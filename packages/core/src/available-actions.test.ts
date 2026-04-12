@@ -638,6 +638,36 @@ function initBattleForReleaseGrappleDiscovery(
   return actor;
 }
 
+function initBattleForPublicGrappleDiscovery({
+  actorConfig,
+  targetConfig,
+}: {
+  readonly actorConfig?: Record<string, unknown>;
+  readonly targetConfig?: Record<string, unknown>;
+} = {}) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        ...actorConfig,
+      },
+      {
+        id: CreatureId("B"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 10,
+        ...targetConfig,
+      },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
 function initBattleForReadyWindow() {
   const actor = makeBattleActor({
     type: "BATTLE_INIT",
@@ -3535,6 +3565,94 @@ describe("available actions contract", () => {
         (token) => token.type,
       ),
     ).not.toContain("BATTLE_DECLARE_RECKLESS");
+  });
+
+  test("battle discovery and resolution expose grapple with explicit save outcome", () => {
+    const actor = initBattleForPublicGrappleDiscovery();
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_GRAPPLE",
+          targetId: { options: ["B"] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_GRAPPLE",
+        targetId: "B",
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_GRAPPLE",
+        targetId: "B",
+      },
+      outcome:
+        "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+      runtime: "battleGrapple",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleGrapple",
+          values: { targetSaveFailed: true },
+        },
+        context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_GRAPPLE",
+        targetId: CreatureId("B"),
+        targetSaveFailed: true,
+      },
+      outcome:
+        "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+    });
+    expect(
+      previewBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_GRAPPLE",
+        targetId: "B",
+      }),
+    ).toEqual({
+      ok: true,
+      summary:
+        "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+      cost: cost(quota("action")),
+      runtime: "battleGrapple",
+      eventType: undefined,
+    });
+  });
+
+  test("battle discovery keeps grapple target options size-filtered by battle ownership", () => {
+    const actor = initBattleForPublicGrappleDiscovery({
+      targetConfig: { creatureSize: "huge" },
+    });
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context).map(
+        (token) => token.type,
+      ),
+    ).not.toContain("BATTLE_GRAPPLE");
   });
 
   test("battle discovery and resolution expose release grapple without action cost", () => {

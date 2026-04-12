@@ -3579,6 +3579,78 @@ describe("MCP server adapter", () => {
     ).toBeNull();
   });
 
+  test("battle hosts surface grapple and require explicit save-outcome runtime through MCP", () => {
+    const host = initBattleHostWithAttackActor();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
+      expect.objectContaining({
+        action: expect.arrayContaining([
+          {
+            scope: "battle",
+            actorId: "A",
+            type: "BATTLE_GRAPPLE",
+            targetId: { options: ["B"] },
+            cost: cost(quota("action")),
+            outcome: {
+              summary:
+                "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+            },
+          },
+        ]),
+      }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_GRAPPLE",
+      targetId: "B",
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        "BATTLE_GRAPPLE requires explicit runtime battleGrapple inputs on execute_action.",
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
+  test("battle hosts execute public grapple through MCP", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_GRAPPLE",
+      targetId: "B",
+      runtime: {
+        runtime: "battleGrapple",
+        values: {
+          targetSaveFailed: true,
+        },
+      },
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Attempt to grapple the chosen target using the battle-owned size check and an explicit resolved Strength or Dexterity save outcome",
+      }),
+    );
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("A"))
+        ?.grapplingTarget,
+    ).toBe(CreatureId("B"));
+    expect(
+      host.actor.getSnapshot().context.creatures.get(CreatureId("B"))
+        ?.grappledBy,
+    ).toBe(CreatureId("A"));
+  });
+
   test("preview_action summarizes BATTLE_ATTACK without mutating state", () => {
     const host = initBattleHostWithAttackActor();
 

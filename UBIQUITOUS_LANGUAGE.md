@@ -2,107 +2,107 @@
 
 ## D20 Rolls
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Ability Check** | A d20 roll testing a creature's innate talent and training against a Difficulty Class | Skill check (imprecise — a skill modifies an ability check, it's not a separate roll type) |
-| **Saving Throw** | A d20 roll to resist a spell, trap, poison, or similar threat | Save (acceptable shorthand but not canonical) |
-| **Attack Roll** | A d20 roll to determine whether an attack hits, compared against Armor Class | Hit roll |
-| **Passive Check** | An ability check resolved without a die roll, using the formula `10 + all modifiers` | Passive score (PHB uses "score" for the result, but the mechanic is a "passive check") |
-| **Contest** | Opposed ability checks; higher total wins; tie preserves status quo | Opposed roll, opposed check |
-| **Group Check** | A group ability check; if at least half the group succeeds, the whole group succeeds | — |
-| **Critical Hit** | Natural 20 on an attack roll; automatic hit regardless of AC; all damage dice are doubled | Crit, natural 20 (natural 20 is the trigger, critical hit is the result) |
-| **Initiative** | A Dexterity check made at the start of combat to determine turn order; order remains constant throughout the encounter | Init |
+| Term              | Definition                                                                                                             | Aliases to avoid                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Ability Check** | A d20 roll testing a creature's innate talent and training against a Difficulty Class                                  | Skill check (imprecise — a skill modifies an ability check, it's not a separate roll type) |
+| **Saving Throw**  | A d20 roll to resist a spell, trap, poison, or similar threat                                                          | Save (acceptable shorthand but not canonical)                                              |
+| **Attack Roll**   | A d20 roll to determine whether an attack hits, compared against Armor Class                                           | Hit roll                                                                                   |
+| **Passive Check** | An ability check resolved without a die roll, using the formula `10 + all modifiers`                                   | Passive score (PHB uses "score" for the result, but the mechanic is a "passive check")     |
+| **Contest**       | Opposed ability checks; higher total wins; tie preserves status quo                                                    | Opposed roll, opposed check                                                                |
+| **Group Check**   | A group ability check; if at least half the group succeeds, the whole group succeeds                                   | —                                                                                          |
+| **Critical Hit**  | Natural 20 on an attack roll; automatic hit regardless of AC; all damage dice are doubled                              | Crit, natural 20 (natural 20 is the trigger, critical hit is the result)                   |
+| **Initiative**    | A Dexterity check made at the start of combat to determine turn order; order remains constant throughout the encounter | Init                                                                                       |
 
 ## Advantage and Disadvantage
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Advantage** | A modifier on a d20 roll: roll two d20s, use the higher; binary (not stackable); translates to +5 in the passive check formula | Bonus (different mechanic) |
-| **Disadvantage** | A modifier on a d20 roll: roll two d20s, use the lower; binary (not stackable); translates to -5 in the passive check formula | Penalty (different mechanic) |
+| Term             | Definition                                                                                                                     | Aliases to avoid             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Advantage**    | A modifier on a d20 roll: roll two d20s, use the higher; binary (not stackable); translates to +5 in the passive check formula | Bonus (different mechanic)   |
+| **Disadvantage** | A modifier on a d20 roll: roll two d20s, use the lower; binary (not stackable); translates to -5 in the passive check formula  | Penalty (different mechanic) |
 
 ## Action Lifecycle
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Resolve** | Compute an outcome from inputs without changing state. In Quint, this is pure rules evaluation over immutable records. In TypeScript, this is outcome computation such as hit/miss, save pass/fail, and reaction legality. | Execute, apply |
-| **Apply** | Take a resolved outcome and produce updated state. In Quint, this is a pure record transformation. In TypeScript, this is the state-building part of the commit layer. | Resolve, mutate |
-| **Advance** | Move through a phase boundary, potentially opening the next interrupt point or timing window. | Continue, proceed |
-| **Offer** | Suspend resolution to present a reaction window to eligible creatures. | Prompt, ask |
-| **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource. | Pass |
+| Term        | Definition                                                                                                                                                                                                                 | Aliases to avoid  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **Resolve** | Compute an outcome from inputs without changing state. In Quint, this is pure rules evaluation over immutable records. In TypeScript, this is outcome computation such as hit/miss, save pass/fail, and reaction legality. | Execute, apply    |
+| **Apply**   | Take a resolved outcome and produce updated state. In Quint, this is a pure record transformation. In TypeScript, this is the state-building part of the commit layer.                                                     | Resolve, mutate   |
+| **Advance** | Move through a phase boundary, potentially opening the next interrupt point or timing window.                                                                                                                              | Continue, proceed |
+| **Offer**   | Suspend resolution to present a reaction window to eligible creatures.                                                                                                                                                     | Prompt, ask       |
+| **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource.                                                                                                         | Pass              |
 
 ## Resource Consumption
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Pool** | A counted stock that depletes until a rest or feature-specific recharge restores it. | Charge bucket, resource blob |
-| **Quota** | A per-turn or per-window allowance that refills automatically at its reset boundary. | Charge, use counter |
-| **Lock** | An exclusive hold where only one effect can occupy the slot at a time; taking a new lock displaces the old holder. | Reservation slot, latch |
-| **Timer** | A countdown or duration that expires after turns, rounds, or another explicit clock. | Counter (too vague) |
-| **Spend** | Pay an immediate up-front cost to take an action now. | Consume (too broad), use up |
-| **Grant** | A spend that creates or restores a different usable resource. | Refund (opposite direction) |
-| **Reserve** | Pay now to hold a future release window; if the hold breaks, the reserved action is lost. | Delay-cast, queue |
-| **Refund** | Restore a previously spent pool resource without rewinding any separate quota that was already used. | Undo, rollback |
+| Term        | Definition                                                                                                         | Aliases to avoid             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Pool**    | A counted stock that depletes until a rest or feature-specific recharge restores it.                               | Charge bucket, resource blob |
+| **Quota**   | A per-turn or per-window allowance that refills automatically at its reset boundary.                               | Charge, use counter          |
+| **Lock**    | An exclusive hold where only one effect can occupy the slot at a time; taking a new lock displaces the old holder. | Reservation slot, latch      |
+| **Timer**   | A countdown or duration that expires after turns, rounds, or another explicit clock.                               | Counter (too vague)          |
+| **Spend**   | Pay an immediate up-front cost to take an action now.                                                              | Consume (too broad), use up  |
+| **Grant**   | A spend that creates or restores a different usable resource.                                                      | Refund (opposite direction)  |
+| **Reserve** | Pay now to hold a future release window; if the hold breaks, the reserved action is lost.                          | Delay-cast, queue            |
+| **Refund**  | Restore a previously spent pool resource without rewinding any separate quota that was already used.               | Undo, rollback               |
 
 ## Proficiency
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Proficiency Bonus** | A level-derived bonus (+2 to +6) added to d20 rolls when proficient | Prof bonus, proficiency modifier |
-| **Proficiency Level** | The degree of training: none, half proficiency, proficient, or expertise | Proficiency type |
-| **Expertise** | A proficiency level that doubles the proficiency bonus for the relevant check | Double proficiency |
+| Term                  | Definition                                                                    | Aliases to avoid                 |
+| --------------------- | ----------------------------------------------------------------------------- | -------------------------------- |
+| **Proficiency Bonus** | A level-derived bonus (+2 to +6) added to d20 rolls when proficient           | Prof bonus, proficiency modifier |
+| **Proficiency Level** | The degree of training: none, half proficiency, proficient, or expertise      | Proficiency type                 |
+| **Expertise**         | A proficiency level that doubles the proficiency bonus for the relevant check | Double proficiency               |
 
 ## Ability Scores
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Ability Score** | A number (1-30) defining the magnitude of one of six abilities | Stat, attribute |
-| **Ability Modifier** | A number derived from an ability score: `floor((score - 10) / 2)` | Stat modifier, ability bonus |
-| **Ability** | One of the six: Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma | Stat, attribute |
-| **Skill** | One of 18 named specializations of ability checks (e.g., Perception specializes Wisdom checks, Stealth specializes Dexterity checks); proficiency in a skill adds proficiency bonus to the relevant ability check | Skill check (a skill modifies an ability check; it's not its own roll type) |
+| Term                 | Definition                                                                                                                                                                                                        | Aliases to avoid                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Ability Score**    | A number (1-30) defining the magnitude of one of six abilities                                                                                                                                                    | Stat, attribute                                                             |
+| **Ability Modifier** | A number derived from an ability score: `floor((score - 10) / 2)`                                                                                                                                                 | Stat modifier, ability bonus                                                |
+| **Ability**          | One of the six: Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma                                                                                                                                 | Stat, attribute                                                             |
+| **Skill**            | One of 18 named specializations of ability checks (e.g., Perception specializes Wisdom checks, Stealth specializes Dexterity checks); proficiency in a skill adds proficiency bonus to the relevant ability check | Skill check (a skill modifies an ability check; it's not its own roll type) |
 
 ## Hit Points and Death
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Hit Points (HP)** | Current health of a creature; ranges from 0 to the creature's hit point maximum | Health, life |
-| **Hit Point Maximum** | Upper bound on HP; derived from class, level, and Constitution; can be reduced by effects (e.g., Exhaustion level 4 halves it) | Max HP (acceptable shorthand), max health |
-| **Temporary Hit Points** | A damage buffer separate from HP; absorbed first; cannot be healed; do not stack (keep higher); can exceed hit point maximum | Temp HP (acceptable shorthand), shield |
-| **Hit Die** | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); all recovered on long rest (SRD 5.2.1); multiclass characters track remaining dice per class separately | Recovery die |
-| **Death Saving Throw** | A special d20 save at 0 HP with no ability modifier; 10+ = success, <10 = failure; nat 20 = regain 1 HP; nat 1 = two failures; three successes = **Stable**; three failures = death | Death save (acceptable shorthand) |
-| **Stable** | A creature at 0 HP that is no longer making death saving throws; remains unconscious; regains 1 HP after 1d4 hours if not healed | Stabilized |
-| **Instant Death** | When damage reduces a creature to 0 HP and the remaining damage equals or exceeds its hit point maximum | Overkill |
+| Term                     | Definition                                                                                                                                                                                                      | Aliases to avoid                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Hit Points (HP)**      | Current health of a creature; ranges from 0 to the creature's hit point maximum                                                                                                                                 | Health, life                              |
+| **Hit Point Maximum**    | Upper bound on HP; derived from class, level, and Constitution; can be reduced by effects (e.g., Exhaustion level 4 halves it)                                                                                  | Max HP (acceptable shorthand), max health |
+| **Temporary Hit Points** | A damage buffer separate from HP; absorbed first; cannot be healed; do not stack (keep higher); can exceed hit point maximum                                                                                    | Temp HP (acceptable shorthand), shield    |
+| **Hit Die**              | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); all recovered on long rest (SRD 5.2.1); multiclass characters track remaining dice per class separately | Recovery die                              |
+| **Death Saving Throw**   | A special d20 save at 0 HP with no ability modifier; 10+ = success, <10 = failure; nat 20 = regain 1 HP; nat 1 = two failures; three successes = **Stable**; three failures = death                             | Death save (acceptable shorthand)         |
+| **Stable**               | A creature at 0 HP that is no longer making death saving throws; remains unconscious; regains 1 HP after 1d4 hours if not healed                                                                                | Stabilized                                |
+| **Instant Death**        | When damage reduces a creature to 0 HP and the remaining damage equals or exceeds its hit point maximum                                                                                                         | Overkill                                  |
 
 ## Damage
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Damage Type** | One of 13 categories: Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder | Element (only partially overlaps) |
-| **Resistance** | Halves incoming damage of a specific type; applied after all other modifiers; multiple instances of same type don't stack | Damage reduction (different concept in other systems) |
-| **Vulnerability** | Doubles incoming damage of a specific type; applied after resistance | Weakness |
-| **Immunity** | Nullifies all damage of a specific type; also applies to conditions and exhaustion (see below) | — |
-| **Condition Immunity** | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | — |
-| **Exhaustion Immunity** | A creature immune to exhaustion does not accumulate exhaustion levels; distinct from condition immunity since Exhaustion is a separate mechanic with levels 1–6, not one of the 14 Conditions | — |
+| Term                    | Definition                                                                                                                                                                                                    | Aliases to avoid                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **Damage Type**         | One of 13 categories: Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder                                                                        | Element (only partially overlaps)                     |
+| **Resistance**          | Halves incoming damage of a specific type; applied after all other modifiers; multiple instances of same type don't stack                                                                                     | Damage reduction (different concept in other systems) |
+| **Vulnerability**       | Doubles incoming damage of a specific type; applied after resistance                                                                                                                                          | Weakness                                              |
+| **Immunity**            | Nullifies all damage of a specific type; also applies to conditions and exhaustion (see below)                                                                                                                | —                                                     |
+| **Condition Immunity**  | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | —                                                     |
+| **Exhaustion Immunity** | A creature immune to exhaustion does not accumulate exhaustion levels; distinct from condition immunity since Exhaustion is a separate mechanic with levels 1–6, not one of the 14 Conditions                 | —                                                     |
 
 ## Conditions
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Condition** | One of 14 named status effects with rules-defined mechanical consequences | Status, debuff, buff |
-| **Blinded** | Can't see; auto-fails sight-based checks; attack rolls against have advantage; own attack rolls have disadvantage | — |
-| **Charmed** | Can't attack or harm the charmer; charmer has advantage on social checks against creature | — |
-| **Deafened** | Can't hear; auto-fails hearing-based checks | — |
-| **Frightened** | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source | Scared, feared |
-| **Grappled** | Speed becomes 0; attack rolls against targets other than the grappler have disadvantage; the grappler can drag/carry the creature, but each foot of that movement costs 1 extra foot unless the target is Tiny or two or more sizes smaller; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held |
-| **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls | Disabled, stunned (Stunned is a separate, stronger condition) |
-| **Invisible** | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage | Hidden (different — hidden requires both unseen and unheard) |
-| **Paralyzed** | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | — |
-| **Petrified** | Turned to stone; incapacitated; can't move/speak; unaware; auto-fails Str/Dex saves; attacks against have advantage; resistance to all damage; immune to poison/disease | — |
-| **Poisoned** | Disadvantage on attack rolls and ability checks | — |
-| **Prone** | Can only crawl (or stand, costing half speed); disadvantage on own attack rolls; attacks within 5 ft have advantage, beyond 5 ft have disadvantage | Knocked down, lying down |
-| **Restrained** | Speed becomes 0; attacks against have advantage; own attacks have disadvantage; disadvantage on Dex saves | Immobilized (imprecise — Grappled also stops movement but differs mechanically) |
-| **Stunned** | Incapacitated; can't move; auto-fails Str/Dex saves; attacks against have advantage | Dazed |
-| **Unconscious** | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
-| **Exhaustion** | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death | Fatigue |
+| Term              | Definition                                                                                                                                                                                                                                                                                                       | Aliases to avoid                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Condition**     | One of 14 named status effects with rules-defined mechanical consequences                                                                                                                                                                                                                                        | Status, debuff, buff                                                                             |
+| **Blinded**       | Can't see; auto-fails sight-based checks; attack rolls against have advantage; own attack rolls have disadvantage                                                                                                                                                                                                | —                                                                                                |
+| **Charmed**       | Can't attack or harm the charmer; charmer has advantage on social checks against creature                                                                                                                                                                                                                        | —                                                                                                |
+| **Deafened**      | Can't hear; auto-fails hearing-based checks                                                                                                                                                                                                                                                                      | —                                                                                                |
+| **Frightened**    | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source                                                                                                                                                                                  | Scared, feared                                                                                   |
+| **Grappled**      | Speed becomes 0; attack rolls against targets other than the grappler have disadvantage; the grappler can drag/carry the creature, but each foot of that movement costs 1 extra foot unless the target is Tiny or two or more sizes smaller; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held                                                                                    |
+| **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls                                                                                                                                                                                             | Disabled, stunned (Stunned is a separate, stronger condition)                                    |
+| **Invisible**     | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage                                                                                                                                                                                          | Hidden (different — hidden requires both unseen and unheard)                                     |
+| **Paralyzed**     | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                                                                      | —                                                                                                |
+| **Petrified**     | Turned to stone; incapacitated; can't move/speak; unaware; auto-fails Str/Dex saves; attacks against have advantage; resistance to all damage; immune to poison/disease                                                                                                                                          | —                                                                                                |
+| **Poisoned**      | Disadvantage on attack rolls and ability checks                                                                                                                                                                                                                                                                  | —                                                                                                |
+| **Prone**         | Can only crawl (or stand, costing half speed); disadvantage on own attack rolls; attacks within 5 ft have advantage, beyond 5 ft have disadvantage                                                                                                                                                               | Knocked down, lying down                                                                         |
+| **Restrained**    | Speed becomes 0; attacks against have advantage; own attacks have disadvantage; disadvantage on Dex saves                                                                                                                                                                                                        | Immobilized (imprecise — Grappled also stops movement but differs mechanically)                  |
+| **Stunned**       | Incapacitated; can't move; auto-fails Str/Dex saves; attacks against have advantage                                                                                                                                                                                                                              | Dazed                                                                                            |
+| **Unconscious**   | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                              | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
+| **Exhaustion**    | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death                                                                                                                                | Fatigue                                                                                          |
 
 ### Canonical Condition Consequences
 
@@ -123,74 +123,74 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 
 ## Turn Structure
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Round** | A cycle of combat lasting ~6 seconds in which every participant takes one turn | — |
-| **Turn** | A single creature's opportunity to move, take an action, and optionally take a bonus action during a round | Phase |
-| **Action** | The primary activity a creature can perform on its turn; one per turn; the 10 standard types are: Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use an Object | — |
-| **Bonus Action** | A secondary activity on a turn, available only when explicitly granted by a feature or spell; one per turn | Swift action, minor action |
-| **Reaction** | An instant response to a trigger, usable on any turn; one per round; resets at the start of the creature's next turn | — |
-| **Surprise** | A determination at the start of combat; a surprised combatant has Disadvantage on their Initiative roll (SRD 5.2.1); no lost turn, no restricted reactions — purely affects the Initiative d20 roll | Ambush (ambush is a narrative situation that may cause surprise), Surprised condition (there is no "surprised condition" in 5.2.1) |
-| **Opportunity Attack** | A reaction melee attack triggered when a hostile creature moves out of the attacker's reach; avoided by the Disengage action | Attack of opportunity, AoO |
+| Term                   | Definition                                                                                                                                                                                          | Aliases to avoid                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Round**              | A cycle of combat lasting ~6 seconds in which every participant takes one turn                                                                                                                      | —                                                                                                                                  |
+| **Turn**               | A single creature's opportunity to move, take an action, and optionally take a bonus action during a round                                                                                          | Phase                                                                                                                              |
+| **Action**             | The primary activity a creature can perform on its turn; one per turn; the 10 standard types are: Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use an Object            | —                                                                                                                                  |
+| **Bonus Action**       | A secondary activity on a turn, available only when explicitly granted by a feature or spell; one per turn                                                                                          | Swift action, minor action                                                                                                         |
+| **Reaction**           | An instant response to a trigger, usable on any turn; one per round; resets at the start of the creature's next turn                                                                                | —                                                                                                                                  |
+| **Surprise**           | A determination at the start of combat; a surprised combatant has Disadvantage on their Initiative roll (SRD 5.2.1); no lost turn, no restricted reactions — purely affects the Initiative d20 roll | Ambush (ambush is a narrative situation that may cause surprise), Surprised condition (there is no "surprised condition" in 5.2.1) |
+| **Opportunity Attack** | A reaction melee attack triggered when a hostile creature moves out of the attacker's reach; avoided by the Disengage action                                                                        | Attack of opportunity, AoO                                                                                                         |
 
 ## Combat
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Armor Class (AC)** | The target number an attack roll must meet or equal to hit; formula depends on armor, shield, Dexterity, and special features | Defense, defense rating |
-| **Armor Category** | One of three types: Light (base + full DEX mod), Medium (base + DEX mod, max +2), Heavy (base AC, no DEX mod) | Armor type (ambiguous — could mean specific armor vs category) |
-| **Cover** | Physical obstruction granting defensive bonuses; three degrees: Half (+2 AC and Dex saves), Three-Quarters (+5 AC and Dex saves), Total (can't be targeted directly) | — |
-| **Grapple** | A special melee attack replacing one attack; Strength (Athletics) vs target's Strength (Athletics) or Dexterity (Acrobatics); success applies Grappled condition; target must be no more than one size larger | Grab |
-| **Shove** | A special melee attack replacing one attack; same contest as Grapple; success either knocks target Prone or pushes it 5 feet; target must be no more than one size larger | Push (push is one of two shove outcomes) |
-| **Unarmed Strike** | A melee weapon attack (punch, kick, etc.) dealing 1 + Strength modifier bludgeoning damage; every creature is proficient | — |
-| **Two-Weapon Fighting** | When attacking with a Light melee weapon, a creature can use a bonus action to attack with a different Light melee weapon in the other hand; ability modifier is not added to the bonus attack's damage (unless negative) | Dual wielding (acceptable colloquial, not the PHB term) |
-| **Knock Out** | When a melee attack reduces a creature to 0 HP, the attacker can choose to render it Unconscious and Stable instead of dying | KO |
-| **Free Hand** | A hand not currently occupied by holding a weapon, wielding a Shield, or maintaining a grapple; required by rules that explicitly say "free hand" | Off hand, spare hand |
+| Term                    | Definition                                                                                                                                                                                                                                                                | Aliases to avoid                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Armor Class (AC)**    | The target number an attack roll must meet or equal to hit; formula depends on armor, shield, Dexterity, and special features                                                                                                                                             | Defense, defense rating                                        |
+| **Armor Category**      | One of three types: Light (base + full DEX mod), Medium (base + DEX mod, max +2), Heavy (base AC, no DEX mod)                                                                                                                                                             | Armor type (ambiguous — could mean specific armor vs category) |
+| **Cover**               | Physical obstruction granting defensive bonuses; three degrees: Half (+2 AC and Dex saves), Three-Quarters (+5 AC and Dex saves), Total (can't be targeted directly)                                                                                                      | —                                                              |
+| **Grapple**             | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure applies Grappled; target must be no more than one size larger and the attacker must have a free hand | Grab                                                           |
+| **Shove**               | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure either knocks the target Prone or pushes it 5 feet; target must be no more than one size larger      | Push (push is one of two shove outcomes)                       |
+| **Unarmed Strike**      | A melee weapon attack (punch, kick, etc.) dealing 1 + Strength modifier bludgeoning damage; every creature is proficient                                                                                                                                                  | —                                                              |
+| **Two-Weapon Fighting** | When attacking with a Light melee weapon, a creature can use a bonus action to attack with a different Light melee weapon in the other hand; ability modifier is not added to the bonus attack's damage (unless negative)                                                 | Dual wielding (acceptable colloquial, not the PHB term)        |
+| **Knock Out**           | When a melee attack reduces a creature to 0 HP, the attacker can choose to render it Unconscious and Stable instead of dying                                                                                                                                              | KO                                                             |
+| **Free Hand**           | A hand not currently occupied by holding a weapon, wielding a Shield, or maintaining a grapple; required by rules that explicitly say "free hand"                                                                                                                         | Off hand, spare hand                                           |
 
 ## Movement
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Speed** | A creature's stat: the maximum distance in feet it is allowed to move on its turn; types include Walk, Fly, Swim, Climb, Burrow; Speed is a capacity, not a resource — it doesn't decrease when you move (but can be reduced by conditions like Exhaustion L2 or Grappled → 0) | Movement speed, movement rate |
-| **Movement** | The act of expending distance from your turn's movement budget (which starts at your Speed); distinct from Speed itself — a creature that has used all its Movement still has its Speed; some features grant bonus movement independent of the normal budget (e.g., Tactical Shift, Dash) | Speed (Speed is the capacity; Movement is the consumption) |
-| **Difficult Terrain** | Terrain that costs 1 extra foot per foot of movement (e.g., rubble, undergrowth, another creature's space) | Rough terrain, hazardous terrain |
-| **Squeezing** | Moving through a space sized for one category smaller; costs 1 extra foot per foot; disadvantage on attack rolls and Dex saves; attacks against have advantage | — |
-| **Long Jump** | Horizontal jump; distance = Strength score (feet) with 10+ ft running start, half that standing; each foot costs 1 foot of movement | — |
-| **High Jump** | Vertical jump; height = 3 + Strength modifier (min 0) feet with 10+ ft running start, half that standing; each foot costs 1 foot of movement | — |
-| **Size** | One of six categories determining space controlled in combat: Tiny (2.5 ft), Small (5 ft), Medium (5 ft), Large (10 ft), Huge (15 ft), Gargantuan (20+ ft) | — |
-| **Carrying Capacity** | Maximum weight a creature can carry: Strength score x 15 lbs; doubled per size category above Medium, halved for Tiny | Encumbrance (variant rule with different thresholds) |
+| Term                  | Definition                                                                                                                                                                                                                                                                                | Aliases to avoid                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Speed**             | A creature's stat: the maximum distance in feet it is allowed to move on its turn; types include Walk, Fly, Swim, Climb, Burrow; Speed is a capacity, not a resource — it doesn't decrease when you move (but can be reduced by conditions like Exhaustion L2 or Grappled → 0)            | Movement speed, movement rate                              |
+| **Movement**          | The act of expending distance from your turn's movement budget (which starts at your Speed); distinct from Speed itself — a creature that has used all its Movement still has its Speed; some features grant bonus movement independent of the normal budget (e.g., Tactical Shift, Dash) | Speed (Speed is the capacity; Movement is the consumption) |
+| **Difficult Terrain** | Terrain that costs 1 extra foot per foot of movement (e.g., rubble, undergrowth, another creature's space)                                                                                                                                                                                | Rough terrain, hazardous terrain                           |
+| **Squeezing**         | Moving through a space sized for one category smaller; costs 1 extra foot per foot; disadvantage on attack rolls and Dex saves; attacks against have advantage                                                                                                                            | —                                                          |
+| **Long Jump**         | Horizontal jump; distance = Strength score (feet) with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                                       | —                                                          |
+| **High Jump**         | Vertical jump; height = 3 + Strength modifier (min 0) feet with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                              | —                                                          |
+| **Size**              | One of six categories determining space controlled in combat: Tiny (2.5 ft), Small (5 ft), Medium (5 ft), Large (10 ft), Huge (15 ft), Gargantuan (20+ ft)                                                                                                                                | —                                                          |
+| **Carrying Capacity** | Maximum weight a creature can carry: Strength score x 15 lbs; doubled per size category above Medium, halved for Tiny                                                                                                                                                                     | Encumbrance (variant rule with different thresholds)       |
 
 ## Equipment
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Weapon Property** | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile | Weapon tag, weapon trait |
-| **Two-Handed** | A weapon property meaning the weapon requires two hands when you attack with it | Two-hand mode, main-hand only |
-| **Versatile** | A weapon property meaning the weapon can be used with one or two hands; the parenthetical damage applies only when used with two hands to make a melee attack | Flexible weapon mode |
-| **Mastery Property** | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
-| **Weapon Mastery** | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | — |
-| **Cleave** | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn | — |
-| **Graze** | Mastery property: on miss, deal damage equal to ability modifier used for the attack (minimum 1; same damage type as weapon). Damage can only be increased by increasing the ability modifier | — |
-| **Nick** | Mastery property: the Light property's extra attack can be made as part of the Attack action instead of as a Bonus Action. Once per turn | — |
-| **Push** | Mastery property: on hit, push a Large or smaller creature up to 10 feet straight away from you | — |
-| **Sap** | Mastery property: on hit, target has Disadvantage on its next attack roll before the start of your next turn | — |
-| **Slow** | Mastery property: on hit (with damage), reduce target's Speed by 10 feet until the start of your next turn; multiple Slow hits don't stack beyond 10 feet | — |
-| **Topple** | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition | — |
-| **Vex** | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn | — |
-| **Donning/Doffing** | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help | — |
-| **Holding / Wielding** | The SRD-facing concept for what a creature has in hand. Use this language in rules and docs; avoid inventing handedness terms that the SRD does not define | Main hand, off hand, left hand, right hand |
+| Term                   | Definition                                                                                                                                                                                                                                                                                                  | Aliases to avoid                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Weapon Property**    | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile                                                                                                                                                          | Weapon tag, weapon trait                                                  |
+| **Two-Handed**         | A weapon property meaning the weapon requires two hands when you attack with it                                                                                                                                                                                                                             | Two-hand mode, main-hand only                                             |
+| **Versatile**          | A weapon property meaning the weapon can be used with one or two hands; the parenthetical damage applies only when used with two hands to make a melee attack                                                                                                                                               | Flexible weapon mode                                                      |
+| **Mastery Property**   | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
+| **Weapon Mastery**     | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | —                                                                         |
+| **Cleave**             | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn                                                                               | —                                                                         |
+| **Graze**              | Mastery property: on miss, deal damage equal to ability modifier used for the attack (minimum 1; same damage type as weapon). Damage can only be increased by increasing the ability modifier                                                                                                               | —                                                                         |
+| **Nick**               | Mastery property: the Light property's extra attack can be made as part of the Attack action instead of as a Bonus Action. Once per turn                                                                                                                                                                    | —                                                                         |
+| **Push**               | Mastery property: on hit, push a Large or smaller creature up to 10 feet straight away from you                                                                                                                                                                                                             | —                                                                         |
+| **Sap**                | Mastery property: on hit, target has Disadvantage on its next attack roll before the start of your next turn                                                                                                                                                                                                | —                                                                         |
+| **Slow**               | Mastery property: on hit (with damage), reduce target's Speed by 10 feet until the start of your next turn; multiple Slow hits don't stack beyond 10 feet                                                                                                                                                   | —                                                                         |
+| **Topple**             | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition                                                                                                                                                       | —                                                                         |
+| **Vex**                | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn                                                                                                                                                                      | —                                                                         |
+| **Donning/Doffing**    | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help                                                                                                                                                         | —                                                                         |
+| **Holding / Wielding** | The SRD-facing concept for what a creature has in hand. Use this language in rules and docs; avoid inventing handedness terms that the SRD does not define                                                                                                                                                  | Main hand, off hand, left hand, right hand                                |
 
 ## Spellcasting
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Spell Slot** | A capacity to cast a spell at a given level (1-9); expended when casting; recovered on long rest | Spell charge, spell use |
-| **Pact Slot** | A Warlock-specific spell slot; level determined by Warlock level; recovered on short rest (unlike regular spell slots) | Warlock slot |
-| **Concentration** | Sustained effort to maintain a spell; broken by: casting another concentration spell, taking damage and failing a Constitution save (DC = max(10, damage/2)), being incapacitated, or dying; only one concentration spell at a time | Channeling, maintaining |
-| **Spell Save DC** | The Difficulty Class for a target's saving throw against a spell: `8 + spellcasting ability modifier + proficiency bonus` | — |
-| **Cantrip** | A level 0 spell cast at will without expending a spell slot | At-will spell, 0-level spell |
-| **Ritual** | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting | — |
-| **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost | Ingredient (only partially overlaps with Material) |
+| Term                | Definition                                                                                                                                                                                                                          | Aliases to avoid                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Spell Slot**      | A capacity to cast a spell at a given level (1-9); expended when casting; recovered on long rest                                                                                                                                    | Spell charge, spell use                            |
+| **Pact Slot**       | A Warlock-specific spell slot; level determined by Warlock level; recovered on short rest (unlike regular spell slots)                                                                                                              | Warlock slot                                       |
+| **Concentration**   | Sustained effort to maintain a spell; broken by: casting another concentration spell, taking damage and failing a Constitution save (DC = max(10, damage/2)), being incapacitated, or dying; only one concentration spell at a time | Channeling, maintaining                            |
+| **Spell Save DC**   | The Difficulty Class for a target's saving throw against a spell: `8 + spellcasting ability modifier + proficiency bonus`                                                                                                           | —                                                  |
+| **Cantrip**         | A level 0 spell cast at will without expending a spell slot                                                                                                                                                                         | At-will spell, 0-level spell                       |
+| **Ritual**          | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting                                                                                                   | —                                                  |
+| **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost                            | Ingredient (only partially overlaps with Material) |
 
 ### Hand Occupancy Terminology
 
@@ -208,83 +208,83 @@ Avoid these as domain-language terms because the SRD does not define them:
 - `off hand`
 - `left hand`
 - `right hand`
-| **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
-| **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
-| **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |
-| **Using a Higher-Level Spell Slot** | Casting a spell with a spell slot above its base spell level; many spells gain enhanced effects (extra damage dice, longer duration, more targets) as described in their "Using a Higher-Level Spell Slot" section | Upcast, upcasting (player slang, not RAW; the SRD says "using a higher-level spell slot") |
-| **Spell Attack** | An attack roll using spellcasting ability modifier + proficiency bonus; subject to advantage, disadvantage, and cover like any attack roll | — |
-| **Casting Time** | How long it takes to cast a spell: 1 action (most common), 1 bonus action, 1 reaction, or extended (minutes/hours); extended casting requires concentration | — |
-| **Duration** | How long a spell's effect persists: Instantaneous (one-time effect), Concentration (up to a stated maximum), or fixed (specific time without concentration) | — |
-| **Area of Effect** | The geometric shape of a spell's impact zone; five standard shapes: Cone (width = distance from origin), Cube (originates from a face), Cylinder (center + radius + height), Line (straight path with width), Sphere (center + radius) | AoE (acceptable shorthand) |
-| **School of Magic** | One of eight categories of spells: Abjuration (protection), Conjuration (transport/summon), Divination (information), Enchantment (mind control), Evocation (energy manipulation), Illusion (deception), Necromancy (life/death), Transmutation (transformation) | — |
-| **Caster Type** | Classification for multiclass spell slot calculation: Full Caster (bard, cleric, druid, sorcerer, wizard), Half Caster (paladin, ranger), Third Caster (Eldritch Knight, Arcane Trickster) | — |
+  | **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
+  | **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
+  | **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |
+  | **Using a Higher-Level Spell Slot** | Casting a spell with a spell slot above its base spell level; many spells gain enhanced effects (extra damage dice, longer duration, more targets) as described in their "Using a Higher-Level Spell Slot" section | Upcast, upcasting (player slang, not RAW; the SRD says "using a higher-level spell slot") |
+  | **Spell Attack** | An attack roll using spellcasting ability modifier + proficiency bonus; subject to advantage, disadvantage, and cover like any attack roll | — |
+  | **Casting Time** | How long it takes to cast a spell: 1 action (most common), 1 bonus action, 1 reaction, or extended (minutes/hours); extended casting requires concentration | — |
+  | **Duration** | How long a spell's effect persists: Instantaneous (one-time effect), Concentration (up to a stated maximum), or fixed (specific time without concentration) | — |
+  | **Area of Effect** | The geometric shape of a spell's impact zone; five standard shapes: Cone (width = distance from origin), Cube (originates from a face), Cylinder (center + radius + height), Line (straight path with width), Sphere (center + radius) | AoE (acceptable shorthand) |
+  | **School of Magic** | One of eight categories of spells: Abjuration (protection), Conjuration (transport/summon), Divination (information), Enchantment (mind control), Evocation (energy manipulation), Illusion (deception), Necromancy (life/death), Transmutation (transformation) | — |
+  | **Caster Type** | Classification for multiclass spell slot calculation: Full Caster (bard, cleric, druid, sorcerer, wizard), Half Caster (paladin, ranger), Third Caster (Eldritch Knight, Arcane Trickster) | — |
 
 ## Resting
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Short Rest** | A downtime period of at least 1 hour; creatures can spend Hit Dice to recover HP; Warlock pact slots recover | — |
-| **Long Rest** | A downtime period of at least 8 hours (6 sleeping, 2 light activity); restores all HP, all spent Hit Dice (SRD 5.2.1), all spell slots; reduces Exhaustion by 1; at most one per 24 hours | Full rest, overnight rest |
+| Term           | Definition                                                                                                                                                                                | Aliases to avoid          |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| **Short Rest** | A downtime period of at least 1 hour; creatures can spend Hit Dice to recover HP; Warlock pact slots recover                                                                              | —                         |
+| **Long Rest**  | A downtime period of at least 8 hours (6 sleeping, 2 light activity); restores all HP, all spent Hit Dice (SRD 5.2.1), all spell slots; reduces Exhaustion by 1; at most one per 24 hours | Full rest, overnight rest |
 
 ## Vision and Light
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Illumination** | One of three light levels: Bright (normal vision), Dim (lightly obscured), Darkness (heavily obscured) | Lighting |
-| **Obscurement** | How much an area impairs vision: Lightly Obscured (disadvantage on sight-based Perception), Heavily Obscured (effectively Blinded) | Visibility (too vague) |
-| **Darkvision** | A special sense: treat dim light as bright, darkness as dim (lightly obscured); can't discern color in darkness | Night vision, low-light vision |
-| **Blindsight** | A special sense: perceive surroundings within a specific radius without relying on sight | Echolocation (one possible in-fiction explanation, not the mechanic) |
-| **Truesight** | A special sense: see in normal and magical darkness, see invisible creatures, detect visual illusions, perceive shapechangers' true forms, see into the Ethereal Plane; within a specific radius | True seeing |
+| Term             | Definition                                                                                                                                                                                       | Aliases to avoid                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| **Illumination** | One of three light levels: Bright (normal vision), Dim (lightly obscured), Darkness (heavily obscured)                                                                                           | Lighting                                                             |
+| **Obscurement**  | How much an area impairs vision: Lightly Obscured (disadvantage on sight-based Perception), Heavily Obscured (effectively Blinded)                                                               | Visibility (too vague)                                               |
+| **Darkvision**   | A special sense: treat dim light as bright, darkness as dim (lightly obscured); can't discern color in darkness                                                                                  | Night vision, low-light vision                                       |
+| **Blindsight**   | A special sense: perceive surroundings within a specific radius without relying on sight                                                                                                         | Echolocation (one possible in-fiction explanation, not the mechanic) |
+| **Truesight**    | A special sense: see in normal and magical darkness, see invisible creatures, detect visual illusions, perceive shapechangers' true forms, see into the Ethereal Plane; within a specific radius | True seeing                                                          |
 
 ## Environmental Hazards
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Falling** | 1d6 bludgeoning damage per 10 feet fallen (max 20d6); creature lands Prone | Fall damage (acceptable shorthand for the damage portion) |
-| **Suffocation** | A creature can hold its breath for 1 + CON modifier minutes (min 30 sec); after that, survives CON modifier rounds (min 1); then drops to 0 HP and can't be stabilized until it can breathe | Drowning (drowning is one cause of suffocation) |
-| **Starvation** | A creature can go without food for 3 + CON modifier days (min 1); after that, 1 level of Exhaustion per day; resets when creature eats | Hunger |
-| **Dehydration** | A creature needs 1 gallon of water per day (2 in hot weather); half intake = DC 15 CON save or 1 Exhaustion; no water = automatic Exhaustion; 2 levels if already exhausted | Thirst |
+| Term            | Definition                                                                                                                                                                                  | Aliases to avoid                                          |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| **Falling**     | 1d6 bludgeoning damage per 10 feet fallen (max 20d6); creature lands Prone                                                                                                                  | Fall damage (acceptable shorthand for the damage portion) |
+| **Suffocation** | A creature can hold its breath for 1 + CON modifier minutes (min 30 sec); after that, survives CON modifier rounds (min 1); then drops to 0 HP and can't be stabilized until it can breathe | Drowning (drowning is one cause of suffocation)           |
+| **Starvation**  | A creature can go without food for 3 + CON modifier days (min 1); after that, 1 level of Exhaustion per day; resets when creature eats                                                      | Hunger                                                    |
+| **Dehydration** | A creature needs 1 gallon of water per day (2 in hot weather); half intake = DC 15 CON save or 1 Exhaustion; no water = automatic Exhaustion; 2 levels if already exhausted                 | Thirst                                                    |
 
 ## Travel
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Travel Pace** | One of three overland speeds: Fast (400 ft/min, 4 mi/hr, 30 mi/day, -5 passive Perception), Normal (300 ft/min, 3 mi/hr, 24 mi/day), Slow (200 ft/min, 2 mi/hr, 18 mi/day, can stealth) | — |
-| **Forced March** | Travel beyond 8 hours per day; Constitution save each additional hour (DC 10 + 1 per hour past 8); failure = 1 level of Exhaustion | — |
+| Term             | Definition                                                                                                                                                                              | Aliases to avoid |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| **Travel Pace**  | One of three overland speeds: Fast (400 ft/min, 4 mi/hr, 30 mi/day, -5 passive Perception), Normal (300 ft/min, 3 mi/hr, 24 mi/day), Slow (200 ft/min, 2 mi/hr, 18 mi/day, can stealth) | —                |
+| **Forced March** | Travel beyond 8 hours per day; Constitution save each additional hour (DC 10 + 1 per hour past 8); failure = 1 level of Exhaustion                                                      | —                |
 
 ## Mounted Combat
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Controlled Mount** | A trained mount whose initiative matches the rider's; can only Dash, Disengage, or Dodge | — |
-| **Independent Mount** | An intelligent mount that retains its own initiative and acts freely | — |
-| **Mounting/Dismounting** | Costs half the rider's speed; can't mount if speed is 0 | — |
+| Term                     | Definition                                                                               | Aliases to avoid |
+| ------------------------ | ---------------------------------------------------------------------------------------- | ---------------- |
+| **Controlled Mount**     | A trained mount whose initiative matches the rider's; can only Dash, Disengage, or Dodge | —                |
+| **Independent Mount**    | An intelligent mount that retains its own initiative and acts freely                     | —                |
+| **Mounting/Dismounting** | Costs half the rider's speed; can't mount if speed is 0                                  | —                |
 
 ## Creatures and Stat Blocks
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Creature** | Any being in the game — PCs, monsters, NPCs, summoned entities. All combat rules are written in terms of creatures ("the creature's AC", "the creature has resistance to..."). The universal participant type in combat; both characters and monsters are creatures. | Character (too narrow — only PCs), monster (too narrow — only non-PCs) |
-| **Stat Block** | A rules record containing all game statistics of a **monster**: Size, Creature Type, AC, Initiative, HP (with Hit Dice), Speed, Ability Scores, Saving Throws, Skills, Resistances, Vulnerabilities, Immunities, Senses, Languages, CR, Traits, Actions, Bonus Actions, Reactions, and (for powerful monsters) Legendary Actions. Stat blocks are for monsters only — PCs use a Character Sheet instead. | Character sheet (different concept for PCs) |
-| **Character Sheet** | A record tracking a player character's information — derived from class, level, species, background, equipment, and features. Produces the same creature-level combat statistics (AC, HP, Speed, etc.) that a Stat Block provides for monsters, but through a derivation process rather than direct authoring. | Stat block (stat blocks are for monsters) |
-| **Creature Type** | The family of beings a monster belongs to: Aberration, Beast, Celestial, Construct, Dragon, Elemental, Fey, Fiend, Giant, Humanoid, Monstrosity, Ooze, Plant, or Undead. Appears in monster stat blocks. PCs are Humanoid by default. | Race (different concept — Species is the PC equivalent) |
-| **Challenge Rating (CR)** | A monster-specific rating (0 to 30) indicating the monster's threat level; determines the monster's Proficiency Bonus and XP reward. PCs do not have CR — their Proficiency Bonus is derived from level. | Level (CR and character level are distinct concepts) |
-| **Multiattack** | A stat block entry allowing a monster to make multiple attacks as part of a single Attack action. Not an extra action — it defines what constitutes the monster's Attack action. PCs gain multiple attacks through class features (e.g., Extra Attack) instead. | Extra Attack (similar effect but different mechanic — Extra Attack is a class feature, Multiattack is a stat block entry) |
-| **Legendary Action** | A special action some powerful monsters can take immediately after another creature's turn ends; limited uses per round, all regained at the start of the monster's turn. PCs cannot take Legendary Actions. | Bonus action (different mechanic), reaction (different trigger model) |
-| **Recharge** | A stat block notation (e.g., "Recharge 5-6") indicating an ability can be used once, then regains on a d6 roll of the specified range at the start of the monster's turn. Also regains after a Short or Long Rest. No PC equivalent. | — |
+| Term                      | Definition                                                                                                                                                                                                                                                                                                                                                                                               | Aliases to avoid                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Creature**              | Any being in the game — PCs, monsters, NPCs, summoned entities. All combat rules are written in terms of creatures ("the creature's AC", "the creature has resistance to..."). The universal participant type in combat; both characters and monsters are creatures.                                                                                                                                     | Character (too narrow — only PCs), monster (too narrow — only non-PCs)                                                    |
+| **Stat Block**            | A rules record containing all game statistics of a **monster**: Size, Creature Type, AC, Initiative, HP (with Hit Dice), Speed, Ability Scores, Saving Throws, Skills, Resistances, Vulnerabilities, Immunities, Senses, Languages, CR, Traits, Actions, Bonus Actions, Reactions, and (for powerful monsters) Legendary Actions. Stat blocks are for monsters only — PCs use a Character Sheet instead. | Character sheet (different concept for PCs)                                                                               |
+| **Character Sheet**       | A record tracking a player character's information — derived from class, level, species, background, equipment, and features. Produces the same creature-level combat statistics (AC, HP, Speed, etc.) that a Stat Block provides for monsters, but through a derivation process rather than direct authoring.                                                                                           | Stat block (stat blocks are for monsters)                                                                                 |
+| **Creature Type**         | The family of beings a monster belongs to: Aberration, Beast, Celestial, Construct, Dragon, Elemental, Fey, Fiend, Giant, Humanoid, Monstrosity, Ooze, Plant, or Undead. Appears in monster stat blocks. PCs are Humanoid by default.                                                                                                                                                                    | Race (different concept — Species is the PC equivalent)                                                                   |
+| **Challenge Rating (CR)** | A monster-specific rating (0 to 30) indicating the monster's threat level; determines the monster's Proficiency Bonus and XP reward. PCs do not have CR — their Proficiency Bonus is derived from level.                                                                                                                                                                                                 | Level (CR and character level are distinct concepts)                                                                      |
+| **Multiattack**           | A stat block entry allowing a monster to make multiple attacks as part of a single Attack action. Not an extra action — it defines what constitutes the monster's Attack action. PCs gain multiple attacks through class features (e.g., Extra Attack) instead.                                                                                                                                          | Extra Attack (similar effect but different mechanic — Extra Attack is a class feature, Multiattack is a stat block entry) |
+| **Legendary Action**      | A special action some powerful monsters can take immediately after another creature's turn ends; limited uses per round, all regained at the start of the monster's turn. PCs cannot take Legendary Actions.                                                                                                                                                                                             | Bonus action (different mechanic), reaction (different trigger model)                                                     |
+| **Recharge**              | A stat block notation (e.g., "Recharge 5-6") indicating an ability can be used once, then regains on a d6 roll of the specified range at the start of the monster's turn. Also regains after a Short or Long Rest. No PC equivalent.                                                                                                                                                                     | —                                                                                                                         |
 
 ## Character Building
 
-| Term | Definition | Aliases to avoid |
-|------|-----------|-----------------|
-| **Class** | A character's vocation (one of 12: Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard); determines hit die, proficiencies, and features | — |
-| **Standard Array** | A fixed set of ability scores for character creation: 15, 14, 13, 12, 10, 8 | — |
-| **Point Buy** | An ability score generation method: 27 points to spend; scores range 8-15; each score has a cost (8=0, 9=1, 10=2, 11=3, 12=4, 13=5, 14=7, 15=9) | — |
-| **Ability Score Improvement (ASI)** | A class feature that usually appears at class levels 4, 8, 12, and 16 (with extra ASI class features for Fighter at 6 and 14 and Rogue at 10). It grants the Ability Score Improvement feat or another feat for which the character qualifies; the Ability Score Improvement feat allows +2 to one ability score or +1 to two, with scores capped at 20. | Stat increase |
-| **Epic Boon** | A level 19 class feature that grants an Epic Boon feat or another feat for which the character qualifies | — |
-| **Multiclassing** | Taking levels in more than one class; requires meeting ability score prerequisites for both the current and new class (13 in the relevant ability) | Multi-class, dual-class |
-| **Feat** | An optional feature chosen in place of an Ability Score Improvement; grants special capabilities outside the normal class progression | Talent, perk |
-| **Unarmored Defense** | A class feature replacing the default AC formula when not wearing armor: Barbarian = 10 + DEX + CON; Monk = 10 + DEX + WIS | Natural armor (different concept for monsters) |
+| Term                                | Definition                                                                                                                                                                                                                                                                                                                                               | Aliases to avoid                               |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **Class**                           | A character's vocation (one of 12: Barbarian, Bard, Cleric, Druid, Fighter, Monk, Paladin, Ranger, Rogue, Sorcerer, Warlock, Wizard); determines hit die, proficiencies, and features                                                                                                                                                                    | —                                              |
+| **Standard Array**                  | A fixed set of ability scores for character creation: 15, 14, 13, 12, 10, 8                                                                                                                                                                                                                                                                              | —                                              |
+| **Point Buy**                       | An ability score generation method: 27 points to spend; scores range 8-15; each score has a cost (8=0, 9=1, 10=2, 11=3, 12=4, 13=5, 14=7, 15=9)                                                                                                                                                                                                          | —                                              |
+| **Ability Score Improvement (ASI)** | A class feature that usually appears at class levels 4, 8, 12, and 16 (with extra ASI class features for Fighter at 6 and 14 and Rogue at 10). It grants the Ability Score Improvement feat or another feat for which the character qualifies; the Ability Score Improvement feat allows +2 to one ability score or +1 to two, with scores capped at 20. | Stat increase                                  |
+| **Epic Boon**                       | A level 19 class feature that grants an Epic Boon feat or another feat for which the character qualifies                                                                                                                                                                                                                                                 | —                                              |
+| **Multiclassing**                   | Taking levels in more than one class; requires meeting ability score prerequisites for both the current and new class (13 in the relevant ability)                                                                                                                                                                                                       | Multi-class, dual-class                        |
+| **Feat**                            | An optional feature chosen in place of an Ability Score Improvement; grants special capabilities outside the normal class progression                                                                                                                                                                                                                    | Talent, perk                                   |
+| **Unarmored Defense**               | A class feature replacing the default AC formula when not wearing armor: Barbarian = 10 + DEX + CON; Monk = 10 + DEX + WIS                                                                                                                                                                                                                               | Natural armor (different concept for monsters) |
 
 ## Relationships
 
@@ -318,7 +318,7 @@ Avoid these as domain-language terms because the SRD does not define them:
 > **Domain expert:** "Damage at 0 HP causes **Death Saving Throw** failures — normally 1, but a **Critical Hit** causes 2. If the total failures reach 3, the creature dies. Separately, if 5 >= the creature's **Hit Point Maximum**, it's **Instant Death**."
 
 > **Dev:** "The fighter wants to grapple the ogre. Is that an **Attack Roll**?"
-> **Domain expert:** "No. A **Grapple** is a **Contest** — the fighter's Strength (Athletics) against the ogre's choice of Strength (Athletics) or Dexterity (Acrobatics). No **Attack Roll** is made, so **AC** and **Cover** are irrelevant."
+> **Domain expert:** "No. A **Grapple** uses the target's choice of Strength or Dexterity **Saving Throw** against the attacker's grapple DC. No **Attack Roll** is made, so **AC** and **Cover** are irrelevant."
 
 > **Dev:** "Should we use Stat Block as the shared type for both PCs and monsters?"
 > **Domain expert:** "No. **Stat Block** is the SRD's term specifically for monsters. PCs have a **Character Sheet**. But both produce the same creature-level combat stats — AC, HP, Speed, damage modifiers. Combat rules are written against **creature** properties, not stat blocks or character sheets. So the shared abstraction is **creature**, not stat block."

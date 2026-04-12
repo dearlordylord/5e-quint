@@ -31,7 +31,10 @@ import {
   buildBattleRuntimeInputs,
   buildRuntimeInputs,
 } from "./server-runtime.ts";
-import { decodeBattleAttackRuntimeInputs } from "./server-battle-attack-runtime.ts";
+import {
+  decodeBattleAttackRuntimeInputs,
+  decodeBattleGrappleRuntimeInputs,
+} from "./server-battle-attack-runtime.ts";
 import {
   type BattleActor,
   type DndActor,
@@ -232,7 +235,9 @@ function executeBattleResolvedAction(
   const runtimeInputs =
     resolution.runtime === "battleAttack"
       ? decodeBattleAttackRuntimeInputs(args, before.context, resolution.token)
-      : Effect.runSync(buildBattleRuntimeInputs(resolution, before.context));
+      : resolution.runtime === "battleGrapple"
+        ? decodeBattleGrappleRuntimeInputs(args, resolution.token)
+        : Effect.runSync(buildBattleRuntimeInputs(resolution, before.context));
   if ("code" in runtimeInputs) {
     return errorContent(runtimeInputs.message, runtimeInputs.code);
   }

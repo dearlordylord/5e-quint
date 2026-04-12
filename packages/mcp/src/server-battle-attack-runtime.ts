@@ -26,6 +26,13 @@ const BattleAttackRuntimeOverrideSchema = Schema.Struct({
   }),
 });
 
+const BattleGrappleRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("battleGrapple"),
+  values: Schema.Struct({
+    targetSaveFailed: Schema.Boolean,
+  }),
+});
+
 export function decodeBattleAttackRuntimeInputs(
   args: unknown,
   context: BattleContext,
@@ -70,6 +77,43 @@ export function decodeBattleAttackRuntimeInputs(
     return {
       code: "INVALID_RUNTIME_INPUT",
       message: `Battle hit reaction candidate ${unknownCandidate} is not a valid other creature in this battle.`,
+    };
+  }
+
+  return decoded.right;
+}
+
+export function decodeBattleGrappleRuntimeInputs(
+  args: unknown,
+  token: Extract<
+    BattleResolvedActionToken,
+    { readonly type: "BATTLE_GRAPPLE" }
+  >,
+):
+  | BattleResolutionRuntimeInputs
+  | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return {
+      code: "INVALID_RUNTIME_INPUT",
+      message: `${token.type} requires explicit runtime battleGrapple inputs on execute_action.`,
+    };
+  }
+
+  const runtime = Reflect.get(args, "runtime");
+  if (runtime === undefined) {
+    return {
+      code: "INVALID_RUNTIME_INPUT",
+      message: `${token.type} requires explicit runtime battleGrapple inputs on execute_action.`,
+    };
+  }
+
+  const decoded = Schema.decodeUnknownEither(
+    BattleGrappleRuntimeOverrideSchema,
+  )(runtime);
+  if (decoded._tag === "Left") {
+    return {
+      code: "INVALID_RUNTIME_INPUT",
+      message: `${token.type} requires runtime: { runtime: "battleGrapple", values: { targetSaveFailed } }.`,
     };
   }
 
