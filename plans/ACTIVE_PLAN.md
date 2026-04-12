@@ -394,19 +394,22 @@ Blocks: none.
 Next action:
 
 - Implement an owned `advancement` / level-history record on the character domain and make it the canonical source for validating higher-level starts and multiclass continuation.
-- Record every legality-relevant advancement choice in order: gained class each level, subclass picks when they occur, Ability Score Improvement feat choices, alternative feat choices, and level-19 Epic Boon choices.
+- Record every legality-relevant advancement choice in order inside the canonical advancement history itself: gained class each level, subclass picks when they occur, Ability Score Improvement feat choices, alternative feat choices, and level-19 Epic Boon choices. Do not leave subclass timing in a side-channel choice record.
 - Validate multiclass entry against the character state that existed at the moment the new class level was taken, not only against final-sheet scores.
 - Derive aggregate class totals, proficiency-sensitive values, HP/hit dice growth, and caster-level/slot projections from that ordered history through the existing finalization and sheet-derivation path.
 - Align TS helpers, `creature.qnt`, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 where current repo helpers still encode stale level-19 ASI assumptions.
-- Model the full ordered advancement choice surface rather than only class totals: each gained class level, score-changing feat/ASI choices, and level-19 Epic Boon choices where they affect legality or downstream derivation.
+- Model the full ordered advancement choice surface rather than only class totals: each gained class level, subclass timing, score-changing feat/ASI choices, non-ASI feat choices where allowed, and level-19 Epic Boon choices where they affect legality or downstream derivation. Do not narrow this to a small feat whitelist that makes legal SRD builds unrepresentable.
+- Reject impossible advancement histories before they affect derived scores or legality checks. In particular, feat or Epic Boon selections must be validated against the actual class level where they occur.
+- Keep the task scoped to advancement/domain work. Do not rewrite or stub shared fuzz / overnight scripts as part of CHAR7.
 - Align repo-owned traceability helpers to SRD 5.2.1 before depending on them; level 19 is an Epic Boon feature, not an Ability Score Improvement.
 
 Acceptance criteria:
 
 - Higher-level starts are represented as legal ordered advancement over the same owned character domain, not a bespoke bootstrap path.
-- The character domain can represent all advancement choices needed to determine legality and downstream derivation for this slice, including feat/ASI and level-19 Epic Boon decisions.
+- The character domain can represent all advancement choices needed to determine legality and downstream derivation for this slice, including subclass timing, feat/ASI choices, non-ASI feat choices where allowed, and level-19 Epic Boon decisions.
 - Multiclass legality is checked at the time of class entry using the character state that existed at that step.
-- The implementation does not keep contradictory peer-owned `classLevels` and advancement history state.
+- The implementation does not keep contradictory peer-owned `classLevels` and advancement history state, and does not keep legality-relevant advancement choices in unordered side channels outside the canonical advancement record.
+- Illegal feat timing is rejected: no early ASI, no early Epic Boon, and no legality-sensitive feat application on class levels that do not grant a feat choice.
 - Advancement updates HP, hit dice, proficiency-sensitive values, features, and slot structures through one derivation path.
 
 Research closeout:
@@ -422,6 +425,7 @@ Verification:
 - Read `.references/srd-5.2.1/Character-Creation.md` for multiclass prerequisites, level advancement, and higher-level starts.
 - Read `UBIQUITOUS_LANGUAGE.md` to confirm advancement remains on the owned `CharacterDraft` / `CharacterSheet` boundary and runtime facts remain projections.
 - Inspected the current TS and Quint ownership surfaces (`packages/core/src/character-domain.ts`, `packages/core/src/character-sheet-derived.ts`, `packages/core/src/features/class-tables.ts`, `packages/core/src/machine-spells.ts`, `creature.qnt`) plus both Ralph implementation worktrees and review reports.
+- Focused verification for the next rerun must include negative coverage for illegal early ASI / Epic Boon placement and positive coverage for subclass timing plus multiclass-entry legality at the moment of class pickup.
 - Did not run MBT because CHAR7 closeout in this merge is research/plan-only and the repo guidance forbids battle MBT for research tasks.
 
 Plan Impact:
