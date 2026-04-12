@@ -191,6 +191,164 @@ Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks ins
 6. `MCPA8` may proceed in parallel only if the loop intentionally chooses MCP work and does not touch the character-formalization ownership surfaces.
 7. Keep H and I deferred.
 
+## Task Bodies
+
+### Task 0 - CQ1 - Formal Character Creation Module
+
+Status: `ready-for-research`
+
+Depends on: none
+
+Blocks: `CQ2`, `CQ3`, `CQ4`
+
+Scope:
+
+- Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`.
+- Formalize `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics.
+- Ground the design in SRD 5.2.1 character-creation text and existing reusable helper semantics in [creature.qnt](../creature.qnt).
+- Update `POST1_FORMAL_CREATION_SEMANTICS.md` so it clearly points at the landed formal module and becomes deletion-ready once the full `CQ*` track is complete.
+
+Next action:
+
+- Start with RAW and ubiquitous-language review.
+- Pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization.
+
+Verification requirements:
+
+- Read the relevant SRD text in `.references/srd-5.2.1/` plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
+- Confirm all modeled rules trace to specific SRD passages.
+- Use deterministic Quint tests and the narrowest relevant parity surface.
+- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+
+### Task 1 - CQ2 - Formal Character Advancement Module
+
+Status: `blocked`
+
+Depends on: `CQ1`
+
+Blocks: `CQ3`, `CQ4`
+
+Scope:
+
+- After `CQ1` lands, implement `character.qnt` over finalized `CharacterSheet` semantics.
+- Cover `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as legal level-1 creation plus repeated legal advancement.
+- Update `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete.
+
+Next action:
+
+- Wait for `CQ1` to define the finalized-sheet boundary in Quint, then implement advancement semantics against that surface.
+
+Verification requirements:
+
+- Read the relevant SRD text in `.references/srd-5.2.1/` plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
+- Confirm all modeled rules trace to specific SRD passages.
+- Prefer deterministic Quint tests and narrow character/creature-level parity before any broader MBT.
+- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+
+### Task 2 - CQ3 - Character To Creature Projection Boundary
+
+Status: `blocked`
+
+Depends on: `CQ1`, `CQ2`
+
+Blocks: `CQ4`
+
+Scope:
+
+- After `CQ1` and `CQ2` land, implement the formal handoff from character semantics into creature-facing execution semantics.
+- Use the PRD's proposed `CharacterCreatureProjection` boundary and map it into `CharConfig`.
+- Remove or redirect remaining references that still treat `POST1` or `POST3` as the current design authority.
+
+Next action:
+
+- Do not size or implement the projection handoff before the formal creation and advancement layers settle.
+
+Verification requirements:
+
+- Keep the projection one-way and derived from character-owned facts.
+- Maintain parity with the authoritative Quint semantics and downstream bridge expectations.
+- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+
+### Task 3 - CQ4 - Character Quint Parity Harness
+
+Status: `blocked`
+
+Depends on: `CQ1`, `CQ2`, `CQ3`
+
+Blocks: none
+
+Scope:
+
+- After the formal modules land, add deterministic Quint tests and TypeScript parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary.
+- Target shared core functions rather than adapter shells.
+- Delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD.
+
+Next action:
+
+- Keep parity at shared-core depth; do not make MCP transport the first comparison target.
+
+Verification requirements:
+
+- Prefer deterministic Quint tests and narrow parity coverage over broader MBT.
+- Record any remaining documentation deletions or retained artifacts as part of closeout.
+- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+
+### Task 4 - MCPA8 - Monster Control And Legendary Action Surface
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: `MCPA1`, `MON3`
+
+Blocks: none
+
+Scope:
+
+- Use [MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md](./MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md) to implement generic `execute_control_command` routes for named monster legendary, recharge, and daily ability choice.
+- Wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`.
+- Keep non-attack legendary options deferred.
+
+Next action:
+
+- Re-check `.references/srd-5.2.1/Monsters/Overview.md` and [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md), then implement against the existing generic attack boundary.
+
+Verification requirements:
+
+- Read the relevant SRD text plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
+- Keep MCP ownership limited to the public action surface; do not introduce MCP-owned combat semantics.
+- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+
+### Task 5 - H - PassiveModifiers Sub-Record
+
+Status: `deferred`
+
+Depends on: none
+
+Blocks: none
+
+Scope:
+
+- Keep deferred unless the batch objective changes back toward MCP or action-surface cleanup.
+
+Next action:
+
+- Do not pick up in the current batch.
+
+### Task 6 - I - Build-Map / Hole Metadata
+
+Status: `deferred`
+
+Depends on: none
+
+Blocks: none
+
+Scope:
+
+- Keep deferred unless the batch objective changes back toward MCP or action-surface cleanup.
+
+Next action:
+
+- Do not pick up in the current batch.
+
 ## Archived Done Foundations
 
 Completed-task details were trimmed from the active execution artifact. Keep only the durable downstream findings here.
