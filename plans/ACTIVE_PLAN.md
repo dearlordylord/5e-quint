@@ -4,10 +4,11 @@ Date: 2026-04-11
 
 This is the single active planning queue.
 
-The previous MCP/battle follow-up queue is complete and has been removed from the active file. The active queue now contains two coordinated tracks:
+The previous MCP/battle follow-up queue is complete and has been removed from the active file. The active queue now contains two coordinated implementation tracks plus one deferred MCP backlog track:
 
 - the character-creation program defined in [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md);
 - the monster-database tracer-bullet rollout defined in [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md) and [monster-database-plan.md](./monster-database-plan.md).
+- the deferred MCP action-surface backlog summarized in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
 
 ## Batch Objective
 
@@ -139,6 +140,54 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "MON4",
       "status": "blocked",
       "title": "Hand-Authored SRD Dataset Expansion"
+    },
+    {
+      "number": 17,
+      "id": "MCPA1",
+      "status": "deferred",
+      "title": "Battle Attack Public Contract"
+    },
+    {
+      "number": 18,
+      "id": "MCPA2",
+      "status": "deferred",
+      "title": "Public Attack Action Slices"
+    },
+    {
+      "number": 19,
+      "id": "MCPA3",
+      "status": "deferred",
+      "title": "Spatial Action Public Contracts"
+    },
+    {
+      "number": 20,
+      "id": "MCPA4",
+      "status": "deferred",
+      "title": "Public Grapple Attack Slice"
+    },
+    {
+      "number": 21,
+      "id": "MCPA5",
+      "status": "deferred",
+      "title": "Battle Attack Rider Windows"
+    },
+    {
+      "number": 22,
+      "id": "MCPA6",
+      "status": "deferred",
+      "title": "Generic Spell Resolution Ownership"
+    },
+    {
+      "number": 23,
+      "id": "MCPA7",
+      "status": "deferred",
+      "title": "Semantic Table Event Expansion"
+    },
+    {
+      "number": 24,
+      "id": "MCPA8",
+      "status": "deferred",
+      "title": "Monster Control And Legendary Action Surface"
     }
   ]
 }
@@ -185,6 +234,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
 | 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
+| 17 | MCPA1 - Battle Attack Public Contract | deferred | none | MCPA2, MCPA5, MCPA8 | Keep deferred unless the batch objective changes back toward MCP/action-surface work. When reactivated, lock the strict public/runtime boundary for `BATTLE_ATTACK` first. | Detailed blockers live in `MCP_EVENT_SURFACE_AUDIT.md`; this is the shared prerequisite for most attack-shaped MCP work |
+| 18 | MCPA2 - Public Attack Action Slices | deferred | MCPA1 | none | Keep deferred. After `MCPA1`, expose the bounded public attack slices beginning with `BATTLE_ATTACK`, then `BATTLE_OFF_HAND_ATTACK` once the Light-property follow-through is wired. | Depends on the finalized battle attack contract rather than inventing separate payloads |
+| 19 | MCPA3 - Spatial Action Public Contracts | deferred | none | none | Keep deferred. If reprioritized, define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only. | No geometry owner in core or MCP; keep the contract aligned with `MCP_EVENT_SURFACE_AUDIT.md` |
+| 20 | MCPA4 - Public Grapple Attack Slice | deferred | none | none | Keep deferred. If reprioritized, expose `BATTLE_GRAPPLE` once the public contract for `targetId` plus resolved save outcome is wired cleanly. | Battle already owns Size legality; the remaining issue is public contract shape |
+| 21 | MCPA5 - Battle Attack Rider Windows | deferred | MCPA1 | none | Keep deferred. If reprioritized, add battle-owned rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE`. | Treat these as battle interrupt/hit windows, not creature-scope tokens |
+| 22 | MCPA6 - Generic Spell Resolution Ownership | deferred | none | none | Keep deferred. If reprioritized, decide and then implement the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces. | This is design-heavy and may stay partially research-first |
+| 23 | MCPA7 - Semantic Table Event Expansion | deferred | none | none | Keep deferred. If reprioritized, add narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas. | Prefer semantic commands over raw payload passthrough |
+| 24 | MCPA8 - Monster Control And Legendary Action Surface | deferred | MCPA1, MON3 | none | Keep deferred. If reprioritized, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice. | Depends on both the generic attack boundary and stable stat-block-owned monster action projection |
 
 ## Current Integrated Baseline
 
@@ -192,17 +249,17 @@ Already wired on `master` and relevant to this batch:
 
 - The repo's authoritative combat boundary remains `battle.qnt` plus `battle-machine.ts`.
 - `creature.qnt` already contains substantial construction and leveling helpers:
-  - `CharConfig`;
-  - point-buy validation;
-  - XP/level helpers;
-  - ASI helpers;
-  - multiclass prerequisite helpers;
-  - first-level and level-up HP helpers;
-  - class-level aggregation helpers.
+  - `CharConfig`
+  - point-buy validation
+  - XP/level helpers
+  - ASI helpers
+  - multiclass prerequisite helpers
+  - first-level and level-up HP helpers
+  - class-level aggregation helpers
 - TypeScript already contains several partial character-facing derivations:
-  - hit dice and multiclass prerequisites in `class-tables.ts`;
-  - slot derivation in `machine-spells.ts`;
-  - partial species combat traits in `species-traits.ts`.
+  - hit dice and multiclass prerequisites in `class-tables.ts`
+  - slot derivation in `machine-spells.ts`
+  - partial species combat traits in `species-traits.ts`
 - The current TS runtime starts from pre-derived combat inputs rather than an owned character-sheet model.
 - `start_battle` and current player loadouts are intentionally narrow and should be treated as transitional, not the long-term character architecture.
 
@@ -221,13 +278,14 @@ Planning note:
 - The post-`CHAR` queue is additive only; it does not revise the completed or in-flight `CHAR` tasks.
 - New work should extend the landed character-domain/product shape toward the revised PRD semantics rather than reopening the earlier ownership decisions.
 - `MON1` through `MON4` are the active monster track. They should reuse the landed monster ownership/provenance boundary and avoid racing `POST4` on shared projection/runtime refactors.
+- `MCPA1` through `MCPA8` are a deferred MCP backlog track. They are visible here so the overnight loop can reason about them, but they must stay deferred unless this file is explicitly reprioritized back toward MCP/action-surface work.
 
 ## Task Selection Guidance
 
 Recommended next coding-loop task:
 
 1. **CHAR7 - Level Advancement And Multiclass Continuation**
-   CHAR6 landed the thin workflow shell. The next slice should research how advancement extends the same owned character domain and reuses the landed sheet-derived projection path instead of inventing a parallel higher-level-start surface.
+   CHAR6 landed the thin workflow shell. The next slice should extend the same owned character domain and reuse the landed sheet-derived projection path instead of inventing a parallel higher-level-start surface.
 2. **MON2 - Second Monster Tracer Bullet**
    This is the safe parallel monster task as long as it stays on catalog/schema/provenance/projection work and does not introduce a new shared generic runtime facility.
 
@@ -246,304 +304,23 @@ Do not start `MON3` before checking whether the needed generic facility would co
 3. Monster work may proceed in parallel only on MON2 while it remains a catalog/provenance/projection slice and does not add a new shared generic runtime facility.
 4. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
 5. Keep `MON3` and `MON4` blocked until the tracer-bullet sequence proves the shared-surface path.
-6. Keep H and I deferred unless this file is explicitly reprioritized.
+6. Keep H, I, and `MCPA1` through `MCPA8` deferred unless this file is explicitly reprioritized.
 
-### Task 0 - CHAR1 - Canonical Character Domain
+## Archived Done Foundations
 
-Status: done.
+Completed-task details were trimmed from the active execution artifact. Keep only the durable downstream findings here.
 
-Depends on: none.
+- `CHAR1`: landed the canonical `CharacterDraft` / `CharacterSheet` boundary in core with `primaryClass + classLevels` as the owned class/level shape.
+- `CHAR2`: landed owned SRD score-generation, background score adjustments, and Standard-Language validation on the canonical sheet.
+- `CHAR3`: landed owned proficiency/subclass/class-resource build choices and validation on the canonical sheet.
+- `CHAR4`: landed owned equipment/loadout facts and one-way projection into creature/battle-facing loadout fields.
+- `CHAR5`: landed one owned derivation path for sheet numbers, spellcasting projection, machine input projection, and battle-init projection.
+- `CHAR6`: landed the thin `/character` workflow shell over `CharacterDraft` plus direct finalization/derivation reuse.
+- `MON1`: landed the canonical goblin tracer-bullet `StatBlock` with explicit SRD provenance and one projection path into generic battle/MCP surfaces.
 
-Blocks: CHAR2, CHAR3, CHAR4, CHAR5, CHAR6, CHAR7.
+Archive rule:
 
-Closeout:
-
-- Landed `packages/core/src/character-domain.ts` with explicit `CharacterDraft` and `CharacterSheet` concepts.
-- Chose `primaryClass + classLevels` as the canonical class/level shape to match `creature.qnt` and avoid duplicating total level on the sheet.
-- Kept the sheet bounded to owned creation facts for this slice: primary class, class-level progression, background, species, languages, and alignment.
-- Left ability scores, subclass gating, proficiencies, and equipment/spellcasting derivations for downstream tasks instead of front-loading them into CHAR1.
-
-Problem:
-
-- The repo can already project some combat-ready creature facts, but it does not own a canonical player-character model.
-- Current TS runtime inputs are combat-facing and pre-derived.
-- Current battle init wants projected combatants, not creation-time choices.
-- Future character-creation work will fragment immediately if the repo does not first define one owned PC domain model.
-
-Inputs:
-
-- [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md)
-- [character-creation-plan.md](./character-creation-plan.md)
-- [ARCHITECTURE.md](../ARCHITECTURE.md)
-- [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md)
-- [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
-- [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
-- [creature.qnt](../creature.qnt)
-- current TS runtime surfaces that consume pre-derived character facts
-
-Implementation output:
-
-- A canonical `CharacterDraft` model that can represent incomplete creation choices without fabricating finalized results.
-- A canonical `CharacterSheet` model that represents a validated SRD player character and remains distinct from monster `StatBlock`.
-- A documented boundary between:
-  - owned sheet facts;
-  - derived sheet results;
-  - runtime projection outputs.
-- A durable serialized sheet shape that keeps `languages` as an array and derives total level from `classLevels`.
-
-Acceptance criteria:
-
-- `CharacterDraft` and `CharacterSheet` exist as explicit owned concepts in core planning and implementation.
-- The canonical model records creation-time facts the SRD requires, including at minimum class, level, background, species, languages, and alignment.
-- The canonical model is not battle-owned and is not adapter-owned.
-- Finalization from draft to sheet rejects incomplete or contradictory states.
-- The chosen shape clearly distinguishes sheet-owned facts from projection-only runtime facts.
-
-Verification:
-
-- RAW check completed against `.references/srd-5.2.1/Character-Creation.md` and `.references/srd-5.2.1/Character-Origins.md`, then `UBIQUITOUS_LANGUAGE.md`.
-- Cross-check completed against `creature.qnt` construction/leveling helpers, especially `CharConfig.className`, `CharConfig.classLevels`, `ZERO_CLASS_LEVELS`, `singleClassLevels`, and `pTotalLevel`.
-- Focused tests added for the canonical-model finalization boundary in `packages/core/src/character-domain.test.ts`.
-- `/simplify` convergence:
-  - Round 1: removed the persistence-hostile `Set` language storage from the candidate design and kept total level derived instead of stored.
-  - Round 2: kept the module bounded to durable CHAR1 facts only; no further important simplifications remained.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR1`: marked `done`.
-  - `CHAR2`: unblocked and promoted to `ready-for-implementation-after-light-research`.
-  - `CHAR3`, `CHAR4`, `CHAR5`, `CHAR6`, `CHAR7`: no dependency change beyond inheriting the clarified `primaryClass + classLevels` ownership baseline.
-
-### Task 1 - CHAR2 - Score Generation And Origin Validation
-
-Status: done.
-
-Depends on: CHAR1.
-
-Blocks: CHAR3, CHAR5.
-
-Closeout:
-
-- Extended `CharacterDraft` and `CharacterSheet` with owned SRD score-generation choices, background ability-score increases, and derived final ability scores.
-- Added pure score helpers in `packages/core/src/character-ability-scores.ts` and extracted score-validation helpers into `packages/core/src/character-finalization-helpers.ts`.
-- Kept final modifiers derived via helpers instead of storing redundant modifier state on the sheet.
-- Tightened starting-language validation to the SRD Standard Languages table for this slice: exactly `Common` plus two other standard languages, with rare/special languages left for later feature-driven tasks.
-
-Acceptance criteria:
-
-- All three SRD score-generation modes are represented.
-- Point-buy legality is validated.
-- Background-based score adjustments are owned choices.
-- Species and language choices finalize into owned sheet facts.
-- Final scores derive final modifiers automatically.
-
-Verification:
-
-- RAW check completed against `.references/srd-5.2.1/Character-Creation.md` Step 2 and Step 3 plus `.references/srd-5.2.1/Character-Origins.md` background ability-score text, then cross-checked terminology in `UBIQUITOUS_LANGUAGE.md` for Character Sheet, Standard Array, Point Buy, and Ability Modifier.
-- Focused tests passed: `pnpm --dir packages/core exec vitest run src/character-domain.test.ts`.
-- Focused lint passed on touched files: `pnpm --dir packages/core exec eslint --no-inline-config -c eslint.config.mjs src/character-domain.ts src/character-domain.test.ts src/character-ability-scores.ts src/character-finalization-helpers.ts`.
-- Dependency graph check passed: `pnpm circular`.
-- Repo verification attempted: `pnpm quality` still fails before typecheck on pre-existing Prettier drift in unrelated core files (`src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`).
-- Existing repo typecheck baseline remains red outside this task when run directly via `pnpm --dir packages/core exec tsc --noEmit`; failures are in battle/runtime files unrelated to CHAR2.
-- `/simplify` convergence:
-  - Round 1: kept the canonical sheet as the owner of generation method, background increase choice, and derived final scores while removing the rejected worktree script rewrites from scope.
-  - Round 2: extracted score-validation helpers to a dedicated module to satisfy the repo file-size limit without adding duplicate state or parallel character models.
-  - Round 3: tightened starting-language validation to Standard Languages only for this slice; no further important simplifications remained.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR2`: marked `done`.
-  - `CHAR3`: unblocked and promoted to `ready-for-implementation-after-light-research`.
-  - `CHAR5`: remains `blocked`; it still depends on `CHAR3` and `CHAR4` despite inheriting the score/origin baseline from `CHAR2`.
-
-### Task 2 - CHAR3 - Proficiencies Features And Level-Gated Character Facts
-
-Status: done.
-
-Depends on: CHAR1, CHAR2.
-
-Blocks: CHAR4, CHAR5, CHAR7.
-
-Acceptance criteria:
-
-- Class/background/species/feat-driven proficiencies merge into one owned result.
-- Subclass gating is level-legal.
-- Multiclass prerequisites are validated on the character side.
-- Level-gated features and resource pools derive from owned sheet facts.
-
-Closeout:
-
-- Extended `packages/core/src/character-domain.ts` to keep explicit CHAR3 build choices on the canonical sheet rather than pushing them into adapters or runtime-only projections.
-- Added owned validation/derivation support for primary-class and multiclass skill picks, background tool picks, species skill picks, human Versatile origin-feat picks, subclass ownership, rogue/ranger granted-language choices, and class-feature choices that change proficiencies (`Divine Order`, `Primal Order`).
-- Landed merged proficiency/resource helpers in `packages/core/src/character-proficiencies.ts` and `packages/core/src/character-resources.ts`, with supporting data/types split into focused modules to stay under repo lint limits.
-- Kept `CharacterSheet` as the owned source of truth for explicit choices while deriving merged proficiencies and resource pools from those choices instead of storing parallel copies.
-
-Verification:
-
-- RAW check completed against:
-  - `.references/srd-5.2.1/Character-Creation.md`
-  - `.references/srd-5.2.1/Character-Origins.md`
-  - `.references/srd-5.2.1/Classes/Fighter.md`
-  - `.references/srd-5.2.1/Classes/Rogue.md`
-  - `.references/srd-5.2.1/Classes/Ranger.md`
-  - `.references/srd-5.2.1/Classes/Cleric.md`
-  - `.references/srd-5.2.1/Classes/Druid.md`
-  - `.references/srd-5.2.1/Classes/Paladin.md`
-  - `.references/srd-5.2.1/Classes/Bard.md`
-  - `.references/srd-5.2.1/Classes/Monk.md`
-  - `.references/srd-5.2.1/Feats.md`
-  - `UBIQUITOUS_LANGUAGE.md`
-- Focused verification passed:
-  - `pnpm --dir packages/core exec vitest run src/character-domain.test.ts`
-- Repo-wide verification attempted:
-  - `pnpm quality`
-  - still fails before typecheck on pre-existing Prettier drift in unrelated core files: `src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/features/spell-available-actions.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`
-- `/simplify` convergence:
-  - Round 1: collapsed the two rejected branch shapes into one bounded character-domain model with explicit build choices and no off-scope script edits.
-  - Round 2: split oversized validation/proficiency files into smaller modules (`character-build-choice-validation.ts`, `character-proficiency-data.ts`) and removed the remaining important duplication/structure issues.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR3`: marked `done`.
-  - `CHAR4`: unblocked and promoted to `ready-for-implementation-after-light-research`.
-  - `CHAR5`: no change; remains blocked behind `CHAR4`.
-  - `CHAR7`: no change; still blocked behind `CHAR5`.
-
-### Task 3 - CHAR4 - Equipment And Loadout Projection
-
-Status: done.
-
-Depends on: CHAR1, CHAR3.
-
-Blocks: CHAR5.
-
-Next action:
-
-- Replace narrow starter-loadout assumptions with owned sheet equipment/loadout facts and project them into combat-facing hand, armor, shield, and weapon facts.
-
-Acceptance criteria:
-
-- Starting equipment is modeled as actual choices.
-- The sheet owns combat-relevant loadout facts.
-- Creature and battle projection consume sheet-owned loadout data rather than narrow temporary presets.
-
-Closeout:
-
-- Landed owned `equipment` facts on `CharacterDraft` / `CharacterSheet`, including background/class package-vs-gold choices, purchased combat-relevant items, recorded remaining starting gold, and a bounded combat loadout.
-- Added SRD-backed combat equipment catalogs and starting-equipment package data for the current character-domain scope, keeping non-combat inventory simulation out of scope.
-- Added loadout validation that enforces ownership counts and hand-occupancy constraints without inventing non-RAW automatic versatile-hand defaults.
-- Added one-way battle projection from sheet-owned loadout facts into `mainHandWeapon`, `offHandWeapon`, `hasShieldEquipped`, `isWearingArmor`, and `mainHandUsesTwoHands`.
-- Updated the transitional `fighterStartBattleLoadout` / `start_battle` path to source those fields from a finalized canonical `CharacterSheet` instead of a narrow hardcoded preset.
-- Fixed the two-die weapon projection path so `greatsword` and `maul` preserve `diceCount: 2` through battle action resolution.
-
-Verification:
-
-- RAW check completed against `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Character-Origins.md`, `.references/srd-5.2.1/Classes/Fighter.md`, and `.references/srd-5.2.1/Equipment.md`, then cross-checked against `UBIQUITOUS_LANGUAGE.md`.
-- Focused tests passed:
-  - `pnpm --dir packages/core exec vitest run src/character-domain.test.ts src/available-actions.test.ts`
-  - `pnpm --dir packages/mcp exec vitest run src/server.test.ts -t "start_battle promotes the router onto a battle host using the fighter snapshot and monster stat block"`
-- Targeted lint passed on touched Task 3 files:
-  - `pnpm --filter @dnd/core exec eslint --no-inline-config -c eslint.config.mjs ...`
-  - `pnpm --filter @dnd/mcp exec eslint --no-inline-config -c eslint.config.mjs src/start-battle.ts src/server.test.ts`
-- Additional repo gates:
-  - `pnpm circular` passed.
-  - `pnpm quality` is currently blocked by pre-existing Prettier drift in unrelated core files (`context-encoding.ts`, `creature.mbt.test.ts`, `features/spell-available-actions.ts`, `machine-event-extractors.ts`, `machine-monk.ts`, `machine-queries.ts`, `machine-startturn.ts`, `machine.ts`).
-  - `pnpm --filter @dnd/core typecheck && pnpm --filter @dnd/mcp typecheck` is currently blocked by pre-existing unrelated core errors outside CHAR4-owned files.
-- `/simplify` convergence:
-  - Round 1: rejected the candidate branches' implicit versatile-hand defaults, missing ownership-count validation, and off-scope AC derivation; kept CHAR4 bounded to owned equipment/loadout facts plus battle-facing projection.
-  - Round 2: split the new equipment implementation into smaller data/projection/validation modules to satisfy repo file-size constraints and removed the remaining important duplication/structure issues.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR4`: marked `done`.
-  - `CHAR5`: unblocked and promoted to `ready-for-implementation-after-light-research`; it should now consume the owned equipment/loadout facts instead of re-deriving them from presets.
-  - `CHAR6`: no change; remains blocked behind `CHAR5`.
-  - `CHAR7`: no change; remains blocked behind `CHAR5`.
-
-### Task 4 - CHAR5 - Sheet-Derived Numbers And Spellcasting Projection
-
-Status: done.
-
-Depends on: CHAR1, CHAR2, CHAR3, CHAR4.
-
-Blocks: CHAR6, CHAR7.
-
-Closeout:
-
-- Extended `CharacterDraft` / `CharacterSheet` with owned class-keyed spellcasting selections, including Wizard spellbooks where the SRD requires them.
-- Landed `character-sheet-derived.ts` as the single derivation path for HP, Hit Dice, AC, initiative, saves, skills, passive Perception, slot state, spell save DC, spell attack bonus, machine input projection, and battle init projection.
-- Threaded battle init to consume projected slot state and projected readyable spell payloads instead of rebuilding them from the old caster preset.
-- Kept generic non-sheet runtime fallbacks intact for existing callers, but the owned sheet projection path now supplies prepared spells and slots directly so the character path no longer relies on runtime guessing.
-
-Acceptance criteria:
-
-- HP, Hit Dice, AC, initiative, saves, skills, passive Perception, slot structures, spell save DC, and spell attack bonus derive from one owned path.
-- Known/prepared spell choices are owned sheet facts, not runtime guesses.
-- Creature and battle runtime projection consume those owned facts without re-deriving them elsewhere.
-
-Verification:
-
-- RAW check completed against `.references/srd-5.2.1/Classes/Bard.md`, `Cleric.md`, `Ranger.md`, `Sorcerer.md`, `Wizard.md`, and `.references/srd-5.2.1/Spells/Gaining-and-Casting.md`, then cross-checked with `UBIQUITOUS_LANGUAGE.md` entries for Spell Save DC, Spell Attack, and Caster Type.
-- Focused tests passed: `cd packages/core && pnpm exec vitest run src/character-domain.test.ts src/character-sheet-derived.test.ts`.
-- Repo-required verification ran: `pnpm quality`. It still fails in pre-existing `packages/core` Prettier-check files outside CHAR5 (`src/context-encoding.ts`, `src/creature.mbt.test.ts`, `src/machine-event-extractors.ts`, `src/machine-monk.ts`, `src/machine-queries.ts`, `src/machine-startturn.ts`, `src/machine.ts`).
-- `/simplify` convergence:
-  - Round 1: extracted spellcasting tables/rule-threshold helpers into `character-spellcasting-data.ts` and trimmed the integration slice to stay under repo file-size limits.
-  - Round 2: removed unnecessary `character-domain.ts` spellcasting re-exports and kept the owned derivation path split at the canonical-domain boundary; no further important simplifications remained.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR5`: marked `done`.
-  - `CHAR6`: unblocked and promoted to `ready-for-research`.
-  - `CHAR7`: unblocked and promoted to `ready-for-research`.
-- Plan edits: updated task statuses, queue guidance, and CHAR5 closeout/verification notes.
-
-### Task 5 - CHAR6 - Guided Workflow Shell
-
-Status: done.
-
-Depends on: CHAR1, CHAR2, CHAR5.
-
-Blocks: none.
-
-Closeout:
-
-- Landed `/character` in `packages/app` as the thinnest product shell that keeps the SRD step order in UI state while storing only `CharacterDraft`.
-- Added local-storage draft persistence, example loaders, and step navigation without draft sanitization or workflow-owned derivation tables.
-- Reused direct domain finalization plus `deriveCharacterSheetNumbers`, `characterSheetMachineInput`, and `characterSheetBattleProjection` for the review surface.
-- Kept complex Step 5 ownership in the draft by editing `choices`, `equipment`, and `spellcasting` as raw JSON instead of recreating class-specific rule logic in the app.
-
-Acceptance criteria:
-
-- The product can guide a user through SRD creation steps while persisting `CharacterDraft`.
-- The workflow shell does not duplicate derivation or validation logic.
-- Finalization produces the same `CharacterSheet` as direct domain-level finalization.
-
-Verification:
-
-- RAW/product-language check completed against `.references/srd-5.2.1/Character-Creation.md`, `.references/srd-5.2.1/Character-Origins.md`, and `UBIQUITOUS_LANGUAGE.md` to keep the UI step order aligned with the SRD sequence and with the repo's `CharacterDraft` / `CharacterSheet` terminology.
-- Focused app verification passed: `pnpm --filter @dnd/app test -- CharacterCreationPage`
-- Focused touched-file lint passed: `pnpm --filter @dnd/app exec eslint src/components/character-creation src/entry.tsx`
-- `/simplify` convergence:
-  - Round 1: rejected both Ralph candidate patches, then replaced them with a thinner shell that removed UI-side issue-code mapping and destructive draft sanitization.
-  - Round 2: split the page into shell, step-content, presets, and shared helpers to satisfy the app file-size cap and remove mutable helper code; no further important simplifications remained.
-
-Plan Impact:
-
-- Status: applied
-- Affected tasks:
-  - `CHAR6`: marked `done`.
-  - `CHAR7`: no dependency change, but it becomes the recommended next task now that the workflow shell exists.
-  - `POST1`: no status change; it remains blocked on `CHAR7` in addition to `CHAR6`.
+- If a future task needs the full implementation history for a done foundation task, inspect git history instead of re-expanding this file.
 
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
@@ -709,24 +486,6 @@ Acceptance criteria:
 - The workflow shell does not become a second rules engine.
 - Runtime projection remains one-way derived from finalized owned character state.
 
-### Task 13 - MON1 - Canonical Goblin Tracer Bullet
-
-Status: done.
-
-Depends on: none.
-
-Blocks: MON2.
-
-Closeout:
-
-- Landed canonical goblin `StatBlock` records with explicit SRD provenance and authored sections.
-- Landed structural executable-vs-text-only monster ability types.
-- Landed one projection path from core-owned monster records into generic battle/MCP monster-init surfaces.
-
-Verification:
-
-- Verified in code via `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, `packages/core/src/monster-catalog-goblins.ts`, and the focused catalog/MCP tests already present in the repo.
-
 ### Task 14 - MON2 - Second Monster Tracer Bullet
 
 Status: ready-for-implementation-after-light-research.
@@ -792,3 +551,130 @@ Acceptance criteria:
 - New monster additions are primarily data entry and projection, not monster-specific engine work.
 - The project has an explicit report or audit view of unsupported ability patterns to drive later generic-facility work.
 - MCP, app, and other adapters continue consuming the core-owned stat block collection instead of maintaining parallel monster registries.
+
+### Task 17 - MCPA1 - Battle Attack Public Contract
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: MCPA2, MCPA5, MCPA8.
+
+Next action: Keep deferred unless the batch objective changes back toward MCP/action-surface work. When reactivated, finalize the strict public/runtime contract for `BATTLE_ATTACK` before picking up other attack-shaped MCP surfaces.
+
+Acceptance criteria:
+
+- One bounded public contract exists for the first safe `BATTLE_ATTACK` slice.
+- Battle-owned facts stay battle-owned; MCP/runtime supplies only explicit battle-external facts.
+- The resulting contract is reusable by later off-hand, legendary, and rider work rather than spawning parallel attack payload shapes.
+
+### Task 18 - MCPA2 - Public Attack Action Slices
+
+Status: deferred.
+
+Depends on: MCPA1.
+
+Blocks: none.
+
+Next action: Keep deferred. After `MCPA1`, expose the bounded public attack slices beginning with `BATTLE_ATTACK`, then `BATTLE_OFF_HAND_ATTACK` once the Light-property follow-through is wired.
+
+Acceptance criteria:
+
+- `BATTLE_ATTACK` is publicly callable through the agreed bounded contract.
+- `BATTLE_OFF_HAND_ATTACK` reuses the same contract rather than adding a second attack payload design.
+- Light-property and ability-modifier handling remain battle-owned and SRD-accurate.
+
+### Task 19 - MCPA3 - Spatial Action Public Contracts
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only.
+
+Acceptance criteria:
+
+- `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` have explicit public contracts over caller/session-owned facts.
+- Core and MCP do not gain a geometry owner, pathfinder, or persistent map model.
+- The public contract preserves the ownership findings in `MCP_EVENT_SURFACE_AUDIT.md`.
+
+### Task 20 - MCPA4 - Public Grapple Attack Slice
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, expose `BATTLE_GRAPPLE` once the public contract for `targetId` plus resolved save outcome is wired cleanly.
+
+Acceptance criteria:
+
+- `BATTLE_GRAPPLE` becomes publicly callable without reintroducing caller-owned size facts.
+- The remaining runtime save outcome stays explicit and honest in the public contract.
+
+### Task 21 - MCPA5 - Battle Attack Rider Windows
+
+Status: deferred.
+
+Depends on: MCPA1.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, add battle-owned rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE`.
+
+Acceptance criteria:
+
+- Rider windows are battle-owned and keyed off the correct pre-roll or post-hit timing window.
+- Creature MCP does not gain duplicate rider tokens that guess battle context.
+- Each rider consumes the right battle-owned legality and runtime/save facts.
+
+### Task 22 - MCPA6 - Generic Spell Resolution Ownership
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, decide and then implement the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces.
+
+Acceptance criteria:
+
+- The plan no longer relies on raw generic spell event passthrough.
+- Counterspell windows, save-failed reactions, and AoE per-target loops have an explicit owner before public exposure.
+- The resulting route is either a bounded semantic spell-action surface or a clearly owned table-event flow.
+
+### Task 23 - MCPA7 - Semantic Table Event Expansion
+
+Status: deferred.
+
+Depends on: none.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, add narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas.
+
+Acceptance criteria:
+
+- New public table-event routes are semantic and provenance-aware, not arbitrary raw payload passthrough.
+- Max-HP change and effect ownership stay aligned with the audit findings.
+- Environmental hazards use SRD-shaped progression semantics rather than current shortcut events.
+
+### Task 24 - MCPA8 - Monster Control And Legendary Action Surface
+
+Status: deferred.
+
+Depends on: MCPA1, MON3.
+
+Blocks: none.
+
+Next action: Keep deferred. If reprioritized, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice.
+
+Acceptance criteria:
+
+- Named monster-control routes derive legality and cost from core-owned stat-block data.
+- `BATTLE_LEGENDARY_ATTACK` reuses the generic attack boundary instead of introducing a monster-specific attack payload.
+- MCP and app continue consuming generic surfaces rather than monster-named adapter routes.
