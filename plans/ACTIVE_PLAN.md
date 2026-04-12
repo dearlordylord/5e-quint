@@ -174,7 +174,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
 | 5 | CHAR6 - Guided Workflow Shell | done | CHAR1, CHAR2, CHAR5 | none | Landed a thin `/character` workflow shell that persists `CharacterDraft`, keeps step order in the app surface, and renders canonical finalization plus derived projection outputs without UI-owned validation. | Complete |
-| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet`, but model the full level-gated choice surface: class taken each level, score-changing feat/ASI choices in order, and level-19 Epic Boon progression. Align `creature.qnt`, TS helpers, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 before landing code that depends on those cadences. | Research complete; implementation must replay ordered advancement choices, not just final class totals |
+| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet` with advancement history as the canonical legality record for higher-level starts and multiclass continuation. Model the full level-gated advancement choice surface needed for legality and downstream derivation: class taken each level, subclass selections when they occur, Ability Score Improvement feat choices, alternative feat choices where allowed, and level-19 Epic Boon choices. Reuse `creature.qnt` as the semantic source for XP thresholds, multiclass legality, HP growth, hit-die growth, proficiency progression, and caster-level/slot behavior, but align any stale helper semantics to SRD 5.2.1 before relying on them. Keep finalized `CharacterSheet` and `deriveCharacterSheetNumbers` as the single downstream projection path, and do not keep `classLevels` and advancement history as contradictory peer-owned facts. | Ready only if implementation treats ordered advancement as the canonical legality surface, includes feat/ASI/Epic Boon choices where they affect legality or derivation, and removes stale SRD cadence assumptions before landing |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | blocked | CHAR6, CHAR7 | POST2, POST4 | Once the current `CHAR` sequence is complete, formalize the creation draft/sheet semantics in Quint, keeping the landed TS character domain as the implementation baseline and parity target rather than rewriting the product shape from scratch. | Future post-`CHAR` phase; depends on current workflow and advancement research landing |
@@ -555,18 +555,21 @@ Blocks: none.
 
 Next action:
 
-- Implement an ordered level-up input over the existing `CharacterDraft` / `CharacterSheet` boundary instead of introducing a separate advanced-character product.
-- Reuse `creature.qnt` as the semantic source for XP thresholds, ASI/feat cadence, multiclass legality, HP growth, hit-die growth, and caster-level/slot behavior; update lower layers if the TS side needs new support rather than copying those tables into a new TS module.
-- Keep `deriveCharacterSheetNumbers` and the existing sheet-to-runtime projections as the single TS derivation path once a sheet is finalized.
-- Make higher-level starts replay legal level-up transitions; a final-sheet-only multiclass prerequisite check is insufficient because later ASIs cannot retroactively legalize an earlier multiclass entry.
+- Implement an owned `advancement` / level-history record on the character domain and make it the canonical source for validating higher-level starts and multiclass continuation.
+- Record every legality-relevant advancement choice in order: gained class each level, subclass picks when they occur, Ability Score Improvement feat choices, alternative feat choices, and level-19 Epic Boon choices.
+- Validate multiclass entry against the character state that existed at the moment the new class level was taken, not only against final-sheet scores.
+- Derive aggregate class totals, proficiency-sensitive values, HP/hit dice growth, and caster-level/slot projections from that ordered history through the existing finalization and sheet-derivation path.
+- Align TS helpers, `creature.qnt`, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 where current repo helpers still encode stale level-19 ASI assumptions.
 - Model the full ordered advancement choice surface rather than only class totals: each gained class level, score-changing feat/ASI choices, and level-19 Epic Boon choices where they affect legality or downstream derivation.
 - Align repo-owned traceability helpers to SRD 5.2.1 before depending on them; level 19 is an Epic Boon feature, not an Ability Score Improvement.
 
 Acceptance criteria:
 
-- Creation and advancement use the same owned character domain.
+- Higher-level starts are represented as legal ordered advancement over the same owned character domain, not a bespoke bootstrap path.
+- The character domain can represent all advancement choices needed to determine legality and downstream derivation for this slice, including feat/ASI and level-19 Epic Boon decisions.
+- Multiclass legality is checked at the time of class entry using the character state that existed at that step.
+- The implementation does not keep contradictory peer-owned `classLevels` and advancement history state.
 - Advancement updates HP, hit dice, proficiency-sensitive values, features, and slot structures through one derivation path.
-- Higher-level starts do not require bespoke runtime bootstrapping.
 
 Research closeout:
 
