@@ -596,6 +596,20 @@ Archived foundation summary:
 - The level-5 fighter preset is derived from the level-1 fighter draft by replaying canonical advancement transitions rather than duplicating a second authored draft blob.
 - Focused app tests cover the higher-level preset plus review-step advancement reopening required choices without introducing a second rules engine.
 
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Character-Creation.md` for character-creation ordering plus multiclass level-gain ownership, and `UBIQUITOUS_LANGUAGE.md` for shared creation terminology such as Standard Array and caster-type language. Task 12 does not add new rule semantics; it keeps the workflow aligned to those existing core-owned creation and advancement surfaces.
+- `/simplify` round 1: confirmed [packages/app/src/components/character-creation/CharacterCreationPage.tsx](/workspace/typescript/dnd/packages/app/src/components/character-creation/CharacterCreationPage.tsx) persists only `CharacterDraft`, calls `assessCharacterDraft()`, and renders review outputs from finalized-sheet projections instead of re-deriving sheet or runtime semantics in app state.
+- `/simplify` round 2: confirmed [packages/app/src/components/character-creation/characterCreationPresets.ts](/workspace/typescript/dnd/packages/app/src/components/character-creation/characterCreationPresets.ts) and [packages/core/src/character-sheet-advancement.ts](/workspace/typescript/dnd/packages/core/src/character-sheet-advancement.ts) keep higher-level presets and review-step level-up on the canonical sheet-to-draft path via `advanceCharacterSheet()` / `characterDraftFromSheet()` rather than a second authored higher-level draft or UI-owned advancement path.
+- Verification command: `pnpm quality`
+
+Plan Impact:
+
+- Status: none
+- Affected tasks:
+  - `POST4` - no-change; closeout updated to record required verification evidence only.
+- Plan edits: none
+
 ### Task 13 - MON1 - Canonical Goblin Tracer Bullet
 
 Status: done.
