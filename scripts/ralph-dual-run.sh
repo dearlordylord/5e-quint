@@ -535,9 +535,16 @@ Rules:
 - Output stop only when there is no meaningful runnable work left in the plan right now.
 - Do not edit repository files.
 
-Write exactly these lines and nothing else:
-Decision: run-task | stop
-Task: <number>\t<id> | none
+Write exactly one of these two forms and nothing else:
+
+Decision: run-task
+Task: <number>\t<id>
+Reason: <one concise sentence>
+
+or
+
+Decision: stop
+Task: none
 Reason: <one concise sentence>
 EOF
 }
@@ -650,11 +657,17 @@ parse_chooser_output() {
   node - "$chooser_output" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const decision = text.match(/^Decision:\s*(.+)$/m)?.[1]?.trim() ?? ""
-const task = text.match(/^Task:\s*(.+)$/m)?.[1]?.trim() ?? ""
+let decision = text.match(/^Decision:\s*(.+)$/m)?.[1]?.trim() ?? ""
+let task = text.match(/^Task:\s*(.+)$/m)?.[1]?.trim() ?? ""
 const reason = text.match(/^Reason:\s*(.+)$/m)?.[1]?.trim() ?? ""
 if (!decision || !task || !reason) {
   throw new Error("chooser output missing Decision/Task/Reason lines")
+}
+if (decision === "run-task | stop") {
+  decision = task === "none" ? "stop" : "run-task"
+}
+if (task === "<number>\\t<id> | none") {
+  throw new Error("chooser returned the task template instead of a concrete selection")
 }
 process.stdout.write(`${decision}\t${task}\t${reason}`)
 NODE
