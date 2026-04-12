@@ -3179,8 +3179,6 @@ module battle {
     val helper = bCreatures.get(activeId)
     nondet allyId = allIds.exclude(Set(activeId)).oneOf()
     nondet targetId = allIds.exclude(Set(activeId, allyId)).oneOf()
-    nondet helperCanSeeAlly = Bool.oneOf()
-    nondet helperCanSeeTarget = Bool.oneOf()
     nondet helperWithin5ftOfTarget = Bool.oneOf()
     val ally = bCreatures.get(allyId)
     val target = bCreatures.get(targetId)
@@ -3192,8 +3190,6 @@ module battle {
       not(isIncapacitated(helper.creature)),
       not(ally.creature.dead),
       not(target.creature.dead),
-      helperCanSeeAlly,
-      helperCanSeeTarget,
       helperWithin5ftOfTarget,
       val newTurn = pUseAction(helper.turn, helper.creature, AHelp)
       all {

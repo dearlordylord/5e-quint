@@ -4,20 +4,15 @@ Date: 2026-04-11
 
 This is the single active planning queue.
 
-The previous MCP/battle follow-up queue is complete and has been removed from the active file. The active queue now contains two coordinated tracks:
-
-- the character-creation program defined in [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md);
-- the monster-database tracer-bullet rollout defined in [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md) and [monster-database-plan.md](./monster-database-plan.md).
+The previous MCP/battle follow-up queue is complete and has been removed from the active file. The next coding-loop batch is the character-creation program defined in [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md).
 
 ## Batch Objective
 
-Land the current bounded implementation slices for SRD 5.2.1 character creation/character-sheet projection and the SRD monster database without:
+Land the first bounded implementation slices for SRD 5.2.1 character creation and character-sheet projection without:
 
 - duplicating character facts across app, MCP, creature runtime, or battle runtime;
-- duplicating monster-authored facts across core, MCP, app, or battle/runtime projections;
 - widening the main battle machine into a character builder;
 - introducing adapter-owned character registries;
-- introducing adapter-owned monster registries;
 - drifting away from the existing Quint construction/leveling semantics in `creature.qnt`.
 
 The coding loop should treat this file as the active queue. Do not start a task whose status is not `ready-for-implementation-after-light-research` or `ready-for-research` unless this file is updated first.
@@ -115,30 +110,6 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "POST4",
       "status": "blocked",
       "title": "Workflow And Projection Convergence"
-    },
-    {
-      "number": 13,
-      "id": "MON1",
-      "status": "done",
-      "title": "Canonical Goblin Tracer Bullet"
-    },
-    {
-      "number": 14,
-      "id": "MON2",
-      "status": "ready-for-implementation-after-light-research",
-      "title": "Second Monster Tracer Bullet"
-    },
-    {
-      "number": 15,
-      "id": "MON3",
-      "status": "blocked",
-      "title": "Advanced Pattern Tracer Bullet"
-    },
-    {
-      "number": 16,
-      "id": "MON4",
-      "status": "blocked",
-      "title": "Hand-Authored SRD Dataset Expansion"
     }
   ]
 }
@@ -174,17 +145,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 3 | CHAR4 - Equipment And Loadout Projection | done | CHAR1, CHAR3 | CHAR5 | Landed owned starting-equipment choices, leftover starting-gold tracking, bounded combat-equipment ownership, loadout validation, and battle-facing weapon/hand/shield/armor projection sourced from `CharacterSheet`. | Complete |
 | 4 | CHAR5 - Sheet-Derived Numbers And Spellcasting Projection | done | CHAR1, CHAR2, CHAR3, CHAR4 | CHAR6, CHAR7 | Landed owned spellcasting selections plus one `CharacterSheet` derivation path for sheet numbers, `DndMachineInput`, and battle init projection. | Complete |
 | 5 | CHAR6 - Guided Workflow Shell | done | CHAR1, CHAR2, CHAR5 | none | Landed a thin `/character` workflow shell that persists `CharacterDraft`, keeps step order in the app surface, and renders canonical finalization plus derived projection outputs without UI-owned validation. | Complete |
-| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet` with advancement history as the canonical legality record for higher-level starts and multiclass continuation. Model the full level-gated advancement choice surface needed for legality and downstream derivation: class taken each level, subclass selections when they occur, Ability Score Improvement feat choices, alternative feat choices where allowed, and level-19 Epic Boon choices. Reuse `creature.qnt` as the semantic source for XP thresholds, multiclass legality, HP growth, hit-die growth, proficiency progression, and caster-level/slot behavior, but align any stale helper semantics to SRD 5.2.1 before relying on them. Keep finalized `CharacterSheet` and `deriveCharacterSheetNumbers` as the single downstream projection path, and do not keep `classLevels` and advancement history as contradictory peer-owned facts. | Ready only if implementation treats ordered advancement as the canonical legality surface, includes feat/ASI/Epic Boon choices where they affect legality or derivation, and removes stale SRD cadence assumptions before landing |
+| 6 | CHAR7 - Level Advancement And Multiclass Continuation | ready-for-implementation-after-light-research | CHAR1, CHAR3, CHAR5 | none | Implement ordered level-up transitions over `CharacterDraft` / `CharacterSheet`, but model the full level-gated choice surface: class taken each level, score-changing feat/ASI choices in order, and level-19 Epic Boon progression. Align `creature.qnt`, TS helpers, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 before landing code that depends on those cadences. | Research complete; implementation must replay ordered advancement choices, not just final class totals |
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | blocked | CHAR6, CHAR7 | POST2, POST4 | Once the current `CHAR` sequence is complete, formalize the creation draft/sheet semantics in Quint, keeping the landed TS character domain as the implementation baseline and parity target rather than rewriting the product shape from scratch. | Future post-`CHAR` phase; depends on current workflow and advancement research landing |
 | 10 | POST2 - Open Choices And Selective Invalidation | blocked | POST1 | POST4 | Build the explicit `open choices` / `validation issues` / dependency-aware invalidation model on top of the immutable `CHAR` foundation so guided workflows can distinguish incompleteness from illegality. | Depends on formal creation semantics |
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | blocked | CHAR7, POST1 | POST4 | Formalize advancement as repeated legal level-up transitions over the same canonical sheet, then use that path for higher-level starts rather than bespoke bootstrapping. | Depends on advancement research plus formal creation semantics |
 | 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
-| 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
-| 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
-| 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
-| 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
 
 ## Current Integrated Baseline
 
@@ -212,15 +179,12 @@ Current architecture decisions for this batch:
 - Canonical class/level ownership is `primaryClass + classLevels`; total level is derived from `classLevels` instead of being stored twice.
 - Character creation must not be generalized into the main battle machine.
 - Runtime projections must flow from owned character data to creature/battle runtime, not the reverse.
-- Monster-authored data must remain core-owned and project exactly once into runtime/battle surfaces; MCP and app consume IDs or projections, not their own monster registries.
-- Shared battle/runtime facilities are sequenced resources: character and monster work may both use them, but only one task should reshape them at a time.
 
-Planning note:
+Post-`CHAR` planning note:
 
 - `CHAR1` through `CHAR7` are treated as immutable foundation for any appended work below.
 - The post-`CHAR` queue is additive only; it does not revise the completed or in-flight `CHAR` tasks.
 - New work should extend the landed character-domain/product shape toward the revised PRD semantics rather than reopening the earlier ownership decisions.
-- `MON1` through `MON4` are the active monster track. They should reuse the landed monster ownership/provenance boundary and avoid racing `POST4` on shared projection/runtime refactors.
 
 ## Task Selection Guidance
 
@@ -228,11 +192,8 @@ Recommended next coding-loop task:
 
 1. **CHAR7 - Level Advancement And Multiclass Continuation**
    CHAR6 landed the thin workflow shell. The next slice should research how advancement extends the same owned character domain and reuses the landed sheet-derived projection path instead of inventing a parallel higher-level-start surface.
-2. **MON2 - Second Monster Tracer Bullet**
-   This is the safe parallel monster task as long as it stays on catalog/schema/provenance/projection work and does not introduce a new shared generic runtime facility.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
-Do not start `MON3` before checking whether the needed generic facility would collide with active shared-surface work in `POST4` or other runtime/projection refactors.
 
 ## Recommended Coding Loop
 
@@ -243,10 +204,8 @@ Do not start `MON3` before checking whether the needed generic facility would co
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
 2. Execute CHAR7 next.
-3. Monster work may proceed in parallel only on MON2 while it remains a catalog/provenance/projection slice and does not add a new shared generic runtime facility.
-4. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
-5. Keep `MON3` and `MON4` blocked until the tracer-bullet sequence proves the shared-surface path.
-6. Keep H and I deferred unless this file is explicitly reprioritized.
+3. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
+4. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
 
@@ -555,21 +514,18 @@ Blocks: none.
 
 Next action:
 
-- Implement an owned `advancement` / level-history record on the character domain and make it the canonical source for validating higher-level starts and multiclass continuation.
-- Record every legality-relevant advancement choice in order: gained class each level, subclass picks when they occur, Ability Score Improvement feat choices, alternative feat choices, and level-19 Epic Boon choices.
-- Validate multiclass entry against the character state that existed at the moment the new class level was taken, not only against final-sheet scores.
-- Derive aggregate class totals, proficiency-sensitive values, HP/hit dice growth, and caster-level/slot projections from that ordered history through the existing finalization and sheet-derivation path.
-- Align TS helpers, `creature.qnt`, and `UBIQUITOUS_LANGUAGE.md` to SRD 5.2.1 where current repo helpers still encode stale level-19 ASI assumptions.
+- Implement an ordered level-up input over the existing `CharacterDraft` / `CharacterSheet` boundary instead of introducing a separate advanced-character product.
+- Reuse `creature.qnt` as the semantic source for XP thresholds, ASI/feat cadence, multiclass legality, HP growth, hit-die growth, and caster-level/slot behavior; update lower layers if the TS side needs new support rather than copying those tables into a new TS module.
+- Keep `deriveCharacterSheetNumbers` and the existing sheet-to-runtime projections as the single TS derivation path once a sheet is finalized.
+- Make higher-level starts replay legal level-up transitions; a final-sheet-only multiclass prerequisite check is insufficient because later ASIs cannot retroactively legalize an earlier multiclass entry.
 - Model the full ordered advancement choice surface rather than only class totals: each gained class level, score-changing feat/ASI choices, and level-19 Epic Boon choices where they affect legality or downstream derivation.
 - Align repo-owned traceability helpers to SRD 5.2.1 before depending on them; level 19 is an Epic Boon feature, not an Ability Score Improvement.
 
 Acceptance criteria:
 
-- Higher-level starts are represented as legal ordered advancement over the same owned character domain, not a bespoke bootstrap path.
-- The character domain can represent all advancement choices needed to determine legality and downstream derivation for this slice, including feat/ASI and level-19 Epic Boon decisions.
-- Multiclass legality is checked at the time of class entry using the character state that existed at that step.
-- The implementation does not keep contradictory peer-owned `classLevels` and advancement history state.
+- Creation and advancement use the same owned character domain.
 - Advancement updates HP, hit dice, proficiency-sensitive values, features, and slot structures through one derivation path.
+- Higher-level starts do not require bespoke runtime bootstrapping.
 
 Research closeout:
 
@@ -708,87 +664,3 @@ Acceptance criteria:
 - Workflow, formal semantics, and runtime projections all use one canonical draft/sheet story.
 - The workflow shell does not become a second rules engine.
 - Runtime projection remains one-way derived from finalized owned character state.
-
-### Task 13 - MON1 - Canonical Goblin Tracer Bullet
-
-Status: done.
-
-Depends on: none.
-
-Blocks: MON2.
-
-Closeout:
-
-- Landed canonical goblin `StatBlock` records with explicit SRD provenance and authored sections.
-- Landed structural executable-vs-text-only monster ability types.
-- Landed one projection path from core-owned monster records into generic battle/MCP monster-init surfaces.
-
-Verification:
-
-- Verified in code via `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, `packages/core/src/monster-catalog-goblins.ts`, and the focused catalog/MCP tests already present in the repo.
-
-### Task 14 - MON2 - Second Monster Tracer Bullet
-
-Status: ready-for-implementation-after-light-research.
-
-Depends on: MON1.
-
-Blocks: MON3, MON4.
-
-Next action:
-
-- Add one non-goblin SRD monster through the same owned `StatBlock` and projection path.
-- Prefer a monster that proves a materially different slice from goblins, such as spellcasting structure or a text-only unsupported authored ability.
-- Keep the slice bounded to catalog/schema/provenance/projection work unless the RAW makes a new shared generic facility unavoidable.
-
-Acceptance criteria:
-
-- At least one non-goblin SRD monster can be added without introducing a monster-specific runtime handler.
-- The new monster cites SRD provenance directly on the owned record.
-- The new monster reuses the same `StatBlock` and projection path as goblins.
-- Any unsupported authored ability on this monster is preserved structurally as text-only data instead of being dropped or silently improvised.
-
-Verification:
-
-- Read the relevant SRD monster passage in `.references/srd-5.2.1/Monsters/` and cross-check `UBIQUITOUS_LANGUAGE.md` before implementation.
-- Prefer focused catalog/projection tests over MBT. Do not run battle MBT unless the task actually changes battle semantics.
-
-### Task 15 - MON3 - Advanced Pattern Tracer Bullet
-
-Status: blocked.
-
-Depends on: MON2.
-
-Blocks: MON4.
-
-Next action:
-
-- After MON2 lands, add one monster that proves a repeated advanced pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility.
-- If a new shared runtime/projection facility is required, coordinate that change against the post-`CHAR` convergence queue before implementation so the same files are not being reshaped in parallel.
-
-Acceptance criteria:
-
-- At least one repeated advanced monster pattern is handled through a generic facility.
-- The chosen monster uses that generic facility through canonical authored sections rather than bespoke runtime code.
-- Unsupported advanced clauses remain present as text-only entries with explicit reasons instead of being silently discarded.
-- Public battle and MCP surfaces remain generic after the slice lands.
-
-### Task 16 - MON4 - Hand-Authored SRD Dataset Expansion
-
-Status: blocked.
-
-Depends on: MON2, MON3.
-
-Blocks: none.
-
-Next action:
-
-- Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset once the schema and advanced-pattern path are proven.
-- Keep unsupported patterns explicit so later generic-facility work has a grounded queue.
-
-Acceptance criteria:
-
-- The agreed SRD monster dataset exists as hand-authored core-owned stat block data with explicit SRD provenance.
-- New monster additions are primarily data entry and projection, not monster-specific engine work.
-- The project has an explicit report or audit view of unsupported ability patterns to drive later generic-facility work.
-- MCP, app, and other adapters continue consuming the core-owned stat block collection instead of maintaining parallel monster registries.

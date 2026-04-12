@@ -132,8 +132,6 @@ export type BattleEvent =
       readonly type: "BATTLE_HELP_ATTACK";
       readonly allyId: CreatureId;
       readonly targetId: CreatureId;
-      readonly helperCanSeeAlly: boolean;
-      readonly helperCanSeeTarget: boolean;
       readonly helperWithin5ftOfTarget: boolean;
     }
   | {
