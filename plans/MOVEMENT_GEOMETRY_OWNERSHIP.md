@@ -1,7 +1,5 @@
 # Movement And Help Geometry Ownership
 
-Task 12 decision note for public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
-
 This document is the source-of-truth decision for movement/help ownership.
 MCP surface planning and audits should conform to it.
 
@@ -9,27 +7,33 @@ MCP surface planning and audits should conform to it.
 
 Do not add a grid engine, pathfinding layer, or session-owned geometry subsystem to core, battle, or MCP.
 
-Movement remains a valid public/session-facing surface, but only as a thin
+Movement is still a valid public/session-facing surface, but only as a thin
 boundary over explicit caller-owned spatial facts. The battle layer owns
 movement economy and downstream rule consequences; it does not own coordinates,
 pathfinding, or geometric inference.
 
-Help remains a valid public/session-facing surface, but it does not need any
+Help is still a valid public/session-facing surface, but it does not need any
 geometry owner beyond one explicit proximity fact from the caller.
 
-Keep spatial facts as explicit caller/session-owned inputs:
+Caller/session code owns spatial relations. Battle consumes those facts and
+applies mechanical consequences.
+
+Specifically:
 
 - Visibility relations are caller/session-owned.
-- Path, destination, and difficult-terrain facts are caller/session-owned.
-- Reach-exit and threatened-creature facts are caller/session-owned, using battle-owned reach statistics as inputs.
-- Movement provocation classification stays caller/session-owned at the public boundary, while battle still owns downstream rule filters such as reaction availability and incapacitation.
-- Reach as a creature or weapon statistic remains core-owned, but "within reach now" and "left reach on this step" are spatial relations and therefore caller/session-owned.
+- Path, destination, difficult-terrain, reach-exit, and threatened-creature
+  facts are caller/session-owned.
+- Movement provocation classification is caller/session-owned at the public
+  boundary.
+- Reach as a creature or weapon statistic remains core-owned, but "within reach
+  now" and "left reach on this step" are spatial relations and therefore
+  caller/session-owned.
 
-## RAW-Constrained Help Conclusion
+## Rule Notes
 
-SRD 5.2.1 `Help [Action]` narrows the attack-help blocker more than the earlier
-audit text did: the helper must momentarily distract an enemy within 5 feet,
-but the rule does not require helper-to-ally or helper-to-target visibility.
+`Help [Action]` uses a fixed proximity rule: the distracted enemy must be
+within 5 feet of the helper when Help is taken. It does not require
+helper-to-ally or helper-to-target visibility.
 
 That means `BATTLE_HELP_ATTACK` only needs:
 
@@ -40,21 +44,23 @@ That means `BATTLE_HELP_ATTACK` only needs:
 
 The later attack still resolves with its own attack-legality visibility facts.
 
-## Movement Boundary
+Opportunity attacks use current melee reach, including reach weapons. The
+caller/session boundary therefore owns the reach-exit fact itself: for example,
+moving from 5 feet to 10 feet leaves a longsword user's reach but does not
+leave a pike user's reach.
 
-`BATTLE_MOVE` should stay checkpoint-based and accept caller/session spatial
-facts instead of positions or pathfinding internals:
+## Planning Implications
 
-- destination or path label
-- difficult-terrain cost beyond the engine's fixed 5-foot spend
-- whether the step crosses a reach-exit checkpoint
-- threatened creature set
-- provocation classification for movement that should not trigger opportunity attacks
+For PM handoff and future planning:
 
-Opportunity-attack legality depends on current melee reach, including reach
-weapons. The caller/session boundary therefore owns the reach-exit fact itself:
-for example, moving from 5 feet to 10 feet leaves a longsword user's reach but
-does not leave a pike user's reach.
+- Do not schedule grid, coordinate, line-drawing, or pathfinding ownership work
+  in core, battle, or MCP.
+- Any public/session-facing `BATTLE_MOVE` design must stay checkpoint-based and
+  accept explicit caller-owned movement facts.
+- Any public/session-facing `BATTLE_HELP_ATTACK` design must use only ally/target
+  choice plus helper-target 5-foot proximity.
+- If a proposed task depends on core or MCP deriving geometry, it conflicts with
+  this decision and should be rewritten or removed.
 
 ## References
 
