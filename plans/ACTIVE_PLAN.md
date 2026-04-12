@@ -329,6 +329,60 @@ Archive rule:
 
 - If a future task needs the full implementation history for a done foundation task, inspect git history instead of re-expanding this file.
 
+### Task 0 - CHAR1 - Canonical Character Domain
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed the canonical `CharacterDraft` / `CharacterSheet` boundary in core with finalization that rejects incomplete or contradictory origin/class/language/alignment state.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
+### Task 1 - CHAR2 - Score Generation And Origin Validation
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed owned SRD score-generation, background score adjustments, and Standard-Language validation on the canonical sheet.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
+### Task 2 - CHAR3 - Proficiencies Features And Level-Gated Character Facts
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed owned proficiency/subclass/class-resource build choices and validation on the canonical sheet.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
+### Task 3 - CHAR4 - Equipment And Loadout Projection
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed owned equipment/loadout facts and one-way projection into creature/battle-facing loadout fields.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
+### Task 4 - CHAR5 - Sheet-Derived Numbers And Spellcasting Projection
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed one owned derivation path for sheet numbers, spellcasting projection, machine input projection, and battle-init projection.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
+### Task 5 - CHAR6 - Guided Workflow Shell
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed the thin `/character` workflow shell over `CharacterDraft` plus direct finalization/derivation reuse.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
 ### Task 6 - CHAR7 - Level Advancement And Multiclass Continuation
 
 Status: ready-for-implementation-after-light-research.
