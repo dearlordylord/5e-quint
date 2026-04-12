@@ -10,10 +10,14 @@ describe("CharacterCreationPage", () => {
 
     render(<CharacterCreationPage />)
 
+    expect(screen.getByText("No illegal issues.")).toBeTruthy()
+    expect(screen.queryByText("No open choices.")).toBeNull()
+
     fireEvent.click(screen.getByRole("button", { name: "Load Cleric Example" }))
 
     expect(screen.getAllByText("Review And Projections").length).toBeGreaterThan(0)
     expect(screen.getByText("This review uses the direct domain-level finalization path.")).toBeTruthy()
+    expect(screen.getByText("Draft is ready for review.")).toBeTruthy()
     expect(screen.getByText("Battle Projection")).toBeTruthy()
 
     await waitFor(() => {
@@ -36,5 +40,13 @@ describe("CharacterCreationPage", () => {
     if (!(primaryClassSelect instanceof HTMLSelectElement)) throw new Error("expected primary class select")
     expect(primaryClassSelect.value).toBe("fighter")
     expect(screen.getByText("Current advancement")).toBeTruthy()
+  })
+
+  it("surfaces open choices separately from illegal state", () => {
+    render(<CharacterCreationPage />)
+
+    expect(screen.getByText(/\d+ required choice\(s\) remain open\./)).toBeTruthy()
+    expect(screen.getByText("No illegal issues.")).toBeTruthy()
+    expect(screen.getByText("missingBackground")).toBeTruthy()
   })
 })

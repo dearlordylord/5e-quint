@@ -103,7 +103,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 10,
       "id": "POST2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Open Choices And Selective Invalidation"
     },
     {
@@ -229,9 +229,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | done | CHAR6, CHAR7 | POST2, POST3, POST4 | Closed by `POST1_FORMAL_CREATION_SEMANTICS.md`: creation semantics should live in Quint draft/sheet records that mirror the landed TS domain, with ordered `advancement` retained as the legality surface and runtime kept as one-way projection. | Complete |
-| 10 | POST2 - Open Choices And Selective Invalidation | ready-for-implementation-after-light-research | POST1 | POST4 | Implement `OpenChoices` and dependency-aware invalidation on the settled `CharacterDraft` / `CharacterSheet` boundary from POST1 rather than on workflow state. | Ready once the implementer re-reads the POST1 note plus the SRD creation step order |
+| 10 | POST2 - Open Choices And Selective Invalidation | done | POST1 | POST4 | Landed core-owned `assessCharacterDraft()` and `applyCharacterDraftUpdate()` so the draft boundary now distinguishes open required choices from illegal state, preserves unrelated authored facts during backtracking, and lets the workflow show incomplete, invalid, and review-ready states separately. | Complete |
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | ready-for-implementation-after-light-research | CHAR7, POST1 | POST4 | Implement repeated legal sheet-to-sheet level-up transitions on the POST1 draft/sheet foundation, reusing ordered `advancement` rather than introducing a second leveling model. | Ready once the implementer re-reads the POST1 note plus SRD advancement/multiclass text |
-| 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
+| 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Blocked only on POST3 after POST2 landed |
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
 | 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
@@ -502,7 +502,7 @@ Plan Impact:
 
 ### Task 10 - POST2 - Open Choices And Selective Invalidation
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: POST1.
 

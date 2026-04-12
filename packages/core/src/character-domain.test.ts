@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assessCharacterDraft,
+  applyCharacterDraftUpdate,
   abilityModifiersFromScores,
   characterBattleEquipmentProjection,
   characterClassResources,
@@ -782,6 +784,120 @@ describe("character-domain", () => {
       "missingAlignment",
       "missingEquipmentChoices",
     ]);
+  });
+
+  it("distinguishes open choices from illegal issues on the draft boundary", () => {
+    const assessment = assessCharacterDraft({
+      ...completeDraft(),
+      languages: ["Common", "Elvish", "Elvish"],
+      choices: {
+        ...completeDraft().choices,
+        primaryClassSkills: ["acrobatics"],
+      },
+    });
+
+    expect(assessment.status).toBe("invalid");
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "wrongPrimaryClassSkillChoiceCount",
+    );
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "tooFewLanguages",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).toContain(
+      "duplicateLanguages",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).not.toContain(
+      "wrongPrimaryClassSkillChoiceCount",
+    );
+  });
+
+  it("treats an empty draft as incomplete rather than illegally shaped", () => {
+    const assessment = assessCharacterDraft({});
+
+    expect(assessment.status).toBe("incomplete");
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "missingPrimaryClass",
+    );
+    expect(assessment.issues).toEqual([]);
+  });
+
+  it("selectively invalidates only dependent choices when earlier authored facts change", () => {
+    const updated = applyCharacterDraftUpdate(completeDraft(), {
+      primaryClass: "wizard",
+      background: "acolyte",
+      species: "dwarf",
+    });
+
+    expect(updated.primaryClass).toBe("wizard");
+    expect(updated.advancement).toEqual([{ className: "wizard" }]);
+    expect(updated.backgroundAbilityScoreIncrease).toBeUndefined();
+    expect(updated.choices?.backgroundTool).toBeUndefined();
+    expect(updated.choices?.humanOriginFeat).toBeUndefined();
+    expect(updated.choices?.primaryClassSkills).toBeUndefined();
+    expect(updated.equipment?.loadout?.wieldedWeapon).toBeUndefined();
+    expect(updated.equipment?.loadout?.wieldedWeaponGrip).toBeUndefined();
+    expect(updated.languages).toEqual(["Common", "Dwarvish", "Elvish"]);
+  });
+
+  it("reopens overspent equipment and spellcasting-dependent extras after earlier choices change", () => {
+    const updated = applyCharacterDraftUpdate(
+      {
+        ...completeDraft({
+          primaryClass: "cleric",
+          advancement: singleClassAdvancement("cleric", 1),
+          background: "acolyte",
+          backgroundAbilityScoreIncrease: {
+            kind: "plusTwoPlusOne",
+            plusTwo: "wis",
+            plusOne: "int",
+          },
+          species: "dwarf",
+          choices: {
+            primaryClassSkills: ["history", "insight"],
+            clericDivineOrder: "thaumaturge",
+          },
+          spellcasting: {
+            cleric: {
+              cantrips: ["guidance", "light", "mending", "resistance"],
+              preparedSpells: [
+                "bless",
+                "cure_wounds",
+                "detect_magic",
+                "guiding_bolt",
+              ],
+            },
+          },
+          equipment: {
+            backgroundOption: "package",
+            classOption: "gold",
+            purchasedCombatEquipment: ["chainMail", "shield"],
+            remainingGoldPieces: 78,
+            loadout: {
+              wornArmor: "chainMail",
+              shield: true,
+            },
+          },
+        }),
+      },
+      {
+        choices: {
+          primaryClassSkills: ["history", "insight"],
+          clericDivineOrder: "protector",
+        },
+        background: "criminal",
+      },
+    );
+
+    expect(updated.choices?.clericDivineOrder).toBe("protector");
+    expect(updated.spellcasting?.cleric?.cantrips).toEqual([
+      "guidance",
+      "light",
+      "mending",
+    ]);
+    expect(updated.equipment?.purchasedCombatEquipment).toBeUndefined();
+    expect(updated.equipment?.remainingGoldPieces).toBeUndefined();
+    expect(updated.equipment?.loadout?.wornArmor).toBeUndefined();
+    expect(updated.equipment?.loadout?.shield).toBeUndefined();
   });
 
   it("rejects invalid standard-array and language assignments", () => {
