@@ -135,7 +135,7 @@ Every implementer, reviewer, and decider prompt includes the repo MBT guard: che
 
 Ralph task runs must never use the fuzz / overnight scripts (`./scripts/mbt-fuzz.sh`, `./scripts/fuzz-all.sh`, `./scripts/fuzz-overnight.sh`) and must never set `MBT_DEV=1` or `MBT_SAVE_TRACES=1`. If a task needs MBT verification, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
 
-Broad verification is diagnostic, not an automatic scope-expander. When lint/typecheck/test commands surface known pre-existing failures outside the touched ownership surface, agents should record that baseline noise and stop widening the task into repo-wide cleanup. Only failures caused by the task diff itself should be fixed inside that task; unrelated cleanup belongs in a separate task or sidecar investigation.
+Broad verification is diagnostic, not an automatic scope-expander. When lint/typecheck/test commands surface known pre-existing failures outside the touched ownership surface, agents should record that baseline noise and stop widening the task into repo-wide cleanup. Only failures caused by the task diff itself should be fixed inside that task; unrelated cleanup belongs in a separate task or sidecar investigation. Prompt behavior is intentionally strict here: once an agent confirms the failure is unrelated baseline noise, it should stop broad verification immediately instead of continuing to chase `pnpm quality`.
 
 The decider must leave the main worktree with no tracked staged or unstaged changes after each task. This makes git the persistent state boundary between task rotations.
 
