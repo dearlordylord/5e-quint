@@ -43,7 +43,7 @@ die() {
 }
 
 log() {
-  printf '[ralph-dual] %s\n' "$*"
+  printf '[ralph-dual] %s\n' "$*" >&2
 }
 
 note() {
