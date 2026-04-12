@@ -1021,8 +1021,6 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_HELP_ATTACK",
       allyId: CreatureId("B"),
       targetId: CreatureId("C"),
-      helperCanSeeAlly: true,
-      helperCanSeeTarget: true,
       helperWithin5ftOfTarget: true,
     });
     expect(ctx(actor).helpTargets).toEqual([
@@ -3956,8 +3954,6 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_HELP_ATTACK",
       allyId: CreatureId("B"),
       targetId: CreatureId("C"),
-      helperCanSeeAlly: true,
-      helperCanSeeTarget: true,
       helperWithin5ftOfTarget: true,
     });
     send(actor, {
@@ -4013,8 +4009,6 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_HELP_ATTACK",
       allyId: CreatureId("B"),
       targetId: CreatureId("C"),
-      helperCanSeeAlly: true,
-      helperCanSeeTarget: true,
       helperWithin5ftOfTarget: true,
     });
     send(actor, {

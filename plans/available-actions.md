@@ -49,7 +49,7 @@ remaining boundaries are:
 
 - battle attack runtime/session facts;
 - battle-owned Size for public grapple;
-- movement/help geometry or session ownership;
+- public movement/help token contract over caller-owned spatial facts;
 - monster stat-block payload ownership for legendary attacks;
 - raw effect/max-HP/environmental provenance;
 - later product work for `dm-override` and `transcript-port-to-dnd`.

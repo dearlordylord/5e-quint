@@ -2,9 +2,20 @@
 
 Task 12 decision note for public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
 
+This document is the source-of-truth decision for movement/help ownership.
+MCP surface planning and audits should conform to it.
+
 ## Decision
 
-Continue deferring the public movement/help surfaces. Do not add a grid engine, pathfinding layer, or session-owned geometry subsystem to core, battle, or MCP.
+Do not add a grid engine, pathfinding layer, or session-owned geometry subsystem to core, battle, or MCP.
+
+Movement remains a valid public/session-facing surface, but only as a thin
+boundary over explicit caller-owned spatial facts. The battle layer owns
+movement economy and downstream rule consequences; it does not own coordinates,
+pathfinding, or geometric inference.
+
+Help remains a valid public/session-facing surface, but it does not need any
+geometry owner beyond one explicit proximity fact from the caller.
 
 Keep spatial facts as explicit caller/session-owned inputs:
 
@@ -16,25 +27,34 @@ Keep spatial facts as explicit caller/session-owned inputs:
 
 ## RAW-Constrained Help Conclusion
 
-SRD 5.2.1 `Help [Action]` narrows the attack-help blocker more than the earlier audit text did: the helper must momentarily distract an enemy within 5 feet, but the rule does not require helper-to-ally or helper-to-target visibility.
+SRD 5.2.1 `Help [Action]` narrows the attack-help blocker more than the earlier
+audit text did: the helper must momentarily distract an enemy within 5 feet,
+but the rule does not require helper-to-ally or helper-to-target visibility.
 
-That means any future public `BATTLE_HELP_ATTACK` token only needs:
+That means `BATTLE_HELP_ATTACK` only needs:
 
 - `allyId`
 - `targetId`
-- one explicit caller/session fact for whether the target is within 5 feet of the helper
+- one explicit caller/session fact for whether the target is within 5 feet of
+  the helper
 
 The later attack still resolves with its own attack-legality visibility facts.
 
 ## Movement Boundary
 
-`BATTLE_MOVE` remains deferred, but the ownership split is now explicit. Any future public movement token should stay checkpoint-based and accept caller/session spatial facts instead of positions or pathfinding internals:
+`BATTLE_MOVE` should stay checkpoint-based and accept caller/session spatial
+facts instead of positions or pathfinding internals:
 
 - destination or path label
 - difficult-terrain cost beyond the engine's fixed 5-foot spend
 - whether the step crosses a reach-exit checkpoint
 - threatened creature set
 - provocation classification for movement that should not trigger opportunity attacks
+
+Opportunity-attack legality depends on current melee reach, including reach
+weapons. The caller/session boundary therefore owns the reach-exit fact itself:
+for example, moving from 5 feet to 10 feet leaves a longsword user's reach but
+does not leave a pike user's reach.
 
 ## References
 

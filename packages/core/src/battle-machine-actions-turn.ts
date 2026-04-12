@@ -782,8 +782,6 @@ export function battleHelpAttack({
     target == null ||
     ally.dead ||
     target.dead ||
-    !e.helperCanSeeAlly ||
-    !e.helperCanSeeTarget ||
     !e.helperWithin5ftOfTarget ||
     e.allyId === id ||
     e.targetId === id ||
