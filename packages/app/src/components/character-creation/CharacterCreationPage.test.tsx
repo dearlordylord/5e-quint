@@ -26,20 +26,7 @@ describe("CharacterCreationPage", () => {
       "dnd.characterDraft.v1",
       JSON.stringify({
         primaryClass: "fighter",
-        classLevels: {
-          barbarian: 0,
-          bard: 0,
-          cleric: 0,
-          druid: 0,
-          fighter: 1,
-          monk: 0,
-          paladin: 0,
-          ranger: 0,
-          rogue: 0,
-          sorcerer: 0,
-          warlock: 0,
-          wizard: 0
-        }
+        advancement: [{ className: "fighter" }]
       })
     )
 
@@ -48,6 +35,6 @@ describe("CharacterCreationPage", () => {
     const primaryClassSelect = screen.getByRole("combobox", { name: "Primary class" })
     if (!(primaryClassSelect instanceof HTMLSelectElement)) throw new Error("expected primary class select")
     expect(primaryClassSelect.value).toBe("fighter")
-    expect(screen.getByText("Current class levels")).toBeTruthy()
+    expect(screen.getByText("Current advancement")).toBeTruthy()
   })
 })

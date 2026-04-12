@@ -3865,8 +3865,9 @@ module creature {
   pure def pLevelUpHp(dieRoll: int, conMod: int): int =
     intMax(1, dieRoll + conMod)
 
-  /// Fighter gets extra ASI at 6, 14; Rogue at 10 — handled by caller's class features.
-  pure val ASI_LEVELS: Set[int] = Set(4, 8, 12, 16, 19)
+  /// Fighter gets extra feat slots at 6, 14; Rogue at 10 — handled by caller's class features.
+  /// Level 19 is an Epic Boon feature in SRD 5.2.1, not an ASI level.
+  pure val ASI_LEVELS: Set[int] = Set(4, 8, 12, 16)
 
   pure def pIsASILevel(level: int): bool = ASI_LEVELS.contains(level)
 

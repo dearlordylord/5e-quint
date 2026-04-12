@@ -1,4 +1,3 @@
-import type { CharacterAbilityScores } from "#/character-ability-scores.ts";
 import {
   CHARACTER_LANGUAGES,
   type CharacterClassLevels,
@@ -10,7 +9,6 @@ import {
   type CharacterOriginFeatSelection,
   type CharacterSkilledProficiencyChoice,
   CHARACTER_RARE_LANGUAGES,
-  SRD_SUBCLASSES,
 } from "#/character-feature-types.ts";
 import {
   BACKGROUND_SKILLS,
@@ -20,7 +18,7 @@ import {
   type Skill,
   validSpeciesSkillChoice,
 } from "#/character-proficiencies.ts";
-import { CLASS_NAMES, meetsMulticlassPrereq } from "#/features/class-tables.ts";
+import { CLASS_NAMES } from "#/features/class-tables.ts";
 
 function validateSkillSelection(
   skills: ReadonlyArray<Skill>,
@@ -242,12 +240,37 @@ function validateSkilledSelection(
 export function validateFeatChoices(
   draft: CharacterDraft,
 ): ReadonlyArray<CharacterFinalizationIssue> {
-  return draft.choices?.humanOriginFeat == null
-    ? []
-    : validateSkilledSelection(
-        draft.choices.humanOriginFeat,
-        "human Versatile",
-      );
+  const issues =
+    draft.choices?.humanOriginFeat == null
+      ? []
+      : [
+          ...validateSkilledSelection(
+            draft.choices.humanOriginFeat,
+            "human Versatile",
+          ),
+        ];
+
+  for (const [index, entry] of (draft.advancement ?? []).entries()) {
+    const choice = entry.feat?.choice;
+    if (
+      choice == null ||
+      choice.tag === "abilityScoreImprovement" ||
+      choice.featId !== "skilled"
+    ) {
+      continue;
+    }
+    issues.push(
+      ...validateSkilledSelection(
+        {
+          feat: "skilled",
+          proficiencies: choice.proficiencies ?? [],
+        },
+        `advancement level ${index + 1}`,
+      ),
+    );
+  }
+
+  return issues;
 }
 
 export function validateFeatureChoices(
@@ -275,45 +298,8 @@ export function validateSubclassSelections(
   classLevels: CharacterClassLevels,
 ): ReadonlyArray<CharacterFinalizationIssue> {
   const issues: CharacterFinalizationIssue[] = [];
-  const subclassSelections = draft.choices?.subclassSelections ?? {};
-
-  for (const className of CLASS_NAMES) {
-    const selection = subclassSelections[className];
-    const requiresSubclass = classLevels[className] >= 3;
-    if (requiresSubclass && selection == null) {
-      issues.push({
-        code: "missingSubclassSelection",
-        message: `${className} level ${classLevels[className]} requires a subclass selection.`,
-      });
-      continue;
-    }
-    if (!requiresSubclass && selection != null) {
-      issues.push({
-        code: "prematureSubclassSelection",
-        message: `${className} cannot choose a subclass before level 3.`,
-      });
-      continue;
-    }
-    if (selection != null) {
-      if (selection.className !== className) {
-        issues.push({
-          code: "invalidSubclassSelection",
-          message: `Subclass selection for ${className} must be owned by ${className}.`,
-        });
-      }
-      if (
-        !(SRD_SUBCLASSES[className] as ReadonlyArray<string>).includes(
-          selection.subclass,
-        )
-      ) {
-        issues.push({
-          code: "invalidSubclassSelection",
-          message: `"${selection.subclass}" is not an SRD subclass for ${className}.`,
-        });
-      }
-    }
-  }
-
+  void draft;
+  void classLevels;
   return issues;
 }
 
@@ -373,27 +359,6 @@ export function validateGrantedLanguages(
   return issues;
 }
 
-export function validateMulticlassPrerequisites(
-  classLevels: CharacterClassLevels,
-  abilityScores: CharacterAbilityScores,
-): ReadonlyArray<CharacterFinalizationIssue> {
-  const classesWithLevels = CLASS_NAMES.filter(
-    (className) => classLevels[className] > 0,
-  );
-  if (classesWithLevels.length <= 1) return [];
-
-  return classesWithLevels.flatMap((className) =>
-    meetsMulticlassPrereq(abilityScores, className)
-      ? []
-      : [
-          {
-            code: "multiclassPrerequisiteNotMet" as const,
-            message: `Multiclass prerequisite not met for ${className}.`,
-          },
-        ],
-  );
-}
-
 export function validateDuplicateGrantedProficiencies(
   draft: CharacterDraft,
 ): ReadonlyArray<CharacterFinalizationIssue> {
@@ -413,6 +378,16 @@ export function validateDuplicateGrantedProficiencies(
   const skilledSelections: CharacterSkilledProficiencyChoice[] = [];
   if (draft.choices?.humanOriginFeat?.feat === "skilled") {
     skilledSelections.push(...draft.choices.humanOriginFeat.proficiencies);
+  }
+  for (const entry of draft.advancement ?? []) {
+    const choice = entry.feat?.choice;
+    if (
+      choice != null &&
+      choice.tag !== "abilityScoreImprovement" &&
+      choice.featId === "skilled"
+    ) {
+      skilledSelections.push(...(choice.proficiencies ?? []));
+    }
   }
   for (const selection of skilledSelections) {
     if (

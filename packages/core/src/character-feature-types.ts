@@ -108,6 +108,12 @@ export type CharacterSkilledProficiencyChoice =
   | Skill
   | CharacterToolProficiency;
 
+type AdvancementFeatData = {
+  readonly featId: string;
+  readonly abilityScoreIncrease?: Ability;
+  readonly proficiencies?: ReadonlyArray<CharacterSkilledProficiencyChoice>;
+};
+
 export interface SkilledOriginFeatSelection {
   readonly feat: "skilled";
   readonly proficiencies: ReadonlyArray<CharacterSkilledProficiencyChoice>;
@@ -128,6 +134,29 @@ export type CharacterOriginFeatSelection =
   | SkilledOriginFeatSelection
   | MagicInitiateOriginFeatSelection
   | SimpleOriginFeatSelection;
+
+export interface AbilityScoreImprovementChoice {
+  readonly tag: "abilityScoreImprovement";
+  readonly abilities: readonly [Ability] | readonly [Ability, Ability];
+}
+
+export interface GeneralFeatChoice extends AdvancementFeatData {
+  readonly tag: "feat";
+}
+
+export interface EpicBoonFeatChoice extends AdvancementFeatData {
+  readonly tag: "epicBoon";
+}
+
+export type CharacterAdvancementChoice =
+  | AbilityScoreImprovementChoice
+  | GeneralFeatChoice
+  | EpicBoonFeatChoice;
+
+export interface CharacterAdvancementFeatSelection {
+  readonly slot: "feat" | "epicBoon";
+  readonly choice: CharacterAdvancementChoice;
+}
 
 export const SRD_SUBCLASSES = {
   barbarian: ["berserker"],
@@ -150,6 +179,12 @@ export type CharacterSubclassSelection = {
     readonly subclass: (typeof SRD_SUBCLASSES)[K][number];
   };
 }[ClassName];
+
+export interface CharacterAdvancementEntry {
+  readonly className: ClassName;
+  readonly subclass?: CharacterSubclassSelection;
+  readonly feat?: CharacterAdvancementFeatSelection;
+}
 
 export const CLERIC_DIVINE_ORDERS = ["protector", "thaumaturge"] as const;
 export type ClericDivineOrder = (typeof CLERIC_DIVINE_ORDERS)[number];
@@ -177,9 +212,6 @@ export interface CharacterBuildChoices {
   readonly rangerDeftExplorerLanguages?: ReadonlyArray<CharacterGrantedLanguage>;
   readonly clericDivineOrder?: ClericDivineOrder;
   readonly druidPrimalOrder?: DruidPrimalOrder;
-  readonly subclassSelections?: Partial<
-    Readonly<Record<ClassName, CharacterSubclassSelection>>
-  >;
 }
 
 export interface CharacterProficiencySummary {

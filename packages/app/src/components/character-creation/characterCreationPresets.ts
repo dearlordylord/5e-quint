@@ -1,9 +1,9 @@
 import type { CharacterDraft } from "@dnd/core/character-domain.ts"
-import { singleClassLevels } from "@dnd/core/character-domain.ts"
+import { singleClassAdvancement } from "@dnd/core/character-domain.ts"
 
 export const FIGHTER_EXAMPLE_DRAFT: CharacterDraft = {
   primaryClass: "fighter",
-  classLevels: singleClassLevels("fighter", 1),
+  advancement: singleClassAdvancement("fighter", 1),
   background: "soldier",
   abilityScoreGeneration: {
     mode: "standardArray",
@@ -46,7 +46,7 @@ export const FIGHTER_EXAMPLE_DRAFT: CharacterDraft = {
 
 export const CLERIC_EXAMPLE_DRAFT: CharacterDraft = {
   primaryClass: "cleric",
-  classLevels: singleClassLevels("cleric", 1),
+  advancement: singleClassAdvancement("cleric", 1),
   background: "acolyte",
   abilityScoreGeneration: {
     mode: "standardArray",

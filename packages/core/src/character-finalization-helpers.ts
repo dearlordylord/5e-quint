@@ -157,10 +157,18 @@ export function validateDraftFields(
     });
   }
   if (draft.classLevels == null) {
-    issues.push({
-      code: "missingClassLevels",
-      message: "CharacterDraft requires class levels before finalization.",
-    });
+    if (draft.advancement == null) {
+      issues.push({
+        code: "missingClassLevels",
+        message:
+          "CharacterDraft requires either class levels or advancement before finalization.",
+      });
+      issues.push({
+        code: "missingAdvancement",
+        message:
+          "Higher-level starts and multiclass characters must record ordered advancement history before finalization.",
+      });
+    }
   }
   for (const className of CLASS_NAMES) {
     if (!isValidClassLevel(classLevels[className])) {
@@ -181,6 +189,13 @@ export function validateDraftFields(
     issues.push({
       code: "primaryClassLevelMissing",
       message: "Primary class must have at least one class level.",
+    });
+  }
+  if (draft.advancement == null && totalLevel > 1) {
+    issues.push({
+      code: "advancementRequiredForHigherLevelStart",
+      message:
+        "Higher-level starts and multiclass continuation must be represented as ordered advancement history.",
     });
   }
 

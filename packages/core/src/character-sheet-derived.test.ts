@@ -6,25 +6,40 @@ import {
   characterSheetMachineInput,
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
+import type { ClassName } from "#/features/class-tables.ts";
 
 describe("character-sheet-derived", () => {
+  const alertFeat = {
+    slot: "feat",
+    choice: { tag: "feat", featId: "alert" },
+  } as const;
+
+  function advancementEntry(
+    className: ClassName,
+    entry: Omit<
+      NonNullable<
+        Parameters<typeof finalizeCharacterDraft>[0]["advancement"]
+      >[number],
+      "className"
+    > = {},
+  ): NonNullable<
+    Parameters<typeof finalizeCharacterDraft>[0]["advancement"]
+  >[number] {
+    return { className, ...entry };
+  }
+
   function finalizeSorcererSheet() {
     const result = finalizeCharacterDraft({
       primaryClass: "sorcerer",
-      classLevels: {
-        barbarian: 0,
-        bard: 0,
-        cleric: 0,
-        druid: 0,
-        fighter: 0,
-        monk: 0,
-        paladin: 0,
-        ranger: 0,
-        rogue: 0,
-        sorcerer: 5,
-        warlock: 0,
-        wizard: 0,
-      },
+      advancement: [
+        advancementEntry("sorcerer"),
+        advancementEntry("sorcerer"),
+        advancementEntry("sorcerer", {
+          subclass: { className: "sorcerer", subclass: "draconic" },
+        }),
+        advancementEntry("sorcerer", { feat: alertFeat }),
+        advancementEntry("sorcerer"),
+      ],
       background: "acolyte",
       abilityScoreGeneration: {
         mode: "randomGeneration",
@@ -48,9 +63,6 @@ describe("character-sheet-derived", () => {
       choices: {
         primaryClassSkills: ["arcana", "persuasion"],
         speciesSkill: "perception",
-        subclassSelections: {
-          sorcerer: { className: "sorcerer", subclass: "draconic" },
-        },
       },
       spellcasting: {
         sorcerer: {
@@ -100,20 +112,7 @@ describe("character-sheet-derived", () => {
   it("requires owned spellcasting choices before finalizing a spellcaster", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "wizard",
-      classLevels: {
-        barbarian: 0,
-        bard: 0,
-        cleric: 0,
-        druid: 0,
-        fighter: 0,
-        monk: 0,
-        paladin: 0,
-        ranger: 0,
-        rogue: 0,
-        sorcerer: 0,
-        warlock: 0,
-        wizard: 1,
-      },
+      advancement: [advancementEntry("wizard")],
       background: "sage",
       abilityScoreGeneration: {
         mode: "standardArray",
@@ -158,20 +157,19 @@ describe("character-sheet-derived", () => {
   it("validates class-specific spell levels instead of multiclass slot levels", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "ranger",
-      classLevels: {
-        barbarian: 0,
-        bard: 0,
-        cleric: 0,
-        druid: 0,
-        fighter: 0,
-        monk: 0,
-        paladin: 0,
-        ranger: 4,
-        rogue: 0,
-        sorcerer: 3,
-        warlock: 0,
-        wizard: 0,
-      },
+      advancement: [
+        advancementEntry("ranger"),
+        advancementEntry("ranger"),
+        advancementEntry("ranger", {
+          subclass: { className: "ranger", subclass: "hunter" },
+        }),
+        advancementEntry("ranger", { feat: alertFeat }),
+        advancementEntry("sorcerer"),
+        advancementEntry("sorcerer"),
+        advancementEntry("sorcerer", {
+          subclass: { className: "sorcerer", subclass: "draconic" },
+        }),
+      ],
       background: "soldier",
       abilityScoreGeneration: {
         mode: "standardArray",

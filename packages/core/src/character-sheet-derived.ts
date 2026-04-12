@@ -1,6 +1,7 @@
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import { characterBattleEquipmentProjection } from "#/character-equipment.ts";
 import {
+  characterSubclassSelections,
   characterProficiencySummary,
   finalAbilityModifiers,
   type CharacterSheet,
@@ -346,6 +347,9 @@ export function characterSheetBattleProjection(
 ): CharacterBattleProjection {
   const abilityModifiers = finalAbilityModifiers(sheet);
   const derived = deriveCharacterSheetNumbers(sheet);
+  const fighterSubclass = characterSubclassSelections(sheet).find(
+    (selection) => selection.className === "fighter",
+  );
 
   return {
     maxHp: derived.maxHp,
@@ -370,7 +374,7 @@ export function characterSheetBattleProjection(
     pactSlotsCurrent: derived.spellcasting.pactSlotsCurrent,
     pactSlotLevel: derived.spellcasting.pactSlotLevel,
     critRange:
-      sheet.choices.subclassSelections?.fighter?.subclass === "champion"
+      fighterSubclass?.subclass === "champion"
         ? championCritRange(sheet.classLevels.fighter)
         : 20,
     sneakAttackDice: sneakAttackDice(sheet.classLevels.rogue),
