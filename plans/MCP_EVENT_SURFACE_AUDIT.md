@@ -2,259 +2,174 @@
 
 ## Status
 
-Audit completed against the current worktree on 2026-04-09.
-Table-event wrap checked on 2026-04-10 after Tasks 6-10.
-Attack rider trigger ownership confirmed on 2026-04-10 after Task 16.
-Attack rider and Light-property extra-attack blockers refined on 2026-04-10 after Task 21.
-Final surface audit sweep on 2026-04-10 after Task 24: all 154 events inventoried, classified, and verified against source types. Druid tokens from Task 13 are marked as wired.
+This file is the durable MCP event-surface backlog reference.
 
-This is a read-only audit of MCP event surfaces. It does not propose raw event-count coverage as a completion metric, and it intentionally excludes transcript-port-to-dnd implementation.
+- Keep it lean and forward-looking.
+- Do not use raw event-count coverage as a completion metric.
+- For every deferred item, keep one clear owning surface and one clear blocker list.
+
+The exhaustive per-event inventory work is complete and no longer lives here. This file keeps only the findings that still matter for future MCP work.
 
 ## Purpose
 
-We need to decide which core events should be exposed through MCP and how.
+The audit question is:
 
-The wrong question is:
+- "For each core event we may want publicly callable, which MCP surface owns it, and what specifically still blocks it?"
 
-- "How many `DndEvent` / `BattleEvent` variants are exposed as `get_available_actions` tokens?"
+Not all core events should become `get_available_actions` tokens. Some belong on `execute_control_command`, some on `record_table_event`, and many should remain internal `action_resolution`, `domain_trigger`, or `bookkeeping`.
 
-The right question is:
+## Current MCP Surfaces
 
-- "For each core event, which MCP surface owns it?"
+Current MCP tools are:
 
-Some events are player options. Some are DM/session facts. Some are runtime resolution events. Some are internal trigger windows. Treating all of them as `get_available_actions` gaps would produce bad API design.
+- `get_state`
+- `get_available_actions`
+- `execute_action`
+- `preview_action`
+- `execute_control_command`
+- `record_table_event`
 
-## Audit Sources
+Current intentionally public routes:
 
-- [available-actions.md](./available-actions.md)
-- [ARCHITECTURE.md](../ARCHITECTURE.md) section 5
-- [available-actions.ts](../packages/core/src/available-actions.ts)
-- [machine-types.ts](../packages/core/src/machine-types.ts)
-- [battle-machine-events.ts](../packages/core/src/battle-machine-events.ts)
-- [server.ts](../packages/mcp/src/server.ts)
+- `get_available_actions` / `execute_action`: ordinary creature and battle suggested actions, plus a few lifecycle actions that carry user choices or runtime-owned resolution (`SHORT_REST`, `START_TURN`, `ENTER_COMBAT`, `EXIT_COMBAT`).
+- `execute_control_command`: battle/session/turn control that should not mix into ordinary player suggestions.
+- `record_table_event`: DM/table/world facts with warning-aware semantics.
 
-Current workspace counts from the audited files:
+Current intentionally hidden routes:
 
-| Surface | Count |
-| --- | ---: |
-| Creature-scoped MCP action tokens (`get_available_actions`) | 48 |
-| Battle-scoped MCP action tokens (`get_available_actions`) | 25 |
-| Total current MCP action-token types | 73 |
-| Control commands wired (`execute_control_command`) | 6 |
-| Table events wired (`record_table_event`) | 14 |
-| Creature core event variants | 112 |
-| Battle core event variants | 42 |
-| Total core event variants | 154 |
+- `action_resolution`: low-level reaction, dice, and branch-resolution events emitted after a public action or table event.
+- `domain_trigger`: internal semantic triggers that open pending windows for later public actions.
+- `bookkeeping`: internal state accounting behind higher-level semantics.
 
-Raw event exposure remains the wrong completion metric: some public tokens wrap lower-level resolution events, and control/table commands deliberately live outside `get_available_actions`. The final audit question is whether every event has either an MCP path, a named domain-ownership blocker, or an intentional hidden classification.
+## Durable Findings
 
-Current MCP tools are `get_state`, `get_available_actions`, `execute_action`, `preview_action`, `execute_control_command`, and `record_table_event`. Control commands for battle setup, battle turn lifecycle, legendary-action pass, creature turn end, and creature long rest are wired. Creature damage/recovery, condition/exhaustion, falling, voluntary concentration-break, and failed-save/check semantic trigger table events are wired. Battle `BATTLE_HEAL` table event is wired. Battle spatial actions (`BATTLE_HIDE`, `BATTLE_SEARCH`, `BATTLE_ESCAPE_GRAPPLE`, `BATTLE_RELEASE_GRAPPLE`) and battle feature actions (`BATTLE_ACTION_SURGE`, `BATTLE_ENTER_RAGE`, `BATTLE_DECLARE_RECKLESS`) are wired through `get_available_actions`. Creature class feature actions for Warlock (`USE_MAGICAL_CUNNING`), Sorcerer (`USE_INNATE_SORCERY`), and Druid (`ENTER_WILD_SHAPE`, `EXIT_WILD_SHAPE`, `USE_WILD_RESURGENCE_SLOT`) are wired. Fighter save/check triggers (`RECORD_FAILED_SAVING_THROW`, `RECORD_FAILED_ABILITY_CHECK`) are wired as semantic table events. Generic spell events (`BATTLE_CAST_SAVE_SPELL`, `BATTLE_CAST_CONCENTRATION_SPELL`, `BATTLE_CAST_AOE`) remain blocked on multi-phase reaction resolution and spell payload ownership; `BATTLE_CONCENTRATION_CHECK` remains classified as `action_resolution`.
+These ownership findings should remain stable unless the architecture changes.
 
-Task 11 table-event wrap:
+### 1. Raw exposure is the wrong metric
 
-- `record_table_event` accepts only the typed `TableEventCommandSchema` union: creature `TAKE_DAMAGE`, `HEAL`, `GRANT_TEMP_HP`, `STABILIZE`, `KNOCK_OUT`, `APPLY_CONDITION`, `REMOVE_CONDITION`, `ADD_EXHAUSTION`, `REDUCE_EXHAUSTION`, `APPLY_FALL`, `BREAK_CONCENTRATION`, `RECORD_FAILED_SAVING_THROW`, `RECORD_FAILED_ABILITY_CHECK`, and battle `BATTLE_HEAL`. It does not accept arbitrary raw `DndEvent` or `BattleEvent` payloads, and strict command parsing rejects extra raw-event fields.
-- All accepted manual table-event paths return the shared warning metadata. Applied and not-accepted table events include `warnings`; invalid schema and scope-mismatch inputs fail before table-event acceptance and do not mutate state.
-- Unsupported public-worthy table events have named blockers in the rows below: max-HP reduction/restoration, raw generic effect add/remove, prone/session-position changes, suffocation, starvation, dehydration, Intimidating Presence restoration, generic battle save spells, generic battle concentration spells, and generic battle AoE spells.
+Some public tokens wrap lower-level runtime events, and some public-worthy events belong on `record_table_event` or `execute_control_command` rather than `get_available_actions`.
 
-## MCP API Surface Taxonomy
+### 2. Do not add a geometry owner to core or MCP
 
-This is an MCP/API-adapter taxonomy, not a Quint or XState domain taxonomy. The completed MCP completion plan was removed from the active tree; this audit is now the durable taxonomy reference.
+- `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` are valid future public surfaces.
+- They must run over explicit caller/session spatial facts.
+- Core and MCP should not grow a grid engine, pathfinder, or persistent geometry subsystem.
 
-Classify every core event into exactly one primary category:
+### 3. Attack-shaped actions need a strict runtime boundary
 
-| Category | Meaning | MCP surface |
-| --- | --- | --- |
-| `suggested_action` | A legal option that should be returned by `get_available_actions` and executable by `execute_action`. | Existing `ActionToken` / `ResolvedActionToken` path. |
-| `control_command` | A deliberate session/turn/rest/monster-control command that should be callable but not mixed into ordinary player suggestions. | New explicit MCP command surface (`execute_control_command`). |
-| `table_event` | A DM/table/world fact such as damage, healing, condition/effect application, environmental harm, or generic spell outcome. | New warning-aware MCP command surface (`record_table_event`). |
-| `action_resolution` | A low-level event produced after a suggested action or table event needs runtime facts, dice, or branch choices. | Hidden behind `execute_action` or `record_table_event`; not directly advertised. |
-| `domain_trigger` | A semantic trigger that opens an owned pending window for a later suggested action. | Usually internal; if public, expose a semantic command rather than the raw `TRIGGER_*` event. |
-| `bookkeeping` | Internal state accounting behind higher-level semantics. | No public MCP surface. |
+`BATTLE_ATTACK` is the template for future attack-shaped public surfaces.
 
-Some lifecycle `control_command` events are exposed through `get_available_actions` / `execute_action` rather than `execute_control_command` because they carry player choices or runtime rolls that the action-token three-step contract already handles. Specifically: `SHORT_REST` has user-selected hit-dice order and runtime-rolled hit dice; `START_TURN` has runtime-filled resolution; `ENTER_COMBAT` and `EXIT_COMBAT` are single-creature host bootstrap/teardown. These are not mirrored on `execute_control_command` to avoid duplicate public routes. Their primary taxonomy still remains `control_command`.
+- Battle owns attacker state, resource spend, weapon/profile derivation, crit derivation, Sneak Attack legality/state, and damage aggregation semantics.
+- Caller/runtime must provide only the explicit battle-external facts needed to resolve the attack honestly.
+- Do not expose arbitrary caller-supplied attack payload fields such as damage type, weapon properties, finesse, or other battle-owned derived facts.
 
-## Creature Event Classification
+This same boundary will be reused by:
 
-| Event | Scope | Currently exposed in MCP? | Current MCP token name | Classification | Reasoning | Should be in `get_available_actions`? | If not, owning MCP surface | Blocker or next implementation step |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `TAKE_DAMAGE` | creature | yes | `record_table_event` | `table_event` | Damage is an external table fact, not a player option. | no | `record_table_event` | **Task 6: wired.** Accepts amount, Damage Type, modifier sets, Critical Hit flag, and optional semantic-action provenance warning. |
-| `HEAL` | creature | yes | `record_table_event` | `table_event` | Generic healing records a table outcome rather than a specific chosen feature. | no | `record_table_event` | **Task 6: wired.** Accepts amount and optional semantic-action provenance warning. |
-| `REDUCE_MAX_HP` | creature | no | - | `table_event` | Max-HP reduction comes from an external effect or rule fact. | no | Future `record_table_event` surface. | **Task 9 blocker:** needs source-specific max-HP reduction ownership before public exposure. SRD examples differ: *Harm* reduces by Necrotic damage taken and cannot reduce below 1, while other effects can increase a Hit Point maximum for a duration or prevent reductions. The raw amount-only event can reduce the maximum to 0 and kill, so exposing it would lose provenance and source caps. |
-| `RESTORE_MAX_HP` | creature | no | - | `table_event` | Max-HP restoration is an external recovery fact. | no | Future `record_table_event` surface. | **Task 9 blocker:** needs restoration provenance and scope before public exposure. SRD Long Rest and *Greater Restoration* restore the reduction fully, while the raw event accepts an arbitrary partial amount. Prefer Long Rest control or a semantic spell/effect resolution until max-HP reduction sources are owned. |
-| `GRANT_TEMP_HP` | creature | yes | `record_table_event` | `table_event` | Generic temporary HP grants are produced by spells/features or DM facts. | no | `record_table_event` | **Task 6: wired.** Requires explicit keep-old/new Temporary Hit Points choice and accepts optional semantic-action provenance warning. |
-| `DEATH_SAVE` | creature | no | - | `action_resolution` | Death-save rolls are runtime dice consumed during turn processing. | no | Runtime/session roll owner. | Keep hidden behind turn processing or future roll owner. |
-| `STABILIZE` | creature | yes | `record_table_event` | `table_event` | Stabilization can be a DM/table result rather than an ordinary self option. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
-| `KNOCK_OUT` | creature | yes | `record_table_event` | `table_event` | Knockout is a damage-resolution choice or table outcome. | no | `record_table_event` | **Task 6: wired.** Accepts optional semantic-action provenance warning. |
-| `APPLY_CONDITION` | creature | yes | `record_table_event` | `table_event` | Condition application is an external rule/effect fact. | no | `record_table_event` | **Task 7: wired.** Requires a Condition and accepts explicit condition-immunity facts plus optional semantic-action provenance warning. Not accepted while the creature is dead; existing conditions can persist through death/revival unless a source-owned rule changes them. |
-| `REMOVE_CONDITION` | creature | yes | `record_table_event` | `table_event` | Generic condition removal is an external rule/effect fact. | no | `record_table_event` | **Task 7: wired.** Requires a Condition and accepts optional semantic-action provenance warning. Not accepted while the creature is dead; existing conditions can persist through death/revival unless a source-owned rule changes them. |
-| `ADD_EXHAUSTION` | creature | yes | `record_table_event` | `table_event` | Exhaustion gain is an external environmental or rule fact. | no | `record_table_event` | **Task 7: wired.** Requires explicit levels, accepts explicit exhaustion-immunity facts, and accepts optional semantic-action provenance warning. |
-| `REDUCE_EXHAUSTION` | creature | yes | `record_table_event` | `table_event` | Exhaustion reduction is an external recovery or rest fact. | no | `record_table_event` | **Task 7: wired.** Requires explicit levels and accepts optional semantic-action provenance warning; prefer rest semantics when possible. |
-| `START_TURN` | creature | yes | `START_TURN` | `control_command` | This starts creature turn processing and currently exposes a runtime-filled token. | yes | - | **Task 4 decision: stays in `get_available_actions`.** The existing action-token path handles resolution and preview. No mirrored control command. |
-| `END_TURN` | creature | yes | `execute_control_command` | `control_command` | Ending a turn is lifecycle control rather than a character option. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
-| `USE_ACTION` | creature | no | - | `bookkeeping` | This is raw action-economy bookkeeping behind semantic actions. | no | None. | Keep internal. |
-| `USE_BONUS_ACTION` | creature | no | - | `bookkeeping` | This is raw bonus-action bookkeeping behind semantic actions. | no | None. | Keep internal. |
-| `USE_REACTION` | creature | no | - | `bookkeeping` | This is raw reaction-economy bookkeeping behind semantic reactions. | no | None. | Keep internal. |
-| `USE_MOVEMENT` | creature | no | - | `bookkeeping` | Creature-level movement spending is low-level economy accounting. | no | None. | Use battle/session movement surfaces instead. |
-| `USE_EXTRA_ATTACK` | creature | no | - | `bookkeeping` | Extra-attack spending is bookkeeping inside attack resolution. | no | None. | Keep internal. |
-| `STAND_FROM_PRONE` | creature | no | - | `suggested_action` | Standing from prone is a real movement option, but the current public token is battle-scoped. | yes | Existing battle `get_available_actions`; creature direct action only if single-creature UX needs it. | Creature-scope token is blocked on deciding whether single-creature movement remains public. |
-| `DROP_PRONE` | creature | no | - | `table_event` | Dropping prone is table-position state and should be owned with movement/position semantics. | no | Future `record_table_event` or movement surface. | Blocked on session/position ownership: dropping prone is a free interaction tied to movement cost (standing costs half speed), so the raw event without movement-budget context loses SRD cost semantics. Expose after battle movement/position ownership is wired. |
-| `MARK_BONUS_ACTION_SPELL` | creature | no | - | `bookkeeping` | This records spellcasting restrictions after a spell action. | no | None. | Keep behind spell execution. |
-| `MARK_NON_CANTRIP_ACTION_SPELL` | creature | no | - | `bookkeeping` | This records spellcasting restrictions after a spell action. | no | None. | Keep behind spell execution. |
-| `CAST_PREPARED_SPELL` | creature | yes | `CAST_PREPARED_SPELL` | `suggested_action` | It is a legal player spell option with user-filled spell and slot choices. | yes | - | Existing token is the correct owner. |
-| `GRAPPLE` | creature | no | - | `suggested_action` | Grapple is a player attack option, but target and contest facts are battle-owned. | yes | Battle `get_available_actions`. | Blocked on battle target/size/free-hand/save-result ownership for honest token projection. |
-| `SET_GRAPPLING_STATE` | creature | no | - | `bookkeeping` | This is a state repair/projection helper, not a player command. | no | None. | Keep internal. |
-| `RELEASE_GRAPPLE` | creature | no | - | `suggested_action` | Releasing a grapple is a real option, but current ownership belongs in battle state. | yes | Battle `get_available_actions`. | Blocked on battle grapple ownership and target identity projection. |
-| `ESCAPE_GRAPPLE` | creature | no | - | `suggested_action` | Escaping a grapple is a real option with runtime contest result. | yes | Battle `get_available_actions`. | Blocked on battle grapple ownership and escape check/result ownership. |
-| `SHOVE` | creature | no | - | `suggested_action` | Shove is a player attack option, but target, size, and save facts are battle-owned. | yes | Battle `get_available_actions`. | Blocked on battle target/size/save-result ownership and choice projection. |
-| `GRANT_EXTRA_ACTION` | creature | no | - | `bookkeeping` | Extra action grants are internal results of features such as Action Surge. | no | None. | Keep behind semantic feature events. |
-| `EXPEND_PACT_SLOT` | creature | no | - | `bookkeeping` | Pact slot spending is bookkeeping under spell/feature actions. | no | None. | Keep behind semantic spell/feature tokens. |
-| `EXPEND_SLOT` | creature | no | - | `bookkeeping` | Spell slot spending is bookkeeping under spell/feature actions. | no | None. | Keep behind semantic spell/feature tokens. |
-| `START_CONCENTRATION` | creature | no | - | `bookkeeping` | Concentration start is an effect of spell execution. | no | None. | Keep behind spell execution. |
-| `ADD_EFFECT` | creature | no | - | `table_event` | Generic effect insertion is a table/effect fact, not a player option. | no | Future semantic spell/effect surface. | **Task 9 blocker:** do not expose the raw active-effect payload. The event carries internal hook, resistance, speed, one-shot rider, and reactive payload fields; accepting it through MCP would become an arbitrary payload dump. Add only through narrow semantic spell/effect commands whose duration, owner, hooks, and granted facts are domain-owned. |
-| `REMOVE_EFFECT` | creature | no | - | `table_event` | Generic effect removal is a table/effect fact. | no | Future semantic spell/effect surface. | **Task 9 blocker:** do not expose raw removal by internal SpellId until effect provenance is public and stable. Prefer specific parent semantics such as concentration break, duration expiry, successful end-of-turn save, *Dispel Magic*, or another modeled source. |
-| `BREAK_CONCENTRATION` | creature | yes | `record_table_event` | `table_event` | Concentration break can be a caster's no-action choice; damage, Incapacitated, death, and replacement concentration remain generated by owned semantics. | no | `record_table_event` | **Task 9: wired.** No payload beyond optional semantic-action provenance warning. |
-| `CONCENTRATION_CHECK` | creature | no | - | `action_resolution` | This is a runtime save result after damage or another concentration trigger. | no | Runtime/session roll owner. | Keep behind damage/concentration resolution. |
-| `SHORT_REST` | creature | yes | `SHORT_REST` | `control_command` | Resting is lifecycle control with user-selected hit dice and runtime rolls. | yes | - | **Task 4 decision: stays in `get_available_actions`.** `spendHitDice` is a player choice with runtime-rolled hit dice; the existing action-token path handles it. No mirrored control command. |
-| `LONG_REST` | creature | yes | `execute_control_command` | `control_command` | Long rest is lifecycle/session control rather than an in-turn option. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
-| `SPEND_HIT_DIE` | creature | no | - | `bookkeeping` | Hit-die spending is a sub-step of `SHORT_REST`. | no | None. | Keep behind `SHORT_REST`. |
-| `APPLY_FALL` | creature | yes | `record_table_event` | `table_event` | Falling is an environmental/table event with runtime damage. | no | `record_table_event` | **Task 8: wired.** Requires explicit fall damage roll and optional Bludgeoning modifier sets; water/liquid halving and fall-distance dice are resolved by the caller before recording the table fact. |
-| `SUFFOCATE` | creature | no | - | `table_event` | Suffocation is an environmental/table event. | no | Future `record_table_event` surface. | Blocked on spec/machine ownership for SRD 5.2.1 suffocation progress and suffocation-sourced Exhaustion removal; current raw event is a terminal drop-to-0 shortcut, not the public hazard event. |
-| `APPLY_STARVATION` | creature | no | - | `table_event` | Starvation is an environmental/table event. | no | Future `record_table_event` surface. | Blocked on SRD 5.2.1 malnutrition ownership: food intake threshold, DC 10 Constitution save, no-food day count, and malnutrition-sourced Exhaustion removal are not represented by the raw event. |
-| `APPLY_DEHYDRATION` | creature | no | - | `table_event` | Dehydration is an environmental/table event. | no | Future `record_table_event` surface. | Blocked on dehydration ownership for water-intake threshold by creature size and dehydration-sourced Exhaustion removal; current raw event is only unconditional Exhaustion gain. |
-| `USE_BONUS_MOVEMENT` | creature | no | - | `bookkeeping` | Bonus movement spending is economy bookkeeping. | no | None. | Keep behind movement-granting actions. |
-| `ENTER_COMBAT` | creature | yes | `ENTER_COMBAT` | `control_command` | Entering combat changes lifecycle mode rather than spending an action. | yes | - | **Task 4 decision: stays in `get_available_actions`.** Single-creature host bootstrap; no separate control command path. |
-| `EXIT_COMBAT` | creature | yes | `EXIT_COMBAT` | `control_command` | Exiting combat changes lifecycle mode rather than spending an action. | yes | - | **Task 4 decision: stays in `get_available_actions`.** Single-creature host teardown; no separate control command path. **Task 5 decision:** keep it available after death because A33 leaves roster teardown to the caller. |
-| `USE_SECOND_WIND` | creature | yes | `USE_SECOND_WIND` | `suggested_action` | It is a legal player feature option with MCP-owned runtime healing die. | yes | - | Existing token is the correct owner; future roll owner should replace random sampling. |
-| `USE_ACTION_SURGE` | creature | yes | `USE_ACTION_SURGE` | `suggested_action` | It is a legal player feature option that grants action economy. | yes | - | Existing token is the correct creature-scope owner. |
-| `USE_INDOMITABLE` | creature | yes | `USE_INDOMITABLE` | `suggested_action` | It is a legal player reaction to an owned pending saving-throw failure. | yes | - | Existing token is the correct owner. |
-| `TRIGGER_INDOMITABLE` | creature | no | - | `domain_trigger` | This establishes the pending Indomitable window. | no | `record_table_event` via `RECORD_FAILED_SAVING_THROW`. | **Task 15: raw trigger stays internal.** Public callers record the semantic failed Saving Throw table fact; MCP opens the pending Indomitable window only when the Fighter owns the feature and a use is available. |
-| `USE_TACTICAL_MIND` | creature | yes | `USE_TACTICAL_MIND` | `suggested_action` | It is a legal player feature option over an owned pending failed ability check. | yes | - | Existing token is the correct owner; future roll owner should replace random success sampling. |
-| `TRIGGER_TACTICAL_MIND` | creature | no | - | `domain_trigger` | This establishes the pending Tactical Mind window. | no | `record_table_event` via `RECORD_FAILED_ABILITY_CHECK`. | **Task 15: raw trigger stays internal.** Public callers record the semantic failed Ability Check table fact; MCP opens the pending Tactical Mind window only when the Fighter owns the feature, has Second Wind available, and is not Incapacitated. |
-| `USE_HEROIC_INSPIRATION` | creature | yes | `USE_HEROIC_INSPIRATION` | `suggested_action` | It is a legal player option to spend Heroic Inspiration. | yes | - | Existing token is the correct owner. |
-| `SCORE_CRITICAL_HIT` | creature | no | - | `action_resolution` | Critical-hit scoring is an attack-resolution result, not an independent command. | no | Runtime attack resolution. | Keep behind attack resolution. |
-| `USE_LEGENDARY_ACTION` | creature | no | - | `control_command` | Named monster legendary actions are explicit monster/session commands, not ordinary PC suggestions. | no | Future `execute_control_command` surface. | Needs action-name legality and monster stat-block ownership. |
-| `USE_RECHARGE_ABILITY` | creature | no | - | `control_command` | Named recharge abilities are explicit monster/session commands. | no | Future `execute_control_command` surface. | Needs stat-block ability ownership and recharge state projection. |
-| `USE_DAILY_ABILITY` | creature | no | - | `control_command` | Named daily abilities are explicit monster/session commands. | no | Future `execute_control_command` surface. | Needs stat-block ability ownership and daily-use projection. |
-| `ENTER_RAGE` | creature | yes | `ENTER_RAGE` | `suggested_action` | It is a legal player bonus-action feature option. | yes | - | Existing token is the correct creature-scope owner. |
-| `END_RAGE` | creature | yes | `END_RAGE` | `suggested_action` | It is a legal player choice to end Rage. | yes | - | Existing token is the correct owner. |
-| `EXTEND_RAGE_BA` | creature | yes | `EXTEND_RAGE_BA` | `suggested_action` | It is a legal player bonus-action feature option. | yes | - | Existing token is the correct owner. |
-| `MARK_ATTACK_OR_FORCED_SAVE` | creature | no | - | `bookkeeping` | This is Rage-duration bookkeeping after an attack or forced save. | no | None. | Keep behind attack/save-producing actions. |
-| `DECLARE_RECKLESS` | creature | yes | `DECLARE_RECKLESS` | `suggested_action` | It is a legal player declaration for Reckless Attack. | yes | - | Existing token is the correct creature-scope owner. |
-| `USE_INTIMIDATING_PRESENCE` | creature | no | - | `suggested_action` | It is a real Barbarian feature option, but target/save facts are not in the current token. | yes | Battle `get_available_actions` or creature token with explicit target hole. | Blocked on target and save-result ownership. |
-| `RESTORE_INTIMIDATING_PRESENCE` | creature | no | - | `table_event` | This restores a feature use and is not an in-turn player action. | no | Future `execute_control_command` or `record_table_event` surface. | Blocked on rest/session ownership: Intimidating Presence uses are restored on Long Rest; prefer Long Rest control command semantics over a raw charge-restore event that bypasses rest provenance. |
-| `USE_BRUTAL_STRIKE` | creature | no | - | `suggested_action` | It is a Barbarian attack rider that needs attack-context ownership. | yes | Battle `get_available_actions`. | **Task 15 closeout:** keep out of creature MCP. This is the one rider that belongs to a pre-roll declaration window: after `DECLARE_RECKLESS`, battle must let the Barbarian choose one Strength-based attack on the turn, forgo Advantage on that roll, and reject the choice if that roll has Disadvantage. Battle already owns Barbarian level, `recklessThisTurn`, and `brutalStrikeUsedThisTurn`; it must also own the chosen-attack window, hit confirmation, extra-damage scaling, and effect resolution. `Forceful Blow` still needs later movement/session follow-through, while the other currently modeled effects are geometry-free target effects. |
-| `USE_RELENTLESS_RAGE` | creature | yes | `USE_RELENTLESS_RAGE` | `suggested_action` | It is a legal feature option over an owned pending drop-to-zero window. | yes | - | Existing token is the correct owner; future roll owner should replace random save sampling. |
-| `USE_LAY_ON_HANDS` | creature | yes | `USE_LAY_ON_HANDS` | `suggested_action` | It is a legal player feature option with a user-filled amount. | yes | - | Existing token is the correct owner. |
-| `USE_PALADIN_CHANNEL_DIVINITY` | creature | yes | `USE_PALADIN_CHANNEL_DIVINITY` | `suggested_action` | It is a legal player resource use in the current feature model. | yes | - | Existing token is the correct owner. |
-| `USE_DIVINE_SMITE` | creature | yes | `USE_DIVINE_SMITE` | `suggested_action` | It is a legal player smite option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_DIVINE_SMITE_FREE` | creature | no | - | `suggested_action` | It is a modeled Paladin feature option, but RAW Divine Smite is cast immediately after hitting a target with a Melee weapon or Unarmed Strike. | yes | Battle `get_available_actions`. | **Task 15 closeout:** do not expose as a creature token. This belongs to a post-hit rider window on a qualifying melee-weapon or Unarmed Strike hit. Battle must own the hit qualification, target identity, attack timing, the once-per-Long-Rest free-use flag, and the target's creature type for the Fiend / Undead bonus-damage clause; MCP must not guess any of those facts from creature scope. |
-| `FLURRY_OF_BLOWS` | creature | yes | `FLURRY_OF_BLOWS` | `suggested_action` | It is a legal player Monk bonus-action option. | yes | - | Existing token is the correct owner. |
-| `PATIENT_DEFENSE_FREE` | creature | yes | `PATIENT_DEFENSE_FREE` | `suggested_action` | It is a legal player Monk option. | yes | - | Existing token is the correct owner. |
-| `PATIENT_DEFENSE_FOCUS` | creature | yes | `PATIENT_DEFENSE_FOCUS` | `suggested_action` | It is a legal player Monk option with Focus cost. | yes | - | Existing token is the correct owner. |
-| `STEP_OF_THE_WIND_FREE` | creature | yes | `STEP_OF_THE_WIND_FREE` | `suggested_action` | It is a legal player Monk option. | yes | - | Existing token is the correct owner. |
-| `STEP_OF_THE_WIND_FOCUS` | creature | yes | `STEP_OF_THE_WIND_FOCUS` | `suggested_action` | It is a legal player Monk option with Focus cost. | yes | - | Existing token is the correct owner. |
-| `STUNNING_STRIKE` | creature | no | - | `suggested_action` | It is a Monk attack rider that needs hit/save/target ownership. | yes | Battle `get_available_actions`. | **Task 15 closeout:** keep out of creature MCP. This belongs to a post-hit rider window on a qualifying Monk-weapon or Unarmed Strike hit. Battle must own the hit qualification, target identity, Monk level, `focusPoints`, and `stunningStrikeUsedThisTurn`; runtime supplies the target's Constitution save result, after which battle applies either `Stunned` or the successful-save rider effects. |
-| `WHOLENESS_OF_BODY` | creature | yes | `WHOLENESS_OF_BODY` | `suggested_action` | It is a legal player Monk option with runtime heal roll. | yes | - | Existing token is the correct owner; future roll owner should replace random sampling. |
-| `UNCANNY_METABOLISM` | creature | yes | `UNCANNY_METABOLISM` | `suggested_action` | It is a legal player Monk option with runtime heal roll. | yes | - | Existing token is the correct owner; future roll owner should replace random sampling. |
-| `USE_ARCANE_RECOVERY` | creature | yes | `USE_ARCANE_RECOVERY` | `suggested_action` | It is a legal player Wizard option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_OVERCHANNEL` | creature | yes | `USE_OVERCHANNEL` | `suggested_action` | It is a legal player option over an owned pending Overchannel window. | yes | - | Existing token is the correct owner. |
-| `TRIGGER_OVERCHANNEL` | creature | no | - | `domain_trigger` | This establishes the pending Overchannel window for a qualifying Wizard spell cast. | no | Spell-cast resolution, not public raw event. | **Task 17 confirmed:** keep internal. RAW requires a Wizard spell cast with a level 1-5 slot that deals damage; creature MCP does not own authoritative spell class-source and damage-dealing cast provenance outside the modeled spell/battle resolution path. No public out-of-band spell-damage command for now. |
-| `USE_SNEAK_ATTACK` | creature | yes | `USE_SNEAK_ATTACK` | `suggested_action` | It is a legal player option over an owned pending Sneak Attack window. | yes | - | Existing token is the correct owner. |
-| `TRIGGER_SNEAK_ATTACK` | creature | no | - | `domain_trigger` | This establishes the pending Sneak Attack window. | no | Battle attack resolution after Task 20. | **Task 16 confirmed:** keep internal. All qualifying conditions (finesse/ranged weapon, advantage or adjacent-ally-without-disadvantage, once-per-turn) are battle-attack-context facts owned by `buildBattleAttackContext` (Task 20 pre-design). No creature-level attack-result command — battle attack resolution fires this trigger on a qualifying hit. |
-| `USE_STEADY_AIM` | creature | yes | `USE_STEADY_AIM` | `suggested_action` | It is a legal player Rogue bonus-action option. | yes | - | Existing token is the correct owner. |
-| `CUNNING_ACTION_DASH` | creature | yes | `CUNNING_ACTION_DASH` | `suggested_action` | It is a legal player Rogue bonus-action option. | yes | - | Existing token is the correct owner. |
-| `CUNNING_ACTION_DISENGAGE` | creature | yes | `CUNNING_ACTION_DISENGAGE` | `suggested_action` | It is a legal player Rogue bonus-action option. | yes | - | Existing token is the correct owner. |
-| `CUNNING_ACTION_HIDE` | creature | yes | `CUNNING_ACTION_HIDE` | `suggested_action` | It is a legal player Rogue bonus-action option. | yes | - | Existing token is the correct owner. |
-| `USE_UNCANNY_DODGE` | creature | no | - | `suggested_action` | It is a real reaction, but the current public owner is battle interrupt state. | yes | Existing battle `get_available_actions`. | Creature-scope token should remain deferred in favor of battle reaction token. |
-| `USE_CUNNING_STRIKE` | creature | no | - | `suggested_action` | It is a Rogue attack rider that needs attack-hit and rider-choice ownership. | yes | Battle `get_available_actions`. | **Task 15 closeout:** keep out of creature MCP. This belongs to a post-hit / pre-Sneak-Attack-damage-roll rider-choice window once battle has determined Sneak Attack applies. Battle must own Sneak Attack legality, remaining Sneak Attack dice, Rogue level scaling, and `cunningStrikeUsesThisTurn`; runtime supplies any per-effect saving throw result, and battle still needs target Size for `Trip`. The chosen effect resolves immediately after the attack's damage is dealt. |
-| `USE_CLERIC_CHANNEL_DIVINITY` | creature | yes | `USE_CLERIC_CHANNEL_DIVINITY` | `suggested_action` | It is a legal player Cleric resource use in the current feature model. | yes | - | Existing token is the correct owner. |
-| `USE_MAGICAL_CUNNING` | creature | yes | `USE_MAGICAL_CUNNING` | `suggested_action` | It is a legal player Warlock recovery feature. | yes | - | Existing token is the correct owner. |
-| `USE_MYSTIC_ARCANUM` | creature | yes | `USE_MYSTIC_ARCANUM` | `suggested_action` | It is a legal player Warlock option with a user-filled spell level. | yes | - | Existing token is the correct owner. |
-| `USE_ELDRITCH_SMITE` | creature | no | - | `suggested_action` | It is a Warlock attack rider that needs hit/target/prone ownership. | yes | Battle `get_available_actions`. | **Task 15 closeout:** keep out of creature MCP. This belongs to a post-hit rider window on a qualifying pact-weapon hit before final damage aggregation. Battle must own the hit qualification, target identity, Warlock level, Pact Magic slot spend, `eldritchSmiteUsedThisTurn`, and target Size for the optional `Prone` rider; no extra runtime save is involved. |
-| `CONVERT_SLOT_TO_POINTS` | creature | yes | `CONVERT_SLOT_TO_POINTS` | `suggested_action` | It is a legal player Sorcerer option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `CONVERT_POINTS_TO_SLOT` | creature | yes | `CONVERT_POINTS_TO_SLOT` | `suggested_action` | It is a legal player Sorcerer option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_INNATE_SORCERY` | creature | yes | `USE_INNATE_SORCERY` | `suggested_action` | It is a legal player Sorcerer bonus-action feature. | yes | - | Existing token is the correct owner. |
-| `USE_METAMAGIC` | creature | yes | `USE_METAMAGIC` | `suggested_action` | It is a legal player Sorcerer option with known-option filtering. | yes | - | Existing token is the correct owner. |
-| `USE_FREE_HUNTERS_MARK` | creature | no | - | `suggested_action` | It is a Ranger spell/feature option that needs target/spell ownership. | yes | Creature or battle `get_available_actions`. | Blocked on Hunter's Mark target and spell-effect ownership. |
-| `USE_TIRELESS` | creature | yes | `USE_TIRELESS` | `suggested_action` | It is a legal player Ranger option with runtime temp-HP die. | yes | - | Existing token is the correct owner; future roll owner should replace random sampling. |
-| `USE_NATURES_VEIL` | creature | yes | `USE_NATURES_VEIL` | `suggested_action` | It is a legal player Ranger bonus-action option. | yes | - | Existing token is the correct owner. |
-| `USE_BARDIC_INSPIRATION` | creature | yes | `USE_BARDIC_INSPIRATION` | `suggested_action` | It is a legal player Bard resource option in the current feature model. | yes | - | Existing token is the correct owner. |
-| `USE_CUTTING_WORDS` | creature | no | - | `suggested_action` | It is a real reaction, but the current public owner is battle interrupt state. | yes | Existing battle `get_available_actions`. | Creature-scope token should remain deferred in favor of battle reaction token. |
-| `USE_FONT_SLOT_RESTORE` | creature | yes | `USE_FONT_SLOT_RESTORE` | `suggested_action` | It is a legal player Bard option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_PEERLESS_SKILL` | creature | yes | `USE_PEERLESS_SKILL` | `suggested_action` | It is a legal player option over an owned pending failed roll. | yes | - | Existing token is the correct owner; future roll owner should replace random success sampling. |
-| `TRIGGER_PEERLESS_SKILL_ABILITY_CHECK` | creature | no | - | `domain_trigger` | This establishes the pending Peerless Skill ability-check window. | no | Domain/session trigger owner, not public raw event. | Task 15-adjacent research: can share any future failed-ability-check semantic command with Tactical Mind if that command fans out to all eligible pending windows; keep raw trigger internal. |
-| `TRIGGER_PEERLESS_SKILL_ATTACK_ROLL` | creature | no | - | `domain_trigger` | This establishes the pending Peerless Skill attack-roll window. | no | Battle attack resolution after Task 20. | **Task 16 confirmed:** keep internal. A failed attack roll is a battle-resolution fact — battle knows when `attackRoll` misses `tAc` after modifiers and hit-reactions. No creature-level failed-attack command — battle attack resolution fires this trigger on a miss by a Bard with Peerless Skill. |
-| `ENTER_WILD_SHAPE` | creature | yes | `ENTER_WILD_SHAPE` | `suggested_action` | It is a legal player Druid bonus-action feature option. | yes | - | Task 13 wired this through creature `get_available_actions`; creature state owns Wild Shape charges and form. |
-| `EXIT_WILD_SHAPE` | creature | yes | `EXIT_WILD_SHAPE` | `suggested_action` | It is a legal player Druid bonus-action or free option. | yes | - | Task 13 wired this through creature `get_available_actions`; creature state owns Wild Shape active status. |
-| `USE_WILD_RESURGENCE_CHARGE` | creature | yes | `USE_WILD_RESURGENCE_CHARGE` | `suggested_action` | It is a legal player Druid option with a user-filled slot level. | yes | - | Existing token is the correct owner. |
-| `USE_WILD_RESURGENCE_SLOT` | creature | yes | `USE_WILD_RESURGENCE_SLOT` | `suggested_action` | It is a legal player Druid feature option with slot recovery. | yes | - | Task 13 wired this through creature `get_available_actions`; creature state owns Druid level and Wild Shape charges. |
-| `CLEAR_PENDING_RESOLUTION` | creature | no | - | `bookkeeping` | This clears internal pending-resolution bookkeeping. | no | None. | Keep internal. |
+- `BATTLE_OFF_HAND_ATTACK`
+- `BATTLE_LEGENDARY_ATTACK`
+- any future movement OA or other attack-shaped reaction flow
 
-## Battle Event Classification
+### 4. Creature attack riders are battle-owned windows
 
-| Event | Scope | Currently exposed in MCP? | Current MCP token name | Classification | Reasoning | Should be in `get_available_actions`? | If not, owning MCP surface | Blocker or next implementation step |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `BATTLE_INIT` | battle | yes | `execute_control_command` | `control_command` | Battle initialization is session lifecycle control. | no | `execute_control_command` | **Task 4: wired.** Accepts a narrow JSON creature-config subset and converts IDs before dispatch. |
-| `BATTLE_START_TURN` | battle | yes | `execute_control_command` | `control_command` | Starting a battle turn is lifecycle control with runtime start-of-turn facts. | no | `execute_control_command` | **Task 4: wired with explicit runtime facts.** Callers must provide recharge, death-save, and start-of-turn effect facts; MCP rejects omitted or extra hidden inputs. |
-| `BATTLE_ATTACK` | battle | no | - | `suggested_action` | Attack is a primary player option, but the event needs target, roll, damage, AC, geometry/visibility, and reaction-candidate facts. | yes | Battle `get_available_actions`. | **Task D closed:** the first safe public slice is active-creature main-hand weapon attack only. Public token holes are `targetId` and `knockOut` only. Runtime must be an explicit `battleAttack` lane carrying `attackRoll`, `targetAc`, `weaponDamage`, optional `sneakAttackDamage`, `attackerWithin5ft`, optional `attackerWithin60ft` only when `attackerWithin5ft` is `true`, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`, and `hitReactionCandidates`. Battle derives the active attacker, action/extra-attack spend, `attackActionUsed`, `lightAttackUsedThisTurn`, help consumption, crit range, main-hand weapon profile, melee/ranged flag, damage type, default damage qualifiers, weapon properties, finesse status, and Sneak Attack legality/state. `crit` is battle-derived from `attackRoll` plus `critRange`, and damage aggregation is battle-owned: runtime supplies only rolled `weaponDamage` and optional `sneakAttackDamage`. Do not expose unarmed, off-hand, legendary, spell-attack, `onHitEffect`, or caller-supplied `weaponProperties`, `isFinesse`, `dt`, or `damageQualifiers` in this slice. |
-| `BATTLE_HELP_ATTACK` | battle | no | - | `suggested_action` | Help attack is a player action needing ally and target choices plus a session-owned proximity fact. | yes | Battle `get_available_actions`. | **Task E research closed:** do not add a geometry owner to core or MCP. Battle can own action spend and the resulting `helpTargets` record. User choice holes remain `allyId` and `targetId`. RAW check against SRD 5.2.1 `Help [Action]` narrows the spatial input to one explicit caller/session fact only: whether the distracted enemy is within 5 feet of the helper when Help is taken. Do not require helper/ally visibility; the later attack still resolves with its own attack-legality facts. Implementation stays deferred until a bounded public token is scheduled. |
-| `BATTLE_RESOLVE_HIT_REACTION` | battle | yes | `CAST_SHIELD` / `USE_PARRY` / `USE_CUTTING_WORDS` | `action_resolution` | This is the low-level hit-reaction decision emitted after a reaction token is chosen. | no | Hidden behind `execute_action`. | Existing token wrappers are correct; do not expose raw event. |
-| `BATTLE_RESOLVE_DMG_REACTION` | battle | yes | `USE_UNCANNY_DODGE` / `USE_DEFLECT_ATTACKS` | `action_resolution` | This is the low-level damage-reaction decision emitted after a reaction token is chosen. | no | Hidden behind `execute_action`. | Existing token wrappers are correct; do not expose raw event. |
-| `BATTLE_AFTER_DAMAGE_DECLINE` | battle | no | - | `action_resolution` | Declining after-damage reactions is a low-level branch in the interrupt window. | no | Hidden behind `execute_action` or future explicit decline command. | Add only if reaction-window UX needs a public decline token. |
-| `BATTLE_AFTER_DAMAGE_SPELL_REACTION` | battle | yes | `CAST_HELLISH_REBUKE` | `action_resolution` | This is the low-level spell reaction emitted after Hellish Rebuke is chosen and runtime facts are supplied. | no | Hidden behind `execute_action`. | Existing token wrapper is correct; future roll owner should replace random damage/save sampling. |
-| `BATTLE_AFTER_DAMAGE_REACTIVE_EFFECT` | battle | yes | `TRIGGER_FIRE_SHIELD` | `action_resolution` | This applies an automatic/reactive effect payload after damage. | no | Hidden behind `execute_action`. | Existing token wrapper is acceptable, but token naming may later become less trigger-like. |
-| `BATTLE_AFTER_DAMAGE_RETALIATION` | battle | yes | `USE_RETALIATION` | `action_resolution` | This is the low-level retaliation attack emitted after the reaction token is chosen. | no | Hidden behind `execute_action`. | Existing token wrapper is correct; future attack roll owner should replace random sampling. |
-| `BATTLE_CAST_SAVE_SPELL` | battle | no | - | `table_event` | Generic save-spell casting needs spell payload, target, save, and damage facts not projected as a public action token. | no | Future `record_table_event` surface. | **Task 10 blocker:** multi-phase resolution (counterspell reaction window → save-failed reaction window → damage application) makes raw table-event exposure unsafe. The event carries 12+ fields including runtime dice (`saveRoll`), and dispatching it opens reaction interrupt phases that require further MCP interaction. Prefer modeled spell `suggested_action` tokens with battle-owned payloads; expose as table event only after reaction-phase resolution is owned by the runtime or a dedicated MCP flow. |
-| `BATTLE_RESOLVE_COUNTERSPELL` | battle | yes | `CAST_COUNTERSPELL` | `action_resolution` | This is the low-level Counterspell decision emitted after a reaction token is chosen. | no | Hidden behind `execute_action`. | Existing token wrapper is correct; future roll owner should replace random ability-check sampling. |
-| `BATTLE_RESOLVE_SAVE_FAILED_REACTION` | battle | no | - | `action_resolution` | This resolves save-failed reaction choices such as Legendary Resistance. | no | Hidden behind future reaction token/direct monster command. | Add semantic Legendary Resistance token/command if MCP should operate monsters. |
-| `BATTLE_CAST_CONCENTRATION_SPELL` | battle | no | - | `table_event` | Generic concentration-spell casting needs spell and target facts not projected as a public action token. | no | Future `record_table_event` surface. | **Task 10 blocker:** initiates counterspell reaction phase requiring further MCP interaction. Uses internal branded `SpellId` not suitable for public input. The event carries `duration`, `cond`, `applyCond`, and `ritual` fields whose valid combinations depend on specific spell definitions. Prefer modeled concentration-spell `suggested_action` tokens; expose as table event only after counterspell resolution is runtime-owned and spell payload validation is domain-owned. |
-| `BATTLE_CONCENTRATION_CHECK` | battle | no | - | `action_resolution` | This resolves a concentration save for a target after a trigger. | no | Runtime/session roll owner. | **Task 10 confirmed:** remains `action_resolution`. Concentration checks are triggered by damage or other owned events, not by direct table command. The `conSaveSucceeded` boolean is a runtime dice result. Keep behind damage/concentration resolution; do not expose as a standalone table event. |
-| `BATTLE_CAST_AOE` | battle | no | - | `table_event` | AoE casting starts a spell resolution with spell payload and target iteration facts. | no | Future `record_table_event` surface. | **Task 10 blocker:** dispatching this event opens a multi-step AoE resolution phase (per-target `BATTLE_RESOLVE_AOE_TARGET` with individual save rolls) plus a counterspell reaction window. The caller would need to drive per-target iteration through further MCP calls. Prefer a modeled AoE spell `suggested_action` token with area/target ownership; expose as table event only after per-target resolution is runtime-owned or handled by a dedicated MCP AoE flow. |
-| `BATTLE_RESOLVE_AOE_TARGET` | battle | no | - | `action_resolution` | This is per-target AoE save resolution. | no | Hidden behind AoE spell execution. | Keep behind future AoE token/runtime owner. |
-| `BATTLE_MOVE` | battle | no | - | `suggested_action` | Movement is a player option, but path and reach-exit facts remain session/spatial ownership. | yes | Battle `get_available_actions`. | **Task E research closed:** keep battle/core positionless and do not add a geometry owner. Battle owns the active creature, movement budget, and opportunity-attack filtering once candidates are supplied. Missing/session facts for any future public token are still explicit per-step inputs: destination/path label, difficult-terrain cost beyond the fixed 5-foot spend, whether the step crosses a reach-exit checkpoint, the threatened creature set, and provocation classification for movement that should not trigger opportunity attacks. Movement remains deferred until a concrete session surface is chosen, but the owner is now explicit: caller/session provides spatial facts; battle resolves their mechanical consequences. |
-| `BATTLE_MOVEMENT_OA_DECLINE` | battle | no | - | `action_resolution` | This is an opportunity-attack reaction-window decline branch. | no | Hidden behind movement reaction handling. | Add only if movement OA UX needs a public decline token. |
-| `BATTLE_MOVEMENT_OA_ATTACK` | battle | no | - | `action_resolution` | This is the low-level opportunity attack emitted after a movement reaction is chosen. | no | Hidden behind future OA reaction token. | Blocked on OA reaction token and attack runtime fact ownership. |
-| `BATTLE_END_TURN` | battle | yes | `execute_control_command` | `control_command` | Ending a battle turn is lifecycle control with runtime end-of-turn facts. | no | `execute_control_command` | **Task 4: wired with explicit runtime facts.** Callers must provide end-of-turn save, damage, and concentration facts; MCP rejects omitted or extra hidden inputs. |
-| `BATTLE_LEGENDARY_PASS` | battle | yes | `execute_control_command` | `control_command` | Passing a legendary-action window is turn-control for monsters. | no | `execute_control_command` | **Task 4: wired.** No parameters; dispatches directly. |
-| `BATTLE_LEGENDARY_ATTACK` | battle | no | - | `suggested_action` | A legendary attack is a monster option but needs target, roll, damage, AC, geometry/visibility, and reaction-candidate facts. | yes | Battle `get_available_actions` for monster hosts; possible future monster automation command only after the same stat-block validation exists. | **Task F blocker:** keep blocked. `BATTLE_LEGENDARY_PASS` is correctly wired as a `control_command`, but battle still owns only the legendary-action window (`laCtx.eligibleMonsters`) and monster legendary-action charges/use expenditure. It does not own the specific stat-block Legendary Action option payload/name/cost that a public attack surface would need. Reuse Task D's attack runtime boundary for the attack-shaped portion: explicit target/runtime session facts, battle-derived crit, and battle-owned damage aggregation. Stat-block/session ownership still must derive action cost, damage type, damage qualifiers, weapon properties, and melee/ranged shape. Do not expose caller-supplied `weaponProperties`, `isFinesse`, `laDt`, or `damageQualifiers` as arbitrary MCP payload. |
-| `BATTLE_HEAL` | battle | yes | `record_table_event` | `table_event` | Generic battle healing records a table/spell outcome rather than a specific player token. | no | `record_table_event` | **Task 10: wired.** Accepts `targetId` and `amount`; validates turn started, active creature alive and not incapacitated, action available; spends action and heals target. Returns external-table-fact and optional semantic-bypass warnings. Prefer semantic spell/feature tokens (e.g., *Cure Wounds*, Lay on Hands) when the healing source can be modeled. |
-| `BATTLE_DASH` | battle | yes | `BATTLE_DASH` | `suggested_action` | It is a legal active-turn player action. | yes | - | Existing token is the correct owner. |
-| `BATTLE_DISENGAGE` | battle | yes | `BATTLE_DISENGAGE` | `suggested_action` | It is a legal active-turn player action. | yes | - | Existing token is the correct owner. |
-| `BATTLE_DODGE` | battle | yes | `BATTLE_DODGE` | `suggested_action` | It is a legal active-turn player action. | yes | - | Existing token is the correct owner. |
-| `BATTLE_HIDE` | battle | yes | `BATTLE_HIDE` | `suggested_action` | Hide is a player action, but it needs stealth, cover/obscurement, and line-of-sight facts. | yes | - | **Task 22 wired.** Battle owns action spend and `hiddenDiscoveryDc` projection. The token exposes explicit inputs for `stealthTotal`, `hasCoverOrObscurement`, and `outOfEnemyLineOfSight`; MCP does not store cover, obscurement, or enemy line-of-sight state. |
-| `BATTLE_SEARCH` | battle | yes | `BATTLE_SEARCH` | `suggested_action` | Search is a player action with a target choice and Wisdom-check result. | yes | - | **Task 22 wired.** Battle owns action spend and target `hiddenDiscoveryDc`. The token exposes `targetId` choices for currently hidden combatants and an explicit `perceptionTotal`/Wisdom-check total input. MCP does not invent perception/proficiency state. |
-| `BATTLE_STAND_FROM_PRONE` | battle | yes | `STAND_FROM_PRONE` | `suggested_action` | Standing from prone is a legal movement option projected with battle movement cost. | yes | - | Existing token is the correct owner. |
-| `BATTLE_OFF_HAND_ATTACK` | battle | no | - | `suggested_action` | Off-hand attack is a player bonus-action option but needs target, roll, damage, AC, geometry/visibility, and reaction-candidate facts. | yes | Battle `get_available_actions`. | **Task 18 blocker, refined Task 21:** inherits all `BATTLE_ATTACK` blockers: target AC, distance/visibility, hostile adjacency, Sneak Attack ally adjacency, and `hitReactionCandidates`. Additionally, RAW Light property requires the Attack action with a Light weapon first, then a different Light weapon for the extra attack; battle owns both weapon profiles and `lightAttackUsedThisTurn`, but the extra attack does not add the ability modifier to damage unless the modifier is negative. Battle also needs `lightPropertyExtraAttackAddsAbilityModifier` for Two-Weapon Fighting style. Blocked until the `BATTLE_ATTACK` payload/runtime boundary is finalized so off-hand can reuse the same target/roll/session-fact contract. |
-| `BATTLE_GRAPPLE` | battle | no | - | `suggested_action` | Grapple is an Unarmed Strike option that needs target choice plus a resolved runtime save outcome. | yes | Battle `get_available_actions`. | **Task B completed for size ownership:** battle now owns combatant `creatureSize` and derives grapple size legality from state rather than public payload. Remaining public-surface blocker: `targetId` is still the user choice hole, and `targetSaveFailed` is still a runtime-owned fact that must fit the eventual public action/session contract. Keep `BATTLE_GRAPPLE` unexposed until that boundary is finalized. |
-| `BATTLE_RELEASE_GRAPPLE` | battle | yes | `BATTLE_RELEASE_GRAPPLE` | `suggested_action` | Releasing a grapple is a player option when battle state owns an active grapple. | yes | - | Task 19 wired this through battle `get_available_actions`; battle state owns the active actor's `grapplingTarget` and release has no action cost. |
-| `BATTLE_ESCAPE_GRAPPLE` | battle | yes | `BATTLE_ESCAPE_GRAPPLE` | `suggested_action` | Escaping a grapple is a player option with a runtime escape check result. | yes | - | **Task 22 wired.** Battle owns active creature `grappledBy` state and action availability. The token exposes explicit `escapeSucceeded` for the Strength (Athletics) or Dexterity (Acrobatics) check against the escape DC; MCP does not add grapple state. |
-| `BATTLE_ACTION_SURGE` | battle | yes | `BATTLE_ACTION_SURGE` | `suggested_action` | Action Surge is a legal battle-scoped player feature option. | yes | - | Task 3 wired this through battle `get_available_actions`; battle state owns fighter level and charges. |
-| `BATTLE_ENTER_RAGE` | battle | yes | `BATTLE_ENTER_RAGE` | `suggested_action` | Entering Rage is a legal battle-scoped player feature option. | yes | - | Task 3 wired this through battle `get_available_actions`; battle state owns Barbarian state. |
-| `BATTLE_DECLARE_RECKLESS` | battle | yes | `BATTLE_DECLARE_RECKLESS` | `suggested_action` | Reckless Attack declaration is a legal battle-scoped player feature option. | yes | - | Task 3 wired this through battle `get_available_actions`; battle state tracks reckless state and turn. |
-| `BATTLE_READY` | battle | yes | `BATTLE_READY` | `suggested_action` | Ready is a legal active-turn player action. | yes | - | Existing token is the correct owner. |
-| `BATTLE_READY_SPELL` | battle | yes | `BATTLE_READY_SPELL` | `suggested_action` | Ready spell is a legal active-turn option with battle-owned spell payloads and user-filled choices. | yes | - | Existing token is the correct owner. |
-| `BATTLE_READY_PASS` | battle | yes | `BATTLE_READY_PASS` | `suggested_action` | Passing a ready trigger is an explicit ready-window option exposed as a public token. | yes | - | Existing token is acceptable for the ready window; do not expose raw lifecycle commands beyond this. |
-| `BATTLE_READY_RELEASE` | battle | yes | `BATTLE_READY_RELEASE` | `suggested_action` | Releasing a readied attack is a legal reaction option in the ready window. | yes | - | Existing token is the correct owner; future attack roll owner should replace random sampling. |
-| `BATTLE_READY_SPELL_RELEASE` | battle | yes | `BATTLE_READY_SPELL_RELEASE` | `suggested_action` | Releasing a readied spell is a legal reaction option in the ready window. | yes | - | Existing token is the correct owner; future save roll owner should replace random sampling. |
+The remaining attack riders do not belong on creature MCP surfaces.
 
-## Recommended Next MCP Batch
+- `USE_BRUTAL_STRIKE` is a pre-roll declaration window.
+- `STUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` are post-hit rider windows.
+- `USE_CUNNING_STRIKE` is a post-hit rider-choice window with effect-resolution follow-through.
 
-The Task 18 battle ownership audit identifies `BATTLE_RELEASE_GRAPPLE` as the smallest next `suggested_action` slice: battle owns the active creature's `grapplingTarget`, and the raw event has no runtime payload.
+These stay blocked until battle owns the relevant hit qualification, target identity, timing window, save/size/runtime facts, and rider-specific spend logic.
 
-Recommended Task 19 order:
+### 5. Generic spell table events are blocked by multi-phase resolution
 
-- `BATTLE_RELEASE_GRAPPLE`: expose only when the active creature has `grapplingTarget != null`; no runtime inputs.
-- `BATTLE_ESCAPE_GRAPPLE`: Task 22 wired this with explicit runtime `escapeSucceeded`.
-- `BATTLE_SEARCH`: Task 22 wired this with target choice and explicit runtime `perceptionTotal`.
-- `BATTLE_HIDE`: Task 22 wired this with explicit session inputs for cover/obscurement and enemy line of sight.
+Do not expose raw generic spell events until the full reaction/resolution flow has an honest owner.
 
-Still explicitly deferred:
+- `BATTLE_CAST_SAVE_SPELL`
+- `BATTLE_CAST_CONCENTRATION_SPELL`
+- `BATTLE_CAST_AOE`
 
-- `BATTLE_ATTACK`: Task D finalized the first main-hand weapon attack slice, but public exposure still waits on Task MCP2-A to wire the token/runtime contract without MCP fabricating table state. Battle owns the weapon payload and spend/feature state; MCP must pass explicit target AC, distance/visibility, adjacency, and hit-reaction candidate facts through the `battleAttack` runtime lane.
-- `BATTLE_OFF_HAND_ATTACK` until it can reuse the finalized `BATTLE_ATTACK` payload/runtime boundary. Off-hand inherits all basic attack blockers plus needs the Light property weapon-pair precondition and ability-modifier handling (RAW: don't add the ability modifier unless negative, unless Two-Weapon Fighting style applies).
-- `BATTLE_LEGENDARY_ATTACK` until it can reuse the finalized attack payload/runtime boundary; additionally needs monster stat-block Legendary Action option payload ownership so MCP does not accept arbitrary damage type, damage qualifier, weapon property, or melee/ranged facts.
-- Creature attack riders (`USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, `USE_DIVINE_SMITE_FREE`) remain blocked from public exposure, but Task 15 closed the ownership question. Brutal Strike is the only pre-roll declaration rider; Stunning Strike, Eldritch Smite, and Divine Smite Free are post-hit rider windows; Cunning Strike is a post-hit choice with post-damage effect resolution. Each rider's remaining runtime/save/size/geometry needs are documented in the creature event rows above.
-- `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` until a bounded public token is scheduled on top of explicit caller/session spatial facts. Task E closed the ownership question: do not add a geometry owner in core or MCP. `BATTLE_HELP_ATTACK` needs only helper-target 5-foot proximity plus ally/target choices; `BATTLE_MOVE` still needs per-step path, threat, and provocation facts.
-- `BATTLE_GRAPPLE` until the public action contract is finalized around `targetId` plus the resolved save outcome; battle now owns creature Size instead of receiving `attackerSize`/`targetSize` from the raw event payload.
-- Generic battle damage, conditions, effects, environmental events, and raw spell events because they belong to `record_table_event` or modeled spell/action tokens, not direct `get_available_actions` exposure; battle healing is already wired through `record_table_event`.
-- Internal triggers and bookkeeping events because they should remain domain-owned and hidden behind semantic commands.
+These are blocked because they can open counterspell windows, save-failed reaction windows, per-target AoE loops, or other follow-up MCP interaction. Prefer modeled spell actions with battle-owned payloads.
+
+### 6. Raw effect payloads are not safe public schemas
+
+Do not expose generic raw effect insertion/removal payloads.
+
+- `ADD_EFFECT`
+- `REMOVE_EFFECT`
+
+These remain blocked until effect provenance, duration, hooks, granted facts, and valid payload shape are owned by narrow semantic commands rather than arbitrary MCP input.
+
+### 7. Max-HP change events need provenance ownership
+
+- `REDUCE_MAX_HP`
+- `RESTORE_MAX_HP`
+
+These are blocked because the raw amount-only events lose rule-source semantics and source-specific caps/restoration behavior.
+
+### 8. Failed-save / failed-check semantic commands are the correct public trigger surface
+
+Raw trigger events stay internal.
+
+- `TRIGGER_INDOMITABLE` is opened via semantic `RECORD_FAILED_SAVING_THROW`.
+- `TRIGGER_TACTICAL_MIND` is opened via semantic `RECORD_FAILED_ABILITY_CHECK`.
+
+Apply the same pattern elsewhere when a public trigger is needed: expose the semantic table fact, not the raw `TRIGGER_*` event.
+
+## Current Public Coverage That Matters To Deferred Work
+
+These already-landed slices are relevant because future items build on their ownership decisions.
+
+- Battle spatial slices already wired: `BATTLE_HIDE`, `BATTLE_SEARCH`, `BATTLE_ESCAPE_GRAPPLE`, `BATTLE_RELEASE_GRAPPLE`
+- Battle feature slices already wired: `BATTLE_ACTION_SURGE`, `BATTLE_ENTER_RAGE`, `BATTLE_DECLARE_RECKLESS`
+- Creature class slices already wired: `USE_MAGICAL_CUNNING`, `USE_INNATE_SORCERY`, `ENTER_WILD_SHAPE`, `EXIT_WILD_SHAPE`, `USE_WILD_RESURGENCE_SLOT`
+- Semantic trigger table events already wired: `RECORD_FAILED_SAVING_THROW`, `RECORD_FAILED_ABILITY_CHECK`
+- Table-event wrap is intentionally narrow: no arbitrary raw `DndEvent` or `BattleEvent` payload passthrough
+
+## Deferred Queue
+
+These are the public-facing items that still matter. Keep this table current.
+
+| Item | Intended MCP surface | Current blocker(s) | Notes |
+| --- | --- | --- | --- |
+| `BATTLE_ATTACK` | `get_available_actions` | Finalize and wire the strict `battleAttack` token/runtime contract. Runtime still must carry explicit target AC, distance/visibility, adjacency, and hit-reaction candidate facts without MCP fabricating battle state. | First safe slice is active-creature main-hand weapon attack only. Battle owns crit derivation and damage semantics. |
+| `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Depends on finalized `BATTLE_ATTACK` boundary. Also needs Light-property pairing and ability-modifier handling for extra attack damage. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`. |
+| `BATTLE_LEGENDARY_ATTACK` | `get_available_actions` or future monster-control route | Depends on finalized `BATTLE_ATTACK` boundary and on stat-block-owned legendary-action option payload/name/cost derivation. | Do not accept arbitrary caller-supplied monster attack payloads. |
+| `BATTLE_HELP_ATTACK` | `get_available_actions` | Needs a bounded token contract over explicit caller/session spatial facts only. | Required public holes are `allyId`, `targetId`, and helper-within-5-feet-of-target fact. No geometry owner in core/MCP. |
+| `BATTLE_MOVE` | `get_available_actions` | Needs a bounded token contract over explicit caller/session path, threat, provocation, and reach-exit facts. | No geometry owner in core/MCP. Opportunity-attack legality still depends on caller/session-owned reach-exit facts. |
+| `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring. | Size ownership is already solved in battle state. |
+| `USE_BRUTAL_STRIKE` | battle-driven rider window | Needs battle-owned chosen-attack window, legality, and effect follow-through. | Pre-roll declaration rider. |
+| `STUNNING_STRIKE` | battle-driven rider window | Needs battle-owned post-hit qualification, target identity, focus spend, and target save result handling. | Post-hit rider. |
+| `USE_CUNNING_STRIKE` | battle-driven rider window | Needs battle-owned Sneak Attack legality, rider-choice window, scaling, size/save follow-through. | Post-hit / pre-Sneak-Attack-damage rider-choice window. |
+| `USE_ELDRITCH_SMITE` | battle-driven rider window | Needs battle-owned pact-weapon hit qualification, slot spend, target identity, and target-size handling for optional `Prone`. | Post-hit rider. |
+| `USE_DIVINE_SMITE_FREE` | battle-driven rider window | Needs battle-owned melee/unarmed hit qualification, target identity, timing, free-use flag, and target creature-type handling. | Post-hit rider. |
+| `BATTLE_CAST_SAVE_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on multi-phase reaction resolution and spell payload ownership. | Do not expose raw generic event while it can open counterspell and save-failed reaction windows. |
+| `BATTLE_CAST_CONCENTRATION_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution ownership and spell payload validation. | Raw `SpellId`/duration/condition payload is not a stable public contract. |
+| `BATTLE_CAST_AOE` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution plus per-target AoE iteration ownership. | Do not expose raw AoE event until the per-target loop has an honest owner. |
+| `REDUCE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for max-HP reduction semantics and caps. | Raw amount-only command is not sufficient. |
+| `RESTORE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for restoration semantics and scope. | Prefer semantic spell/rest routes until provenance is owned. |
+| `ADD_EFFECT` | future semantic spell/effect route | Raw effect payload is too internal and unconstrained for MCP. | Add only through narrow semantic commands. |
+| `REMOVE_EFFECT` | future semantic spell/effect route | Removal by internal effect identity is not yet a stable public contract. | Prefer source-owned parent semantics such as concentration break, expiry, or spell-specific removal. |
+| `DROP_PRONE` | future movement or `record_table_event` route | Blocked on session/position ownership because prone/standing interacts with movement-budget semantics. | Keep aligned with future movement ownership. |
+| `SUFFOCATE` | future `record_table_event` route | Needs explicit suffocation-progress ownership, not the current terminal shortcut event. | Current raw event is not the right public hazard shape. |
+| `APPLY_STARVATION` | future `record_table_event` route | Needs owned malnutrition progression semantics. | Current raw event does not capture the SRD process. |
+| `APPLY_DEHYDRATION` | future `record_table_event` route | Needs owned dehydration progression semantics by creature size and recovery/removal behavior. | Current raw event is too narrow. |
+| `USE_LEGENDARY_ACTION` | future `execute_control_command` route | Needs stat-block-owned action-name legality and cost projection. | Monster-control route, not ordinary player suggestion route. |
+| `USE_RECHARGE_ABILITY` | future `execute_control_command` route | Needs stat-block-owned recharge ability projection and legality. | Monster-control route. |
+| `USE_DAILY_ABILITY` | future `execute_control_command` route | Needs stat-block-owned daily-ability projection and legality. | Monster-control route. |
+
+## Intentionally Internal
+
+These are not backlog items unless the product surface changes.
+
+- Raw reaction-resolution events already wrapped by public reaction tokens
+- Raw `TRIGGER_*` events that should remain behind semantic commands
+- Creature and battle bookkeeping events such as action-economy spend markers
+- Standalone concentration/death-save runtime rolls that belong to turn/damage resolution rather than direct MCP commands
+
+## Maintenance Rule
+
+When updating this file:
+
+- remove completed items from the deferred queue unless their findings still block another item;
+- keep blocker text specific enough that the next coding task can start from it directly;
+- prefer one row per future public item over exhaustive source-type inventories;
+- if a blocker is resolved, replace it with the next real blocker rather than preserving stale history.
