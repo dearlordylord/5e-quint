@@ -4390,6 +4390,9 @@ describe("SessionRouter", () => {
       fighterLevel: 5,
       baseWalkSpeed: 30,
       actionSurgeCharges: 1,
+      isWearingArmor: true,
+      leftHandUse: "mainWeapon",
+      rightHandUse: "shield",
       mainHandWeapon: LONGSWORD,
     });
     expect(goblin).toMatchObject({

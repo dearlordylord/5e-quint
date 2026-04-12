@@ -7,6 +7,7 @@ import { createRoot } from "react-dom/client"
 import { BattlePage } from "#/battle-scene/BattlePage.tsx"
 import { EmbedBattlePage } from "#/battle-scene/EmbedBattlePage.tsx"
 import { App } from "#/components/App.tsx"
+import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 import { EmbedMachineVizPage } from "#/components/trace-visualizer/EmbedMachineVizPage.tsx"
 import { FullMachineVizPage } from "#/components/trace-visualizer/FullMachineVizPage.tsx"
@@ -19,6 +20,9 @@ function HomePage() {
   return (
     <PageShell title="D&D 5e SRD Formal Spec">
       <nav className="flex justify-center gap-8">
+        <a href="/character" className="text-lg text-gray-300 hover:text-amber-400 transition-colors">
+          Character Creation Workflow
+        </a>
         <a href="/trace" className="text-lg text-gray-300 hover:text-amber-400 transition-colors">
           MBT Trace Replay Visualizer
         </a>
@@ -44,6 +48,7 @@ function HomePage() {
 }
 
 function RootApp() {
+  if (pathname === "/character") return <CharacterCreationPage />
   if (pathname === "/simulator") return <App />
   if (pathname === "/machines") return <FullMachineVizPage />
   if (pathname === "/machine-viz") return <MachineVizPage />

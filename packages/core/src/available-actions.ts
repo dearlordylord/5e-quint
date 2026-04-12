@@ -1352,6 +1352,9 @@ const BattleWeaponProfileSchema = Schema.Struct({
   damageType: Schema.Literal(...DAMAGE_TYPES),
   isMelee: Schema.Boolean,
   properties: Schema.Set(Schema.Literal(...WEAPON_PROPERTIES)),
+  diceCount: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+  ),
   damageDie: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
   ),
@@ -4614,7 +4617,7 @@ export function finalizeBattleResolution(
           type: "BATTLE_ATTACK",
           targetId: CreatureId(request.token.targetId),
           attackRoll,
-          diceCount: 1,
+          diceCount: weapon.diceCount ?? 1,
           dieSize: weapon.damageDie ?? 0,
           dmg: weaponDamage,
           dt: weapon.damageType,

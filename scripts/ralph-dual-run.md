@@ -16,6 +16,10 @@
 Runtime logs, prompts, review reports, and diffs are written under ignored `.ralph/runs/<run-id>/task-<n>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
 
+Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness rescans the whole queue from the top and picks the earliest runnable task number, even if that same task number ran earlier in the run. This preserves the intended behavior where a task can do research first and implementation second without inventing an extra task number.
+
+To keep that model safe, the harness caps each numbered task at three attempts per run. If a task keeps re-queueing itself and stays runnable past that cap, the harness fails loudly so the operator fixes the plan transition instead of spinning forever. Explicit `--task` selections remain single-pass in the order requested.
+
 Important: during a live run, the "source plan file" is the plan on the Ralph launcher worktree / integration branch, not `master`. If you add or reorder tasks while Ralph is running, committing the change on `master` is not enough for the active run. Sync the plan onto the live Ralph launcher branch too:
 
 ```bash

@@ -63,6 +63,22 @@ This boundary is practical, not architectural. The SRD is freely available under
     └───────────────────────┘
 ```
 
+## Character Domain Boundary
+
+The repo now has an explicit player-character ownership layer in core:
+
+- `packages/core/src/character-domain.ts:CharacterDraft` owns incomplete SRD character-creation choices.
+- `packages/core/src/character-domain.ts:CharacterSheet` owns validated canonical PC facts.
+
+Ownership rule:
+
+- Sheet-owned facts are player-authored canonical facts such as primary class, class-level progression, background, species, languages, and alignment.
+- Total character level is derived from the canonical `classLevels` map rather than stored as a second field, matching `creature.qnt`'s class-level ownership model.
+- Derived sheet results such as proficiency bonus, ability modifiers, and later equipment or spellcasting derivations should be computed from the sheet instead of stored twice.
+- Runtime projections such as `creature.qnt:CharConfig`, `DndMachineInput`, and `InitCreatureConfig` are execution-facing outputs derived from the sheet; they are not the owner of character-creation data.
+
+This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and aligns PC class ownership with `creature.qnt` by making class-level maps the canonical source of truth for level progression.
+
 ---
 
 ## 1. Quint Spec

@@ -442,6 +442,11 @@ export interface InitCreatureConfig {
     string,
     BattleReadyableSpellPayload
   >;
+  readonly slotsMax?: ReadonlyArray<number>;
+  readonly slotsCurrent?: ReadonlyArray<number>;
+  readonly pactSlotsMax?: number;
+  readonly pactSlotsCurrent?: number;
+  readonly pactSlotLevel?: number;
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
   readonly critRange?: number;
