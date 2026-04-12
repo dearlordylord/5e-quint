@@ -187,7 +187,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 24,
       "id": "MCPA8",
-      "status": "ready-for-research",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Monster Control And Legendary Action Surface"
     }
   ]
@@ -243,7 +243,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 21    | MCPA5 - Battle Attack Rider Windows                            | done               | MCPA1                      | none                                     | Closed with `plans/MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`: these riders stay battle-scoped windows keyed to specific attack phases, and missing legality facts must be projected into battle state rather than added to MCP attack payloads.                                                                            | Complete; reuse the documented pre-roll/post-hit windows instead of exposing creature-scope rider tokens |
 | 22    | MCPA6 - Generic Spell Resolution Ownership                     | done               | none                       | none                                     | Closed with `plans/MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md`: generic spell casts stay battle-scoped action tokens backed by core-owned spell payload projection, while counterspell, save-failed reactions, concentration, and AoE iteration stay battle-owned windows.                                        | Complete; reuse the spell-ownership writeup instead of exposing raw `BATTLE_CAST_*` payloads        |
 | 23    | MCPA7 - Semantic Table Event Expansion                         | done               | none                       | none                                     | Closed with `plans/MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`: `record_table_event` should grow only for semantic hazard progression, while generic max-HP change and lasting-effect mutation stay source-owned rather than becoming raw table-event passthroughs.                                                     | Complete; reuse the hazard-only table-event boundary and keep max-HP / effect work on the owning source surfaces |
-| 24    | MCPA8 - Monster Control And Legendary Action Surface           | ready-for-research | MCPA1, MON3                | none                                     | After `MON3`, design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.                                                                                                           | Ready for research now that MON3 validated stat-block-owned recharge projection                      |
+| 24    | MCPA8 - Monster Control And Legendary Action Surface           | ready-for-implementation-after-light-research | MCPA1, MON3 | none | Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic `execute_control_command` routes for named monster legendary/recharge/daily ability choice, then wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`. | Implementation-ready once the worker reads the MCPA8 writeup, re-checks `.references/srd-5.2.1/Monsters/Overview.md` and `UBIQUITOUS_LANGUAGE.md`, and keeps non-attack legendary options deferred. |
 
 ## Current Integrated Baseline
 
@@ -290,7 +290,7 @@ Planning note:
 - `MCPA7` is done and fixes the ownership boundary for semantic table-event
   expansion: hazard progression gets semantic table routes, while generic
   max-HP and lasting-effect mutations remain source-owned.
-- `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
+- `MCPA8` research is complete: named monster-control stays on generic `execute_control_command`, and attack-shaped legendary follow-up must reuse the settled generic attack boundary plus stat-block `abilityId`.
 
 ## Task Selection Guidance
 
@@ -322,7 +322,7 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
 6. Keep `MON4` bounded to catalog/provenance/projection expansion on top of the landed MON3 generic recharge path.
 7. Keep H and I deferred.
-8. Treat `MCPA8` as the remaining active MCP research task.
+8. Treat `MCPA8` as an implementation-ready MCP follow-up, not an open research question.
 
 ## Archived Done Foundations
 
@@ -1075,16 +1075,62 @@ Plan Impact:
 
 ### Task 24 - MCPA8 - Monster Control And Legendary Action Surface
 
-Status: ready-for-research.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: MCPA1, MON3.
 
 Blocks: none.
 
-Next action: Use the landed MON3 stat-block-owned recharge path to design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities, then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.
+Next action: Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic battle-scope `execute_control_command` routes for `USE_LEGENDARY_ACTION`, `USE_RECHARGE_ABILITY`, and `USE_DAILY_ABILITY`, then wire only the attack-shaped legendary follow-up through `BATTLE_LEGENDARY_ATTACK` on the existing generic attack boundary plus stat-block `abilityId`.
 
 Acceptance criteria:
 
 - Named monster-control routes derive legality and cost from core-owned stat-block data.
 - `BATTLE_LEGENDARY_ATTACK` reuses the generic attack boundary instead of introducing a monster-specific attack payload.
 - MCP and app continue consuming generic surfaces rather than monster-named adapter routes.
+
+Research closeout:
+
+- Added `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` as the
+  durable ownership reference for this surface.
+- Settled that named monster-only ability choice belongs on generic
+  `execute_control_command` routes keyed by `monsterId` plus stat-block
+  `abilityId`, not on monster-named adapter methods or raw caller-authored
+  payloads.
+- Settled that attack-shaped legendary follow-up must remain a battle action
+  token that reuses the existing generic attack boundary, with stat-block
+  `abilityId` supplying authored identity/cost while battle keeps runtime
+  legality and resolution ownership.
+- Kept recharge, daily, and non-attack legendary options on the same generic
+  ownership model while explicitly deferring end-to-end execution for
+  non-attack legendary options until their generic spell/movement facilities
+  exist.
+- Tightened the next implementation slice so it must add one
+  legendary-capable SRD monster tracer bullet before wiring the public route
+  end to end; this avoids another partial implementation that cannot validate
+  named legendary cost derivation.
+
+Verification:
+
+- RAW / terminology check: reviewed
+  `.references/srd-5.2.1/Monsters/Overview.md` for Legendary Actions and
+  Limited Usage, and checked `UBIQUITOUS_LANGUAGE.md` for resource terminology
+  (`Pool`, `Spend`) used by the ownership writeup.
+- `/simplify` round 1: removed the ambiguous "future monster-control route"
+  wording from the audit so `USE_LEGENDARY_ACTION`, `USE_RECHARGE_ABILITY`,
+  and `USE_DAILY_ABILITY` now have one chosen public surface.
+- `/simplify` round 2: tightened `BATTLE_LEGENDARY_ATTACK` so the plan records
+  it as a follow-up on the generic attack boundary after named
+  monster-control selection, rather than as a second monster-specific attack
+  schema.
+- Verification command: `git diff --check`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA8` - marked `ready-for-implementation-after-light-research`
+- Plan edits: updated the Ralph task index, planning notes, DAG row, MCP event
+  audit rows, and this task section; added
+  `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` as the stable
+  ownership reference for later implementation
