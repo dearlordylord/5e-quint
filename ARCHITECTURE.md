@@ -70,6 +70,12 @@ The repo now has an explicit player-character ownership layer in core:
 - `packages/core/src/character-domain.ts:CharacterDraft` owns incomplete SRD character-creation choices.
 - `packages/core/src/character-domain.ts:CharacterSheet` owns validated canonical PC facts.
 
+Design shorthand:
+
+- In peace you're a character; in combat you're a creature.
+- Outside combat, player-facing authored truth lives on the character side (`CharacterDraft` / `CharacterSheet`).
+- Entering runtime or battle projects that authored truth into creature-facing execution data; combat does not become the owner of character-creation facts.
+
 Ownership rule:
 
 - Sheet-owned facts are player-authored canonical facts such as primary class, class-level progression, background, species, languages, and alignment.

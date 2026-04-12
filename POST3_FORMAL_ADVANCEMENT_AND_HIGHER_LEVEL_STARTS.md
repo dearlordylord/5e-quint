@@ -1,11 +1,20 @@
 # POST3 - Formal Advancement And Higher-Level Starts
 
 Date: 2026-04-11
-Status: implemented
+Status: archived implementation note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md)
 Depends on: CHAR7, POST1
 Blocks: POST4
 
 ## RAW And Language Anchors
+
+## Status Note
+
+This note remains the historical closeout for the landed TypeScript advancement helper.
+
+Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) for the current formalization program. That newer PRD preserves this document's core advancement decision while placing it in the newer split architecture:
+
+- `character-creation.qnt` owns level-1 creation and finalized-sheet production;
+- `character.qnt` owns advancement semantics over finalized sheets.
 
 - `.references/srd-5.2.1/Character-Creation.md`
   - `Level Advancement`

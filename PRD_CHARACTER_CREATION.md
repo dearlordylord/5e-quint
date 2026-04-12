@@ -2,9 +2,21 @@
 
 Date: 2026-04-11
 
-Status: Draft
+Status: Historical foundation; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md)
 
 Owner: Core / creature architecture
+
+## Status Note
+
+This document remains useful as the original product/domain PRD for the landed TypeScript character foundation.
+
+Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) as the current primary design artifact for the remaining Quint-driven work. That newer PRD incorporates later decisions that are not reflected here, including:
+
+- splitting formal work into `character-creation.qnt` and `character.qnt`;
+- formalizing open choices and incomplete state on the creation side;
+- keeping level-1 creation distinct from level advancement;
+- introducing the explicit character-to-creature handoff;
+- distinguishing hardcoded rules from parameterized content descriptors for future licensed-content support.
 
 ## Problem Statement
 

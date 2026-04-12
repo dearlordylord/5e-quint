@@ -1,11 +1,20 @@
 # POST1 - Formal Creation Semantics
 
 Date: 2026-04-11
-Status: research complete
+Status: archived research note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md)
 Depends on: CHAR6, CHAR7
 Blocks: POST2, POST3, POST4
 
 ## Scope
+
+## Status Note
+
+This note records the first formal-creation research closeout. It is no longer the current source of truth for the implementation program.
+
+Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) for the current design brief. In particular, this note predates the later decision to split the formal character work into:
+
+- `character-creation.qnt` for draft, open-choice, incompleteness, legality, and finalization semantics;
+- `character.qnt` for finalized-sheet advancement and character-to-creature projection semantics.
 
 This note closes POST1 as a research/design task. It does not add Quint or TypeScript implementation yet. It defines the formal creation surface that later tasks must implement without replacing the landed `CharacterDraft` / `CharacterSheet` domain or moving creation ownership into workflow state or battle/runtime config.
 
