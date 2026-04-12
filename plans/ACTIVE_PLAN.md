@@ -401,6 +401,7 @@ Next action:
 - Model the full ordered advancement choice surface rather than only class totals: each gained class level, subclass timing, score-changing feat/ASI choices, non-ASI feat choices where allowed, and level-19 Epic Boon choices where they affect legality or downstream derivation. Do not narrow this to a small feat whitelist that makes legal SRD builds unrepresentable.
 - Reject impossible advancement histories before they affect derived scores or legality checks. In particular, feat or Epic Boon selections must be validated against the actual class level where they occur.
 - Keep the task scoped to advancement/domain work. Do not rewrite or stub shared fuzz / overnight scripts as part of CHAR7.
+- Before reimplementing, inspect `plans/CHAR7_SALVAGE_HANDOFF.md` and the preserved `debug-ralph-foreground-7` Codex report/worktree for reusable domain and test changes. Reuse product code only; exclude harness-injected fuzz-script stubs and task-worktree `node_modules`.
 - Align repo-owned traceability helpers to SRD 5.2.1 before depending on them; level 19 is an Epic Boon feature, not an Ability Score Improvement.
 
 Acceptance criteria:
