@@ -7,6 +7,7 @@ import { Option } from "effect"
 import { useT } from "#/i18n.ts"
 
 type TrackLabel = "alive" | "stable" | "unstable" | "dead"
+const HEALTH_PERCENT_SCALE = 100
 
 function damageTrackLabel(snap: DndSnapshot): TrackLabel {
   if (snap.hasTag("dead")) return "dead"
@@ -17,7 +18,7 @@ function damageTrackLabel(snap: DndSnapshot): TrackLabel {
 
 function HpBar({ ctx }: { readonly ctx: DndContext }) {
   const t = useT()
-  const pct = ctx.maxHp > 0 ? Math.round((ctx.hp / ctx.maxHp) * 100) : 0
+  const pct = ctx.maxHp > 0 ? Math.round((ctx.hp / ctx.maxHp) * HEALTH_PERCENT_SCALE) : 0
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">

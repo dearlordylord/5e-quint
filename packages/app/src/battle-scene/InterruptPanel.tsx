@@ -221,6 +221,7 @@ const HIGHLIGHT_COLORS: Record<string, string> = {
   red: "text-red-400",
   amber: "text-amber-400"
 }
+const STACK_INDENT_PX = 24
 
 function StackFrameCard({ frame, isTop }: { frame: StackFrame; isTop: boolean }) {
   const colors = KIND_COLORS[frame.kind] ?? KIND_COLORS["ATTACK"]
@@ -230,7 +231,7 @@ function StackFrameCard({ frame, isTop }: { frame: StackFrame; isTop: boolean })
       className={`relative rounded-lg border-2 ${colors.border} ${colors.bg} transition-all duration-300 ${
         isTop ? "shadow-lg shadow-white/5 scale-[1.02]" : "opacity-75"
       }`}
-      style={{ marginLeft: `${frame.depth * 24}px` }}
+      style={{ marginLeft: `${frame.depth * STACK_INDENT_PX}px` }}
     >
       {/* Connector line */}
       {frame.depth > 0 && (

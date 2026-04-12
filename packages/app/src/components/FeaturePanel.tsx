@@ -7,6 +7,13 @@ import { PaladinPanel } from "#/components/PaladinPanel.tsx"
 import { RoguePanel } from "#/components/RoguePanel.tsx"
 import type { UseFeatures } from "#/features/useFeatures.ts"
 
+const DEFAULT_D10_ROLL = 5
+const MAX_CHAMPION_CRIT_RANGE = 20
+const BERSERKER_LEVEL_FRENZY = 3
+const BERSERKER_LEVEL_MINDLESS_RAGE = 6
+const BERSERKER_LEVEL_RETALIATION = 10
+const BERSERKER_LEVEL_INTIMIDATING_PRESENCE = 14
+
 export function FeaturePanel({
   config,
   features,
@@ -16,7 +23,7 @@ export function FeaturePanel({
   readonly config: FeatureConfig
   readonly onFeatureAction: (result: BridgeResult) => void
 }) {
-  const [d10Roll, setD10Roll] = useState(5)
+  const [d10Roll, setD10Roll] = useState(DEFAULT_D10_ROLL)
   const fighter = features.featureState.fighter
   const barbarian = features.featureState.barbarian
   const monk = features.featureState.monk
@@ -175,7 +182,7 @@ export function FeaturePanel({
               </div>
             </div>
           )}
-          {features.championCritRange < 20 && (
+          {features.championCritRange < MAX_CHAMPION_CRIT_RANGE && (
             <div className="mb-4 p-2 bg-indigo-900/30 border border-indigo-700 rounded text-sm">
               <div className="text-indigo-300 font-medium mb-1">Champion</div>
               <div className="text-xs text-gray-400">Critical Hit range: {features.championCritRange}-20</div>
@@ -289,7 +296,7 @@ export function FeaturePanel({
           </div>
 
           {/* Berserker Subclass Features */}
-          {features.berserkerLevel >= 3 && (
+          {features.berserkerLevel >= BERSERKER_LEVEL_FRENZY && (
             <>
               <h3 className="text-md font-semibold text-red-300 mt-4 mb-2">Berserker</h3>
 
@@ -314,14 +321,14 @@ export function FeaturePanel({
               </div>
 
               {/* Mindless Rage (L6) */}
-              {features.berserkerLevel >= 6 && features.mindlessRageImmunities.size > 0 && (
+              {features.berserkerLevel >= BERSERKER_LEVEL_MINDLESS_RAGE && features.mindlessRageImmunities.size > 0 && (
                 <div className="mb-2 p-2 bg-red-900/30 border border-red-700 rounded text-xs text-red-300">
                   Mindless Rage: immune to {[...features.mindlessRageImmunities].join(", ")}
                 </div>
               )}
 
               {/* Retaliation (L10) */}
-              {features.berserkerLevel >= 10 && (
+              {features.berserkerLevel >= BERSERKER_LEVEL_RETALIATION && (
                 <div className="mb-2">
                   <span className="text-sm text-gray-300">Retaliation</span>
                   <div className="mt-1">
@@ -337,7 +344,7 @@ export function FeaturePanel({
               )}
 
               {/* Intimidating Presence (L14) */}
-              {features.berserkerLevel >= 14 && (
+              {features.berserkerLevel >= BERSERKER_LEVEL_INTIMIDATING_PRESENCE && (
                 <div className="mb-2">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm text-gray-300">Intimidating Presence</span>

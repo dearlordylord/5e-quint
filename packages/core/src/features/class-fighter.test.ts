@@ -53,12 +53,16 @@ describe("fightingStyleBattleModifiers", () => {
   it("projects Archery into battle-owned ranged attack state", () =>
     expect(fightingStyleBattleModifiers(styles("archery"))).toEqual({
       rangedWeaponAttackRollBonus: 2,
+      defenseArmorClassBonus: 0,
+      greatWeaponFightingDamageFloor: false,
       lightPropertyExtraAttackAddsAbilityModifier: false,
     }));
 
   it("projects Two-Weapon Fighting into battle-owned Light extra attack state", () =>
     expect(fightingStyleBattleModifiers(styles("twoWeaponFighting"))).toEqual({
       rangedWeaponAttackRollBonus: 0,
+      defenseArmorClassBonus: 0,
+      greatWeaponFightingDamageFloor: false,
       lightPropertyExtraAttackAddsAbilityModifier: true,
     }));
 });

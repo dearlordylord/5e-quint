@@ -29,7 +29,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
-import { armorClass } from "#/types.ts";
+import { armorClass, resourceCount } from "#/types.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 
 function applyDamageModifiers(
@@ -812,8 +812,8 @@ export function freshCreature(
     pactSlotsCurrent: 0,
     pactSlotLevel: 0,
     concentrationSpellId: Option.none(),
-    legendaryActionsRemaining: 0,
-    legendaryResistancesRemaining: 0,
+    legendaryActionsRemaining: resourceCount(0),
+    legendaryResistancesRemaining: resourceCount(0),
     rechargeAvailable: {},
     rechargeMinRolls: {},
     dailyUsesRemaining: {},

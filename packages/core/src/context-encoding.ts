@@ -104,7 +104,9 @@ function canonicalizeEffect(effect: ActiveEffect): ActiveEffect {
         : sortReadonlyArray(
             effect.grantedQualifiedPhysicalResistances.map((entry) => ({
               ...entry,
-              bypassedBy: new Set(sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b))),
+              bypassedBy: new Set(
+                sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b)),
+              ),
             })),
             compareQualified,
           ),
@@ -114,7 +116,9 @@ function canonicalizeEffect(effect: ActiveEffect): ActiveEffect {
         : sortReadonlyArray(
             effect.grantedQualifiedPhysicalVulnerabilities.map((entry) => ({
               ...entry,
-              bypassedBy: new Set(sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b))),
+              bypassedBy: new Set(
+                sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b)),
+              ),
             })),
             compareQualified,
           ),
@@ -124,7 +128,9 @@ function canonicalizeEffect(effect: ActiveEffect): ActiveEffect {
         : sortReadonlyArray(
             effect.grantedQualifiedPhysicalImmunities.map((entry) => ({
               ...entry,
-              bypassedBy: new Set(sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b))),
+              bypassedBy: new Set(
+                sortReadonlySet(entry.bypassedBy, (a, b) => a.localeCompare(b)),
+              ),
             })),
             compareQualified,
           ),
@@ -239,24 +245,36 @@ const ActiveEffectSchema = Schema.Struct({
   grantedResistances: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),
   grantedVulnerabilities: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),
   grantedImmunities: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),
-  grantedQualifiedPhysicalResistances: Schema.optional(Schema.Array(Schema.Struct({
-    damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
-    bypassedBy: Schema.ReadonlySet(
-      Schema.Literal("adamantine", "magical", "silvered"),
+  grantedQualifiedPhysicalResistances: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
+        bypassedBy: Schema.ReadonlySet(
+          Schema.Literal("adamantine", "magical", "silvered"),
+        ),
+      }),
     ),
-  }))),
-  grantedQualifiedPhysicalVulnerabilities: Schema.optional(Schema.Array(Schema.Struct({
-    damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
-    bypassedBy: Schema.ReadonlySet(
-      Schema.Literal("adamantine", "magical", "silvered"),
+  ),
+  grantedQualifiedPhysicalVulnerabilities: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
+        bypassedBy: Schema.ReadonlySet(
+          Schema.Literal("adamantine", "magical", "silvered"),
+        ),
+      }),
     ),
-  }))),
-  grantedQualifiedPhysicalImmunities: Schema.optional(Schema.Array(Schema.Struct({
-    damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
-    bypassedBy: Schema.ReadonlySet(
-      Schema.Literal("adamantine", "magical", "silvered"),
+  ),
+  grantedQualifiedPhysicalImmunities: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        damageType: Schema.Literal("bludgeoning", "piercing", "slashing"),
+        bypassedBy: Schema.ReadonlySet(
+          Schema.Literal("adamantine", "magical", "silvered"),
+        ),
+      }),
     ),
-  }))),
+  ),
   blocksOpportunityAttacks: Schema.optional(Schema.Boolean),
   speedDeltaFeet: Schema.optional(Schema.Number),
   consumeOnQualifiedHit: Schema.optional(

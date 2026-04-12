@@ -634,6 +634,11 @@ const battleDriverSchema = {
   bDisengage: {},
   bBonusDisengage: {},
   bDodge: {},
+  bHide: {
+    stealthTotal: OI,
+    hasCoverOrObscurement: OB,
+    outOfEnemyLineOfSight: OB,
+  },
   bBonusHide: {
     stealthTotal: OI,
     hasCoverOrObscurement: OB,
@@ -686,6 +691,10 @@ const battleDriverSchema = {
   bReadySpellRelease: {
     releaserId: OS,
     saveRoll: OI,
+  },
+  bSearch: {
+    targetId: OS,
+    perceptionTotal: OI,
   },
   bCastBonusActionSpell: {
     targetId: OS,
@@ -1164,6 +1173,14 @@ function createBattleMachineDriver() {
       bDodge: () => {
         send({ type: "BATTLE_DODGE" });
       },
+      bHide: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_HIDE",
+          stealthTotal: p(picks, "stealthTotal", 1),
+          hasCoverOrObscurement: pb(picks, "hasCoverOrObscurement", false),
+          outOfEnemyLineOfSight: pb(picks, "outOfEnemyLineOfSight", false),
+        });
+      },
       bBonusHide: (picks: Record<string, unknown>) => {
         send({
           type: "BATTLE_BONUS_HIDE",
@@ -1263,6 +1280,13 @@ function createBattleMachineDriver() {
           type: "BATTLE_READY_SPELL_RELEASE",
           releaserId: pc(picks, "releaserId", ""),
           saveRoll: p(picks, "saveRoll", 10),
+        });
+      },
+      bSearch: (picks: Record<string, unknown>) => {
+        send({
+          type: "BATTLE_SEARCH",
+          targetId: pc(picks, "targetId", ""),
+          perceptionTotal: p(picks, "perceptionTotal", 10),
         });
       },
       battleStep: () => {},

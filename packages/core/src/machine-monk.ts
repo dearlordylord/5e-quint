@@ -122,7 +122,9 @@ export function wholenessOfBodyUpdate(
   const healAmount = Math.max(1, healRoll);
   return {
     bonusActionUsed: true,
-    hp: hp(Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp, c.maxHpReduction))),
+    hp: hp(
+      Math.min(c.hp + healAmount, effectiveMaxHp(c.maxHp, c.maxHpReduction)),
+    ),
     ...updateClass(c, "monk", {
       wholenessCharges: resourceCount(ms.wholenessCharges - 1),
     }),
@@ -141,7 +143,9 @@ export function uncannyMetabolismUpdate(
   const r = tsUncannyMetabolism(toFocusPool(c), ms.level, healRoll);
   if (!r.triggered) return {};
   return {
-    hp: hp(Math.min(c.hp + r.hpHealed, effectiveMaxHp(c.maxHp, c.maxHpReduction))),
+    hp: hp(
+      Math.min(c.hp + r.hpHealed, effectiveMaxHp(c.maxHp, c.maxHpReduction)),
+    ),
     ...updateClass(c, "monk", {
       focusPoints: resourceCount(r.focusPoints),
       uncannyMetabolismUsed: true,

@@ -67,7 +67,11 @@ import {
   resolveGrapple,
   targetTwoSizesSmaller,
 } from "#/machine-combat.ts";
-import { spellId as mkSpellId, type SpellName } from "#/types.ts";
+import {
+  resourceCount,
+  spellId as mkSpellId,
+  type SpellName,
+} from "#/types.ts";
 
 // TODO style: combinators
 function readyEligible(
@@ -161,10 +165,14 @@ export function buildCreatureState(
     ...(cfg.strMod != null ? { strMod: cfg.strMod } : {}),
     ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
     ...(cfg.legendaryActions != null
-      ? { legendaryActionsRemaining: cfg.legendaryActions }
+      ? { legendaryActionsRemaining: resourceCount(cfg.legendaryActions) }
       : {}),
     ...(cfg.legendaryResistances != null
-      ? { legendaryResistancesRemaining: cfg.legendaryResistances }
+      ? {
+          legendaryResistancesRemaining: resourceCount(
+            cfg.legendaryResistances,
+          ),
+        }
       : {}),
     ...(cfg.rechargeAvailable != null
       ? { rechargeAvailable: cfg.rechargeAvailable }
@@ -246,6 +254,7 @@ export function buildCreatureState(
             cfg.lightPropertyExtraAttackAddsAbilityModifier,
         }
       : {}),
+    ...(cfg.invisible === true ? { invisible: true } : {}),
     ...(cfg.prone === true ? { prone: true } : {}),
     ...(cfg.activeEffects != null ? { activeEffects: cfg.activeEffects } : {}),
     ...(cfg.baseWalkSpeed != null
@@ -462,7 +471,10 @@ export function battleStartTurn({
   const creature = c.creatures.get(id)!;
   let cs: Map<CreatureId, BattleCreatureState> = new Map(c.creatures);
   if (creature.creatureKind === "Monster") {
-    cs = setCreature(cs, id, { ...creature, legendaryActionsRemaining: 3 });
+    cs = setCreature(cs, id, {
+      ...creature,
+      legendaryActionsRemaining: resourceCount(3),
+    });
   }
   let rechargedAbilities: ReadonlyArray<string> | undefined;
   if (creature.creatureKind === "Monster") {
@@ -706,7 +718,7 @@ export function battleLegendaryAttack({
   const m = c.creatures.get(e.monsterId)!;
   const cs = setCreature(c.creatures, e.monsterId, {
     ...m,
-    legendaryActionsRemaining: m.legendaryActionsRemaining - 1,
+    legendaryActionsRemaining: resourceCount(m.legendaryActionsRemaining - 1),
   });
   const laReturn = { tag: "ADRAwaitingLegendaryAction" as const, la: c.laCtx! };
   const helpIdx = findHelpAdvantage(c.helpTargets, e.monsterId, e.laTarget);

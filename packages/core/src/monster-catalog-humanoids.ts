@@ -8,7 +8,6 @@ import { abilityModifier, armorClass } from "#/types.ts";
 
 const H_TO_L_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-H-L.md";
 const M_TO_O_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-M-O.md";
-const P_TO_S_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-P-S.md";
 
 export const KNIGHT = {
   provenance: {

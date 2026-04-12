@@ -145,9 +145,7 @@ function deriveStartTurnEffects(
             : false,
           damageAmount: r.damageAmount ?? 0,
           damageType: r.damageType ?? ("bludgeoning" as DamageType),
-          conSaveSucceeded: hasDamage
-            ? (r.conSaveSucceeded ?? true)
-            : true,
+          conSaveSucceeded: hasDamage ? (r.conSaveSucceeded ?? true) : true,
           resistances: damageMods.resistances,
           vulnerabilities: damageMods.vulnerabilities,
           immunities: damageMods.immunities,

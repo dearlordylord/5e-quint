@@ -5,10 +5,7 @@ import type { DndEvent } from "#/machine-types.ts";
 type TakeDamageEvent = Extract<DndEvent, { readonly type: "TAKE_DAMAGE" }>;
 type HealEvent = Extract<DndEvent, { readonly type: "HEAL" }>;
 type ReduceMaxHpEvent = Extract<DndEvent, { readonly type: "REDUCE_MAX_HP" }>;
-type RestoreMaxHpEvent = Extract<
-  DndEvent,
-  { readonly type: "RESTORE_MAX_HP" }
->;
+type RestoreMaxHpEvent = Extract<DndEvent, { readonly type: "RESTORE_MAX_HP" }>;
 type GrantTempHpEvent = Extract<DndEvent, { readonly type: "GRANT_TEMP_HP" }>;
 type DeathSaveEvent = Extract<DndEvent, { readonly type: "DEATH_SAVE" }>;
 type ApplyConditionEvent = Extract<

@@ -16,6 +16,8 @@ import { useT } from "#/i18n.ts"
 
 const DAMAGE_TYPES: ReadonlyArray<DamageType> = Array.from(ALL_DAMAGE_TYPES)
 const EMPTY_DAMAGE_SET: ReadonlySet<DamageType> = new Set()
+const DEFAULT_AMOUNT = 5
+const DEFAULT_D20 = 10
 
 const prevent = (fn: () => void) => (e: FormEvent) => {
   e.preventDefault()
@@ -95,17 +97,17 @@ export function EventPanel({
   readonly rageResistances?: ReadonlySet<DamageType>
 }) {
   const t = useT()
-  const [dmgAmount, setDmgAmount] = useState(5)
+  const [dmgAmount, setDmgAmount] = useState(DEFAULT_AMOUNT)
   const [dmgType, setDmgType] = useState<DamageType>("bludgeoning")
   const [isCrit, setIsCrit] = useState(false)
-  const [healAmt, setHealAmt] = useState(5)
-  const [tmpHp, setTmpHp] = useState(5)
-  const [d20, setD20] = useState(10)
+  const [healAmt, setHealAmt] = useState(DEFAULT_AMOUNT)
+  const [tmpHp, setTmpHp] = useState(DEFAULT_AMOUNT)
+  const [d20, setD20] = useState(DEFAULT_D20)
   const [condition, setCondition] = useState<Condition>("blinded")
   const [exhLevels, setExhLevels] = useState(1)
   const [slotLevel, setSlotLevel] = useState(1)
   const [spellId, setSpellId] = useState("spell_a")
-  const [fallDmg, setFallDmg] = useState(10)
+  const [fallDmg, setFallDmg] = useState(DEFAULT_D20)
   const [keepOld, setKeepOld] = useState(false)
 
   return (

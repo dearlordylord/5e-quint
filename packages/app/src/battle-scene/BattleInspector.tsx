@@ -12,6 +12,14 @@ import { SubMachineViz } from "#/components/trace-visualizer/MachineViz.tsx"
 
 // turnPhase on top, spellcasting middle, damageTrack (death) at bottom
 const CREATURE_REGIONS = ["turnPhase", "spellcasting", "damageTrack"] as const
+const DEATH_SPRITE_ROW = 2
+const DEATH_SPRITE_COL = 5
+const DEATH_SPRITE_X_BIAS = 6
+const DEATH_SPRITE_Y_BIAS = 6
+const COMPACT_SPRITE_SIZE = 18
+const FULL_SPRITE_SIZE = 24
+const COMPACT_MAX_TRANSITIONS = 10
+const SPRITE_OVERFLOW_DIVISOR = 2
 
 function replayState(events: ReadonlyArray<BattleEvent>, upTo: number) {
   const actor = createActor(battleMachine)
@@ -52,10 +60,10 @@ function SpriteIcon({
 }) {
   const scale = sprite.scale ?? 1
   const unit = (size * scale) / sprite.w
-  const row = dead ? 2 : casting ? 1 : 0
-  const col = dead ? 5 : 0
-  const xBias = dead ? 6 : 0
-  const yBias = dead ? 6 : 0
+  const row = dead ? DEATH_SPRITE_ROW : casting ? 1 : 0
+  const col = dead ? DEATH_SPRITE_COL : 0
+  const xBias = dead ? DEATH_SPRITE_X_BIAS : 0
+  const yBias = dead ? DEATH_SPRITE_Y_BIAS : 0
   const frameX = sprite.x + col * sprite.w
   const frameY = sprite.y + row * sprite.h
   return (
@@ -65,7 +73,7 @@ function SpriteIcon({
         width: size,
         height: size,
         backgroundImage: `url(${sprite.url})`,
-        backgroundPosition: `-${frameX * unit + (sprite.w * unit - size) / 2 + xBias * unit}px -${frameY * unit + (sprite.h * unit - size) / 2 + yBias * unit}px`,
+        backgroundPosition: `-${frameX * unit + (sprite.w * unit - size) / SPRITE_OVERFLOW_DIVISOR + xBias * unit}px -${frameY * unit + (sprite.h * unit - size) / SPRITE_OVERFLOW_DIVISOR + yBias * unit}px`,
         backgroundSize: `${sprite.imgW * unit}px ${sprite.imgH * unit}px`,
         backgroundRepeat: "no-repeat",
         imageRendering: "pixelated"
@@ -99,7 +107,12 @@ function CreatureStateCard({
     <div className={`rounded-lg border border-gray-700 bg-gray-900 ${compact ? "p-1.5" : "p-3"}`}>
       <div className={`flex items-center gap-2 ${compact ? "mb-1" : "mb-2"}`}>
         {sprite && (
-          <SpriteIcon sprite={sprite} size={compact ? 18 : 24} dead={cs.dead || cs.unconscious} casting={casting} />
+          <SpriteIcon
+            sprite={sprite}
+            size={compact ? COMPACT_SPRITE_SIZE : FULL_SPRITE_SIZE}
+            dead={cs.dead || cs.unconscious}
+            casting={casting}
+          />
         )}
         <span
           className={`font-semibold ${compact ? "text-xs" : "text-sm"} ${isActive ? "text-amber-300" : cs.dead ? "text-gray-600" : "text-gray-300"}`}
@@ -123,7 +136,7 @@ function CreatureStateCard({
               stateId={region}
               activeStateKey={activeKey}
               activeEvent={isActive ? activeEvent : ""}
-              maxTransitions={compact ? 10 : undefined}
+              maxTransitions={compact ? COMPACT_MAX_TRANSITIONS : undefined}
             />
           )
         })}

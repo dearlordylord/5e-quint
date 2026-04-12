@@ -5,6 +5,8 @@ type Props = {
   announcement: LayoutState["spellAnnouncement"]
   viewBox: LayoutState["viewBox"]
 }
+const SPELL_TEXT_CENTER = 2
+const SPELL_TEXT_Y_OFFSET = 40
 
 export function SpellAnnouncement({ announcement, viewBox }: Props) {
   return (
@@ -12,8 +14,8 @@ export function SpellAnnouncement({ announcement, viewBox }: Props) {
       {announcement && (
         <motion.text
           key={announcement.spellName + announcement.casterId}
-          x={viewBox.width / 2}
-          y={viewBox.height / 2 - 40}
+          x={viewBox.width / SPELL_TEXT_CENTER}
+          y={viewBox.height / SPELL_TEXT_CENTER - SPELL_TEXT_Y_OFFSET}
           textAnchor="middle"
           dominantBaseline="central"
           fill="#f9fafb"

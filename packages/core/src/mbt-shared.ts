@@ -349,6 +349,10 @@ export const QuintIncapSourceSet = z.any().transform((raw: unknown) => {
 export const QuintCreatureState = z.object({
   hp: z.bigint(),
   maxHp: z.bigint(),
+  maxHpReduction: z
+    .bigint()
+    .optional()
+    .transform((value) => value ?? 0n),
   conMod: z.bigint(),
   tempHp: z.bigint(),
   deathSaves: QuintDeathSaves,

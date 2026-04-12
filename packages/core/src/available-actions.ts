@@ -4507,238 +4507,260 @@ export function resolveBattleAction(
     };
   }
 
-  return Match.value(token).pipe(
-    Match.when({ type: "BATTLE_DASH" }, (specificToken) => ({
-      token: specificToken,
+  if (token.type === "BATTLE_DASH") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_DASH" as const },
-    })),
-    Match.when({ type: "BATTLE_DISENGAGE" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "none",
+      event: { type: "BATTLE_DASH" },
+    };
+  }
+  if (token.type === "BATTLE_DISENGAGE") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_DISENGAGE" as const },
-    })),
-    Match.when({ type: "BATTLE_BONUS_DISENGAGE" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "none",
+      event: { type: "BATTLE_DISENGAGE" },
+    };
+  }
+  if (token.type === "BATTLE_BONUS_DISENGAGE") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_BONUS_DISENGAGE" as const },
-    })),
-    Match.when({ type: "BATTLE_DODGE" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "none",
+      event: { type: "BATTLE_BONUS_DISENGAGE" },
+    };
+  }
+  if (token.type === "BATTLE_DODGE") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_DODGE" as const },
-    })),
-    Match.when({ type: "BATTLE_READY" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "none",
+      event: { type: "BATTLE_DODGE" },
+    };
+  }
+  if (token.type === "BATTLE_READY") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_READY" as const },
-    })),
-    Match.when({ type: "BATTLE_READY_PASS" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "none",
+      event: { type: "BATTLE_READY" },
+    };
+  }
+  if (token.type === "BATTLE_READY_PASS") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: { type: "BATTLE_READY_PASS" as const },
-    })),
-    Match.when({ type: "BATTLE_READY_RELEASE" }, (specificToken) => {
-      if (
-        !("targetId" in availableToken) ||
-        !availableToken.targetId.options.includes(specificToken.targetId)
-      ) {
-        return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `BATTLE_READY_RELEASE against ${specificToken.targetId} is not currently available for ${specificToken.actorId} in this battle state.`,
-        };
-      }
+      runtime: "none",
+      event: { type: "BATTLE_READY_PASS" },
+    };
+  }
+  if (token.type === "BATTLE_READY_RELEASE") {
+    if (
+      !("targetId" in availableToken) ||
+      !availableToken.targetId.options.includes(token.targetId)
+    ) {
       return {
-        token: specificToken,
-        outcome: availableToken.outcome.summary,
-        runtime: "readyAttack" as const,
+        code: "ACTION_NOT_AVAILABLE",
+        message: `BATTLE_READY_RELEASE against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
       };
-    }),
-    Match.when({ type: "BATTLE_READY_SPELL" }, (specificToken) => {
-      if (
-        !("spellName" in availableToken) ||
-        availableToken.spellName !== specificToken.spellName ||
-        !("slotLevel" in availableToken) ||
-        !availableToken.slotLevel.options.includes(specificToken.slotLevel) ||
-        !("targetId" in availableToken) ||
-        !availableToken.targetId.options.includes(specificToken.targetId)
-      ) {
-        return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `${specificToken.type} ${specificToken.spellName} against ${specificToken.targetId} is not currently available for ${specificToken.actorId} in this battle state.`,
-        };
-      }
-      const actor = context.creatures.get(CreatureId(specificToken.actorId));
-      const payload =
-        actor == null
-          ? null
-          : currentReadyableSpellPayload(
-              actor,
-              specificToken.spellName,
-              specificToken.slotLevel,
-            );
-      if (payload == null) {
-        return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `${specificToken.spellName} has no battle-owned ready spell payload for ${specificToken.actorId}.`,
-        };
-      }
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "readyAttack",
+    };
+  }
+  if (token.type === "BATTLE_READY_SPELL") {
+    if (
+      !("spellName" in availableToken) ||
+      availableToken.spellName !== token.spellName ||
+      !("slotLevel" in availableToken) ||
+      !availableToken.slotLevel.options.includes(token.slotLevel) ||
+      !("targetId" in availableToken) ||
+      !availableToken.targetId.options.includes(token.targetId)
+    ) {
       return {
-        token: specificToken,
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} ${token.spellName} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    const actor = context.creatures.get(CreatureId(token.actorId));
+    const payload =
+      actor == null
+        ? null
+        : currentReadyableSpellPayload(actor, token.spellName, token.slotLevel);
+    if (payload == null) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.spellName} has no battle-owned ready spell payload for ${token.actorId}.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_READY_SPELL",
+        targetId: CreatureId(token.targetId),
+        saveDC: payload.release.saveDC,
+        dmgOnFail: payload.release.damageOnFail,
+        halfOnSave: payload.release.halfOnSuccess,
+        dt: payload.release.damageType,
+        cond: payload.release.conditionOnFail,
+        applyCond: payload.release.applyCondition,
+        saveAbility: payload.release.saveAbility,
+        slotLvl: payload.slotLevel,
+        spellName: token.spellName,
+      },
+    };
+  }
+  if (token.type === "BATTLE_READY_SPELL_RELEASE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "readySpellRelease",
+    };
+  }
+  if (token.type === "STAND_FROM_PRONE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_STAND_FROM_PRONE" },
+    };
+  }
+  if (token.type === "CAST_COUNTERSPELL") {
+    if (
+      !("slotLevel" in availableToken) ||
+      !availableToken.slotLevel.options.includes(token.slotLevel)
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `CAST_COUNTERSPELL at slot level ${token.slotLevel} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    const interrupt = context.awaitCtx?.interrupt;
+    if (interrupt == null || interrupt.tag !== "PISpellCast") {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    const targetSpellLevel = battleSpellBaseLevel(interrupt.ctx.spellName);
+    if (targetSpellLevel == null) {
+      return {
+        code: "ACTION_NOT_SUPPORTED",
+        message: `Counterspell cannot resolve ${interrupt.ctx.spellName} because its spell level is not modeled yet.`,
+      };
+    }
+    if (counterspellAutoSuccess(targetSpellLevel, token.slotLevel)) {
+      return {
+        token,
         outcome: availableToken.outcome.summary,
-        runtime: "none" as const,
+        runtime: "none",
         event: {
-          type: "BATTLE_READY_SPELL" as const,
-          targetId: CreatureId(specificToken.targetId),
-          saveDC: payload.release.saveDC,
-          dmgOnFail: payload.release.damageOnFail,
-          halfOnSave: payload.release.halfOnSuccess,
-          dt: payload.release.damageType,
-          cond: payload.release.conditionOnFail,
-          applyCond: payload.release.applyCondition,
-          saveAbility: payload.release.saveAbility,
-          slotLvl: payload.slotLevel,
-          spellName: specificToken.spellName,
+          type: "BATTLE_RESOLVE_COUNTERSPELL",
+          reactorId: CreatureId(token.actorId),
+          decision: { tag: "RCounterspell", saveSucceeded: false },
+          csSlotLvl: token.slotLevel,
         },
       };
-    }),
-    Match.when({ type: "BATTLE_READY_SPELL_RELEASE" }, (specificToken) => ({
-      token: specificToken,
+    }
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "readySpellRelease" as const,
-    })),
-    Match.when({ type: "STAND_FROM_PRONE" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "counterspell",
+    };
+  }
+  if (token.type === "USE_UNCANNY_DODGE") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
+      runtime: "none",
       event: {
-        type: "BATTLE_STAND_FROM_PRONE" as const,
+        type: "BATTLE_RESOLVE_DMG_REACTION",
+        reactorId: CreatureId(token.actorId),
+        decision: { tag: "RUncannyDodge" },
       },
-    })),
-    Match.when({ type: "CAST_COUNTERSPELL" }, (specificToken) => {
-      if (
-        !("slotLevel" in availableToken) ||
-        !availableToken.slotLevel.options.includes(specificToken.slotLevel)
-      ) {
-        return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `CAST_COUNTERSPELL at slot level ${specificToken.slotLevel} is not currently available for ${specificToken.actorId} in this battle state.`,
-        };
-      }
-      const interrupt = context.awaitCtx?.interrupt;
-      if (interrupt == null || interrupt.tag !== "PISpellCast") {
-        return {
-          code: "ACTION_NOT_AVAILABLE" as const,
-          message: `${specificToken.type} is not currently available for ${specificToken.actorId} in this battle state.`,
-        };
-      }
-      const targetSpellLevel = battleSpellBaseLevel(interrupt.ctx.spellName);
-      if (targetSpellLevel == null) {
-        return {
-          code: "ACTION_NOT_SUPPORTED" as const,
-          message: `Counterspell cannot resolve ${interrupt.ctx.spellName} because its spell level is not modeled yet.`,
-        };
-      }
-      if (counterspellAutoSuccess(targetSpellLevel, specificToken.slotLevel)) {
-        return {
-          token: specificToken,
-          outcome: availableToken.outcome.summary,
-          runtime: "none" as const,
-          event: {
-            type: "BATTLE_RESOLVE_COUNTERSPELL" as const,
-            reactorId: CreatureId(specificToken.actorId),
-            decision: { tag: "RCounterspell" as const, saveSucceeded: false },
-            csSlotLvl: specificToken.slotLevel,
-          },
-        };
-      }
-      return {
-        token: specificToken,
-        outcome: availableToken.outcome.summary,
-        runtime: "counterspell" as const,
-      };
-    }),
-    Match.when({ type: "USE_UNCANNY_DODGE" }, (specificToken) => ({
-      token: specificToken,
+    };
+  }
+  if (token.type === "CAST_SHIELD") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
+      runtime: "none",
       event: {
-        type: "BATTLE_RESOLVE_DMG_REACTION" as const,
-        reactorId: CreatureId(specificToken.actorId),
-        decision: { tag: "RUncannyDodge" as const },
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: CreatureId(token.actorId),
+        decision: { tag: "RShield" },
       },
-    })),
-    Match.when({ type: "CAST_SHIELD" }, (specificToken) => ({
-      token: specificToken,
+    };
+  }
+  if (token.type === "USE_PARRY") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
+      runtime: "none",
       event: {
-        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
-        reactorId: CreatureId(specificToken.actorId),
-        decision: { tag: "RShield" as const },
-      },
-    })),
-    Match.when({ type: "USE_PARRY" }, (specificToken) => ({
-      token: specificToken,
-      outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
-      event: {
-        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
-        reactorId: CreatureId(specificToken.actorId),
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: CreatureId(token.actorId),
         decision: {
-          tag: "RParry" as const,
+          tag: "RParry",
           bonus:
-            context.creatures.get(CreatureId(specificToken.actorId))
-              ?.parryAcBonus ?? 0,
+            context.creatures.get(CreatureId(token.actorId))?.parryAcBonus ?? 0,
         },
       },
-    })),
-    Match.when({ type: "USE_CUTTING_WORDS" }, (specificToken) => ({
-      token: specificToken,
+    };
+  }
+  if (token.type === "USE_CUTTING_WORDS") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "cuttingWords" as const,
-    })),
-    Match.when({ type: "USE_REDIRECT_ATTACK" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "cuttingWords",
+    };
+  }
+  if (token.type === "USE_REDIRECT_ATTACK") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "none" as const,
+      runtime: "none",
       event: {
-        type: "BATTLE_RESOLVE_HIT_REACTION" as const,
-        reactorId: CreatureId(specificToken.actorId),
+        type: "BATTLE_RESOLVE_HIT_REACTION",
+        reactorId: CreatureId(token.actorId),
         decision: {
-          tag: "RRedirectAttack" as const,
-          allyId: CreatureId(specificToken.allyId),
+          tag: "RRedirectAttack",
+          allyId: CreatureId(token.allyId),
         },
       },
-    })),
-    Match.when({ type: "USE_DEFLECT_ATTACKS" }, (specificToken) => ({
-      token: specificToken,
+    };
+  }
+  if (token.type === "USE_DEFLECT_ATTACKS") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "deflectAttacks" as const,
-    })),
-    Match.when({ type: "CAST_HELLISH_REBUKE" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "deflectAttacks",
+    };
+  }
+  if (token.type === "CAST_HELLISH_REBUKE") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "hellishRebuke" as const,
-    })),
-    Match.when({ type: "USE_RETALIATION" }, (specificToken) => ({
-      token: specificToken,
+      runtime: "hellishRebuke",
+    };
+  }
+  if (token.type === "USE_RETALIATION") {
+    return {
+      token,
       outcome: availableToken.outcome.summary,
-      runtime: "retaliation" as const,
-    })),
-    Match.when({ type: "TRIGGER_FIRE_SHIELD" }, (specificToken) => ({
-      token: specificToken,
-      outcome: availableToken.outcome.summary,
-      runtime: "fireShield" as const,
-    })),
-    Match.exhaustive,
-  );
+      runtime: "retaliation",
+    };
+  }
+  return {
+    token,
+    outcome: availableToken.outcome.summary,
+    runtime: "fireShield",
+  };
 }
 
 export function finalizeBattleResolution(

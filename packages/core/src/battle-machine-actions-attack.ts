@@ -100,10 +100,7 @@ function battleWeaponDamage(
     isMelee,
     weaponProperties,
   );
-  // Public MCP attacks supply the rolled weapon damage total directly. When the
-  // caller owns the aggregate roll, trust that total instead of requiring the
-  // underlying die faces solely for Great Weapon Fighting validation.
-  if (damageDieRolls == null) return fallbackDamage;
+  if (damageDieRolls == null) return useFloor ? null : fallbackDamage;
   if (damageDieRolls.length !== diceCount) return null;
   if (
     damageDieRolls.some(
@@ -308,8 +305,11 @@ export function battleAttack({
   if (ac.dead || isIncapacitated(ac) || tc.dead) return {};
   if (ac.actionsRemaining <= 0 && ac.extraAttacksRemaining <= 0) return {};
   const weapon = ac.mainHandWeapon ?? UNARMED_STRIKE_PROFILE;
-  const isMeleeAttack = ac.mainHandWeapon == null ? true : e.isMelee;
-  const weaponProperties = e.weaponProperties ?? weapon.properties ?? new Set();
+  const isMeleeAttack = e.isMelee;
+  const weaponProperties = new Set<WeaponProperty>(
+    e.weaponProperties ?? weapon.properties ?? [],
+  );
+  if (e.isFinesse) weaponProperties.add("finesse");
   const expectedDamageDie = battleMainHandDamageDie(ac, isMeleeAttack);
   if (
     expectedDamageDie != null &&
@@ -439,14 +439,16 @@ export function battleResolveHitReaction({
     byTag("RRedirectAttack", (d) => ({
       ...atk,
       target: d.allyId,
-      targetAc: atk.redirectableAlliesByReactor
-        .get(e.reactorId)!
-        .get(d.allyId)!,
+      targetAc:
+        e.reactorId == null
+          ? atk.targetAc
+          : atk.redirectableAlliesByReactor.get(e.reactorId)!.get(d.allyId)!,
     })),
     byTag("RPass", () => atk),
     Match.exhaustive,
   );
   if (retroAtk !== atk) {
+    if (e.reactorId == null) return {};
     const reactor = c.creatures.get(e.reactorId)!;
     const updatedReactor = Match.value(e.decision).pipe(
       byTag("RShield", () => {

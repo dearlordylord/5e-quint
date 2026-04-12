@@ -11,10 +11,7 @@ import { ZERO_HIT_DICE } from "#/features/class-tables.ts";
 import * as barb from "#/machine-barbarian.ts";
 import * as bard from "#/machine-bard.ts";
 import * as cleric from "#/machine-cleric.ts";
-import {
-  resolveGrapple,
-  resolveShove,
-} from "#/machine-combat.ts";
+import { resolveGrapple, resolveShove } from "#/machine-combat.ts";
 import {
   concBreak,
   concBreakFields,
@@ -241,10 +238,7 @@ export const creatureMachine = setup({
     applyHealFromZero: assign(({ context: c, event: e }) => ({
       deathSaves: DEATH_SAVES_RESET,
       hp: hp(
-        Math.min(
-          asHeal(e).amount,
-          effectiveMaxHp(c.maxHp, c.maxHpReduction),
-        ),
+        Math.min(asHeal(e).amount, effectiveMaxHp(c.maxHp, c.maxHpReduction)),
       ),
       pendingResolution: null,
     })),

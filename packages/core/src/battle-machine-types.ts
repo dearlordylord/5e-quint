@@ -14,16 +14,21 @@ import type {
 } from "#/monster-types.ts";
 import type {
   ActiveEffect,
+  Ability,
   ArmorClass,
   BattleWeaponProfile,
+  Condition,
   CreatureId,
   CreatureKind,
   DamageQualifier,
   DamageType,
+  DifficultyClass,
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
   Size,
+  SpellId,
+  SpellSlotLevel,
 } from "#/types.ts";
 
 export type { CreatureId } from "#/types.ts";
@@ -441,6 +446,7 @@ export interface InitCreatureConfig {
   readonly bardicInspirationCharges?: number;
   readonly parryAcBonus?: number;
   readonly lightPropertyExtraAttackAddsAbilityModifier?: boolean;
+  readonly invisible?: boolean;
   readonly prone?: boolean;
   readonly activeEffects?: ReadonlyArray<ActiveEffect>;
   /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */

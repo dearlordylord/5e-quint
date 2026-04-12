@@ -15,15 +15,22 @@ import { I18nContext, type Locale, LocaleContext, messages, useLocale, useT } fr
 
 const DEFAULT_MAX_HP = 20
 export const DEFAULT_SPEED = 30
+const DEFAULT_CLASS_LEVEL = 5
+const INITIAL_CURSOR = -1
 
 function getClassFromUrl(): ClassName {
   const raw = new URLSearchParams(window.location.search).get("class") ?? "fighter"
   return CLASS_NAMES.includes(raw as ClassName) ? (raw as ClassName) : "fighter"
 }
 
-export const DEFAULT_HIT_DICE = singleClassHitDice(getClassFromUrl(), 5)
+export const DEFAULT_HIT_DICE = singleClassHitDice(getClassFromUrl(), DEFAULT_CLASS_LEVEL)
 
-const FEATURE_CONFIG: FeatureConfig = { className: getClassFromUrl(), level: 5, strMod: 3, profBonus: 3 }
+const FEATURE_CONFIG: FeatureConfig = {
+  className: getClassFromUrl(),
+  level: DEFAULT_CLASS_LEVEL,
+  strMod: 3,
+  profBonus: 3
+}
 
 const DEFAULT_INPUT: DndMachineInput = {
   maxHp: DEFAULT_MAX_HP,
@@ -64,9 +71,9 @@ export function App() {
   const actorRef = useRef<ReturnType<typeof createActor<typeof creatureMachine>> | null>(null)
   const [snapshot, setSnapshot] = useState<DndSnapshot | null>(null)
   const [log, setLog] = useState<Array<LogEntry>>([])
-  const [cursor, setCursor] = useState(-1)
+  const [cursor, setCursor] = useState(INITIAL_CURSOR)
   const logIdRef = useRef(0)
-  const cursorRef = useRef(-1)
+  const cursorRef = useRef(INITIAL_CURSOR)
   const logRef = useRef<Array<LogEntry>>([])
 
   const features = useFeatures(FEATURE_CONFIG, snapshot)
@@ -76,9 +83,11 @@ export function App() {
   // call whatever `notifyFeatures` points to at invocation time.
   // TODO: find a cleaner way to wire feature notifications without the ref indirection.
   const notifyFeaturesRef = useRef<((event: DndEvent) => void) | null>(null)
+  // eslint-disable-next-line functional/immutable-data
   notifyFeaturesRef.current = notifyFeatures
 
   const updateCursor = useCallback((val: number) => {
+    // eslint-disable-next-line functional/immutable-data
     cursorRef.current = val
     setCursor(val)
   }, [])
@@ -89,11 +98,14 @@ export function App() {
       const actor = createActor(creatureMachine, { input })
       actor.subscribe(setSnapshot)
       actor.start()
+      // eslint-disable-next-line functional/immutable-data
       actorRef.current = actor
       setSnapshot(actor.getSnapshot())
+      // eslint-disable-next-line functional/immutable-data
       logRef.current = []
       setLog([])
-      updateCursor(-1)
+      updateCursor(INITIAL_CURSOR)
+      // eslint-disable-next-line functional/immutable-data
       logIdRef.current = 0
     },
     [updateCursor]
@@ -104,7 +116,7 @@ export function App() {
     return () => {
       actorRef.current?.stop()
     }
-  }, [])
+  }, [initActor])
 
   const appendLogEntry = useCallback(
     (event: DndEvent, featureAction?: BridgeResult["featureAction"]) => {
@@ -113,6 +125,7 @@ export function App() {
       actorRef.current.send(event)
       const after = stateKey(actorRef.current.getSnapshot())
       const newEntry: LogEntry = {
+        // eslint-disable-next-line functional/immutable-data
         id: ++logIdRef.current,
         event,
         fromState: before,
@@ -121,6 +134,7 @@ export function App() {
       }
       const truncateAt = cursorRef.current + 1
       const nextLog = [...logRef.current.slice(0, truncateAt), newEntry]
+      // eslint-disable-next-line functional/immutable-data
       logRef.current = nextLog
       setLog(nextLog)
       updateCursor(truncateAt)
@@ -149,11 +163,12 @@ export function App() {
   const jumpTo = useCallback(
     (targetIndex: number) => {
       const currentLog = logRef.current
-      if (targetIndex < -1 || targetIndex >= currentLog.length) return
+      if (targetIndex < INITIAL_CURSOR || targetIndex >= currentLog.length) return
       actorRef.current?.stop()
       const eventsToReplay = currentLog.slice(0, targetIndex + 1).map((e) => e.event)
       const { actor, snapshot: newSnap } = replayEvents(DEFAULT_INPUT, eventsToReplay)
       actor.subscribe(setSnapshot)
+      // eslint-disable-next-line functional/immutable-data
       actorRef.current = actor
       setSnapshot(newSnap)
       // Replay feature state

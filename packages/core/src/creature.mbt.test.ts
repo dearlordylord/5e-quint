@@ -648,13 +648,9 @@ function createDndDriver() {
                 // Creature-level MBT: inline hook data for hookless effects
                 damageAmount:
                   effDmgAmount != null ? Number(effDmgAmount) : undefined,
-                damageType: effDmgType
-                  ? mapDamageType(effDmgType)
-                  : undefined,
-                healAmount:
-                  effHeal != null ? Number(effHeal) : undefined,
-                tempHpAmount:
-                  effTempHp != null ? Number(effTempHp) : undefined,
+                damageType: effDmgType ? mapDamageType(effDmgType) : undefined,
+                healAmount: effHeal != null ? Number(effHeal) : undefined,
+                tempHpAmount: effTempHp != null ? Number(effTempHp) : undefined,
                 removeOnSaveSuccess: effSaveResult != null ? true : undefined,
               },
             ];
@@ -737,29 +733,26 @@ function createDndDriver() {
         // When turnPhase != "acting", Quint skips nondet generation — all params are undefined (no-op path)
         // Quint treats saves and damage as SEPARATE lists — split into two resolutions
         // so each matches its own active effect independently.
-        const saveResolution =
-          numSaves
-            ? [
-                {
-                  spellId: spellId(saveSpellId ?? ""),
-                  saveSucceeded: saveSucceeded ?? false,
-                  removeOnSaveSuccess: true,
-                },
-              ]
-            : [];
-        const dmgResolution =
-          numDmg
-            ? [
-                {
-                  spellId: spellId(dmgSpellId ?? ""),
-                  saveSucceeded: false,
-                  conSaveSucceeded: conSave ?? false,
-                  damageAmount:
-                    dmgAmount != null ? Number(dmgAmount) : undefined,
-                  damageType: dmgType ? mapDamageType(dmgType) : undefined,
-                },
-              ]
-            : [];
+        const saveResolution = numSaves
+          ? [
+              {
+                spellId: spellId(saveSpellId ?? ""),
+                saveSucceeded: saveSucceeded ?? false,
+                removeOnSaveSuccess: true,
+              },
+            ]
+          : [];
+        const dmgResolution = numDmg
+          ? [
+              {
+                spellId: spellId(dmgSpellId ?? ""),
+                saveSucceeded: false,
+                conSaveSucceeded: conSave ?? false,
+                damageAmount: dmgAmount != null ? Number(dmgAmount) : undefined,
+                damageType: dmgType ? mapDamageType(dmgType) : undefined,
+              },
+            ]
+          : [];
         const effectResolutions = [...saveResolution, ...dmgResolution];
         const isMonster = currentCreatureKind === "Monster";
         const sb = currentStatBlock;
@@ -1293,9 +1286,9 @@ describe("DnD MBT", () => {
   });
 
   const isCi = process.env["CI"] === "true";
-  const mbtBackend = (
-    process.env["MBT_BACKEND"] ?? "typescript"
-  ) as "typescript" | "rust";
+  const mbtBackend = (process.env["MBT_BACKEND"] ?? "typescript") as
+    | "typescript"
+    | "rust";
   // Keep local runs cheap; broader random coverage belongs in CI/fuzz runs.
   const MBT_TRACE_COUNT = isCi ? 50 : 1;
   const MBT_STEP_COUNT = isCi ? 30 : 10;

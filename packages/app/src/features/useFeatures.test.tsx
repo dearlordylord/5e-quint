@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { BridgeResult } from "@dnd/core/features/feature-bridge.ts"
 import type { FeatureConfig } from "@dnd/core/features/feature-store.ts"
 import type { DndSnapshot } from "@dnd/core/machine.ts"
 import { creatureMachine } from "@dnd/core/machine.ts"
@@ -12,6 +13,19 @@ import { useFeatures } from "#/features/useFeatures.ts"
 const FIGHTER_L5: FeatureConfig = { className: "fighter", level: 5 }
 const BARBARIAN_L5: FeatureConfig = { className: "barbarian", level: 5 }
 const WIZARD_L5: FeatureConfig = { className: "wizard", level: 5 }
+
+function expectDefined<T>(value: T | null | undefined): NonNullable<T> {
+  expect(value).toBeDefined()
+  return value as NonNullable<T>
+}
+
+function expectBridgeResult(value: BridgeResult | null): BridgeResult {
+  expect(value).not.toBeNull()
+  if (value === null) {
+    throw new Error("Expected bridge result")
+  }
+  return value
+}
 
 function makeSnapshot(input = { maxHp: 20 }): DndSnapshot {
   const actor = createActor(creatureMachine, { input })
@@ -36,9 +50,9 @@ describe("useFeatures", () => {
     it("fighter config has correct charges", () => {
       const snap = makeSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
-      expect(result.current.featureState.fighter).toBeDefined()
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
-      expect(result.current.featureState.fighter!.secondWindMax).toBe(3)
+      const fighter = expectDefined(result.current.featureState.fighter)
+      expect(fighter.secondWindCharges).toBe(3)
+      expect(fighter.secondWindMax).toBe(3)
     })
 
     it("non-fighter config has no fighter state", () => {
@@ -61,11 +75,11 @@ describe("useFeatures", () => {
 
       // Use a charge first
       act(() => result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" }))
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(2)
 
       // Short rest restores 1
       act(() => result.current.notify({ type: "SHORT_REST", hdRolls: [] } as DndEvent))
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(3)
     })
 
     it("LONG_REST restores all charges", () => {
@@ -78,10 +92,10 @@ describe("useFeatures", () => {
         result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" })
         result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" })
       })
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(0)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(0)
 
       act(() => result.current.notify({ type: "LONG_REST" } as DndEvent))
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(3)
     })
 
     it("irrelevant events are ignored", () => {
@@ -89,7 +103,7 @@ describe("useFeatures", () => {
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
       act(() => result.current.notify({ type: "HEAL", amount: 5 } as DndEvent))
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(3)
     })
 
     it("START_TURN is handled without error", () => {
@@ -98,7 +112,7 @@ describe("useFeatures", () => {
 
       act(() => result.current.notify({ type: "START_TURN" } as DndEvent))
       // START_TURN is a no-op for fighter Second Wind — charges unchanged
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(3)
     })
   })
 
@@ -107,15 +121,15 @@ describe("useFeatures", () => {
       const snap = makeActingSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
-      let bridgeResult: ReturnType<typeof result.current.secondWind>
+      let bridgeResult: BridgeResult | null = null
       act(() => {
         bridgeResult = result.current.secondWind(7)
       })
-      expect(bridgeResult!).not.toBeNull()
-      expect(bridgeResult!.featureAction).toEqual({ type: "FIGHTER_USE_SECOND_WIND" })
-      expect(bridgeResult!.machineEvents).toHaveLength(2)
-      expect(bridgeResult!.machineEvents[0].type).toBe("USE_BONUS_ACTION")
-      expect(bridgeResult!.machineEvents[1].type).toBe("HEAL")
+      const definedResult = expectBridgeResult(bridgeResult)
+      expect(definedResult.featureAction).toEqual({ type: "FIGHTER_USE_SECOND_WIND" })
+      expect(definedResult.machineEvents).toHaveLength(2)
+      expect(definedResult.machineEvents[0].type).toBe("USE_BONUS_ACTION")
+      expect(definedResult.machineEvents[1].type).toBe("HEAL")
     })
 
     it("decrements charges after call", () => {
@@ -125,7 +139,7 @@ describe("useFeatures", () => {
       act(() => {
         result.current.secondWind(5)
       })
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(2)
     })
 
     it("throws when charges are 0 (canUseSecondWind precondition enforced)", () => {
@@ -151,11 +165,11 @@ describe("useFeatures", () => {
     it("returns null when snapshot is null", () => {
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, null))
 
-      let bridgeResult: ReturnType<typeof result.current.secondWind>
+      let bridgeResult: BridgeResult | null = null
       act(() => {
         bridgeResult = result.current.secondWind(5)
       })
-      expect(bridgeResult!).toBeNull()
+      expect(bridgeResult).toBeNull()
     })
   })
 
@@ -198,10 +212,10 @@ describe("useFeatures", () => {
         result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" })
         result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" })
       })
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(1)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(1)
 
       act(() => result.current.resetToInitial())
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(3)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(3)
     })
   })
 
@@ -211,7 +225,7 @@ describe("useFeatures", () => {
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
       act(() => result.current.dispatch({ type: "FIGHTER_USE_SECOND_WIND" }))
-      expect(result.current.featureState.fighter!.secondWindCharges).toBe(2)
+      expect(expectDefined(result.current.featureState.fighter).secondWindCharges).toBe(2)
     })
   })
 
@@ -220,14 +234,14 @@ describe("useFeatures", () => {
       const snap = makeActingSnapshot()
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
-      let bridgeResult: ReturnType<typeof result.current.actionSurge>
+      let bridgeResult: BridgeResult | null = null
       act(() => {
         bridgeResult = result.current.actionSurge()
       })
-      expect(bridgeResult!).not.toBeNull()
-      expect(bridgeResult!.machineEvents).toHaveLength(1)
-      expect(bridgeResult!.machineEvents[0].type).toBe("GRANT_EXTRA_ACTION")
-      expect(bridgeResult!.featureAction).toEqual({ type: "FIGHTER_USE_ACTION_SURGE" })
+      const definedResult = expectBridgeResult(bridgeResult)
+      expect(definedResult.machineEvents).toHaveLength(1)
+      expect(definedResult.machineEvents[0].type).toBe("GRANT_EXTRA_ACTION")
+      expect(definedResult.featureAction).toEqual({ type: "FIGHTER_USE_ACTION_SURGE" })
     })
 
     it("canActionSurge becomes false after use", () => {
@@ -248,11 +262,11 @@ describe("useFeatures", () => {
       // Use action surge (sets usedThisTurn, but L5 fighter only has 1 charge so charges also drops to 0)
       // We need to test the usedThisTurn reset specifically. Use dispatch to set usedThisTurn without consuming charge.
       act(() => result.current.dispatch({ type: "FIGHTER_USE_ACTION_SURGE" }))
-      expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(true)
+      expect(expectDefined(result.current.featureState.fighter).actionSurgeUsedThisTurn).toBe(true)
 
       // Notify START_TURN resets usedThisTurn
       act(() => result.current.notify({ type: "START_TURN" } as DndEvent))
-      expect(result.current.featureState.fighter!.actionSurgeUsedThisTurn).toBe(false)
+      expect(expectDefined(result.current.featureState.fighter).actionSurgeUsedThisTurn).toBe(false)
     })
 
     it("charges restore after short rest", () => {
@@ -260,10 +274,10 @@ describe("useFeatures", () => {
       const { result } = renderHook(() => useFeatures(FIGHTER_L5, snap))
 
       act(() => result.current.dispatch({ type: "FIGHTER_USE_ACTION_SURGE" }))
-      expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(0)
+      expect(expectDefined(result.current.featureState.fighter).actionSurgeCharges).toBe(0)
 
       act(() => result.current.notify({ type: "SHORT_REST", hdRolls: [] } as DndEvent))
-      expect(result.current.featureState.fighter!.actionSurgeCharges).toBe(1)
+      expect(expectDefined(result.current.featureState.fighter).actionSurgeCharges).toBe(1)
     })
   })
 })
@@ -273,8 +287,8 @@ describe("useFeatures — barbarian", () => {
     it("barbarian config has correct charges", () => {
       const snap = makeSnapshot()
       const { result } = renderHook(() => useFeatures(BARBARIAN_L5, snap))
-      expect(result.current.featureState.barbarian).toBeDefined()
-      expect(result.current.featureState.barbarian!.rageCharges).toBe(3)
+      const barbarian = expectDefined(result.current.featureState.barbarian)
+      expect(barbarian.rageCharges).toBe(3)
       expect(result.current.isRaging).toBe(false)
       expect(result.current.canCastSpells).toBe(true)
     })
@@ -290,7 +304,7 @@ describe("useFeatures — barbarian", () => {
         result.current.enterRage()
       })
       expect(result.current.isRaging).toBe(true)
-      expect(result.current.featureState.barbarian!.rageCharges).toBe(2)
+      expect(expectDefined(result.current.featureState.barbarian).rageCharges).toBe(2)
       expect(result.current.canCastSpells).toBe(false)
     })
   })
@@ -338,13 +352,13 @@ describe("useFeatures — barbarian", () => {
         result.current.enterRage()
       })
 
-      let bridgeResult: ReturnType<typeof result.current.extendRageBA>
+      let bridgeResult: BridgeResult | null = null
       act(() => {
         bridgeResult = result.current.extendRageBA()
       })
-      expect(bridgeResult!).not.toBeNull()
-      expect(bridgeResult!.machineEvents).toHaveLength(1)
-      expect(bridgeResult!.machineEvents[0].type).toBe("USE_BONUS_ACTION")
+      const definedResult = expectBridgeResult(bridgeResult)
+      expect(definedResult.machineEvents).toHaveLength(1)
+      expect(definedResult.machineEvents[0].type).toBe("USE_BONUS_ACTION")
     })
   })
 
@@ -357,7 +371,7 @@ describe("useFeatures — barbarian", () => {
       act(() => {
         result.current.declareReckless()
       })
-      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(true)
+      expect(expectDefined(result.current.featureState.barbarian).recklessThisTurn).toBe(true)
       expect(result.current.canDeclareReckless).toBe(false)
     })
 
@@ -368,12 +382,12 @@ describe("useFeatures — barbarian", () => {
       act(() => {
         result.current.declareReckless()
       })
-      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(true)
+      expect(expectDefined(result.current.featureState.barbarian).recklessThisTurn).toBe(true)
 
       act(() => {
         result.current.notify({ type: "START_TURN" } as DndEvent)
       })
-      expect(result.current.featureState.barbarian!.recklessThisTurn).toBe(false)
+      expect(expectDefined(result.current.featureState.barbarian).recklessThisTurn).toBe(false)
     })
   })
 

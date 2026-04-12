@@ -66,7 +66,7 @@ import type {
   ExpiryPhase,
   SpellId,
 } from "#/types.ts";
-import { armorClass } from "#/types.ts";
+import { resourceCount } from "#/types.ts";
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag");
@@ -525,7 +525,7 @@ export function redirectableAlliesByReactor(
     ) {
       continue;
     }
-    const allies = new Map<CreatureId, number>();
+    const allies = new Map<CreatureId, ArmorClass>();
     for (const [candidateId, candidate] of cs) {
       if (
         candidateId !== id &&
@@ -534,7 +534,7 @@ export function redirectableAlliesByReactor(
         !candidate.unconscious &&
         isRedirectAlly(c, candidate)
       ) {
-        allies.set(candidateId, armorClass(candidate.baseArmorClass));
+        allies.set(candidateId, candidate.baseArmorClass);
       }
     }
     if (allies.size > 0) alliesByReactor.set(id, allies);
@@ -666,7 +666,9 @@ export function spendLR(cs: Creatures, id: CreatureId): Creatures {
   const c = cs.get(id)!;
   return setCreature(cs, id, {
     ...c,
-    legendaryResistancesRemaining: c.legendaryResistancesRemaining - 1,
+    legendaryResistancesRemaining: resourceCount(
+      c.legendaryResistancesRemaining - 1,
+    ),
   });
 }
 

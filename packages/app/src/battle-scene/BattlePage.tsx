@@ -40,6 +40,9 @@ function replayPair(events: ReadonlyArray<BattleEvent>, upTo: number) {
 
 const CAST_BAR_FADE_MS = 550
 const SPELL_NAME_FADE_MS = 800
+const STICKY_HEADER_FALLBACK_HEIGHT = 200
+const STICKY_HEADER_SCROLL_OFFSET = 40
+const AUTO_ADVANCE_FALLBACK_MS = 800
 
 function getInitialStep(max: number): number {
   const raw = new URLSearchParams(window.location.search).get("step")
@@ -62,8 +65,8 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
   useEffect(() => {
     const onScroll = () => {
       // Switch to compact only after scrolling past the expanded header's height
-      const h = headerRef.current?.offsetHeight ?? 200
-      setIsStuck(window.scrollY > h - 40)
+      const h = headerRef.current?.offsetHeight ?? STICKY_HEADER_FALLBACK_HEIGHT
+      setIsStuck(window.scrollY > h - STICKY_HEADER_SCROLL_OFFSET)
     }
     window.addEventListener("scroll", onScroll, { passive: true })
     return () => window.removeEventListener("scroll", onScroll)
@@ -125,9 +128,11 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
     if (castBarTimerRef.current) clearTimeout(castBarTimerRef.current)
     if (spellTimerRef.current) clearTimeout(spellTimerRef.current)
     if (cues.castBar) {
+      // eslint-disable-next-line functional/immutable-data
       castBarTimerRef.current = setTimeout(() => setCastBarFaded(true), CAST_BAR_FADE_MS)
     }
     if (cues.spellAnnouncement) {
+      // eslint-disable-next-line functional/immutable-data
       spellTimerRef.current = setTimeout(() => setSpellFaded(true), SPELL_NAME_FADE_MS)
     }
     setDiceCues(cues.diceRolls)
@@ -190,7 +195,7 @@ export function BattlePage({ scenario }: { scenario: BattleScenario }) {
       setAutoPlay(false)
       return
     }
-    const delayMs = cues.autoAdvanceDelay || 800
+    const delayMs = cues.autoAdvanceDelay || AUTO_ADVANCE_FALLBACK_MS
     const timer = setTimeout(() => stepTo(cursor + 1), delayMs)
     return () => clearTimeout(timer)
   }, [autoPlay, cursor, events.length, stepTo, cues.autoAdvanceDelay])

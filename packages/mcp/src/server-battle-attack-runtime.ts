@@ -33,6 +33,32 @@ const BattleGrappleRuntimeOverrideSchema = Schema.Struct({
   }),
 });
 
+function battleAttackShapeError(
+  token: Extract<
+    BattleResolvedActionToken,
+    { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+  >,
+) {
+  return {
+    code: "INVALID_RUNTIME_INPUT" as const,
+    message: `${token.type} requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.`,
+  };
+}
+
+function missingRuntimeInputsError(
+  token: Extract<
+    BattleResolvedActionToken,
+    | { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+    | { readonly type: "BATTLE_GRAPPLE" }
+  >,
+  runtimeName: "battleAttack" | "battleGrapple",
+) {
+  return {
+    code: "INVALID_RUNTIME_INPUT" as const,
+    message: `${token.type} requires explicit runtime ${runtimeName} inputs on execute_action.`,
+  };
+}
+
 export function decodeBattleAttackRuntimeInputs(
   args: unknown,
   context: BattleContext,
@@ -44,28 +70,41 @@ export function decodeBattleAttackRuntimeInputs(
   | BattleResolutionRuntimeInputs
   | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
   if (typeof args !== "object" || args === null || Array.isArray(args)) {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires explicit runtime battleAttack inputs on execute_action.`,
-    };
+    return missingRuntimeInputsError(token, "battleAttack");
   }
 
   const runtime = Reflect.get(args, "runtime");
   if (runtime === undefined) {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires explicit runtime battleAttack inputs on execute_action.`,
-    };
+    return missingRuntimeInputsError(token, "battleAttack");
   }
 
   const decoded = Schema.decodeUnknownEither(BattleAttackRuntimeOverrideSchema)(
     runtime,
   );
   if (decoded._tag === "Left") {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.`,
-    };
+    return battleAttackShapeError(token);
+  }
+  const values = Reflect.get(runtime as object, "values");
+  if (typeof values !== "object" || values === null || Array.isArray(values)) {
+    return battleAttackShapeError(token);
+  }
+  const allowedKeys = new Set([
+    "attackRoll",
+    "targetAc",
+    "weaponDamage",
+    "attackerWithin5ft",
+    "attackerWithin60ft",
+    "hostileWithin5ft",
+    "targetCanSeeAttacker",
+    "attackerCanSeeTarget",
+    "frightSourceInLOS",
+    "hasAllyAdjacentToTarget",
+    "hitReactionCandidates",
+  ]);
+  for (const key of Object.keys(values)) {
+    if (!allowedKeys.has(key)) {
+      return battleAttackShapeError(token);
+    }
   }
 
   const candidateIds = new Set([...context.creatures.keys()].map(String));
@@ -93,18 +132,12 @@ export function decodeBattleGrappleRuntimeInputs(
   | BattleResolutionRuntimeInputs
   | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
   if (typeof args !== "object" || args === null || Array.isArray(args)) {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires explicit runtime battleGrapple inputs on execute_action.`,
-    };
+    return missingRuntimeInputsError(token, "battleGrapple");
   }
 
   const runtime = Reflect.get(args, "runtime");
   if (runtime === undefined) {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires explicit runtime battleGrapple inputs on execute_action.`,
-    };
+    return missingRuntimeInputsError(token, "battleGrapple");
   }
 
   const decoded = Schema.decodeUnknownEither(

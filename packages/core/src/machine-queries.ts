@@ -34,9 +34,9 @@ export interface D20ModifierSummary {
 }
 
 function activeConditions(ctx: DndContext): ReadonlyArray<Condition> {
-  return (Object.keys(
-    CANONICAL_CONDITION_CONSEQUENCES,
-  ) as ReadonlyArray<Condition>).filter((condition) =>
+  return (
+    Object.keys(CANONICAL_CONDITION_CONSEQUENCES) as ReadonlyArray<Condition>
+  ).filter((condition) =>
     condition === "incapacitated" ? isIncapacitated(ctx) : ctx[condition],
   );
 }
@@ -158,7 +158,6 @@ export function saveMods(ctx: DndContext, ability: Ability): D20Mods {
     hasAdvantage: false,
     hasDisadvantage:
       ability === "dex" && hasConditionConsequence(ctx, "saveDexDisadvantage"),
-    autoFail:
-      isStrOrDex && hasConditionConsequence(ctx, "saveStrDexAutoFail"),
+    autoFail: isStrOrDex && hasConditionConsequence(ctx, "saveStrDexAutoFail"),
   };
 }
