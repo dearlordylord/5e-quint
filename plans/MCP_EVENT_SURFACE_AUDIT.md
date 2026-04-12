@@ -3,8 +3,6 @@
 ## Status
 
 This file is the durable MCP event-surface backlog reference.
-Movement/help rows in this audit are downstream applications of
-`MOVEMENT_GEOMETRY_OWNERSHIP.md`.
 
 - Keep it lean and forward-looking.
 - Do not use raw event-count coverage as a completion metric.
