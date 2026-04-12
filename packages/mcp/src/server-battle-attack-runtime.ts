@@ -15,9 +15,6 @@ const BattleAttackRuntimeOverrideSchema = Schema.Struct({
       Schema.int(),
       Schema.greaterThanOrEqualTo(0),
     ),
-    sneakAttackDamage: Schema.optional(
-      Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
-    ),
     attackerWithin5ft: Schema.Boolean,
     attackerWithin60ft: Schema.optional(Schema.Boolean),
     hostileWithin5ft: Schema.Boolean,

@@ -2914,6 +2914,51 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle resolution ignores caller-supplied sneak attack damage on public BATTLE_ATTACK", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_ATTACK",
+        targetId: "B",
+        knockOut: false,
+      }),
+    );
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 6,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+            sneakAttackDamage: 99,
+          },
+        } as never,
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: expect.objectContaining({
+        type: "BATTLE_ATTACK",
+        dmg: 6,
+        saDmg: 0,
+      }),
+      outcome:
+        "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+    });
+  });
+
   test("battle resolution preserves two-die weapon profiles from projected loadouts", () => {
     const actor = makeBattleActor({
       type: "BATTLE_INIT",

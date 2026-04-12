@@ -145,13 +145,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 17,
       "id": "MCPA1",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Attack Public Contract"
     },
     {
       "number": 18,
       "id": "MCPA2",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Public Attack Action Slices"
     },
     {
@@ -163,13 +163,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 20,
       "id": "MCPA4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Public Grapple Attack Slice"
     },
     {
       "number": 21,
       "id": "MCPA5",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Battle Attack Rider Windows"
     },
     {
@@ -236,14 +236,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 14 | MON2 - Second Monster Tracer Bullet | done | MON1 | MON3, MON4 | Landed a single-size non-goblin SRD stat block (`Pseudodragon`) through the same core-owned `StatBlock` and projection path, with unsupported authored save-based abilities preserved as text-only data instead of being improvised into runtime handlers. | Complete |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | ready-for-implementation-after-light-research | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Ready now that the non-goblin baseline has landed; still coordinate any shared generic facility work against post-`CHAR` convergence before editing |
 | 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
-| 17 | MCPA1 - Battle Attack Public Contract | ready-for-research | none | MCPA2, MCPA4, MCPA5, MCPA8 | Finalize the strict public/runtime boundary for `BATTLE_ATTACK` first. Lock the minimal caller-owned payload and battle-owned legality/runtime facts before any attack-shaped MCP implementation work. | This is the highest-leverage MCP prerequisite and should land before attack, grapple, rider, or legendary-attack implementation |
-| 18 | MCPA2 - Public Attack Action Slices | blocked | MCPA1 | none | After `MCPA1`, expose the bounded public attack slices beginning with `BATTLE_ATTACK`, then `BATTLE_OFF_HAND_ATTACK` once the Light-property follow-through is wired. | Depends on the finalized battle attack contract rather than inventing separate payloads |
+| 17 | MCPA1 - Battle Attack Public Contract | done | none | MCPA2, MCPA4, MCPA5, MCPA8 | Closed with the bounded `battleAttack` contract: public payload is `targetId` plus `knockOut`, runtime carries only explicit roll / AC / spatial / visibility / reaction facts, and battle retains weapon-profile, crit, legality, and rider ownership. | Complete; reuse this contract for later attack-shaped work instead of adding parallel payloads |
+| 18 | MCPA2 - Public Attack Action Slices | ready-for-implementation-after-light-research | MCPA1 | none | Harden `BATTLE_ATTACK` to the finalized contract end to end, then extend the same contract to `BATTLE_OFF_HAND_ATTACK` once Light-property follow-through is wired. | The generic attack boundary is settled; remaining work is bounded implementation and SRD blast-radius checks |
 | 19 | MCPA3 - Spatial Action Public Contracts | ready-for-research | none | none | Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only. | Independent MCP foundation research; no geometry owner in core or MCP |
-| 20 | MCPA4 - Public Grapple Attack Slice | blocked | MCPA1 | none | After `MCPA1`, expose `BATTLE_GRAPPLE` once the public contract for `targetId` plus resolved save outcome is wired cleanly. | Battle already owns Size legality; remaining work is public contract shape plus sequencing behind the attack boundary |
-| 21 | MCPA5 - Battle Attack Rider Windows | blocked | MCPA1 | none | After `MCPA1`, add battle-owned rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE`. | Treat these as battle interrupt/hit windows, not creature-scope tokens |
+| 20 | MCPA4 - Public Grapple Attack Slice | ready-for-implementation-after-light-research | MCPA1 | none | Expose `BATTLE_GRAPPLE` through its own bounded `targetId` plus resolved-save contract without copying the `battleAttack` payload. | Size ownership is already battle-owned; remaining work is the save/result contract and wiring |
+| 21 | MCPA5 - Battle Attack Rider Windows | ready-for-research | MCPA1 | none | Design the battle-owned pre-roll and post-hit rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the settled attack boundary. | Treat these as battle interrupt/hit windows, not creature-scope tokens |
 | 22 | MCPA6 - Generic Spell Resolution Ownership | ready-for-research | none | none | Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces. | Design-heavy foundation work; may split into follow-up implementation slices after research |
 | 23 | MCPA7 - Semantic Table Event Expansion | ready-for-research | none | none | Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas. | Prefer semantic commands over raw payload passthrough; likely implementable in slices after research |
-| 24 | MCPA8 - Monster Control And Legendary Action Surface | blocked | MCPA1, MON3 | none | After `MCPA1` and `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice. | Depends on both the generic attack boundary and stable stat-block-owned monster action projection |
+| 24 | MCPA8 - Monster Control And Legendary Action Surface | blocked | MCPA1, MON3 | none | After `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract. | Still blocked on stable stat-block-owned monster action projection from `MON3` |
 
 ## Current Integrated Baseline
 
@@ -280,8 +280,10 @@ Planning note:
 - The post-`CHAR` queue is additive only; it does not revise the completed or in-flight `CHAR` tasks.
 - New work should extend the landed character-domain/product shape toward the revised PRD semantics rather than reopening the earlier ownership decisions.
 - `MON1` through `MON4` are the active monster track. They should reuse the landed monster ownership/provenance boundary and avoid racing `POST4` on shared projection/runtime refactors.
-- `MCPA1`, `MCPA3`, `MCPA6`, and `MCPA7` are the active MCP foundation tasks. They should resolve ownership/contract shape first.
-- `MCPA2`, `MCPA4`, `MCPA5`, and `MCPA8` stay sequenced behind those contracts and should not start early.
+- `MCPA1` is done and fixes the generic `battleAttack` ownership boundary for later MCP combat work.
+- `MCPA2` and `MCPA4` can now move into bounded implementation on top of that attack contract.
+- `MCPA3`, `MCPA5`, `MCPA6`, and `MCPA7` remain active MCP research/foundation tasks.
+- `MCPA8` stays blocked on `MON3` even though the generic attack boundary is now settled.
 
 ## Task Selection Guidance
 
@@ -293,8 +295,8 @@ Recommended next coding-loop task:
    This is the safe parallel monster task as long as it stays on catalog/schema/provenance/projection work and does not introduce a new shared generic runtime facility.
 3. **POST3 - Formal Advancement And Higher-Level Starts**
    This is now implementable on the POST1 boundary. Keep higher-level starts and multiclass continuation on repeated legal sheet transitions rather than a second leveling model.
-4. **MCPA1 - Battle Attack Public Contract**
-   This remains the MCP prerequisite with the highest downstream leverage. Attack-shaped public work should not proceed until this boundary is explicit.
+4. **MCPA2 - Public Attack Action Slices**
+   The generic `battleAttack` contract is now explicit. The next bounded MCP implementation slice is to harden the public `BATTLE_ATTACK` route against that contract and extend the same shape to `BATTLE_OFF_HAND_ATTACK` without introducing a second attack payload design.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
 Do not start `MON3` before checking whether the needed generic facility would collide with active shared-surface work in `POST4` or other runtime/projection refactors.
@@ -313,7 +315,7 @@ Do not start `MON3` before checking whether the needed generic facility would co
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
 6. Keep `MON3` and `MON4` blocked until the tracer-bullet sequence proves the shared-surface path.
 7. Keep H and I deferred.
-8. Treat `MCPA1`, `MCPA3`, `MCPA6`, and `MCPA7` as active research tasks; keep `MCPA2`, `MCPA4`, `MCPA5`, and `MCPA8` blocked until their prerequisites land.
+8. Treat `MCPA3`, `MCPA5`, `MCPA6`, and `MCPA7` as active research tasks; `MCPA2` and `MCPA4` are now implementable after light research, and `MCPA8` remains blocked on `MON3`.
 
 ## Archived Done Foundations
 
@@ -688,17 +690,19 @@ Acceptance criteria:
 
 ### Task 17 - MCPA1 - Battle Attack Public Contract
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: MCPA2, MCPA4, MCPA5, MCPA8.
 
-Next action:
+Completed action:
 
-- Finalize the strict public/runtime contract for `BATTLE_ATTACK` before picking up other attack-shaped MCP surfaces.
-- Identify the minimal caller-owned payload, the battle-owned legality/runtime facts, and the exact facts that must stay out of MCP payloads.
-- Write the resulting contract back into this file and `MCP_EVENT_SURFACE_AUDIT.md`, then update downstream MCP task statuses accordingly.
+- Locked the first safe `BATTLE_ATTACK` slice to the active creature's Attack-action main-hand weapon or Unarmed Strike only. Off-hand, grapple, legendary, movement-OA, and rider flows remain separate follow-up surfaces.
+- Finalized the minimal public token as `scope`, `actorId`, `type`, `targetId`, and `knockOut`.
+- Finalized the execute-time `battleAttack` runtime envelope as explicit battle-external facts only: `attackRoll`, `targetAc`, rolled `weaponDamage`, `attackerWithin5ft`, `attackerWithin60ft` when needed, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`, and `hitReactionCandidates`.
+- Recorded the battle-owned facts that must stay out of MCP attack payloads: action/attack spend, target legality, weapon or Unarmed Strike profile, melee-versus-ranged classification, damage dice/type/properties, crit range and crit derivation, knock-out legality, Sneak Attack legality/timing, rider timing, and monster-specific attack metadata.
+- Removed stray public `sneakAttackDamage` runtime input so the base attack contract no longer overlaps with battle-owned follow-up windows.
 
 Acceptance criteria:
 
@@ -706,15 +710,35 @@ Acceptance criteria:
 - Battle-owned facts stay battle-owned; MCP/runtime supplies only explicit battle-external facts.
 - The resulting contract is reusable by later off-hand, legendary, and rider work rather than spawning parallel attack payload shapes.
 
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Playing-the-Game.md` for Attack Rolls, Critical Hits, and Knocking Out a Creature; reviewed `.references/srd-5.2.1/Classes/Rogue.md`, `.references/srd-5.2.1/Classes/Barbarian.md`, `.references/srd-5.2.1/Classes/Monk.md`, and `.references/srd-5.2.1/Spells/Descriptions-A-D.md` for attack-adjacent rider timing; cross-checked `UBIQUITOUS_LANGUAGE.md` for Attack Roll, Critical Hit, and Unarmed Strike terminology.
+- `/simplify` round 1: removed the stray public `sneakAttackDamage` runtime field so the implemented `battleAttack` contract matches the ownership decision instead of carrying a parallel rider-damage payload.
+- `/simplify` round 2: confirmed the remaining contract is still single-shape and reusable across later attack work: public token stays minimal, runtime stays limited to battle-external roll / AC / spatial / visibility / reaction facts, and battle-owned legality / weapon-profile / rider semantics remain internal.
+- Verification command: `pnpm quality`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA2` - unblock to `ready-for-implementation-after-light-research`
+  - `MCPA4` - unblock to `ready-for-implementation-after-light-research`
+  - `MCPA5` - unblock to `ready-for-research`
+  - `MCPA8` - remain `blocked`, but revise blocker text so only `MON3` remains unresolved
+- Plan edits: applied in this file
+
 ### Task 18 - MCPA2 - Public Attack Action Slices
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: MCPA1.
 
 Blocks: none.
 
-Next action: After `MCPA1`, expose the bounded public attack slices beginning with `BATTLE_ATTACK`, then `BATTLE_OFF_HAND_ATTACK` once the Light-property follow-through is wired.
+Next action:
+
+- Harden `BATTLE_ATTACK` end to end against the finalized contract, including any remaining public-token narrowing such as melee-only `knockOut` exposure.
+- Extend the same public/runtime contract to `BATTLE_OFF_HAND_ATTACK` once Light-property pairing and damage-modifier ownership are wired.
 
 Acceptance criteria:
 
@@ -744,13 +768,16 @@ Acceptance criteria:
 
 ### Task 20 - MCPA4 - Public Grapple Attack Slice
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: MCPA1.
 
 Blocks: none.
 
-Next action: After `MCPA1`, expose `BATTLE_GRAPPLE` once the public contract for `targetId` plus resolved save outcome is wired cleanly.
+Next action:
+
+- Expose `BATTLE_GRAPPLE` through a bounded public contract built around `targetId` plus resolved save outcome.
+- Keep grapple on its own contract rather than copying the `battleAttack` roll / AC payload shape.
 
 Acceptance criteria:
 
@@ -759,13 +786,16 @@ Acceptance criteria:
 
 ### Task 21 - MCPA5 - Battle Attack Rider Windows
 
-Status: blocked.
+Status: ready-for-research.
 
 Depends on: MCPA1.
 
 Blocks: none.
 
-Next action: After `MCPA1`, add battle-owned rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE`.
+Next action:
+
+- Design the pre-roll and post-hit battle windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the finalized attack boundary.
+- Keep rider spend, target identity, timing, and follow-through battle-owned rather than adding rider data to the base attack payload.
 
 Acceptance criteria:
 
@@ -821,7 +851,7 @@ Depends on: MCPA1, MON3.
 
 Blocks: none.
 
-Next action: After `MCPA1` and `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice.
+Next action: After `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.
 
 Acceptance criteria:
 

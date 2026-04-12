@@ -3591,6 +3591,41 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("execute_action rejects stray sneak attack damage on public BATTLE_ATTACK", () => {
+    const host = initBattleHostWithAttackActor();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_ATTACK",
+      targetId: "B",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 12,
+          targetAc: 12,
+          weaponDamage: 4,
+          sneakAttackDamage: 7,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response)).toEqual({
+      error:
+        'BATTLE_ATTACK requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.',
+      details: "INVALID_RUNTIME_INPUT",
+    });
+  });
+
   test("execute_action routes public BATTLE_ATTACK hits through the battle lane", () => {
     const host = initBattleHostWithAttackActor();
 

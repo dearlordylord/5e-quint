@@ -59,9 +59,11 @@ Some public tokens wrap lower-level runtime events, and some public-worthy event
 
 `BATTLE_ATTACK` is the template for future attack-shaped public surfaces.
 
-- Battle owns attacker state, resource spend, weapon/profile derivation, crit derivation, Sneak Attack legality/state, and damage aggregation semantics.
-- Caller/runtime must provide only the explicit battle-external facts needed to resolve the attack honestly.
-- Do not expose arbitrary caller-supplied attack payload fields such as damage type, weapon properties, finesse, or other battle-owned derived facts.
+- The first safe public slice is the active creature's Attack-action `BATTLE_ATTACK` using its already-derived main-hand weapon or Unarmed Strike. Off-hand, grapple, legendary, movement-OA, and rider flows remain separate follow-up surfaces.
+- The public token is caller-owned and minimal: `scope`, `actorId`, `type`, `targetId`, and `knockOut`.
+- The execute-time runtime envelope is limited to explicit battle-external facts: `attackRoll`, `targetAc`, rolled `weaponDamage`, `attackerWithin5ft`, `attackerWithin60ft` when the target is not within 5 feet, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`, and `hitReactionCandidates`.
+- Battle owns attacker state, action/attack spend, weapon or unarmed profile derivation, crit range and crit derivation, melee-versus-ranged classification, target legality, knock-out legality, Sneak Attack legality/state, rider timing, and damage aggregation semantics.
+- Do not expose caller-supplied attack payload fields such as damage type, damage dice, weapon properties, finesse, reach, legendary-action metadata, or rider damage totals inside the base attack payload.
 
 This same boundary will be reused by:
 
@@ -130,12 +132,12 @@ These are the public-facing items that still matter. Keep this table current.
 
 | Item | Intended MCP surface | Current blocker(s) | Notes |
 | --- | --- | --- | --- |
-| `BATTLE_ATTACK` | `get_available_actions` | Finalize and wire the strict `battleAttack` token/runtime contract. Runtime still must carry explicit target AC, distance/visibility, adjacency, and hit-reaction candidate facts without MCP fabricating battle state. | First safe slice is active-creature main-hand weapon attack only. Battle owns crit derivation and damage semantics. |
-| `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Depends on finalized `BATTLE_ATTACK` boundary. Also needs Light-property pairing and ability-modifier handling for extra attack damage. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`. |
-| `BATTLE_LEGENDARY_ATTACK` | `get_available_actions` or future monster-control route | Depends on finalized `BATTLE_ATTACK` boundary and on stat-block-owned legendary-action option payload/name/cost derivation. | Do not accept arbitrary caller-supplied monster attack payloads. |
+| `BATTLE_ATTACK` | `get_available_actions` | Contract finalized (MCPA1). Remaining work is MCPA2: wire the token as a public `get_available_actions` entry and confirm end-to-end MCP dispatch. | Public contract: caller supplies `targetId`, `knockOut`, `attackRoll` (1–20), `targetAc` (≥0), `weaponDamage` (≥0), spatial/visibility booleans (`attackerWithin5ft`, `attackerWithin60ft?`, `hostileWithin5ft`, `targetCanSeeAttacker`, `attackerCanSeeTarget`, `frightSourceInLOS`, `hasAllyAdjacentToTarget`), `hitReactionCandidates` (valid creature IDs). Battle derives weapon profile, damage type, crit, weapon properties, Sneak Attack legality, and damage bonuses. |
+| `BATTLE_OFF_HAND_ATTACK` | `get_available_actions` | Needs Light-property pairing plus battle-owned ability-modifier and extra-attack sequencing on top of the finalized `battleAttack` contract. | Reuse the same target/roll/session-fact contract as `BATTLE_ATTACK`; do not add a second attack payload schema. |
+| `BATTLE_LEGENDARY_ATTACK` | `get_available_actions` or future monster-control route | Depends on stat-block-owned legendary-action option payload/name/cost derivation plus reuse of the finalized `battleAttack` contract. | Do not accept arbitrary caller-supplied monster attack payloads. |
 | `BATTLE_HELP_ATTACK` | `get_available_actions` | Needs a bounded token contract over explicit caller/session spatial facts only. | Required public holes are `allyId`, `targetId`, and helper-within-5-feet-of-target fact. No geometry owner in core/MCP. |
 | `BATTLE_MOVE` | `get_available_actions` | Needs a bounded token contract over explicit caller/session path, threat, provocation, and reach-exit facts. | No geometry owner in core/MCP. Opportunity-attack legality still depends on caller/session-owned reach-exit facts. |
-| `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring. | Size ownership is already solved in battle state. |
+| `BATTLE_GRAPPLE` | `get_available_actions` | Public contract still needs `targetId` plus resolved save outcome wiring on a non-attack-roll contract. | Size ownership is already solved in battle state; do not copy the `battleAttack` payload just because grapple is attack-shaped in prose. |
 | `USE_BRUTAL_STRIKE` | battle-driven rider window | Needs battle-owned chosen-attack window, legality, and effect follow-through. | Pre-roll declaration rider. |
 | `STUNNING_STRIKE` | battle-driven rider window | Needs battle-owned post-hit qualification, target identity, focus spend, and target save result handling. | Post-hit rider. |
 | `USE_CUNNING_STRIKE` | battle-driven rider window | Needs battle-owned Sneak Attack legality, rider-choice window, scaling, size/save follow-through. | Post-hit / pre-Sneak-Attack-damage rider-choice window. |

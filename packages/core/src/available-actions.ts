@@ -2636,7 +2636,6 @@ export type BattleResolutionRuntimeInputs =
         readonly attackRoll: number;
         readonly targetAc: number;
         readonly weaponDamage: number;
-        readonly sneakAttackDamage?: number;
         readonly attackerWithin5ft: boolean;
         readonly attackerWithin60ft?: boolean;
         readonly hostileWithin5ft: boolean;
@@ -4541,7 +4540,6 @@ export function finalizeBattleResolution(
         attackRoll,
         targetAc,
         weaponDamage,
-        sneakAttackDamage,
         attackerWithin5ft,
         attackerWithin60ft,
         hostileWithin5ft,
@@ -4588,19 +4586,6 @@ export function finalizeBattleResolution(
           },
         };
       }
-      if (
-        sneakAttackDamage != null &&
-        (!Number.isInteger(sneakAttackDamage) || sneakAttackDamage < 0)
-      ) {
-        return {
-          ok: false,
-          error: {
-            code: "INVALID_RUNTIME_INPUT",
-            message:
-              "Battle Sneak Attack damage must be a non-negative integer.",
-          },
-        };
-      }
       if (!attackerWithin5ft && attackerWithin60ft === undefined) {
         return {
           ok: false,
@@ -4635,7 +4620,7 @@ export function finalizeBattleResolution(
           attackerCanSeeTarget,
           frightSourceInLOS,
           hasAllyAdjacentToTarget,
-          saDmg: sneakAttackDamage ?? 0,
+          saDmg: 0,
           hitReactionCandidates: new Set(
             hitReactionCandidates.map((id) => CreatureId(id)),
           ),
