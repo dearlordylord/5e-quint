@@ -1,4 +1,10 @@
-import { type CharacterDraft, finalizeCharacterDraft } from "@dnd/core/character-domain.ts"
+import {
+  applyCharacterDraftUpdate,
+  assessCharacterDraft,
+  type CharacterDraft,
+  characterDraftFromSheet,
+  type CharacterLevelUpTransition
+} from "@dnd/core/character-domain.ts"
 import {
   characterSheetBattleProjection,
   characterSheetMachineInput,
@@ -9,7 +15,8 @@ import { useEffect, useState } from "react"
 
 import {
   CLERIC_EXAMPLE_DRAFT,
-  FIGHTER_EXAMPLE_DRAFT
+  FIGHTER_EXAMPLE_DRAFT,
+  FIGHTER_LEVEL5_EXAMPLE_DRAFT
 } from "#/components/character-creation/characterCreationPresets.ts"
 import { displayValue } from "#/components/character-creation/characterCreationShared.tsx"
 import {
@@ -45,32 +52,39 @@ export function CharacterCreationPage() {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
   }, [draft])
 
-  const finalization = finalizeCharacterDraft(draft)
-  const issues = finalization.ok ? [] : finalization.issues
-  const reviewOutputs = !finalization.ok
-    ? null
-    : {
-        sheet: finalization.sheet,
-        derived: deriveCharacterSheetNumbers(finalization.sheet),
-        machineInput: characterSheetMachineInput(finalization.sheet),
-        battleProjection: characterSheetBattleProjection(finalization.sheet)
-      }
+  const assessment = assessCharacterDraft(draft)
+  const completeSheet = assessment.status === "complete" ? assessment.sheet : null
+  const reviewOutputs =
+    completeSheet == null
+      ? null
+      : {
+          sheet: completeSheet,
+          derived: deriveCharacterSheetNumbers(completeSheet),
+          machineInput: characterSheetMachineInput(completeSheet),
+          battleProjection: characterSheetBattleProjection(completeSheet)
+        }
 
   function updateDraft(patch: Partial<CharacterDraft>) {
-    setDraft((current) => ({ ...current, ...patch }))
+    setDraft((current) => applyCharacterDraftUpdate(current, patch))
   }
 
   function setAbilityScore(ability: Ability, score: number) {
-    setDraft((current) => ({
-      ...current,
-      abilityScoreGeneration: {
-        mode: current.abilityScoreGeneration?.mode ?? "standardArray",
-        assignedScores: {
-          ...current.abilityScoreGeneration?.assignedScores,
-          [ability]: score
+    setDraft((current) =>
+      applyCharacterDraftUpdate(current, {
+        abilityScoreGeneration: {
+          mode: current.abilityScoreGeneration?.mode ?? "standardArray",
+          assignedScores: {
+            ...current.abilityScoreGeneration?.assignedScores,
+            [ability]: score
+          }
         }
-      }
-    }))
+      })
+    )
+  }
+
+  function advanceDraftFromReview(transition: CharacterLevelUpTransition) {
+    if (completeSheet == null) return
+    setDraft(characterDraftFromSheet(completeSheet, transition))
   }
 
   return (
@@ -87,6 +101,16 @@ export function CharacterCreationPage() {
             type="button"
           >
             Load Fighter Example
+          </button>
+          <button
+            className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
+            onClick={() => {
+              setDraft(FIGHTER_LEVEL5_EXAMPLE_DRAFT)
+              setCurrentStep("review")
+            }}
+            type="button"
+          >
+            Load Fighter Lv5
           </button>
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
@@ -136,8 +160,12 @@ export function CharacterCreationPage() {
           </ol>
           <div className="mt-6 rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm">
             <p className="font-medium text-gray-100">Canonical status</p>
-            <p className={finalization.ok ? "mt-2 text-emerald-300" : "mt-2 text-amber-300"}>
-              {finalization.ok ? "Draft is finalizable." : `${issues.length} validation issue(s) remain.`}
+            <p className={assessment.status === "complete" ? "mt-2 text-emerald-300" : "mt-2 text-amber-300"}>
+              {assessment.status === "complete"
+                ? "Draft is ready for review."
+                : assessment.status === "invalid"
+                  ? `${assessment.issues.length} illegal issue(s) require fixes.`
+                  : `${assessment.openChoices.length} required choice(s) remain open.`}
             </p>
             <p className="mt-2 text-gray-400">
               This shell stores only <code>CharacterDraft</code>. Validation, sheet finalization, and projection output
@@ -145,12 +173,30 @@ export function CharacterCreationPage() {
             </p>
           </div>
           <div className="mt-4 rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm">
-            <p className="font-medium text-gray-100">Current issue list</p>
-            {issues.length === 0 ? (
-              <p className="mt-2 text-emerald-300">No issues.</p>
+            <p className="font-medium text-gray-100">Open choices</p>
+            {assessment.openChoices.length === 0 ? (
+              <p className="mt-2 text-emerald-300">No open choices.</p>
             ) : (
               <ul className="mt-2 space-y-2 text-gray-300">
-                {issues.map((issue) => (
+                {assessment.openChoices.map((choice) => (
+                  <li
+                    key={`${choice.code}-${choice.message}`}
+                    className="rounded-md border border-gray-800 bg-gray-900 px-2 py-2"
+                  >
+                    <p className="font-mono text-xs text-sky-300">{choice.code}</p>
+                    <p className="mt-1 text-sm">{choice.message}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="mt-4 rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm">
+            <p className="font-medium text-gray-100">Illegal state</p>
+            {assessment.issues.length === 0 ? (
+              <p className="mt-2 text-emerald-300">No illegal issues.</p>
+            ) : (
+              <ul className="mt-2 space-y-2 text-gray-300">
+                {assessment.issues.map((issue) => (
                   <li
                     key={`${issue.code}-${issue.message}`}
                     className="rounded-md border border-gray-800 bg-gray-900 px-2 py-2"
@@ -172,13 +218,13 @@ export function CharacterCreationPage() {
               point.
             </p>
             <CharacterCreationStepContent
+              advanceDraft={advanceDraftFromReview}
               currentStep={currentStep}
               draft={draft}
               displayValue={displayValue}
-              finalizationOk={finalization.ok}
+              draftStatus={assessment.status}
               reviewOutputs={reviewOutputs}
               setAbilityScore={setAbilityScore}
-              setDraft={setDraft}
               updateDraft={updateDraft}
             />
             <div className="mt-6 flex items-center justify-between border-t border-gray-800 pt-4">

@@ -103,19 +103,19 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 10,
       "id": "POST2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Open Choices And Selective Invalidation"
     },
     {
       "number": 11,
       "id": "POST3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Formal Advancement And Higher-Level Starts"
     },
     {
       "number": 12,
       "id": "POST4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Workflow And Projection Convergence"
     },
     {
@@ -229,9 +229,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7 | H - PassiveModifiers Sub-Record | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | done | CHAR6, CHAR7 | POST2, POST3, POST4 | Closed by `POST1_FORMAL_CREATION_SEMANTICS.md`: creation semantics should live in Quint draft/sheet records that mirror the landed TS domain, with ordered `advancement` retained as the legality surface and runtime kept as one-way projection. | Complete |
-| 10 | POST2 - Open Choices And Selective Invalidation | ready-for-implementation-after-light-research | POST1 | POST4 | Implement `OpenChoices` and dependency-aware invalidation on the settled `CharacterDraft` / `CharacterSheet` boundary from POST1 rather than on workflow state. | Ready once the implementer re-reads the POST1 note plus the SRD creation step order |
-| 11 | POST3 - Formal Advancement And Higher-Level Starts | ready-for-implementation-after-light-research | CHAR7, POST1 | POST4 | Implement repeated legal sheet-to-sheet level-up transitions on the POST1 draft/sheet foundation, reusing ordered `advancement` rather than introducing a second leveling model. | Ready once the implementer re-reads the POST1 note plus SRD advancement/multiclass text |
-| 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
+| 10 | POST2 - Open Choices And Selective Invalidation | done | POST1 | POST4 | Landed core-owned `assessCharacterDraft()` and `applyCharacterDraftUpdate()` so the draft boundary now distinguishes open required choices from illegal state, preserves unrelated authored facts during backtracking, and lets the workflow show incomplete, invalid, and review-ready states separately. | Complete |
+| 11 | POST3 - Formal Advancement And Higher-Level Starts | done | CHAR7, POST1 | POST4 | Landed `advanceCharacterSheet()` as a thin canonical sheet-to-sheet transition that appends one ordered advancement entry and reuses `finalizeCharacterDraft()` instead of inventing a second higher-level-start rules path. | Complete |
+| 12 | POST4 - Workflow And Projection Convergence | done | POST1, POST2, POST3 | none | Landed a thin workflow shell that persists only canonical `CharacterDraft`, uses core-owned assessment to separate open choices from illegal state, derives runtime outputs from finalized sheets, and routes review-step level-up plus higher-level presets through the canonical sheet-to-draft advancement surface. | Complete |
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
 | 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
@@ -502,7 +502,7 @@ Plan Impact:
 
 ### Task 10 - POST2 - Open Choices And Selective Invalidation
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: POST1.
 
@@ -531,7 +531,7 @@ Verification:
 
 ### Task 11 - POST3 - Formal Advancement And Higher-Level Starts
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR7, POST1.
 
@@ -558,9 +558,16 @@ Verification:
 - Re-read `POST1_FORMAL_CREATION_SEMANTICS.md` plus `.references/srd-5.2.1/Character-Creation.md` sections for level advancement, higher-level starts, and multiclassing before implementation.
 - Keep Quint as the owner of advancement semantics and preserve the one-way projection boundary from finalized sheet to runtime.
 
+Archived foundation summary:
+
+- Landed `advanceCharacterSheet()` in `packages/core/src/character-sheet-advancement.ts` as the canonical sheet-to-sheet advancement helper.
+- The helper appends exactly one ordered advancement entry and reuses `finalizeCharacterDraft()` rather than introducing a second advancement validator or a bespoke higher-level-start bootstrap path.
+- Focused tests now cover repeated higher-level advancement, illegal subclass timing, and multiclass continuation on the same sheet boundary.
+- See `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` for the task note and RAW anchors.
+
 ### Task 12 - POST4 - Workflow And Projection Convergence
 
-Status: blocked.
+Status: done.
 
 Depends on: POST1, POST2, POST3.
 
@@ -581,6 +588,27 @@ Acceptance criteria:
 - Workflow, formal semantics, and runtime projections all use one canonical draft/sheet story.
 - The workflow shell does not become a second rules engine.
 - Runtime projection remains one-way derived from finalized owned character state.
+
+Archived foundation summary:
+
+- The app workflow now persists only `CharacterDraft` and renders review/runtime outputs from `assessCharacterDraft()` plus finalized-sheet projections.
+- Review-step level-up no longer appends raw advancement entries in UI state; it starts from the finalized sheet and uses the canonical core sheet-to-draft projection for the next draft state.
+- The level-5 fighter preset is derived from the level-1 fighter draft by replaying canonical advancement transitions rather than duplicating a second authored draft blob.
+- Focused app tests cover the higher-level preset plus review-step advancement reopening required choices without introducing a second rules engine.
+
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Character-Creation.md` for character-creation ordering plus multiclass level-gain ownership, and `UBIQUITOUS_LANGUAGE.md` for shared creation terminology such as Standard Array and caster-type language. Task 12 does not add new rule semantics; it keeps the workflow aligned to those existing core-owned creation and advancement surfaces.
+- `/simplify` round 1: confirmed [packages/app/src/components/character-creation/CharacterCreationPage.tsx](/workspace/typescript/dnd/packages/app/src/components/character-creation/CharacterCreationPage.tsx) persists only `CharacterDraft`, calls `assessCharacterDraft()`, and renders review outputs from finalized-sheet projections instead of re-deriving sheet or runtime semantics in app state.
+- `/simplify` round 2: confirmed [packages/app/src/components/character-creation/characterCreationPresets.ts](/workspace/typescript/dnd/packages/app/src/components/character-creation/characterCreationPresets.ts) and [packages/core/src/character-sheet-advancement.ts](/workspace/typescript/dnd/packages/core/src/character-sheet-advancement.ts) keep higher-level presets and review-step level-up on the canonical sheet-to-draft path via `advanceCharacterSheet()` / `characterDraftFromSheet()` rather than a second authored higher-level draft or UI-owned advancement path.
+- Verification command: `pnpm quality`
+
+Plan Impact:
+
+- Status: none
+- Affected tasks:
+  - `POST4` - no-change; closeout updated to record required verification evidence only.
+- Plan edits: none
 
 ### Task 13 - MON1 - Canonical Goblin Tracer Bullet
 

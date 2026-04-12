@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assessCharacterDraft,
+  advanceCharacterSheet,
+  applyCharacterDraftUpdate,
   abilityModifiersFromScores,
   characterBattleEquipmentProjection,
   characterClassResources,
@@ -217,6 +220,295 @@ describe("character-domain", () => {
       cha: 1,
     });
     expect(JSON.parse(JSON.stringify(result.sheet))).toEqual(result.sheet);
+  });
+
+  it("models higher-level starts as repeated legal sheet-to-sheet advancement", () => {
+    const levelOne = finalizeCharacterDraft(completeDraft());
+    expect(levelOne.ok).toBe(true);
+    if (!levelOne.ok) throw new Error("expected successful level-one sheet");
+
+    const levelTwo = advanceCharacterSheet(levelOne.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+    expect(levelTwo.ok).toBe(true);
+    if (!levelTwo.ok) throw new Error("expected successful level-two sheet");
+
+    const levelThree = advanceCharacterSheet(levelTwo.sheet, {
+      entry: advancementEntry("fighter", {
+        subclass: { className: "fighter", subclass: "champion" },
+      }),
+    });
+    expect(levelThree.ok).toBe(true);
+    if (!levelThree.ok)
+      throw new Error("expected successful level-three sheet");
+
+    const levelFour = advanceCharacterSheet(levelThree.sheet, {
+      entry: advancementEntry("fighter", {
+        feat: {
+          slot: "feat",
+          choice: {
+            tag: "abilityScoreImprovement",
+            abilities: ["str", "con"],
+          },
+        },
+      }),
+    });
+    expect(levelFour.ok).toBe(true);
+    if (!levelFour.ok) throw new Error("expected successful level-four sheet");
+
+    const levelFive = advanceCharacterSheet(levelFour.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+    expect(levelFive.ok).toBe(true);
+    if (!levelFive.ok) throw new Error("expected successful level-five sheet");
+
+    const direct = finalizeCharacterDraft(
+      completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: {
+                tag: "abilityScoreImprovement",
+                abilities: ["str", "con"],
+              },
+            },
+          }),
+          advancementEntry("fighter"),
+        ],
+      }),
+    );
+
+    expect(direct.ok).toBe(true);
+    if (!direct.ok) throw new Error("expected successful direct sheet");
+
+    expect(levelFive.sheet).toEqual(direct.sheet);
+    expect(levelFive.sheet.abilityScores).toEqual({
+      str: 18,
+      dex: 13,
+      con: 16,
+      int: 8,
+      wis: 10,
+      cha: 12,
+    });
+  });
+
+  it("rejects illegal advancement transitions instead of creating a bespoke higher-level path", () => {
+    const levelOne = finalizeCharacterDraft(completeDraft());
+    expect(levelOne.ok).toBe(true);
+    if (!levelOne.ok) throw new Error("expected successful level-one sheet");
+
+    const levelTwo = advanceCharacterSheet(levelOne.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+    expect(levelTwo.ok).toBe(true);
+    if (!levelTwo.ok) throw new Error("expected successful level-two sheet");
+
+    const illegalLevelThree = advanceCharacterSheet(levelTwo.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+
+    expect(illegalLevelThree.ok).toBe(false);
+    if (illegalLevelThree.ok) {
+      throw new Error("expected illegal level-three advancement");
+    }
+
+    expect(illegalLevelThree.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "missingSubclassSelection" }),
+      ]),
+    );
+  });
+
+  it("uses the same advancement path for multiclass continuation", () => {
+    const fighterStart = finalizeCharacterDraft(
+      completeDraft({
+        abilityScoreGeneration: {
+          mode: "standardArray",
+          assignedScores: {
+            str: 14,
+            dex: 15,
+            con: 12,
+            int: 8,
+            wis: 13,
+            cha: 10,
+          },
+        },
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "dex",
+          plusOne: "con",
+        },
+      }),
+    );
+    expect(fighterStart.ok).toBe(true);
+    if (!fighterStart.ok) throw new Error("expected successful fighter sheet");
+
+    const multiclassed = advanceCharacterSheet(fighterStart.sheet, {
+      entry: advancementEntry("monk"),
+      choices: {
+        monkTool: "flute",
+      },
+    });
+
+    expect(multiclassed.ok).toBe(true);
+    if (!multiclassed.ok)
+      throw new Error("expected successful multiclass sheet");
+
+    const direct = finalizeCharacterDraft(
+      completeDraft({
+        abilityScoreGeneration: {
+          mode: "standardArray",
+          assignedScores: {
+            str: 14,
+            dex: 15,
+            con: 12,
+            int: 8,
+            wis: 13,
+            cha: 10,
+          },
+        },
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "dex",
+          plusOne: "con",
+        },
+        advancement: [advancementEntry("fighter"), advancementEntry("monk")],
+        choices: {
+          ...completeDraft().choices,
+          monkTool: "flute",
+        },
+      }),
+    );
+
+    expect(direct.ok).toBe(true);
+    if (!direct.ok)
+      throw new Error("expected successful direct multiclass sheet");
+
+    expect(multiclassed.sheet).toEqual(direct.sheet);
+    expect(multiclassed.sheet.classLevels).toEqual({
+      ...ZERO_CLASS_LEVELS,
+      fighter: 1,
+      monk: 1,
+    });
+  });
+
+  it("keeps spellcasting expansion on the same advancement path", () => {
+    const levelOne = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        advancement: singleClassAdvancement("wizard", 1),
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        languages: ["Common", "Elvish", "Draconic"],
+        alignment: "LN",
+        choices: {
+          primaryClassSkills: ["investigation", "medicine"],
+          speciesSkill: "perception",
+        },
+        spellcasting: wizardLevelOneSpellcasting,
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {},
+        },
+      }),
+    );
+    expect(levelOne.ok).toBe(true);
+    if (!levelOne.ok) throw new Error("expected successful wizard sheet");
+
+    const levelTwo = advanceCharacterSheet(levelOne.sheet, {
+      entry: advancementEntry("wizard"),
+      spellcasting: {
+        wizard: {
+          cantrips: ["fire_bolt", "light", "mage_hand"],
+          preparedSpells: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "magic_missile",
+            "shield",
+          ],
+          spellbook: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "magic_missile",
+            "identify",
+            "sleep",
+            "shield",
+            "thunderwave",
+          ],
+        },
+      },
+    });
+    expect(levelTwo.ok).toBe(true);
+    if (!levelTwo.ok) throw new Error("expected successful level-two wizard");
+
+    const direct = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        advancement: [advancementEntry("wizard"), advancementEntry("wizard")],
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        languages: ["Common", "Elvish", "Draconic"],
+        alignment: "LN",
+        choices: {
+          primaryClassSkills: ["investigation", "medicine"],
+          speciesSkill: "perception",
+        },
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+              "shield",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+              "identify",
+              "sleep",
+              "shield",
+              "thunderwave",
+            ],
+          },
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {},
+        },
+      }),
+    );
+    expect(direct.ok).toBe(true);
+    if (!direct.ok) throw new Error("expected successful direct wizard");
+
+    expect(levelTwo.sheet).toEqual(direct.sheet);
   });
 
   it("derives merged proficiencies from class, background, species, feat, and granted-language choices", () => {
@@ -782,6 +1074,120 @@ describe("character-domain", () => {
       "missingAlignment",
       "missingEquipmentChoices",
     ]);
+  });
+
+  it("distinguishes open choices from illegal issues on the draft boundary", () => {
+    const assessment = assessCharacterDraft({
+      ...completeDraft(),
+      languages: ["Common", "Elvish", "Elvish"],
+      choices: {
+        ...completeDraft().choices,
+        primaryClassSkills: ["acrobatics"],
+      },
+    });
+
+    expect(assessment.status).toBe("invalid");
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "wrongPrimaryClassSkillChoiceCount",
+    );
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "tooFewLanguages",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).toContain(
+      "duplicateLanguages",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).not.toContain(
+      "wrongPrimaryClassSkillChoiceCount",
+    );
+  });
+
+  it("treats an empty draft as incomplete rather than illegally shaped", () => {
+    const assessment = assessCharacterDraft({});
+
+    expect(assessment.status).toBe("incomplete");
+    expect(assessment.openChoices.map((choice) => choice.code)).toContain(
+      "missingPrimaryClass",
+    );
+    expect(assessment.issues).toEqual([]);
+  });
+
+  it("selectively invalidates only dependent choices when earlier authored facts change", () => {
+    const updated = applyCharacterDraftUpdate(completeDraft(), {
+      primaryClass: "wizard",
+      background: "acolyte",
+      species: "dwarf",
+    });
+
+    expect(updated.primaryClass).toBe("wizard");
+    expect(updated.advancement).toEqual([{ className: "wizard" }]);
+    expect(updated.backgroundAbilityScoreIncrease).toBeUndefined();
+    expect(updated.choices?.backgroundTool).toBeUndefined();
+    expect(updated.choices?.humanOriginFeat).toBeUndefined();
+    expect(updated.choices?.primaryClassSkills).toBeUndefined();
+    expect(updated.equipment?.loadout?.wieldedWeapon).toBeUndefined();
+    expect(updated.equipment?.loadout?.wieldedWeaponGrip).toBeUndefined();
+    expect(updated.languages).toEqual(["Common", "Dwarvish", "Elvish"]);
+  });
+
+  it("reopens overspent equipment and spellcasting-dependent extras after earlier choices change", () => {
+    const updated = applyCharacterDraftUpdate(
+      {
+        ...completeDraft({
+          primaryClass: "cleric",
+          advancement: singleClassAdvancement("cleric", 1),
+          background: "acolyte",
+          backgroundAbilityScoreIncrease: {
+            kind: "plusTwoPlusOne",
+            plusTwo: "wis",
+            plusOne: "int",
+          },
+          species: "dwarf",
+          choices: {
+            primaryClassSkills: ["history", "insight"],
+            clericDivineOrder: "thaumaturge",
+          },
+          spellcasting: {
+            cleric: {
+              cantrips: ["guidance", "light", "mending", "resistance"],
+              preparedSpells: [
+                "bless",
+                "cure_wounds",
+                "detect_magic",
+                "guiding_bolt",
+              ],
+            },
+          },
+          equipment: {
+            backgroundOption: "package",
+            classOption: "gold",
+            purchasedCombatEquipment: ["chainMail", "shield"],
+            remainingGoldPieces: 78,
+            loadout: {
+              wornArmor: "chainMail",
+              shield: true,
+            },
+          },
+        }),
+      },
+      {
+        choices: {
+          primaryClassSkills: ["history", "insight"],
+          clericDivineOrder: "protector",
+        },
+        background: "criminal",
+      },
+    );
+
+    expect(updated.choices?.clericDivineOrder).toBe("protector");
+    expect(updated.spellcasting?.cleric?.cantrips).toEqual([
+      "guidance",
+      "light",
+      "mending",
+    ]);
+    expect(updated.equipment?.purchasedCombatEquipment).toBeUndefined();
+    expect(updated.equipment?.remainingGoldPieces).toBeUndefined();
+    expect(updated.equipment?.loadout?.wornArmor).toBeUndefined();
+    expect(updated.equipment?.loadout?.shield).toBeUndefined();
   });
 
   it("rejects invalid standard-array and language assignments", () => {
