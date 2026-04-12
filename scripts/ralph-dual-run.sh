@@ -561,7 +561,7 @@ run_codex() {
   fi
 
   log "codex: $(quote_cmd codex "${args[@]}" -)"
-  codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file"
+  codex "${args[@]}" - <"$prompt" 2>&1 | tee "$log_file" >&2
 }
 
 run_claude() {
@@ -575,7 +575,7 @@ run_claude() {
   fi
 
   log "claude: $(quote_cmd claude "${args[@]}") < $prompt"
-  (cd "$workspace" && claude "${args[@]}" <"$prompt") 2>&1 | tee "$log_file"
+  (cd "$workspace" && claude "${args[@]}" <"$prompt") 2>&1 | tee "$log_file" >&2
 }
 
 save_diff() {
