@@ -6,6 +6,7 @@ import {
   toBattleInitCreatureConfig,
 } from "#/available-actions.ts";
 import {
+  CENTAUR_TROOPER,
   getMonsterStatBlock,
   GOBLIN_BOSS,
   GOBLIN_MINION,
@@ -19,6 +20,7 @@ import {
   statBlockBattleReactionOptions,
   statBlockInitiativeScore,
   statBlockMultiattack,
+  statBlockRechargeMinRolls,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
 import { CreatureId, abilityModifier } from "#/types.ts";
@@ -126,6 +128,7 @@ describe("monster catalog", () => {
 
   it("stores goblin rider metadata on authored attacks without exposing new public IDs", () => {
     expect(MONSTER_STAT_BLOCK_IDS).toEqual([
+      "centaurTrooper",
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
@@ -160,6 +163,76 @@ describe("monster catalog", () => {
   it("publishes Goblin Warrior and Goblin Boss through the generic catalog lookup", () => {
     expect(getMonsterStatBlock("goblinWarrior")).toBe(GOBLIN_WARRIOR);
     expect(getMonsterStatBlock("goblinBoss")).toBe(GOBLIN_BOSS);
+  });
+
+  it("stores Centaur Trooper as an SRD-backed stat block with authored recharge metadata", () => {
+    const statBlock = getMonsterStatBlock("centaurTrooper");
+
+    expect(statBlock).toBe(CENTAUR_TROOPER);
+    expect(statBlock.provenance).toEqual({
+      edition: "SRD 5.2.1",
+      document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+      section: "Centaur Trooper",
+    });
+    expect(statBlock.actions).toEqual([
+      {
+        kind: "multiattack",
+        id: "multiattack",
+        name: "Multiattack",
+        text: "The centaur makes two attacks, using Pike or Longbow in any combination.",
+        slots: [
+          { type: "MAttack", name: "Pike" },
+          { type: "MAttack", name: "Longbow" },
+        ],
+      },
+      {
+        kind: "attack",
+        id: "pike",
+        name: "Pike",
+        text: "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 9 (1d10 + 4) Piercing damage.",
+        attack: {
+          name: "Pike",
+          attackBonus: 6,
+          reach: 10,
+          rangeNormal: 0,
+          rangeLong: 0,
+          damageAmount: 9,
+          damageType: "piercing",
+          isRanged: false,
+          attackMode: "melee",
+        },
+      },
+      {
+        kind: "attack",
+        id: "longbow",
+        name: "Longbow",
+        text: "*Ranged Attack Roll:* +4, range 150/600 ft. *Hit:* 6 (1d8 + 2) Piercing damage.",
+        attack: {
+          name: "Longbow",
+          attackBonus: 4,
+          reach: 0,
+          rangeNormal: 150,
+          rangeLong: 600,
+          damageAmount: 6,
+          damageType: "piercing",
+          isRanged: true,
+          attackMode: "ranged",
+        },
+      },
+    ]);
+    expect(statBlock.bonusActions).toEqual([
+      {
+        kind: "text",
+        id: "tramplingCharge",
+        name: "Trampling Charge",
+        text: "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. *Strength Saving Throw:* DC 14. *Failure:* 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
+        nonExecutableReason:
+          "Recharge-gated movement plus saving-throw bonus-action resolution is not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+    expect(statBlockRechargeMinRolls(statBlock)).toEqual({
+      tramplingCharge: 5,
+    });
   });
 
   it("stores Pseudodragon as an SRD-backed authored stat block with text-preserved unsupported actions", () => {
@@ -323,6 +396,28 @@ describe("monster catalog", () => {
     });
   });
 
+  it("projects authored recharge metadata through the generic monster init path", () => {
+    const config = monsterCatalogInitCreatureConfig({
+      id: CreatureId("centaur-1"),
+      statBlockId: "centaurTrooper",
+    });
+
+    expect(statBlockMultiattack(CENTAUR_TROOPER)).toEqual([
+      { type: "MAttack", name: "Pike" },
+      { type: "MAttack", name: "Longbow" },
+    ]);
+    expect(config).toMatchObject({
+      id: CreatureId("centaur-1"),
+      kind: "Monster",
+      creatureSize: "large",
+      strMod: 4,
+      dexMod: 2,
+      baseWalkSpeed: 50,
+      rechargeAvailable: { tramplingCharge: false },
+      rechargeMinRolls: { tramplingCharge: 5 },
+    });
+  });
+
   it("projects a catalog stat block into battle init without MCP-owned RAW literals", () => {
     const config = monsterCatalogInitCreatureConfig({
       id: CreatureId("goblin-1"),
@@ -435,6 +530,31 @@ describe("monster catalog", () => {
           name: "Bite",
         },
       },
+    });
+  });
+
+  it("accepts Centaur Trooper through the generic statBlockId surface", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "centaur-1",
+          kind: "Monster",
+          statBlockId: "centaurTrooper",
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("centaur-1"),
+      kind: "Monster",
+      creatureSize: "large",
+      rechargeAvailable: { tramplingCharge: false },
+      rechargeMinRolls: { tramplingCharge: 5 },
     });
   });
 

@@ -13,6 +13,7 @@ Current scope:
 
 - Goblin records are authored in canonical SRD-facing sections: `traits`, `actions`, `bonusActions`, `reactions`, `legendaryActions`, and `spellcasting`.
 - Pseudodragon extends the same `StatBlock` path without adding a monster-specific runtime surface: its `Bite` attack projects through the existing generic battle init flow, while `Sting` remains explicit text-authored data until a later generic saving-throw-action facility exists.
+- Centaur Trooper extends the path with authored `rechargeAbilities`: battle init/start-turn now read recharge availability and minimum d6 thresholds generically from stat-block data, while unsupported `Trampling Charge` resolution remains explicit text-authored data.
 - Each owned record carries explicit SRD provenance (`edition`, `document`, `section`) directly on the stat block.
 - Compatibility battle surfaces such as named attacks, multiattack slots, `battleBonusActionOptions`, and `battleReactionOptions` are derived from authored sections in `monster-catalog.ts`; they are no longer primary storage on `StatBlock`.
 - Goblin stat blocks continue to project generic battle bonus-action options for `Nimble Escape` (`Hide` / `Disengage`) and the generic `redirectAttack` reaction without adding goblin-specific public action names.

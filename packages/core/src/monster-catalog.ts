@@ -1,6 +1,7 @@
 import { Match } from "effect";
 
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
+import { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
 import {
   GOBLIN_BOSS,
   GOBLIN_MINION,
@@ -16,6 +17,7 @@ import {
   type CreatureId as CreatureIdT,
 } from "#/types.ts";
 
+export { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
 export {
   GOBLIN_BOSS,
   GOBLIN_MINION,
@@ -35,6 +37,7 @@ export { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
  */
 
 export const MONSTER_STAT_BLOCK_IDS = [
+  "centaurTrooper",
   "goblinMinion",
   "goblinWarrior",
   "goblinBoss",
@@ -55,6 +58,7 @@ export const MONSTER_STAT_BLOCK_PROVENANCE = {
 } as const;
 
 const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
+  centaurTrooper: CENTAUR_TROOPER,
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
   goblinBoss: GOBLIN_BOSS,
@@ -63,11 +67,23 @@ const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
 
 export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
   return Match.value(id).pipe(
+    Match.when("centaurTrooper", () => MONSTER_STAT_BLOCKS.centaurTrooper),
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
     Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
     Match.when("pseudodragon", () => MONSTER_STAT_BLOCKS.pseudodragon),
     Match.exhaustive,
+  );
+}
+
+export function statBlockRechargeMinRolls(
+  statBlock: StatBlock,
+): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    Object.entries(statBlock.rechargeAbilities).map(([id, ability]) => [
+      id,
+      ability.rechargeMin,
+    ]),
   );
 }
 
@@ -209,6 +225,10 @@ export function statBlockToInitCreatureConfig(params: {
       params.statBlock.legendaryResistanceUses > 0
         ? params.statBlock.legendaryResistanceUses
         : undefined,
+    rechargeAvailable: Object.fromEntries(
+      Object.keys(params.statBlock.rechargeAbilities).map((id) => [id, false]),
+    ),
+    rechargeMinRolls: statBlockRechargeMinRolls(params.statBlock),
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: statBlockBattleBonusActionOptions(
       params.statBlock,

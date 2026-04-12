@@ -133,13 +133,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 15,
       "id": "MON3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Advanced Pattern Tracer Bullet"
     },
     {
       "number": 16,
       "id": "MON4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Hand-Authored SRD Dataset Expansion"
     },
     {
@@ -187,7 +187,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 24,
       "id": "MCPA8",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Monster Control And Legendary Action Surface"
     }
   ]
@@ -234,8 +234,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 12 | POST4 - Workflow And Projection Convergence | done | POST1, POST2, POST3 | none | Landed a thin workflow shell that persists only canonical `CharacterDraft`, uses core-owned assessment to separate open choices from illegal state, derives runtime outputs from finalized sheets, and routes review-step level-up plus higher-level presets through the canonical sheet-to-draft advancement surface. | Complete |
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
 | 14 | MON2 - Second Monster Tracer Bullet | done | MON1 | MON3, MON4 | Landed a single-size non-goblin SRD stat block (`Pseudodragon`) through the same core-owned `StatBlock` and projection path, with unsupported authored save-based abilities preserved as text-only data instead of being improvised into runtime handlers. | Complete |
-| 15 | MON3 - Advanced Pattern Tracer Bullet | ready-for-implementation-after-light-research | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Ready now that the non-goblin baseline has landed; still coordinate any shared generic facility work against post-`CHAR` convergence before editing |
-| 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
+| 15 | MON3 - Advanced Pattern Tracer Bullet | done | MON2 | MON4 | Landed `Centaur Trooper` as an SRD-authored tracer bullet with `rechargeAbilities` projected through the generic monster init/start-turn path, while keeping unsupported `Trampling Charge` resolution as explicit text-only authored content. | Complete |
+| 16 | MON4 - Hand-Authored SRD Dataset Expansion | ready-for-implementation-after-light-research | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, reusing the landed generic multiattack/recharge projection path and keeping unsupported patterns explicit. | Ready now that the advanced recharge tracer bullet has validated the generic facility |
 | 17 | MCPA1 - Battle Attack Public Contract | done | none | MCPA2, MCPA4, MCPA5, MCPA8 | Closed with the bounded `battleAttack` contract: public payload is `targetId` plus `knockOut`, runtime carries only explicit roll / AC / spatial / visibility / reaction facts, and battle retains weapon-profile, crit, legality, and rider ownership. | Complete; reuse this contract for later attack-shaped work instead of adding parallel payloads |
 | 18 | MCPA2 - Public Attack Action Slices | done | MCPA1 | none | Landed public `BATTLE_ATTACK` / `BATTLE_OFF_HAND_ATTACK` slices on one shared `battleAttack` runtime contract, with battle-owned melee-lane derivation, knockout narrowing, and Light extra-attack ability-mod handling. | Complete |
 | 19 | MCPA3 - Spatial Action Public Contracts | ready-for-research | none | none | Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only. | Independent MCP foundation research; no geometry owner in core or MCP |
@@ -243,7 +243,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 21 | MCPA5 - Battle Attack Rider Windows | ready-for-research | MCPA1 | none | Design the battle-owned pre-roll and post-hit rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the settled attack boundary. | Treat these as battle interrupt/hit windows, not creature-scope tokens |
 | 22 | MCPA6 - Generic Spell Resolution Ownership | ready-for-research | none | none | Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces. | Design-heavy foundation work; may split into follow-up implementation slices after research |
 | 23 | MCPA7 - Semantic Table Event Expansion | ready-for-research | none | none | Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas. | Prefer semantic commands over raw payload passthrough; likely implementable in slices after research |
-| 24 | MCPA8 - Monster Control And Legendary Action Surface | blocked | MCPA1, MON3 | none | After `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract. | Still blocked on stable stat-block-owned monster action projection from `MON3` |
+| 24 | MCPA8 - Monster Control And Legendary Action Surface | ready-for-research | MCPA1, MON3 | none | After `MON3`, design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract. | Ready for research now that MON3 validated stat-block-owned recharge projection |
 
 ## Current Integrated Baseline
 
@@ -283,7 +283,7 @@ Planning note:
 - `MCPA1` is done and fixes the generic `battleAttack` ownership boundary for later MCP combat work.
 - `MCPA2` and `MCPA4` can now move into bounded implementation on top of that attack contract.
 - `MCPA3`, `MCPA5`, `MCPA6`, and `MCPA7` remain active MCP research/foundation tasks.
-- `MCPA8` stays blocked on `MON3` even though the generic attack boundary is now settled.
+- `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
 
 ## Task Selection Guidance
 
@@ -299,7 +299,7 @@ Recommended next coding-loop task:
    The generic `battleAttack` contract is now explicit. The next bounded MCP implementation slice is to harden the public `BATTLE_ATTACK` route against that contract and extend the same shape to `BATTLE_OFF_HAND_ATTACK` without introducing a second attack payload design.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
-Do not start `MON3` before checking whether the needed generic facility would collide with active shared-surface work in `POST4` or other runtime/projection refactors.
+`MON3` is complete; use its generic recharge path as the baseline for later monster-control and dataset-expansion work.
 
 ## Recommended Coding Loop
 
@@ -313,9 +313,9 @@ Do not start `MON3` before checking whether the needed generic facility would co
 3. Execute POST3 after POST2, unless monster or MCP work is intentionally chosen for parallelism.
 4. Monster work may proceed in parallel only on MON2 while it remains a catalog/provenance/projection slice and does not add a new shared generic runtime facility.
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
-6. Keep `MON3` and `MON4` blocked until the tracer-bullet sequence proves the shared-surface path.
+6. Keep `MON4` bounded to catalog/provenance/projection expansion on top of the landed MON3 generic recharge path.
 7. Keep H and I deferred.
-8. Treat `MCPA3`, `MCPA5`, `MCPA6`, and `MCPA7` as active research tasks; `MCPA2` and `MCPA4` are now implementable after light research, and `MCPA8` remains blocked on `MON3`.
+8. Treat `MCPA3`, `MCPA5`, `MCPA6`, `MCPA7`, and `MCPA8` as active research tasks; `MCPA2` and `MCPA4` are now implementable after light research.
 
 ## Archived Done Foundations
 
@@ -650,16 +650,17 @@ Verification:
 
 ### Task 15 - MON3 - Advanced Pattern Tracer Bullet
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: MON2.
 
 Blocks: MON4.
 
-Next action:
+Completed action:
 
-- After MON2 lands, add one monster that proves a repeated advanced pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility.
-- If a new shared runtime/projection facility is required, coordinate that change against the post-`CHAR` convergence queue before implementation so the same files are not being reshaped in parallel.
+- Added `Centaur Trooper` from `.references/srd-5.2.1/Monsters/Monsters-C-D.md`.
+- Landed a generic authored recharge projection path from `StatBlock.rechargeAbilities` into monster battle-init state and start-of-turn recharge checks.
+- Kept unsupported `Trampling Charge` execution semantics explicit as text-only authored data with a non-executable reason instead of inventing a bespoke runtime handler.
 
 Acceptance criteria:
 
@@ -670,7 +671,7 @@ Acceptance criteria:
 
 ### Task 16 - MON4 - Hand-Authored SRD Dataset Expansion
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: MON2, MON3.
 
@@ -678,7 +679,7 @@ Blocks: none.
 
 Next action:
 
-- Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset once the schema and advanced-pattern path are proven.
+- Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset now that both the generic multiattack and generic recharge paths are proven.
 - Keep unsupported patterns explicit so later generic-facility work has a grounded queue.
 
 Acceptance criteria:
@@ -868,13 +869,13 @@ Acceptance criteria:
 
 ### Task 24 - MCPA8 - Monster Control And Legendary Action Surface
 
-Status: blocked.
+Status: ready-for-research.
 
 Depends on: MCPA1, MON3.
 
 Blocks: none.
 
-Next action: After `MON3`, add explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.
+Next action: Use the landed MON3 stat-block-owned recharge path to design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities, then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.
 
 Acceptance criteria:
 

@@ -815,6 +815,7 @@ export function freshCreature(
     legendaryActionsRemaining: 0,
     legendaryResistancesRemaining: 0,
     rechargeAvailable: {},
+    rechargeMinRolls: {},
     dailyUsesRemaining: {},
     creatureKind: kind,
     creatureSize: "medium",

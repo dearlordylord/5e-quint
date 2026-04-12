@@ -8,6 +8,7 @@ import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import {
+  CENTAUR_TROOPER,
   GOBLIN_WARRIOR,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -800,8 +801,9 @@ function initDodgeLossBattle() {
 
 function startTurn(
   actor: ReturnType<typeof createActor<typeof battleMachine>>,
+  overrides: Partial<typeof ZERO_SOT> = {},
 ) {
-  send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT });
+  send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT, ...overrides });
 }
 
 function endTurn(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
@@ -1794,6 +1796,39 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
     expect(creature(actor, "C").legendaryResistancesRemaining).toBe(2);
     expect(creature(actor, "C").paralyzed).toBe(false);
+  });
+
+  it("recharges authored monster abilities from stat-block metadata at start of turn", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("C"),
+          statBlock: CENTAUR_TROOPER,
+          initiativeRoll: 20,
+        }),
+      ],
+    });
+
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: false,
+    });
+
+    startTurn(actor, { rechargeD6: 4 });
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: false,
+    });
+
+    endTurn(actor);
+    startTurn(actor);
+    endTurn(actor);
+
+    startTurn(actor, { rechargeD6: 5 });
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: true,
+    });
   });
 
   it("natural_20: passing the failed-save reaction applies the spell effect and preserves Legendary Resistance", () => {

@@ -166,6 +166,12 @@ export function buildCreatureState(
     ...(cfg.legendaryResistances != null
       ? { legendaryResistancesRemaining: cfg.legendaryResistances }
       : {}),
+    ...(cfg.rechargeAvailable != null
+      ? { rechargeAvailable: cfg.rechargeAvailable }
+      : {}),
+    ...(cfg.rechargeMinRolls != null
+      ? { rechargeMinRolls: cfg.rechargeMinRolls }
+      : {}),
     preparedSpells,
     slotsMax,
     slotsCurrent,
@@ -460,12 +466,11 @@ export function battleStartTurn({
   }
   let rechargedAbilities: ReadonlyArray<string> | undefined;
   if (creature.creatureKind === "Monster") {
-    const minRolls: Record<string, number> = { breath_weapon: 5 };
     const recharged: Array<string> = [];
     for (const [name, available] of Object.entries(
       cs.get(id)!.rechargeAvailable,
     )) {
-      if (!available && e.rechargeD6 >= (minRolls[name] ?? 5))
+      if (!available && e.rechargeD6 >= (creature.rechargeMinRolls[name] ?? 5))
         recharged.push(name);
     }
     if (recharged.length > 0) rechargedAbilities = recharged;
