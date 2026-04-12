@@ -169,7 +169,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 21,
       "id": "MCPA5",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Battle Attack Rider Windows"
     },
     {
@@ -240,7 +240,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 18    | MCPA2 - Public Attack Action Slices                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_ATTACK` / `BATTLE_OFF_HAND_ATTACK` slices on one shared `battleAttack` runtime contract, with battle-owned melee-lane derivation, knockout narrowing, and Light extra-attack ability-mod handling.                                                                                               | Complete                                                                                             |
 | 19    | MCPA3 - Spatial Action Public Contracts                        | done               | none                       | none                                     | Closed with `plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`: `BATTLE_HELP_ATTACK` stays bounded to `allyId`, `targetId`, and execute-time `helperWithin5ftOfTarget`; `BATTLE_MOVE` stays bounded to one 5-foot checkpoint plus execute-time `provocationKind` and `threatened` facts, with no geometry owner in core/MCP. | Complete; reuse this contract in future Help/Move wiring instead of adding geometry/path payloads     |
 | 20    | MCPA4 - Public Grapple Attack Slice                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_GRAPPLE` as a bounded `targetId` token plus explicit `battleGrapple` save-outcome runtime, while battle retains size and free-hand legality.                                                                                                                                                     | Complete; reuse this separate grapple contract instead of extending `battleAttack`                   |
-| 21    | MCPA5 - Battle Attack Rider Windows                            | ready-for-research | MCPA1                      | none                                     | Design the battle-owned pre-roll and post-hit rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the settled attack boundary.                                                                                                 | Treat these as battle interrupt/hit windows, not creature-scope tokens                               |
+| 21    | MCPA5 - Battle Attack Rider Windows                            | done               | MCPA1                      | none                                     | Closed with `plans/MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`: these riders stay battle-scoped windows keyed to specific attack phases, and missing legality facts must be projected into battle state rather than added to MCP attack payloads.                                                                            | Complete; reuse the documented pre-roll/post-hit windows instead of exposing creature-scope rider tokens |
 | 22    | MCPA6 - Generic Spell Resolution Ownership                     | ready-for-research | none                       | none                                     | Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces.                                                                                                                                                                                               | Design-heavy foundation work; may split into follow-up implementation slices after research          |
 | 23    | MCPA7 - Semantic Table Event Expansion                         | ready-for-research | none                       | none                                     | Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas.                                                                                                                                  | Prefer semantic commands over raw payload passthrough; likely implementable in slices after research |
 | 24    | MCPA8 - Monster Control And Legendary Action Surface           | ready-for-research | MCPA1, MON3                | none                                     | After `MON3`, design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.                                                                                                           | Ready for research now that MON3 validated stat-block-owned recharge projection                      |
@@ -283,7 +283,7 @@ Planning note:
 - `MCPA1` is done and fixes the generic `battleAttack` ownership boundary for later MCP combat work.
 - `MCPA2` and `MCPA4` are done; later MCP combat work should reuse their settled public attack/grapple ownership boundaries.
 - `MCPA3` is done and fixes the bounded public contract/ownership shape for Help and Move without introducing a geometry owner.
-- `MCPA5`, `MCPA6`, and `MCPA7` remain active MCP research/foundation tasks.
+- `MCPA6` and `MCPA7` remain active MCP research/foundation tasks.
 - `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
 
 ## Task Selection Guidance
@@ -885,22 +885,52 @@ Plan Impact:
 
 ### Task 21 - MCPA5 - Battle Attack Rider Windows
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: MCPA1.
 
 Blocks: none.
 
-Next action:
+Completed action:
 
-- Design the pre-roll and post-hit battle windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the finalized attack boundary.
-- Keep rider spend, target identity, timing, and follow-through battle-owned rather than adding rider data to the base attack payload.
+- Added `plans/MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md` to lock the ownership model for the remaining attack riders on top of the settled `battleAttack` boundary.
+- Defined `USE_BRUTAL_STRIKE` as a battle-owned pre-roll reservation window rather than a free creature action.
+- Defined `STUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` as post-hit battle windows keyed to the qualifying hit rather than to generic actor state.
+- Defined `USE_CUNNING_STRIKE` as a battle-owned post-hit / pre-Sneak-Attack-commit choice window so Sneak Attack dice can be reduced before rolling while rider effects still occur immediately after damage.
+- Recorded the battle projection deltas needed for honest implementation: project existing class-state use flags and levels, plus battle-owned legality facts such as target creature type, monk-weapon identity, pact-weapon identity, and Poisoner's Kit possession if the Poison option is implemented.
 
 Acceptance criteria:
 
 - Rider windows are battle-owned and keyed off the correct pre-roll or post-hit timing window.
 - Creature MCP does not gain duplicate rider tokens that guess battle context.
 - Each rider consumes the right battle-owned legality and runtime/save facts.
+
+Research closeout:
+
+- RAW timing confirms these riders are not generic creature actions:
+  - `Brutal Strike` is chosen on a specific qualifying Reckless Strength-based attack before the roll and only resolves on hit.
+  - `Stunning Strike`, `Eldritch Smite`, and `Divine Smite` key off a qualifying hit.
+  - `Cunning Strike` keys off Sneak Attack damage, which requires battle to pause before Sneak Attack dice are finalized.
+- Existing code already points the same way: the public action surface excludes these rider tokens today, while battle already owns the attack interrupt infrastructure they need.
+- Current creature guards are too weak to publish directly because they do not know the actual qualifying hit, target identity, weapon identity, or attack timing window.
+- Some legality facts are missing from `BattleCreatureState` today. Those should be added as battle projections from existing owned data rather than smuggled through MCP/runtime payloads.
+
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Classes/Barbarian.md`, `.references/srd-5.2.1/Classes/Monk.md`, `.references/srd-5.2.1/Classes/Rogue.md`, `.references/srd-5.2.1/Classes/Warlock.md`, `.references/srd-5.2.1/Classes/Paladin.md`, and `.references/srd-5.2.1/Spells/Descriptions-A-D.md`; cross-checked `UBIQUITOUS_LANGUAGE.md` for Attack Roll, Unarmed Strike, Bonus Action, Reaction, Speed, Prone, Stunned, and creature-type terminology.
+- `/simplify` round 1: tightened the writeup so every rider is keyed to one concrete battle timing window instead of a vague "post-hit rider" label.
+- `/simplify` round 2: removed MCP-side workaround temptations from the design by explicitly listing the battle-state projections that must be extended instead.
+- Verification command: `git diff --check`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA5` - marked `done`
+  - `MCPA6` - no-change
+  - `MCPA7` - no-change
+  - `MCPA8` - no-change
+- Plan edits: updated the Ralph task index, DAG row, planning notes, MCP audit references, and this task section to reflect the landed rider-window ownership design
 
 ### Task 22 - MCPA6 - Generic Spell Resolution Ownership
 
