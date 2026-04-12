@@ -1,4 +1,10 @@
-import { applyCharacterDraftUpdate, assessCharacterDraft, type CharacterDraft } from "@dnd/core/character-domain.ts"
+import {
+  applyCharacterDraftUpdate,
+  assessCharacterDraft,
+  type CharacterDraft,
+  characterDraftFromSheet,
+  type CharacterLevelUpTransition
+} from "@dnd/core/character-domain.ts"
 import {
   characterSheetBattleProjection,
   characterSheetMachineInput,
@@ -9,7 +15,8 @@ import { useEffect, useState } from "react"
 
 import {
   CLERIC_EXAMPLE_DRAFT,
-  FIGHTER_EXAMPLE_DRAFT
+  FIGHTER_EXAMPLE_DRAFT,
+  FIGHTER_LEVEL5_EXAMPLE_DRAFT
 } from "#/components/character-creation/characterCreationPresets.ts"
 import { displayValue } from "#/components/character-creation/characterCreationShared.tsx"
 import {
@@ -75,6 +82,11 @@ export function CharacterCreationPage() {
     )
   }
 
+  function advanceDraftFromReview(transition: CharacterLevelUpTransition) {
+    if (completeSheet == null) return
+    setDraft(characterDraftFromSheet(completeSheet, transition))
+  }
+
   return (
     <PageShell
       title="Character Creation Workflow"
@@ -89,6 +101,16 @@ export function CharacterCreationPage() {
             type="button"
           >
             Load Fighter Example
+          </button>
+          <button
+            className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
+            onClick={() => {
+              setDraft(FIGHTER_LEVEL5_EXAMPLE_DRAFT)
+              setCurrentStep("review")
+            }}
+            type="button"
+          >
+            Load Fighter Lv5
           </button>
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
@@ -196,6 +218,7 @@ export function CharacterCreationPage() {
               point.
             </p>
             <CharacterCreationStepContent
+              advanceDraft={advanceDraftFromReview}
               currentStep={currentStep}
               draft={draft}
               displayValue={displayValue}

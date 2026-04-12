@@ -5,6 +5,7 @@ import {
   CHARACTER_LANGUAGES,
   CHARACTER_SPECIES,
   type CharacterDraft,
+  type CharacterLevelUpTransition,
   STANDARD_ARRAY_SCORES,
   totalPointBuyCost
 } from "@dnd/core/character-domain.ts"
@@ -58,6 +59,7 @@ function nextLanguages(
 }
 
 export function CharacterCreationStepContent({
+  advanceDraft,
   currentStep,
   displayValue,
   draft,
@@ -66,16 +68,12 @@ export function CharacterCreationStepContent({
   setAbilityScore,
   updateDraft
 }: {
+  advanceDraft: (transition: CharacterLevelUpTransition) => void
   currentStep: StepId
   draft: CharacterDraft
   displayValue: (value: unknown) => string
   draftStatus: "complete" | "incomplete" | "invalid"
-  reviewOutputs: {
-    readonly battleProjection: unknown
-    readonly derived: unknown
-    readonly machineInput: unknown
-    readonly sheet: unknown
-  } | null
+  reviewOutputs: Readonly<Record<"battleProjection" | "derived" | "machineInput" | "sheet", unknown>> | null
   setAbilityScore: (ability: Ability, score: number) => void
   updateDraft: (patch: Partial<CharacterDraft>) => void
 }) {
@@ -107,8 +105,8 @@ export function CharacterCreationStepContent({
         <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
           <p className="font-medium text-gray-100">Current advancement</p>
           <p className="mt-2 text-gray-400">
-            CHAR7 owns higher-level starts and multiclass flow. This shell preserves the ordered advancement record
-            already in the draft.
+            The ordered advancement record drives level, class distribution, subclass timing, and feat choices. Edit it
+            here for higher-level starts, or use Level Up from the review step after completing a character.
           </p>
           <pre className="mt-3 overflow-auto rounded-md bg-black/30 p-3 text-xs text-gray-200">
             {displayValue(draft.advancement ?? [])}
@@ -383,6 +381,27 @@ export function CharacterCreationStepContent({
               : "The draft still has open required choices before review."}
         </p>
       </div>
+      {draftStatus === "complete" && (
+        <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
+          <p className="font-medium text-gray-100">Level Up (current: {draft.advancement?.length ?? 0})</p>
+          <p className="mt-1 text-xs text-gray-500">
+            Starts from the finalized sheet, projects one canonical advancement transition back to draft, and lets the
+            assessment pipeline surface any newly opened choices.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {CLASS_NAMES.map((className) => (
+              <button
+                key={className}
+                className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
+                onClick={() => advanceDraft({ entry: { className } })}
+                type="button"
+              >
+                +1 {titleCase(className)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {reviewOutputs == null ? null : (
         <div className="grid gap-5 xl:grid-cols-2">
           {(

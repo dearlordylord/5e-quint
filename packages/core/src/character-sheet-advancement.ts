@@ -67,15 +67,15 @@ function mergeSpellcastingChoices(
   return Object.fromEntries(merged) as CharacterSpellcastingChoices;
 }
 
-function draftFromSheet(
+export function characterDraftFromSheet(
   sheet: CharacterSheet,
-  transition: CharacterLevelUpTransition,
+  transition?: CharacterLevelUpTransition,
 ): CharacterDraft {
   return {
     primaryClass: sheet.primaryClass,
     advancement: [
       ...cloneAdvancement(sheet.advancement),
-      ...cloneAdvancement([transition.entry]),
+      ...(transition == null ? [] : cloneAdvancement([transition.entry])),
     ],
     background: sheet.background,
     abilityScoreGeneration: {
@@ -87,13 +87,13 @@ function draftFromSheet(
     languages: [...sheet.languages],
     alignment: sheet.alignment,
     choices:
-      transition.choices == null
+      transition?.choices == null
         ? sheet.choices
         : { ...sheet.choices, ...transition.choices },
     equipment: cloneEquipmentChoices(sheet.equipment),
     spellcasting: mergeSpellcastingChoices(
       sheet.spellcasting,
-      transition.spellcasting,
+      transition?.spellcasting,
     ),
   };
 }
@@ -102,5 +102,5 @@ export function advanceCharacterSheet(
   sheet: CharacterSheet,
   transition: CharacterLevelUpTransition,
 ): CharacterFinalizationResult {
-  return finalizeCharacterDraft(draftFromSheet(sheet, transition));
+  return finalizeCharacterDraft(characterDraftFromSheet(sheet, transition));
 }

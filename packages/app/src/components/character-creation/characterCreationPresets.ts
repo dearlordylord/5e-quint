@@ -1,5 +1,10 @@
-import type { CharacterDraft } from "@dnd/core/character-domain.ts"
-import { singleClassAdvancement } from "@dnd/core/character-domain.ts"
+import type { CharacterDraft, CharacterLevelUpTransition } from "@dnd/core/character-domain.ts"
+import {
+  advanceCharacterSheet,
+  characterDraftFromSheet,
+  finalizeCharacterDraft,
+  singleClassAdvancement
+} from "@dnd/core/character-domain.ts"
 
 export const FIGHTER_EXAMPLE_DRAFT: CharacterDraft = {
   primaryClass: "fighter",
@@ -43,6 +48,40 @@ export const FIGHTER_EXAMPLE_DRAFT: CharacterDraft = {
     }
   }
 }
+
+const FIGHTER_LEVEL5_TRANSITIONS: ReadonlyArray<CharacterLevelUpTransition> = [
+  { entry: { className: "fighter" } },
+  { entry: { className: "fighter", subclass: { className: "fighter", subclass: "champion" } } },
+  {
+    entry: {
+      className: "fighter",
+      feat: { slot: "feat", choice: { tag: "abilityScoreImprovement", abilities: ["str", "str"] } }
+    }
+  },
+  { entry: { className: "fighter" } }
+]
+
+function buildAdvancedExampleDraft(
+  draft: CharacterDraft,
+  transitions: ReadonlyArray<CharacterLevelUpTransition>
+): CharacterDraft {
+  const finalized = finalizeCharacterDraft(draft)
+  if (!finalized.ok) throw new Error("expected example draft to finalize")
+
+  let sheet = finalized.sheet
+  for (const transition of transitions) {
+    const advanced = advanceCharacterSheet(sheet, transition)
+    if (!advanced.ok) throw new Error("expected example advancement transition to finalize")
+    sheet = advanced.sheet
+  }
+
+  return characterDraftFromSheet(sheet)
+}
+
+export const FIGHTER_LEVEL5_EXAMPLE_DRAFT: CharacterDraft = buildAdvancedExampleDraft(
+  FIGHTER_EXAMPLE_DRAFT,
+  FIGHTER_LEVEL5_TRANSITIONS
+)
 
 export const CLERIC_EXAMPLE_DRAFT: CharacterDraft = {
   primaryClass: "cleric",

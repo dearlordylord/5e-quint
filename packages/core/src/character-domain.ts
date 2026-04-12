@@ -48,6 +48,7 @@ export {
 } from "#/character-advancement.ts";
 export {
   advanceCharacterSheet,
+  characterDraftFromSheet,
   type CharacterLevelUpTransition,
 } from "#/character-sheet-advancement.ts";
 export {
