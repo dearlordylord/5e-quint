@@ -135,6 +135,13 @@ These remain blocked until effect provenance, duration, hooks, granted facts, an
 
 These are blocked because the raw amount-only events lose rule-source semantics and source-specific caps/restoration behavior.
 
+MCPA7 decision:
+
+- do not add generic public `REDUCE_MAX_HP` / `RESTORE_MAX_HP` table events;
+- keep max-HP change on the owning source surface (attack, spell, curse,
+  disease, rest, or future named route), with restoration semantics authored by
+  that same source.
+
 ### 8. Failed-save / failed-check semantic commands are the correct public trigger surface
 
 Raw trigger events stay internal.
@@ -174,14 +181,14 @@ These are the public-facing items that still matter. Keep this table current.
 | `BATTLE_CAST_SAVE_SPELL` | future battle spell token in `get_available_actions` | Needs a battle-scoped spell token backed by core-owned spell payload projection; counterspell and save-failed windows stay battle-owned. | Public input should identify spell, slot level, and target choice, not save DC / damage / condition payloads. |
 | `BATTLE_CAST_CONCENTRATION_SPELL` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus battle-owned concentration start/break semantics. | Raw `SpellId` / duration / condition payload is not a stable public contract; `BREAK_CONCENTRATION` remains the narrow table-fact route. |
 | `BATTLE_CAST_AOE` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus a bounded area-membership/runtime-save boundary while battle owns the per-target loop. | Do not expose raw AoE event or move the target-by-target continuation loop into MCP. |
-| `REDUCE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for max-HP reduction semantics and caps. | Raw amount-only command is not sufficient. |
-| `RESTORE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for restoration semantics and scope. | Prefer semantic spell/rest routes until provenance is owned. |
-| `ADD_EFFECT` | future semantic spell/effect route | Raw effect payload is too internal and unconstrained for MCP. | Add only through narrow semantic commands. |
-| `REMOVE_EFFECT` | future semantic spell/effect route | Removal by internal effect identity is not yet a stable public contract. | Prefer source-owned parent semantics such as concentration break, expiry, or spell-specific removal. |
+| `REDUCE_MAX_HP` | source-owned action / control / named ongoing-effect route | Generic `record_table_event` remains rejected after MCPA7; max-HP reduction must stay on the owning source surface with that source's cap/floor/restoration semantics. | Raw amount-only command is not sufficient. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `RESTORE_MAX_HP` | source-owned rest / action / named ongoing-effect route | Generic `record_table_event` remains rejected after MCPA7; restoration must stay on the owning source surface, and ordinary reset already belongs to `LONG_REST`. | Prefer semantic source-owned restoration over a free-floating restore amount. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `ADD_EFFECT` | source-owned spell / feature / named hazard route | Generic `record_table_event` remains rejected after MCPA7; public MCP must not send internal effect-hook payloads or granted-fact blobs. | Add only through parent/source semantics. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `REMOVE_EFFECT` | source-owned spell / feature / named hazard route | Generic `record_table_event` remains rejected after MCPA7; removal by internal effect identity is not a stable public contract. | Prefer concentration break, expiry/save-success semantics, or a source-specific end command. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
 | `DROP_PRONE` | future movement or `record_table_event` route | Blocked on session/position ownership because prone/standing interacts with movement-budget semantics. | Keep aligned with future movement ownership. |
-| `SUFFOCATE` | future `record_table_event` route | Needs explicit suffocation-progress ownership, not the current terminal shortcut event. | Current raw event is not the right public hazard shape. |
-| `APPLY_STARVATION` | future `record_table_event` route | Needs owned malnutrition progression semantics. | Current raw event does not capture the SRD process. |
-| `APPLY_DEHYDRATION` | future `record_table_event` route | Needs owned dehydration progression semantics by creature size and recovery/removal behavior. | Current raw event is too narrow. |
+| `SUFFOCATE` | future semantic `record_table_event` hazard family | Replace the shortcut with semantic suffocation progression such as `RECORD_HOLD_BREATH_EXPIRED`, `RECORD_SUFFOCATION_TURN_END`, and `RECORD_BREATHING_RESTORED`; core must own suffocation-sourced Exhaustion cleanup. | Current raw event is not the right public hazard shape and does not match SRD 5.2.1. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `APPLY_STARVATION` | future semantic `record_table_event` hazard route | Replace the shortcut with a daily-intake route such as `RECORD_DAILY_FOOD_INTAKE`; core must own the 5-day no-food counter and the malnutrition recovery lock. | Current raw event does not capture the SRD process. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
+| `APPLY_DEHYDRATION` | future semantic `record_table_event` hazard route | Replace the shortcut with a daily-intake route such as `RECORD_DAILY_WATER_INTAKE`; core must own dehydration's recovery/removal lock. | Current raw event is too narrow. See `MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`. |
 | `USE_LEGENDARY_ACTION` | future `execute_control_command` route | Needs stat-block-owned action-name legality and cost projection. | Monster-control route, not ordinary player suggestion route. |
 | `USE_RECHARGE_ABILITY` | future `execute_control_command` route | Needs stat-block-owned recharge ability projection and legality. | Monster-control route. |
 | `USE_DAILY_ABILITY` | future `execute_control_command` route | Needs stat-block-owned daily-ability projection and legality. | Monster-control route. |

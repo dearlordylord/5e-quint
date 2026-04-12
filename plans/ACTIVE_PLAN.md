@@ -181,7 +181,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 23,
       "id": "MCPA7",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Semantic Table Event Expansion"
     },
     {
@@ -242,7 +242,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 20    | MCPA4 - Public Grapple Attack Slice                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_GRAPPLE` as a bounded `targetId` token plus explicit `battleGrapple` save-outcome runtime, while battle retains size and free-hand legality.                                                                                                                                                     | Complete; reuse this separate grapple contract instead of extending `battleAttack`                   |
 | 21    | MCPA5 - Battle Attack Rider Windows                            | done               | MCPA1                      | none                                     | Closed with `plans/MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`: these riders stay battle-scoped windows keyed to specific attack phases, and missing legality facts must be projected into battle state rather than added to MCP attack payloads.                                                                            | Complete; reuse the documented pre-roll/post-hit windows instead of exposing creature-scope rider tokens |
 | 22    | MCPA6 - Generic Spell Resolution Ownership                     | done               | none                       | none                                     | Closed with `plans/MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md`: generic spell casts stay battle-scoped action tokens backed by core-owned spell payload projection, while counterspell, save-failed reactions, concentration, and AoE iteration stay battle-owned windows.                                        | Complete; reuse the spell-ownership writeup instead of exposing raw `BATTLE_CAST_*` payloads        |
-| 23    | MCPA7 - Semantic Table Event Expansion                         | ready-for-research | none                       | none                                     | Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas.                                                                                                                                  | Prefer semantic commands over raw payload passthrough; likely implementable in slices after research |
+| 23    | MCPA7 - Semantic Table Event Expansion                         | done               | none                       | none                                     | Closed with `plans/MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md`: `record_table_event` should grow only for semantic hazard progression, while generic max-HP change and lasting-effect mutation stay source-owned rather than becoming raw table-event passthroughs.                                                     | Complete; reuse the hazard-only table-event boundary and keep max-HP / effect work on the owning source surfaces |
 | 24    | MCPA8 - Monster Control And Legendary Action Surface           | ready-for-research | MCPA1, MON3                | none                                     | After `MON3`, design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.                                                                                                           | Ready for research now that MON3 validated stat-block-owned recharge projection                      |
 
 ## Current Integrated Baseline
@@ -287,7 +287,9 @@ Planning note:
   work: spell casting stays battle-scoped, spell-authored payloads stay
   core-owned, and counterspell / save-failed / concentration / AoE follow-up
   windows stay battle-owned.
-- `MCPA7` remains the next active MCP research/foundation task.
+- `MCPA7` is done and fixes the ownership boundary for semantic table-event
+  expansion: hazard progression gets semantic table routes, while generic
+  max-HP and lasting-effect mutations remain source-owned.
 - `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
 
 ## Task Selection Guidance
@@ -320,7 +322,7 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
 6. Keep `MON4` bounded to catalog/provenance/projection expansion on top of the landed MON3 generic recharge path.
 7. Keep H and I deferred.
-8. Treat `MCPA7` and `MCPA8` as the remaining active research tasks.
+8. Treat `MCPA8` as the remaining active MCP research task.
 
 ## Archived Done Foundations
 
@@ -1017,23 +1019,59 @@ Plan Impact:
 
 ### Task 23 - MCPA7 - Semantic Table Event Expansion
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: none.
 
-Next action:
+Completed research:
 
-- Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas.
-- Preserve provenance/source semantics so MCP does not become a raw internal-event passthrough.
-- Break out implementation slices only after the semantic route set is stable.
+- Added `plans/MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md` as the durable
+  ownership reference for this surface.
+- Settled that generic raw `REDUCE_MAX_HP` / `RESTORE_MAX_HP` and generic raw
+  `ADD_EFFECT` / `REMOVE_EFFECT` must not become public `record_table_event`
+  routes; they stay on their owning spell / attack / feature / rest surfaces.
+- Settled that environmental hazards are the only table-event expansion slice
+  here: suffocation, malnutrition, and dehydration should use semantic
+  progression routes rather than the current shortcut internals.
+- Kept SRD 5.2.1 hazard semantics intact by distinguishing `atLeastHalf` from
+  `lessThanHalf` intake and by treating full intake as unlocking later
+  Exhaustion removal rather than itself removing the hazard-sourced levels.
 
 Acceptance criteria:
 
-- New public table-event routes are semantic and provenance-aware, not arbitrary raw payload passthrough.
+- New public table-event routes are semantic and provenance-aware, not
+  arbitrary raw payload passthrough.
 - Max-HP change and effect ownership stay aligned with the audit findings.
-- Environmental hazards use SRD-shaped progression semantics rather than current shortcut events.
+- Environmental hazards use SRD-shaped progression semantics rather than
+  current shortcut events.
+
+Verification:
+
+- RAW agent check: reviewed `.references/srd-5.2.1/Playing-the-Game.md` and
+  `.references/srd-5.2.1/Rules-Glossary.md` for Long Rest, Concentration,
+  Dehydration, Malnutrition, Suffocation, and Exhaustion; also checked
+  `UBIQUITOUS_LANGUAGE.md` and noted its stale 5.1-era Exhaustion/dehydration
+  entries as separate baseline documentation debt rather than widening MCPA7.
+- `/simplify` round 1: removed the draft generic table-event route shapes for
+  max-HP change and lasting effects so the public boundary stays source-owned.
+- `/simplify` round 2: tightened hazard intake semantics to
+  `full | atLeastHalf | lessThanHalf | none` where needed, keeping the
+  recovery lock distinct from actual Exhaustion removal and leaving future
+  provenance tracking as implementation work.
+- Verification command: `git diff --check`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA7` - marked `done`
+  - `MCPA8` - no-change
+- Plan edits: updated the Ralph task index, planning notes, DAG row, MCP event
+  audit rows, and this task section; added
+  `plans/MCPA7_SEMANTIC_TABLE_EVENT_EXPANSION.md` as the stable ownership
+  reference for later implementation slices
 
 ### Task 24 - MCPA8 - Monster Control And Legendary Action Surface
 
