@@ -175,7 +175,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 22,
       "id": "MCPA6",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Generic Spell Resolution Ownership"
     },
     {
@@ -241,7 +241,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 19    | MCPA3 - Spatial Action Public Contracts                        | done               | none                       | none                                     | Closed with `plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`: `BATTLE_HELP_ATTACK` stays bounded to `allyId`, `targetId`, and execute-time `helperWithin5ftOfTarget`; `BATTLE_MOVE` stays bounded to one 5-foot checkpoint plus execute-time `provocationKind` and `threatened` facts, with no geometry owner in core/MCP. | Complete; reuse this contract in future Help/Move wiring instead of adding geometry/path payloads     |
 | 20    | MCPA4 - Public Grapple Attack Slice                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_GRAPPLE` as a bounded `targetId` token plus explicit `battleGrapple` save-outcome runtime, while battle retains size and free-hand legality.                                                                                                                                                     | Complete; reuse this separate grapple contract instead of extending `battleAttack`                   |
 | 21    | MCPA5 - Battle Attack Rider Windows                            | done               | MCPA1                      | none                                     | Closed with `plans/MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`: these riders stay battle-scoped windows keyed to specific attack phases, and missing legality facts must be projected into battle state rather than added to MCP attack payloads.                                                                            | Complete; reuse the documented pre-roll/post-hit windows instead of exposing creature-scope rider tokens |
-| 22    | MCPA6 - Generic Spell Resolution Ownership                     | ready-for-research | none                       | none                                     | Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces.                                                                                                                                                                                               | Design-heavy foundation work; may split into follow-up implementation slices after research          |
+| 22    | MCPA6 - Generic Spell Resolution Ownership                     | done               | none                       | none                                     | Closed with `plans/MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md`: generic spell casts stay battle-scoped action tokens backed by core-owned spell payload projection, while counterspell, save-failed reactions, concentration, and AoE iteration stay battle-owned windows.                                        | Complete; reuse the spell-ownership writeup instead of exposing raw `BATTLE_CAST_*` payloads        |
 | 23    | MCPA7 - Semantic Table Event Expansion                         | ready-for-research | none                       | none                                     | Design narrow semantic public routes for max-HP change, effect application/removal, and environmental hazard progression where the audit says raw events are not safe public schemas.                                                                                                                                  | Prefer semantic commands over raw payload passthrough; likely implementable in slices after research |
 | 24    | MCPA8 - Monster Control And Legendary Action Surface           | ready-for-research | MCPA1, MON3                | none                                     | After `MON3`, design explicit monster-control/public MCP routes for named legendary/recharge/daily abilities and then the bounded `BATTLE_LEGENDARY_ATTACK` slice using the settled generic attack contract.                                                                                                           | Ready for research now that MON3 validated stat-block-owned recharge projection                      |
 
@@ -283,7 +283,11 @@ Planning note:
 - `MCPA1` is done and fixes the generic `battleAttack` ownership boundary for later MCP combat work.
 - `MCPA2` and `MCPA4` are done; later MCP combat work should reuse their settled public attack/grapple ownership boundaries.
 - `MCPA3` is done and fixes the bounded public contract/ownership shape for Help and Move without introducing a geometry owner.
-- `MCPA6` and `MCPA7` remain active MCP research/foundation tasks.
+- `MCPA6` is done and fixes the ownership boundary for future generic spell MCP
+  work: spell casting stays battle-scoped, spell-authored payloads stay
+  core-owned, and counterspell / save-failed / concentration / AoE follow-up
+  windows stay battle-owned.
+- `MCPA7` remains the next active MCP research/foundation task.
 - `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
 
 ## Task Selection Guidance
@@ -316,7 +320,7 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
 6. Keep `MON4` bounded to catalog/provenance/projection expansion on top of the landed MON3 generic recharge path.
 7. Keep H and I deferred.
-8. Treat `MCPA5`, `MCPA6`, `MCPA7`, and `MCPA8` as active research tasks.
+8. Treat `MCPA7` and `MCPA8` as the remaining active research tasks.
 
 ## Archived Done Foundations
 
@@ -934,23 +938,82 @@ Plan Impact:
 
 ### Task 22 - MCPA6 - Generic Spell Resolution Ownership
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: none.
 
-Next action:
-
-- Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces.
-- Make the owning layer explicit for counterspell windows, save-failed reactions, and per-target AoE resolution loops.
-- Split any implementation follow-up into bounded tasks only after the ownership writeup is stable.
+Next action: complete.
 
 Acceptance criteria:
 
 - The plan no longer relies on raw generic spell event passthrough.
 - Counterspell windows, save-failed reactions, and AoE per-target loops have an explicit owner before public exposure.
 - The resulting route is either a bounded semantic spell-action surface or a clearly owned table-event flow.
+
+Research closeout:
+
+- The honest public route is not `record_table_event`. Casting a spell is a
+  battle action with action-economy spend, component legality, slot spend or
+  refund, and follow-up reaction windows.
+- The current raw internal spell events already prove why they are not public
+  contracts:
+  - `BATTLE_CAST_SAVE_SPELL` currently asks callers for spell-authored payload
+    such as save DC, save ability, damage, and on-fail condition.
+  - `BATTLE_CAST_CONCENTRATION_SPELL` currently asks callers for
+    spell-authored duration and on-fail condition payload.
+  - `BATTLE_CAST_AOE` currently asks callers for spell-authored AoE payload and
+    then enters a battle-owned target-by-target continuation loop.
+- Existing lower-layer ownership already points to the correct replacement:
+  `features/spell-available-actions.ts` derives modeled spell metadata and
+  battle-ready payloads from the SRD spell registry. Future public battle spell
+  tokens should reuse that path instead of introducing caller-authored spell
+  payloads.
+- Counterspell, save-failed reactions, concentration, and AoE continuation are
+  all battle-owned windows:
+  - `CAST_COUNTERSPELL` remains the public reaction model for the spell-being-
+    cast window.
+  - failed-save reactions remain separate battle reaction tokens rather than
+    fields on the incoming spell command.
+  - concentration start, break, and cleanup stay in battle state; only the
+    narrow external table fact `BREAK_CONCENTRATION` remains a table-event
+    route.
+  - AoE per-target iteration stays battle-owned; if geometry remains external,
+    the future public boundary should accept one bounded area-membership or
+    runtime-save bundle rather than one MCP command per target.
+- The design should land as bounded follow-up implementation slices rather than
+  one generic spell mega-task: save spells first, then concentration spells,
+  then AoE spells.
+
+Verification:
+
+- RAW / terminology check: reviewed
+  `.references/srd-5.2.1/Spells/Descriptions-A-D.md`,
+  `.references/srd-5.2.1/Spells/Descriptions-E-L.md`,
+  `.references/srd-5.2.1/Rules-Glossary.md`,
+  `.references/srd-5.2.1/Playing-the-Game.md`, and
+  `UBIQUITOUS_LANGUAGE.md` for Counterspell, Concentration, Saving Throw, Area
+  of Effect, and spellcasting terminology.
+- `/simplify` round 1: removed the lingering `record_table_event` fallback from
+  the audit rows and task writeup so the plan now chooses one owner instead of
+  preserving two parallel routes.
+- `/simplify` round 2: tightened the ownership split so spell-authored payloads
+  are explicitly core-owned and multi-phase follow-up remains battle-owned,
+  rather than leaving “modeled spell action” underspecified.
+- Verification command: `git diff --check`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA6` - marked `done`
+  - `MCPA7` - left unchanged
+  - `MCPA8` - left unchanged
+- Plan edits: updated the Ralph task index, planning notes, DAG row, MCP event
+  audit rows, and this task section; added
+  `plans/MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md` as the stable ownership
+  reference for later spell-surface implementation
 
 ### Task 23 - MCPA7 - Semantic Table Event Expansion
 

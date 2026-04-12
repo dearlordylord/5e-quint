@@ -106,13 +106,18 @@ These stay blocked until battle owns the relevant hit qualification, target iden
 
 ### 5. Generic spell table events are blocked by multi-phase resolution
 
-Do not expose raw generic spell events until the full reaction/resolution flow has an honest owner.
+Do not expose raw generic spell events through `record_table_event`.
+Generic spell casting is battle-action work, and the full
+reaction/resolution flow must stay battle-owned.
 
 - `BATTLE_CAST_SAVE_SPELL`
 - `BATTLE_CAST_CONCENTRATION_SPELL`
 - `BATTLE_CAST_AOE`
 
-These are blocked because they can open counterspell windows, save-failed reaction windows, per-target AoE loops, or other follow-up MCP interaction. Prefer modeled spell actions with battle-owned payloads.
+These are blocked because they can open counterspell windows, save-failed
+reaction windows, per-target AoE loops, or other follow-up MCP interaction.
+Prefer battle-scoped spell tokens backed by core-owned spell payload
+projections. See `MCPA6_GENERIC_SPELL_RESOLUTION_OWNERSHIP.md`.
 
 ### 6. Raw effect payloads are not safe public schemas
 
@@ -166,9 +171,9 @@ These are the public-facing items that still matter. Keep this table current.
 | `USE_CUNNING_STRIKE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs a battle-owned pending Sneak Attack commit step plus size/save follow-through. | Post-hit / pre-Sneak-Attack-damage rider-choice window. |
 | `USE_ELDRITCH_SMITE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs pact-weapon projection and the post-hit spend/follow-through window. | Post-hit rider. |
 | `USE_DIVINE_SMITE_FREE` | battle-driven rider window | Ownership/design finalized in `MCPA5_BATTLE_ATTACK_RIDER_WINDOWS.md`; implementation still needs target creature-type projection and the shared Divine Smite hit window. | Post-hit rider. |
-| `BATTLE_CAST_SAVE_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on multi-phase reaction resolution and spell payload ownership. | Do not expose raw generic event while it can open counterspell and save-failed reaction windows. |
-| `BATTLE_CAST_CONCENTRATION_SPELL` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution ownership and spell payload validation. | Raw `SpellId`/duration/condition payload is not a stable public contract. |
-| `BATTLE_CAST_AOE` | future semantic spell action or future `record_table_event` route | Blocked on counterspell resolution plus per-target AoE iteration ownership. | Do not expose raw AoE event until the per-target loop has an honest owner. |
+| `BATTLE_CAST_SAVE_SPELL` | future battle spell token in `get_available_actions` | Needs a battle-scoped spell token backed by core-owned spell payload projection; counterspell and save-failed windows stay battle-owned. | Public input should identify spell, slot level, and target choice, not save DC / damage / condition payloads. |
+| `BATTLE_CAST_CONCENTRATION_SPELL` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus battle-owned concentration start/break semantics. | Raw `SpellId` / duration / condition payload is not a stable public contract; `BREAK_CONCENTRATION` remains the narrow table-fact route. |
+| `BATTLE_CAST_AOE` | future battle spell token in `get_available_actions` | Needs the same spell-payload owner plus a bounded area-membership/runtime-save boundary while battle owns the per-target loop. | Do not expose raw AoE event or move the target-by-target continuation loop into MCP. |
 | `REDUCE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for max-HP reduction semantics and caps. | Raw amount-only command is not sufficient. |
 | `RESTORE_MAX_HP` | future `record_table_event` route | Needs source/provenance ownership for restoration semantics and scope. | Prefer semantic spell/rest routes until provenance is owned. |
 | `ADD_EFFECT` | future semantic spell/effect route | Raw effect payload is too internal and unconstrained for MCP. | Add only through narrow semantic commands. |
