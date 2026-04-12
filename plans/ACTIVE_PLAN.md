@@ -547,6 +547,15 @@ Acceptance criteria:
 - The workflow shell does not become a second rules engine.
 - Runtime projection remains one-way derived from finalized owned character state.
 
+### Task 13 - MON1 - Canonical Goblin Tracer Bullet
+
+Status: done.
+
+Archived foundation summary:
+
+- Landed the canonical goblin tracer-bullet `StatBlock` with explicit SRD provenance and one projection path into generic battle and MCP surfaces.
+- See the archived done foundations section above for the durable downstream summary; inspect git history for full implementation detail.
+
 ### Task 14 - MON2 - Second Monster Tracer Bullet
 
 Status: ready-for-implementation-after-light-research.
