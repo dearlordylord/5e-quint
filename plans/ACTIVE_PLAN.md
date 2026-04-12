@@ -157,13 +157,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 19,
       "id": "MCPA3",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Spatial Action Public Contracts"
     },
     {
       "number": 20,
       "id": "MCPA4",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Public Grapple Attack Slice"
     },
     {
@@ -238,7 +238,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16    | MON4 - Hand-Authored SRD Dataset Expansion                     | done               | MON2, MON3                 | none                                     | Landed the hand-authored SRD dataset expansion plus a code-derived unsupported-pattern audit while keeping spellcasting inside authored action-economy sections and leaving unrelated tooling untouched.                                                                                                               | Complete                                                                                             |
 | 17    | MCPA1 - Battle Attack Public Contract                          | done               | none                       | MCPA2, MCPA4, MCPA5, MCPA8               | Closed with the bounded `battleAttack` contract: public payload is `targetId` plus `knockOut`, runtime carries only explicit roll / AC / spatial / visibility / reaction facts, and battle retains weapon-profile, crit, legality, and rider ownership.                                                                | Complete; reuse this contract for later attack-shaped work instead of adding parallel payloads       |
 | 18    | MCPA2 - Public Attack Action Slices                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_ATTACK` / `BATTLE_OFF_HAND_ATTACK` slices on one shared `battleAttack` runtime contract, with battle-owned melee-lane derivation, knockout narrowing, and Light extra-attack ability-mod handling.                                                                                               | Complete                                                                                             |
-| 19    | MCPA3 - Spatial Action Public Contracts                        | ready-for-research | none                       | none                                     | Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only.                                                                                                                                                                                            | Independent MCP foundation research; no geometry owner in core or MCP                                |
+| 19    | MCPA3 - Spatial Action Public Contracts                        | done               | none                       | none                                     | Closed with `plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`: `BATTLE_HELP_ATTACK` stays bounded to `allyId`, `targetId`, and execute-time `helperWithin5ftOfTarget`; `BATTLE_MOVE` stays bounded to one 5-foot checkpoint plus execute-time `provocationKind` and `threatened` facts, with no geometry owner in core/MCP. | Complete; reuse this contract in future Help/Move wiring instead of adding geometry/path payloads     |
 | 20    | MCPA4 - Public Grapple Attack Slice                            | done               | MCPA1                      | none                                     | Landed public `BATTLE_GRAPPLE` as a bounded `targetId` token plus explicit `battleGrapple` save-outcome runtime, while battle retains size and free-hand legality.                                                                                                                                                     | Complete; reuse this separate grapple contract instead of extending `battleAttack`                   |
 | 21    | MCPA5 - Battle Attack Rider Windows                            | ready-for-research | MCPA1                      | none                                     | Design the battle-owned pre-roll and post-hit rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the settled attack boundary.                                                                                                 | Treat these as battle interrupt/hit windows, not creature-scope tokens                               |
 | 22    | MCPA6 - Generic Spell Resolution Ownership                     | ready-for-research | none                       | none                                     | Decide and document the honest public ownership path for generic save, concentration, and AoE spell resolution surfaces.                                                                                                                                                                                               | Design-heavy foundation work; may split into follow-up implementation slices after research          |
@@ -282,7 +282,8 @@ Planning note:
 - `MON1` through `MON4` are the active monster track. They should reuse the landed monster ownership/provenance boundary and avoid racing `POST4` on shared projection/runtime refactors.
 - `MCPA1` is done and fixes the generic `battleAttack` ownership boundary for later MCP combat work.
 - `MCPA2` and `MCPA4` are done; later MCP combat work should reuse their settled public attack/grapple ownership boundaries.
-- `MCPA3`, `MCPA5`, `MCPA6`, and `MCPA7` remain active MCP research/foundation tasks.
+- `MCPA3` is done and fixes the bounded public contract/ownership shape for Help and Move without introducing a geometry owner.
+- `MCPA5`, `MCPA6`, and `MCPA7` remain active MCP research/foundation tasks.
 - `MCPA8` is ready for research now that `MON3` has validated generic stat-block-owned recharge projection.
 
 ## Task Selection Guidance
@@ -315,7 +316,7 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
 5. Keep `POST4` blocked until POST2 and POST3 land on the POST1 draft/sheet boundary.
 6. Keep `MON4` bounded to catalog/provenance/projection expansion on top of the landed MON3 generic recharge path.
 7. Keep H and I deferred.
-8. Treat `MCPA3`, `MCPA5`, `MCPA6`, `MCPA7`, and `MCPA8` as active research tasks.
+8. Treat `MCPA5`, `MCPA6`, `MCPA7`, and `MCPA8` as active research tasks.
 
 ## Archived Done Foundations
 
@@ -788,23 +789,59 @@ Plan Impact:
 
 ### Task 19 - MCPA3 - Spatial Action Public Contracts
 
-Status: ready-for-research.
+Status: done.
 
 Depends on: none.
 
 Blocks: none.
 
-Next action:
+Completed action:
 
-- Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only.
-- Make the non-goal explicit: core and MCP do not gain a geometry owner, pathfinder, or persistent map model.
-- Record the proposed caller/session fact surface and any unresolved battle-owned legality checks.
+- Added `plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md` as the task-specific
+  contract note for spatial public surfaces.
+- Settled `BATTLE_HELP_ATTACK` as a minimal public token over `allyId` and
+  `targetId`, with one execute-time caller/session spatial fact:
+  `helperWithin5ftOfTarget`.
+- Settled `BATTLE_MOVE` as a one-checkpoint public token with execute-time
+  caller/session reach-exit facts: `provocationKind` and `threatened`.
+- Reaffirmed the non-goal from `MOVEMENT_GEOMETRY_OWNERSHIP.md`: no geometry
+  owner, pathfinder, or persistent map model in core or MCP.
+- Recorded the remaining unresolved follow-up boundary honestly: movement-driven
+  OA follow-up wiring is future work and is not finalized by MCPA3.
 
 Acceptance criteria:
 
 - `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` have explicit public contracts over caller/session-owned facts.
 - Core and MCP do not gain a geometry owner, pathfinder, or persistent map model.
 - The public contract preserves the ownership findings in `MCP_EVENT_SURFACE_AUDIT.md`.
+
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Rules-Glossary.md`
+  for `Help [Action]`, `.references/srd-5.2.1/Playing-the-Game.md` for movement
+  and opportunity attacks, and `UBIQUITOUS_LANGUAGE.md` for `Action`,
+  `Movement`, and `Opportunity Attack` terminology.
+- `/simplify` round 1: removed any need for caller-owned path, destination, or
+  geometry payloads and kept `BATTLE_MOVE` checkpoint-based.
+- `/simplify` round 2: narrowed `BATTLE_HELP_ATTACK` to one execute-time
+  proximity fact and left the OA attack follow-up contract explicitly
+  unresolved instead of overfitting MCPA3 to later tasks.
+- Verification commands:
+  - `git diff --check`
+  - `rg -n "BATTLE_HELP_ATTACK|BATTLE_MOVE|MCPA3" plans/ACTIVE_PLAN.md plans/MCP_EVENT_SURFACE_AUDIT.md plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA3` - marked `done`
+  - `MCPA5` - no-change
+  - `MCPA6` - no-change
+  - `MCPA7` - no-change
+  - `MCPA8` - no-change
+- Plan edits: updated the Ralph task index, planning notes, DAG row, and this
+  task section; added `plans/MCPA3_SPATIAL_ACTION_CONTRACTS.md`; synced
+  `plans/MCP_EVENT_SURFACE_AUDIT.md` to the settled Help/Move boundary
 
 ### Task 20 - MCPA4 - Public Grapple Attack Slice
 
