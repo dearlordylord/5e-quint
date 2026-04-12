@@ -2,6 +2,9 @@
 
 Task 12 decision note for public `BATTLE_MOVE` and `BATTLE_HELP_ATTACK`.
 
+This document is the source-of-truth decision for movement/help ownership.
+MCP surface planning and audits should conform to it.
+
 ## Decision
 
 Continue deferring the public movement/help surfaces. Do not add a grid engine, pathfinding layer, or session-owned geometry subsystem to core, battle, or MCP.
