@@ -127,13 +127,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 14,
       "id": "MON2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Second Monster Tracer Bullet"
     },
     {
       "number": 15,
       "id": "MON3",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Advanced Pattern Tracer Bullet"
     },
     {
@@ -233,8 +233,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | done | CHAR7, POST1 | POST4 | Landed `advanceCharacterSheet()` as a thin canonical sheet-to-sheet transition that appends one ordered advancement entry and reuses `finalizeCharacterDraft()` instead of inventing a second higher-level-start rules path. | Complete |
 | 12 | POST4 - Workflow And Projection Convergence | done | POST1, POST2, POST3 | none | Landed a thin workflow shell that persists only canonical `CharacterDraft`, uses core-owned assessment to separate open choices from illegal state, derives runtime outputs from finalized sheets, and routes review-step level-up plus higher-level presets through the canonical sheet-to-draft advancement surface. | Complete |
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
-| 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
-| 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
+| 14 | MON2 - Second Monster Tracer Bullet | done | MON1 | MON3, MON4 | Landed a single-size non-goblin SRD stat block (`Pseudodragon`) through the same core-owned `StatBlock` and projection path, with unsupported authored save-based abilities preserved as text-only data instead of being improvised into runtime handlers. | Complete |
+| 15 | MON3 - Advanced Pattern Tracer Bullet | ready-for-implementation-after-light-research | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Ready now that the non-goblin baseline has landed; still coordinate any shared generic facility work against post-`CHAR` convergence before editing |
 | 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
 | 17 | MCPA1 - Battle Attack Public Contract | ready-for-research | none | MCPA2, MCPA4, MCPA5, MCPA8 | Finalize the strict public/runtime boundary for `BATTLE_ATTACK` first. Lock the minimal caller-owned payload and battle-owned legality/runtime facts before any attack-shaped MCP implementation work. | This is the highest-leverage MCP prerequisite and should land before attack, grapple, rider, or legendary-attack implementation |
 | 18 | MCPA2 - Public Attack Action Slices | blocked | MCPA1 | none | After `MCPA1`, expose the bounded public attack slices beginning with `BATTLE_ATTACK`, then `BATTLE_OFF_HAND_ATTACK` once the Light-property follow-through is wired. | Depends on the finalized battle attack contract rather than inventing separate payloads |
@@ -621,17 +621,17 @@ Archived foundation summary:
 
 ### Task 14 - MON2 - Second Monster Tracer Bullet
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: MON1.
 
 Blocks: MON3, MON4.
 
-Next action:
+Completed action:
 
-- Add one non-goblin SRD monster through the same owned `StatBlock` and projection path.
-- Prefer a monster that proves a materially different slice from goblins, such as spellcasting structure or a text-only unsupported authored ability.
-- Keep the slice bounded to catalog/schema/provenance/projection work unless the RAW makes a new shared generic facility unavoidable.
+- Added `Pseudodragon` from `.references/srd-5.2.1/Monsters/Monsters-P-S.md` through the same owned `StatBlock` and projection path used by goblins.
+- Kept the slice bounded to catalog/provenance/projection work.
+- Preserved unsupported authored abilities such as `Sting` as text-only data instead of inventing a runtime-specific handler.
 
 Acceptance criteria:
 
@@ -644,10 +644,11 @@ Verification:
 
 - Read the relevant SRD monster passage in `.references/srd-5.2.1/Monsters/` and cross-check `UBIQUITOUS_LANGUAGE.md` before implementation.
 - Prefer focused catalog/projection tests over MBT. Do not run battle MBT unless the task actually changes battle semantics.
+- Ran focused monster catalog tests plus repo quality verification; no MBT was needed because battle semantics did not change.
 
 ### Task 15 - MON3 - Advanced Pattern Tracer Bullet
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: MON2.
 

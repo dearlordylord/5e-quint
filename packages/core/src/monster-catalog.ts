@@ -6,6 +6,7 @@ import {
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import {
   CreatureId,
@@ -20,6 +21,7 @@ export {
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+export { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 
 /**
  * Core-owned runtime catalog for named monster stat blocks.
@@ -36,6 +38,7 @@ export const MONSTER_STAT_BLOCK_IDS = [
   "goblinMinion",
   "goblinWarrior",
   "goblinBoss",
+  "pseudodragon",
 ] as const;
 export type MonsterStatBlockId = (typeof MONSTER_STAT_BLOCK_IDS)[number];
 
@@ -55,6 +58,7 @@ const MONSTER_STAT_BLOCKS: Readonly<Record<MonsterStatBlockId, StatBlock>> = {
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
   goblinBoss: GOBLIN_BOSS,
+  pseudodragon: PSEUDODRAGON,
 };
 
 export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
@@ -62,6 +66,7 @@ export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
     Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
+    Match.when("pseudodragon", () => MONSTER_STAT_BLOCKS.pseudodragon),
     Match.exhaustive,
   );
 }
@@ -140,6 +145,16 @@ function statBlockAttackToBattleWeaponProfile(
       isMelee: false,
       damageDie: 6,
       properties: new Set(["ammunition", "twoHanded"]),
+      statBlockAttackSource,
+    };
+  }
+  if (attack.name === "Bite") {
+    return {
+      name: attack.name,
+      damageType: attack.damageType,
+      isMelee: true,
+      damageDie: 4,
+      properties: new Set([]),
       statBlockAttackSource,
     };
   }

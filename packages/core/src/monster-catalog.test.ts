@@ -13,6 +13,7 @@ import {
   MONSTER_STAT_BLOCK_IDS,
   MONSTER_STAT_BLOCK_PROVENANCE,
   monsterCatalogInitCreatureConfig,
+  PSEUDODRAGON,
   statBlockAttacks,
   statBlockBattleBonusActionOptions,
   statBlockBattleReactionOptions,
@@ -128,6 +129,7 @@ describe("monster catalog", () => {
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
+      "pseudodragon",
     ]);
     expect(
       statBlockAttacks(GOBLIN_WARRIOR).scimitar.extraDamageOnAdvantageHit,
@@ -160,6 +162,102 @@ describe("monster catalog", () => {
     expect(getMonsterStatBlock("goblinBoss")).toBe(GOBLIN_BOSS);
   });
 
+  it("stores Pseudodragon as an SRD-backed authored stat block with text-preserved unsupported actions", () => {
+    const statBlock = getMonsterStatBlock("pseudodragon");
+
+    expect(statBlock).toBe(PSEUDODRAGON);
+    expect(statBlock.provenance).toEqual({
+      edition: "SRD 5.2.1",
+      document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+      section: "Pseudodragon",
+    });
+    expect(statBlock.name).toBe("Pseudodragon");
+    expect(statBlock.creatureType).toBe("dragon");
+    expect(statBlock.creatureSize).toBe("tiny");
+    expect(statBlock.ac).toBe(14);
+    expect(statBlock.initiativeMod).toBe(2);
+    expect(statBlock.maxHp).toBe(10);
+    expect(statBlock.hitDice).toBe(3);
+    expect(statBlock.hitDieType).toBe(4);
+    expect(statBlock.speeds).toEqual({
+      walk: 15,
+      fly: 60,
+      swim: 0,
+      climb: 0,
+      burrow: 0,
+    });
+    expect(statBlock.abilityScores).toEqual({
+      str: 6,
+      dex: 15,
+      con: 13,
+      int: 10,
+      wis: 12,
+      cha: 10,
+    });
+    expect([...statBlock.saveProficiencies]).toEqual([]);
+    expect(statBlock.skillBonuses.perception).toBe(5);
+    expect(statBlock.skillBonuses.stealth).toBe(4);
+    expect(statBlock.senses).toEqual({
+      blindsight: 10,
+      darkvision: 60,
+      tremorsense: 0,
+      truesight: 0,
+    });
+    expect(statBlock.passivePerception).toBe(15);
+    expect(statBlock.languages).toEqual([
+      "Understands Common and Draconic but can't speak",
+    ]);
+    expect(statBlock.cr).toEqual({ type: "CR_Quarter" });
+    expect(statBlock.proficiencyBonus).toBe(2);
+    expect(statBlock.traits).toEqual([
+      {
+        kind: "text",
+        id: "magicResistance",
+        name: "Magic Resistance",
+        text: "The pseudodragon has Advantage on saving throws against spells and other magical effects.",
+        nonExecutableReason:
+          "Saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+    expect(statBlock.actions).toEqual([
+      {
+        kind: "multiattack",
+        id: "multiattack",
+        name: "Multiattack",
+        text: "The pseudodragon makes two Bite attacks.",
+        slots: [
+          { type: "MAttack", name: "Bite" },
+          { type: "MAttack", name: "Bite" },
+        ],
+      },
+      {
+        kind: "attack",
+        id: "bite",
+        name: "Bite",
+        text: "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 4 (1d4 + 2) Piercing damage.",
+        attack: {
+          name: "Bite",
+          attackBonus: 4,
+          reach: 5,
+          rangeNormal: 0,
+          rangeLong: 0,
+          damageAmount: 4,
+          damageType: "piercing",
+          isRanged: false,
+          attackMode: "melee",
+        },
+      },
+      {
+        kind: "text",
+        id: "sting",
+        name: "Sting",
+        text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
+        nonExecutableReason:
+          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+  });
+
   it("can project a selected named stat-block attack into the battle attack lane", () => {
     const config = statBlockToInitCreatureConfig({
       id: CreatureId("goblin-warrior-1"),
@@ -176,6 +274,50 @@ describe("monster catalog", () => {
       statBlockAttackSource: {
         name: "Shortbow",
         extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+      },
+    });
+  });
+
+  it("can project Pseudodragon through the same generic battle-init path", () => {
+    const config = monsterCatalogInitCreatureConfig({
+      id: CreatureId("pseudodragon-1"),
+      statBlockId: "pseudodragon",
+    });
+
+    expect(statBlockMultiattack(PSEUDODRAGON)).toEqual([
+      { type: "MAttack", name: "Bite" },
+      { type: "MAttack", name: "Bite" },
+    ]);
+    expect(statBlockAttacks(PSEUDODRAGON).bite).toEqual({
+      name: "Bite",
+      attackBonus: 4,
+      reach: 5,
+      rangeNormal: 0,
+      rangeLong: 0,
+      damageAmount: 4,
+      damageType: "piercing",
+      isRanged: false,
+      attackMode: "melee",
+    });
+    expect(config).toMatchObject({
+      id: CreatureId("pseudodragon-1"),
+      kind: "Monster",
+      maxHp: 10,
+      creatureSize: "tiny",
+      dexMod: 2,
+      baseWalkSpeed: 15,
+      battleBonusActionOptions: [],
+      battleReactionOptions: [],
+      initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Bite",
+        damageType: "piercing",
+        isMelee: true,
+        damageDie: 4,
+        properties: new Set([]),
+        statBlockAttackSource: {
+          name: "Bite",
+        },
       },
     });
   });
@@ -258,6 +400,37 @@ describe("monster catalog", () => {
         isMelee: true,
         damageDie: 4,
         properties: new Set(["finesse", "light", "thrown"]),
+      },
+    });
+  });
+
+  it("accepts Pseudodragon through the generic statBlockId surface without a monster-specific handler", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "pseudodragon-1",
+          kind: "Monster",
+          statBlockId: "pseudodragon",
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("pseudodragon-1"),
+      kind: "Monster",
+      maxHp: 10,
+      creatureSize: "tiny",
+      initiativeRoll: 12,
+      mainHandWeapon: {
+        name: "Bite",
+        statBlockAttackSource: {
+          name: "Bite",
+        },
       },
     });
   });
