@@ -4,15 +4,20 @@ Date: 2026-04-11
 
 This is the single active planning queue.
 
-The previous MCP/battle follow-up queue is complete and has been removed from the active file. The next coding-loop batch is the character-creation program defined in [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md).
+The previous MCP/battle follow-up queue is complete and has been removed from the active file. The active queue now contains two coordinated tracks:
+
+- the character-creation program defined in [PRD_CHARACTER_CREATION.md](../PRD_CHARACTER_CREATION.md);
+- the monster-database tracer-bullet rollout defined in [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md) and [monster-database-plan.md](./monster-database-plan.md).
 
 ## Batch Objective
 
-Land the first bounded implementation slices for SRD 5.2.1 character creation and character-sheet projection without:
+Land the current bounded implementation slices for SRD 5.2.1 character creation/character-sheet projection and the SRD monster database without:
 
 - duplicating character facts across app, MCP, creature runtime, or battle runtime;
+- duplicating monster-authored facts across core, MCP, app, or battle/runtime projections;
 - widening the main battle machine into a character builder;
 - introducing adapter-owned character registries;
+- introducing adapter-owned monster registries;
 - drifting away from the existing Quint construction/leveling semantics in `creature.qnt`.
 
 The coding loop should treat this file as the active queue. Do not start a task whose status is not `ready-for-implementation-after-light-research` or `ready-for-research` unless this file is updated first.
@@ -110,6 +115,30 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "POST4",
       "status": "blocked",
       "title": "Workflow And Projection Convergence"
+    },
+    {
+      "number": 13,
+      "id": "MON1",
+      "status": "done",
+      "title": "Canonical Goblin Tracer Bullet"
+    },
+    {
+      "number": 14,
+      "id": "MON2",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Second Monster Tracer Bullet"
+    },
+    {
+      "number": 15,
+      "id": "MON3",
+      "status": "blocked",
+      "title": "Advanced Pattern Tracer Bullet"
+    },
+    {
+      "number": 16,
+      "id": "MON4",
+      "status": "blocked",
+      "title": "Hand-Authored SRD Dataset Expansion"
     }
   ]
 }
@@ -152,6 +181,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 10 | POST2 - Open Choices And Selective Invalidation | blocked | POST1 | POST4 | Build the explicit `open choices` / `validation issues` / dependency-aware invalidation model on top of the immutable `CHAR` foundation so guided workflows can distinguish incompleteness from illegality. | Depends on formal creation semantics |
 | 11 | POST3 - Formal Advancement And Higher-Level Starts | blocked | CHAR7, POST1 | POST4 | Formalize advancement as repeated legal level-up transitions over the same canonical sheet, then use that path for higher-level starts rather than bespoke bootstrapping. | Depends on advancement research plus formal creation semantics |
 | 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Final post-`CHAR` integration phase |
+| 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
+| 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
+| 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
+| 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
 
 ## Current Integrated Baseline
 
@@ -179,12 +212,15 @@ Current architecture decisions for this batch:
 - Canonical class/level ownership is `primaryClass + classLevels`; total level is derived from `classLevels` instead of being stored twice.
 - Character creation must not be generalized into the main battle machine.
 - Runtime projections must flow from owned character data to creature/battle runtime, not the reverse.
+- Monster-authored data must remain core-owned and project exactly once into runtime/battle surfaces; MCP and app consume IDs or projections, not their own monster registries.
+- Shared battle/runtime facilities are sequenced resources: character and monster work may both use them, but only one task should reshape them at a time.
 
-Post-`CHAR` planning note:
+Planning note:
 
 - `CHAR1` through `CHAR7` are treated as immutable foundation for any appended work below.
 - The post-`CHAR` queue is additive only; it does not revise the completed or in-flight `CHAR` tasks.
 - New work should extend the landed character-domain/product shape toward the revised PRD semantics rather than reopening the earlier ownership decisions.
+- `MON1` through `MON4` are the active monster track. They should reuse the landed monster ownership/provenance boundary and avoid racing `POST4` on shared projection/runtime refactors.
 
 ## Task Selection Guidance
 
@@ -192,8 +228,11 @@ Recommended next coding-loop task:
 
 1. **CHAR7 - Level Advancement And Multiclass Continuation**
    CHAR6 landed the thin workflow shell. The next slice should research how advancement extends the same owned character domain and reuses the landed sheet-derived projection path instead of inventing a parallel higher-level-start surface.
+2. **MON2 - Second Monster Tracer Bullet**
+   This is the safe parallel monster task as long as it stays on catalog/schema/provenance/projection work and does not introduce a new shared generic runtime facility.
 
 Do not jump ahead to workflow/UI work before the canonical domain exists. Do not solve character creation by widening `DndMachineInput`, `BATTLE_INIT`, or adapter-owned metadata.
+Do not start `MON3` before checking whether the needed generic facility would collide with active shared-surface work in `POST4` or other runtime/projection refactors.
 
 ## Recommended Coding Loop
 
@@ -204,8 +243,10 @@ Do not jump ahead to workflow/UI work before the canonical domain exists. Do not
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
 2. Execute CHAR7 next.
-3. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
-4. Keep H and I deferred unless this file is explicitly reprioritized.
+3. Monster work may proceed in parallel only on MON2 while it remains a catalog/provenance/projection slice and does not add a new shared generic runtime facility.
+4. Keep `POST1` through `POST4` as the additive post-`CHAR` queue described above once CHAR7 lands.
+5. Keep `MON3` and `MON4` blocked until the tracer-bullet sequence proves the shared-surface path.
+6. Keep H and I deferred unless this file is explicitly reprioritized.
 
 ### Task 0 - CHAR1 - Canonical Character Domain
 
@@ -662,3 +703,87 @@ Acceptance criteria:
 - Workflow, formal semantics, and runtime projections all use one canonical draft/sheet story.
 - The workflow shell does not become a second rules engine.
 - Runtime projection remains one-way derived from finalized owned character state.
+
+### Task 13 - MON1 - Canonical Goblin Tracer Bullet
+
+Status: done.
+
+Depends on: none.
+
+Blocks: MON2.
+
+Closeout:
+
+- Landed canonical goblin `StatBlock` records with explicit SRD provenance and authored sections.
+- Landed structural executable-vs-text-only monster ability types.
+- Landed one projection path from core-owned monster records into generic battle/MCP monster-init surfaces.
+
+Verification:
+
+- Verified in code via `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, `packages/core/src/monster-catalog-goblins.ts`, and the focused catalog/MCP tests already present in the repo.
+
+### Task 14 - MON2 - Second Monster Tracer Bullet
+
+Status: ready-for-implementation-after-light-research.
+
+Depends on: MON1.
+
+Blocks: MON3, MON4.
+
+Next action:
+
+- Add one non-goblin SRD monster through the same owned `StatBlock` and projection path.
+- Prefer a monster that proves a materially different slice from goblins, such as spellcasting structure or a text-only unsupported authored ability.
+- Keep the slice bounded to catalog/schema/provenance/projection work unless the RAW makes a new shared generic facility unavoidable.
+
+Acceptance criteria:
+
+- At least one non-goblin SRD monster can be added without introducing a monster-specific runtime handler.
+- The new monster cites SRD provenance directly on the owned record.
+- The new monster reuses the same `StatBlock` and projection path as goblins.
+- Any unsupported authored ability on this monster is preserved structurally as text-only data instead of being dropped or silently improvised.
+
+Verification:
+
+- Read the relevant SRD monster passage in `.references/srd-5.2.1/Monsters/` and cross-check `UBIQUITOUS_LANGUAGE.md` before implementation.
+- Prefer focused catalog/projection tests over MBT. Do not run battle MBT unless the task actually changes battle semantics.
+
+### Task 15 - MON3 - Advanced Pattern Tracer Bullet
+
+Status: blocked.
+
+Depends on: MON2.
+
+Blocks: MON4.
+
+Next action:
+
+- After MON2 lands, add one monster that proves a repeated advanced pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility.
+- If a new shared runtime/projection facility is required, coordinate that change against the post-`CHAR` convergence queue before implementation so the same files are not being reshaped in parallel.
+
+Acceptance criteria:
+
+- At least one repeated advanced monster pattern is handled through a generic facility.
+- The chosen monster uses that generic facility through canonical authored sections rather than bespoke runtime code.
+- Unsupported advanced clauses remain present as text-only entries with explicit reasons instead of being silently discarded.
+- Public battle and MCP surfaces remain generic after the slice lands.
+
+### Task 16 - MON4 - Hand-Authored SRD Dataset Expansion
+
+Status: blocked.
+
+Depends on: MON2, MON3.
+
+Blocks: none.
+
+Next action:
+
+- Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset once the schema and advanced-pattern path are proven.
+- Keep unsupported patterns explicit so later generic-facility work has a grounded queue.
+
+Acceptance criteria:
+
+- The agreed SRD monster dataset exists as hand-authored core-owned stat block data with explicit SRD provenance.
+- New monster additions are primarily data entry and projection, not monster-specific engine work.
+- The project has an explicit report or audit view of unsupported ability patterns to drive later generic-facility work.
+- MCP, app, and other adapters continue consuming the core-owned stat block collection instead of maintaining parallel monster registries.
