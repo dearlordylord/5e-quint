@@ -47,6 +47,10 @@ export {
   characterSubclassSelections,
 } from "#/character-advancement.ts";
 export {
+  advanceCharacterSheet,
+  type CharacterLevelUpTransition,
+} from "#/character-sheet-advancement.ts";
+export {
   characterClassResources,
   characterOriginFeats,
   characterProficiencySummary,

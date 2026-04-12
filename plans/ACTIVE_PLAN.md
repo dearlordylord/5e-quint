@@ -109,13 +109,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 11,
       "id": "POST3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Formal Advancement And Higher-Level Starts"
     },
     {
       "number": 12,
       "id": "POST4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Workflow And Projection Convergence"
     },
     {
@@ -230,8 +230,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8 | I - Build-Map / Hole Metadata | deferred | none | none | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup. | Explicitly outside the current batch |
 | 9 | POST1 - Formal Creation Semantics | done | CHAR6, CHAR7 | POST2, POST3, POST4 | Closed by `POST1_FORMAL_CREATION_SEMANTICS.md`: creation semantics should live in Quint draft/sheet records that mirror the landed TS domain, with ordered `advancement` retained as the legality surface and runtime kept as one-way projection. | Complete |
 | 10 | POST2 - Open Choices And Selective Invalidation | done | POST1 | POST4 | Landed core-owned `assessCharacterDraft()` and `applyCharacterDraftUpdate()` so the draft boundary now distinguishes open required choices from illegal state, preserves unrelated authored facts during backtracking, and lets the workflow show incomplete, invalid, and review-ready states separately. | Complete |
-| 11 | POST3 - Formal Advancement And Higher-Level Starts | ready-for-implementation-after-light-research | CHAR7, POST1 | POST4 | Implement repeated legal sheet-to-sheet level-up transitions on the POST1 draft/sheet foundation, reusing ordered `advancement` rather than introducing a second leveling model. | Ready once the implementer re-reads the POST1 note plus SRD advancement/multiclass text |
-| 12 | POST4 - Workflow And Projection Convergence | blocked | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Blocked only on POST3 after POST2 landed |
+| 11 | POST3 - Formal Advancement And Higher-Level Starts | done | CHAR7, POST1 | POST4 | Landed `advanceCharacterSheet()` as a thin canonical sheet-to-sheet transition that appends one ordered advancement entry and reuses `finalizeCharacterDraft()` instead of inventing a second higher-level-start rules path. | Complete |
+| 12 | POST4 - Workflow And Projection Convergence | ready-for-implementation-after-light-research | POST1, POST2, POST3 | none | Converge the guided workflow shell and runtime projections onto the formal creation/advancement surfaces without introducing a second semantic model. | Ready now that POST1/POST2/POST3 share one draft/sheet advancement story |
 | 13 | MON1 - Canonical Goblin Tracer Bullet | done | none | MON2 | Landed canonical goblin `StatBlock` records with explicit SRD provenance and one projection path into generic battle/MCP surfaces. | Complete |
 | 14 | MON2 - Second Monster Tracer Bullet | ready-for-implementation-after-light-research | MON1 | MON3, MON4 | Add one non-goblin SRD monster through the same core-owned `StatBlock` and projection path. Prefer a monster that proves a materially different slice, but avoid new shared generic facilities unless the RAW forces them. | Ready if kept to catalog/schema/projection work and scoped away from shared runtime refactors owned by post-`CHAR` convergence |
 | 15 | MON3 - Advanced Pattern Tracer Bullet | blocked | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Blocked on a stable non-goblin baseline plus shared-surface sequencing |
@@ -531,7 +531,7 @@ Verification:
 
 ### Task 11 - POST3 - Formal Advancement And Higher-Level Starts
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: CHAR7, POST1.
 
@@ -558,9 +558,16 @@ Verification:
 - Re-read `POST1_FORMAL_CREATION_SEMANTICS.md` plus `.references/srd-5.2.1/Character-Creation.md` sections for level advancement, higher-level starts, and multiclassing before implementation.
 - Keep Quint as the owner of advancement semantics and preserve the one-way projection boundary from finalized sheet to runtime.
 
+Archived foundation summary:
+
+- Landed `advanceCharacterSheet()` in `packages/core/src/character-sheet-advancement.ts` as the canonical sheet-to-sheet advancement helper.
+- The helper appends exactly one ordered advancement entry and reuses `finalizeCharacterDraft()` rather than introducing a second advancement validator or a bespoke higher-level-start bootstrap path.
+- Focused tests now cover repeated higher-level advancement, illegal subclass timing, and multiclass continuation on the same sheet boundary.
+- See `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` for the task note and RAW anchors.
+
 ### Task 12 - POST4 - Workflow And Projection Convergence
 
-Status: blocked.
+Status: ready-for-implementation-after-light-research.
 
 Depends on: POST1, POST2, POST3.
 
