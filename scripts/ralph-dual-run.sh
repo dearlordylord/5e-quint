@@ -530,6 +530,8 @@ Read the plan snapshot and the ready task candidate list. Pick the single best n
 
 Rules:
 - Choose exactly one runnable task from the candidate list when at least one meaningful runnable candidate exists.
+- Current plan status is authoritative. If a task is present in the ready-task candidate list, it is runnable now even if an earlier attempt on the same task number already completed.
+- If the same task number appears in history and is still runnable now, treat that as an intentional research->implementation or revised-task rerun, not as a reason to stop.
 - Prefer the task that best advances the plan now; you are not required to pick the numerically earliest task.
 - Use the history file to avoid mindlessly repeating an unproductive attempt pattern, but do requeue the same task when the plan clearly intends a rerun.
 - Output stop only when there is no meaningful runnable work left in the plan right now.
@@ -680,6 +682,7 @@ choose_next_task() {
   local chooser_prompt="$chooser_root/chooser.prompt.md"
   local chooser_output="$chooser_root/chooser.final.md"
   local chooser_log="$chooser_root/chooser.log"
+  local ready_count
   mkdir -p "$chooser_root"
 
   refresh_plan_snapshot
@@ -700,6 +703,14 @@ choose_next_task() {
     note "chooser" "no-runnable-tasks"
     return 1
   fi
+  ready_count="$(wc -l <"$ready_tasks_file" | tr -d '[:space:]')"
+  if [[ "$ready_count" == "1" ]]; then
+    local only_task
+    only_task="$(cat "$ready_tasks_file")"
+    note "chooser" "single-runnable-task task=$only_task"
+    printf '%s\n' "$only_task"
+    return 0
+  fi
 
   write_chooser_prompt "$chooser_prompt" "$ready_tasks_file" "$iteration"
   if ! run_codex "$repo_root" "$chooser_prompt" "$chooser_log" "$chooser_output"; then
@@ -713,7 +724,8 @@ choose_next_task() {
   note "chooser" "decision=$chooser_decision task=$chooser_task reason=$chooser_reason"
 
   if [[ "$chooser_decision" == "stop" ]]; then
-    return 1
+    printf 'chooser returned stop even though %s runnable task(s) exist\n' "$ready_count" >"$last_error_file"
+    return 2
   fi
 
   [[ "$chooser_decision" == "run-task" ]] || {
