@@ -291,6 +291,7 @@ describe("character-sheet-derived", () => {
     expect(battleProjection.maxHp).toBe(27);
     expect(battleProjection.baseArmorClass).toBe(12);
     expect(battleProjection.baseWalkSpeed).toBe(30);
+    expect(battleProjection.strMod).toBe(-1);
     expect(battleProjection.dexMod).toBe(2);
     expect(battleProjection.caster).toBe(true);
     expect(battleProjection.preparedSpells).toEqual(

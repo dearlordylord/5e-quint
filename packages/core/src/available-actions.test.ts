@@ -554,6 +554,47 @@ function initBattleForAttackDiscovery() {
   return actor;
 }
 
+function initBattleForOffHandAttackDiscovery(params?: {
+  readonly strMod?: number;
+  readonly dexMod?: number;
+  readonly lightPropertyExtraAttackAddsAbilityModifier?: boolean;
+}) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        initiativeRoll: 15,
+        strMod: params?.strMod,
+        dexMod: params?.dexMod,
+        lightPropertyExtraAttackAddsAbilityModifier:
+          params?.lightPropertyExtraAttackAddsAbilityModifier,
+        mainHandWeapon: {
+          name: "Shortsword",
+          damageType: "piercing",
+          isMelee: true,
+          damageDie: 6,
+          versatileDie: 0,
+          properties: new Set(["finesse", "light"]),
+        },
+        offHandWeapon: {
+          name: "Shortsword",
+          damageType: "piercing",
+          isMelee: true,
+          damageDie: 6,
+          versatileDie: 0,
+          properties: new Set(["finesse", "light"]),
+        },
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
 function initBattleForReleaseGrappleDiscovery(
   {
     withGrapple,
@@ -2838,6 +2879,47 @@ describe("available actions contract", () => {
     ).toBe(true);
   });
 
+  test("battle discovery narrows BATTLE_ATTACK knockOut for thrown melee targets outside 5 feet", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+          mainHandWeapon: {
+            name: "Dagger",
+            damageType: "piercing",
+            isMelee: true,
+            damageDie: 4,
+            versatileDie: 0,
+            properties: new Set(["finesse", "light", "thrown"]),
+          },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 4, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: "BATTLE_ATTACK",
+          targetId: { options: ["B"] },
+          knockOut: { options: [false] },
+        }),
+      ]),
+    );
+  });
+
   test("battle resolution exposes the public BATTLE_ATTACK runtime contract", () => {
     const actor = initBattleForAttackDiscovery();
     const request = expectBattleRequest(
@@ -3188,6 +3270,114 @@ describe("available actions contract", () => {
         message:
           "Battle attack runtime must include attackerWithin60ft when attackerWithin5ft is false.",
       },
+    });
+  });
+
+  test("battle discovery and resolution reuse battleAttack runtime for BATTLE_OFF_HAND_ATTACK", () => {
+    const actor = initBattleForOffHandAttackDiscovery({
+      strMod: 3,
+      dexMod: 3,
+    });
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 6,
+      dmg: 4,
+      dt: "piercing",
+      weaponProperties: new Set(["finesse", "light"]),
+      tAc: armorClass(10),
+      crit: false,
+      ...DEFAULT_BATTLE_ATTACK_CONTEXT,
+    });
+    actor.send({
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
+      reactorId: null,
+    });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_OFF_HAND_ATTACK",
+          targetId: { options: ["B"] },
+          knockOut: { options: [false, true] },
+          cost: cost(quota("bonusAction")),
+          outcome: {
+            summary:
+              "Make the Light property's extra attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_OFF_HAND_ATTACK",
+        targetId: "B",
+        knockOut: true,
+      }),
+    );
+
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_OFF_HAND_ATTACK",
+        targetId: "B",
+        knockOut: true,
+      },
+      outcome:
+        "Make the Light property's extra attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
+      runtime: "battleAttack",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "battleAttack",
+          values: {
+            attackRoll: 15,
+            targetAc: 10,
+            weaponDamage: 3,
+            attackerWithin5ft: true,
+            hostileWithin5ft: false,
+            targetCanSeeAttacker: true,
+            attackerCanSeeTarget: true,
+            frightSourceInLOS: false,
+            hasAllyAdjacentToTarget: false,
+            hitReactionCandidates: [],
+          },
+        },
+        context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_OFF_HAND_ATTACK",
+        targetId: CreatureId("B"),
+        attackRoll: 15,
+        dmg: 3,
+        crit: false,
+        tAc: armorClass(10),
+        knockOut: true,
+        attackerWithin5ft: true,
+        hostileWithin5ft: false,
+        targetCanSeeAttacker: true,
+        attackerCanSeeTarget: true,
+        frightSourceInLOS: false,
+        hasAllyAdjacentToTarget: false,
+        saDmg: 0,
+        hitReactionCandidates: new Set(),
+      },
+      outcome:
+        "Make the Light property's extra attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
     });
   });
 

@@ -29,15 +29,17 @@ const BattleAttackRuntimeOverrideSchema = Schema.Struct({
 export function decodeBattleAttackRuntimeInputs(
   args: unknown,
   context: BattleContext,
-  token: Extract<BattleResolvedActionToken, { readonly type: "BATTLE_ATTACK" }>,
+  token: Extract<
+    BattleResolvedActionToken,
+    { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+  >,
 ):
   | BattleResolutionRuntimeInputs
   | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
   if (typeof args !== "object" || args === null || Array.isArray(args)) {
     return {
       code: "INVALID_RUNTIME_INPUT",
-      message:
-        "BATTLE_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
+      message: `${token.type} requires explicit runtime battleAttack inputs on execute_action.`,
     };
   }
 
@@ -45,8 +47,7 @@ export function decodeBattleAttackRuntimeInputs(
   if (runtime === undefined) {
     return {
       code: "INVALID_RUNTIME_INPUT",
-      message:
-        "BATTLE_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
+      message: `${token.type} requires explicit runtime battleAttack inputs on execute_action.`,
     };
   }
 
@@ -56,8 +57,7 @@ export function decodeBattleAttackRuntimeInputs(
   if (decoded._tag === "Left") {
     return {
       code: "INVALID_RUNTIME_INPUT",
-      message:
-        'BATTLE_ATTACK requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.',
+      message: `${token.type} requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.`,
     };
   }
 

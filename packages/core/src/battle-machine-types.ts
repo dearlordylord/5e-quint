@@ -35,10 +35,7 @@ export type { CreatureId } from "#/types.ts";
 
 type DeathSaves = { readonly successes: number; readonly failures: number };
 
-export interface BattlePosition {
-  readonly row: number;
-  readonly col: number;
-}
+export type BattlePosition = Readonly<{ row: number; col: number }>;
 
 export interface BattleCreatureState {
   readonly hp: number;
@@ -104,10 +101,10 @@ export interface BattleCreatureState {
   readonly baseArmorClass: ArmorClass;
   readonly battleSide: string;
   readonly battlePosition: BattlePosition;
-  // Class levels tracked by battle Combatant
   readonly rogueLevel: number;
   readonly monkLevel: number;
-  // Static combatant modifier owned by battle when battle-resolved rules need it.
+  // Static combatant modifiers owned by battle when battle-resolved rules need them.
+  readonly strMod: number;
   readonly dexMod: number;
   // Prepared spells (for CS eligibility)
   readonly preparedSpells: ReadonlySet<string>;
@@ -434,6 +431,7 @@ export interface InitCreatureConfig {
   readonly caster?: boolean;
   readonly rogueLevel?: number;
   readonly monkLevel?: number;
+  readonly strMod?: number;
   readonly dexMod?: number;
   readonly legendaryActions?: number;
   readonly legendaryResistances?: number;

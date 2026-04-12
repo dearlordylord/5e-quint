@@ -151,7 +151,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 18,
       "id": "MCPA2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Public Attack Action Slices"
     },
     {
@@ -237,7 +237,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 15 | MON3 - Advanced Pattern Tracer Bullet | ready-for-implementation-after-light-research | MON2 | MON4 | Add one advanced monster that proves a repeated pattern such as recharge, legendary actions, or a stronger multiattack shape through a generic facility. Sequence this after MON2 and coordinate with shared runtime/projection work so it does not race `POST4`. | Ready now that the non-goblin baseline has landed; still coordinate any shared generic facility work against post-`CHAR` convergence before editing |
 | 16 | MON4 - Hand-Authored SRD Dataset Expansion | blocked | MON2, MON3 | none | Expand from the tracer bullets to the agreed SRD monster dataset, keeping unsupported patterns explicit and preserving core-owned provenance. | Blocked on tracer-bullet validation of schema and advanced-generic-facility path |
 | 17 | MCPA1 - Battle Attack Public Contract | done | none | MCPA2, MCPA4, MCPA5, MCPA8 | Closed with the bounded `battleAttack` contract: public payload is `targetId` plus `knockOut`, runtime carries only explicit roll / AC / spatial / visibility / reaction facts, and battle retains weapon-profile, crit, legality, and rider ownership. | Complete; reuse this contract for later attack-shaped work instead of adding parallel payloads |
-| 18 | MCPA2 - Public Attack Action Slices | ready-for-implementation-after-light-research | MCPA1 | none | Harden `BATTLE_ATTACK` to the finalized contract end to end, then extend the same contract to `BATTLE_OFF_HAND_ATTACK` once Light-property follow-through is wired. | The generic attack boundary is settled; remaining work is bounded implementation and SRD blast-radius checks |
+| 18 | MCPA2 - Public Attack Action Slices | done | MCPA1 | none | Landed public `BATTLE_ATTACK` / `BATTLE_OFF_HAND_ATTACK` slices on one shared `battleAttack` runtime contract, with battle-owned melee-lane derivation, knockout narrowing, and Light extra-attack ability-mod handling. | Complete |
 | 19 | MCPA3 - Spatial Action Public Contracts | ready-for-research | none | none | Define bounded public contracts for `BATTLE_HELP_ATTACK` and `BATTLE_MOVE` over explicit caller/session spatial facts only. | Independent MCP foundation research; no geometry owner in core or MCP |
 | 20 | MCPA4 - Public Grapple Attack Slice | ready-for-implementation-after-light-research | MCPA1 | none | Expose `BATTLE_GRAPPLE` through its own bounded `targetId` plus resolved-save contract without copying the `battleAttack` payload. | Size ownership is already battle-owned; remaining work is the save/result contract and wiring |
 | 21 | MCPA5 - Battle Attack Rider Windows | ready-for-research | MCPA1 | none | Design the battle-owned pre-roll and post-hit rider windows for `USE_BRUTAL_STRIKE`, `STUNNING_STRIKE`, `USE_CUNNING_STRIKE`, `USE_ELDRITCH_SMITE`, and `USE_DIVINE_SMITE_FREE` on top of the settled attack boundary. | Treat these as battle interrupt/hit windows, not creature-scope tokens |
@@ -729,22 +729,45 @@ Plan Impact:
 
 ### Task 18 - MCPA2 - Public Attack Action Slices
 
-Status: ready-for-implementation-after-light-research.
+Status: done.
 
 Depends on: MCPA1.
 
 Blocks: none.
 
-Next action:
+Implemented:
 
-- Harden `BATTLE_ATTACK` end to end against the finalized contract, including any remaining public-token narrowing such as melee-only `knockOut` exposure.
-- Extend the same public/runtime contract to `BATTLE_OFF_HAND_ATTACK` once Light-property pairing and damage-modifier ownership are wired.
+- Landed `BATTLE_OFF_HAND_ATTACK` as a public `get_available_actions` / `execute_action` slice that reuses the same `battleAttack` runtime envelope as `BATTLE_ATTACK` instead of introducing a second attack payload schema.
+- Hardened public knockout exposure and finalized attack-lane derivation so thrown melee weapons only expose melee-only `knockOut` when the current target is actually within 5 feet, while battle still derives the melee-vs-ranged lane at execution time.
+- Moved Light extra-attack ability-modifier ownership fully into battle state by threading `strMod` into battle init projection and deriving off-hand damage modifiers from equipped weapon facts plus battle-owned Strength/Dexterity data.
+- Rejected the rejected-implementer failure modes directly in the landed design: no duplicated off-hand weapon facts in the internal event payload, and no unrelated fuzz-script rewrites or premature audit-plan completion.
 
 Acceptance criteria:
 
 - `BATTLE_ATTACK` is publicly callable through the agreed bounded contract.
 - `BATTLE_OFF_HAND_ATTACK` reuses the same contract rather than adding a second attack payload design.
 - Light-property and ability-modifier handling remain battle-owned and SRD-accurate.
+
+Verification:
+
+- RAW / terminology check: reviewed `.references/srd-5.2.1/Equipment.md` for the Light, Finesse, and Thrown properties, `.references/srd-5.2.1/Feats.md` for Two-Weapon Fighting, `.references/srd-5.2.1/Playing-the-Game.md` and `.references/srd-5.2.1/Rules-Glossary.md` for melee attacks and Knocking Out a Creature, and `UBIQUITOUS_LANGUAGE.md` for Light property / Two-Weapon Fighting / Knock Out terminology.
+- `/simplify` round 1: removed a redundant off-hand `abilityMod` event field and kept off-hand weapon / damage-modifier derivation battle-owned instead of runtime-owned.
+- `/simplify` round 2: tightened the public slice so off-hand keeps the shared `battleAttack` runtime, thrown melee knockout exposure is target-sensitive, and no additional attack payload schema or script-policy churn remains in scope.
+- Verification commands:
+  - `git diff --check`
+  - `pnpm quality` (stopped at confirmed baseline Prettier failures in unrelated files: `packages/core/src/context-encoding.ts`, `packages/core/src/creature.mbt.test.ts`, `packages/core/src/machine-event-extractors.ts`, `packages/core/src/machine-monk.ts`, `packages/core/src/machine-queries.ts`, `packages/core/src/machine-startturn.ts`, `packages/core/src/machine.ts`)
+  - `pnpm --dir packages/core exec vitest run src/available-actions.test.ts src/battle-rules-scenarios.test.ts src/character-sheet-derived.test.ts src/monster-catalog.test.ts -t "thrown melee|BATTLE_OFF_HAND_ATTACK|off-hand attack|runtime projections from one owned path|projects a catalog stat block into battle init"` (passed)
+  - `pnpm --dir packages/mcp exec vitest run src/server.test.ts -t "BATTLE_OFF_HAND_ATTACK"` (passed)
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `MCPA2` - marked `done`
+  - `MCPA4` - no-change
+  - `MCPA5` - no-change
+  - `MCPA8` - no-change
+- Plan edits: updated the Ralph task index, DAG row, and this task section to reflect the landed shared attack-slice implementation and its verification/baseline notes
 
 ### Task 19 - MCPA3 - Spatial Action Public Contracts
 

@@ -195,6 +195,9 @@ export function statBlockToInitCreatureConfig(params: {
     maxHp: params.statBlock.maxHp,
     creatureSize: params.statBlock.creatureSize,
     baseArmorClass: params.statBlock.ac,
+    strMod: abilityModifier(
+      abilityScoreToMod(params.statBlock.abilityScores.str),
+    ),
     dexMod: abilityModifier(
       abilityScoreToMod(params.statBlock.abilityScores.dex),
     ),

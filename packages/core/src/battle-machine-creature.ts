@@ -823,6 +823,7 @@ export function freshCreature(
     battlePosition: { row: 0, col: 0 },
     rogueLevel: 0,
     monkLevel: 0,
+    strMod: 0,
     dexMod: 0,
     preparedSpells: new Set(),
     readyableSpellPayloads: new Map(),

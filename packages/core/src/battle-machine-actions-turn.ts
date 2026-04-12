@@ -158,6 +158,7 @@ export function buildCreatureState(
       : {}),
     ...(cfg.rogueLevel != null ? { rogueLevel: cfg.rogueLevel } : {}),
     ...(cfg.monkLevel != null ? { monkLevel: cfg.monkLevel } : {}),
+    ...(cfg.strMod != null ? { strMod: cfg.strMod } : {}),
     ...(cfg.dexMod != null ? { dexMod: cfg.dexMod } : {}),
     ...(cfg.legendaryActions != null
       ? { legendaryActionsRemaining: cfg.legendaryActions }
@@ -931,16 +932,22 @@ export function battleOffHandAttack({
     ...attacker,
     bonusActionUsed: true,
   });
+  const isMeleeAttack =
+    offHand.isMelee &&
+    (e.attackerWithin5ft || !offHand.properties.has("thrown"));
+  const abilityMod = offHand.properties.has("finesse")
+    ? Math.max(attacker.strMod, attacker.dexMod)
+    : attacker.strMod;
   const effectiveAbilityMod =
     attacker.lightPropertyExtraAttackAddsAbilityModifier
-      ? e.abilityMod
-      : Math.min(0, e.abilityMod);
+      ? abilityMod
+      : Math.min(0, abilityMod);
   const damage = Math.max(0, e.dmg + effectiveAbilityMod);
   const ctx = buildBattleAttackContext(
     cs,
     id,
     e.targetId,
-    offHand.isMelee,
+    isMeleeAttack,
     offHand.properties,
     e.attackerWithin5ft,
     e.hostileWithin5ft,
@@ -963,7 +970,7 @@ export function battleOffHandAttack({
     attacker.critRange,
     ADR_ACTIVE_TURN,
     e.knockOut,
-    offHand.isMelee,
+    isMeleeAttack,
     e.attackerWithin5ft,
     e.attackerWithin60ft ?? false,
     e.targetCanSeeAttacker,

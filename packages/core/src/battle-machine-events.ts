@@ -326,7 +326,6 @@ export type BattleEvent =
       readonly targetId: CreatureId;
       readonly attackRoll: number;
       readonly dmg: number;
-      readonly abilityMod: number;
       readonly crit: boolean;
       readonly tAc: ArmorClass;
       readonly knockOut: boolean;
