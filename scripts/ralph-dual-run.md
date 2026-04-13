@@ -21,7 +21,15 @@ The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read th
 
 Important queue contract: unfiltered Ralph runs are phase-capable. A numbered task may update later tasks, unblock later tasks, add new later tasks, reorder the future queue, or turn itself back into a runnable state after a research/plan pass. After every decider refresh, the harness asks the chooser to pick again from the live runnable set, including reruns of the same numbered task when the plan clearly intends that.
 
-The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns. It also enforces a per-task attempt cap within a single Ralph run: by default a task may reach the decider at most 3 times before the harness stops with `fatal-task-attempt-limit` instead of rerunning it indefinitely.
+The harness persists per-attempt history in `.ralph/runs/<run-id>/history.tsv` and gives that history to the chooser so the model can avoid blindly repeating unproductive attempts while still allowing intentional reruns. It also enforces a per-task attempt cap within a single Ralph run: by default a task may reach the decider at most 3 times.
+
+On non-final attempts, the decider may classify the task as `retry-same-task` and leave it runnable. On the final allowed attempt, the decider must choose one of:
+
+- `done`
+- `blocked-needs-design`
+- `deferred`
+
+It may not leave the task runnable as `retry-same-task` or `needs-more-research` on that final attempt. This is the key protection against infinite "try again" loops: after enough failed implementation attempts, Ralph must either land the task or make it non-runnable so the chooser can advance to the next task.
 
 Every rerun of the same numbered task gets its own attempt directory:
 
@@ -87,11 +95,29 @@ Every implementer, reviewer, and decider prompt requires a `Plan Impact` section
 
 The decider owns plan reconciliation. If either implementation or review reports plan impact, the decider must update the source plan file in the same task commit or explicitly explain why no plan update was needed. The harness treats a decider report without `Plan Impact` as a fatal harness error because the loop can no longer safely continue.
 
-Rejected tasks are not terminal. The decider must:
+Rejected tasks are not terminal. The decider must classify every task result with a `Task Disposition` section:
 
-1. put the task back into an appropriate runnable to-do status;
+- `done`
+- `retry-same-task`
+- `needs-more-research`
+- `blocked-needs-design`
+- `deferred`
+
+The decider must then keep the plan status aligned with that disposition:
+
+- `done` -> `done`
+- `retry-same-task` -> leave the task runnable
+- `needs-more-research` -> `ready-for-research`
+- `blocked-needs-design` -> `blocked`
+- `deferred` -> `deferred`
+
+In addition, the decider must:
+
+1. choose `retry-same-task` only when the task is still implementation-ready right now and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
 3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
+
+On the final allowed attempt for a task in a Ralph run, `retry-same-task` and `needs-more-research` are forbidden. If the task still cannot land, the decider must mark it non-runnable (`blocked` or `deferred`) before finishing so the chooser can move on.
 
 Before editing the plan, the decider must pass a new-information gate in its final report:
 
@@ -126,7 +152,7 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 
 `--codex-only` keeps the normal chooser and decider flow, but only the Codex implementer pipeline runs for each task. No Claude worktree is launched in that mode.
 
-`--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run before the harness stops and surfaces the stuck-task condition.
+`--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
 Candidate execution is now pipeline-based. In dual mode, Claude and Codex still run in parallel, but each candidate follows:
 

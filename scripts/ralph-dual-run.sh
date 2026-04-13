@@ -537,6 +537,8 @@ write_decider_prompt() {
   local codex_worktree="$6"
   local attempt_root="$7"
   local mode_label="${8:-dual}"
+  local attempt_no="${9:-1}"
+  local final_attempt="${10:-false}"
 
   cat >"$output_file" <<EOF
 You are the master merge/decider agent for Task $task_no in a Ralph-style dual implementation run.
@@ -557,6 +559,8 @@ Codex review: $attempt_root/codex-review.md
 Claude review exit: $attempt_root/claude-review.exit
 Codex review exit: $attempt_root/codex-review.exit
 Verification command: $test_command
+Attempt number for this task in this Ralph run: $attempt_no
+Final allowed attempt in this Ralph run: $final_attempt
 
 Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the available Task $task_no diff(s) and review report(s). In codex-only mode, the Claude paths are placeholders and you should evaluate the Codex result directly against the task brief. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
 
@@ -574,6 +578,14 @@ Requirements:
   - Why was it not already implied by the current plan text?
   - Why is it durable enough to remain correct after run-local artifacts are deleted?
 - If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied; otherwise leave the plan stable and rely on the task body plus run-local artifacts for the rerun.
+- Every decider result must classify the task disposition as exactly one of:
+  - done
+  - retry-same-task
+  - needs-more-research
+  - blocked-needs-design
+  - deferred
+- Use retry-same-task only when the task is still implementation-ready right now and the next attempt has a concrete implementable delta.
+- If Final allowed attempt in this Ralph run is true, you must not use `retry-same-task` or `needs-more-research`. On the final allowed attempt, either land the task as `done` or update the plan so the task becomes non-runnable (`blocked` or `deferred`) before you finish.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
 - Leave temporary worktree cleanup to the harness.
@@ -584,6 +596,9 @@ At the end, report:
 - Files changed in the main worktree
 - Verification commands run and results
 - Any remaining risks
+- Task Disposition:
+  - Status: done | retry-same-task | needs-more-research | blocked-needs-design | deferred
+  - Why this disposition is correct now
 - New Information Gate:
   - What new fact was learned?
   - Why it was not already implied by the plan
@@ -865,6 +880,22 @@ process.stdout.write(`${decision}\t${task}\t${reason}`)
 NODE
 }
 
+parse_decider_disposition() {
+  local report="$1"
+  node - "$report" <<'NODE'
+const fs = require("fs")
+const text = fs.readFileSync(process.argv[2], "utf8")
+const sameLine = text.match(/^[-*]?\s*Task Disposition:\s*(?:Status:\s*)?([A-Za-z-]+)\s*$/im)
+const statusLine = text.match(/^[-*]?\s*Status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)\s*$/im)
+const headingThenStatus = text.match(/^##?\s*Task Disposition:?\s*$[\r\n]+(?:.*[\r\n]+)*?^[-*]?\s*Status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)\s*$/im)
+const raw = sameLine?.[1] ?? headingThenStatus?.[1] ?? statusLine?.[1] ?? ""
+if (!raw) {
+  throw new Error("missing Task Disposition status")
+}
+process.stdout.write(raw.trim().toLowerCase())
+NODE
+}
+
 choose_next_task() {
   local iteration="$1"
   local chooser_root="$iterations_root/iteration-$iteration"
@@ -954,6 +985,7 @@ run_task_attempt() {
   local task_end="$6"
   local task_title="$7"
   local attempt_no="$8"
+  local final_attempt="${9:-false}"
 
   local task_root="$run_root/task-$task_no"
   local attempt_root="$task_root/attempt-$attempt_no"
@@ -1058,7 +1090,7 @@ run_task_attempt() {
     return 0
   fi
 
-  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root" "$( [[ "$codex_only" == true ]] && printf 'codex-only' || printf 'dual' )"
+  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root" "$( [[ "$codex_only" == true ]] && printf 'codex-only' || printf 'dual' )" "$attempt_no" "$final_attempt"
   if ! run_codex "$repo_root" "$attempt_root/decider.prompt.md" "$attempt_root/decider.log" "$attempt_root/decider.final.md"; then
     printf 'decider failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-decider-failure task=$task_no attempt=$attempt_no"
@@ -1070,6 +1102,14 @@ run_task_attempt() {
     printf 'task %s attempt %s missing Plan Impact section in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-missing-plan-impact task=$task_no attempt=$attempt_no"
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-plan-impact" "-" "decider missing plan impact"
+    return 2
+  fi
+
+  local decider_disposition=""
+  if ! decider_disposition="$(parse_decider_disposition "$attempt_root/decider.final.md")"; then
+    printf 'task %s attempt %s missing Task Disposition status in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-missing-task-disposition task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-disposition" "-" "decider missing task disposition"
     return 2
   fi
 
@@ -1088,6 +1128,76 @@ run_task_attempt() {
   fi
 
   refresh_plan_snapshot
+  local refreshed_task_row=""
+  refreshed_task_row="$(lookup_task_row "$task_no" || true)"
+  if [[ -z "$refreshed_task_row" ]]; then
+    printf 'task %s disappeared from refreshed plan after decider\n' "$task_no" >"$last_error_file"
+    note "task" "fatal-missing-task-after-decider task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-after-decider" "-" "task missing from refreshed plan"
+    return 2
+  fi
+  local refreshed_task_status=""
+  IFS=$'\t' read -r _ref_task_no _ref_task_id refreshed_task_status _ref_task_start _ref_task_end _ref_task_title <<<"$refreshed_task_row"
+  case "$decider_disposition" in
+    done)
+      if [[ "$refreshed_task_status" != "done" ]]; then
+        printf 'task %s attempt %s disposition was done but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "done disposition without done plan status"
+        return 2
+      fi
+      ;;
+    retry-same-task)
+      if ! task_status_is_runnable "$refreshed_task_status"; then
+        printf 'task %s attempt %s disposition was retry-same-task but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "retry disposition without runnable plan status"
+        return 2
+      fi
+      if [[ "$final_attempt" == "true" ]]; then
+        printf 'task %s attempt %s used retry-same-task on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task runnable"
+        return 2
+      fi
+      ;;
+    needs-more-research)
+      if [[ "$refreshed_task_status" != "ready-for-research" ]]; then
+        printf 'task %s attempt %s disposition was needs-more-research but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "research disposition without research plan status"
+        return 2
+      fi
+      if [[ "$final_attempt" == "true" ]]; then
+        printf 'task %s attempt %s used needs-more-research on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-final-attempt-rerun" "-" "final attempt left task research-runnable"
+        return 2
+      fi
+      ;;
+    blocked-needs-design)
+      if [[ "$refreshed_task_status" != "blocked" ]]; then
+        printf 'task %s attempt %s disposition was blocked-needs-design but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "blocked disposition without blocked plan status"
+        return 2
+      fi
+      ;;
+    deferred)
+      if [[ "$refreshed_task_status" != "deferred" ]]; then
+        printf 'task %s attempt %s disposition was deferred but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "deferred disposition without deferred plan status"
+        return 2
+      fi
+      ;;
+    *)
+      printf 'task %s attempt %s had unknown disposition: %s\n' "$task_no" "$attempt_no" "$decider_disposition" >"$last_error_file"
+      note "task" "fatal-unknown-disposition task=$task_no attempt=$attempt_no disposition=$decider_disposition"
+      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-unknown-disposition" "-" "unknown task disposition"
+      return 2
+      ;;
+  esac
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
 
@@ -1162,9 +1272,13 @@ while true; do
   fi
   task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
   attempt_no="${task_attempts[$task_no]}"
+  final_attempt=false
+  if (( attempt_no >= max_task_attempts )); then
+    final_attempt=true
+  fi
 
   task_result=0
-  run_task_attempt "$iteration" "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title" "$attempt_no" || task_result=$?
+  run_task_attempt "$iteration" "$task_no" "$task_id" "$status" "$task_start" "$task_end" "$task_title" "$attempt_no" "$final_attempt" || task_result=$?
   if [[ "$task_result" -eq 2 ]]; then
     note "run" "fatal-task-error iteration=$iteration task=$task_no attempt=$attempt_no"
     exit 1
