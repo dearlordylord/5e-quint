@@ -1,25 +1,25 @@
 # Active Plan
 
-Date: 2026-04-12
+Date: 2026-04-13
 
 This is the single active planning queue.
 
-The active queue now contains two coordinated tracks:
+The previous character-formalization and MCP monster-control batch is complete and no longer belongs in the active queue. This file now tracks the next sequenced architecture batch:
 
-- the Quint-driven character formalization program defined in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md);
-- the remaining MCP action-surface follow-up summarized in [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md).
+- Monster database Phase 1-2 first;
+- spell ownership and generic spell execution surfaces second;
+- monster database continuation after the spell boundary lands.
 
 ## Batch Objective
 
-Land the remaining formal character-semantics work and the last bounded MCP follow-up without:
+Land the next content-architecture staircase without:
 
-- duplicating character facts across app, core, runtime, or battle layers;
-- widening the battle machine into a character builder;
-- making runtime or battle config the owner of character-creation facts;
-- collapsing character creation, level advancement, and combat into one semantic surface;
-- hardcoding content catalogs into rule semantics when typed content descriptors should own them;
-- drifting away from the existing Quint helper semantics already owned in `creature.qnt`;
-- introducing adapter-owned character registries or MCP-owned combat semantics.
+- duplicating monster or spell authored facts across core, MCP, app, runtime, or battle layers;
+- collapsing provenance, structured input, and runtime projection into one type;
+- inventing monster-specific or spell-specific adapter APIs where generic engine facilities should own execution;
+- letting monster work become the owner of spell execution semantics;
+- letting spell work create a second monster registry or bypass stat-block ownership;
+- widening battle or MCP into the canonical owner of authored content.
 
 The coding loop should treat this file as the active queue. Do not start a task whose status is not `ready-for-implementation-after-light-research` or `ready-for-research` unless this file is updated first.
 
@@ -41,57 +41,45 @@ The Ralph harness reads this machine-readable index for task order and status. K
   "tasks": [
     {
       "number": 0,
-      "id": "CQ1a",
-      "status": "done",
-      "title": "Freeze Character Creation Surface"
+      "id": "MONDB1",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Canonical Goblin Tracer Bullet"
     },
     {
       "number": 1,
-      "id": "CQ1b",
-      "status": "done",
-      "title": "Implement Character Creation Module"
+      "id": "MONDB2",
+      "status": "blocked",
+      "title": "Second Monster Tracer Bullet"
     },
     {
       "number": 2,
-      "id": "CQ2",
-      "status": "done",
-      "title": "Formal Character Advancement Module"
+      "id": "SPELL1",
+      "status": "blocked",
+      "title": "Freeze Spell Ownership Surface"
     },
     {
       "number": 3,
-      "id": "CQ3",
-      "status": "done",
-      "title": "Character To Creature Projection Boundary"
+      "id": "SPELL2a",
+      "status": "blocked",
+      "title": "Canonical Spell Records And Identity Projection"
     },
     {
       "number": 4,
-      "id": "CQ4",
-      "status": "done",
-      "title": "Character Quint Parity Harness"
+      "id": "SPELL2b",
+      "status": "blocked",
+      "title": "Battle Spell Projection For One Generic Spell Family"
     },
     {
       "number": 5,
-      "id": "MCPA8",
-      "status": "done",
-      "title": "Monster Control And Legendary Action Surface"
+      "id": "MONDB3",
+      "status": "blocked",
+      "title": "Advanced Monster Pattern Tracer Bullet"
     },
     {
       "number": 6,
-      "id": "H",
-      "status": "deferred",
-      "title": "PassiveModifiers Sub-Record"
-    },
-    {
-      "number": 7,
-      "id": "I",
-      "status": "deferred",
-      "title": "Build-Map / Hole Metadata"
-    },
-    {
-      "number": 8,
-      "id": "QFULL",
-      "status": "done",
-      "title": "Full Workspace Quality Run"
+      "id": "MONDB4a",
+      "status": "blocked",
+      "title": "Freeze Dataset Expansion Scope"
     }
   ]
 }
@@ -117,343 +105,284 @@ The Ralph harness reads this machine-readable index for task order and status. K
 - For any implementation task, read the relevant SRD text in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` before editing code.
 - For any task that changes modeled D&D rule semantics, make the RAW/ASSUMPTIONS decision in Quint first, then update XState/TS/MCP to match. Adapter-only tasks and documentation-only tasks are exempt.
 - For any implementation task, include `/simplify` convergence in the task closeout: minimum two rounds unless the changeset is trivial, and continue until no important fixes remain.
-- Do not run battle MBT for research-only tasks. For character-formalization tasks, prefer deterministic Quint tests and the narrowest character/creature-level parity surface before considering battle MBT.
+- Do not run battle MBT for research-only tasks.
+- Treat battle MBT as scarce for implementation tasks too. Use deterministic unit and projection tests first, and only run the narrowest relevant MBT tier once the code change is complete.
 - If broader lint/typecheck/test verification surfaces known pre-existing failures outside the touched ownership surface, record that baseline noise and stop. Do not widen the task into repo-wide cleanup; unrelated cleanup belongs in a separate task or sidecar investigation.
 
 ## DAG / Queue Order
 
-| Order | Task                                                 | Status                                 | Depends on | Blocks       | Next action                                                                                                                                                                                                                                  | Handoff readiness                                                                                                                                              |
-| ----- | ---------------------------------------------------- | -------------------------------------- | ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0     | CQ1a - Freeze Character Creation Surface             | done                                   | none       | CQ1b         | Keep the frozen target in [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md). Do not reopen this task unless a genuinely missing owned surface is discovered.                              | Completed. The inventory plus stable acceptance gates below define the implementation target.                                                                |
-| 1     | CQ1b - Implement Character Creation Module           | done                                   | CQ1a       | CQ2, CQ3, CQ4 | Landed `character-creation.qnt`, deterministic Quint coverage in `dndTest.qnt`, generated spell-data support, and a TS parity test scaffold for the frozen TS-owned creation surface. Keep shared fuzz/MBT tooling untouched and leave `POST1` for CQ4 cleanup. | Completed. The finalized-sheet boundary now exists in Quint, so downstream character formalization can build on it.                                      |
-| 2     | CQ2 - Formal Character Advancement Module            | done                                   | CQ1b   | CQ3, CQ4     | Landed `character.qnt` over finalized `CharacterSheet` semantics, including `pIsLegalSheet`, `pCanAdvance`, `pAdvanceLevel`, deterministic Quint coverage for higher-level starts and advancement legality, and the `POST3` status-note refresh pointing at the landed formal owner. | Completed. Advancement semantics now sit on the finalized-sheet boundary, so projection/parity work can size against the formal owner instead of the historical TS helper alone. |
-| 3     | CQ3 - Character To Creature Projection Boundary      | done                                   | CQ1b, CQ2  | CQ4          | Landed `CharacterCreatureProjection` in `character.qnt`, the downstream `pProjectionToCharConfig` / `pSheetToCharConfig` mapping, the shared TypeScript helper in `packages/core/src/character-sheet-creature-projection.ts`, focused TS projection coverage, and status-note redirects away from `POST1` / `POST3` as the primary implementation brief. | Completed. The one-way character-to-creature handoff now exists in both Quint and shared TS, so CQ4 can target parity at that settled boundary instead of re-sizing the projection surface. |
-| 4     | CQ4 - Character Quint Parity Harness                 | done                                   | CQ1b, CQ2, CQ3 | none   | Landed deterministic TS-to-Quint shared-core parity in `packages/core/src/character-semantics-quint-parity.test.ts` for draft/finalization, advancement transitions, and character-to-creature projection. Retained `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` because the current PRD still points to them as supporting rationale rather than deletion-ready archive noise. | Completed. Shared-core parity now covers the settled character ownership surfaces without widening into MCP transport or battle MBT.             |
-| 5     | MCPA8 - Monster Control And Legendary Action Surface | done                                   | MCPA1, MON3 | none | Landed the generic battle-scope monster control commands, stat-block-derived MCP discovery state, and the attack-shaped legendary follow-up through the shared battle attack boundary. Non-attack legendary options remain honestly selectable and deferred until their generic execution facilities exist. | Completed. MCP owns the public control surface, while battle/core keep legality, stat-block lookup, and attack follow-up semantics aligned with Quint. |
-| 6     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
-| 7     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
-| 8     | QFULL - Full Workspace Quality Run                   | done                                   | CQ3, CQ4, MCPA8 | none      | Completed the integrated verification gate on `integration`: `pnpm quality`, `pnpm exec quint test --backend typescript --match 'test_character_' dndTest.qnt`, `pnpm --filter @dnd/core exec vitest run src/character-semantics-quint-parity.test.ts`, `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t 'legendary|monster control'`, and `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t 'battle get_state projects named monster-control menus from stat-block ownership|battle legendary control selection opens the generic legendary attack follow-up|battle monster control commands accept named non-attack, recharge, and daily selection without spending resources'`. A real integrated regression was fixed in the process: fighter projections without an explicit Fighter subclass selection were incorrectly inheriting Champion crit ranges, and one deterministic multiclass fixture had fallen out of legality with the current finalized-sheet surface. | Completed. Integrated lint/circular/typecheck, deterministic character Quint coverage on the TypeScript backend, shared-core parity, and the targeted monster-control regressions are green. The direct default-backend `pnpm exec quint test --match 'test_character_' dndTest.qnt` path still hits a baseline `EPIPE` in this environment, so QFULL closes without widening into separate tooling work. |
+| Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
+| ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
+| 0 | MONDB1 - Canonical Goblin Tracer Bullet | ready-for-implementation-after-light-research | none | MONDB2 | Read `PRD_MONSTER_DATABASE.md`, `plans/monster-database-plan.md`, `ARCHITECTURE.md`, `UBIQUITOUS_LANGUAGE.md`, and the local SRD goblin text. Then replace the current goblin-oriented shortcuts with the canonical `StatBlock` authored-section model while preserving existing goblin battle and MCP behavior. | Ready now. The ownership direction, provenance rules, and Phase 1 acceptance criteria are already stable enough for implementation. |
+| 1 | MONDB2 - Second Monster Tracer Bullet | blocked | MONDB1 | SPELL1 | After MONDB1 lands, add one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership. | Blocked only by the need to prove the canonical `StatBlock` seam on goblins first. |
+| 2 | SPELL1 - Freeze Spell Ownership Surface | blocked | MONDB2 | SPELL2a | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution. | Sequentially next after MONDB2. This should start with repo/source research, not implementation. |
+| 3 | SPELL2a - Canonical Spell Records And Identity Projection | blocked | SPELL1 | SPELL2b | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics. | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start. |
+| 4 | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked | SPELL2a | MONDB3 | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once. | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline. |
+| 5 | MONDB3 - Advanced Monster Pattern Tracer Bullet | blocked | SPELL2b | MONDB4a | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers. | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones. |
+| 6 | MONDB4a - Freeze Dataset Expansion Scope | blocked | MONDB3 | none | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion. | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven. |
 
 ## Current Integrated Baseline
 
 Already wired on `master` / `integration` and relevant to this batch:
 
 - `battle.qnt` remains the authoritative combat boundary.
-- `creature.qnt` already contains reusable helper semantics relevant to character formalization:
-  - `CharConfig`
-  - point-buy validation
-  - XP/level helpers
-  - ASI helpers
-  - multiclass prerequisite helpers
-  - first-level and level-up HP helpers
-  - class-level aggregation helpers
-- TypeScript already contains the landed character foundation:
-  - `CharacterDraft` / `CharacterSheet`
-  - open-choice and finalization analysis
-  - ordered `advancement`
-  - sheet-to-runtime projection helpers
-  - a thin `/character` workflow shell that persists only draft state
-  - partial authored creation facts, including incomplete ability-score assignment plus owned choice / equipment / spellcasting state that CQ1 must formalize rather than trim away
-- The character/creature boundary is now stated explicitly in [ARCHITECTURE.md](../ARCHITECTURE.md):
-  - in peace you're a character; in combat you're a creature
-- The new synthesis artifact for the remaining formalization work is [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).
+- Monster control and legendary action MCP surfaces already exist and consume core-owned monster data through generic battle-facing routes rather than adapter-owned monster registries.
+- `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, and `packages/core/src/monster-catalog.md` already provide the starting point for the monster catalog, but the current shape is intentionally narrow and still too goblin-specific for durable SRD dataset growth.
+- `CONTENT_ARCHITECTURE_ROADMAP.md` already establishes the intended sequence after the completed character batch:
+  - monsters first;
+  - spells second;
+  - monster continuation after the spell boundary exists.
+- `plans/monster-database-plan.md` already contains the durable phase structure for Monster DB phases 1-4.
+- `MCP_EVENT_SURFACE_AUDIT.md` already identifies generic battle spell surfaces as blocked on a canonical spell-content owner and battle-owned multi-phase spell resolution boundary.
 
 Current architecture decisions for this batch:
 
-- `CharacterDraft` and `CharacterSheet` remain the canonical player-character ownership surfaces.
-- `character-creation.qnt` should own draft/open-choice/finalization semantics.
-- `character.qnt` should own finalized-sheet advancement and character-to-creature projection semantics.
-- `CharacterCreatureProjection` is the intended formal handoff between character semantics and creature runtime semantics.
-- Level-1 creation is not level advancement.
-- Higher-level starts are explained as legal level-1 creation plus repeated legal advancement.
-- Runtime projections remain one-way derived data from character-owned facts.
-- Rule semantics may be hardcoded where they are stable SRD mechanics; content should enter through typed descriptors where possible so future licensed content can reuse the same semantic engine without semantic forks.
+- `StatBlock` is the canonical monster-authored record.
+- SRD is provenance for shipped SRD monsters; 5e-tools may inform normalization but is never provenance.
+- Monster-authored sections should be modeled explicitly as typed authored data.
+- The type shape must distinguish executable abilities from text-only unsupported abilities structurally.
+- Runtime battle state is a one-way projection from authored monster or spell records.
+- Monster work may reference spell identities and authored spellcasting prose, but it must not become the owner of spell execution semantics.
+- Spell work must first define canonical spell records and identity projection, then one narrow battle spell family slice, before advanced monster continuation depends on them.
 
 Planning note:
 
-- `CHAR1` through `CHAR7` and `POST1` through `POST4` are complete foundation work, not active queue items.
-- `MON1` through `MON4` are complete and no longer belong in the active queue.
-- New character work is additive: formalize the already-landed character domain rather than reopening the ownership decisions already made.
-- `MCPA8` is complete, and the integrated quality gate is complete for this batch.
+- The completed character-formalization and MCP monster-control work is intentionally removed from the active queue. Use git history and the supporting PRDs for context when needed; do not re-open that finished batch here.
 
 ## Task Selection Guidance
 
 Recommended next coding-loop task:
 
-1. No active implementation task remains in this batch.
+1. `MONDB1 - Canonical Goblin Tracer Bullet`
 
-Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks inside the active queue. Use the archived foundation summary and git history when context is needed.
+Do not skip ahead to spell execution or advanced monster facilities before the canonical goblin tracer bullet lands. The current sequence is deliberate:
+
+1. prove the canonical stat-block owner on the narrowest monster slice;
+2. prove the schema on a second monster without preempting spell ownership;
+3. freeze the spell-content owner;
+4. implement canonical spell identity/projection;
+5. implement one battle spell family on top of that projection;
+6. resume advanced monster continuation on top of that settled spell boundary.
 
 ## Recommended Coding Loop
 
-1. Read [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) alongside:
-   - [ARCHITECTURE.md](../ARCHITECTURE.md)
-   - [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md)
-   - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
-   - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
-   - [creature.qnt](../creature.qnt)
-2. Treat CQ1a as frozen and done; do not reopen it unless the implementation uncovers a genuinely missing owned surface.
-3. CQ3 and CQ4 are complete; use the landed projection boundary plus shared-core parity harness as the reference surface for future character-semantic changes.
-4. `MCPA8` is complete; do not reopen it unless a genuine regression is found in the landed public monster-control surface.
-5. Keep H and I deferred.
-6. Keep future verification work scoped; do not reopen completed feature tasks unless a later integrated regression proves they need more than verification-only follow-up.
+1. Start with [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md), [plans/monster-database-plan.md](./monster-database-plan.md), [ARCHITECTURE.md](../ARCHITECTURE.md), and [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+2. For monster implementation tasks, read the relevant SRD monster text in `.references/srd-5.2.1/Monsters/` before editing code.
+3. Keep monster spellcasting sections reference-only or text-only until `SPELL1`, `SPELL2a`, and the relevant `SPELL2b` slice land.
+4. For spell planning and implementation tasks, use [MCP_EVENT_SURFACE_AUDIT.md](./MCP_EVENT_SURFACE_AUDIT.md) as the public-surface dependency ledger, not as the spell-content owner.
+5. Treat `SPELL2a` and `SPELL2b` as separate coding loops. Do not merge canonical spell identity work and battle spell family work into one unbounded task unless this plan is updated first.
+6. Keep future verification narrow and ownership-focused; do not widen MONDB or SPELL tasks into repo-wide cleanup.
 
 ## Task Bodies
 
-### Task 0 - CQ1a - Freeze Character Creation Surface
+### Task 0 - MONDB1 - Canonical Goblin Tracer Bullet
 
-Status: `done`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: none
 
-Blocks: `CQ1b`
+Blocks: `MONDB2`
 
 Scope:
 
-- Freeze the canonical TS-owned character-creation surface before implementation.
-- Capture the inventory of authored fields, choice categories, and legality/open-choice ownership that `character-creation.qnt` must preserve.
-- Define stable acceptance gates for the implementation task so later CQ1 rejections do not keep mutating scope.
+- Replace the current goblin-oriented stat-block shortcuts with the canonical `StatBlock` authored-section shape described in [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md) and [plans/monster-database-plan.md](./monster-database-plan.md).
+- Keep the owned collection in `packages/core`; do not create a second monster registry in MCP, app, or runtime code.
+- Add explicit SRD provenance to the goblin-owned records.
+- Model authored sections explicitly enough to distinguish executable entries from text-only unsupported entries structurally.
+- Preserve existing goblin battle and MCP behavior through the same public surfaces.
+- Do not widen this task into spell execution ownership, importer pipelines, or full-dataset expansion.
 
 Next action:
 
-- None. This task is complete; use its artifacts as the stable brief for CQ1b.
+- Perform the light RAW/blast-radius pass, then implement Phase 1.
 
 Research note:
 
-- The frozen surface inventory lives in [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md).
-- CQ1b must preserve the canonical TS-owned authored shape rather than inventing a surrogate or shadow-state model.
-- CQ1b must keep `finalizeDraft` guarded/partial: incomplete or illegal drafts must not produce a `CharacterSheet`.
-- CQ1b must preserve the TS-owned legality/open-choice surface for character creation instead of collapsing it into summary invalidity checks.
+- The phase and acceptance criteria already exist in [plans/monster-database-plan.md](./monster-database-plan.md).
+- The goblin tracer bullet should prove vocabulary, provenance, and projection, not advanced execution support.
+- If goblin spellcasting or advanced facility pressure appears, stop at the reference/text boundary and leave that work for later tasks.
 
 Verification requirements:
 
-- Confirm the inventory and stable acceptance gates exist and are specific enough for CQ1b to implement without reopening task scope.
+- Confirm the modeled goblin rules and provenance trace to the local SRD corpus.
+- Run task-scoped TypeScript tests for the monster catalog, projection, battle, and MCP paths touched by the migration.
+- Include `/simplify` convergence, minimum two rounds.
+- If battle behavior changed, run only the narrowest relevant verification surface after deterministic tests are green.
 
-### Task 1 - CQ1b - Implement Character Creation Module
+### Task 1 - MONDB2 - Second Monster Tracer Bullet
 
-Status: `done`
+Status: `blocked`
 
-Depends on: `CQ1a`
+Depends on: `MONDB1`
 
-Blocks: `CQ2`, `CQ3`, `CQ4`
+Blocks: `SPELL1`
 
 Scope:
 
-- Implement `character-creation.qnt` over the frozen CQ1 surface defined by [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md).
-- Formalize `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics.
-- Ground the design in SRD 5.2.1 character-creation text and existing reusable helper semantics in [creature.qnt](../creature.qnt).
-- Preserve the canonical TS-owned authored creation shape rather than introducing a reduced surrogate model, flattened replacement record, or duplicate shadow-presence metadata.
-- Keep `finalizeDraft` guarded/partial: an illegal or incomplete draft must not produce a `CharacterSheet`.
-- Preserve the TS-owned legality/open-choice surface for character creation rather than collapsing it into looser summary invalidity checks.
-- Do not edit unrelated shared verification tooling as part of CQ1b.
-- Update `POST1_FORMAL_CREATION_SEMANTICS.md` only if the aligned formal module and deterministic tests actually land in the same change.
+- Add one non-goblin SRD monster that proves the canonical `StatBlock` shape works beyond the goblin slice.
+- Reuse the same owned record and projection path established in `MONDB1`.
+- Prefer a monster that exercises a materially different authored-section shape without forcing spell ownership decisions.
+- Preserve unsupported abilities as text-only structured data with explicit reasons instead of dropping them.
 
 Next action:
 
-- None. This task is complete; use the landed finalized-sheet boundary in `character-creation.qnt` as the starting point for `CQ2`.
+- Unblock after `MONDB1`, then choose the concrete second monster using the now-landed schema.
+
+Research note:
+
+- This task should not define a second spell schema.
+- If the chosen monster includes spellcasting, keep that section reference-only/text-only unless `SPELL1`, `SPELL2a`, and the relevant `SPELL2b` slice are pulled forward by an explicit plan update.
 
 Verification requirements:
 
-- Read the relevant SRD text in `.references/srd-5.2.1/` plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
-- Confirm all modeled rules trace to specific SRD passages.
-- Verify that `character-creation.qnt` covers the same authored creation facts already owned by the TS draft/sheet surface, including incompleteness states and legality-relevant choice categories needed by downstream CQ2/CQ4 work.
-- Demonstrate that the Quint issue/open-choice surface still covers TS-owned categories for granted-language/proficiency validation, multiclass-specific choices, duplicate-choice detection, equipment/loadout legality, and spellcasting legality rather than replacing them with looser summary checks.
-- Verify that no shared fuzz/MBT/helper scripts changed as part of CQ1b.
-- Use deterministic Quint tests and the narrowest relevant parity surface.
-- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+- Confirm the added monster cites SRD provenance directly on the owned record.
+- Verify the monster reaches battle/MCP through the same projection path as goblins.
+- Include `/simplify` convergence, minimum two rounds.
 
-### Task 2 - CQ2 - Formal Character Advancement Module
+### Task 2 - SPELL1 - Freeze Spell Ownership Surface
 
-Status: `done`
+Status: `blocked`
 
-Depends on: `CQ1b`
+Depends on: `MONDB2`
 
-Blocks: `CQ3`, `CQ4`
+Blocks: `SPELL2a`
 
 Scope:
 
-- After `CQ1b` lands, implement `character.qnt` over finalized `CharacterSheet` semantics.
-- Cover `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as legal level-1 creation plus repeated legal advancement.
-- Update `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete.
+- Freeze the canonical spell-authored record and spell-ownership seam before implementation.
+- Inventory where spell identity, metadata, execution semantics, and public battle spell payloads currently live across core, features, battle, and MCP.
+- Define the lasting boundary between:
+  - authored spell records;
+  - spell references used by monsters or characters;
+  - battle-owned multi-phase spell resolution;
+  - MCP/public input contracts.
 
 Next action:
 
-- None. This task is complete; use the landed advancement owner in `character.qnt` as the formal prerequisite for `CQ3` and later parity work.
+- After `MONDB2`, write the frozen ownership surface back into this file or a task-specific plan artifact, then update status.
+
+Research note:
+
+- `MCP_EVENT_SURFACE_AUDIT.md` already names the blocked public spell surfaces and why they are blocked.
+- The missing piece is the spell-content owner and the spell-to-battle projection contract, not another MCP-specific schema.
 
 Verification requirements:
 
-- Confirm the landed advancement module remains grounded in the local SRD advancement text and `UBIQUITOUS_LANGUAGE.md`.
-- Keep deterministic Quint coverage for advancement legality, contradiction rejection, and higher-level-start equivalence close to the formal owner.
-- Keep TypeScript advancement helpers thin wrappers over the shared finalized-sheet boundary until CQ4 closes the remaining parity work.
+- Confirm the frozen ownership surface is specific enough that `SPELL2a` can implement it without reopening task scope.
+- Confirm the frozen seam prevents monster work from becoming the spell-content owner.
 
-### Task 3 - CQ3 - Character To Creature Projection Boundary
+### Task 3 - SPELL2a - Canonical Spell Records And Identity Projection
 
-Status: `done`
+Status: `blocked`
 
-Depends on: `CQ1b`, `CQ2`
+Depends on: `SPELL1`
 
-Blocks: `CQ4`
+Blocks: `SPELL2b`
 
 Scope:
 
-- After `CQ1b` and `CQ2` land, implement the formal handoff from character semantics into creature-facing execution semantics.
-- Use the PRD's proposed `CharacterCreatureProjection` boundary and map it into `CharConfig`.
-- Remove or redirect remaining references that still treat `POST1` or `POST3` as the current design authority.
+- Implement the canonical spell-owned record and the one-way identity/projection boundary used by character and monster authored content.
+- Keep spell identity, provenance, and authored metadata on the spell side.
+- Define the minimum projection contract that lets downstream layers reference canonical spells without restating spell facts.
+- Do not implement full battle spell resolution in this task.
+- Do not expose raw internal event payloads as MCP schemas.
 
 Next action:
 
-- None. This task is complete; use the landed `CharacterCreatureProjection` and shared TS helper as the fixed boundary for CQ4 parity work.
+- Unblock after `SPELL1`, then implement the frozen spell-owned boundary and identity projection layer.
+
+Research note:
+
+- This task should make spell identity referenceable from monsters, characters, and later battle spell-family projections.
+- It should not widen into full content ingestion, app UX redesign, battle event ownership, or adapter-owned spell registries.
 
 Verification requirements:
 
-- Confirm the landed projection remains one-way and derived from character-owned facts.
-- Confirm the Quint-to-TS handoff still routes through the settled `CharacterCreatureProjection` boundary and downstream `CharConfig` mapping.
-- `/simplify` round 1 removed a broken optional-subclass assumption from the candidate merge and aligned the formal `CharConfig` mapping with the existing non-optional `creature.qnt:CharConfig.subclass` surface.
-- `/simplify` round 2 pulled the new TS projection helper off the `character-domain.ts` barrel and onto direct imports, eliminating an avoidable circular-dependency risk without changing the CQ3 behavior.
+- Confirm all modeled rules trace to the local SRD corpus plus the repo's ubiquitous language.
+- Run the narrowest relevant core tests for the touched spell/projection paths.
+- Include `/simplify` convergence, minimum two rounds.
 
-### Task 4 - CQ4 - Character Quint Parity Harness
+### Task 4 - SPELL2b - Battle Spell Projection For One Generic Spell Family
 
-Status: `done`
+Status: `blocked`
 
-Depends on: `CQ1b`, `CQ2`, `CQ3`
+Depends on: `SPELL2a`
+
+Blocks: `MONDB3`
+
+Scope:
+
+- Implement one battle-facing generic spell family on top of canonical spell records and identity projection.
+- Pick one bounded family, such as save spells or concentration spells, and define the projection contract from canonical spell records into battle-owned resolution inputs.
+- Keep save/DC/damage loops, counterspell windows, concentration transitions, and per-target resolution battle-owned.
+- Do not widen this task to every battle spell family or all `BATTLE_CAST_*` surfaces at once.
+
+Next action:
+
+- Unblock after `SPELL2a`, then choose the smallest spell family that proves the reusable battle projection path.
+
+Research note:
+
+- This task should directly support one future generic battle spell surface without forcing the entire spell system to land in one change.
+- Public MCP schemas should still remain narrow and derived from the battle-owned spell family boundary.
+
+Verification requirements:
+
+- Confirm the chosen spell family routes through a reusable generic projection path from canonical spell records into battle-owned semantics.
+- Run the narrowest relevant core/battle/MCP tests for the touched spell family path.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 5 - MONDB3 - Advanced Monster Pattern Tracer Bullet
+
+Status: `blocked`
+
+Depends on: `SPELL2b`
+
+Blocks: `MONDB4a`
+
+Scope:
+
+- Return to monster continuation once spell ownership exists.
+- Add one advanced repeated monster pattern through a generic engine facility rather than a monster-specific handler.
+- Candidate patterns include recharge, legendary actions, stronger multiattack shapes, or monster spellcasting that now targets the canonical spell boundary.
+
+Next action:
+
+- Unblock after `SPELL2b`, then choose the smallest advanced pattern that proves the reusable facility.
+
+Research note:
+
+- The point of this task is not merely another monster record. It is to prove one durable advanced facility over canonical authored sections.
+
+Verification requirements:
+
+- Confirm the chosen advanced pattern routes through a reusable generic facility.
+- Verify public battle and MCP surfaces remain generic after the tracer bullet lands.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 6 - MONDB4a - Freeze Dataset Expansion Scope
+
+Status: `blocked`
+
+Depends on: `MONDB3`
 
 Blocks: none
 
 Scope:
 
-- After the formal modules land, add deterministic Quint tests and TypeScript parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary.
-- Target shared core functions rather than adapter shells.
-- Delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD.
+- Freeze the next SRD dataset expansion slice before bulk implementation starts.
+- Choose the initial dataset batch size, the batching strategy for follow-on monster additions, and the unsupported-pattern audit/report shape.
+- Convert the old monolithic dataset-expansion phase into explicit future implementation tasks once the scope is frozen.
 
 Next action:
 
-- None. This task is complete; use the landed shared-core parity harness as the guardrail for future character-semantic changes.
+- Unblock after `MONDB3`, then write the frozen dataset-expansion scope back into this file and add the concrete child implementation tasks.
+
+Research note:
+
+- This task exists to keep the queue implementation-sized. Do not treat the full dataset expansion as one coding-loop task.
 
 Verification requirements:
 
-- Prefer deterministic Quint tests and narrow parity coverage over broader MBT.
-- Record any remaining documentation deletions or retained artifacts as part of closeout.
-- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
-- `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` remain retained supporting rationale because [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) still names them as such; do not delete them unless the PRD and landed `CQ*` artifacts later make them truly redundant.
-
-### Task 5 - MCPA8 - Monster Control And Legendary Action Surface
-
-Status: `done`
-
-Depends on: `MCPA1`, `MON3`
-
-Blocks: none
-
-Scope:
-
-- Use [MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md](./MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md) to implement generic `execute_control_command` routes for named monster legendary, recharge, and daily ability choice.
-- Wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`.
-- Keep non-attack legendary options deferred.
-
-Next action:
-
-- None. This task is complete; use the landed generic monster-control surface and Quint-aligned legendary follow-up as the reference boundary.
-
-Verification requirements:
-
-- Read the relevant SRD text plus [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md) before editing code.
-- Keep MCP ownership limited to the public action surface; do not introduce MCP-owned combat semantics.
-- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
-
-### Task 6 - H - PassiveModifiers Sub-Record
-
-Status: `deferred`
-
-Depends on: none
-
-Blocks: none
-
-Scope:
-
-- Keep deferred unless the batch objective changes back toward MCP or action-surface cleanup.
-
-Next action:
-
-- Do not pick up in the current batch.
-
-### Task 7 - I - Build-Map / Hole Metadata
-
-Status: `deferred`
-
-Depends on: none
-
-Blocks: none
-
-Scope:
-
-- Keep deferred unless the batch objective changes back toward MCP or action-surface cleanup.
-
-Next action:
-
-- Do not pick up in the current batch.
-
-### Task 8 - QFULL - Full Workspace Quality Run
-
-Status: `done`
-
-Depends on: `CQ3`, `CQ4`, `MCPA8`
-
-Blocks: none
-
-Scope:
-
-- Run the full integrated quality surface from a clean installed checkout after the remaining active implementation tasks land.
-- Use this task for broad repository verification rather than widening feature tasks into repo-wide cleanup mid-implementation.
-- Capture any remaining baseline failures as explicit follow-up work instead of folding unrelated cleanup into earlier character/MCP tasks.
-
-Next action:
-
-- None. The integrated quality gate is complete for this batch.
-
-Verification requirements:
-
-- Run from a clean checkout with valid `node_modules`.
-- Record the exact commands used and whether failures are task-caused or baseline noise.
-- Do not treat this task as permission to reopen already-landed feature scope unless the failure proves a real integrated regression.
-
-Verification notes:
-
-- `pnpm quality` succeeded on `integration`.
-- `pnpm exec quint test --backend typescript --match 'test_character_' dndTest.qnt` succeeded.
-- `pnpm --filter @dnd/core exec vitest run src/character-semantics-quint-parity.test.ts` succeeded.
-- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t 'legendary|monster control'` succeeded.
-- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t 'battle get_state projects named monster-control menus from stat-block ownership|battle legendary control selection opens the generic legendary attack follow-up|battle monster control commands accept named non-attack, recharge, and daily selection without spending resources'` succeeded.
-- `/simplify` round 1 kept the Quint crit-range fix scoped to the existing subclass projection surface and refreshed the deterministic multiclass fixture so the broad character suite exercised a legal finalized sheet again.
-- `/simplify` round 2 re-checked the touched Quint and parity files for duplicated state or broader ownership drift; no further important simplifications were needed.
-- RAW verification for the task-owned crit-range fix:
-  - `.references/srd-5.2.1/Classes/Fighter.md` states Champion `Improved Critical` at Fighter level 3 and `Superior Critical` at Fighter level 15, so those expanded crit thresholds require an actual Fighter subclass selection.
-  - `UBIQUITOUS_LANGUAGE.md` keeps the default Critical Hit trigger at natural 20, so a Fighter sheet with no Fighter subclass selection must remain at crit range `20`.
-- The direct default-backend command `pnpm exec quint test --match 'test_character_' dndTest.qnt` still fails with `EPIPE` in this environment. That failure is recorded here as baseline verification noise rather than a reopened feature task because the integration branch’s TypeScript-backend deterministic Quint surface and targeted TS/MCP regressions are green.
-
-## Archived Done Foundations
-
-Completed-task details were trimmed from the active execution artifact. Keep only the durable downstream findings here.
-
-Character foundation:
-
-- `CHAR1`: landed the canonical `CharacterDraft` / `CharacterSheet` boundary in core.
-- `CHAR2`: landed owned SRD score-generation, background score adjustments, and starting-language validation.
-- `CHAR3`: landed owned proficiency/subclass/class-resource build choices and validation.
-- `CHAR4`: landed owned equipment/loadout facts and one-way projection into creature/battle-facing loadout fields.
-- `CHAR5`: landed one owned derivation path for sheet numbers, spellcasting projection, machine input projection, and battle-init projection.
-- `CHAR6`: landed the thin `/character` workflow shell over `CharacterDraft` plus direct finalization/derivation reuse.
-- `CHAR7`: landed ordered `advancement` history as the canonical legality surface for higher-level starts and multiclass continuation.
-- `POST1`: closed the research/design boundary for formal character creation semantics.
-- `POST2`: landed open-choice and selective-invalidation behavior on the draft/sheet boundary in TypeScript.
-- `POST3`: landed the canonical sheet-to-sheet advancement helper in TypeScript.
-- `POST4`: converged workflow and runtime projections on the canonical draft/sheet story.
-
-Monster and MCP foundation:
-
-- `MON1` through `MON4`: landed the hand-authored SRD monster catalog foundation and the generic recharge projection path.
-- `MCPA1` through `MCPA7`: landed the current public attack/spell/table-event ownership boundaries.
-
-Archive rule:
-
-- If a future task needs the full implementation history for a done foundation task, inspect git history instead of re-expanding this file.
-- Once `CQ1` through `CQ4` are complete, delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if the landed formal modules, current PRD, and git history fully cover their remaining documentary value.
+- Confirm the frozen dataset slice and batching strategy are specific enough to open concrete implementation tasks without reopening monster ownership decisions.
+- Confirm the unsupported-pattern report shape is explicit enough to guide later generic-facility work.
