@@ -313,6 +313,8 @@ function isDefaultBattlePosition(
 export function battleInit({
   event: e,
 }: BattleActionArgs<"BATTLE_INIT">): Partial<BattleContext> {
+  // BATTLE_INIT establishes the initial battle roster from already-authored
+  // creatures using the same projection path later reused by BATTLE_ADD_CREATURE.
   const creatures = new Map<CreatureId, BattleCreatureState>();
   const scored = e.creatures.map((cfg) => ({
     cfg,
@@ -345,6 +347,8 @@ export function battleAddCreature({
   context: c,
   event: e,
 }: BattleActionArgs<"BATTLE_ADD_CREATURE">): Partial<BattleContext> {
+  // BATTLE_ADD_CREATURE changes battle participation, not creature existence.
+  // The added creatures are already-authored inputs projected into battle state.
   if (!c.turnStarted) return {};
   if (e.insertAtIndex < 0 || e.insertAtIndex > c.initiative.length) return {};
   if (e.creatures.length === 0) return {};

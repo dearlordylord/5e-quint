@@ -141,7 +141,7 @@ export const toolDefinitions = [
   {
     name: "start_battle",
     description:
-      "Start a battle from the current creature host by compiling its Fighter durable state into BATTLE_INIT and adding a core-owned monster stat block through the generic monster session surface.",
+      "Start a battle from the current creature host by compiling its Fighter durable state into an initial BATTLE_INIT batch and adding a core-owned monster stat block through the generic monster session surface. This promotes already-authored creatures into battle participation; it does not create creatures inside battle.",
     inputSchema: startBattleJsonSchema,
   },
   {
@@ -164,7 +164,7 @@ export const toolDefinitions = [
   {
     name: "execute_control_command",
     description:
-      "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs. This surface does not mirror lifecycle flows already kept on execute_action, including SHORT_REST.",
+      "Execute a narrow session, turn, rest, or monster-control command. Supported battle turn commands require explicit runtime facts; MCP does not invent hidden start/end-turn inputs. Battle lifecycle commands control which already-authored creatures participate in battle; they do not create creatures from nothing. This surface does not mirror lifecycle flows already kept on execute_action, including SHORT_REST.",
     inputSchema: scopedCommandMcpInputSchema,
   },
   {

@@ -206,6 +206,14 @@ Source-specific compilers should stay separate from battle-state construction. T
 
 - source owner -> named `InitCreatureConfig` projector -> `buildCreatureState`
 
+Battle participation rule:
+
+- battle lifecycle commands control participation in a battle, not creature existence;
+- creatures are authored outside battle and then projected into battle state;
+- `BATTLE_INIT` is the initial batch add of already-authored creatures into a new battle;
+- `BATTLE_ADD_CREATURE` is the same projection operation later in the battle lifecycle;
+- the same model also permits removing creatures from an ongoing battle when the caller/session semantics require it.
+
 The monster path already follows this with `statBlockToInitCreatureConfig`. The current PC/session `start_battle` path still assembles `BATTLE_INIT` creature objects inline, which is workable but not the desired steady-state methodology when new projected fields are added.
 
 Current `dexMod` / `strMod` note:
