@@ -103,7 +103,7 @@ Rejected tasks are not terminal. The decider should classify every task result w
 - `blocked-needs-design`
 - `deferred`
 
-The decider must then keep the plan status aligned with that disposition:
+The plan status after the decider run is authoritative. Ralph refreshes `plans/ACTIVE_PLAN.md` and derives the effective disposition from the task's refreshed status:
 
 - `done` -> `done`
 - `retry-same-task` -> leave the task runnable
@@ -111,7 +111,7 @@ The decider must then keep the plan status aligned with that disposition:
 - `blocked-needs-design` -> `blocked`
 - `deferred` -> `deferred`
 
-The harness treats that section as the primary signal, but it also has a fallback: if the decider output omits or oddly formats `Task Disposition`, Ralph infers the disposition from the refreshed task status in `plans/ACTIVE_PLAN.md`. That prevents harmless markdown-format drift from killing an otherwise valid run.
+The `Task Disposition` section is therefore diagnostic rather than control-critical. If the decider output omits it, uses unusual markdown, or even disagrees with the refreshed plan, Ralph continues from the refreshed plan status and records a warning instead of killing the loop.
 
 In addition, the decider must:
 

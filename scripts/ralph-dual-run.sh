@@ -927,6 +927,30 @@ process.stdout.write(raw)
 NODE
 }
 
+disposition_from_task_status() {
+  local status="$1"
+  case "$status" in
+    done)
+      printf 'done\n'
+      ;;
+    blocked)
+      printf 'blocked-needs-design\n'
+      ;;
+    deferred)
+      printf 'deferred\n'
+      ;;
+    ready-for-research)
+      printf 'needs-more-research\n'
+      ;;
+    ready-for-implementation-after-light-research)
+      printf 'retry-same-task\n'
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 choose_next_task() {
   local iteration="$1"
   local chooser_root="$iterations_root/iteration-$iteration"
@@ -1167,49 +1191,25 @@ run_task_attempt() {
   fi
   local refreshed_task_status=""
   IFS=$'\t' read -r _ref_task_no _ref_task_id refreshed_task_status _ref_task_start _ref_task_end _ref_task_title <<<"$refreshed_task_row"
-  if [[ -z "$decider_disposition" ]]; then
-    case "$refreshed_task_status" in
-      done)
-        decider_disposition="done"
-        ;;
-      blocked)
-        decider_disposition="blocked-needs-design"
-        ;;
-      deferred)
-        decider_disposition="deferred"
-        ;;
-      ready-for-research)
-        decider_disposition="needs-more-research"
-        ;;
-      ready-for-implementation-after-light-research)
-        decider_disposition="retry-same-task"
-        ;;
-    esac
-    if [[ -n "$decider_disposition" ]]; then
-      note "task" "inferred-task-disposition task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-    else
-      printf 'task %s attempt %s missing Task Disposition status and could not infer one from refreshed plan status %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-      note "task" "fatal-missing-task-disposition task=$task_no attempt=$attempt_no"
-      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-disposition" "-" "decider missing task disposition and no plan-status fallback"
-      return 2
-    fi
+  local authoritative_disposition=""
+  if ! authoritative_disposition="$(disposition_from_task_status "$refreshed_task_status")"; then
+    printf 'task %s attempt %s ended with unknown refreshed plan status %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+    note "task" "fatal-unknown-task-status task=$task_no attempt=$attempt_no status=$refreshed_task_status"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-unknown-task-status" "-" "unknown refreshed plan status after decider"
+    return 2
   fi
+
+  if [[ -z "$decider_disposition" ]]; then
+    note "task" "inferred-task-disposition task=$task_no attempt=$attempt_no disposition=$authoritative_disposition status=$refreshed_task_status"
+  elif [[ "$decider_disposition" != "$authoritative_disposition" ]]; then
+    note "task" "warning-disposition-mismatch task=$task_no attempt=$attempt_no parsed=$decider_disposition authoritative=$authoritative_disposition status=$refreshed_task_status"
+  fi
+
+  decider_disposition="$authoritative_disposition"
   case "$decider_disposition" in
     done)
-      if [[ "$refreshed_task_status" != "done" ]]; then
-        printf 'task %s attempt %s disposition was done but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "done disposition without done plan status"
-        return 2
-      fi
       ;;
     retry-same-task)
-      if ! task_status_is_runnable "$refreshed_task_status"; then
-        printf 'task %s attempt %s disposition was retry-same-task but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "retry disposition without runnable plan status"
-        return 2
-      fi
       if [[ "$final_attempt" == "true" ]]; then
         printf 'task %s attempt %s used retry-same-task on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no"
@@ -1218,12 +1218,6 @@ run_task_attempt() {
       fi
       ;;
     needs-more-research)
-      if [[ "$refreshed_task_status" != "ready-for-research" ]]; then
-        printf 'task %s attempt %s disposition was needs-more-research but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "research disposition without research plan status"
-        return 2
-      fi
       if [[ "$final_attempt" == "true" ]]; then
         printf 'task %s attempt %s used needs-more-research on the final allowed attempt\n' "$task_no" "$attempt_no" >"$last_error_file"
         note "task" "fatal-final-attempt-rerun task=$task_no attempt=$attempt_no disposition=$decider_disposition"
@@ -1232,20 +1226,8 @@ run_task_attempt() {
       fi
       ;;
     blocked-needs-design)
-      if [[ "$refreshed_task_status" != "blocked" ]]; then
-        printf 'task %s attempt %s disposition was blocked-needs-design but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "blocked disposition without blocked plan status"
-        return 2
-      fi
       ;;
     deferred)
-      if [[ "$refreshed_task_status" != "deferred" ]]; then
-        printf 'task %s attempt %s disposition was deferred but plan status is %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
-        note "task" "fatal-disposition-plan-mismatch task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
-        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-disposition-plan-mismatch" "-" "deferred disposition without deferred plan status"
-        return 2
-      fi
       ;;
     *)
       printf 'task %s attempt %s had unknown disposition: %s\n' "$task_no" "$attempt_no" "$decider_disposition" >"$last_error_file"
