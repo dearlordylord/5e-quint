@@ -271,8 +271,24 @@ export type BattleEvent =
     }
   | { readonly type: "BATTLE_LEGENDARY_PASS" }
   | {
+      readonly type: "USE_LEGENDARY_ACTION";
+      readonly monsterId: CreatureId;
+      readonly abilityId: string;
+    }
+  | {
+      readonly type: "USE_RECHARGE_ABILITY";
+      readonly monsterId: CreatureId;
+      readonly abilityId: string;
+    }
+  | {
+      readonly type: "USE_DAILY_ABILITY";
+      readonly monsterId: CreatureId;
+      readonly abilityId: string;
+    }
+  | {
       readonly type: "BATTLE_LEGENDARY_ATTACK";
       readonly monsterId: CreatureId;
+      readonly abilityId: string;
       readonly laTarget: CreatureId;
       readonly laAtkRoll: number;
       readonly laDmg: number;

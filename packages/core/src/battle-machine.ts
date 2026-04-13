@@ -65,6 +65,9 @@ import {
   battleSearch,
   battleReleaseGrapple,
   battleStartTurn,
+  battleUseDailyAbility,
+  battleUseLegendaryAction,
+  battleUseRechargeAbility,
 } from "#/battle-machine-actions-turn.ts";
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts";
 
@@ -93,6 +96,7 @@ const INITIAL_CONTEXT: BattleContext = {
   turnIndex: 0,
   round: 0,
   turnStarted: false,
+  selectedMonsterCommand: null,
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
@@ -154,6 +158,9 @@ export const battleMachine = setup({
     battleEndTurn: narrow(battleEndTurn),
     battleLegendaryPass: narrow(battleLegendaryPass),
     battleLegendaryAttack: narrow(battleLegendaryAttack),
+    battleUseLegendaryAction: narrow(battleUseLegendaryAction),
+    battleUseRechargeAbility: narrow(battleUseRechargeAbility),
+    battleUseDailyAbility: narrow(battleUseDailyAbility),
     battleHeal: narrow(battleHeal),
     battleHelpAttack: narrow(battleHelpAttack),
     battleHide: narrow(battleHide),
@@ -212,6 +219,8 @@ export const battleMachine = setup({
             BATTLE_CAST_AOE: { actions: "battleCastAoE" },
             BATTLE_MOVE: { actions: "battleMove" },
             BATTLE_END_TURN: { actions: "battleEndTurn" },
+            USE_RECHARGE_ABILITY: { actions: "battleUseRechargeAbility" },
+            USE_DAILY_ABILITY: { actions: "battleUseDailyAbility" },
             BATTLE_HEAL: { actions: "battleHeal" },
             BATTLE_HELP_ATTACK: { actions: "battleHelpAttack" },
             BATTLE_HIDE: { actions: "battleHide" },
@@ -285,6 +294,7 @@ export const battleMachine = setup({
           always: [{ guard: "noLaCtx", target: "activeTurn" }],
           on: {
             BATTLE_LEGENDARY_PASS: { actions: "battleLegendaryPass" },
+            USE_LEGENDARY_ACTION: { actions: "battleUseLegendaryAction" },
             BATTLE_LEGENDARY_ATTACK: { actions: "battleLegendaryAttack" },
           },
         },

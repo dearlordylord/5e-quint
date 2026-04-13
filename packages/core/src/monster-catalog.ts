@@ -10,6 +10,7 @@ import {
   SCOUT,
 } from "#/monster-catalog-srd-expanded.ts";
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
+import { ABOLETH } from "#/monster-catalog-aboleths.ts";
 import { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
 import {
   GOBLIN_BOSS,
@@ -27,6 +28,7 @@ import {
 } from "#/types.ts";
 
 export { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
+export { ABOLETH } from "#/monster-catalog-aboleths.ts";
 export {
   GOBLIN_BOSS,
   GOBLIN_MINION,
@@ -55,6 +57,7 @@ export {
  */
 
 export const MONSTER_STAT_BLOCK_IDS = [
+  "aboleth",
   "centaurTrooper",
   "goblinMinion",
   "goblinWarrior",
@@ -85,6 +88,7 @@ export const MONSTER_STAT_BLOCK_PROVENANCE = {
 export const MONSTER_STAT_BLOCKS: Readonly<
   Record<MonsterStatBlockId, StatBlock>
 > = {
+  aboleth: ABOLETH,
   centaurTrooper: CENTAUR_TROOPER,
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
@@ -101,6 +105,7 @@ export const MONSTER_STAT_BLOCKS: Readonly<
 
 export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
   return Match.value(id).pipe(
+    Match.when("aboleth", () => MONSTER_STAT_BLOCKS.aboleth),
     Match.when("centaurTrooper", () => MONSTER_STAT_BLOCKS.centaurTrooper),
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
@@ -115,6 +120,14 @@ export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
     Match.when("scout", () => MONSTER_STAT_BLOCKS.scout),
     Match.exhaustive,
   );
+}
+
+export function getMonsterStatBlockByStateId(
+  id: string | undefined,
+): StatBlock | null {
+  return id != null && id in MONSTER_STAT_BLOCKS
+    ? getMonsterStatBlock(id as MonsterStatBlockId)
+    : null;
 }
 
 export function statBlockRechargeMinRolls(
@@ -156,6 +169,26 @@ export function statBlockBattleReactionOptions(statBlock: StatBlock) {
   return statBlock.reactions.flatMap((reaction) =>
     reaction.kind === "battleReaction" ? [reaction.option] : [],
   );
+}
+
+export function statBlockLegendaryAction(
+  statBlock: StatBlock,
+  abilityId: string,
+) {
+  return (
+    statBlock.legendaryActions.find((ability) => ability.id === abilityId) ??
+    null
+  );
+}
+
+export function statBlockAbilityName(statBlock: StatBlock, abilityId: string) {
+  return [
+    ...statBlock.traits,
+    ...statBlock.actions,
+    ...statBlock.bonusActions,
+    ...statBlock.reactions,
+    ...statBlock.legendaryActions,
+  ].find((ability) => ability.id === abilityId)?.name;
 }
 
 /**
@@ -215,7 +248,25 @@ function statBlockAttackToBattleWeaponProfile(
       statBlockAttackSource,
     };
   }
+  if (attack.name === "Tentacle") {
+    return {
+      name: attack.name,
+      damageType: attack.damageType,
+      isMelee: true,
+      damageDie: 6,
+      properties: new Set(["reach"]),
+      statBlockAttackSource,
+    };
+  }
   return null;
+}
+
+export function statBlockAttackBattleProfile(
+  statBlock: StatBlock,
+  attackId: string,
+): BattleWeaponProfile | null {
+  const attack = statBlockAttacks(statBlock)[attackId];
+  return attack == null ? null : statBlockAttackToBattleWeaponProfile(attack);
 }
 
 function statBlockPrimaryWeaponProfile(
@@ -224,8 +275,7 @@ function statBlockPrimaryWeaponProfile(
 ): BattleWeaponProfile | null {
   const attacks = statBlockAttacks(statBlock);
   if (primaryAttackName != null) {
-    const attack = attacks[primaryAttackName];
-    return attack == null ? null : statBlockAttackToBattleWeaponProfile(attack);
+    return statBlockAttackBattleProfile(statBlock, primaryAttackName);
   }
   for (const attack of Object.values(attacks)) {
     const profile = statBlockAttackToBattleWeaponProfile(attack);
@@ -237,6 +287,7 @@ function statBlockPrimaryWeaponProfile(
 export function statBlockToInitCreatureConfig(params: {
   readonly id: CreatureIdT;
   readonly statBlock: StatBlock;
+  readonly statBlockId?: MonsterStatBlockId;
   readonly primaryAttackName?: string;
   readonly initiativeRoll?: number;
   readonly initiativeRollB?: number;
@@ -249,6 +300,9 @@ export function statBlockToInitCreatureConfig(params: {
   const config: InitCreatureConfig = {
     id: CreatureId(params.id),
     kind: "Monster",
+    ...(params.statBlockId != null
+      ? { monsterStatBlockId: params.statBlockId }
+      : {}),
     maxHp: params.statBlock.maxHp,
     creatureSize: params.statBlock.creatureSize,
     baseArmorClass: params.statBlock.ac,
@@ -269,6 +323,7 @@ export function statBlockToInitCreatureConfig(params: {
     rechargeAvailable: Object.fromEntries(
       Object.keys(params.statBlock.rechargeAbilities).map((id) => [id, false]),
     ),
+    dailyUsesRemaining: params.statBlock.dailyAbilities,
     rechargeMinRolls: statBlockRechargeMinRolls(params.statBlock),
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: statBlockBattleBonusActionOptions(

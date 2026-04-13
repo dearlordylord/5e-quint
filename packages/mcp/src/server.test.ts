@@ -695,7 +695,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(invalidRawAction)).toEqual({
       error: "Invalid execute_control_command input",
       details:
-        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_ADD_CREATURE, BATTLE_REMOVE_CREATURE, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS.',
+        'Invalid control command. Received type: "USE_SECOND_WIND". Valid types: END_TURN, LONG_REST, BATTLE_INIT, BATTLE_ADD_CREATURE, BATTLE_REMOVE_CREATURE, BATTLE_START_TURN, BATTLE_END_TURN, BATTLE_LEGENDARY_PASS, USE_LEGENDARY_ACTION, USE_RECHARGE_ABILITY, USE_DAILY_ABILITY.',
     });
   });
 
@@ -1885,6 +1885,267 @@ describe("MCP server adapter", () => {
         awaitingLegendaryAction: false,
       }),
     );
+  });
+
+  test("battle get_state projects named monster-control menus from stat-block ownership", () => {
+    const host = createBattleHost();
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 44, kind: "PC", initiativeRoll: 20 },
+        {
+          id: "aboleth-1",
+          kind: "Monster",
+          statBlockId: "aboleth",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    const payload = readPayload(handleToolCall(host, "get_state", {}));
+    expect(payload.monsterControl).toMatchObject({
+      "aboleth-1": {
+        statBlockId: "aboleth",
+        legendaryActions: expect.arrayContaining([
+          expect.objectContaining({
+            id: "lash",
+            name: "Lash",
+            cost: 1,
+            remainingUses: 3,
+            selected: false,
+          }),
+          expect.objectContaining({
+            id: "psychicDrain",
+            name: "Psychic Drain",
+            selected: false,
+          }),
+        ]),
+        dailyAbilities: [
+          {
+            id: "dominateMind",
+            name: "Dominate Mind",
+            remainingUses: 2,
+            selected: false,
+          },
+        ],
+      },
+    });
+  });
+
+  test("battle legendary control selection opens the generic legendary attack follow-up", () => {
+    const host = createBattleHost();
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: "fighter", maxHp: 44, kind: "PC", initiativeRoll: 20 },
+        {
+          id: "aboleth-1",
+          kind: "Monster",
+          statBlockId: "aboleth",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+
+    const select = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: "aboleth-1",
+      abilityId: "lash",
+    });
+
+    expect("isError" in select).toBe(false);
+    expect(readPayload(select).state.monsterControl["aboleth-1"]).toMatchObject(
+      {
+        legendaryActions: expect.arrayContaining([
+          expect.objectContaining({ id: "lash", selected: true }),
+        ]),
+      },
+    );
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.free).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "aboleth-1",
+          type: "BATTLE_LEGENDARY_ATTACK",
+          abilityId: "lash",
+          targetId: { options: ["fighter"] },
+        }),
+      ]),
+    );
+
+    const attack = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "aboleth-1",
+      type: "BATTLE_LEGENDARY_ATTACK",
+      abilityId: "lash",
+      targetId: "fighter",
+      knockOut: false,
+      runtime: {
+        runtime: "battleAttack",
+        values: {
+          attackRoll: 15,
+          targetAc: 18,
+          weaponDamage: 12,
+          attackerWithin5ft: true,
+          hostileWithin5ft: false,
+          targetCanSeeAttacker: true,
+          attackerCanSeeTarget: true,
+          frightSourceInLOS: false,
+          hasAllyAdjacentToTarget: false,
+          hitReactionCandidates: [],
+        },
+      },
+    });
+
+    expect("isError" in attack).toBe(false);
+    expect(readPayload(attack).state.monsterControl["aboleth-1"]).toMatchObject(
+      {
+        legendaryActions: expect.arrayContaining([
+          expect.objectContaining({
+            id: "lash",
+            remainingUses: 2,
+            selected: false,
+          }),
+        ]),
+      },
+    );
+  });
+
+  test("battle monster control commands accept named non-attack, recharge, and daily selection without spending resources", () => {
+    const host = createBattleHost();
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "aboleth-1",
+          kind: "Monster",
+          statBlockId: "aboleth",
+          initiativeRoll: 20,
+        },
+        { id: "fighter", maxHp: 44, kind: "PC", initiativeRoll: 15 },
+        {
+          id: "centaur-1",
+          kind: "Monster",
+          statBlockId: "centaurTrooper",
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+      rechargeD6: 5,
+    });
+    const daily = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "USE_DAILY_ABILITY",
+      monsterId: "aboleth-1",
+      abilityId: "dominateMind",
+    });
+    expect("isError" in daily).toBe(false);
+    expect(readPayload(daily).state.monsterControl["aboleth-1"]).toMatchObject({
+      dailyAbilities: [
+        {
+          id: "dominateMind",
+          name: "Dominate Mind",
+          remainingUses: 2,
+          selected: true,
+        },
+      ],
+    });
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+      rechargeD6: 5,
+    });
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    const nonAttackLegendary = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: "aboleth-1",
+      abilityId: "psychicDrain",
+    });
+    expect("isError" in nonAttackLegendary).toBe(false);
+    expect(
+      readPayload(nonAttackLegendary).state.monsterControl["aboleth-1"],
+    ).toMatchObject({
+      legendaryActions: expect.arrayContaining([
+        expect.objectContaining({ id: "psychicDrain", selected: true }),
+      ]),
+    });
+
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_LEGENDARY_PASS",
+    });
+    handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+      rechargeD6: 5,
+    });
+    const recharge = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: "centaur-1",
+      abilityId: "tramplingCharge",
+    });
+    expect("isError" in recharge).toBe(false);
+    expect(
+      readPayload(recharge).state.monsterControl["centaur-1"],
+    ).toMatchObject({
+      rechargeAbilities: [
+        {
+          id: "tramplingCharge",
+          name: "Trampling Charge",
+          available: true,
+          selected: true,
+        },
+      ],
+    });
   });
 
   test("battle turn control commands require explicit runtime facts", () => {

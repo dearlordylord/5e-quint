@@ -7,6 +7,7 @@ import {
 } from "#/available-actions.ts";
 import { MONSTER_CATALOG_UNSUPPORTED_AUDIT } from "#/monster-catalog-audit.ts";
 import {
+  ABOLETH,
   CENTAUR_TROOPER,
   getMonsterStatBlock,
   GOBLIN_BOSS,
@@ -24,9 +25,12 @@ import {
   SAHUAGIN_WARRIOR,
   SCOUT,
   statBlockAttacks,
+  statBlockAttackBattleProfile,
+  statBlockAbilityName,
   statBlockBattleBonusActionOptions,
   statBlockBattleReactionOptions,
   statBlockInitiativeScore,
+  statBlockLegendaryAction,
   statBlockMultiattack,
   statBlockRechargeMinRolls,
   statBlockToInitCreatureConfig,
@@ -109,6 +113,20 @@ describe("monster catalog", () => {
     ]);
   });
 
+  it("stores Aboleth as an SRD-backed authored stat block", () => {
+    const statBlock = getMonsterStatBlock("aboleth");
+
+    expect(statBlock.provenance).toEqual({
+      edition: "SRD 5.2.1",
+      document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+      section: "Aboleth",
+    });
+    expect(statBlock.name).toBe("Aboleth");
+    expect(statBlock.legendaryActionUses).toBe(3);
+    expect(statBlock.legendaryResistanceUses).toBe(3);
+    expect(statBlock.dailyAbilities).toEqual({ dominateMind: 2 });
+  });
+
   it("derives compatibility battle projections from authored sections", () => {
     expect(statBlockBattleBonusActionOptions(GOBLIN_MINION)).toEqual([
       "disengage",
@@ -136,6 +154,7 @@ describe("monster catalog", () => {
 
   it("stores goblin rider metadata on authored attacks without exposing new public IDs", () => {
     expect(MONSTER_STAT_BLOCK_IDS).toEqual([
+      "aboleth",
       "centaurTrooper",
       "goblinMinion",
       "goblinWarrior",
@@ -527,6 +546,23 @@ describe("monster catalog", () => {
     });
   });
 
+  it("can project an attack-shaped legendary action through the generic battle attack lane", () => {
+    expect(statBlockLegendaryAction(ABOLETH, "lash")).toMatchObject({
+      kind: "legendaryAction",
+      id: "lash",
+      cost: 1,
+      attackId: "tentacle",
+    });
+    expect(statBlockAttackBattleProfile(ABOLETH, "tentacle")).toMatchObject({
+      name: "Tentacle",
+      damageType: "bludgeoning",
+      isMelee: true,
+      damageDie: 6,
+      properties: new Set(["reach"]),
+    });
+    expect(statBlockAbilityName(ABOLETH, "dominateMind")).toBe("Dominate Mind");
+  });
+
   it("can project Pseudodragon through the same generic battle-init path", () => {
     const config = monsterCatalogInitCreatureConfig({
       id: CreatureId("pseudodragon-1"),
@@ -731,6 +767,70 @@ describe("monster catalog", () => {
       creatureSize: "large",
       rechargeAvailable: { tramplingCharge: false },
       rechargeMinRolls: { tramplingCharge: 5 },
+    });
+  });
+
+  it("accepts Aboleth through the generic statBlockId surface", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "aboleth-1",
+          kind: "Monster",
+          statBlockId: "aboleth",
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("aboleth-1"),
+      kind: "Monster",
+      monsterStatBlockId: "aboleth",
+      dailyUsesRemaining: { dominateMind: 2 },
+      legendaryActions: 3,
+      legendaryResistances: 3,
+    });
+  });
+
+  it("accepts generic named monster control commands keyed by monsterId and abilityId", () => {
+    expect(
+      Schema.decodeSync(ControlCommandSchema)({
+        scope: "battle",
+        type: "USE_LEGENDARY_ACTION",
+        monsterId: "aboleth-1",
+        abilityId: "lash",
+      }),
+    ).toMatchObject({
+      type: "USE_LEGENDARY_ACTION",
+      abilityId: "lash",
+    });
+
+    expect(
+      Schema.decodeSync(ControlCommandSchema)({
+        scope: "battle",
+        type: "USE_RECHARGE_ABILITY",
+        monsterId: "centaur-1",
+        abilityId: "tramplingCharge",
+      }),
+    ).toMatchObject({
+      type: "USE_RECHARGE_ABILITY",
+      abilityId: "tramplingCharge",
+    });
+
+    expect(
+      Schema.decodeSync(ControlCommandSchema)({
+        scope: "battle",
+        type: "USE_DAILY_ABILITY",
+        monsterId: "aboleth-1",
+        abilityId: "dominateMind",
+      }),
+    ).toMatchObject({
+      type: "USE_DAILY_ABILITY",
+      abilityId: "dominateMind",
     });
   });
 

@@ -53,8 +53,11 @@ import {
   legalWildResurgenceChargeLevels,
 } from "#/machine-guards.ts";
 import {
+  getMonsterStatBlockByStateId,
   MONSTER_STAT_BLOCK_IDS,
   monsterCatalogInitCreatureConfig,
+  statBlockAttackBattleProfile,
+  statBlockLegendaryAction,
 } from "#/monster-catalog.ts";
 import { MONSTER_BATTLE_BONUS_ACTION_OPTIONS } from "#/monster-types.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
@@ -337,6 +340,16 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_OFF_HAND_ATTACK";
+      readonly targetId: Hole<string>;
+      readonly knockOut: Hole<boolean>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_LEGENDARY_ATTACK";
+      readonly abilityId: string;
       readonly targetId: Hole<string>;
       readonly knockOut: Hole<boolean>;
       readonly cost: ResourceCost;
@@ -675,6 +688,14 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_LEGENDARY_ATTACK";
+      readonly abilityId: string;
+      readonly targetId: string;
+      readonly knockOut: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_ACTION_SURGE";
     }
   | {
@@ -853,6 +874,9 @@ export const BATTLE_CONTROL_COMMAND_TYPES = [
   "BATTLE_START_TURN",
   "BATTLE_END_TURN",
   "BATTLE_LEGENDARY_PASS",
+  "USE_LEGENDARY_ACTION",
+  "USE_RECHARGE_ABILITY",
+  "USE_DAILY_ABILITY",
 ] as const satisfies ReadonlyArray<BattleEvent["type"]>;
 export type BattleControlCommandType =
   (typeof BATTLE_CONTROL_COMMAND_TYPES)[number];
@@ -1187,6 +1211,14 @@ const BattleOffHandAttackResolvedActionSchema = Schema.Struct({
   knockOut: Schema.Boolean,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleLegendaryAttackResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_LEGENDARY_ATTACK"),
+  abilityId: Schema.String,
+  targetId: Schema.String,
+  knockOut: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleActionSurgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_ACTION_SURGE"),
@@ -1345,6 +1377,7 @@ const TriggerFireShieldBattleResolvedActionSchema = Schema.Struct({
 const BattleResolvedActionTokenSchema = Schema.Union(
   BattleAttackResolvedActionSchema,
   BattleOffHandAttackResolvedActionSchema,
+  BattleLegendaryAttackResolvedActionSchema,
   BattleActionSurgeResolvedActionSchema,
   BattleEnterRageResolvedActionSchema,
   BattleDeclareRecklessResolvedActionSchema,
@@ -1553,6 +1586,23 @@ const BattleLegendaryPassControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_LEGENDARY_PASS"),
 });
+const BattleMonsterAbilityControlFields = {
+  scope: Schema.Literal("battle"),
+  monsterId: Schema.String,
+  abilityId: Schema.String,
+} as const;
+const BattleUseLegendaryActionControlSchema = Schema.Struct({
+  ...BattleMonsterAbilityControlFields,
+  type: Schema.Literal("USE_LEGENDARY_ACTION"),
+});
+const BattleUseRechargeAbilityControlSchema = Schema.Struct({
+  ...BattleMonsterAbilityControlFields,
+  type: Schema.Literal("USE_RECHARGE_ABILITY"),
+});
+const BattleUseDailyAbilityControlSchema = Schema.Struct({
+  ...BattleMonsterAbilityControlFields,
+  type: Schema.Literal("USE_DAILY_ABILITY"),
+});
 
 export const ControlCommandSchema = Schema.Union(
   CreatureEndTurnControlSchema,
@@ -1563,6 +1613,9 @@ export const ControlCommandSchema = Schema.Union(
   BattleStartTurnControlSchema,
   BattleEndTurnControlSchema,
   BattleLegendaryPassControlSchema,
+  BattleUseLegendaryActionControlSchema,
+  BattleUseRechargeAbilityControlSchema,
+  BattleUseDailyAbilityControlSchema,
 );
 const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
   END_TURN: CreatureEndTurnControlSchema,
@@ -1573,6 +1626,9 @@ const CONTROL_COMMAND_SCHEMA_BY_TYPE = {
   BATTLE_START_TURN: BattleStartTurnControlSchema,
   BATTLE_END_TURN: BattleEndTurnControlSchema,
   BATTLE_LEGENDARY_PASS: BattleLegendaryPassControlSchema,
+  USE_LEGENDARY_ACTION: BattleUseLegendaryActionControlSchema,
+  USE_RECHARGE_ABILITY: BattleUseRechargeAbilityControlSchema,
+  USE_DAILY_ABILITY: BattleUseDailyAbilityControlSchema,
 } as const;
 export type ControlCommand = Schema.Schema.Type<typeof ControlCommandSchema>;
 export type BattleInitControlCreatureConfig = Schema.Schema.Type<
@@ -2372,7 +2428,10 @@ export type BattleResolutionRequest =
       readonly token: Extract<
         BattleResolvedActionToken,
         {
-          readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK";
+          readonly type:
+            | "BATTLE_ATTACK"
+            | "BATTLE_OFF_HAND_ATTACK"
+            | "BATTLE_LEGENDARY_ATTACK";
         }
       >;
       readonly outcome: string;
@@ -3930,6 +3989,60 @@ export function getAvailableBattleActions(
     return activeReadyTokens;
   }
 
+  if (context.laCtx != null) {
+    const selected = context.selectedMonsterCommand;
+    if (selected == null || selected.type !== "USE_LEGENDARY_ACTION") return [];
+    const actor = context.creatures.get(selected.monsterId);
+    const statBlock = getMonsterStatBlockByStateId(actor?.monsterStatBlockId);
+    const legendary =
+      statBlock == null
+        ? null
+        : statBlockLegendaryAction(statBlock, selected.abilityId);
+    if (
+      actor == null ||
+      statBlock == null ||
+      actor.dead ||
+      isIncapacitated(actor) ||
+      legendary == null ||
+      legendary.kind !== "legendaryAction" ||
+      legendary.attackId == null ||
+      actor.legendaryActionsRemaining < legendary.cost
+    ) {
+      return [];
+    }
+    const attackProfile = statBlockAttackBattleProfile(
+      statBlock,
+      legendary.attackId,
+    );
+    const targetOptions = [...context.creatures.entries()]
+      .filter(
+        ([targetId, target]) => targetId !== selected.monsterId && !target.dead,
+      )
+      .map(([targetId]) => targetId)
+      .sort();
+    if (attackProfile == null || targetOptions.length === 0) return [];
+    return battleAttackTargetGroups({
+      context,
+      attackerId: selected.monsterId,
+      targetOptions,
+      weapon: attackProfile,
+    }).map((targetGroup) =>
+      battleToken<
+        Extract<BattleActionToken, { readonly type: "BATTLE_LEGENDARY_ATTACK" }>
+      >({
+        actorId: selected.monsterId,
+        type: "BATTLE_LEGENDARY_ATTACK",
+        abilityId: selected.abilityId,
+        targetId: { options: [...targetGroup.targetOptions] },
+        knockOut: { options: [...targetGroup.knockOutOptions] },
+        cost: FREE_COST,
+        outcome: {
+          summary: `Resolve ${legendary.name} through the battle attack boundary using explicit roll, AC, visibility, adjacency, and reaction-candidate facts`,
+        },
+      }),
+    );
+  }
+
   const awaitCtx = context.awaitCtx;
   if (awaitCtx == null) {
     const activeCreatureId = context.initiative[context.turnIndex];
@@ -4353,9 +4466,17 @@ function availableBattleTokenForResolved(
     }
     if (
       (candidate.type === "BATTLE_ATTACK" ||
-        candidate.type === "BATTLE_OFF_HAND_ATTACK") &&
+        candidate.type === "BATTLE_OFF_HAND_ATTACK" ||
+        candidate.type === "BATTLE_LEGENDARY_ATTACK") &&
       candidate.type === token.type
     ) {
+      if (
+        candidate.type === "BATTLE_LEGENDARY_ATTACK" &&
+        token.type === "BATTLE_LEGENDARY_ATTACK" &&
+        candidate.abilityId !== token.abilityId
+      ) {
+        return false;
+      }
       if (!candidate.targetId.options.includes(token.targetId)) return false;
       return candidate.knockOut.options.includes(token.knockOut);
     }
@@ -4397,7 +4518,8 @@ export function resolveBattleAction(
   }
   if (
     token.type === "BATTLE_ATTACK" ||
-    token.type === "BATTLE_OFF_HAND_ATTACK"
+    token.type === "BATTLE_OFF_HAND_ATTACK" ||
+    token.type === "BATTLE_LEGENDARY_ATTACK"
   ) {
     return {
       token,
@@ -4781,7 +4903,8 @@ export function finalizeBattleResolution(
       }
       if (
         request.token.type !== "BATTLE_ATTACK" &&
-        request.token.type !== "BATTLE_OFF_HAND_ATTACK"
+        request.token.type !== "BATTLE_OFF_HAND_ATTACK" &&
+        request.token.type !== "BATTLE_LEGENDARY_ATTACK"
       ) {
         return {
           ok: false,
@@ -4804,7 +4927,32 @@ export function finalizeBattleResolution(
       const weapon =
         request.token.type === "BATTLE_ATTACK"
           ? (actor.mainHandWeapon ?? UNARMED_STRIKE_PROFILE)
-          : actor.offHandWeapon;
+          : request.token.type === "BATTLE_OFF_HAND_ATTACK"
+            ? actor.offHandWeapon
+            : (() => {
+                const statBlock = getMonsterStatBlockByStateId(
+                  actor.monsterStatBlockId,
+                );
+                const legendary =
+                  statBlock == null
+                    ? null
+                    : statBlockLegendaryAction(
+                        statBlock,
+                        request.token.abilityId,
+                      );
+                if (
+                  statBlock == null ||
+                  legendary == null ||
+                  legendary.kind !== "legendaryAction" ||
+                  legendary.attackId == null
+                ) {
+                  return null;
+                }
+                return statBlockAttackBattleProfile(
+                  statBlock,
+                  legendary.attackId,
+                );
+              })();
       if (weapon == null) {
         return {
           ok: false,
@@ -4909,11 +5057,41 @@ export function finalizeBattleResolution(
                 weaponProperties: weapon.properties,
                 isFinesse: weapon.properties.has("finesse"),
               }
-            : {
-                type: "BATTLE_OFF_HAND_ATTACK",
-                ...commonEvent,
-                dmg: weaponDamage,
-              },
+            : request.token.type === "BATTLE_OFF_HAND_ATTACK"
+              ? {
+                  type: "BATTLE_OFF_HAND_ATTACK",
+                  ...commonEvent,
+                  dmg: weaponDamage,
+                }
+              : {
+                  type: "BATTLE_LEGENDARY_ATTACK",
+                  monsterId: CreatureId(request.token.actorId),
+                  abilityId: request.token.abilityId,
+                  laTarget: CreatureId(request.token.targetId),
+                  laAtkRoll: attackRoll,
+                  laDmg: weaponDamage,
+                  laDt: weapon.damageType,
+                  damageQualifiers: weapon.damageQualifiers ?? new Set(),
+                  laCrit: attackRoll >= actor.critRange,
+                  laTgtAc: armorClass(targetAc),
+                  knockOut: request.token.knockOut,
+                  isMelee,
+                  weaponProperties: weapon.properties,
+                  isFinesse: weapon.properties.has("finesse"),
+                  attackerWithin5ft,
+                  ...(attackerWithin60ft !== undefined
+                    ? { attackerWithin60ft }
+                    : {}),
+                  hostileWithin5ft,
+                  targetCanSeeAttacker,
+                  attackerCanSeeTarget,
+                  frightSourceInLOS,
+                  hasAllyAdjacentToTarget,
+                  saDmg: 0,
+                  hitReactionCandidates: new Set(
+                    hitReactionCandidates.map((id) => CreatureId(id)),
+                  ),
+                },
         outcome: request.outcome,
       };
     }),

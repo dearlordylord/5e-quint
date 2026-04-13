@@ -1,6 +1,11 @@
 import type { Option } from "effect";
 import type { ReadiedSpellParams } from "#/battle-ready-types.ts";
 import type {
+  LAWindowCtx,
+  MonsterCommandSelection,
+  ReadyWindowCtx,
+} from "#/battle-machine-phase-types.ts";
+import type {
   DmgReactionKind,
   HitReactionKind,
   PendingInterrupt,
@@ -158,6 +163,7 @@ export interface BattleCreatureState extends Pick<
   readonly rightHandUse: HandUse;
   readonly battleBonusActionOptions: ReadonlyArray<MonsterBattleBonusActionOption>;
   readonly battleReactionOptions: ReadonlyArray<MonsterBattleReactionOption>;
+  readonly monsterStatBlockId?: string;
 }
 
 export interface AttackHitCtx {
@@ -329,15 +335,12 @@ export interface MovementCtx {
   readonly processed: ReadonlySet<CreatureId>;
 }
 
-export interface LAWindowCtx {
-  readonly eligibleMonsters: ReadonlySet<CreatureId>;
-  readonly endingTurnIndex: number;
-}
-
-export interface ReadyWindowCtx {
-  readonly eligibleCreatures: ReadonlySet<CreatureId>;
-  readonly endingTurnIndex: number;
-}
+export type { InitCreatureConfig } from "#/battle-init-creature-config.ts";
+export type {
+  LAWindowCtx,
+  MonsterCommandSelection,
+  ReadyWindowCtx,
+} from "#/battle-machine-phase-types.ts";
 
 export interface AwaitCtx {
   readonly interrupt: PendingInterrupt;
@@ -362,6 +365,7 @@ export interface BattleContext {
   readonly turnIndex: number;
   readonly round: number;
   readonly turnStarted: boolean;
+  readonly selectedMonsterCommand: MonsterCommandSelection | null;
   readonly awaitCtx: AwaitCtx | null;
   readonly aoeCtx: AoESpellCtx | null;
   readonly movementCtx: MovementCtx | null;
@@ -374,8 +378,14 @@ export interface BattleContext {
 /** All phase fields nulled — machine is in activeTurn. */
 export const PHASE_ACTIVE: Pick<
   BattleContext,
-  "awaitCtx" | "aoeCtx" | "movementCtx" | "laCtx" | "readyCtx"
+  | "selectedMonsterCommand"
+  | "awaitCtx"
+  | "aoeCtx"
+  | "movementCtx"
+  | "laCtx"
+  | "readyCtx"
 > = {
+  selectedMonsterCommand: null,
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
@@ -399,79 +409,4 @@ export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
 }
 export function phaseAwaitingReady(ready: ReadyWindowCtx): PhaseFields {
   return { ...PHASE_ACTIVE, readyCtx: ready };
-}
-
-/** Creature config for BATTLE_INIT — determines initial state per combatant. */
-export interface InitCreatureConfig {
-  readonly id: CreatureId;
-  readonly maxHp: number;
-  readonly maxHpReduction?: number;
-  readonly kind: CreatureKind;
-  readonly creatureSize?: Size;
-  readonly baseArmorClass?: ArmorClass;
-  readonly battleSide?: string;
-  readonly battlePosition?: BattlePosition;
-  readonly caster?: boolean;
-  readonly rogueLevel?: number;
-  readonly monkLevel?: number;
-  readonly strMod?: number;
-  readonly dexMod?: number;
-  readonly legendaryActions?: number;
-  readonly legendaryResistances?: number;
-  readonly rechargeAvailable?: Readonly<Record<string, boolean>>;
-  readonly rechargeMinRolls?: Readonly<Record<string, number>>;
-  readonly preparedSpells?: ReadonlySet<string>;
-  readonly readyableSpellPayloads?: ReadonlyMap<
-    string,
-    BattleReadyableSpellPayload
-  >;
-  readonly slotsMax?: ReadonlyArray<number>;
-  readonly slotsCurrent?: ReadonlyArray<number>;
-  readonly pactSlotsMax?: number;
-  readonly pactSlotsCurrent?: number;
-  readonly pactSlotLevel?: number;
-  readonly hasEvasion?: boolean;
-  readonly saveMiscBonus?: number;
-  readonly critRange?: number;
-  readonly isWearingArmor?: boolean;
-  readonly defenseArmorClassBonus?: number;
-  readonly greatWeaponFightingDamageFloor?: boolean;
-  readonly hiddenDiscoveryDc?: number;
-  readonly rangedWeaponAttackRollBonus?: number;
-  readonly fighterLevel?: number;
-  readonly barbarianLevel?: number;
-  readonly meleeDamageBonus?: number;
-  readonly sneakAttackDice?: number;
-  readonly bardLevel?: number;
-  readonly bardicInspirationCharges?: number;
-  readonly parryAcBonus?: number;
-  readonly lightPropertyExtraAttackAddsAbilityModifier?: boolean;
-  readonly invisible?: boolean;
-  readonly prone?: boolean;
-  readonly activeEffects?: ReadonlyArray<ActiveEffect>;
-  /** Walk speed (PC: 30, Monster: from stat block). Defaults to 30. */
-  readonly baseWalkSpeed?: number;
-  /** Pre-resolved d20 initiative roll (1-20). Defaults to 10 (no roll). */
-  readonly initiativeRoll?: number;
-  /** Second d20 for Disadvantage. Required when surprised=true; defaults to initiativeRoll (no effect). */
-  readonly initiativeRollB?: number;
-  /** SRD 5.2.1: surprised combatant has Disadvantage on Initiative roll. Defaults to false. */
-  readonly surprised?: boolean;
-  /**
-   * Primary battle attack profile.
-   *
-   * PCs should project this from owned equipment/loadout data.
-   * Monsters may project this from a named stat-block attack when the stat
-   * block owns the combat behavior; that projection is not a claim that the
-   * monster is using generic `Equipment` rules for the attack.
-   */
-  readonly mainHandWeapon?: BattleWeaponProfile;
-  readonly offHandWeapon?: BattleWeaponProfile;
-  readonly battleBonusActionOptions?: ReadonlyArray<MonsterBattleBonusActionOption>;
-  readonly battleReactionOptions?: ReadonlyArray<MonsterBattleReactionOption>;
-  readonly hasShieldEquipped?: boolean;
-  readonly mainHandUsesTwoHands?: boolean;
-  readonly qualifiedPhysicalResistances?: ReadonlyArray<QualifiedPhysicalBypass>;
-  readonly qualifiedPhysicalVulnerabilities?: ReadonlyArray<QualifiedPhysicalBypass>;
-  readonly qualifiedPhysicalImmunities?: ReadonlyArray<QualifiedPhysicalBypass>;
 }

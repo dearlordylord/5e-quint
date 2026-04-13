@@ -8,6 +8,7 @@ import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import {
+  ABOLETH,
   CENTAUR_TROOPER,
   GOBLIN_WARRIOR,
   statBlockToInitCreatureConfig,
@@ -505,13 +506,12 @@ function initLegendaryBattle() {
     type: "BATTLE_INIT",
     creatures: [
       { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
-      {
+      statBlockToInitCreatureConfig({
         id: CreatureId("C"),
-        maxHp: 30,
-        kind: "Monster",
-        legendaryActions: 3,
+        statBlock: ABOLETH,
+        statBlockId: "aboleth",
         initiativeRoll: 10,
-      },
+      }),
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
     ],
   });
@@ -1727,14 +1727,20 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
 
     endTurn(actor);
+    send(actor, {
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: CreatureId("C"),
+      abilityId: "lash",
+    });
 
     send(actor, {
       type: "BATTLE_LEGENDARY_ATTACK",
       monsterId: CreatureId("C"),
+      abilityId: "lash",
       laTarget: CreatureId("A"),
       laAtkRoll: 15,
-      laDmg: 7,
-      laDt: "slashing",
+      laDmg: 12,
+      laDt: "bludgeoning",
       laCrit: false,
       laTgtAc: armorClass(10),
       knockOut: false,
@@ -1751,7 +1757,7 @@ describe("battle rules scenario regressions", () => {
     });
     resolveAttackWindows(actor);
 
-    expect(creature(actor, "A").hp).toBe(13);
+    expect(creature(actor, "A").hp).toBe(8);
     expect(creature(actor, "C").legendaryActionsRemaining).toBe(2);
     expect(ctx(actor).laCtx?.eligibleMonsters).toEqual(
       new Set([CreatureId("C")]),
@@ -1761,6 +1767,75 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).laCtx).toBeNull();
     expect(ctx(actor).turnIndex).toBe(1);
+  });
+
+  it("battle control accepts non-attack legendary, recharge, and daily ability selection without spending resources", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: ABOLETH,
+          statBlockId: "aboleth",
+          initiativeRoll: 20,
+        }),
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("C"),
+          statBlock: CENTAUR_TROOPER,
+          statBlockId: "centaurTrooper",
+          initiativeRoll: 10,
+        }),
+      ],
+    });
+
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_DAILY_ABILITY",
+      monsterId: CreatureId("A"),
+      abilityId: "dominateMind",
+    });
+    expect(ctx(actor).selectedMonsterCommand).toEqual({
+      type: "USE_DAILY_ABILITY",
+      monsterId: CreatureId("A"),
+      abilityId: "dominateMind",
+    });
+    expect(creature(actor, "A").dailyUsesRemaining).toEqual({
+      dominateMind: 2,
+    });
+
+    endTurn(actor);
+    startTurn(actor);
+    endTurn(actor);
+    send(actor, {
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: CreatureId("A"),
+      abilityId: "psychicDrain",
+    });
+    expect(ctx(actor).selectedMonsterCommand).toEqual({
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: CreatureId("A"),
+      abilityId: "psychicDrain",
+    });
+    expect(creature(actor, "A").legendaryActionsRemaining).toBe(3);
+
+    send(actor, { type: "BATTLE_LEGENDARY_PASS" });
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    expect(ctx(actor).selectedMonsterCommand).toEqual({
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: true,
+    });
   });
 
   it("natural_20: Legendary Resistance turns a failed save into a success and spends one use", () => {

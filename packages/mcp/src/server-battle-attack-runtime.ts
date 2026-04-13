@@ -36,7 +36,12 @@ const BattleGrappleRuntimeOverrideSchema = Schema.Struct({
 function battleAttackShapeError(
   token: Extract<
     BattleResolvedActionToken,
-    { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+    {
+      readonly type:
+        | "BATTLE_ATTACK"
+        | "BATTLE_OFF_HAND_ATTACK"
+        | "BATTLE_LEGENDARY_ATTACK";
+    }
   >,
 ) {
   return {
@@ -48,7 +53,12 @@ function battleAttackShapeError(
 function missingRuntimeInputsError(
   token: Extract<
     BattleResolvedActionToken,
-    | { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+    | {
+        readonly type:
+          | "BATTLE_ATTACK"
+          | "BATTLE_OFF_HAND_ATTACK"
+          | "BATTLE_LEGENDARY_ATTACK";
+      }
     | { readonly type: "BATTLE_GRAPPLE" }
   >,
   runtimeName: "battleAttack" | "battleGrapple",
@@ -64,7 +74,12 @@ export function decodeBattleAttackRuntimeInputs(
   context: BattleContext,
   token: Extract<
     BattleResolvedActionToken,
-    { readonly type: "BATTLE_ATTACK" | "BATTLE_OFF_HAND_ATTACK" }
+    {
+      readonly type:
+        | "BATTLE_ATTACK"
+        | "BATTLE_OFF_HAND_ATTACK"
+        | "BATTLE_LEGENDARY_ATTACK";
+    }
   >,
 ):
   | BattleResolutionRuntimeInputs

@@ -68,6 +68,10 @@ import {
   targetTwoSizesSmaller,
 } from "#/machine-combat.ts";
 import {
+  getMonsterStatBlockByStateId,
+  statBlockLegendaryAction,
+} from "#/monster-catalog.ts";
+import {
   resourceCount,
   spellId as mkSpellId,
   type SpellName,
@@ -144,6 +148,9 @@ export function buildCreatureState(
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   return {
     ...base,
+    ...(cfg.monsterStatBlockId != null
+      ? { monsterStatBlockId: cfg.monsterStatBlockId }
+      : {}),
     ...(cfg.creatureSize != null ? { creatureSize: cfg.creatureSize } : {}),
     ...(cfg.baseArmorClass != null
       ? { baseArmorClass: cfg.baseArmorClass }
@@ -179,6 +186,9 @@ export function buildCreatureState(
       : {}),
     ...(cfg.rechargeMinRolls != null
       ? { rechargeMinRolls: cfg.rechargeMinRolls }
+      : {}),
+    ...(cfg.dailyUsesRemaining != null
+      ? { dailyUsesRemaining: cfg.dailyUsesRemaining }
       : {}),
     preparedSpells,
     slotsMax,
@@ -635,6 +645,91 @@ export function battleLegendaryPass({
   );
 }
 
+export function battleUseLegendaryAction({
+  context: c,
+  event: e,
+}: BattleActionArgs<"USE_LEGENDARY_ACTION">): Partial<BattleContext> {
+  const laCtx = c.laCtx;
+  if (laCtx == null || !laCtx.eligibleMonsters.has(e.monsterId)) return {};
+  const monster = c.creatures.get(e.monsterId);
+  const statBlock = getMonsterStatBlockByStateId(monster?.monsterStatBlockId);
+  const legendary =
+    statBlock == null ? null : statBlockLegendaryAction(statBlock, e.abilityId);
+  if (
+    monster == null ||
+    monster.creatureKind !== "Monster" ||
+    monster.dead ||
+    isIncapacitated(monster) ||
+    legendary == null ||
+    legendary.kind !== "legendaryAction" ||
+    monster.legendaryActionsRemaining < legendary.cost
+  ) {
+    return {};
+  }
+  return {
+    selectedMonsterCommand: {
+      type: "USE_LEGENDARY_ACTION",
+      monsterId: e.monsterId,
+      abilityId: e.abilityId,
+    },
+  };
+}
+
+export function battleUseRechargeAbility({
+  context: c,
+  event: e,
+}: BattleActionArgs<"USE_RECHARGE_ABILITY">): Partial<BattleContext> {
+  if (!c.turnStarted || activeId(c) !== e.monsterId) return {};
+  const monster = c.creatures.get(e.monsterId);
+  const statBlock = getMonsterStatBlockByStateId(monster?.monsterStatBlockId);
+  if (
+    monster == null ||
+    monster.creatureKind !== "Monster" ||
+    monster.dead ||
+    isIncapacitated(monster) ||
+    statBlock == null ||
+    statBlock.rechargeAbilities[e.abilityId] == null ||
+    !monster.rechargeAvailable[e.abilityId]
+  ) {
+    return {};
+  }
+  return {
+    selectedMonsterCommand: {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: e.monsterId,
+      abilityId: e.abilityId,
+    },
+  };
+}
+
+export function battleUseDailyAbility({
+  context: c,
+  event: e,
+}: BattleActionArgs<"USE_DAILY_ABILITY">): Partial<BattleContext> {
+  if (!c.turnStarted || activeId(c) !== e.monsterId) return {};
+  const monster = c.creatures.get(e.monsterId);
+  const statBlock = getMonsterStatBlockByStateId(monster?.monsterStatBlockId);
+  const remaining = monster?.dailyUsesRemaining[e.abilityId] ?? 0;
+  if (
+    monster == null ||
+    monster.creatureKind !== "Monster" ||
+    monster.dead ||
+    isIncapacitated(monster) ||
+    statBlock == null ||
+    statBlock.dailyAbilities[e.abilityId] == null ||
+    remaining <= 0
+  ) {
+    return {};
+  }
+  return {
+    selectedMonsterCommand: {
+      type: "USE_DAILY_ABILITY",
+      monsterId: e.monsterId,
+      abilityId: e.abilityId,
+    },
+  };
+}
+
 export function battleReadyPass({
   context: c,
 }: BattleActionArgs<"BATTLE_READY_PASS">): Partial<BattleContext> {
@@ -715,10 +810,30 @@ export function battleLegendaryAttack({
   context: c,
   event: e,
 }: BattleActionArgs<"BATTLE_LEGENDARY_ATTACK">): Partial<BattleContext> {
-  const m = c.creatures.get(e.monsterId)!;
+  const m = c.creatures.get(e.monsterId);
+  const selected = c.selectedMonsterCommand;
+  const statBlock = getMonsterStatBlockByStateId(m?.monsterStatBlockId);
+  const legendary =
+    statBlock == null ? null : statBlockLegendaryAction(statBlock, e.abilityId);
+  if (
+    m == null ||
+    c.laCtx == null ||
+    selected == null ||
+    selected.type !== "USE_LEGENDARY_ACTION" ||
+    selected.monsterId !== e.monsterId ||
+    selected.abilityId !== e.abilityId ||
+    legendary == null ||
+    legendary.kind !== "legendaryAction" ||
+    legendary.attackId == null ||
+    m.legendaryActionsRemaining < legendary.cost
+  ) {
+    return {};
+  }
   const cs = setCreature(c.creatures, e.monsterId, {
     ...m,
-    legendaryActionsRemaining: resourceCount(m.legendaryActionsRemaining - 1),
+    legendaryActionsRemaining: resourceCount(
+      m.legendaryActionsRemaining - legendary.cost,
+    ),
   });
   const laReturn = { tag: "ADRAwaitingLegendaryAction" as const, la: c.laCtx! };
   const helpIdx = findHelpAdvantage(c.helpTargets, e.monsterId, e.laTarget);
@@ -765,8 +880,12 @@ export function battleLegendaryAttack({
     e.hitReactionCandidates,
   );
   return helpIdx >= 0
-    ? { ...result, helpTargets: consumeHelp(c.helpTargets, helpIdx) }
-    : result;
+    ? {
+        ...result,
+        selectedMonsterCommand: null,
+        helpTargets: consumeHelp(c.helpTargets, helpIdx),
+      }
+    : { ...result, selectedMonsterCommand: null };
 }
 
 export function battleHeal({

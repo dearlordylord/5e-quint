@@ -1143,6 +1143,7 @@ function createBattleMachineDriver() {
         send({
           type: "BATTLE_LEGENDARY_ATTACK",
           monsterId: pc(picks, "monsterId", ""),
+          abilityId: ps(picks, "abilityId", "lash"),
           laTarget: pc(picks, "laTarget", ""),
           laAtkRoll: p(picks, "laAtkRoll", 10),
           laDmg: p(picks, "laDmg", 10),

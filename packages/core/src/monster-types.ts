@@ -170,6 +170,7 @@ export interface MonsterBattleReactionAbility extends MonsterAbilityBase {
 export interface MonsterLegendaryActionAbility extends MonsterAbilityBase {
   readonly kind: "legendaryAction";
   readonly cost: number;
+  readonly attackId?: string;
 }
 
 export interface MonsterSpellReference {

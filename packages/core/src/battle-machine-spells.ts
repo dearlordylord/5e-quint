@@ -103,6 +103,7 @@ export function resolveSpellEntry(
       const r = resolveSave(cs1, pc.save, ADR_ACTIVE_TURN);
       return {
         creatures: r.creatures,
+        selectedMonsterCommand: r.selectedMonsterCommand,
         awaitCtx: r.awaitCtx,
         aoeCtx: r.aoeCtx,
         movementCtx: r.movementCtx,

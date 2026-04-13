@@ -152,6 +152,27 @@ function buildBattleControlEvent(
     Match.when({ type: "BATTLE_LEGENDARY_PASS" }, () => ({
       type: "BATTLE_LEGENDARY_PASS" as const,
     })),
+    Match.when(
+      { type: "USE_LEGENDARY_ACTION" },
+      ({ monsterId, abilityId }) => ({
+        type: "USE_LEGENDARY_ACTION" as const,
+        monsterId: CreatureId(monsterId),
+        abilityId,
+      }),
+    ),
+    Match.when(
+      { type: "USE_RECHARGE_ABILITY" },
+      ({ monsterId, abilityId }) => ({
+        type: "USE_RECHARGE_ABILITY" as const,
+        monsterId: CreatureId(monsterId),
+        abilityId,
+      }),
+    ),
+    Match.when({ type: "USE_DAILY_ABILITY" }, ({ monsterId, abilityId }) => ({
+      type: "USE_DAILY_ABILITY" as const,
+      monsterId: CreatureId(monsterId),
+      abilityId,
+    })),
     Match.exhaustive,
   );
 }
