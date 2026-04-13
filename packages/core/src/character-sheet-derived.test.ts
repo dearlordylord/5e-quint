@@ -8,6 +8,7 @@ import {
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
 import type { ClassName } from "#/features/class-tables.ts";
+import { spellId } from "#/types.ts";
 
 describe("character-sheet-derived", () => {
   const alertFeat = {
@@ -321,11 +322,12 @@ describe("character-sheet-derived", () => {
     expect(battleProjection.slotsMax).toEqual(derived.spellcasting.slotsMax);
     expect(battleProjection.mainHandWeapon?.name).toBe("Quarterstaff");
     expect(
-      battleProjection.readyableSpellPayloads!.get("fireball")?.release.saveDC,
+      battleProjection.readyableSpellPayloads!.get(spellId("fireball"))?.release
+        .saveDC,
     ).toBe(15);
     expect(
-      battleProjection.readyableSpellPayloads!.get("hold_person")?.release
-        .saveDC,
+      battleProjection.readyableSpellPayloads!.get(spellId("hold_person"))
+        ?.release.saveDC,
     ).toBe(15);
   });
 

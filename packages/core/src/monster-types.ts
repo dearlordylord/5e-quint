@@ -12,6 +12,7 @@ import type {
   DamageType,
   ResourceCount,
   Size,
+  SpellId,
   WeaponProperty,
 } from "./types";
 
@@ -241,9 +242,9 @@ export interface MonsterLegendaryActionAbility extends MonsterAbilityBase {
 }
 
 export interface MonsterSpellReference {
-  readonly name: string;
+  readonly spellId: SpellId;
   readonly usage: string;
-  readonly level?: number;
+  readonly castLevel?: number;
   readonly notes?: string;
 }
 

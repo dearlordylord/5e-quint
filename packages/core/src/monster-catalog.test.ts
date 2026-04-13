@@ -38,7 +38,7 @@ import {
   statBlockRechargeMinRolls,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
-import { CreatureId, abilityModifier } from "#/types.ts";
+import { CreatureId, abilityModifier, spellId } from "#/types.ts";
 
 describe("monster catalog", () => {
   it("documents the core-owned SRD provenance rules", () => {
@@ -522,15 +522,19 @@ describe("monster catalog", () => {
       spellcastingAbility: "int",
       saveDc: 14,
       spells: [
-        { name: "Detect Magic", usage: "At Will" },
-        { name: "Light", usage: "At Will" },
-        { name: "Mage Armor", usage: "At Will", notes: "included in AC" },
-        { name: "Mage Hand", usage: "At Will" },
-        { name: "Prestidigitation", usage: "At Will" },
-        { name: "Fireball", usage: "2/Day Each", level: 4 },
-        { name: "Invisibility", usage: "2/Day Each" },
-        { name: "Cone of Cold", usage: "1/Day Each" },
-        { name: "Fly", usage: "1/Day Each" },
+        { spellId: spellId("detect_magic"), usage: "At Will" },
+        { spellId: spellId("light"), usage: "At Will" },
+        {
+          spellId: spellId("mage_armor"),
+          usage: "At Will",
+          notes: "included in AC",
+        },
+        { spellId: spellId("mage_hand"), usage: "At Will" },
+        { spellId: spellId("prestidigitation"), usage: "At Will" },
+        { spellId: spellId("fireball"), usage: "2/Day Each", castLevel: 4 },
+        { spellId: spellId("invisibility"), usage: "2/Day Each" },
+        { spellId: spellId("cone_of_cold"), usage: "1/Day Each" },
+        { spellId: spellId("fly"), usage: "1/Day Each" },
       ],
     });
     expect(PRIEST.bonusActions).toContainEqual({
@@ -540,10 +544,10 @@ describe("monster catalog", () => {
       text: "The priest casts *Bless*, *Dispel Magic*, *Healing Word*, or *Lesser Restoration*, using the same spellcasting ability as Spellcasting.",
       spellcastingAbility: "wis",
       spells: [
-        { name: "Bless", usage: "3/Day" },
-        { name: "Dispel Magic", usage: "3/Day" },
-        { name: "Healing Word", usage: "3/Day" },
-        { name: "Lesser Restoration", usage: "3/Day" },
+        { spellId: spellId("bless"), usage: "3/Day" },
+        { spellId: spellId("dispel_magic"), usage: "3/Day" },
+        { spellId: spellId("healing_word"), usage: "3/Day" },
+        { spellId: spellId("lesser_restoration"), usage: "3/Day" },
       ],
     });
   });

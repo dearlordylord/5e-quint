@@ -61,6 +61,7 @@ import {
   battleReadyableSpellPayloadsFromPreparedSpells,
   getBattleReadyableSpellPayloadForSlots,
 } from "#/features/spell-available-actions.ts";
+import { getSpellRecordStrict } from "#/features/spell-registry.ts";
 import {
   aggregateAttackMods,
   hasAttackDisadvantageSource,
@@ -74,6 +75,7 @@ import {
 import {
   resourceCount,
   spellId as mkSpellId,
+  type SpellId,
   type SpellName,
 } from "#/types.ts";
 
@@ -92,6 +94,14 @@ function readyEligible(
       result.add(id);
   }
   return result;
+}
+
+function canonicalPreparedSpellIds(
+  spellRefs: ReadonlySet<string>,
+): ReadonlySet<SpellId> {
+  return new Set(
+    [...spellRefs].map((spellRef) => getSpellRecordStrict(spellRef).id),
+  );
 }
 
 /** Check for ready-eligible creatures, enter ready window or advance turn. */
@@ -143,7 +153,10 @@ export function buildCreatureState(
     hasShieldEquipped: cfg.hasShieldEquipped ?? false,
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
-  const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
+  const preparedSpells =
+    cfg.preparedSpells == null
+      ? base.preparedSpells
+      : canonicalPreparedSpellIds(cfg.preparedSpells);
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   return {
@@ -1251,7 +1264,9 @@ export function battleReadySpell({
   )
     return {};
   if (ac.preparedSpells.size === 0) return {};
-  const readyableDefinition = ac.readyableSpellPayloads.get(e.spellName);
+  const readyableDefinition = ac.readyableSpellPayloads.get(
+    mkSpellId(e.spellName),
+  );
   const readyablePayload =
     readyableDefinition == null
       ? null

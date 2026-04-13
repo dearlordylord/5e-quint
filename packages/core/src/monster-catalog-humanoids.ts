@@ -5,7 +5,7 @@ import {
   srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
-import { abilityModifier, armorClass } from "#/types.ts";
+import { abilityModifier, armorClass, spellId } from "#/types.ts";
 
 const H_TO_L_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-H-L.md";
 const M_TO_O_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-M-O.md";
@@ -248,15 +248,19 @@ export const MAGE = {
       spellcastingAbility: "int",
       saveDc: 14,
       spells: [
-        { name: "Detect Magic", usage: "At Will" },
-        { name: "Light", usage: "At Will" },
-        { name: "Mage Armor", usage: "At Will", notes: "included in AC" },
-        { name: "Mage Hand", usage: "At Will" },
-        { name: "Prestidigitation", usage: "At Will" },
-        { name: "Fireball", usage: "2/Day Each", level: 4 },
-        { name: "Invisibility", usage: "2/Day Each" },
-        { name: "Cone of Cold", usage: "1/Day Each" },
-        { name: "Fly", usage: "1/Day Each" },
+        { spellId: spellId("detect_magic"), usage: "At Will" },
+        { spellId: spellId("light"), usage: "At Will" },
+        {
+          spellId: spellId("mage_armor"),
+          usage: "At Will",
+          notes: "included in AC",
+        },
+        { spellId: spellId("mage_hand"), usage: "At Will" },
+        { spellId: spellId("prestidigitation"), usage: "At Will" },
+        { spellId: spellId("fireball"), usage: "2/Day Each", castLevel: 4 },
+        { spellId: spellId("invisibility"), usage: "2/Day Each" },
+        { spellId: spellId("cone_of_cold"), usage: "1/Day Each" },
+        { spellId: spellId("fly"), usage: "1/Day Each" },
       ],
     },
   ],
@@ -267,7 +271,7 @@ export const MAGE = {
       name: "Misty Step",
       text: "The mage casts *Misty Step*, using the same spellcasting ability as Spellcasting.",
       spellcastingAbility: "int",
-      spells: [{ name: "Misty Step", usage: "3/Day" }],
+      spells: [{ spellId: spellId("misty_step"), usage: "3/Day" }],
     },
   ],
   reactions: [
@@ -278,8 +282,8 @@ export const MAGE = {
       text: "The mage casts *Counterspell* or *Shield* in response to the spell's trigger, using the same spellcasting ability as Spellcasting.",
       spellcastingAbility: "int",
       spells: [
-        { name: "Counterspell", usage: "3/Day" },
-        { name: "Shield", usage: "3/Day" },
+        { spellId: spellId("counterspell"), usage: "3/Day" },
+        { spellId: spellId("shield"), usage: "3/Day" },
       ],
     },
   ],

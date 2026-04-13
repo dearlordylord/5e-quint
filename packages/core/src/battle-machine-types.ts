@@ -11,7 +11,7 @@ import type {
   PendingInterrupt,
   TriggerType,
 } from "#/battle-machine-events.ts";
-import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
+import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import type {
   MonsterResourceState,
   MonsterBattleBonusActionOption,
@@ -112,10 +112,10 @@ export interface BattleCreatureState extends Pick<
   readonly strMod: number;
   readonly dexMod: number;
   // Prepared spells (for CS eligibility)
-  readonly preparedSpells: ReadonlySet<string>;
+  readonly preparedSpells: ReadonlySet<SpellId>;
   // Battle-owned payload facts for readyable action-casting-time spells.
   readonly readyableSpellPayloads: ReadonlyMap<
-    string,
+    SpellId,
     BattleReadyableSpellPayload
   >;
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half

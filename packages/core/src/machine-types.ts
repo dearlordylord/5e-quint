@@ -139,7 +139,7 @@ export interface DndMachineInput {
   readonly chaMod?: AbilityModifier;
   readonly slotsMax?: ReadonlyArray<number>;
   readonly slotsCurrent?: ReadonlyArray<number>;
-  readonly preparedSpells?: ReadonlySet<SpellName>;
+  readonly preparedSpells?: ReadonlySet<SpellId>;
   readonly wearingArmorWithoutTraining?: boolean;
 }
 
@@ -216,7 +216,7 @@ export interface DndContext {
   readonly pactSlotLevel: number;
   readonly concentrationSpellId: Option.Option<SpellId>;
   readonly hitDiceRemaining: HitDiceRemaining;
-  readonly preparedSpells: ReadonlySet<SpellName>;
+  readonly preparedSpells: ReadonlySet<SpellId>;
   readonly wearingArmorWithoutTraining: boolean;
   readonly activeEffects: ReadonlyArray<ActiveEffect>;
   readonly pendingResolution: PendingResolution;

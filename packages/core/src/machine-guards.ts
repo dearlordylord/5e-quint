@@ -56,7 +56,7 @@ import {
 } from "#/machine-types.ts";
 import type { MetamagicOption } from "#/features/class-sorcerer.ts";
 import type { SpellName, SpellSlotLevel } from "#/types.ts";
-import { spellSlotLevel } from "#/types.ts";
+import { spellId, spellSlotLevel } from "#/types.ts";
 
 type GuardArg = { context: DndContext; event: DndEvent };
 
@@ -186,7 +186,7 @@ export function legalPreparedSpellSlotLevels(
 ): ReadonlyArray<SpellSlotLevel> {
   const spell = getModeledPreparedSpellInfo(spellName);
   if (spell == null) return [];
-  if (!context.preparedSpells.has(spellName)) return [];
+  if (!context.preparedSpells.has(spellId(spellName))) return [];
   if (
     context.hp <= 0 ||
     isIncapacitated(context) ||

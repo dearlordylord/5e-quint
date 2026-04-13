@@ -1,6 +1,7 @@
 // Enchantment spells — SRD 5.2.1
 // Mind-affecting spells that influence or control creatures.
 
+import { battleReadyableSaveSpell } from "#/features/spell-modeled-mechanics.ts";
 import type {
   ConditionSpellInfo,
   ConditionSpellResult,
@@ -94,6 +95,18 @@ export const HOLD_PERSON_INFO: ConditionSpellInfo = {
   conditionApplied: "paralyzed",
   durationDescription: "Concentration, up to 1 minute",
 };
+
+// SRD 5.2.1 Descriptions-E-L.md "Hold Person" plus UBIQUITOUS_LANGUAGE.md
+// terms "Saving Throw", "Concentration", and "Base Spell Level".
+export const HOLD_PERSON_MECHANICS = battleReadyableSaveSpell({
+  baseLevel: HOLD_PERSON_INFO.level,
+  saveAbility: "wis",
+  halfOnSuccess: false,
+  damageType: "psychic",
+  conditionOnFail: "paralyzed",
+  applyCondition: true,
+  damageOnFailAtSlotLevel: () => 0,
+});
 
 export const HOLD_MONSTER_INFO: ConditionSpellInfo = {
   name: "Hold Monster",

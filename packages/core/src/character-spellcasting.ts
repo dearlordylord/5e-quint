@@ -13,12 +13,15 @@ import {
   wizardSpellbookCount,
 } from "#/character-spellcasting-data.ts";
 import type { ClassName } from "#/features/class-tables.ts";
-import { SRD_SPELLS } from "#/features/spell-registry.ts";
+import {
+  getSpellRecord,
+  getSpellRecordStrict,
+} from "#/features/spell-registry.ts";
 import type {
   Ability,
   CasterClass,
   DifficultyClass,
-  SpellName,
+  SpellId,
   SpellSlots,
 } from "#/types.ts";
 import { CASTER_CLASSES, difficultyClass } from "#/types.ts";
@@ -60,16 +63,16 @@ export type CharacterSpellcastingChoices = Partial<
 export interface CharacterSpellcastingClassSummary {
   readonly className: CasterClass;
   readonly spellcastingAbility: Ability;
-  readonly cantrips: ReadonlyArray<SpellName>;
-  readonly preparedSpells: ReadonlyArray<SpellName>;
+  readonly cantrips: ReadonlyArray<SpellId>;
+  readonly preparedSpells: ReadonlyArray<SpellId>;
   readonly spellSaveDC: DifficultyClass;
   readonly spellAttackBonus: number;
 }
 
 export interface CharacterSpellcastingSummary {
   readonly classes: ReadonlyArray<CharacterSpellcastingClassSummary>;
-  readonly preparedSpells: ReadonlySet<SpellName>;
-  readonly preparedSpellSaveDCs: ReadonlyMap<SpellName, DifficultyClass>;
+  readonly preparedSpells: ReadonlySet<SpellId>;
+  readonly preparedSpellSaveDCs: ReadonlyMap<SpellId, DifficultyClass>;
   readonly modeledPreparedSpells: ReadonlySet<ModeledPreparedSpell>;
   readonly slotsMax: SpellSlots;
   readonly slotsCurrent: SpellSlots;
@@ -89,18 +92,6 @@ type SpellcastingIssue = {
   readonly message: string;
 };
 
-function normalizeSpellName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-const SPELLS_BY_ID = new Map(
-  SRD_SPELLS.map((spell) => [normalizeSpellName(spell.name), spell] as const),
-);
-
 function duplicateSpells(values: ReadonlyArray<string>): ReadonlyArray<string> {
   const seen = new Set<string>();
   const duplicates = new Set<string>();
@@ -109,6 +100,12 @@ function duplicateSpells(values: ReadonlyArray<string>): ReadonlyArray<string> {
     seen.add(value);
   }
   return [...duplicates];
+}
+
+function canonicalSpellIds(
+  spells: ReadonlyArray<string> | undefined,
+): ReadonlyArray<SpellId> {
+  return (spells ?? []).map((spellRef) => getSpellRecordStrict(spellRef).id);
 }
 
 function validateSpellList(params: {
@@ -141,7 +138,7 @@ function validateSpellList(params: {
     });
   }
   for (const spellId of params.spells) {
-    const spell = SPELLS_BY_ID.get(spellId);
+    const spell = getSpellRecord(spellId);
     if (spell == null) {
       issues.push({
         code: params.codes.invalid,
@@ -306,8 +303,8 @@ export function deriveCharacterSpellcastingSummary(params: {
 }): CharacterSpellcastingSummary {
   const slotState = classSpellSlots(params.classLevels);
   const classes: CharacterSpellcastingClassSummary[] = [];
-  const preparedSpells = new Set<SpellName>();
-  const preparedSpellSaveDCs = new Map<SpellName, DifficultyClass>();
+  const preparedSpells = new Set<SpellId>();
+  const preparedSpellSaveDCs = new Map<SpellId, DifficultyClass>();
 
   for (const className of CASTER_CLASSES) {
     const level = params.classLevels[className];
@@ -327,22 +324,20 @@ export function deriveCharacterSpellcastingSummary(params: {
       8 + abilityModifier + params.proficiencyBonus,
     );
     const spellAttackBonus = abilityModifier + params.proficiencyBonus;
-    const classPreparedSpells = [
-      ...(entry.preparedSpells ?? []),
-    ] as ReadonlyArray<SpellName>;
+    const classPreparedSpells = canonicalSpellIds(entry.preparedSpells);
 
-    for (const spellName of classPreparedSpells) {
-      preparedSpells.add(spellName);
-      const previous = preparedSpellSaveDCs.get(spellName);
+    for (const spellId of classPreparedSpells) {
+      preparedSpells.add(spellId);
+      const previous = preparedSpellSaveDCs.get(spellId);
       if (previous == null || spellSaveDC > previous) {
-        preparedSpellSaveDCs.set(spellName, spellSaveDC);
+        preparedSpellSaveDCs.set(spellId, spellSaveDC);
       }
     }
 
     classes.push({
       className,
       spellcastingAbility,
-      cantrips: [...(entry.cantrips ?? [])] as ReadonlyArray<SpellName>,
+      cantrips: canonicalSpellIds(entry.cantrips),
       preparedSpells: classPreparedSpells,
       spellSaveDC,
       spellAttackBonus,
@@ -350,11 +345,13 @@ export function deriveCharacterSpellcastingSummary(params: {
   }
 
   const modeledPreparedSpells = new Set<ModeledPreparedSpell>();
-  for (const spellName of preparedSpells) {
+  for (const spellId of preparedSpells) {
     if (
-      (MODELED_PREPARED_SPELLS as ReadonlyArray<string>).includes(spellName)
+      (MODELED_PREPARED_SPELLS as ReadonlyArray<string>).includes(
+        spellId as string,
+      )
     ) {
-      modeledPreparedSpells.add(spellName as ModeledPreparedSpell);
+      modeledPreparedSpells.add(spellId as unknown as ModeledPreparedSpell);
     }
   }
 

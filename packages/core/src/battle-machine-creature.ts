@@ -29,7 +29,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
-import { armorClass, resourceCount } from "#/types.ts";
+import { armorClass, resourceCount, spellId } from "#/types.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 
 function applyDamageModifiers(
@@ -759,18 +759,20 @@ const EMPTY_SLOTS: ReadonlyArray<number> = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 const CASTER_SLOTS: ReadonlyArray<number> = [4, 3, 2, 0, 0, 0, 0, 0, 0];
 
-const CASTER_PREPARED_SPELLS: ReadonlySet<string> = new Set([
-  "hold_person",
-  "bless",
-  "haste",
-  "spirit_guardians",
-  "fireball",
-  "burning_hands",
-  "guiding_bolt",
-  "inflict_wounds",
-  "counterspell",
-  "shield",
-]);
+const CASTER_PREPARED_SPELLS: ReadonlySet<SpellId> = new Set(
+  [
+    "hold_person",
+    "bless",
+    "haste",
+    "spirit_guardians",
+    "fireball",
+    "burning_hands",
+    "guiding_bolt",
+    "inflict_wounds",
+    "counterspell",
+    "shield",
+  ].map(spellId),
+);
 
 export function freshCreature(
   maxHp: number,

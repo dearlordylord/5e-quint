@@ -106,6 +106,12 @@ function isDead(s: DndSnapshot) {
   return s.matches({ damageTrack: "dead" });
 }
 
+function preparedSpellIds(
+  ...spells: ReadonlyArray<string>
+): ReadonlySet<ReturnType<typeof mkSpellId>> {
+  return new Set(spells.map(mkSpellId));
+}
+
 function takeDamage(
   actor: ReturnType<typeof create>,
   amount: number,
@@ -2628,7 +2634,7 @@ describe("cast prepared spell", () => {
     const a = createWithInput({
       maxHp: 30,
       clericLevel: classLevel(5),
-      preparedSpells: new Set(["bless", "guiding_bolt"]),
+      preparedSpells: preparedSpellIds("bless", "guiding_bolt"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -2662,7 +2668,7 @@ describe("cast prepared spell", () => {
     const a = createWithInput({
       maxHp: 30,
       clericLevel: classLevel(5),
-      preparedSpells: new Set(["bless", "hold_person"]),
+      preparedSpells: preparedSpellIds("bless", "hold_person"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -2703,7 +2709,7 @@ describe("cast prepared spell", () => {
       maxHp: 36,
       barbarianLevel: classLevel(5),
       clericLevel: classLevel(5),
-      preparedSpells: new Set(["bless"]),
+      preparedSpells: preparedSpellIds("bless"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -2726,7 +2732,7 @@ describe("cast prepared spell", () => {
     const a = createWithInput({
       maxHp: 30,
       clericLevel: classLevel(5),
-      preparedSpells: new Set(["bless"]),
+      preparedSpells: preparedSpellIds("bless"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
       wearingArmorWithoutTraining: true,

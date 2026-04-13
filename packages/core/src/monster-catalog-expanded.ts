@@ -5,7 +5,7 @@ import {
   srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
-import { abilityModifier, armorClass } from "#/types.ts";
+import { abilityModifier, armorClass, spellId } from "#/types.ts";
 
 const M_TO_O_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-M-O.md";
 const P_TO_S_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-P-S.md";
@@ -173,9 +173,9 @@ export const PRIEST = {
       spellcastingAbility: "wis",
       saveDc: 13,
       spells: [
-        { name: "Light", usage: "At Will" },
-        { name: "Thaumaturgy", usage: "At Will" },
-        { name: "Spirit Guardians", usage: "1/Day" },
+        { spellId: spellId("light"), usage: "At Will" },
+        { spellId: spellId("thaumaturgy"), usage: "At Will" },
+        { spellId: spellId("spirit_guardians"), usage: "1/Day" },
       ],
     },
   ],
@@ -187,10 +187,10 @@ export const PRIEST = {
       text: "The priest casts *Bless*, *Dispel Magic*, *Healing Word*, or *Lesser Restoration*, using the same spellcasting ability as Spellcasting.",
       spellcastingAbility: "wis",
       spells: [
-        { name: "Bless", usage: "3/Day" },
-        { name: "Dispel Magic", usage: "3/Day" },
-        { name: "Healing Word", usage: "3/Day" },
-        { name: "Lesser Restoration", usage: "3/Day" },
+        { spellId: spellId("bless"), usage: "3/Day" },
+        { spellId: spellId("dispel_magic"), usage: "3/Day" },
+        { spellId: spellId("healing_word"), usage: "3/Day" },
+        { spellId: spellId("lesser_restoration"), usage: "3/Day" },
       ],
     },
   ],

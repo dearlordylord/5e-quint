@@ -58,6 +58,12 @@ function cost(
   return items;
 }
 
+function preparedSpellIds(
+  ...spells: ReadonlyArray<string>
+): ReadonlySet<ReturnType<typeof spellId>> {
+  return new Set(spells.map(spellId));
+}
+
 const FIGHTER_5_INPUT: DndMachineInput = {
   maxHp: 44,
   conMod: abilityModifier(2),
@@ -193,7 +199,7 @@ const WIZARD_14_INPUT: DndMachineInput = {
   wizardLevel: classLevel(14),
   slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
   slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
-  preparedSpells: new Set(["burning_hands", "fireball", "hold_person"]),
+  preparedSpells: preparedSpellIds("burning_hands", "fireball", "hold_person"),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 };
@@ -201,7 +207,7 @@ const WIZARD_14_INPUT: DndMachineInput = {
 const CLERIC_5_SPELL_INPUT: DndMachineInput = {
   maxHp: 32,
   clericLevel: classLevel(5),
-  preparedSpells: new Set(["bless", "guiding_bolt", "healing_word"]),
+  preparedSpells: preparedSpellIds("bless", "guiding_bolt", "healing_word"),
   baseWalkSpeed: 30,
   effectiveSpeed: 30,
 };
@@ -376,7 +382,7 @@ function initBattleForHitDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["shield"]),
+        preparedSpells: preparedSpellIds("shield"),
         initiativeRoll: 15,
       },
       {
@@ -717,7 +723,7 @@ function initBattleForReadySpellDiscovery(
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        preparedSpells: preparedSpellIds("hold_person"),
         initiativeRoll: 15,
         ...actorConfig,
       },
@@ -754,7 +760,7 @@ function initBattleForCounterspellDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        preparedSpells: preparedSpellIds("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -762,7 +768,7 @@ function initBattleForCounterspellDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["counterspell"]),
+        preparedSpells: preparedSpellIds("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -796,7 +802,7 @@ function initBattleForCounterspellRuntimeDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["banishment"]),
+        preparedSpells: preparedSpellIds("banishment"),
         initiativeRoll: 15,
       },
       {
@@ -804,7 +810,7 @@ function initBattleForCounterspellRuntimeDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["counterspell"]),
+        preparedSpells: preparedSpellIds("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -4055,7 +4061,7 @@ describe("available actions contract", () => {
 
   test("battle discovery does not surface ready-spell setup without a modeled payload", () => {
     const actor = initBattleForReadySpellDiscovery({
-      preparedSpells: new Set(["hellish_rebuke"]),
+      preparedSpells: preparedSpellIds("hellish_rebuke"),
     });
 
     expect(
@@ -4337,7 +4343,7 @@ describe("available actions contract", () => {
   test("after-damage discovery exposes Hellish Rebuke only from owned visible and within-60 trigger facts", () => {
     const actor = initBattleForAfterDamageDiscovery({
       caster: true,
-      preparedSpells: new Set(["hellish_rebuke"]),
+      preparedSpells: preparedSpellIds("hellish_rebuke"),
     });
 
     expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
@@ -4354,7 +4360,7 @@ describe("available actions contract", () => {
     ]);
 
     const hiddenActor = initBattleForAfterDamageDiscovery(
-      { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
+      { caster: true, preparedSpells: preparedSpellIds("hellish_rebuke") },
       { ...DEFAULT_BATTLE_ATTACK_CONTEXT, targetCanSeeAttacker: false },
     );
     expect(
@@ -4362,7 +4368,7 @@ describe("available actions contract", () => {
     ).toEqual([]);
 
     const rangedActor = initBattleForAfterDamageDiscovery(
-      { caster: true, preparedSpells: new Set(["hellish_rebuke"]) },
+      { caster: true, preparedSpells: preparedSpellIds("hellish_rebuke") },
       {
         ...DEFAULT_BATTLE_ATTACK_CONTEXT,
         isMelee: false,

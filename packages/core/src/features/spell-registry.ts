@@ -1,11 +1,112 @@
 // SRD 5.2.1 Complete Spell Registry — 339 spells
 // Generated from .references/srd-5.2.1/Spells/Descriptions-*.md
-// Pure metadata for spell browser UI. Combat logic lives in spell-{school}.ts files.
+// Canonical spell-owned records plus lightweight lookup/projection helpers.
 
-import type { CasterClass, SpellSchool } from "#/types.ts";
+import type {
+  BattleReadyableSaveSpellMechanics,
+  BattleReadyableSpellPayload,
+  SpellModeledMechanics,
+} from "#/features/spell-modeled-mechanics.ts";
+import { HOLD_PERSON_MECHANICS } from "#/features/spell-enchantment.ts";
+import {
+  BURNING_HANDS_MECHANICS,
+  FIREBALL_MECHANICS,
+} from "#/features/spell-evocation.ts";
+import type {
+  CasterClass,
+  DifficultyClass,
+  SpellId,
+  SpellSchool,
+  SpellSlotLevel,
+} from "#/types.ts";
+import { spellId } from "#/types.ts";
 
-/** Metadata for any SRD spell (combat or non-combat). */
-export interface SpellInfo {
+export type {
+  BattleReadyableSaveSpellMechanics,
+  BattleReadyableSpellPayload,
+  SpellModeledMechanics,
+} from "#/features/spell-modeled-mechanics.ts";
+
+export const CANONICAL_SPELL_SOURCE_KINDS = [
+  "canonicalRulesText",
+  "licensedPack",
+] as const;
+
+export type CanonicalSpellSourceKind =
+  (typeof CANONICAL_SPELL_SOURCE_KINDS)[number];
+
+export const SUPPORTING_SPELL_SOURCE_KINDS = [
+  "supportingStructuredInput",
+] as const;
+
+export type SupportingSpellSourceKind =
+  (typeof SUPPORTING_SPELL_SOURCE_KINDS)[number];
+
+export const SUPPORTING_SPELL_SOURCE_CITATION_ROLES = [
+  "normalizationInput",
+  "crossCheck",
+] as const;
+
+export type SupportingSpellSourceCitationRole =
+  (typeof SUPPORTING_SPELL_SOURCE_CITATION_ROLES)[number];
+
+export interface CanonicalSpellSourceCitation {
+  readonly sourceName: string;
+  readonly sourceKind: CanonicalSpellSourceKind;
+  readonly license: string;
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
+export interface SupportingSpellSourceCitation {
+  readonly sourceName: string;
+  readonly sourceKind: SupportingSpellSourceKind;
+  readonly license: string;
+  readonly role: SupportingSpellSourceCitationRole;
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
+export interface SRDCanonicalSpellSourceCitation {
+  readonly sourceName: "srd-5.2.1";
+  readonly sourceKind: "canonicalRulesText";
+  readonly license: "CC-BY-4.0";
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
+export interface LicensedPackSpellSourceCitation {
+  readonly sourceName: string;
+  readonly sourceKind: "licensedPack";
+  readonly license: string;
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
+export interface SRDSpellRecordProvenance {
+  readonly provenance: SRDCanonicalSpellSourceCitation;
+  readonly supportingInputs?: ReadonlyArray<SupportingSpellSourceCitation>;
+}
+
+export interface LicensedPackSpellRecordProvenance {
+  readonly provenance: LicensedPackSpellSourceCitation;
+  readonly supportingInputs?: ReadonlyArray<SupportingSpellSourceCitation>;
+}
+
+export type SpellRecordProvenance =
+  | SRDSpellRecordProvenance
+  | LicensedPackSpellRecordProvenance;
+
+/** Authored spell facts independent of provenance and identity. */
+export interface SpellAuthoredMetadata {
   readonly name: string;
   readonly level: number; // 0 = cantrip
   readonly school: SpellSchool;
@@ -18,7 +119,114 @@ export interface SpellInfo {
   readonly classes: ReadonlyArray<CasterClass>;
 }
 
-export const SRD_SPELLS = [
+export interface SpellRecordModeling {
+  readonly mechanics?: SpellModeledMechanics;
+}
+
+export interface SpellRecordProjections {
+  readonly toBattleReadyablePayload?: (
+    slotLevel: SpellSlotLevel,
+    saveDC: DifficultyClass,
+  ) => BattleReadyableSpellPayload;
+}
+
+export interface SpellRecordBase extends SpellAuthoredMetadata {
+  readonly id: SpellId;
+  readonly provenance: SpellRecordProvenance;
+  readonly modeling: SpellRecordModeling;
+  readonly projections: SpellRecordProjections;
+}
+
+export interface SpellReferenceProjection {
+  readonly spellId: SpellId;
+  readonly name: string;
+  readonly level: number;
+  readonly school: SpellSchool;
+  readonly castingTime: string;
+  readonly duration: string;
+  readonly concentration: boolean;
+}
+
+export interface SRDSpellRecord extends SpellRecordBase {
+  readonly provenance: SRDSpellRecordProvenance;
+}
+
+export interface LicensedPackSpellRecord extends SpellRecordBase {
+  readonly provenance: LicensedPackSpellRecordProvenance;
+}
+
+export type SpellRecord = SRDSpellRecord | LicensedPackSpellRecord;
+
+export function normalizeSpellName(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function modeledSpellMechanics(
+  spellName: string,
+): SpellModeledMechanics | undefined {
+  switch (normalizeSpellName(spellName)) {
+    case "burning_hands":
+      return BURNING_HANDS_MECHANICS;
+    case "fireball":
+      return FIREBALL_MECHANICS;
+    case "hold_person":
+      return HOLD_PERSON_MECHANICS;
+    default:
+      return undefined;
+  }
+}
+
+function spellRecordModeling(mechanics?: SpellModeledMechanics): {
+  readonly modeling: SpellRecordModeling;
+  readonly projections: SpellRecordProjections;
+} {
+  return {
+    modeling: mechanics == null ? {} : { mechanics },
+    projections:
+      mechanics == null
+        ? {}
+        : {
+            toBattleReadyablePayload: mechanics.projectBattlePayload,
+          },
+  };
+}
+
+function spellDescriptionDocument(name: string): string {
+  const firstLetter = name[0]?.toUpperCase() ?? "";
+  if (firstLetter >= "A" && firstLetter <= "D") {
+    return ".references/srd-5.2.1/Spells/Descriptions-A-D.md";
+  }
+  if (firstLetter >= "E" && firstLetter <= "L") {
+    return ".references/srd-5.2.1/Spells/Descriptions-E-L.md";
+  }
+  if (firstLetter >= "M" && firstLetter <= "P") {
+    return ".references/srd-5.2.1/Spells/Descriptions-M-P.md";
+  }
+  if (firstLetter >= "Q" && firstLetter <= "R") {
+    return ".references/srd-5.2.1/Spells/Descriptions-Q-R.md";
+  }
+  return ".references/srd-5.2.1/Spells/Descriptions-S-Z.md";
+}
+
+function srdSpellProvenance(name: string): SRDSpellRecordProvenance {
+  return {
+    provenance: {
+      sourceName: "srd-5.2.1",
+      sourceKind: "canonicalRulesText",
+      license: "CC-BY-4.0",
+      citation: {
+        document: spellDescriptionDocument(name),
+        section: name,
+      },
+    },
+  };
+}
+
+const SRD_SPELL_METADATA = [
   {
     name: "Acid Arrow",
     level: 2,
@@ -4139,7 +4347,72 @@ export const SRD_SPELLS = [
     ritual: false,
     classes: ["bard", "cleric", "paladin"],
   },
-] as const satisfies ReadonlyArray<SpellInfo>;
+] as const satisfies ReadonlyArray<SpellAuthoredMetadata>;
+
+export const SRD_SPELLS = SRD_SPELL_METADATA.map((spell) => ({
+  id: spellId(normalizeSpellName(spell.name)),
+  provenance: srdSpellProvenance(spell.name),
+  ...spellRecordModeling(modeledSpellMechanics(spell.name)),
+  ...spell,
+})) as ReadonlyArray<SRDSpellRecord>;
+
+export const SPELLS_BY_ID = new Map(
+  SRD_SPELLS.map((spell) => [spell.id, spell] as const),
+);
+
+export const SPELLS_BY_NAME = new Map(
+  SRD_SPELLS.map((spell) => [normalizeSpellName(spell.name), spell] as const),
+);
+
+export function getSpellRecord(idOrName: string): SpellRecord | null {
+  const byId = SPELLS_BY_ID.get(spellId(idOrName));
+  if (byId != null) return byId;
+  return SPELLS_BY_NAME.get(normalizeSpellName(idOrName)) ?? null;
+}
+
+export function getSpellRecordStrict(idOrName: string): SpellRecord {
+  const record = getSpellRecord(idOrName);
+  if (record == null) {
+    throw new Error(`Unknown SRD spell ${idOrName}`);
+  }
+  return record;
+}
+
+export function getBattleReadyableSpellMechanics(
+  idOrName: string,
+): BattleReadyableSaveSpellMechanics | null {
+  const mechanics = getSpellRecord(idOrName)?.modeling.mechanics;
+  return mechanics?.family === "battleReadyableSave" ? mechanics : null;
+}
+
+export function projectBattleReadyableSpellPayload(
+  idOrName: string,
+  slotLevel: SpellSlotLevel,
+  saveDC: DifficultyClass,
+): BattleReadyableSpellPayload | null {
+  return (
+    getSpellRecord(idOrName)?.projections.toBattleReadyablePayload?.(
+      slotLevel,
+      saveDC,
+    ) ?? null
+  );
+}
+
+export function spellReferenceProjection(
+  idOrName: string,
+): SpellReferenceProjection | null {
+  const record = getSpellRecord(idOrName);
+  if (record == null) return null;
+  return {
+    spellId: record.id,
+    name: record.name,
+    level: record.level,
+    school: record.school,
+    castingTime: record.castingTime,
+    duration: record.duration,
+    concentration: record.concentration,
+  };
+}
 
 /** Union of all 339 SRD spell display names (Title Case). */
-export type SRDSpellDisplayName = (typeof SRD_SPELLS)[number]["name"];
+export type SRDSpellDisplayName = (typeof SRD_SPELL_METADATA)[number]["name"];

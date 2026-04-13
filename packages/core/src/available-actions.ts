@@ -6,10 +6,12 @@ import {
   getModeledPreparedSpellInfo,
   MODELED_PREPARED_SPELLS,
   ModeledPreparedSpellSchema,
-  type BattleReadyableSpellPayload,
   type ModeledPreparedSpell,
 } from "#/features/spell-available-actions.ts";
-import { SRD_SPELLS } from "#/features/spell-registry.ts";
+import {
+  getSpellRecord,
+  type BattleReadyableSpellPayload,
+} from "#/features/spell-registry.ts";
 import {
   CLASS_NAMES,
   classHitDie,
@@ -72,6 +74,7 @@ import {
   DAMAGE_TYPES,
   SIZES,
   SpellSlotLevel,
+  spellId,
   spellSlotLevel,
   UNARMED_STRIKE_PROFILE,
   WEAPON_PROPERTIES,
@@ -2890,7 +2893,7 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
   CAST_PREPARED_SPELL: {
     buildToken: (context) =>
       MODELED_PREPARED_SPELLS.flatMap((spellName) => {
-        if (!context.preparedSpells.has(spellName)) return [];
+        if (!context.preparedSpells.has(spellId(spellName))) return [];
         const spell = getModeledPreparedSpellInfo(spellName);
         if (spell == null) return [];
         const slotLevels = legalPreparedSpellSlotLevels(context, spellName);
@@ -3671,7 +3674,7 @@ function afterDamageReactionTokens(
     if (
       ad.sourceVisibleToDamagedCreature &&
       ad.sourceWithin60ftOfDamagedCreature &&
-      actor.preparedSpells.has("hellish_rebuke") &&
+      actor.preparedSpells.has(spellId("hellish_rebuke")) &&
       actor.slotsCurrent.some((remaining) => remaining > 0)
     ) {
       tokens.push(
@@ -3770,7 +3773,7 @@ function battleActiveReadyableSpellTokens(
       >({
         actorId,
         type: "BATTLE_READY_SPELL",
-        spellName,
+        spellName: spellName as SpellName,
         slotLevel: { options: slotOptions },
         targetId: { options: targetOptions },
         cost: costs(quotaCost("action"), poolCost("spellSlot")),
@@ -3900,7 +3903,7 @@ function currentReadyableSpellPayload(
   spellName: string,
   slotLevel: SpellSlotLevelValue,
 ): BattleReadyableSpellPayload | null {
-  const storedPayload = actor.readyableSpellPayloads.get(spellName);
+  const storedPayload = actor.readyableSpellPayloads.get(spellId(spellName));
   return (
     currentReadyableSpellPayloads(actor, spellName, storedPayload).find(
       (payload) => payload.slotLevel === slotLevel,
@@ -3908,23 +3911,10 @@ function currentReadyableSpellPayload(
   );
 }
 
-function normalizeSpellLookupName(spellName: string): string {
-  return spellName
-    .toLowerCase()
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
 function battleSpellBaseLevel(spellName: string): number | null {
-  const modeled = getModeledPreparedSpellInfo(spellName as SpellName);
+  const modeled = getModeledPreparedSpellInfo(spellName);
   if (modeled != null) return modeled.baseLevel;
-  const normalized = normalizeSpellLookupName(spellName);
-  return (
-    SRD_SPELLS.find(
-      (info) => normalizeSpellLookupName(info.name) === normalized,
-    )?.level ?? null
-  );
+  return getSpellRecord(spellName)?.level ?? null;
 }
 
 export function getAvailableBattleActions(

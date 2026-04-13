@@ -58,7 +58,7 @@ import type {
   FullAttackMods,
   WeaponProperty,
 } from "#/types.ts";
-import { armorClass, UNARMED_STRIKE_PROFILE } from "#/types.ts";
+import { armorClass, spellId, UNARMED_STRIKE_PROFILE } from "#/types.ts";
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
 
@@ -642,7 +642,7 @@ export function battleAfterDamageSpellReaction({
     e.reactorId !== ad.damagedCreature ||
     !ad.sourceVisibleToDamagedCreature ||
     !ad.sourceWithin60ftOfDamagedCreature ||
-    !reactor.preparedSpells.has("hellish_rebuke") ||
+    !reactor.preparedSpells.has(spellId("hellish_rebuke")) ||
     !reactor.slotsCurrent.some((remaining) => remaining > 0)
   ) {
     return {};
