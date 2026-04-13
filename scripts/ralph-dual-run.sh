@@ -26,6 +26,9 @@ Options:
   --run-id <id>           Run identifier. Default: timestamp
   --test-command <cmd>    Verification command to tell agents to run.
                           Default: pnpm quality
+  --max-task-attempts <n> Maximum decider-attempts per task in one Ralph run
+                          before the harness stops instead of rerunning it.
+                          Default: 3
   --task <n>              Run only Task n. May be repeated; tasks run in
                           the order provided.
   --keep-worktrees        Leave temporary worktrees in place.
@@ -80,6 +83,7 @@ run_id="$(date -u +%Y%m%dT%H%M%SZ)"
 output_branch=""
 commit_to_base=false
 test_command="pnpm quality"
+max_task_attempts=3
 keep_worktrees=false
 skip_decider=false
 codex_only=false
@@ -113,6 +117,12 @@ while [[ $# -gt 0 ]]; do
     --test-command)
       [[ $# -ge 2 ]] || die "--test-command requires a value"
       test_command="$2"
+      shift 2
+      ;;
+    --max-task-attempts)
+      [[ $# -ge 2 ]] || die "--max-task-attempts requires a value"
+      [[ "$2" =~ ^[1-9][0-9]*$ ]] || die "--max-task-attempts must be a positive integer"
+      max_task_attempts="$2"
       shift 2
       ;;
     --task)
@@ -213,6 +223,7 @@ write_state() {
     printf 'PLAN_FILE=%q\n' "$plan_file"
     printf 'PLAN_SNAPSHOT=%q\n' "$plan_snapshot"
     printf 'TASK_INDEX=%q\n' "$task_index"
+    printf 'MAX_TASK_ATTEMPTS=%q\n' "$max_task_attempts"
   } >"$state_file"
 }
 
@@ -738,7 +749,11 @@ save_diff() {
 
 bootstrap_worktree_install() {
   local workspace="$1"
+  local install_source_root=""
   local path
+
+  install_source_root="$(find_worktree_install_source)"
+  [[ -n "$install_source_root" ]] || die "could not find a worktree with node_modules to bootstrap $workspace"
 
   for path in \
     "node_modules" \
@@ -748,8 +763,34 @@ bootstrap_worktree_install() {
       rm -rf "$workspace/$path"
     fi
     mkdir -p "$(dirname "$workspace/$path")"
-    ln -s "$repo_root/$path" "$workspace/$path"
+    ln -s "$install_source_root/$path" "$workspace/$path"
   done
+}
+
+worktree_has_install() {
+  local root="$1"
+  [[ -d "$root/node_modules" ]] &&
+    [[ -d "$root/packages/core/node_modules" ]] &&
+    [[ -d "$root/packages/mcp/node_modules" ]]
+}
+
+find_worktree_install_source() {
+  local path=""
+
+  if worktree_has_install "$repo_root"; then
+    printf '%s\n' "$repo_root"
+    return 0
+  fi
+
+  while IFS= read -r path; do
+    [[ -n "$path" ]] || continue
+    if worktree_has_install "$path"; then
+      printf '%s\n' "$path"
+      return 0
+    fi
+  done < <(git worktree list --porcelain | awk '/^worktree / {print substr($0, 10)}')
+
+  return 1
 }
 
 disable_fuzz_scripts_in_worktree() {
@@ -1112,6 +1153,13 @@ while true; do
   fi
 
   IFS=$'\t' read -r task_no task_id status task_start task_end task_title <<<"$task_row"
+  if (( ${task_attempts["$task_no"]:-0} >= max_task_attempts )); then
+    printf 'task %s (%s) hit the per-run attempt limit (%s) without landing; refusing to rerun indefinitely\n' \
+      "$task_no" "$task_id" "$max_task_attempts" >"$last_error_file"
+    note "run" "fatal-task-attempt-limit iteration=$iteration task=$task_no id=$task_id limit=$max_task_attempts"
+    append_history "$iteration" "$task_no" "$task_id" "${task_attempts["$task_no"]}" "fatal-task-attempt-limit" "-" "attempt limit reached"
+    exit 1
+  fi
   task_attempts["$task_no"]=$(( ${task_attempts["$task_no"]:-0} + 1 ))
   attempt_no="${task_attempts[$task_no]}"
 
