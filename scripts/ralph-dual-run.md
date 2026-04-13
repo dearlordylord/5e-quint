@@ -44,7 +44,7 @@ Task worktrees reuse the main repo install by symlinking `node_modules`, `packag
 
 The harness also kills stray fuzz / overnight MBT processes and removes generated MBT artifact files under `packages/` before the run starts, before each task begins, and after each task ends. Ralph task runs are not allowed to leave `mbt-failure-battle-*.log`, `mbt-failures.jsonl`, `mbt-timing.jsonl`, `mbt-fuzz.log`, `mbt-seed-blacklist.txt`, or `packages/fat-traces/` behind.
 
-Ralph no longer rewrites tracked fuzz scripts inside task worktrees. Instead, the prompts forbid those commands, the harness cleans up stray fuzz processes/artifacts, and the harness treats actual invocations of:
+In addition, every temporary Ralph task worktree has these scripts replaced with hard-fail stubs before agents start:
 
 - `scripts/mbt-fuzz.sh`
 - `scripts/mbt-fuzz-timed.sh`
@@ -53,7 +53,7 @@ Ralph no longer rewrites tracked fuzz scripts inside task worktrees. Instead, th
 - `scripts/escalate-fuzz.sh`
 - `scripts/measure-tier-timing.sh`
 
-or use of `MBT_DEV=1` / `MBT_SAVE_TRACES=1` in task logs as a fatal Ralph policy violation. This preserves clean diffs while still enforcing the “no fuzz / overnight verification in Ralph tasks” rule.
+That makes fuzz / overnight validation impossible inside task worktrees even if an agent ignores prompt guidance. Reviewers and deciders should treat those standard stub diffs as harness noise rather than task-owned product changes.
 
 ## Plan Format
 

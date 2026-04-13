@@ -406,6 +406,7 @@ Read AGENTS.md/CLAUDE.md first and follow the repo instructions. Important local
   If a prior quint_evaluator is alive, stop it with killall -9 quint_evaluator before starting. If a vitest/MBT process is alive, do not start another MBT run; wait for it or report the blocker.
 - Run MBT with the repo background/timing protocol from AGENTS.md, never as a casual foreground exploratory command.
 - Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. Ralph verification must stay on Tier 1 / Tier 1b only unless the task explicitly requires a higher tier.
+- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs. Those tracked script diffs are harness noise, not task-owned product changes. Do not treat those stubbed script files as part of your implementation.
 - Do not write to the memory system.
 - Broad verification is diagnostic, not an automatic scope-expander. If lint/typecheck/test verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification immediately, record that baseline noise, and do not continue repo-wide cleanup inside this task. Only keep fixing failures that are caused by your task diff itself.
 
@@ -450,6 +451,7 @@ Review report output path: $report
 Review the implementation diff against $task_base_sha. Do not modify repository files. Focus on correctness, Task $task_no coverage, repo instruction violations, missing verification, duplicated state, and SRD/UBIQUITOUS_LANGUAGE traceability for modeled rules. Flag any changes that implement later tasks prematurely. If you decide verification requires MBT, first check for existing vitest/quint_evaluator processes per AGENTS.md and do not launch a second MBT run while one is alive.
 Do not edit the main repo worktree at $repo_root or any sibling task worktree.
 Treat unrelated repo-wide baseline failures as noise unless the reviewed diff clearly causes them. A task should not be rejected merely for not repairing pre-existing broad verification failures outside its touched ownership surface.
+Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat diffs to \`scripts/mbt-fuzz*.sh\`, \`scripts/fuzz-*.sh\`, \`scripts/escalate-fuzz.sh\`, and \`scripts/measure-tier-timing.sh\` as harness-injected noise unless the implementation made additional edits beyond the standard stub content.
 
 Your final answer is the review report. The harness saves it to the output path above. Write markdown with these sections:
 - Verdict: accept | accept-with-fixes | reject
@@ -495,6 +497,7 @@ Requirements:
 - Preserve repo constraints: pnpm only, no redundant state, Quint parity, SRD traceability for modeled rules, scarce MBT usage.
 - Before any MBT run, check for existing vitest and quint_evaluator processes per AGENTS.md. Kill stale quint_evaluator processes, and do not launch a second MBT while another vitest/MBT run is alive.
 - Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
+- Ralph task worktrees replace the shared fuzz / overnight verification scripts with hard-fail stubs before implementers start. Treat those script diffs as harness noise, not task-owned changes, unless a candidate went beyond the standard stub content.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
 - Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes, parser-error reminders, or "next attempt must..." guidance to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
@@ -616,34 +619,27 @@ bootstrap_worktree_install() {
   done
 }
 
-log_has_forbidden_fuzz_invocation() {
-  local log_file="$1"
-  [[ -f "$log_file" ]] || return 1
+disable_fuzz_scripts_in_worktree() {
+  local workspace="$1"
+  local path
 
-  rg -n \
-    -e 'tool_use".*"command":"[^"]*(\./)?scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' \
-    -e 'tool_use".*"command":"[^"]*\bMBT_DEV=1\b' \
-    -e 'tool_use".*"command":"[^"]*\bMBT_SAVE_TRACES=1\b' \
-    -e '^/bin/bash -lc ".*(\./)?scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' \
-    -e '^/bin/bash -lc ".*\bMBT_DEV=1\b' \
-    -e '^/bin/bash -lc ".*\bMBT_SAVE_TRACES=1\b' \
-    "$log_file" >/dev/null 2>&1
-}
-
-assert_no_forbidden_fuzz_invocation() {
-  local phase="$1"
-  local task_no="$2"
-  local attempt_no="$3"
-  local log_file="$4"
-
-  if ! log_has_forbidden_fuzz_invocation "$log_file"; then
-    return 0
-  fi
-
-  printf 'task %s attempt %s ran forbidden fuzz/overnight verification during %s\n' "$task_no" "$attempt_no" "$phase" >"$last_error_file"
-  note "task" "fatal-forbidden-fuzz-invocation task=$task_no attempt=$attempt_no phase=$phase"
-  append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-forbidden-fuzz-invocation" "-" "$phase invoked forbidden fuzz verification"
-  return 1
+  for path in \
+    "scripts/mbt-fuzz.sh" \
+    "scripts/mbt-fuzz-timed.sh" \
+    "scripts/fuzz-all.sh" \
+    "scripts/fuzz-overnight.sh" \
+    "scripts/escalate-fuzz.sh" \
+    "scripts/measure-tier-timing.sh"; do
+    [[ -f "$workspace/$path" ]] || continue
+    cat >"$workspace/$path" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "This script is disabled inside Ralph task worktrees." >&2
+echo "Use Tier 1 / Tier 1b MBT or focused non-fuzz verification instead." >&2
+exit 97
+EOF
+    chmod 0555 "$workspace/$path"
+  done
 }
 
 kill_stray_mbt_processes() {
@@ -812,6 +808,8 @@ run_task_attempt() {
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
   bootstrap_worktree_install "$claude_worktree"
   bootstrap_worktree_install "$codex_worktree"
+  disable_fuzz_scripts_in_worktree "$claude_worktree"
+  disable_fuzz_scripts_in_worktree "$codex_worktree"
 
   write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   write_prompt "Codex implementer" "$attempt_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
@@ -831,8 +829,6 @@ run_task_attempt() {
 
   printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
   printf '%s\n' "$codex_status" >"$attempt_root/codex-implementer.exit"
-  assert_no_forbidden_fuzz_invocation "claude-implementer" "$task_no" "$attempt_no" "$attempt_root/claude-implementer.log" || return 2
-  assert_no_forbidden_fuzz_invocation "codex-implementer" "$task_no" "$attempt_no" "$attempt_root/codex-implementer.log" || return 2
   save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
   save_diff "$codex_worktree" "$attempt_root/codex.diff" "$task_base_sha"
 
@@ -854,8 +850,6 @@ run_task_attempt() {
 
   printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
   printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
-  assert_no_forbidden_fuzz_invocation "claude-review" "$task_no" "$attempt_no" "$attempt_root/claude-review.log" || return 2
-  assert_no_forbidden_fuzz_invocation "codex-review" "$task_no" "$attempt_no" "$attempt_root/codex-review.log" || return 2
   save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
   save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
 
@@ -872,7 +866,6 @@ run_task_attempt() {
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-decider-failure" "-" "decider exited non-zero"
     return 2
   fi
-  assert_no_forbidden_fuzz_invocation "decider" "$task_no" "$attempt_no" "$attempt_root/decider.log" || return 2
 
   if ! grep -Eqi "Plan Impact|Plan impact" "$attempt_root/decider.final.md"; then
     printf 'task %s attempt %s missing Plan Impact section in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
