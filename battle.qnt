@@ -454,6 +454,12 @@ module battle {
     endingTurnIndex: int,                // turn index that just ended (for advancing)
   }
 
+  type SelectedLegendaryActionCtx = {
+    la: LAWindowCtx,
+    monsterId: CreatureId,
+    abilityId: str,
+  }
+
   // Context for readied action window between turns.
   type ReadyWindowCtx = {
     eligibleCreatures: Set[CreatureId],  // creatures with readiedAction + reactionAvailable
@@ -468,6 +474,7 @@ module battle {
     // applies to an empty set — the spell still occurs, it just affects no creatures).
     | BPResolvingMovement(MovementCtx)   // processing OAs one by one (R5, R22)
     | BPAwaitingLegendaryAction(LAWindowCtx)  // LA window at end of turn (R7)
+    | BPAwaitingLegendaryAttack(SelectedLegendaryActionCtx)  // named LA selected, waiting for attack follow-up
     | BPAwaitingReadiedAction(ReadyWindowCtx)  // readied action window after LA (R-ready)
 
   // ============================================================
@@ -1346,6 +1353,17 @@ module battle {
     before.concat(elems).concat(after)
   }
 
+  pure def monsterAttackToWeapon(atk: MonsterAttack): Weapon = {
+    name: atk.name,
+    damageDie: 0,
+    versatileDie: 0,
+    damageType: atk.damageType,
+    properties: Set(),
+    isMelee: not(atk.isRanged),
+    normalRange: atk.rangeNormal,
+    longRange: atk.rangeLong,
+  }
+
   // ============================================================
   // 4. BATTLE ACTIONS
   // ============================================================
@@ -1354,9 +1372,21 @@ module battle {
   val TEST_MONSTER_STAT_BLOCK: StatBlock = NULL_STAT_BLOCK
     .with("name", "TestMonster")
     .with("speeds", Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
+    .with("attacks", Map(
+      "tentacle" -> {
+        name: "Tentacle",
+        attackBonus: 9,
+        reach: 10,
+        rangeNormal: 0,
+        rangeLong: 0,
+        damageAmount: 12,
+        damageType: Bludgeoning,
+        isRanged: false,
+      }
+    ))
     .with("legendaryActionUses", 3)
     .with("legendaryResistanceUses", 3)
-    .with("legendaryActions", Map("tail_attack" -> { name: "Tail Attack", cost: 1 }))
+    .with("legendaryActions", Map("lash" -> { name: "Lash", cost: 1, attackId: "tentacle" }))
     .with("rechargeAbilities", Map("breath_weapon" -> { name: "Breath Weapon", rechargeMin: 5 }))
 
   action bInit = {
@@ -2995,6 +3025,64 @@ module battle {
             bHelpTargets' = bHelpTargets,
           }
         }
+      | BPAwaitingLegendaryAttack(sel) =>
+        val readyElig = readyEligible(bCreatures)
+        if (readyElig.size() > 0) {
+          val readyCtx: ReadyWindowCtx = { eligibleCreatures: readyElig, endingTurnIndex: sel.la.endingTurnIndex }
+          all {
+            bCreatures' = bCreatures,
+            bPhase' = BPAwaitingReadiedAction(readyCtx),
+            keepBattle,
+          }
+        } else {
+          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          all {
+            bCreatures' = bCreatures, bInitiative' = bInitiative,
+            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
+            bTurnStarted' = false,
+            bHelpTargets' = bHelpTargets,
+          }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// LA window: select a named legendary action before resolving any follow-up.
+  action bUseLegendaryAction = {
+    match bPhase {
+      | BPAwaitingLegendaryAction(laCtx) =>
+        nondet monsterId = laCtx.eligibleMonsters.oneOf()
+        val m = bCreatures.get(monsterId)
+        val usable = m.statBlock.legendaryActions.keys().filter(abilityId =>
+          val legendary = m.statBlock.legendaryActions.get(abilityId)
+          m.monsterResources.legendaryActionsRemaining >= legendary.cost
+        )
+        if (usable.size() == 0) all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        else {
+          nondet abilityId = usable.oneOf()
+          all {
+            bCreatures' = bCreatures,
+            bPhase' = BPAwaitingLegendaryAttack({ la: laCtx, monsterId: monsterId, abilityId: abilityId }),
+            keepBattle,
+          }
+        }
+      | BPAwaitingLegendaryAttack(sel) =>
+        nondet monsterId = sel.la.eligibleMonsters.oneOf()
+        val m = bCreatures.get(monsterId)
+        val usable = m.statBlock.legendaryActions.keys().filter(abilityId =>
+          val legendary = m.statBlock.legendaryActions.get(abilityId)
+          m.monsterResources.legendaryActionsRemaining >= legendary.cost
+        )
+        if (usable.size() == 0) all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+        else {
+          nondet abilityId = usable.oneOf()
+          all {
+            bCreatures' = bCreatures,
+            bPhase' = BPAwaitingLegendaryAttack({ la: sel.la, monsterId: monsterId, abilityId: abilityId }),
+            keepBattle,
+          }
+        }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
   }
@@ -3127,8 +3215,9 @@ module battle {
   action bLegendaryAttack = {
     val allIds = bCreatures.keys()
     match bPhase {
-      | BPAwaitingLegendaryAction(laCtx) =>
-        nondet monsterId = laCtx.eligibleMonsters.oneOf()
+      | BPAwaitingLegendaryAttack(sel) =>
+        val laCtx = sel.la
+        val monsterId = sel.monsterId
         nondet laTarget = allIds.exclude(Set(monsterId)).oneOf()
         nondet laAtkRoll = 1.to(20).oneOf()
         nondet laDmg = 1.to(20).oneOf()
@@ -3146,10 +3235,11 @@ module battle {
         nondet laHasAllyAdjacent = Bool.oneOf()
         nondet laHitReactionCandidates = allIds.exclude(Set(monsterId)).powerset().oneOf()
         val m = bCreatures.get(monsterId)
-        val weapon = m.mainHandWeapon
+        val legendary = m.statBlock.legendaryActions.get(sel.abilityId)
+        val weapon = monsterAttackToWeapon(m.statBlock.attacks.get(legendary.attackId))
         nondet laSaDmg = m.sneakAttackDice.to(m.sneakAttackDice * 6).oneOf()
         val newMR = m.monsterResources.with("legendaryActionsRemaining",
-          m.monsterResources.legendaryActionsRemaining - 1)
+          m.monsterResources.legendaryActionsRemaining - legendary.cost)
         val cs1 = bCreatures.set(monsterId, m.with("monsterResources", newMR))
         val helpMatches = bHelpTargets.filter(h => h.allyId == monsterId and h.targetEnemyId == laTarget)
         val helpAdv = helpMatches.size() > 0
@@ -3159,6 +3249,9 @@ module battle {
         val laMods = pAggregateAttackMods(laAtkCtx)
         val result = resolveAttack(cs1, monsterId, laTarget, laAtkRoll, laTgtAc, laDmg, laDt, Set(), laCrit, m.critRange, laReturn, laKnockOut, laIsMelee, laTgtCanSee, laAtkWithin5ft, laAtkWithin60ft, laMods, weapon, { diceCount: 0, dieSize: 0 }, laHasAllyAdjacent, laSaDmg, NoAttackHitRider, laHitReactionCandidates)
         all {
+          legendary.attackId != "",
+          m.statBlock.attacks.keys().contains(legendary.attackId),
+          m.monsterResources.legendaryActionsRemaining >= legendary.cost,
           not(laAtkWithin5ft) or laAtkWithin60ft,
           bCreatures' = result.creatures,
           bPhase' = result.phase,
@@ -3870,7 +3963,8 @@ module battle {
       }
     | BPResolvingAoE(_) => any { bResolveAoETarget, }
     | BPResolvingMovement(_) => any { bMovementOADecline, bMovementOAAttack }
-    | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bLegendaryAttack }
+    | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bUseLegendaryAction }
+    | BPAwaitingLegendaryAttack(_) => any { bLegendaryPass, bUseLegendaryAction, bLegendaryAttack }
     | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, bReadySpellRelease, }
   }
 
@@ -3956,6 +4050,9 @@ module battle {
     | BPAwaitingLegendaryAction(ctx) =>
       val activeId = bInitiative[bTurnIndex]
       ctx.eligibleMonsters.forall(mid => mid != activeId)
+    | BPAwaitingLegendaryAttack(sel) =>
+      val activeId = bInitiative[bTurnIndex]
+      sel.la.eligibleMonsters.contains(sel.monsterId) and sel.monsterId != activeId
     | _ => true
   }
 

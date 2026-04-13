@@ -72,7 +72,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 5,
       "id": "MCPA8",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Monster Control And Legendary Action Surface"
     },
     {
@@ -90,7 +90,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 8,
       "id": "QFULL",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Full Workspace Quality Run"
     }
   ]
@@ -129,10 +129,10 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2     | CQ2 - Formal Character Advancement Module            | done                                   | CQ1b   | CQ3, CQ4     | Landed `character.qnt` over finalized `CharacterSheet` semantics, including `pIsLegalSheet`, `pCanAdvance`, `pAdvanceLevel`, deterministic Quint coverage for higher-level starts and advancement legality, and the `POST3` status-note refresh pointing at the landed formal owner. | Completed. Advancement semantics now sit on the finalized-sheet boundary, so projection/parity work can size against the formal owner instead of the historical TS helper alone. |
 | 3     | CQ3 - Character To Creature Projection Boundary      | done                                   | CQ1b, CQ2  | CQ4          | Landed `CharacterCreatureProjection` in `character.qnt`, the downstream `pProjectionToCharConfig` / `pSheetToCharConfig` mapping, the shared TypeScript helper in `packages/core/src/character-sheet-creature-projection.ts`, focused TS projection coverage, and status-note redirects away from `POST1` / `POST3` as the primary implementation brief. | Completed. The one-way character-to-creature handoff now exists in both Quint and shared TS, so CQ4 can target parity at that settled boundary instead of re-sizing the projection surface. |
 | 4     | CQ4 - Character Quint Parity Harness                 | done                                   | CQ1b, CQ2, CQ3 | none   | Landed deterministic TS-to-Quint shared-core parity in `packages/core/src/character-semantics-quint-parity.test.ts` for draft/finalization, advancement transitions, and character-to-creature projection. Retained `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` because the current PRD still points to them as supporting rationale rather than deletion-ready archive noise. | Completed. Shared-core parity now covers the settled character ownership surfaces without widening into MCP transport or battle MBT.             |
-| 5     | MCPA8 - Monster Control And Legendary Action Surface | ready-for-implementation-after-light-research | MCPA1, MON3 | none | Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic `execute_control_command` routes for named monster legendary/recharge/daily ability choice, then wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`. | Implementation-ready once the worker reads the MCPA8 writeup, re-checks `.references/srd-5.2.1/Monsters/Overview.md` and `UBIQUITOUS_LANGUAGE.md`, and keeps non-attack legendary options deferred. |
+| 5     | MCPA8 - Monster Control And Legendary Action Surface | done                                   | MCPA1, MON3 | none | Landed the generic battle-scope monster control commands, stat-block-derived MCP discovery state, and the attack-shaped legendary follow-up through the shared battle attack boundary. Non-attack legendary options remain honestly selectable and deferred until their generic execution facilities exist. | Completed. MCP owns the public control surface, while battle/core keep legality, stat-block lookup, and attack follow-up semantics aligned with Quint. |
 | 6     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
 | 7     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
-| 8     | QFULL - Full Workspace Quality Run                   | blocked                                | CQ3, CQ4, MCPA8 | none      | After the remaining active implementation tasks land, run the full workspace verification surface from a clean installed checkout: `pnpm quality`, the relevant deterministic Quint test commands, and the task-owned TS test commands needed to prove the integrated branch is coherent end-to-end. | Blocked until the remaining active implementation tasks settle; use this as the final integration-quality gate rather than widening feature tasks into repo-wide verification. |
+| 8     | QFULL - Full Workspace Quality Run                   | ready-for-implementation-after-light-research | CQ3, CQ4, MCPA8 | none      | Run the full workspace verification surface from a clean installed checkout: `pnpm quality`, the relevant deterministic Quint test commands, and the task-owned TS test commands needed to prove the integrated branch is coherent end-to-end. | Ready now that CQ3, CQ4, and MCPA8 are complete; use this as the final integration-quality gate rather than widening feature tasks into repo-wide cleanup. |
 
 ## Current Integrated Baseline
 
@@ -174,16 +174,14 @@ Planning note:
 - `CHAR1` through `CHAR7` and `POST1` through `POST4` are complete foundation work, not active queue items.
 - `MON1` through `MON4` are complete and no longer belong in the active queue.
 - New character work is additive: formalize the already-landed character domain rather than reopening the ownership decisions already made.
-- `MCPA8` remains the only active MCP follow-up in this batch.
+- `MCPA8` is complete; the remaining active queue item is the integrated quality gate.
 
 ## Task Selection Guidance
 
 Recommended next coding-loop task:
 
-1. **MCPA8 - Monster Control And Legendary Action Surface**
-   This remains implementation-ready and can proceed if the current loop intentionally chooses MCP work instead of the character-formalization track.
-2. **QFULL - Full Workspace Quality Run**
-   Run this only after the remaining implementation tasks are landed, from a clean installed checkout, as the final broad quality gate.
+1. **QFULL - Full Workspace Quality Run**
+   The remaining active queue item is the final broad quality gate from a clean installed checkout.
 
 Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks inside the active queue. Use the archived foundation summary and git history when context is needed.
 
@@ -197,9 +195,9 @@ Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks ins
    - [creature.qnt](../creature.qnt)
 2. Treat CQ1a as frozen and done; do not reopen it unless the implementation uncovers a genuinely missing owned surface.
 3. CQ3 and CQ4 are complete; use the landed projection boundary plus shared-core parity harness as the reference surface for future character-semantic changes.
-4. `MCPA8` may proceed in parallel only if the loop intentionally chooses MCP work and does not touch the character-formalization ownership surfaces.
+4. `MCPA8` is complete; do not reopen it unless a genuine regression is found in the landed public monster-control surface.
 5. Keep H and I deferred.
-6. Execute `QFULL` only after `CQ3`, `CQ4`, and `MCPA8` are complete or intentionally deferred for the batch.
+6. Execute `QFULL` now that `CQ3`, `CQ4`, and `MCPA8` are complete.
 
 ## Task Bodies
 
@@ -341,7 +339,7 @@ Verification requirements:
 
 ### Task 5 - MCPA8 - Monster Control And Legendary Action Surface
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `MCPA1`, `MON3`
 
@@ -355,7 +353,7 @@ Scope:
 
 Next action:
 
-- Re-check `.references/srd-5.2.1/Monsters/Overview.md` and [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md), then implement against the existing generic attack boundary.
+- None. This task is complete; use the landed generic monster-control surface and Quint-aligned legendary follow-up as the reference boundary.
 
 Verification requirements:
 
@@ -397,7 +395,7 @@ Next action:
 
 ### Task 8 - QFULL - Full Workspace Quality Run
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `CQ3`, `CQ4`, `MCPA8`
 
@@ -411,7 +409,7 @@ Scope:
 
 Next action:
 
-- Wait until `CQ3`, `CQ4`, and `MCPA8` are complete or intentionally deferred for the batch, then run:
+- Run from a clean installed checkout:
   - `pnpm quality`
   - the deterministic Quint commands relevant to the landed character modules
   - the task-owned TS test commands needed to validate the integrated branch end-to-end

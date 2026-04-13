@@ -110,8 +110,10 @@ module creature {
 
   // -- Legendary / Recharge / X-Day types (Phase L) --
 
-  /// Legendary action definition: name + cost in legendary action uses
-  type LegendaryActionDef = { name: str, cost: int }
+  /// Legendary action definition: authored identity, cost, and optional attack follow-up.
+  /// `attackId == ""` means the legendary action is not executable through the
+  /// generic attack surface.
+  type LegendaryActionDef = { name: str, cost: int, attackId: str }
 
   /// Recharge ability: minimum d6 roll to recharge (e.g., 5 for "Recharge 5-6")
   type RechargeAbilityDef = { name: str, rechargeMin: int }
@@ -277,9 +279,9 @@ module creature {
     legendaryActionUses: 3,
     legendaryResistanceUses: 3,
     legendaryActions: Map(
-      "Commanding Presence" -> { name: "Commanding Presence", cost: 1 },
-      "Fiery Rays" -> { name: "Fiery Rays", cost: 1 },
-      "Pounce" -> { name: "Pounce", cost: 1 }
+      "Commanding Presence" -> { name: "Commanding Presence", cost: 1, attackId: "" },
+      "Fiery Rays" -> { name: "Fiery Rays", cost: 1, attackId: "" },
+      "Pounce" -> { name: "Pounce", cost: 1, attackId: "" }
     ),
     rechargeAbilities: Map(
       "Fire Breath" -> { name: "Fire Breath", rechargeMin: 5 }
@@ -3678,9 +3680,9 @@ module creature {
 
   /// Use a legendary action: decrement remaining by cost.
   /// Caller must guard: remaining >= cost.
-  pure def pUseLegendaryAction(mrs: MonsterResourceState, actionName: str,
+  pure def pUseLegendaryAction(mrs: MonsterResourceState, abilityId: str,
       legendaryActions: str -> LegendaryActionDef): MonsterResourceState = {
-    val cost = legendaryActions.get(actionName).cost
+    val cost = legendaryActions.get(abilityId).cost
     mrs.with("legendaryActionsRemaining", mrs.legendaryActionsRemaining - cost)
   }
 
@@ -6078,11 +6080,11 @@ module creature {
         or monsterResourceState.legendaryActionsRemaining <= 0)
       unchanged
     else {
-      nondet actionName = monsterStatBlock.legendaryActions.keys().oneOf()
-      val cost = monsterStatBlock.legendaryActions.get(actionName).cost
+      nondet abilityId = monsterStatBlock.legendaryActions.keys().oneOf()
+      val cost = monsterStatBlock.legendaryActions.get(abilityId).cost
       if (monsterResourceState.legendaryActionsRemaining < cost) unchanged
       else {
-        val mrs1 = pUseLegendaryAction(monsterResourceState, actionName, monsterStatBlock.legendaryActions)
+        val mrs1 = pUseLegendaryAction(monsterResourceState, abilityId, monsterStatBlock.legendaryActions)
         all {
           state' = state, turnState' = turnState, spellSlots' = spellSlots,
           turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels,

@@ -452,6 +452,7 @@ interface BattleCompareState {
   round: number;
   turnStarted: boolean;
   phase: string;
+  selectedMonsterCommand: string;
 }
 
 // ============================================================
@@ -608,7 +609,12 @@ const battleDriverSchema = {
   },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
+  bUseLegendaryAction: {
+    monsterId: OS,
+    abilityId: OS,
+  },
   bLegendaryAttack: {
+    abilityId: OS,
     monsterId: OS,
     laTarget: OS,
     laAtkRoll: OI,
@@ -1139,11 +1145,25 @@ function createBattleMachineDriver() {
       bLegendaryPass: () => {
         send({ type: "BATTLE_LEGENDARY_PASS" });
       },
-      bLegendaryAttack: (picks: Record<string, unknown>) => {
+      bUseLegendaryAction: (picks: Record<string, unknown>) => {
         send({
-          type: "BATTLE_LEGENDARY_ATTACK",
+          type: "USE_LEGENDARY_ACTION",
           monsterId: pc(picks, "monsterId", ""),
           abilityId: ps(picks, "abilityId", "lash"),
+        });
+      },
+      bLegendaryAttack: (picks: Record<string, unknown>) => {
+        const currentSelection = ctx().selectedMonsterCommand;
+        send({
+          type: "BATTLE_LEGENDARY_ATTACK",
+          monsterId:
+            picks["monsterId"] != null
+              ? pc(picks, "monsterId", "")
+              : (currentSelection?.monsterId ?? mkCreatureId("")),
+          abilityId:
+            picks["abilityId"] != null
+              ? ps(picks, "abilityId", "lash")
+              : (currentSelection?.abilityId ?? "lash"),
           laTarget: pc(picks, "laTarget", ""),
           laAtkRoll: p(picks, "laAtkRoll", 10),
           laDmg: p(picks, "laDmg", 10),
@@ -1309,6 +1329,10 @@ function createBattleMachineDriver() {
           round: c.round,
           turnStarted: c.turnStarted,
           phase,
+          selectedMonsterCommand:
+            c.selectedMonsterCommand == null
+              ? ""
+              : `${c.selectedMonsterCommand.type}:${c.selectedMonsterCommand.monsterId}:${c.selectedMonsterCommand.abilityId}`,
         };
       },
       config: () => ({ statePath: [] as Array<string> }),
@@ -1333,10 +1357,30 @@ function normalizeQuintPhase(raw: unknown): string {
     case "BPResolvingMovement":
       return "resolvingMovement";
     case "BPAwaitingLegendaryAction":
+    case "BPAwaitingLegendaryAttack":
       return "awaitingLegendaryAction";
     default:
       return `unknown(${tag})`;
   }
+}
+
+function normalizeQuintSelectedMonsterCommand(rawPhase: unknown): string {
+  if (
+    typeof rawPhase !== "object" ||
+    rawPhase == null ||
+    !("tag" in rawPhase) ||
+    !("value" in rawPhase)
+  ) {
+    return "";
+  }
+  const phase = rawPhase as Record<string, unknown>;
+  if (String(phase["tag"]) !== "BPAwaitingLegendaryAttack") return "";
+  const value =
+    typeof phase["value"] === "object" && phase["value"] != null
+      ? (phase["value"] as Record<string, unknown>)
+      : null;
+  if (value == null) return "";
+  return `USE_LEGENDARY_ACTION:${String(value["monsterId"] ?? "")}:${String(value["abilityId"] ?? "")}`;
 }
 
 const battleMachineStateCheck = stateCheck(
@@ -1351,6 +1395,9 @@ const battleMachineStateCheck = stateCheck(
       round: Number(parsed.bRound),
       turnStarted: parsed.bTurnStarted,
       phase: normalizeQuintPhase(parsed.bPhase),
+      selectedMonsterCommand: normalizeQuintSelectedMonsterCommand(
+        parsed.bPhase,
+      ),
     } satisfies BattleCompareState;
   },
   (spec: BattleCompareState, impl: BattleCompareState) => {
@@ -1363,6 +1410,8 @@ const battleMachineStateCheck = stateCheck(
       return false;
     // Compare phase
     if (spec.phase !== impl.phase) return false;
+    if (spec.selectedMonsterCommand !== impl.selectedMonsterCommand)
+      return false;
     // Compare per-creature fields
     for (const [id, specState] of spec.creatures) {
       const implState = impl.creatures.get(id);

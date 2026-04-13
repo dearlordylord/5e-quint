@@ -430,7 +430,9 @@ const battleDriverSchema = {
   },
   bEndTurn: { eotSaveSucceeded: OB, eotDmg: OI, eotDt: OV, eotConSave: OB },
   bLegendaryPass: {},
+  bUseLegendaryAction: { monsterId: OS, abilityId: OS },
   bLegendaryAttack: {
+    abilityId: OS,
     monsterId: OS,
     laTarget: OS,
     laAtkRoll: OI,
@@ -1872,11 +1874,15 @@ function createBattleProjectionDriver() {
     }
 
     let pendingEndTurn = false;
+    let selectedLegendaryMonsterId = "";
+    let selectedLegendaryAbilityId = "";
 
     function advanceTurn() {
       const initLen = initiative.length;
       turnIndex = (turnIndex + 1) % initLen;
       pendingEndTurn = false;
+      selectedLegendaryMonsterId = "";
+      selectedLegendaryAbilityId = "";
     }
 
     function handleBLegendaryPass(_picks: ReadonlyMap<string, unknown>) {
@@ -1884,11 +1890,29 @@ function createBattleProjectionDriver() {
       if (pendingEndTurn) advanceTurn();
     }
 
+    function handleBUseLegendaryAction(picks: ReadonlyMap<string, unknown>) {
+      if (!pendingEndTurn) return;
+
+      const monsterId = pickString(picks, "monsterId") ?? "";
+      const abilityId = pickString(picks, "abilityId") ?? "lash";
+
+      ensureWaitingForTurn(monsterId);
+      selectedLegendaryMonsterId = monsterId;
+      selectedLegendaryAbilityId = abilityId;
+      send(monsterId, {
+        type: "USE_LEGENDARY_ACTION",
+        actionName: abilityId,
+      });
+    }
+
     function handleBLegendaryAttack(picks: ReadonlyMap<string, unknown>) {
       // Only act if we're in the LA window (after bEndTurn)
       if (!pendingEndTurn) return;
 
-      const monsterId = pickString(picks, "monsterId") ?? "";
+      const monsterId =
+        pickString(picks, "monsterId") ?? selectedLegendaryMonsterId;
+      const abilityId =
+        pickString(picks, "abilityId") ?? selectedLegendaryAbilityId;
       const laTarget = pickString(picks, "laTarget") ?? "";
       const laAtkRoll = pickBigInt(picks, "laAtkRoll") ?? 10;
       const laDmg = pickBigInt(picks, "laDmg") ?? 10;
@@ -1897,12 +1921,7 @@ function createBattleProjectionDriver() {
       const laTgtAc = pickBigInt(picks, "laTgtAc") ?? 15;
 
       ensureWaitingForTurn(monsterId);
-
-      // Spend LA
-      send(monsterId, {
-        type: "USE_LEGENDARY_ACTION",
-        actionName: "tail_attack",
-      });
+      if (abilityId === "") return;
 
       const hit = laAtkRoll >= laTgtAc || laAtkRoll === 20;
       if (hit) {
@@ -2349,6 +2368,10 @@ function createBattleProjectionDriver() {
       bLegendaryPass: () => {
         before("bLegendaryPass");
         handleBLegendaryPass(new Map());
+      },
+      bUseLegendaryAction: (p: Record<string, unknown>) => {
+        before("bUseLegendaryAction");
+        handleBUseLegendaryAction(toMap(p));
       },
       bLegendaryAttack: (p: Record<string, unknown>) => {
         before("bLegendaryAttack");
