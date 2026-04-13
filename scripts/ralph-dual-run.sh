@@ -885,14 +885,45 @@ parse_decider_disposition() {
   node - "$report" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const sameLine = text.match(/^[-*]?\s*Task Disposition:\s*(?:Status:\s*)?([A-Za-z-]+)\s*$/im)
-const statusLine = text.match(/^[-*]?\s*Status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)\s*$/im)
-const headingThenStatus = text.match(/^##?\s*Task Disposition:?\s*$[\r\n]+(?:.*[\r\n]+)*?^[-*]?\s*Status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)\s*$/im)
-const raw = sameLine?.[1] ?? headingThenStatus?.[1] ?? statusLine?.[1] ?? ""
+const clean = (s) => s.replace(/[`*_]/g, "").trim().toLowerCase()
+const allowed = new Set(["done", "retry-same-task", "needs-more-research", "blocked-needs-design", "deferred"])
+
+const lines = text.split(/\r?\n/)
+let inDispositionSection = false
+let raw = ""
+
+for (const line of lines) {
+  const normalized = clean(line)
+  if (!inDispositionSection && /^#{0,6}\s*task disposition:?$/.test(normalized)) {
+    inDispositionSection = true
+    continue
+  }
+  if (!inDispositionSection && /^task disposition:\s*(.+)$/.test(normalized)) {
+    raw = normalized.replace(/^task disposition:\s*/, "")
+    break
+  }
+  if (inDispositionSection) {
+    if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(line.trim())) {
+      break
+    }
+    const statusMatch = normalized.match(/^[-*]?\s*status:\s*(.+)$/)
+    if (statusMatch) {
+      raw = statusMatch[1]
+      break
+    }
+  }
+}
+
 if (!raw) {
+  const globalStatus = clean(text).match(/status:\s*(done|retry-same-task|needs-more-research|blocked-needs-design|deferred)/)
+  raw = globalStatus?.[1] ?? ""
+}
+
+raw = clean(raw)
+if (!allowed.has(raw)) {
   throw new Error("missing Task Disposition status")
 }
-process.stdout.write(raw.trim().toLowerCase())
+process.stdout.write(raw)
 NODE
 }
 
@@ -1107,10 +1138,8 @@ run_task_attempt() {
 
   local decider_disposition=""
   if ! decider_disposition="$(parse_decider_disposition "$attempt_root/decider.final.md")"; then
-    printf 'task %s attempt %s missing Task Disposition status in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
-    note "task" "fatal-missing-task-disposition task=$task_no attempt=$attempt_no"
-    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-disposition" "-" "decider missing task disposition"
-    return 2
+    decider_disposition=""
+    note "task" "warning-missing-task-disposition task=$task_no attempt=$attempt_no"
   fi
 
   if ! assert_clean_main_worktree; then
@@ -1138,6 +1167,33 @@ run_task_attempt() {
   fi
   local refreshed_task_status=""
   IFS=$'\t' read -r _ref_task_no _ref_task_id refreshed_task_status _ref_task_start _ref_task_end _ref_task_title <<<"$refreshed_task_row"
+  if [[ -z "$decider_disposition" ]]; then
+    case "$refreshed_task_status" in
+      done)
+        decider_disposition="done"
+        ;;
+      blocked)
+        decider_disposition="blocked-needs-design"
+        ;;
+      deferred)
+        decider_disposition="deferred"
+        ;;
+      ready-for-research)
+        decider_disposition="needs-more-research"
+        ;;
+      ready-for-implementation-after-light-research)
+        decider_disposition="retry-same-task"
+        ;;
+    esac
+    if [[ -n "$decider_disposition" ]]; then
+      note "task" "inferred-task-disposition task=$task_no attempt=$attempt_no disposition=$decider_disposition status=$refreshed_task_status"
+    else
+      printf 'task %s attempt %s missing Task Disposition status and could not infer one from refreshed plan status %s\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+      note "task" "fatal-missing-task-disposition task=$task_no attempt=$attempt_no"
+      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-disposition" "-" "decider missing task disposition and no plan-status fallback"
+      return 2
+    fi
+  fi
   case "$decider_disposition" in
     done)
       if [[ "$refreshed_task_status" != "done" ]]; then

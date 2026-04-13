@@ -95,7 +95,7 @@ Every implementer, reviewer, and decider prompt requires a `Plan Impact` section
 
 The decider owns plan reconciliation. If either implementation or review reports plan impact, the decider must update the source plan file in the same task commit or explicitly explain why no plan update was needed. The harness treats a decider report without `Plan Impact` as a fatal harness error because the loop can no longer safely continue.
 
-Rejected tasks are not terminal. The decider must classify every task result with a `Task Disposition` section:
+Rejected tasks are not terminal. The decider should classify every task result with a `Task Disposition` section:
 
 - `done`
 - `retry-same-task`
@@ -110,6 +110,8 @@ The decider must then keep the plan status aligned with that disposition:
 - `needs-more-research` -> `ready-for-research`
 - `blocked-needs-design` -> `blocked`
 - `deferred` -> `deferred`
+
+The harness treats that section as the primary signal, but it also has a fallback: if the decider output omits or oddly formats `Task Disposition`, Ralph infers the disposition from the refreshed task status in `plans/ACTIVE_PLAN.md`. That prevents harmless markdown-format drift from killing an otherwise valid run.
 
 In addition, the decider must:
 
