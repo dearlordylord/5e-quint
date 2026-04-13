@@ -830,6 +830,40 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("execute_control_command projects Harpy through the same battle lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("fighter"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: "harpy-1", kind: "Monster", statBlockId: "harpy" }],
+    });
+
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        activeCreatureId: "fighter",
+        initiative: ["fighter", "harpy-1"],
+        creatureIds: ["fighter", "harpy-1"],
+      },
+    });
+  });
+
   test("record_table_event validates a narrow table-event shape", () => {
     const host = createDemoHost();
     const before = readPayload(handleToolCall(host, "get_state", {}));

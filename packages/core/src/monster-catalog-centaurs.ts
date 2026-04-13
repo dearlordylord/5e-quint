@@ -75,6 +75,7 @@ export const CENTAUR_TROOPER = {
         damageType: "piercing",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
     {
@@ -92,6 +93,7 @@ export const CENTAUR_TROOPER = {
         damageType: "piercing",
         isRanged: true,
         attackMode: "ranged",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
   ],

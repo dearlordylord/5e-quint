@@ -12,6 +12,7 @@ import type {
   DamageType,
   ResourceCount,
   Size,
+  WeaponProperty,
 } from "./types";
 
 // --- Phase L: Legendary / Recharge / X-Day types ---
@@ -141,6 +142,22 @@ export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
 export type MonsterBattleReactionOption =
   (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
 
+export interface MonsterAttackStockWeaponProjection {
+  readonly kind: "stockWeapon";
+}
+
+export interface MonsterAttackNaturalWeaponProjection {
+  readonly kind: "naturalWeapon";
+  readonly damageDie: number;
+  readonly diceCount?: number;
+  readonly versatileDie?: number;
+  readonly properties: ReadonlyArray<WeaponProperty>;
+}
+
+export type MonsterAttackBattleProfile =
+  | MonsterAttackStockWeaponProjection
+  | MonsterAttackNaturalWeaponProjection;
+
 // --- Monster Attack ---
 
 export interface MonsterAttack {
@@ -166,6 +183,13 @@ export interface MonsterAttack {
    * had Advantage."
    */
   readonly extraDamageOnAdvantageHit?: AdvantageDamageDice;
+  /**
+   * Optional authored projection into battle weapon state.
+   *
+   * Keep this on the stat block attack itself so compatible monster attacks
+   * project generically without runtime attack-name special cases.
+   */
+  readonly battleProfile?: MonsterAttackBattleProfile;
 }
 
 // --- Multiattack Slot ---

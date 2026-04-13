@@ -19,9 +19,10 @@ import {
 } from "#/monster-catalog-goblins.ts";
 export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
+import { HARPY } from "#/monster-catalog-harpies.ts";
 import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
-import type { CharacterWeapon } from "#/character-equipment-data.ts";
+import type { CharacterWeapon } from "#/character-equipment-weapon-data.ts";
 import { projectBattleWeaponProfile } from "#/character-equipment.ts";
 import {
   CreatureId,
@@ -38,6 +39,7 @@ export {
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+export { HARPY } from "#/monster-catalog-harpies.ts";
 export { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 export {
   KNIGHT,
@@ -66,6 +68,7 @@ export const MONSTER_STAT_BLOCK_IDS = [
   "goblinMinion",
   "goblinWarrior",
   "goblinBoss",
+  "harpy",
   "knight",
   "koboldWarrior",
   "mage",
@@ -100,6 +103,7 @@ export const MONSTER_STAT_BLOCKS: Readonly<
   goblinMinion: GOBLIN_MINION,
   goblinWarrior: GOBLIN_WARRIOR,
   goblinBoss: GOBLIN_BOSS,
+  harpy: HARPY,
   knight: KNIGHT,
   koboldWarrior: KOBOLD_WARRIOR,
   mage: MAGE,
@@ -117,6 +121,7 @@ export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
     Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
     Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
     Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
+    Match.when("harpy", () => MONSTER_STAT_BLOCKS.harpy),
     Match.when("knight", () => MONSTER_STAT_BLOCKS.knight),
     Match.when("koboldWarrior", () => MONSTER_STAT_BLOCKS.koboldWarrior),
     Match.when("mage", () => MONSTER_STAT_BLOCKS.mage),
@@ -208,8 +213,13 @@ export function statBlockInitiativeScore(statBlock: StatBlock): number {
 
 const STOCK_MONSTER_ATTACK_WEAPONS = {
   Dagger: "dagger",
+  Greatclub: "greatclub",
+  Javelin: "javelin",
+  Longbow: "longbow",
+  Pike: "pike",
   Scimitar: "scimitar",
   Shortbow: "shortbow",
+  Shortsword: "shortsword",
 } as const satisfies Readonly<Record<string, CharacterWeapon>>;
 
 function stockMonsterAttackWeapon(name: string): CharacterWeapon | null {
@@ -229,34 +239,32 @@ function statBlockAttackToBattleWeaponProfile(
       ? { extraDamageOnAdvantageHit: attack.extraDamageOnAdvantageHit }
       : {}),
   };
-  const stockWeapon = stockMonsterAttackWeapon(attack.name);
-  if (stockWeapon != null) {
-    return {
-      ...projectBattleWeaponProfile(stockWeapon),
-      statBlockAttackSource,
-    };
-  }
-  if (attack.name === "Bite") {
-    return {
+  return Match.value(attack.battleProfile).pipe(
+    Match.when({ kind: "stockWeapon" }, () => {
+      const stockWeapon = stockMonsterAttackWeapon(attack.name);
+      return stockWeapon == null
+        ? null
+        : {
+            ...projectBattleWeaponProfile(stockWeapon),
+            statBlockAttackSource,
+          };
+    }),
+    Match.when({ kind: "naturalWeapon" }, (battleProfile) => ({
       name: attack.name,
       damageType: attack.damageType,
-      isMelee: true,
-      damageDie: 4,
-      properties: new Set([]),
+      isMelee: attack.attackMode !== "ranged",
+      damageDie: battleProfile.damageDie,
+      ...(battleProfile.diceCount != null
+        ? { diceCount: battleProfile.diceCount }
+        : {}),
+      ...(battleProfile.versatileDie != null
+        ? { versatileDie: battleProfile.versatileDie }
+        : {}),
+      properties: new Set(battleProfile.properties),
       statBlockAttackSource,
-    };
-  }
-  if (attack.name === "Tentacle") {
-    return {
-      name: attack.name,
-      damageType: attack.damageType,
-      isMelee: true,
-      damageDie: 6,
-      properties: new Set(["reach"]),
-      statBlockAttackSource,
-    };
-  }
-  return null;
+    })),
+    Match.orElse(() => null),
+  );
 }
 
 export function statBlockAttackBattleProfile(

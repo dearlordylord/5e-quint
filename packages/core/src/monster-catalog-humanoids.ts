@@ -159,6 +159,7 @@ export const KOBOLD_WARRIOR = {
         damageType: "piercing",
         isRanged: false,
         attackMode: "meleeOrRanged",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
   ],

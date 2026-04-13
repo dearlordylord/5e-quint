@@ -15,6 +15,7 @@ import {
   GOBLIN_BOSS,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
+  HARPY,
   KNIGHT,
   KOBOLD_WARRIOR,
   MAGE,
@@ -117,6 +118,7 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: false,
           attackMode: "meleeOrRanged",
+          battleProfile: { kind: "stockWeapon" },
         },
       },
     ]);
@@ -173,6 +175,7 @@ describe("monster catalog", () => {
       damageType: "piercing",
       isRanged: false,
       attackMode: "meleeOrRanged",
+      battleProfile: { kind: "stockWeapon" },
     });
   });
 
@@ -183,6 +186,7 @@ describe("monster catalog", () => {
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
+      "harpy",
       "knight",
       "koboldWarrior",
       "mage",
@@ -287,6 +291,7 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: false,
           attackMode: "melee",
+          battleProfile: { kind: "stockWeapon" },
         },
       },
       {
@@ -304,6 +309,7 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: true,
           attackMode: "ranged",
+          battleProfile: { kind: "stockWeapon" },
         },
       },
     ]);
@@ -411,6 +417,11 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: false,
           attackMode: "melee",
+          battleProfile: {
+            kind: "naturalWeapon",
+            damageDie: 4,
+            properties: [],
+          },
         },
       },
       {
@@ -420,6 +431,82 @@ describe("monster catalog", () => {
         text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
         nonExecutableReason:
           "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+      },
+    ]);
+  });
+
+  it("stores Harpy as an SRD-backed authored stat block with a text-preserved unsupported action", () => {
+    const statBlock = getMonsterStatBlock("harpy");
+
+    expect(statBlock).toBe(HARPY);
+    expect(statBlock.provenance).toEqual({
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+          section: "Harpy",
+        },
+      },
+    });
+    expect(statBlock.name).toBe("Harpy");
+    expect(statBlock.creatureType).toBe("monstrosity");
+    expect(statBlock.creatureSize).toBe("medium");
+    expect(statBlock.ac).toBe(11);
+    expect(statBlock.initiativeMod).toBe(1);
+    expect(statBlock.maxHp).toBe(38);
+    expect(statBlock.hitDice).toBe(7);
+    expect(statBlock.hitDieType).toBe(8);
+    expect(statBlock.speeds).toEqual({
+      walk: 20,
+      fly: 40,
+      swim: 0,
+      climb: 0,
+      burrow: 0,
+    });
+    expect(statBlock.abilityScores).toEqual({
+      str: 12,
+      dex: 13,
+      con: 12,
+      int: 7,
+      wis: 10,
+      cha: 13,
+    });
+    expect([...statBlock.saveProficiencies]).toEqual([]);
+    expect(statBlock.passivePerception).toBe(10);
+    expect(statBlock.languages).toEqual(["Common"]);
+    expect(statBlock.actions).toEqual([
+      {
+        kind: "attack",
+        id: "claw",
+        name: "Claw",
+        text: "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 6 (2d4 + 1) Slashing damage.",
+        attack: {
+          name: "Claw",
+          attackBonus: 3,
+          reach: 5,
+          rangeNormal: 0,
+          rangeLong: 0,
+          damageAmount: 6,
+          damageType: "slashing",
+          isRanged: false,
+          attackMode: "melee",
+          battleProfile: {
+            kind: "naturalWeapon",
+            damageDie: 4,
+            diceCount: 2,
+            properties: [],
+          },
+        },
+      },
+      {
+        kind: "text",
+        id: "luringSong",
+        name: "Luring Song",
+        text: "The harpy sings a magical melody, which lasts until the harpy's Concentration ends on it. *Wisdom Saving Throw:* DC 11, each Humanoid and Giant in a 300-foot Emanation originating from the harpy when the song starts. *Failure:* The target has the Charmed condition until the song ends and repeats the save at the end of each of its turns. While Charmed, the target has the Incapacitated condition and ignores the Luring Song of other harpies. If the target is more than 5 feet from the harpy, the target moves on its turn toward the harpy by the most direct route, trying to get within 5 feet of the harpy. It doesn't avoid Opportunity Attacks; however, before moving into damaging terrain (such as lava or a pit) and whenever it takes damage from a source other than the harpy, the target repeats the save. *Success:* The target is immune to this harpy's Luring Song for 24 hours.",
+        nonExecutableReason:
+          "Area charm songs with repeated saves, forced movement, and concentration are not yet projected into the generic monster runtime surface.",
       },
     ]);
   });
@@ -532,6 +619,7 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: false,
           attackMode: "melee",
+          battleProfile: { kind: "stockWeapon" },
         },
       },
       {
@@ -549,6 +637,7 @@ describe("monster catalog", () => {
           damageType: "piercing",
           isRanged: true,
           attackMode: "ranged",
+          battleProfile: { kind: "stockWeapon" },
         },
       },
     ]);
@@ -566,6 +655,16 @@ describe("monster catalog", () => {
           pattern: "textOnlyAbility",
           reason:
             "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+        },
+        {
+          statBlockId: "harpy",
+          monsterName: "Harpy",
+          section: "actions",
+          abilityId: "luringSong",
+          abilityName: "Luring Song",
+          pattern: "textOnlyAbility",
+          reason:
+            "Area charm songs with repeated saves, forced movement, and concentration are not yet projected into the generic monster runtime surface.",
         },
         {
           statBlockId: "mage",
@@ -648,6 +747,11 @@ describe("monster catalog", () => {
       damageType: "piercing",
       isRanged: false,
       attackMode: "melee",
+      battleProfile: {
+        kind: "naturalWeapon",
+        damageDie: 4,
+        properties: [],
+      },
     });
     expect(config).toMatchObject({
       id: CreatureId("pseudodragon-1"),
@@ -668,6 +772,65 @@ describe("monster catalog", () => {
         properties: new Set([]),
         statBlockAttackSource: {
           name: "Bite",
+        },
+      },
+    });
+  });
+
+  it("can project Harpy through the same generic battle-init path", () => {
+    const config = monsterCatalogInitCreatureConfig({
+      id: CreatureId("harpy-1"),
+      statBlockId: "harpy",
+    });
+
+    expect(statBlockAttacks(HARPY).claw).toEqual({
+      name: "Claw",
+      attackBonus: 3,
+      reach: 5,
+      rangeNormal: 0,
+      rangeLong: 0,
+      damageAmount: 6,
+      damageType: "slashing",
+      isRanged: false,
+      attackMode: "melee",
+      battleProfile: {
+        kind: "naturalWeapon",
+        damageDie: 4,
+        diceCount: 2,
+        properties: [],
+      },
+    });
+    expect(statBlockAttackBattleProfile(HARPY, "claw")).toEqual({
+      name: "Claw",
+      damageType: "slashing",
+      isMelee: true,
+      damageDie: 4,
+      diceCount: 2,
+      properties: new Set([]),
+      statBlockAttackSource: {
+        name: "Claw",
+      },
+    });
+    expect(config).toMatchObject({
+      id: CreatureId("harpy-1"),
+      kind: "Monster",
+      maxHp: 38,
+      creatureSize: "medium",
+      strMod: 1,
+      dexMod: 1,
+      baseWalkSpeed: 20,
+      battleBonusActionOptions: [],
+      battleReactionOptions: [],
+      initiativeRoll: 11,
+      mainHandWeapon: {
+        name: "Claw",
+        damageType: "slashing",
+        isMelee: true,
+        damageDie: 4,
+        diceCount: 2,
+        properties: new Set([]),
+        statBlockAttackSource: {
+          name: "Claw",
         },
       },
     });
@@ -805,6 +968,38 @@ describe("monster catalog", () => {
         name: "Bite",
         statBlockAttackSource: {
           name: "Bite",
+        },
+      },
+    });
+  });
+
+  it("accepts Harpy through the generic statBlockId surface without a monster-specific handler", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "harpy-1",
+          kind: "Monster",
+          statBlockId: "harpy",
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("harpy-1"),
+      kind: "Monster",
+      maxHp: 38,
+      creatureSize: "medium",
+      initiativeRoll: 11,
+      mainHandWeapon: {
+        name: "Claw",
+        diceCount: 2,
+        statBlockAttackSource: {
+          name: "Claw",
         },
       },
     });

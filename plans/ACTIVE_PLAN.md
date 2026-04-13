@@ -54,13 +54,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 2,
       "id": "MONDB2",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Second Monster Tracer Bullet"
     },
     {
       "number": 3,
       "id": "SPELL1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Freeze Spell Ownership Surface"
     },
     {
@@ -151,8 +151,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | ----- | -------------------------------------------------------------- | --------------------------------------------- | ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 0     | MONDB1 - Canonical Goblin Tracer Bullet                        | done                                          | none               | MONDB1a   | Landed on `integration`: goblin stock-weapon projection now reuses the shared SRD equipment weapon table, keeping one source of weapon identity while preserving existing goblin battle and MCP behavior.                                                                                                                                                               | Complete. Goblin stat blocks remain SRD-backed authored `StatBlock` data and deterministic verification is green.                                                          |
 | 1     | MONDB1a - Battle Participation Semantics And Goblin Add Flow   | done                                          | MONDB1             | MONDB2    | Landed on `integration`: battle-participation wording is now explicit across the documented `BATTLE_INIT` / `BATTLE_ADD_CREATURE` surfaces, and deterministic regressions cover one initial goblin projection and one mid-battle goblin projection.                                                                                                                     | Complete. Goblins are now regression-covered through the same generic projection semantics at battle init and mid-battle add time.                                         |
-| 2     | MONDB2 - Second Monster Tracer Bullet                          | ready-for-implementation-after-light-research | MONDB1a            | SPELL1    | Choose one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership.                                                                                                                                | Ready now. The goblin stat-block seam and battle-participation semantics are both landed, so the next tracer bullet can widen the pattern without redefining the boundary. |
-| 3     | SPELL1 - Freeze Spell Ownership Surface                        | blocked                                       | MONDB2             | SPELL2a   | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution.                                                                                                          | Sequentially next after MONDB2. This should start with repo/source research, not implementation.                                                                           |
+| 2     | MONDB2 - Second Monster Tracer Bullet                          | done                                          | MONDB1a            | SPELL1    | Landed on `integration`: `Harpy` now serves as the task-owned non-goblin tracer bullet in this batch, preserving `Luring Song` as explicit text-authored unsupported data while `Claw` projects through the same generic stat-block, battle-init, and battle-add paths used by goblins.                                                                                 | Complete. A materially different non-spellcasting monster now proves the shared `StatBlock` and MCP/battle projection seam without pulling spell ownership forward.         |
+| 3     | SPELL1 - Freeze Spell Ownership Surface                        | ready-for-research                            | MONDB2             | SPELL2a   | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution.                                                                                                          | Ready now. `MONDB2` is complete, so the next loop should be a research/documentation pass that freezes spell ownership before any new spell implementation starts.          |
 | 4     | SPELL2a - Canonical Spell Records And Identity Projection      | blocked                                       | SPELL1             | SPELL2b   | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics.                                                                                                                                                       | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start.                                                          |
 | 5     | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked                                       | SPELL2a            | MONDB3    | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once.                                                                                                                                                 | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline.                                                |
 | 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | blocked                                       | SPELL2b            | MONDB4a   | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers.                                                                                 | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones.               |
@@ -206,7 +206,7 @@ Structure note:
 
 Recommended next coding-loop task:
 
-1. `MONDB1a - Battle Participation Semantics And Goblin Add Flow`
+1. `SPELL1 - Freeze Spell Ownership Surface`
 
 Do not skip ahead to spell execution or advanced monster facilities before the canonical goblin tracer bullet lands. The current sequence is deliberate:
 
@@ -307,7 +307,7 @@ Closeout note:
 
 ### Task 2 - MONDB2 - Second Monster Tracer Bullet
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `MONDB1a`
 
@@ -322,22 +322,30 @@ Scope:
 
 Next action:
 
-- Choose the concrete second monster using the now-landed schema and battle-participation semantics, then verify it reaches battle and MCP through the same generic projection path.
+- None. This task is complete on `integration`.
 
 Research note:
 
-- This task should not define a second spell schema.
-- If the chosen monster includes spellcasting, keep that section reference-only/text-only unless `SPELL1`, `SPELL2a`, and the relevant `SPELL2b` slice are pulled forward by an explicit plan update.
+- `Harpy` is the chosen task-owned monster because it widens authored-section shape without pulling spell ownership forward.
+- `Luring Song` remains explicit text-authored unsupported data with a recorded reason, while `Claw` projects through the generic battle path.
 
 Verification requirements:
 
-- Confirm the added monster cites SRD provenance directly on the owned record.
-- Verify the monster reaches battle/MCP through the same projection path as goblins.
-- Include `/simplify` convergence, minimum two rounds.
+- RAW / terminology traceability: reviewed `.references/srd-5.2.1/Monsters/Monsters-H-L.md` (`Harpy`) and `UBIQUITOUS_LANGUAGE.md` terms `Stat Block`, `Creature`, `Attack Roll`, `Initiative`, `Charmed`, `Incapacitated`, and `Opportunity Attack` before finalizing the owned record.
+- Deterministic verification:
+  - `pnpm --filter @dnd/core exec vitest run src/monster-catalog.test.ts`
+  - `pnpm --filter @dnd/core typecheck`
+  - `pnpm --filter @dnd/core lint`
+  - `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t Harpy`
+  - `pnpm --filter @dnd/mcp lint`
+  - `pnpm quality`
+- `/simplify` convergence:
+  - Round 1: removed catalog-side attack-name special cases and moved compatible attack projection facts into authored `MonsterAttack.battleProfile` data so Harpy, goblins, and existing natural-weapon monsters share one generic projector.
+  - Round 2: removed redundant stock-weapon identity from authored attack records so compatible stock-weapon projection remains single-source-of-truth on attack name, then confirmed no further important dedup or simplification issues remained on the task-owned surface.
 
 ### Task 3 - SPELL1 - Freeze Spell Ownership Surface
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `MONDB2`
 
@@ -355,7 +363,7 @@ Scope:
 
 Next action:
 
-- After `MONDB2`, write the frozen ownership surface back into this file or a task-specific plan artifact, then update status.
+- Inventory the current spell owners across core, features, battle, and MCP, then write the frozen ownership surface back into this file or a task-specific plan artifact.
 
 Research note:
 

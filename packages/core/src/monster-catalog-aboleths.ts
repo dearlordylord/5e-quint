@@ -78,6 +78,12 @@ export const ABOLETH = {
         damageType: "bludgeoning",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: {
+          kind: "naturalWeapon",
+          damageDie: 6,
+          diceCount: 2,
+          properties: ["reach"],
+        },
       },
     },
     {

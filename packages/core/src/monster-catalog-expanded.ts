@@ -59,6 +59,7 @@ export const OGRE = {
         damageType: "bludgeoning",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
     {
@@ -76,6 +77,7 @@ export const OGRE = {
         damageType: "piercing",
         isRanged: false,
         attackMode: "meleeOrRanged",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
   ],
@@ -287,6 +289,11 @@ export const SAHUAGIN_WARRIOR = {
         damageType: "slashing",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: {
+          kind: "naturalWeapon",
+          damageDie: 6,
+          properties: [],
+        },
       },
     },
   ],
@@ -373,6 +380,7 @@ export const SCOUT = {
         damageType: "piercing",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
     {
@@ -390,6 +398,7 @@ export const SCOUT = {
         damageType: "piercing",
         isRanged: true,
         attackMode: "ranged",
+        battleProfile: { kind: "stockWeapon" },
       },
     },
   ],
