@@ -14,7 +14,10 @@ import type {
 } from "#/types.ts";
 import type { BattlePosition } from "#/battle-machine-types.ts";
 
-/** Creature config for BATTLE_INIT — determines initial state per combatant. */
+/**
+ * Battle participation config projected by BATTLE_INIT and BATTLE_ADD_CREATURE.
+ * Determines the initial battle-state facts for each combatant.
+ */
 export interface InitCreatureConfig {
   readonly id: CreatureId;
   readonly maxHp: number;

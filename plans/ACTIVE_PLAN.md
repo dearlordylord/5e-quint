@@ -48,13 +48,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 1,
       "id": "MONDB1a",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Battle Participation Semantics And Goblin Add Flow"
     },
     {
       "number": 2,
       "id": "MONDB2",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Second Monster Tracer Bullet"
     },
     {
@@ -147,21 +147,21 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 ## DAG / Queue Order
 
-| Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
-| ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
-| 0 | MONDB1 - Canonical Goblin Tracer Bullet | done | none | MONDB1a | Landed on `integration`: goblin stock-weapon projection now reuses the shared SRD equipment weapon table, keeping one source of weapon identity while preserving existing goblin battle and MCP behavior. | Complete. Goblin stat blocks remain SRD-backed authored `StatBlock` data and deterministic verification is green. |
-| 1 | MONDB1a - Battle Participation Semantics And Goblin Add Flow | ready-for-implementation-after-light-research | MONDB1 | MONDB2 | Read `ARCHITECTURE.md`, MCP tool wording/examples, and the current `BATTLE_INIT` / `BATTLE_ADD_CREATURE` paths. Then harden battle-participation semantics and add regression coverage for one initial goblin add flow and one mid-battle goblin add flow. | Ready now. The goblin stat-block seam is landed; this follow-up is the planned semantics-and-wording cleanup before a second monster broadens the pattern. |
-| 2 | MONDB2 - Second Monster Tracer Bullet | blocked | MONDB1a | SPELL1 | After MONDB1a lands, add one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership. | Blocked by the need to prove both the canonical `StatBlock` seam and the battle-participation semantics on goblins first. |
-| 3 | SPELL1 - Freeze Spell Ownership Surface | blocked | MONDB2 | SPELL2a | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution. | Sequentially next after MONDB2. This should start with repo/source research, not implementation. |
-| 4 | SPELL2a - Canonical Spell Records And Identity Projection | blocked | SPELL1 | SPELL2b | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics. | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start. |
-| 5 | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked | SPELL2a | MONDB3 | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once. | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline. |
-| 6 | MONDB3 - Advanced Monster Pattern Tracer Bullet | blocked | SPELL2b | MONDB4a | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers. | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones. |
-| 7 | MONDB4a - Freeze Dataset Expansion Scope | blocked | MONDB3 | none | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion. | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven. |
-| 8 | CHAREDIT1 - Mandatory Character Draft Update Preview | deferred | none | CHARMCP1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch. |
-| 9 | CHARMCP1 - Stored Character MCP Surface | deferred | CHAREDIT1 | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md). | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior. |
-| 10 | CHAROWN1 - Character Ownership Gap Cleanup | deferred | none | CHAROWN2 | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions. |
-| 11 | CHAROWN2 - Fighting Style Authored Ownership | deferred | CHAROWN1 | CHARAUTH1 | After `CHAROWN1`, add Fighting Style selections as authored character-side facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | This is a real missing authored-owner gap, not cleanup. It should land before the final convergence push so projection stops carrying placeholder empty sets. |
-| 12 | CHARAUTH1 - Character Quint Authority Convergence | deferred | CHARMCP1, CHAROWN2 | none | After the MCP surface and character-side ownership gaps land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | This is the convergence capstone, not the starting slice. It needs the MCP boundary and remaining character-side authored facts settled first. |
+| Order | Task                                                           | Status                                        | Depends on         | Blocks    | Next action                                                                                                                                                                                                                                                                                                                                                             | Handoff readiness                                                                                                                                                          |
+| ----- | -------------------------------------------------------------- | --------------------------------------------- | ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0     | MONDB1 - Canonical Goblin Tracer Bullet                        | done                                          | none               | MONDB1a   | Landed on `integration`: goblin stock-weapon projection now reuses the shared SRD equipment weapon table, keeping one source of weapon identity while preserving existing goblin battle and MCP behavior.                                                                                                                                                               | Complete. Goblin stat blocks remain SRD-backed authored `StatBlock` data and deterministic verification is green.                                                          |
+| 1     | MONDB1a - Battle Participation Semantics And Goblin Add Flow   | done                                          | MONDB1             | MONDB2    | Landed on `integration`: battle-participation wording is now explicit across the documented `BATTLE_INIT` / `BATTLE_ADD_CREATURE` surfaces, and deterministic regressions cover one initial goblin projection and one mid-battle goblin projection.                                                                                                                     | Complete. Goblins are now regression-covered through the same generic projection semantics at battle init and mid-battle add time.                                         |
+| 2     | MONDB2 - Second Monster Tracer Bullet                          | ready-for-implementation-after-light-research | MONDB1a            | SPELL1    | Choose one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership.                                                                                                                                | Ready now. The goblin stat-block seam and battle-participation semantics are both landed, so the next tracer bullet can widen the pattern without redefining the boundary. |
+| 3     | SPELL1 - Freeze Spell Ownership Surface                        | blocked                                       | MONDB2             | SPELL2a   | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution.                                                                                                          | Sequentially next after MONDB2. This should start with repo/source research, not implementation.                                                                           |
+| 4     | SPELL2a - Canonical Spell Records And Identity Projection      | blocked                                       | SPELL1             | SPELL2b   | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics.                                                                                                                                                       | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start.                                                          |
+| 5     | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked                                       | SPELL2a            | MONDB3    | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once.                                                                                                                                                 | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline.                                                |
+| 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | blocked                                       | SPELL2b            | MONDB4a   | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers.                                                                                 | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones.               |
+| 7     | MONDB4a - Freeze Dataset Expansion Scope                       | blocked                                       | MONDB3             | none      | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion.                                                                                                                                                                      | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven.                                               |
+| 8     | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1  | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
+| 9     | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
+| 10    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
+| 11    | CHAROWN2 - Fighting Style Authored Ownership                   | deferred                                      | CHAROWN1           | CHARAUTH1 | After `CHAROWN1`, add Fighting Style selections as authored character-side facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                        | This is a real missing authored-owner gap, not cleanup. It should land before the final convergence push so projection stops carrying placeholder empty sets.              |
+| 12    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHAROWN2 | none      | After the MCP surface and character-side ownership gaps land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                                                            | This is the convergence capstone, not the starting slice. It needs the MCP boundary and remaining character-side authored facts settled first.                             |
 
 ## Current Integrated Baseline
 
@@ -269,7 +269,7 @@ Closeout note:
 
 ### Task 1 - MONDB1a - Battle Participation Semantics And Goblin Add Flow
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `MONDB1`
 
@@ -286,7 +286,7 @@ Scope:
 
 Next action:
 
-- Read `ARCHITECTURE.md`, MCP tool wording/examples, and the current `BATTLE_INIT` / `BATTLE_ADD_CREATURE` paths. Then harden the semantics and wording before a second monster expands the pattern.
+- None. This task is complete on `integration`.
 
 Research note:
 
@@ -301,9 +301,13 @@ Verification requirements:
   - mid-battle goblin add via `BATTLE_ADD_CREATURE`.
 - Include `/simplify` convergence, minimum two rounds.
 
+Closeout note:
+
+- The integrated result keeps `BATTLE_INIT` and `BATTLE_ADD_CREATURE` aligned on the same battle-participation projection semantics, with explicit goblin regression coverage in core battle and MCP control-command tests.
+
 ### Task 2 - MONDB2 - Second Monster Tracer Bullet
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `MONDB1a`
 
@@ -318,7 +322,7 @@ Scope:
 
 Next action:
 
-- Unblock after `MONDB1a`, then choose the concrete second monster using the now-landed schema.
+- Choose the concrete second monster using the now-landed schema and battle-participation semantics, then verify it reaches battle and MCP through the same generic projection path.
 
 Research note:
 

@@ -10,6 +10,7 @@ import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import {
   ABOLETH,
   CENTAUR_TROOPER,
+  GOBLIN_MINION,
   GOBLIN_WARRIOR,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -944,6 +945,68 @@ describe("battle rules scenario regressions", () => {
       row: 6,
       col: 0,
     });
+  });
+
+  it("projects goblins into battle participation both at init and mid-battle", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("fighter"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 18,
+        },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("goblin-warrior-1"),
+          statBlock: GOBLIN_WARRIOR,
+          statBlockId: "goblinWarrior",
+          initiativeRoll: 12,
+        }),
+      ],
+    });
+
+    expect(ctx(actor).initiative).toEqual([
+      CreatureId("fighter"),
+      CreatureId("goblin-warrior-1"),
+    ]);
+    expect(creature(actor, "goblin-warrior-1")).toMatchObject({
+      hp: 10,
+      maxHp: 10,
+      monsterStatBlockId: "goblinWarrior",
+      battleBonusActionOptions: ["disengage", "hide"],
+    });
+
+    send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT });
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("goblin-minion-1"),
+          statBlock: GOBLIN_MINION,
+          statBlockId: "goblinMinion",
+          initiativeRoll: 9,
+        }),
+      ],
+    });
+
+    expect(ctx(actor).initiative).toEqual([
+      CreatureId("fighter"),
+      CreatureId("goblin-minion-1"),
+      CreatureId("goblin-warrior-1"),
+    ]);
+    expect(creature(actor, "goblin-minion-1")).toMatchObject({
+      hp: 7,
+      maxHp: 7,
+      monsterStatBlockId: "goblinMinion",
+      battleBonusActionOptions: ["disengage", "hide"],
+    });
+    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(
+      CreatureId("fighter"),
+    );
   });
 
   it("rejects insertion before the first turn starts and on duplicate ids", () => {

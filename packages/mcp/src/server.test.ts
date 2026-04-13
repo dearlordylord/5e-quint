@@ -766,6 +766,42 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("execute_control_command projects a goblin stat block onto the battle lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("fighter"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        { id: "goblin-1", kind: "Monster", statBlockId: "goblinMinion" },
+      ],
+    });
+
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        activeCreatureId: "fighter",
+        initiative: ["fighter", "goblin-1"],
+        creatureIds: ["fighter", "goblin-1"],
+      },
+    });
+  });
+
   test("execute_control_command accepts BATTLE_REMOVE_CREATURE on the battle lane", () => {
     const actor = createActor(battleMachine);
     actor.start();
