@@ -508,8 +508,12 @@ module character {
     subclasses: List[CharacterSubclassSelection],
     classLevels: ClassName -> int,
   ): int =
-    if (pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 15) 18
-    else if (pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 3) 19
+    val hasFighterSubclassSelection =
+      subclasses.foldl(false, (hasSelection, selection) =>
+        hasSelection or selection.className == Fighter
+      )
+    if (hasFighterSubclassSelection and pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 15) 18
+    else if (hasFighterSubclassSelection and pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 3) 19
     else 20
 
   pure def pHasFightingStyleFeature(classLevels: ClassName -> int): bool =

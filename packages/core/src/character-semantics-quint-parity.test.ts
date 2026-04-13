@@ -1047,6 +1047,20 @@ describe("character semantics Quint parity", () => {
       const multiclassProjection = characterSheetCreatureProjection(
         multiclassFinalization.sheet,
       );
+      const fighterWithoutSubclassProjection = characterSheetCreatureProjection(
+        {
+          ...fighterLevelFive.sheet,
+          advancement: [
+            advancementEntry("fighter"),
+            advancementEntry("fighter"),
+            advancementEntry("fighter"),
+          ],
+          classLevels: {
+            ...fighterLevelFive.sheet.classLevels,
+            fighter: 3,
+          },
+        },
+      );
 
       await runQuintParityModule(
         `module characterProjectionParity {
@@ -1086,6 +1100,26 @@ describe("character semantics Quint parity", () => {
           val projection = pCharacterCreatureProjection(sheet)
           all {
             ${renderProjectionAssertions(multiclassProjection)}
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run parity_projection_fighter_without_subclass_keeps_default_crit_range = {
+    match pFinalizeDraft(FIGHTER_LEVEL_FIVE_DRAFT) {
+      | Finalized(sheet) =>
+          val levelThreeWithoutSubclass =
+            sheet
+              .with("advancement", [
+                { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+                { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+                { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+              ])
+              .with("classLevels", singleClassLevels(Fighter, 3))
+          val projection = pCharacterCreatureProjection(levelThreeWithoutSubclass)
+          all {
+            assert(projection.critRange == ${fighterWithoutSubclassProjection.critRange}),
+            assert(projection.subclasses == []),
           }
       | Blocked(_) => assert(false)
     }

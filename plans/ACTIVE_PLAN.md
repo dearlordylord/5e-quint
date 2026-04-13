@@ -90,7 +90,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 8,
       "id": "QFULL",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Full Workspace Quality Run"
     }
   ]
@@ -132,7 +132,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 5     | MCPA8 - Monster Control And Legendary Action Surface | done                                   | MCPA1, MON3 | none | Landed the generic battle-scope monster control commands, stat-block-derived MCP discovery state, and the attack-shaped legendary follow-up through the shared battle attack boundary. Non-attack legendary options remain honestly selectable and deferred until their generic execution facilities exist. | Completed. MCP owns the public control surface, while battle/core keep legality, stat-block lookup, and attack follow-up semantics aligned with Quint. |
 | 6     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
 | 7     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
-| 8     | QFULL - Full Workspace Quality Run                   | ready-for-implementation-after-light-research | CQ3, CQ4, MCPA8 | none      | Run the full workspace verification surface from a clean installed checkout: `pnpm quality`, the relevant deterministic Quint test commands, and the task-owned TS test commands needed to prove the integrated branch is coherent end-to-end. | Ready now that CQ3, CQ4, and MCPA8 are complete; use this as the final integration-quality gate rather than widening feature tasks into repo-wide cleanup. |
+| 8     | QFULL - Full Workspace Quality Run                   | done                                   | CQ3, CQ4, MCPA8 | none      | Completed the integrated verification gate on `integration`: `pnpm quality`, `pnpm exec quint test --backend typescript --match 'test_character_' dndTest.qnt`, `pnpm --filter @dnd/core exec vitest run src/character-semantics-quint-parity.test.ts`, `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t 'legendary|monster control'`, and `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t 'battle get_state projects named monster-control menus from stat-block ownership|battle legendary control selection opens the generic legendary attack follow-up|battle monster control commands accept named non-attack, recharge, and daily selection without spending resources'`. A real integrated regression was fixed in the process: fighter projections without an explicit Fighter subclass selection were incorrectly inheriting Champion crit ranges, and one deterministic multiclass fixture had fallen out of legality with the current finalized-sheet surface. | Completed. Integrated lint/circular/typecheck, deterministic character Quint coverage on the TypeScript backend, shared-core parity, and the targeted monster-control regressions are green. The direct default-backend `pnpm exec quint test --match 'test_character_' dndTest.qnt` path still hits a baseline `EPIPE` in this environment, so QFULL closes without widening into separate tooling work. |
 
 ## Current Integrated Baseline
 
@@ -174,14 +174,13 @@ Planning note:
 - `CHAR1` through `CHAR7` and `POST1` through `POST4` are complete foundation work, not active queue items.
 - `MON1` through `MON4` are complete and no longer belong in the active queue.
 - New character work is additive: formalize the already-landed character domain rather than reopening the ownership decisions already made.
-- `MCPA8` is complete; the remaining active queue item is the integrated quality gate.
+- `MCPA8` is complete, and the integrated quality gate is complete for this batch.
 
 ## Task Selection Guidance
 
 Recommended next coding-loop task:
 
-1. **QFULL - Full Workspace Quality Run**
-   The remaining active queue item is the final broad quality gate from a clean installed checkout.
+1. No active implementation task remains in this batch.
 
 Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks inside the active queue. Use the archived foundation summary and git history when context is needed.
 
@@ -197,7 +196,7 @@ Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks ins
 3. CQ3 and CQ4 are complete; use the landed projection boundary plus shared-core parity harness as the reference surface for future character-semantic changes.
 4. `MCPA8` is complete; do not reopen it unless a genuine regression is found in the landed public monster-control surface.
 5. Keep H and I deferred.
-6. Execute `QFULL` now that `CQ3`, `CQ4`, and `MCPA8` are complete.
+6. Keep future verification work scoped; do not reopen completed feature tasks unless a later integrated regression proves they need more than verification-only follow-up.
 
 ## Task Bodies
 
@@ -395,7 +394,7 @@ Next action:
 
 ### Task 8 - QFULL - Full Workspace Quality Run
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `CQ3`, `CQ4`, `MCPA8`
 
@@ -409,16 +408,27 @@ Scope:
 
 Next action:
 
-- Run from a clean installed checkout:
-  - `pnpm quality`
-  - the deterministic Quint commands relevant to the landed character modules
-  - the task-owned TS test commands needed to validate the integrated branch end-to-end
+- None. The integrated quality gate is complete for this batch.
 
 Verification requirements:
 
 - Run from a clean checkout with valid `node_modules`.
 - Record the exact commands used and whether failures are task-caused or baseline noise.
 - Do not treat this task as permission to reopen already-landed feature scope unless the failure proves a real integrated regression.
+
+Verification notes:
+
+- `pnpm quality` succeeded on `integration`.
+- `pnpm exec quint test --backend typescript --match 'test_character_' dndTest.qnt` succeeded.
+- `pnpm --filter @dnd/core exec vitest run src/character-semantics-quint-parity.test.ts` succeeded.
+- `pnpm --filter @dnd/core exec vitest run src/battle-rules-scenarios.test.ts -t 'legendary|monster control'` succeeded.
+- `pnpm --filter @dnd/mcp exec vitest run src/server.test.ts -t 'battle get_state projects named monster-control menus from stat-block ownership|battle legendary control selection opens the generic legendary attack follow-up|battle monster control commands accept named non-attack, recharge, and daily selection without spending resources'` succeeded.
+- `/simplify` round 1 kept the Quint crit-range fix scoped to the existing subclass projection surface and refreshed the deterministic multiclass fixture so the broad character suite exercised a legal finalized sheet again.
+- `/simplify` round 2 re-checked the touched Quint and parity files for duplicated state or broader ownership drift; no further important simplifications were needed.
+- RAW verification for the task-owned crit-range fix:
+  - `.references/srd-5.2.1/Classes/Fighter.md` states Champion `Improved Critical` at Fighter level 3 and `Superior Critical` at Fighter level 15, so those expanded crit thresholds require an actual Fighter subclass selection.
+  - `UBIQUITOUS_LANGUAGE.md` keeps the default Critical Hit trigger at natural 20, so a Fighter sheet with no Fighter subclass selection must remain at crit range `20`.
+- The direct default-backend command `pnpm exec quint test --match 'test_character_' dndTest.qnt` still fails with `EPIPE` in this environment. That failure is recorded here as baseline verification noise rather than a reopened feature task because the integration branch’s TypeScript-backend deterministic Quint surface and targeted TS/MCP regressions are green.
 
 ## Archived Done Foundations
 

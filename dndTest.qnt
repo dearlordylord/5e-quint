@@ -3996,6 +3996,7 @@ module dndTest::Impl {
   run test_character_projection_non_caster_primary_multiclass_uses_first_caster_spellcasting_ability = {
     val finalized = pFinalizeDraft(
       COMPLETE_FIGHTER_DRAFT
+        .with("background", HasBackground(Sage))
         .with("advancement", HasAdvancement([
           { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
           { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
@@ -4012,7 +4013,17 @@ module dndTest::Impl {
             Cha -> PresentScore(8),
           ),
         }))
-        .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Str, plusOne: Int_ })))
+        .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })))
+        .with("choices", HasBuildChoices(
+          EMPTY_BUILD_CHOICES
+            .with("primaryClassSkills", HasSkillList([Acrobatics, Perception]))
+            .with("speciesSkill", HasSkill(Stealth))
+            .with("humanOriginFeat", HasOriginFeatSelection(OriginSkilled([
+              SkilledSkill(Religion),
+              SkilledTool(ThievesTools),
+              SkilledTool(MusicalInstrumentProficiency(Viol)),
+            ])))
+        ))
         .with("spellcasting", HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
           "wizard",
           HasSpellcastingEntry({
@@ -4020,7 +4031,14 @@ module dndTest::Impl {
             preparedSpells: HasStringList(["burning_hands", "detect_magic", "magic_missile", "shield"]),
             spellbook: HasStringList(["burning_hands", "detect_magic", "magic_missile", "shield", "identify", "sleep"]),
           })
-        ))),
+        )))
+        .with("equipment", HasEquipmentChoices({
+          backgroundOption: HasString("package"),
+          classOption: HasString("packageA"),
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: HasInt(8),
+          loadout: HasLoadout(EMPTY_LOADOUT.with("wieldedWeapon", HasString("greatsword")).with("wieldedWeaponGrip", TwoHandedGrip)),
+        })),
     )
     match finalized {
       | Finalized(sheet) =>
