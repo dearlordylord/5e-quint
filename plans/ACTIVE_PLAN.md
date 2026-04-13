@@ -42,13 +42,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 0,
       "id": "MONDB1",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Canonical Goblin Tracer Bullet"
     },
     {
       "number": 1,
       "id": "MONDB1a",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Battle Participation Semantics And Goblin Add Flow"
     },
     {
@@ -149,8 +149,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 | ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
-| 0 | MONDB1 - Canonical Goblin Tracer Bullet | ready-for-implementation-after-light-research | none | MONDB1a | Read `PRD_MONSTER_DATABASE.md`, `plans/monster-database-plan.md`, `ARCHITECTURE.md`, `UBIQUITOUS_LANGUAGE.md`, and the local SRD goblin text. Then replace the current goblin-oriented shortcuts with the canonical `StatBlock` authored-section model while preserving existing goblin battle and MCP behavior. | Ready now. The ownership direction, provenance rules, and Phase 1 acceptance criteria are already stable enough for implementation. |
-| 1 | MONDB1a - Battle Participation Semantics And Goblin Add Flow | blocked | MONDB1 | MONDB2 | After MONDB1 lands, lock the battle-participation rule: creatures exist outside battle, `BATTLE_INIT` is an initial batch add into battle, and `BATTLE_ADD_CREATURE` is the same projection semantics later in the battle lifecycle. Harden and document one initial goblin add flow and one mid-battle goblin add flow without changing public command names or payloads. | Hard gate after MONDB1. This task is mostly semantic cleanup, wording hardening, and regression coverage; it should land before a second monster broadens the pattern. |
+| 0 | MONDB1 - Canonical Goblin Tracer Bullet | done | none | MONDB1a | Landed on `integration`: goblin stock-weapon projection now reuses the shared SRD equipment weapon table, keeping one source of weapon identity while preserving existing goblin battle and MCP behavior. | Complete. Goblin stat blocks remain SRD-backed authored `StatBlock` data and deterministic verification is green. |
+| 1 | MONDB1a - Battle Participation Semantics And Goblin Add Flow | ready-for-implementation-after-light-research | MONDB1 | MONDB2 | Read `ARCHITECTURE.md`, MCP tool wording/examples, and the current `BATTLE_INIT` / `BATTLE_ADD_CREATURE` paths. Then harden battle-participation semantics and add regression coverage for one initial goblin add flow and one mid-battle goblin add flow. | Ready now. The goblin stat-block seam is landed; this follow-up is the planned semantics-and-wording cleanup before a second monster broadens the pattern. |
 | 2 | MONDB2 - Second Monster Tracer Bullet | blocked | MONDB1a | SPELL1 | After MONDB1a lands, add one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership. | Blocked by the need to prove both the canonical `StatBlock` seam and the battle-participation semantics on goblins first. |
 | 3 | SPELL1 - Freeze Spell Ownership Surface | blocked | MONDB2 | SPELL2a | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution. | Sequentially next after MONDB2. This should start with repo/source research, not implementation. |
 | 4 | SPELL2a - Canonical Spell Records And Identity Projection | blocked | SPELL1 | SPELL2b | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics. | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start. |
@@ -206,7 +206,7 @@ Structure note:
 
 Recommended next coding-loop task:
 
-1. `MONDB1 - Canonical Goblin Tracer Bullet`
+1. `MONDB1a - Battle Participation Semantics And Goblin Add Flow`
 
 Do not skip ahead to spell execution or advanced monster facilities before the canonical goblin tracer bullet lands. The current sequence is deliberate:
 
@@ -231,11 +231,11 @@ Do not skip ahead to spell execution or advanced monster facilities before the c
 
 ### Task 0 - MONDB1 - Canonical Goblin Tracer Bullet
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
-Blocks: `MONDB2`
+Blocks: `MONDB1a`
 
 Scope:
 
@@ -248,7 +248,7 @@ Scope:
 
 Next action:
 
-- Perform the light RAW/blast-radius pass, then implement Phase 1.
+- None. This task is complete on `integration`.
 
 Research note:
 
@@ -263,9 +263,13 @@ Verification requirements:
 - Include `/simplify` convergence, minimum two rounds.
 - If battle behavior changed, run only the narrowest relevant verification surface after deterministic tests are green.
 
+Closeout note:
+
+- Integrated result keeps goblin stock-weapon projection (`Dagger`, `Scimitar`, `Shortbow`) on the shared SRD equipment weapon table rather than duplicating weapon identity inside monster battle projection code.
+
 ### Task 1 - MONDB1a - Battle Participation Semantics And Goblin Add Flow
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `MONDB1`
 
@@ -282,7 +286,7 @@ Scope:
 
 Next action:
 
-- Unblock after `MONDB1`, then harden the semantics and wording before a second monster expands the pattern.
+- Read `ARCHITECTURE.md`, MCP tool wording/examples, and the current `BATTLE_INIT` / `BATTLE_ADD_CREATURE` paths. Then harden the semantics and wording before a second monster expands the pattern.
 
 Research note:
 

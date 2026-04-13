@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
+import { projectBattleWeaponProfile } from "#/character-equipment.ts";
 import {
   ControlCommandSchema,
   toBattleInitCreatureConfig,
@@ -214,6 +215,29 @@ describe("monster catalog", () => {
     ).toEqual({
       diceCount: 1,
       dieSize: 4,
+    });
+  });
+
+  it("reuses the shared equipment weapon table for goblin stock-weapon projections", () => {
+    expect(statBlockAttackBattleProfile(GOBLIN_MINION, "dagger")).toEqual({
+      ...projectBattleWeaponProfile("dagger"),
+      statBlockAttackSource: {
+        name: "Dagger",
+      },
+    });
+    expect(statBlockAttackBattleProfile(GOBLIN_WARRIOR, "scimitar")).toEqual({
+      ...projectBattleWeaponProfile("scimitar"),
+      statBlockAttackSource: {
+        name: "Scimitar",
+        extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+      },
+    });
+    expect(statBlockAttackBattleProfile(GOBLIN_WARRIOR, "shortbow")).toEqual({
+      ...projectBattleWeaponProfile("shortbow"),
+      statBlockAttackSource: {
+        name: "Shortbow",
+        extraDamageOnAdvantageHit: { diceCount: 1, dieSize: 4 },
+      },
     });
   });
 

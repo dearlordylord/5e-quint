@@ -13,6 +13,7 @@ Current scope:
 
 - The hand-authored SRD dataset currently includes `Goblin Minion`, `Goblin Warrior`, `Goblin Boss`, `Pseudodragon`, `Centaur Trooper`, `Knight`, `Kobold Warrior`, `Mage`, `Ogre`, `Priest`, `Sahuagin Warrior`, and `Scout`.
 - Goblin records are authored in canonical SRD-facing sections: `traits`, `actions`, `bonusActions`, `reactions`, and `legendaryActions`.
+- Goblin stock-weapon attacks project through the shared SRD equipment weapon table by their canonical authored attack names (`Dagger`, `Scimitar`, `Shortbow`), so the stat block keeps one source of weapon identity.
 - Goblin tracer-bullet traceability: `.references/srd-5.2.1/Monsters/Monsters-E-G.md` (`Goblins > Goblin Minion`, `Goblin Warrior`, `Goblin Boss`) and `UBIQUITOUS_LANGUAGE.md` terms `Stat Block`, `Creature`, `Attack Roll`, `Bonus Action`, and `Reaction`.
 - Pseudodragon extends the same `StatBlock` path without adding a monster-specific runtime surface: its `Bite` attack projects through the existing generic battle init flow, while `Sting` remains explicit text-authored data until a later generic saving-throw-action facility exists.
 - Centaur Trooper extends the path with authored `rechargeAbilities`: battle init/start-turn now read recharge availability and minimum d6 thresholds generically from stat-block data, while unsupported `Trampling Charge` resolution remains explicit text-authored data.
