@@ -82,6 +82,9 @@ export function buildStartBattleCommand(
   return {
     scope: "battle" as const,
     type: "BATTLE_INIT" as const,
+    // BATTLE_INIT seeds the initial roster of an already-authored battle.
+    // These creatures are promoted into battle participation here; they are
+    // not "created by battle".
     creatures: [
       {
         id: input.fighterId,

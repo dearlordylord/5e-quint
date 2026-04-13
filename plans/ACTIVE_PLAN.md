@@ -47,36 +47,42 @@ The Ralph harness reads this machine-readable index for task order and status. K
     },
     {
       "number": 1,
+      "id": "MONDB1a",
+      "status": "blocked",
+      "title": "Battle Participation Semantics And Goblin Add Flow"
+    },
+    {
+      "number": 2,
       "id": "MONDB2",
       "status": "blocked",
       "title": "Second Monster Tracer Bullet"
     },
     {
-      "number": 2,
+      "number": 3,
       "id": "SPELL1",
       "status": "blocked",
       "title": "Freeze Spell Ownership Surface"
     },
     {
-      "number": 3,
+      "number": 4,
       "id": "SPELL2a",
       "status": "blocked",
       "title": "Canonical Spell Records And Identity Projection"
     },
     {
-      "number": 4,
+      "number": 5,
       "id": "SPELL2b",
       "status": "blocked",
       "title": "Battle Spell Projection For One Generic Spell Family"
     },
     {
-      "number": 5,
+      "number": 6,
       "id": "MONDB3",
       "status": "blocked",
       "title": "Advanced Monster Pattern Tracer Bullet"
     },
     {
-      "number": 6,
+      "number": 7,
       "id": "MONDB4a",
       "status": "blocked",
       "title": "Freeze Dataset Expansion Scope"
@@ -113,13 +119,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 | ----- | ---- | ------ | ---------- | ------ | ----------- | ----------------- |
-| 0 | MONDB1 - Canonical Goblin Tracer Bullet | ready-for-implementation-after-light-research | none | MONDB2 | Read `PRD_MONSTER_DATABASE.md`, `plans/monster-database-plan.md`, `ARCHITECTURE.md`, `UBIQUITOUS_LANGUAGE.md`, and the local SRD goblin text. Then replace the current goblin-oriented shortcuts with the canonical `StatBlock` authored-section model while preserving existing goblin battle and MCP behavior. | Ready now. The ownership direction, provenance rules, and Phase 1 acceptance criteria are already stable enough for implementation. |
-| 1 | MONDB2 - Second Monster Tracer Bullet | blocked | MONDB1 | SPELL1 | After MONDB1 lands, add one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership. | Blocked only by the need to prove the canonical `StatBlock` seam on goblins first. |
-| 2 | SPELL1 - Freeze Spell Ownership Surface | blocked | MONDB2 | SPELL2a | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution. | Sequentially next after MONDB2. This should start with repo/source research, not implementation. |
-| 3 | SPELL2a - Canonical Spell Records And Identity Projection | blocked | SPELL1 | SPELL2b | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics. | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start. |
-| 4 | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked | SPELL2a | MONDB3 | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once. | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline. |
-| 5 | MONDB3 - Advanced Monster Pattern Tracer Bullet | blocked | SPELL2b | MONDB4a | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers. | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones. |
-| 6 | MONDB4a - Freeze Dataset Expansion Scope | blocked | MONDB3 | none | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion. | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven. |
+| 0 | MONDB1 - Canonical Goblin Tracer Bullet | ready-for-implementation-after-light-research | none | MONDB1a | Read `PRD_MONSTER_DATABASE.md`, `plans/monster-database-plan.md`, `ARCHITECTURE.md`, `UBIQUITOUS_LANGUAGE.md`, and the local SRD goblin text. Then replace the current goblin-oriented shortcuts with the canonical `StatBlock` authored-section model while preserving existing goblin battle and MCP behavior. | Ready now. The ownership direction, provenance rules, and Phase 1 acceptance criteria are already stable enough for implementation. |
+| 1 | MONDB1a - Battle Participation Semantics And Goblin Add Flow | blocked | MONDB1 | MONDB2 | After MONDB1 lands, lock the battle-participation rule: creatures exist outside battle, `BATTLE_INIT` is an initial batch add into battle, and `BATTLE_ADD_CREATURE` is the same projection semantics later in the battle lifecycle. Harden and document one initial goblin add flow and one mid-battle goblin add flow without changing public command names or payloads. | Hard gate after MONDB1. This task is mostly semantic cleanup, wording hardening, and regression coverage; it should land before a second monster broadens the pattern. |
+| 2 | MONDB2 - Second Monster Tracer Bullet | blocked | MONDB1a | SPELL1 | After MONDB1a lands, add one materially different SRD monster through the same `StatBlock` and projection path. Prefer a non-spellcasting monster or keep any spellcasting section reference-only/text-only so this task does not preempt spell ownership. | Blocked by the need to prove both the canonical `StatBlock` seam and the battle-participation semantics on goblins first. |
+| 3 | SPELL1 - Freeze Spell Ownership Surface | blocked | MONDB2 | SPELL2a | Inventory the current spell owners across core/features/battle/MCP, then freeze the canonical authored spell record, spell identity/provenance rules, and the exact boundary between spell-authored data, spell projection, and battle-owned spell resolution. | Sequentially next after MONDB2. This should start with repo/source research, not implementation. |
+| 4 | SPELL2a - Canonical Spell Records And Identity Projection | blocked | SPELL1 | SPELL2b | Implement the frozen spell-owned record, spell identity/provenance shape, and the one-way projection layer that lets characters and monsters reference canonical spells without owning spell execution semantics. | Blocked on SPELL1 because the spell-content owner and projection seam must be explicit before code changes start. |
+| 5 | SPELL2b - Battle Spell Projection For One Generic Spell Family | blocked | SPELL2a | MONDB3 | Implement one battle-facing generic spell projection slice on top of canonical spell records. Start with one family such as save spells or concentration spells; do not widen to every `BATTLE_CAST_*` surface at once. | Blocked on SPELL2a because battle should consume a settled spell identity/projection seam rather than inventing one inline. |
+| 6 | MONDB3 - Advanced Monster Pattern Tracer Bullet | blocked | SPELL2b | MONDB4a | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers. | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones. |
+| 7 | MONDB4a - Freeze Dataset Expansion Scope | blocked | MONDB3 | none | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion. | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven. |
 
 ## Current Integrated Baseline
 
@@ -142,6 +149,7 @@ Current architecture decisions for this batch:
 - Monster-authored sections should be modeled explicitly as typed authored data.
 - The type shape must distinguish executable abilities from text-only unsupported abilities structurally.
 - Runtime battle state is a one-way projection from authored monster or spell records.
+- Battle owns participation, not creature existence. `BATTLE_INIT` should be understood as the initial batch add of already-authored creatures into a new battle, and `BATTLE_ADD_CREATURE` as the same projection semantics later in the battle lifecycle.
 - Monster work may reference spell identities and authored spellcasting prose, but it must not become the owner of spell execution semantics.
 - Spell work must first define canonical spell records and identity projection, then one narrow battle spell family slice, before advanced monster continuation depends on them.
 
@@ -158,11 +166,12 @@ Recommended next coding-loop task:
 Do not skip ahead to spell execution or advanced monster facilities before the canonical goblin tracer bullet lands. The current sequence is deliberate:
 
 1. prove the canonical stat-block owner on the narrowest monster slice;
-2. prove the schema on a second monster without preempting spell ownership;
-3. freeze the spell-content owner;
-4. implement canonical spell identity/projection;
-5. implement one battle spell family on top of that projection;
-6. resume advanced monster continuation on top of that settled spell boundary.
+2. lock battle participation semantics on the goblin flow before widening the monster pattern;
+3. prove the schema on a second monster without preempting spell ownership;
+4. freeze the spell-content owner;
+5. implement canonical spell identity/projection;
+6. implement one battle spell family on top of that projection;
+7. resume advanced monster continuation on top of that settled spell boundary.
 
 ## Recommended Coding Loop
 
@@ -209,11 +218,45 @@ Verification requirements:
 - Include `/simplify` convergence, minimum two rounds.
 - If battle behavior changed, run only the narrowest relevant verification surface after deterministic tests are green.
 
-### Task 1 - MONDB2 - Second Monster Tracer Bullet
+### Task 1 - MONDB1a - Battle Participation Semantics And Goblin Add Flow
 
 Status: `blocked`
 
 Depends on: `MONDB1`
+
+Blocks: `MONDB2`
+
+Scope:
+
+- Lock the durable domain rule that creatures exist outside battle and are projected into battle participation rather than created by battle lifecycle commands.
+- Make `BATTLE_INIT` explicitly mean initial batch add into battle, not creature creation.
+- Make `BATTLE_ADD_CREATURE` explicitly mean the same projection semantics later in the battle lifecycle.
+- Prove one initial goblin add flow and one mid-battle goblin add flow through the existing MCP/core surfaces.
+- Allow wording cleanup in `plans/ACTIVE_PLAN.md`, [ARCHITECTURE.md](../ARCHITECTURE.md), MCP tool descriptions/examples, and implementation-facing code comments where current wording implies creature creation at battle start.
+- Do not rename public command types or change payload shapes in this task.
+
+Next action:
+
+- Unblock after `MONDB1`, then harden the semantics and wording before a second monster expands the pattern.
+
+Research note:
+
+- This is intentionally a hard-gate semantic cleanup task, not a request for new monster-addition mechanics.
+- The existing MCP/core paths already support goblin add flows; the task is to make their shared semantics explicit and regression-covered.
+
+Verification requirements:
+
+- Confirm the cleaned-up wording consistently states battle participation rather than creature creation.
+- Verify both flows:
+  - initial goblin batch add via `BATTLE_INIT`;
+  - mid-battle goblin add via `BATTLE_ADD_CREATURE`.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 2 - MONDB2 - Second Monster Tracer Bullet
+
+Status: `blocked`
+
+Depends on: `MONDB1a`
 
 Blocks: `SPELL1`
 
@@ -226,7 +269,7 @@ Scope:
 
 Next action:
 
-- Unblock after `MONDB1`, then choose the concrete second monster using the now-landed schema.
+- Unblock after `MONDB1a`, then choose the concrete second monster using the now-landed schema.
 
 Research note:
 
@@ -239,7 +282,7 @@ Verification requirements:
 - Verify the monster reaches battle/MCP through the same projection path as goblins.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 2 - SPELL1 - Freeze Spell Ownership Surface
+### Task 3 - SPELL1 - Freeze Spell Ownership Surface
 
 Status: `blocked`
 
@@ -271,7 +314,7 @@ Verification requirements:
 - Confirm the frozen ownership surface is specific enough that `SPELL2a` can implement it without reopening task scope.
 - Confirm the frozen seam prevents monster work from becoming the spell-content owner.
 
-### Task 3 - SPELL2a - Canonical Spell Records And Identity Projection
+### Task 4 - SPELL2a - Canonical Spell Records And Identity Projection
 
 Status: `blocked`
 
@@ -302,7 +345,7 @@ Verification requirements:
 - Run the narrowest relevant core tests for the touched spell/projection paths.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 4 - SPELL2b - Battle Spell Projection For One Generic Spell Family
+### Task 5 - SPELL2b - Battle Spell Projection For One Generic Spell Family
 
 Status: `blocked`
 
@@ -332,7 +375,7 @@ Verification requirements:
 - Run the narrowest relevant core/battle/MCP tests for the touched spell family path.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 5 - MONDB3 - Advanced Monster Pattern Tracer Bullet
+### Task 6 - MONDB3 - Advanced Monster Pattern Tracer Bullet
 
 Status: `blocked`
 
@@ -360,7 +403,7 @@ Verification requirements:
 - Verify public battle and MCP surfaces remain generic after the tracer bullet lands.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 6 - MONDB4a - Freeze Dataset Expansion Scope
+### Task 7 - MONDB4a - Freeze Dataset Expansion Scope
 
 Status: `blocked`
 
