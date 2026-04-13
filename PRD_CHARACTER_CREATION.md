@@ -16,7 +16,14 @@ Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) as the cu
 - formalizing open choices and incomplete state on the creation side;
 - keeping level-1 creation distinct from level advancement;
 - introducing the explicit character-to-creature handoff;
-- distinguishing hardcoded rules from parameterized content descriptors for future licensed-content support.
+- distinguishing hardcoded rules from parameterized content descriptors for future licensed-content support;
+- defining the remaining convergence work needed for Quint authority, draft-edit preview semantics, and downstream adapter surfaces.
+
+For the current post-foundation follow-on work, also see:
+
+- [PRD_CHARACTER_MCP_SURFACE.md](./PRD_CHARACTER_MCP_SURFACE.md) for the downstream stored-server-side MCP character surface;
+- [PRD_CHARACTER_DRAFT_EDITABILITY.md](./PRD_CHARACTER_DRAFT_EDITABILITY.md) for mandatory preview-before-commit draft-edit semantics;
+- [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](./PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) for the remaining cleanup and authored-ownership gaps on the character side.
 
 ## Problem Statement
 
@@ -87,7 +94,7 @@ The product should preserve that sequential shape for guided workflows without m
 - finalizable status, meaning the draft can become a canonical character sheet;
 - projection eligibility into creature and battle runtime.
 
-The same principle should govern higher-level starts. A higher-level character is not a separate semantic product; it is a level 1 character created using the normal creation flow and then advanced one level at a time using the level-advancement rules until the target level is reached.
+The same principle should govern higher-level starts. A higher-level character is not a separate semantic product; it is a level-1 character created using the normal creation flow and then advanced one level at a time using the level-advancement rules until the target level is reached.
 
 ## User Stories
 
@@ -121,7 +128,7 @@ The same principle should govern higher-level starts. A higher-level character i
 28. As a player, I want to move through character creation step by step and still go back to earlier steps, so that the guided workflow does not trap me in a linear one-way flow.
 29. As a player, if I change an earlier choice, I want only dependent later choices to be invalidated, so that unrelated later choices are preserved.
 30. As a player, I want to review and edit a complete character before finalizing it, so that "all choices present" and "finalized" are not treated as the same thing.
-31. As a player, I want a higher-level starting character to be built by creating a level 1 character first and then leveling up repeatedly, so that the same rules apply whether the character started at level 1 or entered the campaign later.
+31. As a player, I want a higher-level starting character to be built by creating a level-1 character first and then leveling up repeatedly, so that the same rules apply whether the character started at level 1 or entered the campaign later.
 32. As a developer, I want one owned character-sheet model, so that MCP, app, battle initialization, and feature hooks stop inventing their own partial character representations.
 33. As a developer, I want creation-time validation separated from combat-time transitions, so that the battle machine stays focused on combat semantics.
 34. As a developer, I want pure derivation functions from character sheet to runtime projections, so that the same sheet can feed creature runtime and battle runtime without duplicated logic.
@@ -164,27 +171,6 @@ The same principle should govern higher-level starts. A higher-level character i
 - When an upstream choice changes, the system should preserve later user choices unless those choices depend on the changed fact and are no longer valid or meaningful.
 - Runtime projections must avoid redundant state. If a fact already exists on the canonical character sheet, downstream layers should project or reference it rather than duplicating it.
 - The solution should favor deep modules: validation, derivation, sheet projection, and loadout projection should each expose small stable interfaces over substantial internal logic.
-
-## Core Domain Model
-
-The product should explicitly model the following domain surfaces:
-
-- `CharacterDraft`: editable in-progress player-character state.
-- `OpenChoices`: required unresolved choices implied by the current draft and stage of creation or advancement.
-- `ValidationIssues`: illegal or contradictory choices present in the current draft.
-- `CharacterSheet`: finalized canonical player-character state.
-- `LevelUpDraft` or equivalent advancement input: the explicit choices required to move a finalized sheet to the next legal level.
-- Runtime projections: execution-facing projections derived from a finalized sheet.
-
-In a Quint-first formulation, the most important pure functions are:
-
-- `draft -> open choices`
-- `draft -> validation issues`
-- `draft -> finalized sheet when valid`
-- `sheet -> next-level open choices`
-- `sheet + level-up choices -> next-level sheet`
-- `sheet -> creature runtime projection`
-- later `sheet -> battle init projection`
 
 ## Testing Decisions
 

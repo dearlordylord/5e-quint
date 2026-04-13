@@ -2,37 +2,39 @@
 
 Date: 2026-04-12
 
-Status: Draft
+Status: Current primary design artifact for the remaining character-side ownership, MCP, and editability work
 
 Owner: Core / Quint architecture
 
 ## Problem Statement
 
-The repo now has a substantial TypeScript character domain, but the formal ownership line is still incomplete.
+The repo has landed a substantial character domain and a substantial formal character layer, but the end state is not yet fully converged.
 
 Today, the project has:
 
 - a canonical TypeScript `CharacterDraft` / `CharacterSheet` split;
+- `character-creation.qnt` as the formal owner of draft/open-choice/finalization semantics;
+- `character.qnt` as the formal owner of advancement and character-to-creature projection semantics;
 - ordered advancement history as the legality-relevant record for higher-level starts and multiclass continuation;
 - one-way projection from finalized sheet state into creature-facing and battle-facing runtime inputs;
-- a thin character workflow that correctly avoids becoming a second rules engine.
+- a thin character workflow shell that avoids becoming a second rules engine.
 
 But it does not yet have:
 
-- a dedicated Quint model for character creation;
-- a dedicated Quint model for character advancement over finalized characters;
-- formal open-choice and incomplete-state semantics on the character-creation side;
-- formal parity between TypeScript character logic and Quint character logic.
+- full convergence where Quint is unmistakably the semantic owner and TypeScript is unmistakably the adapter/runtime implementation;
+- a public MCP character surface over stored server-side character records;
+- first-class preview-before-commit semantics for destructive draft edits;
+- full authored ownership for every projection-relevant character fact;
+- complete cleanup of stale helper structure left behind by earlier ownership migrations.
 
-This leaves the project in an unstable middle state:
+This leaves the project in a middle state:
 
-- combat is Quint-driven;
-- character creation and leveling are only Quint-aligned by design intent and TypeScript structure;
-- the repo has design notes for a formal character layer, but not the formal character layer itself.
+- combat is already Quint-authoritative;
+- character creation and leveling are formally modeled, but the product/runtime path still feels operationally TypeScript-first;
+- app and MCP surfaces are not yet symmetric downstream consumers of the owned character domain;
+- some projection paths still carry placeholder behavior because the character side does not yet own the authored choice they want to project.
 
-The result is a correctness gap. The project has already decided that battle semantics belong in Quint and that runtime surfaces should be projections from canonical authored state. Character creation and level advancement should follow the same principle instead of remaining only partially formalized.
-
-The governing boundary is:
+The governing boundary remains:
 
 - In peace you're a character; in combat you're a creature.
 
@@ -40,16 +42,12 @@ That means:
 
 - outside combat, the canonical player-facing authored object is a character;
 - entering runtime or battle projects character facts into creature-facing execution facts;
-- combat must never become the owner of character-creation facts.
+- combat must never become the owner of character-creation facts;
+- MCP and app must remain downstream consumers of the owned character domain rather than becoming parallel owners.
 
 ## Solution
 
-Introduce two formal Quint modules for the player-character domain:
-
-- `character-creation.qnt`
-- `character.qnt`
-
-The split is intentional.
+Keep the current formal split and drive it to completion.
 
 `character-creation.qnt` owns:
 
@@ -65,32 +63,33 @@ The split is intentional.
 - higher-level starts as level-1 creation plus repeated legal advancement transitions;
 - projection from finalized character semantics into creature-facing execution semantics.
 
-The overall pipeline becomes:
+The overall pipeline remains:
 
 - `CharacterDraft` -> open choices / legality / finalization in `character-creation.qnt`
 - finalized `CharacterSheet` -> advancement semantics in `character.qnt`
-- finalized `CharacterSheet` -> formal combat-ready character projection
-- formal combat-ready character projection -> creature-facing runtime projection
-- creature-facing runtime projection -> battle-facing runtime projection
+- finalized `CharacterSheet` -> formal character-creature projection
+- formal character-creature projection -> runtime/battle-facing projections
 
-This design preserves the repo's ownership rules:
+The remaining work should make that pipeline operationally explicit too:
 
-- player-authored creation facts are owned on the character side;
-- runtime facts are derived projections;
-- combat owns combat state, not authored character state.
+- TypeScript remains the runtime implementation and adapter layer over the owned semantics;
+- app and MCP become thin consumers of the same canonical draft/sheet/projection path;
+- destructive draft edits gain mandatory preview before commit;
+- missing authored facts are added on the character side instead of guessed in projections or adapters.
 
 ## Goals
 
 - Make character creation Quint-driven rather than only Quint-aligned.
 - Make level advancement Quint-driven rather than only Quint-aligned.
 - Keep character creation distinct from combat semantics.
-- Keep level 1 creation distinct from level advancement.
+- Keep level-1 creation distinct from level advancement.
 - Make higher-level starts semantically equal to legal level-1 creation followed by repeated legal level-ups.
 - Keep the UI and adapter layers thin and non-authoritative.
 - Preserve one-way projection from character semantics into runtime.
 - Support all SRD 5.2.1 character-creation facts as first-class formal concepts, including non-combat facts the runtime may later ignore.
-- Formalize open choices and incomplete state where technically feasible.
-- Keep the semantics reusable for future licensed content without forcing semantic rewrites.
+- Converge on a state where new character semantics land in Quint first and TypeScript/MCP/app follow.
+- Add explicit preview-before-commit semantics for destructive draft edits.
+- Close the remaining character-sheet ownership gaps that still force placeholder projection behavior.
 
 ## Non-Goals
 
@@ -100,6 +99,7 @@ This design preserves the repo's ownership rules:
 - Flattening PCs and monsters into one authored type.
 - Making the formal layer dependent on workflow page order or UI state.
 - Building MCP-specific parity as the first correctness target.
+- Adding rollback/checkpoint history in the first editability slice.
 - Adding non-SRD shipped content as part of this PRD.
 
 ## User Stories
@@ -112,13 +112,24 @@ This design preserves the repo's ownership rules:
 6. As a player, I want multiclass legality to be checked when I take the new class level, so that later scores or later choices do not retroactively legalize an illegal path.
 7. As a player, I want subclass, ASI, feat, and Epic Boon timing to be checked on the actual advancement path, so that timing-sensitive character legality is preserved.
 8. As a player, I want all SRD character-creation facts, including alignment and languages, to remain part of my canonical character even if battle does not care about them.
-9. As a developer, I want a formal owner for draft/open-choice/finalization semantics, so that TypeScript does not remain the only executable character-creation semantics.
-10. As a developer, I want a formal owner for advancement semantics, so that TypeScript does not remain the only executable level-up model.
-11. As a developer, I want runtime projections to remain one-way derived data, so that character facts are authored once and projected downward rather than re-authored in runtime layers.
-12. As a developer, I want a clean character-side handoff into creature semantics, so that the repo's ubiquitous language stays coherent.
-13. As a developer, I want rule semantics hardcoded where they are core SRD mechanics, so that the formal layer remains explicit and trustworthy.
-14. As a developer, I want concrete content fed through typed content descriptors where possible, so that future licensed content can use the same semantic engine without semantic rewrites.
-15. As a tester, I want parity between Quint character semantics and shared TypeScript character logic, so that creation and leveling do not drift from the formal model.
+9. As a user, I want destructive draft edits to require an explicit preview before commit, so that I can see which later choices would be dropped or reopened before accepting the change.
+10. As a user of a downstream adapter surface, I want character records to be stored server-side and manipulated through canonical operations, so that I am not forced to resend the whole character every time.
+11. As a developer, I want a formal owner for draft/open-choice/finalization semantics, so that TypeScript does not remain the only executable character-creation semantics.
+12. As a developer, I want a formal owner for advancement semantics, so that TypeScript does not remain the only executable level-up model.
+13. As a developer, I want runtime projections to remain one-way derived data, so that character facts are authored once and projected downward rather than re-authored in runtime layers.
+14. As a developer, I want MCP and app to consume stored canonical draft/sheet state rather than alternate adapter-specific schemas, so that the owned domain remains singular.
+15. As a developer, I want subclass legality to remain owned by ordered advancement replay, so that there is not a second side-channel subclass validator drifting from the canonical history model.
+16. As a developer, I want projection-relevant choices such as Fighting Style selections to exist on the character side before projection, so that runtime layers stop carrying placeholder empty sets for authored facts the sheet does not yet own.
+17. As a tester, I want parity between Quint character semantics and shared TypeScript character logic, so that creation and leveling do not drift from the formal model.
+
+## Recent Decisions
+
+- **Target end state is "moved," not merely "moving."** In this repo, that means Quint is the semantic owner for character creation and advancement, while TypeScript is the adapter/runtime implementation and parity guardrail.
+- **Character MCP is downstream, stored server-side, and non-authoritative.** MCP should operate on stored draft/sheet records and thin core calls rather than caller-supplied alternate character schemas.
+- **Destructive draft edits require mandatory preview before commit.** The current `applyCharacterDraftUpdate()` behavior is a post-change sanitizer. The next slice must add a first-class preview-of-loss surface before mutation is accepted.
+- **Rollback/checkpoints are deferred.** The current scope is preview-of-loss only. History/checkpoint semantics should be documented explicitly as follow-on work rather than implied or silently omitted.
+- **Subclass legality is advancement-owned.** Earlier versions validated subclass choices through a side-channel draft field. That ownership moved into ordered `advancement` entries, and replay is now the canonical legality path. Any remaining stub validator should be cleaned up to reflect that ownership line.
+- **Fighting Style ownership is still incomplete on the character side.** Both TypeScript and Quint currently project an empty set because the authored `CharacterSheet` surface does not yet own Fighting Style selections. This is an explicit ownership gap, not an accidental omission.
 
 ## Domain Model
 
@@ -134,6 +145,7 @@ Core concepts:
 - `CharacterSheet`
 - `AdvancementEntry`
 - advancement transition inputs
+- stored draft/sheet handles for downstream adapter surfaces such as MCP
 
 The critical rule is:
 
@@ -145,8 +157,8 @@ The creature side owns execution-facing creature semantics.
 
 Core concepts:
 
+- character-creature projection
 - creature-facing runtime projection
-- `CharConfig`
 - battle-facing creature initialization
 - battle-owned combatant state
 
@@ -210,8 +222,8 @@ Required formal outputs:
 - `isLegalSheet`
 - `canAdvance`
 - `advanceLevel`
-- finalized sheet -> formal combat-ready character projection
-- formal combat-ready character projection -> creature-facing runtime projection
+- finalized sheet -> formal character-creature projection
+- formal character-creature projection -> creature-facing runtime projection
 
 What it must not own:
 
@@ -223,177 +235,68 @@ What it must not own:
 
 Do not project finalized sheets directly to raw runtime config as the first formal boundary.
 
-Instead, introduce a narrow intermediate formal projection owned by the character side.
-
-Proposed name:
+Instead, use a narrow intermediate formal projection owned by the character side:
 
 - `CharacterCreatureProjection`
 
 Purpose:
 
-- represent the last character-owned formal projection before the character becomes a creature for runtime purposes.
-
-Benefits:
-
-- keeps the character/creature handoff explicit in domain language;
-- reduces coupling between character semantics and whatever exact runtime wire shape `CharConfig` currently has;
-- allows the formal layer to say what combat-relevant facts a character contributes without making raw runtime config the semantic owner.
-
-Costs:
-
-- adds one more projection layer;
-- requires one extra mapping step into `CharConfig`.
+- represent the last character-owned formal projection before the character becomes a creature for runtime purposes;
+- keep the character/creature handoff explicit in domain language;
+- reduce coupling between character semantics and any exact runtime wire shape;
+- let the formal layer say what combat-relevant facts a character contributes without making raw runtime config the semantic owner.
 
 Decision:
 
 - use `CharacterCreatureProjection` as the formal projection target in `character.qnt`;
-- keep the mapping from `CharacterCreatureProjection` to `CharConfig` thin and downstream.
+- keep the mapping from `CharacterCreatureProjection` to runtime/battle inputs thin and downstream.
 
-## Content Strategy
+## Adapter And Editability Boundaries
 
-The formal layer must distinguish rules from content.
+### Adapter Boundary
 
-### Hardcode In Formal Semantics
+- MCP and app surfaces are downstream consumers of the owned character domain.
+- Stored server-side draft/sheet state may exist for MCP usability, but those stored records must still be canonical `CharacterDraft` / `CharacterSheet` data rather than adapter-owned alternate schemas.
+- Public adapter contracts should expose narrow operations over the owned domain:
+  - inspect stored draft/sheet state;
+  - preview a draft update;
+  - apply an accepted draft update;
+  - assess/finalize/advance/project through core-owned semantics.
 
-Hardcode SRD mechanics that are rules, not catalog entries, such as:
+### Editability Boundary
 
-- level-advancement shape;
-- multiclass prerequisite semantics;
-- subclass timing semantics;
-- ASI / feat / Epic Boon timing semantics;
-- higher-level-start semantics;
-- projection-boundary semantics.
-
-These are stable rules and belong directly in Quint semantics.
-
-### Parameterize Through Typed Content Descriptors
-
-Do not hardwire all future content into the semantics layer.
-
-Character semantics should consume typed content descriptors for things like:
-
-- classes and class progression descriptors;
-- backgrounds and granted-choice descriptors;
-- species and species-choice descriptors;
-- feat and spell-selection descriptors where they matter for legality or projection.
-
-This allows:
-
-- direct shipped SRD content where the repo owns the content;
-- future licensed content without semantic forks;
-- a stable formal engine that does not need a rewrite for every new content family.
-
-### SRD-Shipped Content
-
-If content is directly part of the shipped SRD corpus the repo chooses to own, it may be represented concretely.
-
-But the semantic model should still be written so that:
-
-- rules are the owner of legality and transition logic;
-- content enters through typed descriptors rather than ad hoc rule branches.
-
-## Level-1 Creation Versus Level Advancement
-
-The formal model must preserve this distinction:
-
-- creating a level-1 character is not a level-up;
-- creating a level-3 starting character is level-1 character creation plus two legal level-up transitions.
-
-This rule affects both module boundaries:
-
-- `character-creation.qnt` is responsible for producing the first legal finalized sheet;
-- `character.qnt` is responsible for producing later legal sheets from that first one.
-
-Direct higher-level authored inputs may exist as convenience surfaces in TypeScript, but the formal owner must explain them through equivalence to:
-
-1. legal level-1 creation
-2. repeated legal advancement
-
-## Open Choices And Incomplete State
-
-Open choices and incomplete state should be formalized if technically feasible.
-
-The intended rule is:
-
-- incomplete does not mean illegal;
-- illegal does not mean incomplete;
-- open choices are unresolved requirements implied by the current authored state;
-- validation issues are contradictions or disallowed authored states.
-
-This belongs in `character-creation.qnt`, not only in TypeScript.
-
-Constraint:
-
-- formalize authored incompleteness and choice requirements;
-- do not formalize workflow-page state or UI progression.
-
-## Parity Plan
-
-The initial correctness target should be as deep as possible without binding the formal model to adapters.
-
-### First-Class Parity Targets
-
-Compare Quint against shared TypeScript domain functions for:
-
-- draft assessment and finalization;
-- advancement legality and advancement transition;
-- finalized-sheet derivation;
-- projection into shared creature-facing runtime inputs.
-
-### Secondary Parity Targets
-
-Where useful, compare Quint against shared reusable projection/state helper surfaces consumed by multiple frontends.
-
-### Excluded From First Pass
-
-Do not make first-pass parity depend on:
-
-- app UI structure;
-- MCP transport schemas;
-- MCP-specific request/response payloads.
-
-The formal layer should bind to deep reusable semantics, not to adapter shells.
+- Current TypeScript sanitization is post-change and destructive when later choices become invalid.
+- The next slice must add a domain-level preview operation that computes:
+  - the proposed next draft;
+  - authored fields that would be dropped;
+  - newly opened required choices;
+  - newly introduced illegal issues.
+- Commit remains a separate step after preview acceptance.
+- History, rollback, and checkpoints remain intentionally deferred for now.
 
 ## Testing Decisions
 
-- `character-creation.qnt` should have deterministic Quint tests for open choices, incompleteness, legality, and finalization.
-- `character.qnt` should have deterministic Quint tests for advancement legality, advancement transitions, and higher-level-start equivalence.
-- `character.qnt` should have deterministic Quint tests for `CharacterCreatureProjection`.
-- TypeScript parity tests should compare shared domain logic against Quint legality/finalization behavior.
-- TypeScript parity tests should compare shared advancement logic against Quint advancement behavior.
-- TypeScript parity tests should compare shared projection logic against Quint projection behavior.
-- The first parity harness should stay at creature/character level rather than battle MBT.
-- Battle MBT remains out of scope unless character formalization changes battle semantics directly.
+- A good test verifies externally visible domain behavior from the user's perspective and from the public character-domain perspective.
+- Formal parity should compare core character-domain behavior against the corresponding Quint outputs instead of re-encoding weaker interpretations in adapter code.
+- Modules and surfaces that should definitely be tested include:
+  - draft assessment and finalization;
+  - advancement legality and replay;
+  - character-creature projection;
+  - draft-edit preview behavior once added;
+  - MCP character operations once added.
+- Existing test style in the repo favors pure-function tests, scenario tests, and parity-style assertions. The remaining character work should follow the same pattern.
+- Adapter tests should assert that app/MCP surfaces route through the owned character domain rather than duplicating legality or projection logic locally.
 
-## Implementation Decisions
+## Out of Scope
 
-- Add `character-creation.qnt` as the formal owner of draft/open-choice/finalization semantics.
-- Add `character.qnt` as the formal owner of finalized-sheet advancement and projection semantics.
-- Keep `character.qnt` separate from `battle.qnt`.
-- Let both character-side modules reuse helper semantics from `creature.qnt`.
-- Keep the landed TypeScript domain as the concrete implementation boundary that Quint parity will check, not replace.
-- Use `CharacterCreatureProjection` as the formal handoff between character semantics and creature runtime semantics.
-- Treat higher-level starts as creation plus repeated legal advancement, not as a separate semantic product.
-- Formalize all SRD-mentioned character-creation facts, including non-combat facts, on the character side.
-- Parameterize content through typed descriptors where possible so licensed content can reuse the semantic engine later.
-- Keep the workflow shell thin and non-authoritative.
-
-## Out Of Scope
-
-- Implementing the Quint modules as part of this PRD.
-- Refactoring battle semantics as part of this PRD.
-- MCP-specific API redesign.
-- Monster-domain redesign beyond the explicit character/creature/monster language boundary.
-- Shipping new non-SRD content.
+- Moving character creation into `battle.qnt`.
+- Making battle init, app workflow state, or MCP payloads the semantic owner of player-character facts.
+- Adding rollback/checkpoint history in the first editability slice.
+- Replacing the landed `CharacterDraft` / `CharacterSheet` model with a second incompatible product model.
+- Adding non-SRD shipped content as part of this PRD.
 
 ## Further Notes
 
-- Existing docs already contain the foundation for this work, but they are spread across PRDs, plan closeouts, and design notes.
-- This PRD is intended to become the primary design artifact for the remaining formalization work.
-- Historical notes such as `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` should remain as supporting rationale, not as the main implementation brief.
-- The implementation program after this PRD should be sequenced as:
-  1. `character-creation.qnt`
-  2. `character.qnt`
-  3. deterministic Quint tests
-  4. TypeScript parity harness
-  5. plan/task updates for implementation rollout
+- The repo already has the right ownership direction. The remaining work is convergence and explicitness, not invention of a new model.
+- The `/character` page is useful as a thin exercise shell, but it is not itself the long-term product center or semantic owner.
+- Stored server-side MCP character state is a usability decision, not an ownership exception.
