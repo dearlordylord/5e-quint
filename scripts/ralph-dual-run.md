@@ -6,13 +6,14 @@
 2. Creates an integration branch from the current main `HEAD`.
 3. Refreshes the live plan snapshot every iteration.
 4. Asks Codex to choose the next runnable task from the refreshed plan instead of hard-coding earliest-runnable selection.
-5. For the chosen task, creates two disposable worktrees from the current integration branch `HEAD`.
+5. For the chosen task, creates disposable worktree(s) from the current integration branch `HEAD`.
 6. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
-7. Runs Claude in one worktree with `claude --dangerously-skip-permissions`.
-8. Runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
-9. Reviews both task diffs with Codex.
+7. By default, runs Claude in one worktree with `claude --dangerously-skip-permissions`.
+8. By default, runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
+9. By default, reviews both task diffs with Codex.
 10. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
-11. Refreshes the plan snapshot again and repeats until the chooser says there is no meaningful runnable work left.
+11. With `--codex-only`, skips Claude implementation/review and uses the decider as the sole gatekeeper over the Codex result.
+12. Refreshes the plan snapshot again and repeats until the chooser says there is no meaningful runnable work left.
 
 Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
 The supplied plan is copied to `.ralph/runs/<run-id>/plan.md` and agents read that snapshot. The snapshot is refreshed from the source plan file after every decider run, so a task can update future planning when it discovers new information. Unfiltered runs rescan the refreshed `ralph-task-index` after every task, so newly added runnable tasks and newly unblocked tasks are picked up automatically. Explicit `--task` selections still run in the requested order because the operator has deliberately selected them.
@@ -114,11 +115,14 @@ Useful options:
 ```bash
 scripts/ralph-dual-run.sh plans/some-plan.md \
   --task 3 \
+  --codex-only \
   --test-command "pnpm --filter @dnd/core test" \
   --output-branch "ralph/my-run/integration" \
   --run-id "my-run" \
   --keep-worktrees
 ```
+
+`--codex-only` keeps the normal chooser and decider flow, but only the Codex implementer path runs for each task. No Claude worktree or Claude review is launched in that mode.
 
 The output branch must not already exist. This avoids silently resetting an existing run branch.
 

@@ -10,8 +10,9 @@ Runs a Ralph-style fresh-context loop:
   2. Create an integration branch from the current base HEAD, unless --commit-to-base is set.
   3. Refresh the live plan snapshot every iteration.
   4. Ask Codex to choose the next runnable task from the refreshed plan.
-  5. For the chosen task, create two disposable worktrees from the current integration HEAD.
-  6. Run Claude and Codex implementers in parallel, then parallel reviews, then a Codex decider.
+  5. For the chosen task, create disposable worktree(s) from the current integration HEAD.
+  6. By default, run Claude and Codex implementers in parallel, then parallel reviews, then a Codex decider.
+     With --codex-only, run only the Codex implementer and let the Codex decider act as the gatekeeper.
   7. Let the decider either land the task or explicitly reject/update the plan.
   8. Keep looping until the chooser reports there is no next meaningful runnable task.
 
@@ -28,6 +29,8 @@ Options:
   --task <n>              Run only Task n. May be repeated; tasks run in
                           the order provided.
   --keep-worktrees        Leave temporary worktrees in place.
+  --codex-only            Run only the Codex implementer path; skip Claude
+                          implementation and review.
   --skip-decider          Stop each task after implementation and review.
   -h, --help              Show this help.
 
@@ -79,6 +82,7 @@ commit_to_base=false
 test_command="pnpm quality"
 keep_worktrees=false
 skip_decider=false
+codex_only=false
 selected_tasks=()
 child_pids=()
 task_branches=()
@@ -117,6 +121,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --keep-worktrees)
       keep_worktrees=true
+      shift
+      ;;
+    --codex-only)
+      codex_only=true
       shift
       ;;
     --skip-decider)
@@ -470,6 +478,7 @@ write_decider_prompt() {
   local claude_worktree="$5"
   local codex_worktree="$6"
   local attempt_root="$7"
+  local mode_label="${8:-dual}"
 
   cat >"$output_file" <<EOF
 You are the master merge/decider agent for Task $task_no in a Ralph-style dual implementation run.
@@ -480,6 +489,7 @@ Base SHA: $task_base_sha
 Output branch: $output_branch
 Plan file: $plan_snapshot
 Current task file: $task_file
+Run mode: $mode_label
 Claude worktree: $claude_worktree
 Codex worktree: $codex_worktree
 Claude implementer exit: $attempt_root/claude-implementer.exit
@@ -490,7 +500,7 @@ Claude review exit: $attempt_root/claude-review.exit
 Codex review exit: $attempt_root/codex-review.exit
 Verification command: $test_command
 
-Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The two implementation worktrees are inputs, not final output. Inspect both Task $task_no diffs and both review reports. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
+Read AGENTS.md/CLAUDE.md first and follow the repo instructions. The implementation worktree inputs are not final output. Inspect the available Task $task_no diff(s) and review report(s). In codex-only mode, the Claude paths are placeholders and you should evaluate the Codex result directly against the task brief. Apply the best final implementation for Task $task_no to the main worktree, combining useful parts when appropriate and rejecting broken or off-plan changes. Do not implement later tasks.
 
 Requirements:
 - Keep the main worktree on $output_branch; do not merge branches blindly.
@@ -795,8 +805,13 @@ run_task_attempt() {
   mkdir -p "$attempt_root" "$(dirname "$claude_worktree")"
   sed -n "${task_start},${task_end}p" "$plan_snapshot" >"$task_file"
 
-  task_branches+=("$claude_branch" "$codex_branch")
-  active_worktrees+=("$claude_worktree" "$codex_worktree")
+  if [[ "$codex_only" == true ]]; then
+    task_branches+=("$codex_branch")
+    active_worktrees+=("$codex_worktree")
+  else
+    task_branches+=("$claude_branch" "$codex_branch")
+    active_worktrees+=("$claude_worktree" "$codex_worktree")
+  fi
 
   log "task $task_no attempt $attempt_no: $task_title"
   note "task" "start iteration=$iteration task=$task_no id=$task_id attempt=$attempt_no status=$status base=$task_base_sha"
@@ -804,54 +819,86 @@ run_task_attempt() {
   kill_stray_mbt_processes
   cleanup_mbt_artifacts
 
-  git worktree add -B "$claude_branch" "$claude_worktree" "$task_base_sha"
+  if [[ "$codex_only" != true ]]; then
+    git worktree add -B "$claude_branch" "$claude_worktree" "$task_base_sha"
+  fi
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
-  bootstrap_worktree_install "$claude_worktree"
+  if [[ "$codex_only" != true ]]; then
+    bootstrap_worktree_install "$claude_worktree"
+  fi
   bootstrap_worktree_install "$codex_worktree"
-  disable_fuzz_scripts_in_worktree "$claude_worktree"
+  if [[ "$codex_only" != true ]]; then
+    disable_fuzz_scripts_in_worktree "$claude_worktree"
+  fi
   disable_fuzz_scripts_in_worktree "$codex_worktree"
 
-  write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   write_prompt "Codex implementer" "$attempt_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  if [[ "$codex_only" != true ]]; then
+    write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  else
+    printf 'codex-only\n' >"$attempt_root/claude-implementer.exit"
+    : >"$attempt_root/claude-implementer.log"
+    : >"$attempt_root/claude.diff"
+    : >"$attempt_root/claude-review.log"
+    : >"$attempt_root/claude-review.md"
+    printf 'codex-only\n' >"$attempt_root/claude-review.exit"
+    : >"$attempt_root/claude.after-review.diff"
+  fi
 
-  run_claude "$claude_worktree" "$attempt_root/claude-implementer.prompt.md" "$attempt_root/claude-implementer.log" &
-  local claude_pid=$!
-  child_pids+=("$claude_pid")
+  local claude_pid=""
+  if [[ "$codex_only" != true ]]; then
+    run_claude "$claude_worktree" "$attempt_root/claude-implementer.prompt.md" "$attempt_root/claude-implementer.log" &
+    claude_pid=$!
+    child_pids+=("$claude_pid")
+  fi
   run_codex "$codex_worktree" "$attempt_root/codex-implementer.prompt.md" "$attempt_root/codex-implementer.log" "$attempt_root/codex-implementer.final.md" &
   local codex_pid=$!
   child_pids+=("$codex_pid")
 
   local claude_status=0
   local codex_status=0
-  wait "$claude_pid" || claude_status=$?
+  if [[ "$codex_only" != true ]]; then
+    wait "$claude_pid" || claude_status=$?
+  fi
   wait "$codex_pid" || codex_status=$?
   child_pids=()
 
-  printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
+  if [[ "$codex_only" != true ]]; then
+    printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
+  fi
   printf '%s\n' "$codex_status" >"$attempt_root/codex-implementer.exit"
-  save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
+  if [[ "$codex_only" != true ]]; then
+    save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
+  fi
   save_diff "$codex_worktree" "$attempt_root/codex.diff" "$task_base_sha"
-
-  write_review_prompt "Claude" "$claude_worktree" "$attempt_root/claude-review.md" "$attempt_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-  write_review_prompt "Codex" "$codex_worktree" "$attempt_root/codex-review.md" "$attempt_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-
-  run_codex "$claude_worktree" "$attempt_root/claude-review.prompt.md" "$attempt_root/claude-review.log" "$attempt_root/claude-review.md" &
-  local claude_review_pid=$!
-  child_pids+=("$claude_review_pid")
-  run_codex "$codex_worktree" "$attempt_root/codex-review.prompt.md" "$attempt_root/codex-review.log" "$attempt_root/codex-review.md" &
-  local codex_review_pid=$!
-  child_pids+=("$codex_review_pid")
 
   local claude_review_status=0
   local codex_review_status=0
-  wait "$claude_review_pid" || claude_review_status=$?
-  wait "$codex_review_pid" || codex_review_status=$?
-  child_pids=()
+  if [[ "$codex_only" != true ]]; then
+    write_review_prompt "Claude" "$claude_worktree" "$attempt_root/claude-review.md" "$attempt_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
+    write_review_prompt "Codex" "$codex_worktree" "$attempt_root/codex-review.md" "$attempt_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
 
-  printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
-  printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
-  save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
-  save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
+    run_codex "$claude_worktree" "$attempt_root/claude-review.prompt.md" "$attempt_root/claude-review.log" "$attempt_root/claude-review.md" &
+    local claude_review_pid=$!
+    child_pids+=("$claude_review_pid")
+    run_codex "$codex_worktree" "$attempt_root/codex-review.prompt.md" "$attempt_root/codex-review.log" "$attempt_root/codex-review.md" &
+    local codex_review_pid=$!
+    child_pids+=("$codex_review_pid")
+
+    wait "$claude_review_pid" || claude_review_status=$?
+    wait "$codex_review_pid" || codex_review_status=$?
+    child_pids=()
+
+    printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
+    printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
+    save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
+    save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
+  else
+    : >"$attempt_root/codex-review.log"
+    : >"$attempt_root/codex-review.md"
+    printf 'codex-only\n' >"$attempt_root/codex-review.exit"
+    save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
+  fi
 
   if [[ "$skip_decider" == true ]]; then
     note "task" "skip-decider task=$task_no attempt=$attempt_no"
@@ -859,7 +906,7 @@ run_task_attempt() {
     return 0
   fi
 
-  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root"
+  write_decider_prompt "$attempt_root/decider.prompt.md" "$task_no" "$task_file" "$task_base_sha" "$claude_worktree" "$codex_worktree" "$attempt_root" "$( [[ "$codex_only" == true ]] && printf 'codex-only' || printf 'dual' )"
   if ! run_codex "$repo_root" "$attempt_root/decider.prompt.md" "$attempt_root/decider.log" "$attempt_root/decider.final.md"; then
     printf 'decider failed for task %s attempt %s\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-decider-failure task=$task_no attempt=$attempt_no"
@@ -898,13 +945,21 @@ run_task_attempt() {
   append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "completed" "$new_head" "$task_title"
 
   if [[ "$keep_worktrees" == false ]]; then
-    git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
+    if [[ "$codex_only" != true ]]; then
+      git worktree remove --force "$claude_worktree" >/dev/null 2>&1 || true
+    fi
     git worktree remove --force "$codex_worktree" >/dev/null 2>&1 || true
-    git branch -D "$claude_branch" >/dev/null 2>&1 || true
+    if [[ "$codex_only" != true ]]; then
+      git branch -D "$claude_branch" >/dev/null 2>&1 || true
+    fi
     git branch -D "$codex_branch" >/dev/null 2>&1 || true
-    active_worktrees=("${active_worktrees[@]/$claude_worktree}")
+    if [[ "$codex_only" != true ]]; then
+      active_worktrees=("${active_worktrees[@]/$claude_worktree}")
+    fi
     active_worktrees=("${active_worktrees[@]/$codex_worktree}")
-    task_branches=("${task_branches[@]/$claude_branch}")
+    if [[ "$codex_only" != true ]]; then
+      task_branches=("${task_branches[@]/$claude_branch}")
+    fi
     task_branches=("${task_branches[@]/$codex_branch}")
     rmdir "$(dirname "$claude_worktree")" >/dev/null 2>&1 || true
   fi
