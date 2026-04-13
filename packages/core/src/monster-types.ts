@@ -31,10 +31,53 @@ export interface RechargeRollEvent {
   readonly d6Roll: number;
 }
 
+export const CANONICAL_MONSTER_SOURCE_KINDS = [
+  "canonicalRulesText",
+  "licensedPack",
+] as const;
+
+export type CanonicalMonsterSourceKind =
+  (typeof CANONICAL_MONSTER_SOURCE_KINDS)[number];
+
+export const SUPPORTING_MONSTER_SOURCE_KINDS = [
+  "supportingStructuredInput",
+] as const;
+
+export type SupportingMonsterSourceKind =
+  (typeof SUPPORTING_MONSTER_SOURCE_KINDS)[number];
+
+export const SUPPORTING_SOURCE_CITATION_ROLES = [
+  "normalizationInput",
+  "crossCheck",
+] as const;
+
+export type SupportingSourceCitationRole =
+  (typeof SUPPORTING_SOURCE_CITATION_ROLES)[number];
+
+export interface CanonicalSourceCitation {
+  readonly sourceName: string;
+  readonly sourceKind: CanonicalMonsterSourceKind;
+  readonly license: string;
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
+export interface SupportingSourceCitation {
+  readonly sourceName: string;
+  readonly sourceKind: SupportingMonsterSourceKind;
+  readonly license: string;
+  readonly role: SupportingSourceCitationRole;
+  readonly citation: {
+    readonly document: string;
+    readonly section: string;
+  };
+}
+
 export interface StatBlockProvenance {
-  readonly edition: "SRD 5.2.1";
-  readonly document: string;
-  readonly section: string;
+  readonly provenance: CanonicalSourceCitation;
+  readonly supportingInputs?: ReadonlyArray<SupportingSourceCitation>;
 }
 
 export interface MonsterResourceState {

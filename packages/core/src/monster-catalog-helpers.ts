@@ -1,9 +1,20 @@
 import {
+  type CanonicalSourceCitation,
+  type StatBlockProvenance,
   type SenseType,
   SENSE_TYPES,
   type Skill,
   SKILLS,
 } from "#/monster-types.ts";
+
+export const CANONICAL_SRD_MONSTER_PROVENANCE = {
+  sourceName: "srd-5.2.1",
+  sourceKind: "canonicalRulesText",
+  license: "CC-BY-4.0",
+} as const satisfies Pick<
+  CanonicalSourceCitation,
+  "sourceName" | "sourceKind" | "license"
+>;
 
 export function monsterSkillBonuses(
   overrides: Partial<Record<Skill, number>>,
@@ -36,5 +47,20 @@ export function monsterSpeeds(
     climb: 0,
     burrow: 0,
     ...overrides,
+  };
+}
+
+export function srdRulesProvenance(
+  document: string,
+  section: string,
+): StatBlockProvenance {
+  return {
+    provenance: {
+      ...CANONICAL_SRD_MONSTER_PROVENANCE,
+      citation: {
+        document,
+        section,
+      },
+    },
   };
 }

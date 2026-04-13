@@ -2,6 +2,7 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
@@ -14,11 +15,7 @@ const PSEUDODRAGON_SOURCE_DOCUMENT =
  * `.references/srd-5.2.1/Monsters/Monsters-P-S.md` > `Pseudodragon`.
  */
 export const PSEUDODRAGON = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: PSEUDODRAGON_SOURCE_DOCUMENT,
-    section: "Pseudodragon",
-  },
+  provenance: srdRulesProvenance(PSEUDODRAGON_SOURCE_DOCUMENT, "Pseudodragon"),
   name: "Pseudodragon",
   creatureType: "dragon",
   creatureSize: "tiny",

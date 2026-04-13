@@ -2,6 +2,7 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
@@ -16,11 +17,7 @@ const CENTAUR_SOURCE_DOCUMENT =
  * MON3 tracer bullet: proves the generic authored recharge facility.
  */
 export const CENTAUR_TROOPER = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: CENTAUR_SOURCE_DOCUMENT,
-    section: "Centaur Trooper",
-  },
+  provenance: srdRulesProvenance(CENTAUR_SOURCE_DOCUMENT, "Centaur Trooper"),
   name: "Centaur Trooper",
   creatureType: "fey",
   creatureSize: "large",
