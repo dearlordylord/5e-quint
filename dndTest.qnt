@@ -3,6 +3,7 @@
 module dndTest::Impl {
   import creature.* from "./creature"
   import battle.* from "./battle"
+  import characterCreation.* from "./character-creation"
 
   // ============================================================
   // Ability Modifier tests
@@ -3303,6 +3304,336 @@ module dndTest::Impl {
   // ============================================================
   // These tests verify that allInvariants hold across multi-step traces.
   // Complement `quint run --invariant=allInvariants` with deterministic traces.
+
+  // ============================================================
+  // Character Creation (CQ1b)
+  // ============================================================
+
+  pure val EMPTY_DRAFT_SCORES: Ability -> DraftAbilityScore = Map(
+    Str -> MissingScore, Dex -> MissingScore, Con -> MissingScore,
+    Int_ -> MissingScore, Wis -> MissingScore, Cha -> MissingScore
+  )
+
+  pure val FIGHTER_STD_SCORES: Ability -> DraftAbilityScore = Map(
+    Str -> PresentScore(15), Dex -> PresentScore(13), Con -> PresentScore(14),
+    Int_ -> PresentScore(8), Wis -> PresentScore(10), Cha -> PresentScore(12)
+  )
+
+  pure val EMPTY_CREATION_DRAFT: CharacterDraft = {
+    primaryClass: NoPrimaryClass,
+    classLevels: NoClassLevels,
+    advancement: NoAdvancement,
+    background: NoBackground,
+    abilityScoreGeneration: NoAbilityScoreGeneration,
+    backgroundAbilityScoreIncrease: NoBackgroundAbilityScoreIncrease,
+    species: NoSpecies,
+    languages: NoLanguages,
+    alignment: NoAlignment,
+    choices: NoBuildChoices,
+    equipment: NoEquipmentChoices,
+    spellcasting: NoSpellcastingChoices,
+  }
+
+  pure val COMPLETE_FIGHTER_CHOICES: CharacterBuildChoices =
+    EMPTY_BUILD_CHOICES
+      .with("primaryClassSkills", HasSkillList([Acrobatics, Perception]))
+      .with("backgroundTool", HasGamingSet(Dice))
+      .with("speciesSkill", HasSkill(Stealth))
+      .with("humanOriginFeat", HasOriginFeatSelection(OriginSkilled([
+        SkilledSkill(History),
+        SkilledTool(ThievesTools),
+        SkilledTool(MusicalInstrumentProficiency(Viol)),
+      ])))
+
+  pure val COMPLETE_FIGHTER_DRAFT: CharacterDraft = {
+    primaryClass: HasPrimaryClass(Fighter),
+    classLevels: HasClassLevels(singleClassLevels(Fighter, 1)),
+    advancement: NoAdvancement,
+    background: HasBackground(Soldier),
+    abilityScoreGeneration: HasAbilityScoreGeneration({ mode: StandardArray, assignedScores: FIGHTER_STD_SCORES }),
+    backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Str, plusOne: Con })),
+    species: HasSpecies(Human),
+    languages: HasLanguages([Common, Dwarvish, Elvish]),
+    alignment: HasAlignment(NG),
+    choices: HasBuildChoices(COMPLETE_FIGHTER_CHOICES),
+    equipment: HasEquipmentChoices({
+      backgroundOption: HasString("package"),
+      classOption: HasString("packageA"),
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: HasInt(18),
+      loadout: HasLoadout(EMPTY_LOADOUT.with("wieldedWeapon", HasString("greatsword")).with("wieldedWeaponGrip", TwoHandedGrip)),
+    }),
+    spellcasting: NoSpellcastingChoices,
+  }
+
+  run test_character_creation_empty_draft_is_incomplete = {
+    val open = pOpenChoiceIssues(EMPTY_CREATION_DRAFT)
+    val illegal = pIllegalIssues(EMPTY_CREATION_DRAFT)
+    all {
+      assert(pDraftStatus(EMPTY_CREATION_DRAFT) == DraftIncomplete),
+      assert(open.contains(MissingPrimaryClass)),
+      assert(open.contains(MissingEquipmentChoices)),
+      assert(illegal.size() == 0),
+    }
+  }
+
+  run test_character_creation_open_vs_illegal_are_separate = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("languages", HasLanguages([Common, Elvish, Elvish]))
+      .with("choices", HasBuildChoices(COMPLETE_FIGHTER_CHOICES.with("primaryClassSkills", HasSkillList([Acrobatics]))))
+    val open = pOpenChoiceIssues(draft)
+    val illegal = pIllegalIssues(draft)
+    all {
+      assert(pDraftStatus(draft) == DraftInvalid),
+      assert(open.contains(WrongPrimaryClassSkillChoiceCount)),
+      assert(open.contains(TooFewLanguages)),
+      assert(illegal.contains(DuplicateLanguages)),
+      assert(not(illegal.contains(WrongPrimaryClassSkillChoiceCount))),
+    }
+  }
+
+  run test_character_creation_level_one_start_does_not_require_advancement = {
+    val open = pOpenChoiceIssues(COMPLETE_FIGHTER_DRAFT)
+    all {
+      assert(not(open.contains(MissingAdvancement))),
+      assert(not(open.contains(AdvancementRequiredForHigherLevelStart))),
+    }
+  }
+
+  run test_character_creation_granted_language_surface_stays_open = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Rogue, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      ]))
+      .with("classLevels", HasClassLevels(ZERO_CLASS_LEVELS.set(Fighter, 1).set(Rogue, 1)))
+      .with("choices", HasBuildChoices(
+        COMPLETE_FIGHTER_CHOICES.with(
+          "multiclassSkills",
+          HasMulticlassSkills(EMPTY_MULTICLASS_SKILLS.with("rogue", HasSkillList([Investigation])))
+        ).with("rogueLanguage", NoGrantedLanguage)
+      ))
+    assert(pOpenChoiceIssues(draft).contains(MissingGrantedLanguageChoice))
+  }
+
+  run test_character_creation_invalid_primary_skill_is_illegal = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("choices", HasBuildChoices(
+        COMPLETE_FIGHTER_CHOICES.with("primaryClassSkills", HasSkillList([Arcana, Religion]))
+      ))
+    assert(pIllegalIssues(draft).contains(InvalidPrimaryClassSkillChoice))
+  }
+
+  run test_character_creation_duplicate_tool_is_illegal = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("primaryClass", HasPrimaryClass(Bard))
+      .with("classLevels", HasClassLevels(singleClassLevels(Bard, 1)))
+      .with("background", HasBackground(Criminal))
+      .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Dex, plusOne: Con })))
+      .with("choices", HasBuildChoices(
+        EMPTY_BUILD_CHOICES
+          .with("primaryClassSkills", HasSkillList([Medicine, Arcana, History]))
+          .with("bardInstruments", HasMusicalInstrumentList([Lute, Lute, Viol]))
+      ))
+    assert(pIllegalIssues(draft).contains(DuplicateToolChoice))
+  }
+
+  run test_character_creation_duplicate_granted_proficiency_is_illegal = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Rogue, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      ]))
+      .with("classLevels", HasClassLevels(ZERO_CLASS_LEVELS.set(Fighter, 1).set(Rogue, 1)))
+      .with("choices", HasBuildChoices(
+        COMPLETE_FIGHTER_CHOICES
+          .with("multiclassSkills", HasMulticlassSkills(EMPTY_MULTICLASS_SKILLS.with("rogue", HasSkillList([Athletics]))))
+          .with("rogueLanguage", HasGrantedLanguage(RareGrantedLanguage(DruidicLanguage)))
+      ))
+    assert(pIllegalIssues(draft).contains(DuplicateGrantedProficiency))
+  }
+
+  run test_character_creation_equipment_loadout_conflicts_are_illegal = {
+    val draft = COMPLETE_FIGHTER_DRAFT.with("equipment",
+      HasEquipmentChoices({
+        backgroundOption: HasString("package"),
+        classOption: HasString("packageA"),
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: HasInt(18),
+        loadout: HasLoadout({
+          wornArmor: NoString,
+          wieldedWeapon: HasString("greatsword"),
+          secondaryWeapon: HasString("dagger"),
+          shield: HasBool(true),
+          wieldedWeaponGrip: TwoHandedGrip,
+        }),
+      }))
+    val illegal = pIllegalIssues(draft)
+    all {
+      assert(illegal.contains(TwoHandedWeaponRequiresTwoHandedGrip) == false),
+      assert(illegal.contains(SecondaryWeaponRequiresOneHandedGrip)),
+      assert(illegal.contains(ShieldRequiresOneHandedGrip)),
+      assert(illegal.contains(ShieldAndSecondaryWeaponConflict)),
+    }
+  }
+
+  run test_character_creation_spellcasting_surface_tracks_missing_and_illegal_choices = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("primaryClass", HasPrimaryClass(Wizard))
+      .with("classLevels", HasClassLevels(singleClassLevels(Wizard, 1)))
+      .with("background", HasBackground(Sage))
+      .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })))
+      .with("species", HasSpecies(Elf))
+      .with("choices", HasBuildChoices(EMPTY_BUILD_CHOICES.with("primaryClassSkills", HasSkillList([Investigation, Medicine])).with("speciesSkill", HasSkill(Perception))))
+      .with("spellcasting", HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+        "wizard",
+        HasSpellcastingEntry({
+          cantrips: HasStringList(["fire_bolt", "fire_bolt"]),
+          preparedSpells: HasStringList(["cure_wounds"]),
+          spellbook: HasStringList(["shield", "magic_missile", "cure_wounds", "shield", "detect_magic"])
+        })
+      )))
+    val open = pOpenChoiceIssues(draft)
+    val illegal = pIllegalIssues(draft)
+    all {
+      assert(open.contains(WrongWizardSpellbookChoiceCount)),
+      assert(illegal.contains(DuplicateCantripChoice)),
+      assert(illegal.contains(PreparedSpellNotAvailableForClass)),
+      assert(illegal.size() > 0),
+    }
+  }
+
+  run test_character_creation_higher_level_start_requires_subclass_at_level_three = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      ]))
+      .with("classLevels", HasClassLevels(singleClassLevels(Fighter, 3)))
+    val open = pOpenChoiceIssues(draft)
+    val illegal = pIllegalIssues(draft)
+    all {
+      assert(open.contains(MissingSubclassSelection)),
+      assert(not(illegal.contains(MissingSubclassSelection))),
+    }
+  }
+
+  run test_character_creation_higher_level_start_applies_advancement_asi = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: HasSubclassSelection({ className: Fighter, subclass: "champion" }), feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: NoSubclassSelection, feat: HasAdvancementFeatSelection({ slot: FeatSlot, choice: AbilityScoreImprovement([Str]) }) },
+      ]))
+      .with("classLevels", HasClassLevels(singleClassLevels(Fighter, 4)))
+    val finalized = pFinalizeDraft(draft)
+    match finalized {
+      | Finalized(sheet) =>
+          all {
+            assert(sheet.classLevels.get(Fighter) == 4),
+            assert(sheet.abilityScores.get(Str) == 19),
+            assert(sheet.equipment.backgroundOption == "package"),
+            assert(sheet.equipment.classOption == "packageA"),
+            assert(sheet.equipment.remainingGoldPieces == 18),
+            assert(sheet.equipment.loadout.wieldedWeapon == HasString("greatsword")),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_creation_premature_epic_boon_is_illegal = {
+    val draft = COMPLETE_FIGHTER_DRAFT
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Fighter, subclass: HasSubclassSelection({ className: Fighter, subclass: "champion" }), feat: NoAdvancementFeatSelection },
+        {
+          className: Fighter,
+          subclass: NoSubclassSelection,
+          feat: HasAdvancementFeatSelection({
+            slot: FeatSlot,
+            choice: AdvancementFeat({
+              featId: "boon_of_combat_prowess",
+              abilityScoreIncrease: NoAbility,
+              proficiencies: NoSkilledProficiencyChoices,
+            }),
+          }),
+        },
+      ]))
+      .with("classLevels", HasClassLevels(singleClassLevels(Fighter, 4)))
+    assert(pIllegalIssues(draft).contains(PrematureEpicBoonChoice))
+  }
+
+  run test_character_creation_full_srd_spell_registry_accepts_wizard_level_one_choices = {
+    val draft = {
+      primaryClass: HasPrimaryClass(Wizard),
+      classLevels: HasClassLevels(singleClassLevels(Wizard, 1)),
+      advancement: NoAdvancement,
+      background: HasBackground(Sage),
+      abilityScoreGeneration: HasAbilityScoreGeneration({
+        mode: StandardArray,
+        assignedScores: Map(Str -> PresentScore(15), Dex -> PresentScore(13), Con -> PresentScore(14), Int_ -> PresentScore(8), Wis -> PresentScore(10), Cha -> PresentScore(12)),
+      }),
+      backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })),
+      species: HasSpecies(Elf),
+      languages: HasLanguages([Common, Dwarvish, Elvish]),
+      alignment: HasAlignment(NG),
+      choices: HasBuildChoices(
+        EMPTY_BUILD_CHOICES
+          .with("primaryClassSkills", HasSkillList([Investigation, Medicine]))
+          .with("speciesSkill", HasSkill(Perception))
+      ),
+      equipment: HasEquipmentChoices({
+        backgroundOption: HasString("package"),
+        classOption: HasString("gold"),
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: HasInt(8),
+        loadout: HasLoadout(EMPTY_LOADOUT),
+      }),
+      spellcasting: HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+        "wizard",
+        HasSpellcastingEntry({
+          cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+          preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile"]),
+          spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "identify", "sleep"]),
+        })
+      )),
+    }
+    val finalized = pFinalizeDraft(draft)
+    match finalized {
+      | Finalized(sheet) =>
+          all {
+            assert(sheet.primaryClass == Wizard),
+            assert(sheet.classLevels.get(Wizard) == 1),
+            assert(sheet.abilityScores.get(Int_) == 10),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_creation_complete_draft_finalizes = {
+    val open = pOpenChoiceIssues(COMPLETE_FIGHTER_DRAFT)
+    val illegal = pIllegalIssues(COMPLETE_FIGHTER_DRAFT)
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          all {
+            assert(open == Set()),
+            assert(illegal == Set()),
+            assert(sheet.primaryClass == Fighter),
+            assert(sheet.classLevels.get(Fighter) == 1),
+            assert(sheet.advancement.length() == 1),
+            assert(sheet.abilityScores.get(Str) == 17),
+            assert(sheet.abilityScores.get(Con) == 15),
+          }
+      | Blocked(_) =>
+          all {
+            assert(false),
+          }
+    }
+  }
 
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
