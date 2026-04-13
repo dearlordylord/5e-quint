@@ -21,6 +21,8 @@ export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
+import type { CharacterWeapon } from "#/character-equipment-data.ts";
+import { projectBattleWeaponProfile } from "#/character-equipment.ts";
 import {
   CreatureId,
   abilityModifier,
@@ -204,6 +206,20 @@ export function statBlockInitiativeScore(statBlock: StatBlock): number {
   return 10 + statBlock.initiativeMod;
 }
 
+const STOCK_MONSTER_ATTACK_WEAPONS = {
+  Dagger: "dagger",
+  Scimitar: "scimitar",
+  Shortbow: "shortbow",
+} as const satisfies Readonly<Record<string, CharacterWeapon>>;
+
+function stockMonsterAttackWeapon(name: string): CharacterWeapon | null {
+  return (
+    STOCK_MONSTER_ATTACK_WEAPONS[
+      name as keyof typeof STOCK_MONSTER_ATTACK_WEAPONS
+    ] ?? null
+  );
+}
+
 function statBlockAttackToBattleWeaponProfile(
   attack: MonsterAttack,
 ): BattleWeaponProfile | null {
@@ -213,33 +229,10 @@ function statBlockAttackToBattleWeaponProfile(
       ? { extraDamageOnAdvantageHit: attack.extraDamageOnAdvantageHit }
       : {}),
   };
-  if (attack.name === "Dagger") {
+  const stockWeapon = stockMonsterAttackWeapon(attack.name);
+  if (stockWeapon != null) {
     return {
-      name: attack.name,
-      damageType: attack.damageType,
-      isMelee: true,
-      damageDie: 4,
-      properties: new Set(["finesse", "light", "thrown"]),
-      statBlockAttackSource,
-    };
-  }
-  if (attack.name === "Scimitar") {
-    return {
-      name: attack.name,
-      damageType: attack.damageType,
-      isMelee: true,
-      damageDie: 6,
-      properties: new Set(["finesse", "light"]),
-      statBlockAttackSource,
-    };
-  }
-  if (attack.name === "Shortbow") {
-    return {
-      name: attack.name,
-      damageType: attack.damageType,
-      isMelee: false,
-      damageDie: 6,
-      properties: new Set(["ammunition", "twoHanded"]),
+      ...projectBattleWeaponProfile(stockWeapon),
       statBlockAttackSource,
     };
   }
