@@ -46,6 +46,11 @@ log() {
   printf '[ralph-dual] %s\n' "$*" >&2
 }
 
+contains_attempt_specific_plan_notes() {
+  local path="$1"
+  rg -n '^[[:space:]-]*Attempt [0-9]+|^[[:space:]-]*next attempt must\b' "$path" >/dev/null 2>&1
+}
+
 note() {
   local phase="$1"
   local message="$2"
@@ -492,8 +497,12 @@ Requirements:
 - Never run ./scripts/mbt-fuzz.sh, ./scripts/fuzz-all.sh, ./scripts/fuzz-overnight.sh, or any MBT command with MBT_DEV=1 or MBT_SAVE_TRACES=1 in a Ralph task run. If verification needs MBT, stay on Tier 1 / Tier 1b unless the task explicitly requires a higher tier.
 - Run appropriate verification after applying the final result, using "$test_command" unless a narrower repo-approved command is justified.
 - If broader verification surfaces a confirmed unrelated baseline failure outside the touched ownership surface, stop broad verification at that point and record the baseline noise instead of continuing repo-wide cleanup.
-- Inspect both implementations and both reviews for Plan Impact. If either implementation is rejected, the task description must be tightened with helpful rerun guidance before the decider finishes. If any impact is update-required, update the source plan file at $plan_file in the same commit. If no plan update is needed, say so explicitly in the final Plan Impact section.
-- If the task is rejected, put it back into the appropriate runnable to-do status, commit the rejection/plan guidance, and leave the plan in a shape where the next Ralph iteration can pick it again without operator intervention.
+- Inspect both implementations and both reviews for Plan Impact. Update the source plan file at $plan_file only when you learned a genuinely new durable planning fact. Do not add attempt-numbered notes, parser-error reminders, or "next attempt must..." guidance to the plan. Keep attempt-specific rejection detail in the decider final and review artifacts instead. If no durable plan update is needed, say so explicitly in the final Plan Impact section.
+- Before editing $plan_file, answer a New Information Gate in the decider final:
+  - What new fact was learned?
+  - Why was it not already implied by the current plan text?
+  - Why is it durable enough to remain correct after run-local artifacts are deleted?
+- If the task is rejected, put it back into the appropriate runnable to-do status. Only edit the plan when the New Information Gate is satisfied; otherwise leave the plan stable and rely on the task body plus run-local artifacts for the rerun.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
 - Leave temporary worktree cleanup to the harness.
@@ -504,6 +513,10 @@ At the end, report:
 - Files changed in the main worktree
 - Verification commands run and results
 - Any remaining risks
+- New Information Gate:
+  - What new fact was learned?
+  - Why it was not already implied by the plan
+  - Why it is durable enough for $plan_file, or "not applicable"
 - Plan Impact:
   - Status: none | applied
   - Affected tasks: task IDs and final planning action for each
@@ -862,6 +875,13 @@ run_task_attempt() {
     printf 'task %s attempt %s left main worktree dirty\n' "$task_no" "$attempt_no" >"$last_error_file"
     note "task" "fatal-dirty-main-worktree task=$task_no attempt=$attempt_no"
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-dirty-main-worktree" "-" "decider left tracked changes"
+    return 2
+  fi
+
+  if contains_attempt_specific_plan_notes "$plan_file"; then
+    printf 'task %s attempt %s introduced attempt-specific notes into %s\n' "$task_no" "$attempt_no" "$plan_file" >"$last_error_file"
+    note "task" "fatal-attempt-specific-plan-notes task=$task_no attempt=$attempt_no"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-attempt-specific-plan-notes" "-" "decider wrote attempt-specific plan notes"
     return 2
   fi
 

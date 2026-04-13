@@ -87,9 +87,17 @@ The decider owns plan reconciliation. If either implementation or review reports
 
 Rejected tasks are not terminal. The decider must:
 
-1. tighten the task description with helpful rerun guidance;
-2. put the task back into an appropriate runnable to-do status;
-3. commit that plan update so the next loop iteration can pick it again automatically.
+1. put the task back into an appropriate runnable to-do status;
+2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
+3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
+
+Before editing the plan, the decider must pass a new-information gate in its final report:
+
+1. what new fact was learned;
+2. why that fact was not already implied by the current plan text;
+3. why that fact is durable enough to remain true after run-local artifacts are deleted.
+
+The harness treats attempt-numbered rejection notes or "next attempt must..." guidance in `plans/ACTIVE_PLAN.md` as a fatal decider error. Durable requirements belong in the plan. Attempt scar tissue does not.
 
 This is the key difference between a normal task rejection and a fatal harness failure. Rejection is part of the loop. Fatal harness failure is loss of a trustworthy repo or plan state.
 

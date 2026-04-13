@@ -41,42 +41,48 @@ The Ralph harness reads this machine-readable index for task order and status. K
   "tasks": [
     {
       "number": 0,
-      "id": "CQ1",
-      "status": "ready-for-research",
-      "title": "Formal Character Creation Module"
+      "id": "CQ1a",
+      "status": "done",
+      "title": "Freeze Character Creation Surface"
     },
     {
       "number": 1,
+      "id": "CQ1b",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Implement Character Creation Module"
+    },
+    {
+      "number": 2,
       "id": "CQ2",
       "status": "blocked",
       "title": "Formal Character Advancement Module"
     },
     {
-      "number": 2,
+      "number": 3,
       "id": "CQ3",
       "status": "blocked",
       "title": "Character To Creature Projection Boundary"
     },
     {
-      "number": 3,
+      "number": 4,
       "id": "CQ4",
       "status": "blocked",
       "title": "Character Quint Parity Harness"
     },
     {
-      "number": 4,
+      "number": 5,
       "id": "MCPA8",
       "status": "ready-for-implementation-after-light-research",
       "title": "Monster Control And Legendary Action Surface"
     },
     {
-      "number": 5,
+      "number": 6,
       "id": "H",
       "status": "deferred",
       "title": "PassiveModifiers Sub-Record"
     },
     {
-      "number": 6,
+      "number": 7,
       "id": "I",
       "status": "deferred",
       "title": "Build-Map / Hole Metadata"
@@ -94,6 +100,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
   - `Status: none` when no future planning changes are needed;
   - `Status: update-required` or `Status: applied` when the task changes downstream assumptions, status, dependencies, ordering, blockers, acceptance criteria, verification, or creates follow-up work.
 - When `Plan Impact` is not `none`, update this file in the same task closeout before continuing. Record affected task IDs and the concrete planning action for each: unblock, block, defer, revise, add, or no-change.
+- Only add durable planning facts to this file. Attempt-specific failure notes, parser mistakes, or "next attempt must..." reminders belong in run-local review/decider artifacts, not here.
+- Before editing this file during a task closeout, answer a new-information gate in the closeout: what new fact was learned, why it was not already implied by the current plan text, and why it is durable enough to keep after run-local artifacts are deleted. If that gate is weak, leave the plan unchanged.
 - Update the task status before ending the loop:
   - `done` if implementation/research and verification are complete;
   - `ready-for-implementation-after-light-research` if research made it implementable;
@@ -110,13 +118,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task                                                 | Status                                 | Depends on | Blocks       | Next action                                                                                                                                                                                                                                  | Handoff readiness                                                                                                                                              |
 | ----- | ---------------------------------------------------- | -------------------------------------- | ---------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0     | CQ1 - Formal Character Creation Module               | ready-for-research                     | none       | CQ2, CQ3, CQ4 | Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`: formal `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics grounded in SRD 5.2.1 creation text. Keep the Quint draft/sheet aligned with the canonical TS domain surface instead of introducing a reduced surrogate or shadow-presence metadata. Update the historical `POST1` note only when the landed module actually covers that owned surface and is deletion-ready once the full `CQ*` track is complete. | Start with RAW and ubiquitous-language review, then inventory the existing TS-owned draft/sheet fields and open-choice categories before sizing the Quint surface or tests. |
-| 1     | CQ2 - Formal Character Advancement Module            | blocked                                | CQ1        | CQ3, CQ4     | After CQ1 lands, implement `character.qnt` over finalized `CharacterSheet` semantics: `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as creation plus repeated legal level-ups. Also update the historical `POST3` note so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete. | Blocked on CQ1 because advancement starts from the finalized-sheet boundary defined by creation formalization.                                               |
-| 2     | CQ3 - Character To Creature Projection Boundary      | blocked                                | CQ1, CQ2   | CQ4          | After CQ1 and CQ2 land, implement the formal handoff from character semantics into creature-facing execution semantics using the PRD's proposed `CharacterCreatureProjection` boundary and the downstream mapping into `CharConfig`. Remove or redirect any remaining references that still treat `POST1` / `POST3` as the current design authority. | Blocked until both creation and advancement semantics are formalized and the handoff surface can be sized once instead of guessed.                         |
-| 3     | CQ4 - Character Quint Parity Harness                 | blocked                                | CQ1, CQ2, CQ3 | none      | After the formal modules land, add deterministic Quint tests and TS parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary against shared core functions rather than adapter shells. As part of closeout, delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD. | Blocked on the formal modules and projection surface. Keep parity at shared-core depth; do not make MCP transport the first comparison target.             |
-| 4     | MCPA8 - Monster Control And Legendary Action Surface | ready-for-implementation-after-light-research | MCPA1, MON3 | none   | Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic `execute_control_command` routes for named monster legendary/recharge/daily ability choice, then wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`. | Implementation-ready once the worker reads the MCPA8 writeup, re-checks `.references/srd-5.2.1/Monsters/Overview.md` and `UBIQUITOUS_LANGUAGE.md`, and keeps non-attack legendary options deferred. |
-| 5     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
-| 6     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
+| 0     | CQ1a - Freeze Character Creation Surface             | done                                   | none       | CQ1b         | Keep the frozen target in [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md). Do not reopen this task unless a genuinely missing owned surface is discovered.                              | Completed. The inventory plus stable acceptance gates below define the implementation target.                                                                |
+| 1     | CQ1b - Implement Character Creation Module           | ready-for-implementation-after-light-research | CQ1a   | CQ2, CQ3, CQ4 | Implement `character-creation.qnt` and deterministic tests against the frozen TS-owned authored surface from [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) plus [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md). Preserve the canonical TS-owned shape, keep `finalizeDraft` guarded/partial, preserve the TS-owned legality/open-choice surface, and leave shared verification tooling and `POST1` untouched unless the aligned module lands in the same change. | Implementation-ready. Re-read the local RAW anchors and the inventory, then code against the frozen target instead of re-scoping CQ1 mid-run.             |
+| 2     | CQ2 - Formal Character Advancement Module            | blocked                                | CQ1b       | CQ3, CQ4     | After CQ1b lands, implement `character.qnt` over finalized `CharacterSheet` semantics: `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as creation plus repeated legal level-ups. Also update the historical `POST3` note so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete. | Blocked on CQ1b because advancement starts from the finalized-sheet boundary defined by creation formalization.                                              |
+| 3     | CQ3 - Character To Creature Projection Boundary      | blocked                                | CQ1b, CQ2  | CQ4          | After CQ1b and CQ2 land, implement the formal handoff from character semantics into creature-facing execution semantics using the PRD's proposed `CharacterCreatureProjection` boundary and the downstream mapping into `CharConfig`. Remove or redirect any remaining references that still treat `POST1` / `POST3` as the current design authority. | Blocked until both creation and advancement semantics are formalized and the handoff surface can be sized once instead of guessed.                         |
+| 4     | CQ4 - Character Quint Parity Harness                 | blocked                                | CQ1b, CQ2, CQ3 | none   | After the formal modules land, add deterministic Quint tests and TS parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary against shared core functions rather than adapter shells. As part of closeout, delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD. | Blocked on the formal modules and projection surface. Keep parity at shared-core depth; do not make MCP transport the first comparison target.             |
+| 5     | MCPA8 - Monster Control And Legendary Action Surface | ready-for-implementation-after-light-research | MCPA1, MON3 | none | Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic `execute_control_command` routes for named monster legendary/recharge/daily ability choice, then wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`. | Implementation-ready once the worker reads the MCPA8 writeup, re-checks `.references/srd-5.2.1/Monsters/Overview.md` and `UBIQUITOUS_LANGUAGE.md`, and keeps non-attack legendary options deferred. |
+| 6     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
+| 7     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
 
 ## Current Integrated Baseline
 
@@ -164,12 +173,12 @@ Planning note:
 
 Recommended next coding-loop task:
 
-1. **CQ1 - Formal Character Creation Module**
-   This is the new highest-priority task. The formal creation owner does not exist yet, and CQ2/CQ3/CQ4 all depend on it.
+1. **CQ1b - Implement Character Creation Module**
+   The research/freeze pass is complete. The next loop should execute against the stable CQ1 surface instead of rediscovering it.
 2. **MCPA8 - Monster Control And Legendary Action Surface**
    This remains implementation-ready and can proceed if the current loop intentionally chooses MCP work instead of the new character-formalization track.
 3. **CQ2 - Formal Character Advancement Module**
-   Pick this up immediately after CQ1 defines the finalized-sheet boundary in Quint.
+   Pick this up immediately after CQ1b defines the finalized-sheet boundary in Quint.
 4. **CQ3 - Character To Creature Projection Boundary**
    Do not size or implement the projection handoff before the formal creation and advancement layers settle.
 5. **CQ4 - Character Quint Parity Harness**
@@ -185,41 +194,70 @@ Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks ins
    - [.references/srd-5.2.1/Character-Creation.md](../.references/srd-5.2.1/Character-Creation.md)
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
-2. Execute CQ1 next.
-3. Execute CQ2 after CQ1.
-4. Execute CQ3 after CQ1 and CQ2.
-5. Execute CQ4 after CQ1, CQ2, and CQ3.
-6. `MCPA8` may proceed in parallel only if the loop intentionally chooses MCP work and does not touch the character-formalization ownership surfaces.
-7. Keep H and I deferred.
+2. Treat CQ1a as frozen and done; do not reopen it unless the implementation uncovers a genuinely missing owned surface.
+3. Execute CQ1b next.
+4. Execute CQ2 after CQ1b.
+5. Execute CQ3 after CQ1b and CQ2.
+6. Execute CQ4 after CQ1b, CQ2, and CQ3.
+7. `MCPA8` may proceed in parallel only if the loop intentionally chooses MCP work and does not touch the character-formalization ownership surfaces.
+8. Keep H and I deferred.
 
 ## Task Bodies
 
-### Task 0 - CQ1 - Formal Character Creation Module
+### Task 0 - CQ1a - Freeze Character Creation Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
+
+Blocks: `CQ1b`
+
+Scope:
+
+- Freeze the canonical TS-owned character-creation surface before implementation.
+- Capture the inventory of authored fields, choice categories, and legality/open-choice ownership that `character-creation.qnt` must preserve.
+- Define stable acceptance gates for the implementation task so later CQ1 rejections do not keep mutating scope.
+
+Next action:
+
+- None. This task is complete; use its artifacts as the stable brief for CQ1b.
+
+Research note:
+
+- The frozen surface inventory lives in [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md).
+- CQ1b must preserve the canonical TS-owned authored shape rather than inventing a surrogate or shadow-state model.
+- CQ1b must keep `finalizeDraft` guarded/partial: incomplete or illegal drafts must not produce a `CharacterSheet`.
+- CQ1b must preserve the TS-owned legality/open-choice surface for character creation instead of collapsing it into summary invalidity checks.
+
+Verification requirements:
+
+- Confirm the inventory and stable acceptance gates exist and are specific enough for CQ1b to implement without reopening task scope.
+
+### Task 1 - CQ1b - Implement Character Creation Module
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: `CQ1a`
 
 Blocks: `CQ2`, `CQ3`, `CQ4`
 
 Scope:
 
-- Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) to design `character-creation.qnt`.
+- Implement `character-creation.qnt` over the frozen CQ1 surface defined by [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md).
 - Formalize `CharacterDraft`, open choices, incompleteness, legality, and finalization semantics.
 - Ground the design in SRD 5.2.1 character-creation text and existing reusable helper semantics in [creature.qnt](../creature.qnt).
-- Keep the Quint ownership surface aligned with the canonical TS domain exposed through `packages/core/src/character-domain.ts` and implemented across `packages/core/src/character-domain-model.ts`, `packages/core/src/character-ability-scores.ts`, `packages/core/src/character-build-choice-validation.ts`, `packages/core/src/character-draft-analysis.ts`, `packages/core/src/character-equipment-validation.ts`, and `packages/core/src/character-spellcasting.ts`; do not replace optional / partial authored facts with a narrowed surrogate type, flattened replacement record, or duplicate `present`/`has*` shadow state.
-- Preserve the existing owned authored surface instead of summarizing it away: that includes the ordered class/level data, partial ability-score state, equipment/loadout choices, spellcasting picks, granted-language/proficiency choices, and multiclass-specific choice fields already present in the TS draft/sheet domain.
-- `finalizeDraft` semantics must stay guarded/partial: an illegal or incomplete draft must not produce a `CharacterSheet`, and the Quint legality/open-choice surface must cover the same issue categories that TS analysis already reports.
-- Do not edit unrelated shared verification tooling as part of CQ1.
-- Update `POST1_FORMAL_CREATION_SEMANTICS.md` so it clearly points at the landed formal module only after that aligned surface exists, then leave it deletion-ready once the full `CQ*` track is complete.
+- Preserve the canonical TS-owned authored creation shape rather than introducing a reduced surrogate model, flattened replacement record, or duplicate shadow-presence metadata.
+- Keep `finalizeDraft` guarded/partial: an illegal or incomplete draft must not produce a `CharacterSheet`.
+- Preserve the TS-owned legality/open-choice surface for character creation rather than collapsing it into looser summary invalidity checks.
+- Do not edit unrelated shared verification tooling as part of CQ1b.
+- Update `POST1_FORMAL_CREATION_SEMANTICS.md` only if the aligned formal module and deterministic tests actually land in the same change.
 
 Next action:
 
-- Start with RAW and ubiquitous-language review.
-- Inventory the existing TS-owned draft/sheet fields, partial ability-score state, and open-choice / issue categories that CQ1 must preserve.
-- Write that inventory back into the task notes before implementation if any part of the owned surface is still ambiguous, with explicit callouts for class-level structure, granted-language/proficiency choices, multiclass choice fields, equipment/loadout state and legality, and spellcasting picks and legality.
-- Pin the formal type/function surface and the minimum deterministic Quint test set for draft/finalization from that inventory.
-- If the owned surface still feels ambiguous after the inventory, stop and write the mapping back into this plan before implementing rather than shipping a reduced slice.
+- Read [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md) before editing code.
+- Re-check the relevant SRD 5.2.1 creation/origin passages and [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
+- Implement `character-creation.qnt` and deterministic tests against the frozen target instead of narrowing or re-scoping the domain surface mid-run.
+- If implementation uncovers a genuinely missing owned surface, stop and record that durable discovery before editing the plan. Do not append attempt-specific rejection notes here.
 
 Verification requirements:
 
@@ -227,27 +265,27 @@ Verification requirements:
 - Confirm all modeled rules trace to specific SRD passages.
 - Verify that `character-creation.qnt` covers the same authored creation facts already owned by the TS draft/sheet surface, including incompleteness states and legality-relevant choice categories needed by downstream CQ2/CQ4 work.
 - Demonstrate that the Quint issue/open-choice surface still covers TS-owned categories for granted-language/proficiency validation, multiclass-specific choices, duplicate-choice detection, equipment/loadout legality, and spellcasting legality rather than replacing them with looser summary checks.
-- Verify that no shared fuzz/MBT/helper scripts changed as part of CQ1.
+- Verify that no shared fuzz/MBT/helper scripts changed as part of CQ1b.
 - Use deterministic Quint tests and the narrowest relevant parity surface.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
-### Task 1 - CQ2 - Formal Character Advancement Module
+### Task 2 - CQ2 - Formal Character Advancement Module
 
 Status: `blocked`
 
-Depends on: `CQ1`
+Depends on: `CQ1b`
 
 Blocks: `CQ3`, `CQ4`
 
 Scope:
 
-- After `CQ1` lands, implement `character.qnt` over finalized `CharacterSheet` semantics.
+- After `CQ1b` lands, implement `character.qnt` over finalized `CharacterSheet` semantics.
 - Cover `isLegalSheet`, `canAdvance`, `advanceLevel`, and higher-level starts as legal level-1 creation plus repeated legal advancement.
 - Update `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` so it points at the landed formal advancement module and becomes deletion-ready once the full `CQ*` track is complete.
 
 Next action:
 
-- Wait for `CQ1` to define the finalized-sheet boundary in Quint, then implement advancement semantics against that surface.
+- Wait for `CQ1b` to define the finalized-sheet boundary in Quint, then implement advancement semantics against that surface.
 
 Verification requirements:
 
@@ -256,17 +294,17 @@ Verification requirements:
 - Prefer deterministic Quint tests and narrow character/creature-level parity before any broader MBT.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
-### Task 2 - CQ3 - Character To Creature Projection Boundary
+### Task 3 - CQ3 - Character To Creature Projection Boundary
 
 Status: `blocked`
 
-Depends on: `CQ1`, `CQ2`
+Depends on: `CQ1b`, `CQ2`
 
 Blocks: `CQ4`
 
 Scope:
 
-- After `CQ1` and `CQ2` land, implement the formal handoff from character semantics into creature-facing execution semantics.
+- After `CQ1b` and `CQ2` land, implement the formal handoff from character semantics into creature-facing execution semantics.
 - Use the PRD's proposed `CharacterCreatureProjection` boundary and map it into `CharConfig`.
 - Remove or redirect remaining references that still treat `POST1` or `POST3` as the current design authority.
 
@@ -280,11 +318,11 @@ Verification requirements:
 - Maintain parity with the authoritative Quint semantics and downstream bridge expectations.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
-### Task 3 - CQ4 - Character Quint Parity Harness
+### Task 4 - CQ4 - Character Quint Parity Harness
 
 Status: `blocked`
 
-Depends on: `CQ1`, `CQ2`, `CQ3`
+Depends on: `CQ1b`, `CQ2`, `CQ3`
 
 Blocks: none
 
@@ -304,7 +342,7 @@ Verification requirements:
 - Record any remaining documentation deletions or retained artifacts as part of closeout.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
-### Task 4 - MCPA8 - Monster Control And Legendary Action Surface
+### Task 5 - MCPA8 - Monster Control And Legendary Action Surface
 
 Status: `ready-for-implementation-after-light-research`
 
@@ -328,7 +366,7 @@ Verification requirements:
 - Keep MCP ownership limited to the public action surface; do not introduce MCP-owned combat semantics.
 - Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
 
-### Task 5 - H - PassiveModifiers Sub-Record
+### Task 6 - H - PassiveModifiers Sub-Record
 
 Status: `deferred`
 
@@ -344,7 +382,7 @@ Next action:
 
 - Do not pick up in the current batch.
 
-### Task 6 - I - Build-Map / Hole Metadata
+### Task 7 - I - Build-Map / Hole Metadata
 
 Status: `deferred`
 
