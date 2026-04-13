@@ -616,27 +616,34 @@ bootstrap_worktree_install() {
   done
 }
 
-disable_fuzz_scripts_in_worktree() {
-  local workspace="$1"
-  local path
+log_has_forbidden_fuzz_invocation() {
+  local log_file="$1"
+  [[ -f "$log_file" ]] || return 1
 
-  for path in \
-    "scripts/mbt-fuzz.sh" \
-    "scripts/mbt-fuzz-timed.sh" \
-    "scripts/fuzz-all.sh" \
-    "scripts/fuzz-overnight.sh" \
-    "scripts/escalate-fuzz.sh" \
-    "scripts/measure-tier-timing.sh"; do
-    [[ -f "$workspace/$path" ]] || continue
-    cat >"$workspace/$path" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-echo "This script is disabled inside Ralph task worktrees." >&2
-echo "Use Tier 1 / Tier 1b MBT or focused non-fuzz verification instead." >&2
-exit 97
-EOF
-    chmod 0555 "$workspace/$path"
-  done
+  rg -n \
+    -e 'tool_use".*"command":"[^"]*(\./)?scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' \
+    -e 'tool_use".*"command":"[^"]*\bMBT_DEV=1\b' \
+    -e 'tool_use".*"command":"[^"]*\bMBT_SAVE_TRACES=1\b' \
+    -e '^/bin/bash -lc ".*(\./)?scripts/(mbt-fuzz|mbt-fuzz-timed|fuzz-all|fuzz-overnight|escalate-fuzz|measure-tier-timing)\.sh' \
+    -e '^/bin/bash -lc ".*\bMBT_DEV=1\b' \
+    -e '^/bin/bash -lc ".*\bMBT_SAVE_TRACES=1\b' \
+    "$log_file" >/dev/null 2>&1
+}
+
+assert_no_forbidden_fuzz_invocation() {
+  local phase="$1"
+  local task_no="$2"
+  local attempt_no="$3"
+  local log_file="$4"
+
+  if ! log_has_forbidden_fuzz_invocation "$log_file"; then
+    return 0
+  fi
+
+  printf 'task %s attempt %s ran forbidden fuzz/overnight verification during %s\n' "$task_no" "$attempt_no" "$phase" >"$last_error_file"
+  note "task" "fatal-forbidden-fuzz-invocation task=$task_no attempt=$attempt_no phase=$phase"
+  append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-forbidden-fuzz-invocation" "-" "$phase invoked forbidden fuzz verification"
+  return 1
 }
 
 kill_stray_mbt_processes() {
@@ -805,8 +812,6 @@ run_task_attempt() {
   git worktree add -B "$codex_branch" "$codex_worktree" "$task_base_sha"
   bootstrap_worktree_install "$claude_worktree"
   bootstrap_worktree_install "$codex_worktree"
-  disable_fuzz_scripts_in_worktree "$claude_worktree"
-  disable_fuzz_scripts_in_worktree "$codex_worktree"
 
   write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   write_prompt "Codex implementer" "$attempt_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
@@ -826,6 +831,8 @@ run_task_attempt() {
 
   printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
   printf '%s\n' "$codex_status" >"$attempt_root/codex-implementer.exit"
+  assert_no_forbidden_fuzz_invocation "claude-implementer" "$task_no" "$attempt_no" "$attempt_root/claude-implementer.log" || return 2
+  assert_no_forbidden_fuzz_invocation "codex-implementer" "$task_no" "$attempt_no" "$attempt_root/codex-implementer.log" || return 2
   save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
   save_diff "$codex_worktree" "$attempt_root/codex.diff" "$task_base_sha"
 
@@ -847,6 +854,8 @@ run_task_attempt() {
 
   printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
   printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
+  assert_no_forbidden_fuzz_invocation "claude-review" "$task_no" "$attempt_no" "$attempt_root/claude-review.log" || return 2
+  assert_no_forbidden_fuzz_invocation "codex-review" "$task_no" "$attempt_no" "$attempt_root/codex-review.log" || return 2
   save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
   save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
 
@@ -863,6 +872,7 @@ run_task_attempt() {
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-decider-failure" "-" "decider exited non-zero"
     return 2
   fi
+  assert_no_forbidden_fuzz_invocation "decider" "$task_no" "$attempt_no" "$attempt_root/decider.log" || return 2
 
   if ! grep -Eqi "Plan Impact|Plan impact" "$attempt_root/decider.final.md"; then
     printf 'task %s attempt %s missing Plan Impact section in decider final\n' "$task_no" "$attempt_no" >"$last_error_file"
