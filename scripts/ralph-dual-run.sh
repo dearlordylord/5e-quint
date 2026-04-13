@@ -503,11 +503,13 @@ parse_review_verdict() {
   node - "$report" <<'NODE'
 const fs = require("fs")
 const text = fs.readFileSync(process.argv[2], "utf8")
-const match = text.match(/^##?\s*Verdict:\s*(.+)$/im)
-if (!match) {
+const sameLine = text.match(/^##?\s*Verdict:\s*(.+)$/im)
+const nextLine = text.match(/^##?\s*Verdict\s*$\n+^\s*([A-Za-z-]+)\s*$/im)
+const raw = sameLine?.[1] ?? nextLine?.[1]
+if (!raw) {
   throw new Error("review report missing Verdict section")
 }
-const verdict = match[1].trim().replace(/`/g, "").toLowerCase()
+const verdict = raw.trim().replace(/`/g, "").toLowerCase()
 if (!["accept", "accept-with-fixes", "reject"].includes(verdict)) {
   throw new Error(`invalid review verdict: ${verdict}`)
 }
