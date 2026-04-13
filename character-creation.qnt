@@ -246,6 +246,7 @@ module characterCreation {
     | MissingSubclassSelection | InvalidSubclassSelection | PrematureSubclassSelection
     | MissingGrantedLanguageChoice | WrongGrantedLanguageChoiceCount | InvalidGrantedLanguageChoice | DuplicateGrantedLanguageChoice
     | DuplicateGrantedProficiency | MulticlassPrerequisiteNotMet | AbilityScoreIncreaseExceedsThirty
+    | ContradictoryFinalizedSheet
     | MissingEquipmentChoices | MissingBackgroundEquipmentChoice | InvalidBackgroundEquipmentChoice
     | MissingClassEquipmentChoice | InvalidClassEquipmentChoice | MissingRemainingGoldPieces | InvalidRemainingGoldPieces
     | OverspentStartingGold | MissingLoadout | InvalidLoadoutArmor | InvalidLoadoutWieldedWeapon | InvalidLoadoutSecondaryWeapon

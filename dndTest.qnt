@@ -4,6 +4,7 @@ module dndTest::Impl {
   import creature.* from "./creature"
   import battle.* from "./battle"
   import characterCreation.* from "./character-creation"
+  import character.* from "./character"
 
   // ============================================================
   // Ability Modifier tests
@@ -3366,6 +3367,41 @@ module dndTest::Impl {
     spellcasting: NoSpellcastingChoices,
   }
 
+  pure val COMPLETE_WIZARD_DRAFT: CharacterDraft = {
+    primaryClass: HasPrimaryClass(Wizard),
+    classLevels: HasClassLevels(singleClassLevels(Wizard, 1)),
+    advancement: NoAdvancement,
+    background: HasBackground(Sage),
+    abilityScoreGeneration: HasAbilityScoreGeneration({
+      mode: StandardArray,
+      assignedScores: Map(Str -> PresentScore(15), Dex -> PresentScore(13), Con -> PresentScore(14), Int_ -> PresentScore(8), Wis -> PresentScore(10), Cha -> PresentScore(12)),
+    }),
+    backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })),
+    species: HasSpecies(Elf),
+    languages: HasLanguages([Common, Dwarvish, Elvish]),
+    alignment: HasAlignment(NG),
+    choices: HasBuildChoices(
+      EMPTY_BUILD_CHOICES
+        .with("primaryClassSkills", HasSkillList([Investigation, Medicine]))
+        .with("speciesSkill", HasSkill(Perception))
+    ),
+    equipment: HasEquipmentChoices({
+      backgroundOption: HasString("package"),
+      classOption: HasString("gold"),
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: HasInt(8),
+      loadout: HasLoadout(EMPTY_LOADOUT),
+    }),
+    spellcasting: HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+      "wizard",
+      HasSpellcastingEntry({
+        cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+        preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile"]),
+        spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "identify", "sleep"]),
+      })
+    )),
+  }
+
   run test_character_creation_empty_draft_is_incomplete = {
     val open = pOpenChoiceIssues(EMPTY_CREATION_DRAFT)
     val illegal = pIllegalIssues(EMPTY_CREATION_DRAFT)
@@ -3632,6 +3668,246 @@ module dndTest::Impl {
           all {
             assert(false),
           }
+    }
+  }
+
+  // ============================================================
+  // Character Advancement (CQ2)
+  // ============================================================
+
+  pure val LEVEL_UP_FIGHTER_NO_PATCH: CharacterLevelUpTransition =
+    {
+      entry: { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      choices: EMPTY_BUILD_CHOICES,
+      spellcasting: NoSpellcastingChoices,
+    }
+
+  pure def pLevelUpTransition(entry: CharacterAdvancementEntry): CharacterLevelUpTransition = {
+    entry: entry,
+    choices: EMPTY_BUILD_CHOICES,
+    spellcasting: NoSpellcastingChoices,
+  }
+
+  run test_character_advancement_level_one_sheet_is_legal = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) => assert(pIsLegalSheet(sheet))
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_rejects_illegal_sheet = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          assert(not(pIsLegalSheet(sheet.with("primaryClass", Wizard))))
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_rejects_contradictory_finalized_ability_scores = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          assert(not(pIsLegalSheet(sheet.with("abilityScores", sheet.abilityScores.set(Str, 20)))))
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_rejects_contradictory_sheet_with_actionable_issue = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          match pAdvanceLevel(
+            sheet.with("abilityScores", sheet.abilityScores.set(Str, 20)),
+            LEVEL_UP_FIGHTER_NO_PATCH,
+          ) {
+            | AdvanceBlocked(issues) =>
+                all {
+                  assert(issues.openChoices == Set()),
+                  assert(issues.illegalIssues == Set(ContradictoryFinalizedSheet)),
+                }
+            | _ => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_can_reach_fighter_level_two = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          assert(pCanAdvance(sheet, LEVEL_UP_FIGHTER_NO_PATCH))
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_multiclass_gate_checks_new_level_timing = {
+    val finalized = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          assert(not(pCanAdvance(
+            sheet,
+            pLevelUpTransition({ className: Cleric, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection }),
+          )))
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_monk_multiclass_uses_shared_choice_patch = {
+    val fighterBase = COMPLETE_FIGHTER_DRAFT
+      .with("abilityScoreGeneration", HasAbilityScoreGeneration({
+        mode: StandardArray,
+        assignedScores: Map(Str -> PresentScore(14), Dex -> PresentScore(15), Con -> PresentScore(12), Int_ -> PresentScore(8), Wis -> PresentScore(13), Cha -> PresentScore(10)),
+      }))
+      .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Dex, plusOne: Con })))
+    val finalized = pFinalizeDraft(fighterBase)
+    val multiclassTransition = pLevelUpTransition({
+      className: Monk,
+      subclass: NoSubclassSelection,
+      feat: NoAdvancementFeatSelection,
+    }).with("choices", EMPTY_BUILD_CHOICES.with("monkTool", HasMonkTool(MusicalInstrumentProficiency(Flute))))
+    val directMulticlassDraft = fighterBase
+      .with("advancement", HasAdvancement([
+        { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        { className: Monk, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      ]))
+      .with("classLevels", HasClassLevels(ZERO_CLASS_LEVELS.set(Fighter, 1).set(Monk, 1)))
+      .with("choices", HasBuildChoices(COMPLETE_FIGHTER_CHOICES.with("monkTool", HasMonkTool(MusicalInstrumentProficiency(Flute)))))
+    val directFinalized = pFinalizeDraft(directMulticlassDraft)
+    match finalized {
+      | Finalized(sheet) =>
+          match directFinalized {
+            | Finalized(expectedSheet) =>
+                match pAdvanceLevel(sheet, multiclassTransition) {
+                  | Advanced(nextSheet) =>
+                      all {
+                        assert(nextSheet == expectedSheet),
+                        assert(nextSheet.classLevels.get(Fighter) == 1),
+                        assert(nextSheet.classLevels.get(Monk) == 1),
+                        assert(nextSheet.choices.monkTool == HasMonkTool(MusicalInstrumentProficiency(Flute))),
+                      }
+                  | _ => assert(false)
+                }
+            | _ => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_spellcasting_patch_is_required_for_wizard_level_two = {
+    val finalized = pFinalizeDraft(COMPLETE_WIZARD_DRAFT)
+    val wizardLevelTwo = pLevelUpTransition({
+      className: Wizard,
+      subclass: NoSubclassSelection,
+      feat: NoAdvancementFeatSelection,
+    })
+    val wizardLevelTwoWithPatch =
+      wizardLevelTwo.with(
+        "spellcasting",
+        HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+          "wizard",
+          HasSpellcastingEntry({
+            cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+            preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "shield"]),
+            spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "identify", "sleep", "mage_armor", "shield"]),
+          })
+        ))
+      )
+    match finalized {
+      | Finalized(sheet) =>
+          all {
+            assert(not(pCanAdvance(sheet, wizardLevelTwo))),
+            assert(pCanAdvance(sheet, wizardLevelTwoWithPatch)),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_spellcasting_patch_advances_wizard_level_two = {
+    val finalized = pFinalizeDraft(COMPLETE_WIZARD_DRAFT)
+    val wizardLevelTwoWithPatch =
+      pLevelUpTransition({
+        className: Wizard,
+        subclass: NoSubclassSelection,
+        feat: NoAdvancementFeatSelection,
+      }).with(
+        "spellcasting",
+        HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+          "wizard",
+          HasSpellcastingEntry({
+            cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+            preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "shield"]),
+            spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "magic_missile", "identify", "sleep", "mage_armor", "shield"]),
+          })
+        ))
+      )
+    match finalized {
+      | Finalized(sheet) =>
+          match pAdvanceLevel(sheet, wizardLevelTwoWithPatch) {
+            | Advanced(levelTwo) =>
+                all {
+                  assert(levelTwo.primaryClass == Wizard),
+                  assert(levelTwo.classLevels.get(Wizard) == 2),
+                  assert(levelTwo.advancement.length() == 2),
+                  assert(pIsLegalSheet(levelTwo)),
+                }
+            | AdvanceBlocked(_) => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_advancement_higher_level_start_matches_repeated_level_ups = {
+    val levelOne = pFinalizeDraft(COMPLETE_FIGHTER_DRAFT)
+    val directLevelFour = pFinalizeDraft(
+      COMPLETE_FIGHTER_DRAFT
+        .with("advancement", HasAdvancement([
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: HasSubclassSelection({ className: Fighter, subclass: "champion" }), feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: NoSubclassSelection, feat: HasAdvancementFeatSelection({ slot: FeatSlot, choice: AbilityScoreImprovement([Str]) }) },
+        ]))
+        .with("classLevels", HasClassLevels(singleClassLevels(Fighter, 4))),
+    )
+    match levelOne {
+      | Finalized(baseSheet) =>
+          match pAdvanceLevel(baseSheet, LEVEL_UP_FIGHTER_NO_PATCH) {
+            | Advanced(levelTwo) =>
+                match pAdvanceLevel(
+                  levelTwo,
+                  pLevelUpTransition({
+                    className: Fighter,
+                    subclass: HasSubclassSelection({ className: Fighter, subclass: "champion" }),
+                    feat: NoAdvancementFeatSelection,
+                  }),
+                ) {
+                  | Advanced(levelThree) =>
+                      match pAdvanceLevel(
+                        levelThree,
+                        pLevelUpTransition({
+                          className: Fighter,
+                          subclass: NoSubclassSelection,
+                          feat: HasAdvancementFeatSelection({ slot: FeatSlot, choice: AbilityScoreImprovement([Str]) }),
+                        }),
+                      ) {
+                        | Advanced(levelFour) =>
+                            match directLevelFour {
+                              | Finalized(expectedSheet) =>
+                                  all {
+                                    assert(levelFour == expectedSheet),
+                                    assert(levelFour.classLevels.get(Fighter) == 4),
+                                    assert(levelFour.abilityScores.get(Str) == 19),
+                                  }
+                              | Blocked(_) => assert(false)
+                            }
+                        | AdvanceBlocked(_) => assert(false)
+                      }
+                  | AdvanceBlocked(_) => assert(false)
+                }
+            | AdvanceBlocked(_) => assert(false)
+          }
+      | Blocked(_) => assert(false)
     }
   }
 

@@ -1,7 +1,7 @@
 # POST3 - Formal Advancement And Higher-Level Starts
 
 Date: 2026-04-11
-Status: archived implementation note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md)
+Status: archived implementation note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) and partially landed in [character.qnt](./character.qnt)
 Depends on: CHAR7, POST1
 Blocks: POST4
 
@@ -15,6 +15,14 @@ Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) for the c
 
 - `character-creation.qnt` owns level-1 creation and finalized-sheet production;
 - `character.qnt` owns advancement semantics over finalized sheets.
+
+Task `CQ2` has now landed the formal advancement owner in [character.qnt](./character.qnt):
+
+- `pIsLegalSheet`
+- `pCanAdvance`
+- `pAdvanceLevel`
+
+The existing TypeScript helper in [packages/core/src/character-sheet-advancement.ts](./packages/core/src/character-sheet-advancement.ts) remains a thin adapter over the shared finalized-sheet boundary until the later parity and projection tasks close out the rest of the `CQ*` track.
 
 - `.references/srd-5.2.1/Character-Creation.md`
   - `Level Advancement`
@@ -58,5 +66,7 @@ This preserves the POST1 boundary:
 - Focused tests prove repeated legal advancement reaches the same sheet as direct higher-level authorship.
 - Focused tests prove illegal subclass timing is still rejected through the advancement helper.
 - Focused tests prove multiclass continuation uses the same sheet-to-sheet transition path.
-- `/simplify` round 1: kept the helper as a thin wrapper over `finalizeCharacterDraft()` and removed any temptation to duplicate advancement legality.
-- `/simplify` round 2: kept choice updates patch-shaped so callers only provide newly required advancement-owned facts instead of rebuilding the sheet.
+- Focused tests prove contradictory finalized sheets are rejected when replayed finalized semantics disagree with sheet-owned fields.
+- Focused tests prove spellcasting level-ups succeed only when the transition supplies newly required spellcasting choices.
+- `/simplify` round 1: removed the stale `classLevels` carry-forward from sheet-to-transition replay and derived the transition draft's class levels directly from the appended ordered advancement list.
+- `/simplify` round 2: tightened finalized-sheet legality so `pIsLegalSheet` replays the canonical finalization path and compares the resulting `CharacterSheet` against the input instead of checking draft completeness alone.

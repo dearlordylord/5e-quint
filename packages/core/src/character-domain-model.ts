@@ -156,6 +156,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "duplicateGrantedProficiency",
   "multiclassPrerequisiteNotMet",
   "abilityScoreIncreaseExceedsThirty",
+  "contradictoryFinalizedSheet",
   ...CHARACTER_EQUIPMENT_ISSUE_CODES,
   ...CHARACTER_SPELLCASTING_ISSUE_CODES,
 ] as const;

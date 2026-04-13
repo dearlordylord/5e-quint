@@ -1,3 +1,5 @@
+import { isDeepStrictEqual } from "node:util";
+
 import { cloneAdvancement } from "#/character-advancement.ts";
 import { finalizeCharacterDraft } from "#/character-draft-analysis.ts";
 import type {
@@ -102,5 +104,20 @@ export function advanceCharacterSheet(
   sheet: CharacterSheet,
   transition: CharacterLevelUpTransition,
 ): CharacterFinalizationResult {
+  const legalityCheck = finalizeCharacterDraft(characterDraftFromSheet(sheet));
+  if (!legalityCheck.ok) return legalityCheck;
+  if (!isDeepStrictEqual(legalityCheck.sheet, sheet)) {
+    return {
+      ok: false,
+      issues: [
+        {
+          code: "contradictoryFinalizedSheet",
+          message:
+            "Finalized sheet facts must match the replayed result of their owned draft state before advancement.",
+        },
+      ],
+    };
+  }
+
   return finalizeCharacterDraft(characterDraftFromSheet(sheet, transition));
 }

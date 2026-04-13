@@ -396,6 +396,36 @@ describe("character-domain", () => {
       fighter: 1,
       monk: 1,
     });
+    expect(multiclassed.sheet.choices.monkTool).toBe("flute");
+  });
+
+  it("blocks contradictory finalized sheets with an actionable issue", () => {
+    const levelOne = finalizeCharacterDraft(completeDraft());
+    expect(levelOne.ok).toBe(true);
+    if (!levelOne.ok) throw new Error("expected successful level-one sheet");
+
+    const tampered = {
+      ...levelOne.sheet,
+      abilityScores: {
+        ...levelOne.sheet.abilityScores,
+        str: 20,
+      },
+    } as const;
+
+    const blocked = advanceCharacterSheet(tampered, {
+      entry: advancementEntry("fighter"),
+    });
+
+    expect(blocked.ok).toBe(false);
+    if (blocked.ok) {
+      throw new Error("expected contradictory sheet to be blocked");
+    }
+
+    expect(blocked.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: "contradictoryFinalizedSheet" }),
+      ]),
+    );
   });
 
   it("keeps spellcasting expansion on the same advancement path", () => {
