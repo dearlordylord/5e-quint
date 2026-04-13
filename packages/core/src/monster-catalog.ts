@@ -17,6 +17,8 @@ import {
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
 } from "#/monster-catalog-goblins.ts";
+export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
+import { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import {
@@ -75,6 +77,9 @@ export type MonsterStatBlockId = (typeof MONSTER_STAT_BLOCK_IDS)[number];
 
 export const MONSTER_STAT_BLOCK_PROVENANCE = {
   defaultSource: ".references/srd-5.2.1/",
+  defaultSourceName: CANONICAL_SRD_MONSTER_PROVENANCE.sourceName,
+  defaultSourceKind: CANONICAL_SRD_MONSTER_PROVENANCE.sourceKind,
+  defaultLicense: CANONICAL_SRD_MONSTER_PROVENANCE.license,
   externalSourcePolicy:
     "Any non-SRD corpus requires explicit owner approval before it becomes a catalog source of truth.",
   researchOnlySources:

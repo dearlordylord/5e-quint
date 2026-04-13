@@ -2,6 +2,7 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
@@ -10,11 +11,7 @@ const H_TO_L_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-H-L.md";
 const M_TO_O_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-M-O.md";
 
 export const KNIGHT = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: H_TO_L_SOURCE_DOCUMENT,
-    section: "Knight",
-  },
+  provenance: srdRulesProvenance(H_TO_L_SOURCE_DOCUMENT, "Knight"),
   name: "Knight",
   creatureType: "humanoid",
   creatureSize: "medium",
@@ -94,11 +91,10 @@ export const KNIGHT = {
 } as const satisfies StatBlock;
 
 export const KOBOLD_WARRIOR = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: H_TO_L_SOURCE_DOCUMENT,
-    section: "Kobold > Kobold Warrior",
-  },
+  provenance: srdRulesProvenance(
+    H_TO_L_SOURCE_DOCUMENT,
+    "Kobold > Kobold Warrior",
+  ),
   name: "Kobold Warrior",
   creatureType: "dragon",
   creatureSize: "small",
@@ -177,11 +173,7 @@ export const KOBOLD_WARRIOR = {
 } as const satisfies StatBlock;
 
 export const MAGE = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: M_TO_O_SOURCE_DOCUMENT,
-    section: "Mage",
-  },
+  provenance: srdRulesProvenance(M_TO_O_SOURCE_DOCUMENT, "Mage"),
   name: "Mage",
   creatureType: "humanoid",
   descriptiveTags: ["Wizard"],

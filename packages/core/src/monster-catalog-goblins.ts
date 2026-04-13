@@ -6,6 +6,7 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
 
@@ -17,11 +18,10 @@ const GOBLIN_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-E-G.md";
  * `Goblin Minion`.
  */
 export const GOBLIN_MINION = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: GOBLIN_SOURCE_DOCUMENT,
-    section: "Goblins > Goblin Minion",
-  },
+  provenance: srdRulesProvenance(
+    GOBLIN_SOURCE_DOCUMENT,
+    "Goblins > Goblin Minion",
+  ),
   name: "Goblin Minion",
   creatureType: "fey",
   descriptiveTags: ["Goblinoid"],
@@ -97,11 +97,10 @@ export const GOBLIN_MINION = {
  * `Goblin Warrior`.
  */
 export const GOBLIN_WARRIOR = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: GOBLIN_SOURCE_DOCUMENT,
-    section: "Goblins > Goblin Warrior",
-  },
+  provenance: srdRulesProvenance(
+    GOBLIN_SOURCE_DOCUMENT,
+    "Goblins > Goblin Warrior",
+  ),
   name: "Goblin Warrior",
   creatureType: "fey",
   descriptiveTags: ["Goblinoid"],
@@ -196,11 +195,10 @@ export const GOBLIN_WARRIOR = {
  * `Goblin Boss`.
  */
 export const GOBLIN_BOSS = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: GOBLIN_SOURCE_DOCUMENT,
-    section: "Goblins > Goblin Boss",
-  },
+  provenance: srdRulesProvenance(
+    GOBLIN_SOURCE_DOCUMENT,
+    "Goblins > Goblin Boss",
+  ),
   name: "Goblin Boss",
   creatureType: "fey",
   descriptiveTags: ["Goblinoid"],

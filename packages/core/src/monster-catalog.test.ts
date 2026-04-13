@@ -7,6 +7,7 @@ import {
 } from "#/available-actions.ts";
 import { MONSTER_CATALOG_UNSUPPORTED_AUDIT } from "#/monster-catalog-audit.ts";
 import {
+  CANONICAL_SRD_MONSTER_PROVENANCE,
   ABOLETH,
   CENTAUR_TROOPER,
   getMonsterStatBlock,
@@ -42,6 +43,15 @@ describe("monster catalog", () => {
     expect(MONSTER_STAT_BLOCK_PROVENANCE.defaultSource).toBe(
       ".references/srd-5.2.1/",
     );
+    expect(MONSTER_STAT_BLOCK_PROVENANCE.defaultSourceName).toBe(
+      CANONICAL_SRD_MONSTER_PROVENANCE.sourceName,
+    );
+    expect(MONSTER_STAT_BLOCK_PROVENANCE.defaultSourceKind).toBe(
+      CANONICAL_SRD_MONSTER_PROVENANCE.sourceKind,
+    );
+    expect(MONSTER_STAT_BLOCK_PROVENANCE.defaultLicense).toBe(
+      CANONICAL_SRD_MONSTER_PROVENANCE.license,
+    );
     expect(MONSTER_STAT_BLOCK_PROVENANCE.researchOnlySources).toContain(
       "research-only",
     );
@@ -54,10 +64,17 @@ describe("monster catalog", () => {
     const statBlock = getMonsterStatBlock("goblinMinion");
 
     expect(statBlock.provenance).toEqual({
-      edition: "SRD 5.2.1",
-      document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
-      section: "Goblins > Goblin Minion",
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+          section: "Goblins > Goblin Minion",
+        },
+      },
     });
+    expect("role" in statBlock.provenance.provenance).toBe(false);
     expect(statBlock.name).toBe("Goblin Minion");
     expect(statBlock.creatureType).toBe("fey");
     expect(statBlock.descriptiveTags).toEqual(["Goblinoid"]);
@@ -117,9 +134,15 @@ describe("monster catalog", () => {
     const statBlock = getMonsterStatBlock("aboleth");
 
     expect(statBlock.provenance).toEqual({
-      edition: "SRD 5.2.1",
-      document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
-      section: "Aboleth",
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+          section: "Aboleth",
+        },
+      },
     });
     expect(statBlock.name).toBe("Aboleth");
     expect(statBlock.legendaryActionUses).toBe(3);
@@ -204,9 +227,15 @@ describe("monster catalog", () => {
 
     expect(statBlock).toBe(CENTAUR_TROOPER);
     expect(statBlock.provenance).toEqual({
-      edition: "SRD 5.2.1",
-      document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
-      section: "Centaur Trooper",
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+          section: "Centaur Trooper",
+        },
+      },
     });
     expect(statBlock.actions).toEqual([
       {
@@ -274,9 +303,15 @@ describe("monster catalog", () => {
 
     expect(statBlock).toBe(PSEUDODRAGON);
     expect(statBlock.provenance).toEqual({
-      edition: "SRD 5.2.1",
-      document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-      section: "Pseudodragon",
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+          section: "Pseudodragon",
+        },
+      },
     });
     expect(statBlock.name).toBe("Pseudodragon");
     expect(statBlock.creatureType).toBe("dragon");
@@ -409,9 +444,15 @@ describe("monster catalog", () => {
     expect(getMonsterStatBlock("sahuaginWarrior")).toBe(SAHUAGIN_WARRIOR);
     expect(getMonsterStatBlock("scout")).toBe(SCOUT);
     expect(KNIGHT.provenance).toEqual({
-      edition: "SRD 5.2.1",
-      document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
-      section: "Knight",
+      provenance: {
+        sourceName: "srd-5.2.1",
+        sourceKind: "canonicalRulesText",
+        license: "CC-BY-4.0",
+        citation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+          section: "Knight",
+        },
+      },
     });
     expect(KOBOLD_WARRIOR.traits).toEqual([
       {

@@ -2,6 +2,7 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
@@ -10,11 +11,7 @@ const M_TO_O_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-M-O.md";
 const P_TO_S_SOURCE_DOCUMENT = ".references/srd-5.2.1/Monsters/Monsters-P-S.md";
 
 export const OGRE = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: M_TO_O_SOURCE_DOCUMENT,
-    section: "Ogre",
-  },
+  provenance: srdRulesProvenance(M_TO_O_SOURCE_DOCUMENT, "Ogre"),
   name: "Ogre",
   creatureType: "giant",
   creatureSize: "large",
@@ -93,11 +90,7 @@ export const OGRE = {
 } as const satisfies StatBlock;
 
 export const PRIEST = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: P_TO_S_SOURCE_DOCUMENT,
-    section: "Priests > Priest",
-  },
+  provenance: srdRulesProvenance(P_TO_S_SOURCE_DOCUMENT, "Priests > Priest"),
   name: "Priest",
   creatureType: "humanoid",
   descriptiveTags: ["Cleric"],
@@ -209,11 +202,10 @@ export const PRIEST = {
 } as const satisfies StatBlock;
 
 export const SAHUAGIN_WARRIOR = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: P_TO_S_SOURCE_DOCUMENT,
-    section: "Sahuagin > Sahuagin Warrior",
-  },
+  provenance: srdRulesProvenance(
+    P_TO_S_SOURCE_DOCUMENT,
+    "Sahuagin > Sahuagin Warrior",
+  ),
   name: "Sahuagin Warrior",
   creatureType: "fiend",
   creatureSize: "medium",
@@ -318,11 +310,7 @@ export const SAHUAGIN_WARRIOR = {
 } as const satisfies StatBlock;
 
 export const SCOUT = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: P_TO_S_SOURCE_DOCUMENT,
-    section: "Scout",
-  },
+  provenance: srdRulesProvenance(P_TO_S_SOURCE_DOCUMENT, "Scout"),
   name: "Scout",
   creatureType: "humanoid",
   creatureSize: "medium",

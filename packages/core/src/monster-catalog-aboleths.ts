@@ -2,16 +2,16 @@ import {
   monsterSenses,
   monsterSkillBonuses,
   monsterSpeeds,
+  srdRulesProvenance,
 } from "#/monster-catalog-helpers.ts";
 import { type StatBlock } from "#/monster-types.ts";
 import { abilityModifier, armorClass } from "#/types.ts";
 
 export const ABOLETH = {
-  provenance: {
-    edition: "SRD 5.2.1",
-    document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
-    section: "Aboleth",
-  },
+  provenance: srdRulesProvenance(
+    ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+    "Aboleth",
+  ),
   name: "Aboleth",
   creatureType: "aberration",
   creatureSize: "large",
