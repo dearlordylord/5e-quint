@@ -83,6 +83,7 @@ test_command="pnpm quality"
 keep_worktrees=false
 skip_decider=false
 codex_only=false
+candidate_round_limit=3
 selected_tasks=()
 child_pids=()
 task_branches=()
@@ -470,6 +471,50 @@ Your final answer is the review report. The harness saves it to the output path 
 EOF
 }
 
+write_candidate_prompt() {
+  local role="$1"
+  local output_file="$2"
+  local workspace="$3"
+  local task_no="$4"
+  local task_file="$5"
+  local task_base_ref="$6"
+  local task_base_sha="$7"
+  local feedback_file="${8:-}"
+  local round_label="${9:-1}"
+
+  write_prompt "$role" "$output_file" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+  if [[ -n "$feedback_file" && -f "$feedback_file" ]]; then
+    cat >>"$output_file" <<EOF
+
+Revision round: $round_label
+
+You are rerunning the same task in the same Ralph attempt after reviewer feedback.
+Address the findings below before you finish. Keep the work scoped to Task $task_no and update the existing worktree rather than starting a fresh design.
+
+Reviewer feedback file: $feedback_file
+
+EOF
+    cat "$feedback_file" >>"$output_file"
+  fi
+}
+
+parse_review_verdict() {
+  local report="$1"
+  node - "$report" <<'NODE'
+const fs = require("fs")
+const text = fs.readFileSync(process.argv[2], "utf8")
+const match = text.match(/^##?\s*Verdict:\s*(.+)$/im)
+if (!match) {
+  throw new Error("review report missing Verdict section")
+}
+const verdict = match[1].trim().replace(/`/g, "").toLowerCase()
+if (!["accept", "accept-with-fixes", "reject"].includes(verdict)) {
+  throw new Error(`invalid review verdict: ${verdict}`)
+}
+process.stdout.write(verdict)
+NODE
+}
+
 write_decider_prompt() {
   local output_file="$1"
   local task_no="$2"
@@ -535,6 +580,82 @@ At the end, report:
   - Affected tasks: task IDs and final planning action for each
   - Plan edits: summary of updates made to $plan_file, or "none"
 EOF
+}
+
+run_candidate_pipeline() {
+  local candidate_name="$1"
+  local runner="$2"
+  local workspace="$3"
+  local attempt_root="$4"
+  local task_no="$5"
+  local task_file="$6"
+  local task_base_ref="$7"
+  local task_base_sha="$8"
+
+  local slug="${candidate_name,,}"
+  local round=1
+  local previous_review=""
+  local verdict="reject"
+  local implementer_role="$candidate_name implementer"
+
+  while (( round <= candidate_round_limit )); do
+    local round_prefix="$attempt_root/$slug-round-$round"
+    local implementer_prompt="$round_prefix-implementer.prompt.md"
+    local implementer_log="$round_prefix-implementer.log"
+    local implementer_exit="$round_prefix-implementer.exit"
+    local implementer_final="$round_prefix-implementer.final.md"
+    local review_prompt="$round_prefix-review.prompt.md"
+    local review_log="$round_prefix-review.log"
+    local review_report="$round_prefix-review.md"
+    local review_exit="$round_prefix-review.exit"
+    local diff_file="$round_prefix.diff"
+    local after_review_diff="$round_prefix.after-review.diff"
+
+    note "task" "candidate-start task=$task_no candidate=$slug round=$round"
+    write_candidate_prompt "$implementer_role" "$implementer_prompt" "$workspace" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" "$previous_review" "$round"
+
+    local implementer_status=0
+    if [[ "$runner" == "claude" ]]; then
+      run_claude "$workspace" "$implementer_prompt" "$implementer_log" || implementer_status=$?
+    else
+      run_codex "$workspace" "$implementer_prompt" "$implementer_log" "$implementer_final" || implementer_status=$?
+    fi
+    printf '%s\n' "$implementer_status" >"$implementer_exit"
+    save_diff "$workspace" "$diff_file" "$task_base_sha"
+    note "task" "candidate-implemented task=$task_no candidate=$slug round=$round status=$implementer_status"
+
+    write_review_prompt "$candidate_name" "$workspace" "$review_report" "$review_prompt" "$task_no" "$task_file" "$task_base_sha"
+    local review_status=0
+    run_codex "$workspace" "$review_prompt" "$review_log" "$review_report" || review_status=$?
+    printf '%s\n' "$review_status" >"$review_exit"
+    save_diff "$workspace" "$after_review_diff" "$task_base_sha"
+    verdict="$(parse_review_verdict "$review_report")"
+    note "task" "candidate-reviewed task=$task_no candidate=$slug round=$round verdict=$verdict status=$review_status"
+
+    if [[ "$verdict" == "accept" ]]; then
+      break
+    fi
+    if (( round >= candidate_round_limit )); then
+      break
+    fi
+
+    previous_review="$review_report"
+    note "task" "candidate-handoff task=$task_no candidate=$slug round=$round next_round=$((round + 1)) verdict=$verdict"
+    ((round++))
+  done
+
+  cp -f "$attempt_root/$slug-round-$round-implementer.prompt.md" "$attempt_root/$slug-implementer.prompt.md"
+  cp -f "$attempt_root/$slug-round-$round-implementer.log" "$attempt_root/$slug-implementer.log"
+  cp -f "$attempt_root/$slug-round-$round-implementer.exit" "$attempt_root/$slug-implementer.exit"
+  cp -f "$attempt_root/$slug-round-$round.diff" "$attempt_root/$slug.diff"
+  cp -f "$attempt_root/$slug-round-$round-review.prompt.md" "$attempt_root/$slug-review.prompt.md"
+  cp -f "$attempt_root/$slug-round-$round-review.log" "$attempt_root/$slug-review.log"
+  cp -f "$attempt_root/$slug-round-$round-review.md" "$attempt_root/$slug-review.md"
+  cp -f "$attempt_root/$slug-round-$round-review.exit" "$attempt_root/$slug-review.exit"
+  cp -f "$attempt_root/$slug-round-$round.after-review.diff" "$attempt_root/$slug.after-review.diff"
+  if [[ "$runner" == "codex" && -f "$attempt_root/$slug-round-$round-implementer.final.md" ]]; then
+    cp -f "$attempt_root/$slug-round-$round-implementer.final.md" "$attempt_root/$slug-implementer.final.md"
+  fi
 }
 
 write_chooser_prompt() {
@@ -832,9 +953,21 @@ run_task_attempt() {
   fi
   disable_fuzz_scripts_in_worktree "$codex_worktree"
 
-  write_prompt "Codex implementer" "$attempt_root/codex-implementer.prompt.md" "$codex_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
   if [[ "$codex_only" != true ]]; then
-    write_prompt "Claude implementer" "$attempt_root/claude-implementer.prompt.md" "$claude_worktree" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha"
+    : >"$attempt_root/claude-implementer.log"
+    : >"$attempt_root/claude-implementer.exit"
+    : >"$attempt_root/claude.diff"
+    : >"$attempt_root/claude-review.log"
+    : >"$attempt_root/claude-review.md"
+    : >"$attempt_root/claude-review.exit"
+    : >"$attempt_root/claude.after-review.diff"
+    : >"$attempt_root/codex-implementer.log"
+    : >"$attempt_root/codex-implementer.exit"
+    : >"$attempt_root/codex.diff"
+    : >"$attempt_root/codex-review.log"
+    : >"$attempt_root/codex-review.md"
+    : >"$attempt_root/codex-review.exit"
+    : >"$attempt_root/codex.after-review.diff"
   else
     printf 'codex-only\n' >"$attempt_root/claude-implementer.exit"
     : >"$attempt_root/claude-implementer.log"
@@ -847,11 +980,11 @@ run_task_attempt() {
 
   local claude_pid=""
   if [[ "$codex_only" != true ]]; then
-    run_claude "$claude_worktree" "$attempt_root/claude-implementer.prompt.md" "$attempt_root/claude-implementer.log" &
+    run_candidate_pipeline "Claude" "claude" "$claude_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
     claude_pid=$!
     child_pids+=("$claude_pid")
   fi
-  run_codex "$codex_worktree" "$attempt_root/codex-implementer.prompt.md" "$attempt_root/codex-implementer.log" "$attempt_root/codex-implementer.final.md" &
+  run_candidate_pipeline "Codex" "codex" "$codex_worktree" "$attempt_root" "$task_no" "$task_file" "$task_base_ref" "$task_base_sha" &
   local codex_pid=$!
   child_pids+=("$codex_pid")
 
@@ -863,41 +996,17 @@ run_task_attempt() {
   wait "$codex_pid" || codex_status=$?
   child_pids=()
 
-  if [[ "$codex_only" != true ]]; then
-    printf '%s\n' "$claude_status" >"$attempt_root/claude-implementer.exit"
+  if [[ "$codex_only" != true && "$claude_status" -ne 0 ]]; then
+    printf 'candidate pipeline failed for task %s attempt %s: claude\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-candidate-pipeline task=$task_no attempt=$attempt_no candidate=claude"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-candidate-pipeline" "-" "claude pipeline failed"
+    return 2
   fi
-  printf '%s\n' "$codex_status" >"$attempt_root/codex-implementer.exit"
-  if [[ "$codex_only" != true ]]; then
-    save_diff "$claude_worktree" "$attempt_root/claude.diff" "$task_base_sha"
-  fi
-  save_diff "$codex_worktree" "$attempt_root/codex.diff" "$task_base_sha"
-
-  local claude_review_status=0
-  local codex_review_status=0
-  if [[ "$codex_only" != true ]]; then
-    write_review_prompt "Claude" "$claude_worktree" "$attempt_root/claude-review.md" "$attempt_root/claude-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-    write_review_prompt "Codex" "$codex_worktree" "$attempt_root/codex-review.md" "$attempt_root/codex-review.prompt.md" "$task_no" "$task_file" "$task_base_sha"
-
-    run_codex "$claude_worktree" "$attempt_root/claude-review.prompt.md" "$attempt_root/claude-review.log" "$attempt_root/claude-review.md" &
-    local claude_review_pid=$!
-    child_pids+=("$claude_review_pid")
-    run_codex "$codex_worktree" "$attempt_root/codex-review.prompt.md" "$attempt_root/codex-review.log" "$attempt_root/codex-review.md" &
-    local codex_review_pid=$!
-    child_pids+=("$codex_review_pid")
-
-    wait "$claude_review_pid" || claude_review_status=$?
-    wait "$codex_review_pid" || codex_review_status=$?
-    child_pids=()
-
-    printf '%s\n' "$claude_review_status" >"$attempt_root/claude-review.exit"
-    printf '%s\n' "$codex_review_status" >"$attempt_root/codex-review.exit"
-    save_diff "$claude_worktree" "$attempt_root/claude.after-review.diff" "$task_base_sha"
-    save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
-  else
-    : >"$attempt_root/codex-review.log"
-    : >"$attempt_root/codex-review.md"
-    printf 'codex-only\n' >"$attempt_root/codex-review.exit"
-    save_diff "$codex_worktree" "$attempt_root/codex.after-review.diff" "$task_base_sha"
+  if [[ "$codex_status" -ne 0 ]]; then
+    printf 'candidate pipeline failed for task %s attempt %s: codex\n' "$task_no" "$attempt_no" >"$last_error_file"
+    note "task" "fatal-candidate-pipeline task=$task_no attempt=$attempt_no candidate=codex"
+    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-candidate-pipeline" "-" "codex pipeline failed"
+    return 2
   fi
 
   if [[ "$skip_decider" == true ]]; then
