@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { finalizeCharacterDraft } from "#/character-domain.ts";
 import {
   characterSheetBattleProjection,
+  characterSheetCreatureProjection,
   characterSheetMachineInput,
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
@@ -231,6 +232,7 @@ describe("character-sheet-derived", () => {
   it("derives sheet numbers and runtime projections from one owned path", () => {
     const sheet = finalizeSorcererSheet();
     const derived = deriveCharacterSheetNumbers(sheet);
+    const projection = characterSheetCreatureProjection(sheet);
     const machineInput = characterSheetMachineInput(sheet);
     const battleProjection = characterSheetBattleProjection(sheet);
 
@@ -276,6 +278,25 @@ describe("character-sheet-derived", () => {
     ]);
     expect(derived.spellcasting.slotsMax).toEqual([4, 3, 2, 0, 0, 0, 0, 0, 0]);
 
+    expect(projection.creatureSize).toBe("medium");
+    expect(projection.subclasses).toEqual([
+      { className: "sorcerer", subclass: "draconic" },
+    ]);
+    expect(projection.fightingStyles).toEqual(new Set());
+    expect(projection.saveProficiencies).toEqual(new Set(["con", "cha"]));
+    expect(projection.skillProficiencies).toEqual(
+      new Set(["insight", "religion", "arcana", "persuasion", "perception"]),
+    );
+    expect(projection.expertiseSkills).toEqual(new Set());
+    expect(projection.armorProficiencies).toEqual(new Set());
+    expect(projection.hitDieType).toBe(6);
+    expect(projection.spellcastingAbility).toBe("cha");
+    expect(projection.hasSpellcasting).toBe(true);
+    expect(projection.unarmoredDefense).toBe("none");
+    expect(projection.features).toEqual(new Set());
+    expect(projection.critRange).toBe(20);
+    expect(projection.hasFightingStyleFeature).toBe(false);
+
     expect(machineInput.maxHp).toBe(27);
     expect(machineInput.conMod).toBe(1);
     expect(machineInput.baseWalkSpeed).toBe(30);
@@ -298,6 +319,7 @@ describe("character-sheet-derived", () => {
       derived.spellcasting.preparedSpells,
     );
     expect(battleProjection.slotsMax).toEqual(derived.spellcasting.slotsMax);
+    expect(battleProjection.mainHandWeapon?.name).toBe("Quarterstaff");
     expect(
       battleProjection.readyableSpellPayloads!.get("fireball")?.release.saveDC,
     ).toBe(15);
@@ -305,5 +327,57 @@ describe("character-sheet-derived", () => {
       battleProjection.readyableSpellPayloads!.get("hold_person")?.release
         .saveDC,
     ).toBe(15);
+  });
+
+  it("projects spellcasting ability from the first caster class on the advancement path", () => {
+    const sheet = finalizeSorcererSheet();
+    const projection = characterSheetCreatureProjection({
+      ...sheet,
+      primaryClass: "fighter",
+      advancement: [advancementEntry("fighter"), advancementEntry("wizard")],
+      classLevels: {
+        ...sheet.classLevels,
+        fighter: 1,
+        sorcerer: 0,
+        wizard: 1,
+      },
+    });
+
+    expect(projection.hasSpellcasting).toBe(true);
+    expect(projection.spellcastingAbility).toBe("int");
+  });
+
+  it("does not grant Champion crit ranges without a Champion subclass selection", () => {
+    const sheet = finalizeSorcererSheet();
+
+    const levelThreeWithoutChampion = characterSheetCreatureProjection({
+      ...sheet,
+      primaryClass: "fighter",
+      advancement: [
+        advancementEntry("fighter"),
+        advancementEntry("fighter"),
+        advancementEntry("fighter"),
+      ],
+      classLevels: {
+        ...sheet.classLevels,
+        fighter: 3,
+        sorcerer: 0,
+      },
+    });
+    const levelFifteenWithoutChampion = characterSheetCreatureProjection({
+      ...sheet,
+      primaryClass: "fighter",
+      advancement: Array.from({ length: 15 }, () =>
+        advancementEntry("fighter"),
+      ),
+      classLevels: {
+        ...sheet.classLevels,
+        fighter: 15,
+        sorcerer: 0,
+      },
+    });
+
+    expect(levelThreeWithoutChampion.critRange).toBe(20);
+    expect(levelFifteenWithoutChampion.critRange).toBe(20);
   });
 });

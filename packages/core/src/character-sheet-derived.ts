@@ -1,11 +1,14 @@
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 import { characterBattleEquipmentProjection } from "#/character-equipment.ts";
 import {
-  characterSubclassSelections,
   characterProficiencySummary,
   finalAbilityModifiers,
   type CharacterSheet,
 } from "#/character-domain.ts";
+import {
+  characterSheetCreatureProjection,
+  speciesWalkSpeed,
+} from "#/character-sheet-creature-projection.ts";
 import {
   SKILLS,
   SKILL_ABILITIES,
@@ -22,7 +25,6 @@ import {
   type ClassName,
   type HitDiceRemaining,
 } from "#/features/class-tables.ts";
-import { championCritRange } from "#/features/class-fighter.ts";
 import { sneakAttackDice } from "#/features/class-rogue.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
@@ -33,19 +35,12 @@ import {
   type Ability,
 } from "#/types.ts";
 
-const SHIELD_ARMOR_CLASS_BONUS = 2;
+export {
+  characterSheetCreatureProjection,
+  type CharacterCreatureProjection,
+} from "#/character-sheet-creature-projection.ts";
 
-const SPECIES_WALK_SPEED = {
-  dragonborn: 30,
-  dwarf: 30,
-  elf: 30,
-  gnome: 30,
-  goliath: 35,
-  halfling: 30,
-  human: 30,
-  orc: 30,
-  tiefling: 30,
-} as const satisfies Readonly<Record<CharacterSheet["species"], number>>;
+const SHIELD_ARMOR_CLASS_BONUS = 2;
 
 type AbilityModifierMap = ReturnType<typeof finalAbilityModifiers>;
 
@@ -73,10 +68,6 @@ function levelOneHitPoints(hitDie: number, conMod: number): number {
 
 function levelUpHitPoints(className: ClassName, conMod: number): number {
   return Math.max(1, fixedHitPointsPerLevel(className) + conMod);
-}
-
-function speciesWalkSpeed(sheet: CharacterSheet): number {
-  return SPECIES_WALK_SPEED[sheet.species];
 }
 
 function hitPointMaximum(
@@ -251,63 +242,64 @@ export function deriveCharacterSheetNumbers(
 export function characterSheetMachineInput(
   sheet: CharacterSheet,
 ): DndMachineInput {
-  const abilityModifiers = finalAbilityModifiers(sheet);
+  const projection = characterSheetCreatureProjection(sheet);
   const derived = deriveCharacterSheetNumbers(sheet);
+  const abilityModifiers = finalAbilityModifiers(sheet);
 
   return {
     maxHp: derived.maxHp,
     conMod: abilityModifier(abilityModifiers.con),
     hitDiceRemaining: derived.hitDiceRemaining,
-    baseWalkSpeed: derived.baseWalkSpeed,
-    effectiveSpeed: derived.baseWalkSpeed,
-    movementRemaining: derived.baseWalkSpeed,
+    baseWalkSpeed: projection.baseWalkSpeed,
+    effectiveSpeed: projection.baseWalkSpeed,
+    movementRemaining: projection.baseWalkSpeed,
     barbarianLevel:
-      sheet.classLevels.barbarian > 0
-        ? classLevel(sheet.classLevels.barbarian)
+      projection.classLevels.barbarian > 0
+        ? classLevel(projection.classLevels.barbarian)
         : undefined,
     bardLevel:
-      sheet.classLevels.bard > 0
-        ? classLevel(sheet.classLevels.bard)
+      projection.classLevels.bard > 0
+        ? classLevel(projection.classLevels.bard)
         : undefined,
     clericLevel:
-      sheet.classLevels.cleric > 0
-        ? classLevel(sheet.classLevels.cleric)
+      projection.classLevels.cleric > 0
+        ? classLevel(projection.classLevels.cleric)
         : undefined,
     druidLevel:
-      sheet.classLevels.druid > 0
-        ? classLevel(sheet.classLevels.druid)
+      projection.classLevels.druid > 0
+        ? classLevel(projection.classLevels.druid)
         : undefined,
     fighterLevel:
-      sheet.classLevels.fighter > 0
-        ? classLevel(sheet.classLevels.fighter)
+      projection.classLevels.fighter > 0
+        ? classLevel(projection.classLevels.fighter)
         : undefined,
     monkLevel:
-      sheet.classLevels.monk > 0
-        ? classLevel(sheet.classLevels.monk)
+      projection.classLevels.monk > 0
+        ? classLevel(projection.classLevels.monk)
         : undefined,
     paladinLevel:
-      sheet.classLevels.paladin > 0
-        ? classLevel(sheet.classLevels.paladin)
+      projection.classLevels.paladin > 0
+        ? classLevel(projection.classLevels.paladin)
         : undefined,
     rangerLevel:
-      sheet.classLevels.ranger > 0
-        ? classLevel(sheet.classLevels.ranger)
+      projection.classLevels.ranger > 0
+        ? classLevel(projection.classLevels.ranger)
         : undefined,
     rogueLevel:
-      sheet.classLevels.rogue > 0
-        ? classLevel(sheet.classLevels.rogue)
+      projection.classLevels.rogue > 0
+        ? classLevel(projection.classLevels.rogue)
         : undefined,
     sorcererLevel:
-      sheet.classLevels.sorcerer > 0
-        ? classLevel(sheet.classLevels.sorcerer)
+      projection.classLevels.sorcerer > 0
+        ? classLevel(projection.classLevels.sorcerer)
         : undefined,
     warlockLevel:
-      sheet.classLevels.warlock > 0
-        ? classLevel(sheet.classLevels.warlock)
+      projection.classLevels.warlock > 0
+        ? classLevel(projection.classLevels.warlock)
         : undefined,
     wizardLevel:
-      sheet.classLevels.wizard > 0
-        ? classLevel(sheet.classLevels.wizard)
+      projection.classLevels.wizard > 0
+        ? classLevel(projection.classLevels.wizard)
         : undefined,
     wisMod: abilityModifier(abilityModifiers.wis),
     chaMod: abilityModifier(abilityModifiers.cha),
@@ -346,24 +338,23 @@ type CharacterBattleProjection = Pick<
 export function characterSheetBattleProjection(
   sheet: CharacterSheet,
 ): CharacterBattleProjection {
-  const abilityModifiers = finalAbilityModifiers(sheet);
+  const projection = characterSheetCreatureProjection(sheet);
   const derived = deriveCharacterSheetNumbers(sheet);
-  const fighterSubclass = characterSubclassSelections(sheet).find(
-    (selection) => selection.className === "fighter",
-  );
+  const abilityModifiers = finalAbilityModifiers(sheet);
+  const battleEquipment = characterBattleEquipmentProjection(sheet);
 
   return {
     maxHp: derived.maxHp,
     baseArmorClass: armorClass(derived.armorClass),
-    baseWalkSpeed: derived.baseWalkSpeed,
+    baseWalkSpeed: projection.baseWalkSpeed,
     caster: derived.spellcasting.preparedSpells.size > 0,
     strMod: abilityModifiers.str,
     dexMod: abilityModifiers.dex,
-    rogueLevel: sheet.classLevels.rogue,
-    monkLevel: sheet.classLevels.monk,
-    fighterLevel: sheet.classLevels.fighter,
-    barbarianLevel: sheet.classLevels.barbarian,
-    bardLevel: sheet.classLevels.bard,
+    rogueLevel: projection.classLevels.rogue,
+    monkLevel: projection.classLevels.monk,
+    fighterLevel: projection.classLevels.fighter,
+    barbarianLevel: projection.classLevels.barbarian,
+    bardLevel: projection.classLevels.bard,
     preparedSpells: derived.spellcasting.preparedSpells,
     readyableSpellPayloads: battleReadyableSpellPayloadsFromPreparedSpells(
       derived.spellcasting.preparedSpells,
@@ -375,11 +366,8 @@ export function characterSheetBattleProjection(
     pactSlotsMax: derived.spellcasting.pactSlotsMax,
     pactSlotsCurrent: derived.spellcasting.pactSlotsCurrent,
     pactSlotLevel: derived.spellcasting.pactSlotLevel,
-    critRange:
-      fighterSubclass?.subclass === "champion"
-        ? championCritRange(sheet.classLevels.fighter)
-        : 20,
+    critRange: projection.critRange,
     sneakAttackDice: sneakAttackDice(sheet.classLevels.rogue),
-    ...characterBattleEquipmentProjection(sheet),
+    ...battleEquipment,
   };
 }

@@ -1,7 +1,7 @@
 # POST1 - Formal Creation Semantics
 
 Date: 2026-04-11
-Status: archived research note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md)
+Status: archived research note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md), [character-creation.qnt](./character-creation.qnt), and [character.qnt](./character.qnt)
 Depends on: CHAR6, CHAR7
 Blocks: POST2, POST3, POST4
 
@@ -11,7 +11,7 @@ Blocks: POST2, POST3, POST4
 
 This note records the first formal-creation research closeout. It is no longer the current source of truth for the implementation program.
 
-Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) for the current design brief. In particular, this note predates the later decision to split the formal character work into:
+Use [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) for the current design brief. The current landed authority for the projection boundary is `character.qnt:pCharacterCreatureProjection` plus `character.qnt:pProjectionToCharConfig`, with the TypeScript runtime side implemented through `packages/core/src/character-sheet-creature-projection.ts:characterSheetCreatureProjection()`. In particular, this note predates the later decision to split the formal character work into:
 
 - `character-creation.qnt` for draft, open-choice, incompleteness, legality, and finalization semantics;
 - `character.qnt` for finalized-sheet advancement and character-to-creature projection semantics.
@@ -52,6 +52,7 @@ The current TypeScript domain already has the right ownership split:
   - `validateAndReplayAdvancement()` already treats ordered `advancement` as the legality-relevant history
 - `packages/core/src/character-sheet-derived.ts`
   - `deriveCharacterSheetNumbers()`
+  - `characterSheetCreatureProjection()`
   - `characterSheetMachineInput()`
   - `characterSheetBattleProjection()`
   - all are one-way projections from finalized sheet state

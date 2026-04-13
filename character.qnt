@@ -22,6 +22,28 @@ module character {
     | Advanced(CharacterSheet)
     | AdvanceBlocked({ openChoices: Set[CharacterCreationIssueCode], illegalIssues: Set[CharacterCreationIssueCode] })
 
+  type CharacterCreatureProjection = {
+    primaryClass: ClassName,
+    subclasses: List[CharacterSubclassSelection],
+    species: Species,
+    classLevels: ClassName -> int,
+    fightingStyles: Set[FightingStyleFeat],
+    abilityScores: Ability -> int,
+    creatureSize: Size,
+    baseWalkSpeed: int,
+    saveProficiencies: Set[Ability],
+    skillProficiencies: Set[Skill],
+    expertiseSkills: Set[Skill],
+    armorProficiencies: Set[ArmorCategory],
+    hitDieType: int,
+    spellcastingAbility: Ability,
+    hasSpellcasting: bool,
+    unarmoredDefense: UnarmoredDefense,
+    features: Set[Feature],
+    critRange: int,
+    hasFightingStyleFeature: bool,
+  }
+
   pure def pMergeOptionalSkillList(base: OptionalSkillList, patch: OptionalSkillList): OptionalSkillList = match patch {
     | NoSkillList => base
     | _ => patch
@@ -249,4 +271,342 @@ module character {
       | Blocked(issues) => AdvanceBlocked(issues)
     }
   }
+
+  pure def pSkillSet(skills: List[Skill]): Set[Skill] =
+    skills.foldl(Set(), (acc, skill) => acc.union(Set(skill)))
+
+  pure def pSubclassSelections(advancement: List[CharacterAdvancementEntry]): List[CharacterSubclassSelection] =
+    advancement.foldl([], (acc, entry) => match entry.subclass {
+      | HasSubclassSelection(selection) => acc.concat([selection])
+      | _ => acc
+    })
+
+  // RAW traceability for the projection helpers below:
+  // - Character Creation: a species determines a character's size and Speed.
+  // - Character Origins: each SRD species entry states its Size and Speed.
+  // - Class chapters: each Core Class Traits table states hit point die,
+  //   saving throw proficiencies, and armor training.
+  // - Class tables place subclass selection at level 3 for every SRD class.
+  // - Fighter/Paladin/Ranger class tables place Fighting Style at levels 1/2/2.
+  // - Spellcasting sections state the spellcasting ability for each caster class.
+
+  pure def pBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
+    | Acolyte => Set(Insight, Religion)
+    | Criminal => Set(SleightOfHand, Stealth)
+    | Sage => Set(Arcana, History)
+    | Soldier => Set(Athletics, Intimidation)
+  }
+
+  pure def pPrimarySaveProficiencies(primaryClass: ClassName): Set[Ability] = match primaryClass {
+    | Barbarian => Set(Str, Con)
+    | Bard => Set(Dex, Cha)
+    | Cleric => Set(Wis, Cha)
+    | Druid => Set(Int_, Wis)
+    | Fighter => Set(Str, Con)
+    | Monk => Set(Str, Dex)
+    | Paladin => Set(Wis, Cha)
+    | Ranger => Set(Str, Dex)
+    | Rogue => Set(Dex, Int_)
+    | Sorcerer => Set(Con, Cha)
+    | Warlock => Set(Wis, Cha)
+    | Wizard => Set(Int_, Wis)
+  }
+
+  pure def pPrimaryArmorProficiencies(primaryClass: ClassName): Set[ArmorCategory] = match primaryClass {
+    | Barbarian => Set(LightArmor, MediumArmor)
+    | Bard => Set(LightArmor)
+    | Cleric => Set(LightArmor, MediumArmor)
+    | Druid => Set(LightArmor)
+    | Fighter => Set(LightArmor, MediumArmor, HeavyArmor)
+    | Monk => Set()
+    | Paladin => Set(LightArmor, MediumArmor, HeavyArmor)
+    | Ranger => Set(LightArmor, MediumArmor)
+    | Rogue => Set(LightArmor)
+    | Sorcerer => Set()
+    | Warlock => Set(LightArmor)
+    | Wizard => Set()
+  }
+
+  pure def pMulticlassArmorProficiencies(className: ClassName): Set[ArmorCategory] = match className {
+    | Barbarian => Set()
+    | Bard => Set(LightArmor)
+    | Cleric => Set(LightArmor, MediumArmor)
+    | Druid => Set(LightArmor)
+    | Fighter => Set(LightArmor, MediumArmor)
+    | Monk => Set()
+    | Paladin => Set(LightArmor, MediumArmor)
+    | Ranger => Set(LightArmor, MediumArmor)
+    | Rogue => Set(LightArmor)
+    | Sorcerer => Set()
+    | Warlock => Set(LightArmor)
+    | Wizard => Set()
+  }
+
+  pure def pSkilledSkillProficiencies(
+    proficiencies: List[CharacterSkilledProficiencyChoice],
+  ): Set[Skill] =
+    proficiencies.foldl(Set(), (acc, choice) => match choice {
+      | SkilledSkill(skill) => acc.union(Set(skill))
+      | _ => acc
+    })
+
+  pure def pAdvancementSkillProficiencies(
+    advancement: List[CharacterAdvancementEntry],
+  ): Set[Skill] =
+    advancement.foldl(Set(), (acc, entry) => match entry.feat {
+      | HasAdvancementFeatSelection(selection) =>
+          match selection.choice {
+            | AdvancementFeat(feat) =>
+                match feat.proficiencies {
+                  | HasSkilledProficiencyChoices(proficiencies) => acc.union(pSkilledSkillProficiencies(proficiencies))
+                  | _ => acc
+                }
+            | EpicBoonFeat(feat) =>
+                match feat.proficiencies {
+                  | HasSkilledProficiencyChoices(proficiencies) => acc.union(pSkilledSkillProficiencies(proficiencies))
+                  | _ => acc
+                }
+            | _ => acc
+          }
+      | _ => acc
+    })
+
+  pure def pOptionalSkillSet(optionalSkills: OptionalSkillList): Set[Skill] = match optionalSkills {
+    | HasSkillList(skills) => pSkillSet(skills)
+    | _ => Set()
+  }
+
+  pure def pSpeciesSkillProficiencies(choices: CharacterBuildChoices): Set[Skill] = match choices.speciesSkill {
+    | HasSkill(skill) => Set(skill)
+    | _ => Set()
+  }
+
+  pure def pSheetSkillProficiencies(sheet: CharacterSheet): Set[Skill] = {
+    val multiclassSkills = match sheet.choices.multiclassSkills {
+      | HasMulticlassSkills(choices) =>
+          pOptionalSkillSet(choices.bard)
+            .union(pOptionalSkillSet(choices.ranger))
+            .union(pOptionalSkillSet(choices.rogue))
+      | _ => Set()
+    }
+    val originFeatSkills = match sheet.choices.humanOriginFeat {
+      | HasOriginFeatSelection(originFeat) =>
+          match originFeat {
+            | OriginSkilled(proficiencies) => pSkilledSkillProficiencies(proficiencies)
+            | _ => Set()
+          }
+      | _ => Set()
+    }
+
+    pBackgroundSkillProficiencies(sheet.background)
+      .union(pOptionalSkillSet(sheet.choices.primaryClassSkills))
+      .union(multiclassSkills)
+      .union(pSpeciesSkillProficiencies(sheet.choices))
+      .union(originFeatSkills)
+      .union(pAdvancementSkillProficiencies(sheet.advancement))
+  }
+
+  pure def pSheetArmorProficiencies(sheet: CharacterSheet): Set[ArmorCategory] = {
+    val multiclassArmor = sheet.classLevels.keys().fold(Set(), (acc, className) =>
+      if (className == sheet.primaryClass or sheet.classLevels.get(className) <= 0) acc
+      else acc.union(pMulticlassArmorProficiencies(className)))
+    val clericArmor = if (sheet.classLevels.get(Cleric) > 0 and sheet.choices.clericDivineOrder == HasString("protector"))
+      Set(HeavyArmor)
+    else
+      Set()
+    val druidArmor = if (sheet.classLevels.get(Druid) > 0 and sheet.choices.druidPrimalOrder == HasString("warden"))
+      Set(MediumArmor)
+    else
+      Set()
+    pPrimaryArmorProficiencies(sheet.primaryClass)
+      .union(multiclassArmor)
+      .union(clericArmor)
+      .union(druidArmor)
+  }
+
+  pure def pHitDieType(primaryClass: ClassName): int = match primaryClass {
+    | Barbarian => 12
+    | Fighter => 10
+    | Paladin => 10
+    | Ranger => 10
+    | Bard => 8
+    | Cleric => 8
+    | Druid => 8
+    | Monk => 8
+    | Rogue => 8
+    | Warlock => 8
+    | Sorcerer => 6
+    | Wizard => 6
+  }
+
+  pure def pHasSpellcasting(sheet: CharacterSheet): bool =
+    sheet.classLevels.get(Bard) > 0
+      or sheet.classLevels.get(Cleric) > 0
+      or sheet.classLevels.get(Druid) > 0
+      or sheet.classLevels.get(Paladin) > 0
+      or sheet.classLevels.get(Ranger) > 0
+      or sheet.classLevels.get(Sorcerer) > 0
+      or sheet.classLevels.get(Warlock) > 0
+      or sheet.classLevels.get(Wizard) > 0
+
+  pure def pIsCasterClass(className: ClassName): bool =
+    className == Bard
+      or className == Cleric
+      or className == Druid
+      or className == Paladin
+      or className == Ranger
+      or className == Sorcerer
+      or className == Warlock
+      or className == Wizard
+
+  pure def pSpellcastingAbilityForClass(className: ClassName): Ability = match className {
+    | Bard => Cha
+    | Cleric => Wis
+    | Druid => Wis
+    | Paladin => Cha
+    | Ranger => Wis
+    | Sorcerer => Cha
+    | Warlock => Cha
+    | Wizard => Int_
+    | _ => Wis
+  }
+
+  pure def pFirstCasterClass(
+    advancement: List[CharacterAdvancementEntry],
+    fallback: ClassName,
+  ): ClassName =
+    advancement.foldl(fallback, (acc, entry) =>
+      if (pIsCasterClass(acc)) acc
+      else if (pIsCasterClass(entry.className)) entry.className
+      else acc
+    )
+
+  pure def pProjectionSpellcastingAbility(sheet: CharacterSheet): Ability =
+    if (pHasSpellcasting(sheet))
+      pSpellcastingAbilityForClass(pFirstCasterClass(sheet.advancement, sheet.primaryClass))
+    else Wis
+
+  pure def pUnarmoredDefense(sheet: CharacterSheet): UnarmoredDefense =
+    if (sheet.classLevels.get(Barbarian) > 0) BarbarianUD
+    else if (sheet.classLevels.get(Monk) > 0) MonkUD
+    else NoUnarmoredDefense
+
+  pure def pCreatureFeatures(classLevels: ClassName -> int): Set[Feature] = {
+    val fighterFeatures = if (classLevels.get(Fighter) >= 20) Set(FExtraAttack, FExtraAttack2, FExtraAttack3)
+      else if (classLevels.get(Fighter) >= 11) Set(FExtraAttack, FExtraAttack2)
+      else if (classLevels.get(Fighter) >= 5) Set(FExtraAttack)
+      else Set()
+    val hasExtraAttack = fighterFeatures.contains(FExtraAttack)
+      or classLevels.get(Barbarian) >= 5
+      or classLevels.get(Monk) >= 5
+      or classLevels.get(Paladin) >= 5
+      or classLevels.get(Ranger) >= 5
+    if (hasExtraAttack) fighterFeatures.union(Set(FExtraAttack)) else fighterFeatures
+  }
+
+  pure def pCritRange(
+    subclasses: List[CharacterSubclassSelection],
+    classLevels: ClassName -> int,
+  ): int =
+    if (pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 15) 18
+    else if (pProjectionSubclass(Fighter, subclasses) == Champion and classLevels.get(Fighter) >= 3) 19
+    else 20
+
+  pure def pHasFightingStyleFeature(classLevels: ClassName -> int): bool =
+    classLevels.get(Fighter) >= 1
+      or classLevels.get(Paladin) >= 2
+      or classLevels.get(Ranger) >= 2
+
+  pure def pSpeciesCreatureSize(species: Species): Size = match species {
+    | Gnome => Small
+    | Halfling => Small
+    | _ => Medium
+  }
+
+  pure def pSpeciesBaseWalkSpeed(species: Species): int = match species {
+    | Goliath => 35
+    | _ => 30
+  }
+
+  pure def pSubclassNameForClass(className: ClassName): SubclassName = match className {
+    | Barbarian => PathOfTheBerserker
+    | Bard => CollegeOfLore
+    | Cleric => LifeDomain
+    | Druid => CircleOfTheLand
+    | Fighter => Champion
+    | Monk => WarriorOfTheOpenHand
+    | Paladin => OathOfDevotion
+    | Ranger => Hunter
+    | Rogue => Thief
+    | Sorcerer => DraconicSorcery
+    | Warlock => FiendPatron
+    | Wizard => Evoker
+  }
+
+  pure def pSubclassNameFromSelection(selection: CharacterSubclassSelection): SubclassName =
+    pSubclassNameForClass(selection.className)
+
+  pure def pProjectionSubclass(
+    primaryClass: ClassName,
+    subclasses: List[CharacterSubclassSelection],
+  ): SubclassName =
+    subclasses.foldl(pSubclassNameForClass(primaryClass), (acc, selection) =>
+      if (selection.className == primaryClass)
+        pSubclassNameFromSelection(selection)
+      else acc
+    )
+
+  // The current CharacterSheet surface does not yet own Fighting Style feat
+  // selections, so the formal projection can only thread the empty set until
+  // that authored choice exists on the character side.
+  pure def pProjectionFightingStyles(_sheet: CharacterSheet): Set[FightingStyleFeat] =
+    Set()
+
+  pure def pCharacterCreatureProjection(sheet: CharacterSheet): CharacterCreatureProjection = {
+    primaryClass: sheet.primaryClass,
+    subclasses: pSubclassSelections(sheet.advancement),
+    species: sheet.species,
+    classLevels: sheet.classLevels,
+    fightingStyles: pProjectionFightingStyles(sheet),
+    abilityScores: sheet.abilityScores,
+    creatureSize: pSpeciesCreatureSize(sheet.species),
+    baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
+    saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
+    skillProficiencies: pSheetSkillProficiencies(sheet),
+    expertiseSkills: Set(),
+    armorProficiencies: pSheetArmorProficiencies(sheet),
+    hitDieType: pHitDieType(sheet.primaryClass),
+    spellcastingAbility: pProjectionSpellcastingAbility(sheet),
+    hasSpellcasting: pHasSpellcasting(sheet),
+    unarmoredDefense: pUnarmoredDefense(sheet),
+    features: pCreatureFeatures(sheet.classLevels),
+    critRange: pCritRange(pSubclassSelections(sheet.advancement), sheet.classLevels),
+    hasFightingStyleFeature: pHasFightingStyleFeature(sheet.classLevels),
+  }
+
+  pure def pProjectionToCharConfig(projection: CharacterCreatureProjection): CharConfig = {
+    className: projection.primaryClass,
+    subclass: pProjectionSubclass(projection.primaryClass, projection.subclasses),
+    species: projection.species,
+    classLevels: projection.classLevels,
+    fightingStyles: projection.fightingStyles,
+    abilityScores: projection.abilityScores,
+    level: pTotalLevel(projection.classLevels),
+    creatureSize: projection.creatureSize,
+    speeds: Map(Walk -> projection.baseWalkSpeed, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0),
+    saveProficiencies: projection.saveProficiencies,
+    skillProficiencies: projection.skillProficiencies,
+    expertiseSkills: projection.expertiseSkills,
+    armorProficiencies: projection.armorProficiencies,
+    hitDieType: projection.hitDieType,
+    spellcastingAbility: projection.spellcastingAbility,
+    hasSpellcasting: projection.hasSpellcasting,
+    unarmoredDefense: projection.unarmoredDefense,
+    features: projection.features,
+    critRange: projection.critRange,
+    hasFightingStyleFeature: projection.hasFightingStyleFeature,
+  }
+
+  pure def pSheetToCharConfig(sheet: CharacterSheet): CharConfig =
+    pProjectionToCharConfig(pCharacterCreatureProjection(sheet))
 }

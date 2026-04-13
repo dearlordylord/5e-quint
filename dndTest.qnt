@@ -3911,6 +3911,155 @@ module dndTest::Impl {
     }
   }
 
+  run test_character_projection_fighter_level_five_maps_to_creature_projection_and_char_config = {
+    val finalized = pFinalizeDraft(
+      COMPLETE_FIGHTER_DRAFT
+        .with("advancement", HasAdvancement([
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: HasSubclassSelection({ className: Fighter, subclass: "champion" }), feat: NoAdvancementFeatSelection },
+          { className: Fighter, subclass: NoSubclassSelection, feat: HasAdvancementFeatSelection({ slot: FeatSlot, choice: AbilityScoreImprovement([Str]) }) },
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        ]))
+        .with("classLevels", HasClassLevels(singleClassLevels(Fighter, 5))),
+    )
+    match finalized {
+      | Finalized(sheet) =>
+          val projection = pCharacterCreatureProjection(sheet)
+          val config = pProjectionToCharConfig(projection)
+          all {
+            assert(projection.primaryClass == Fighter),
+            assert(projection.subclasses == [{ className: Fighter, subclass: "champion" }]),
+            assert(projection.creatureSize == Medium),
+            assert(projection.baseWalkSpeed == 30),
+            assert(projection.saveProficiencies == Set(Str, Con)),
+            assert(projection.skillProficiencies == Set(Acrobatics, Athletics, History, Intimidation, Perception, Stealth)),
+            assert(projection.armorProficiencies == Set(LightArmor, MediumArmor, HeavyArmor)),
+            assert(projection.critRange == 19),
+            assert(projection.features == Set(FExtraAttack)),
+            assert(config.className == Fighter),
+            assert(config.subclass == Champion),
+            assert(config.level == 5),
+            assert(config.speeds.get(Walk) == 30),
+            assert(config.critRange == 19),
+            assert(config.features == Set(FExtraAttack)),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_projection_level_one_wizard_uses_class_default_subclass_at_char_config_boundary = {
+    match pFinalizeDraft(
+      COMPLETE_WIZARD_DRAFT
+        .with("advancement", HasAdvancement([
+          { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        ]))
+        .with("classLevels", HasClassLevels(singleClassLevels(Wizard, 1))),
+    ) {
+      | Finalized(sheet) =>
+          val projection = pCharacterCreatureProjection(sheet)
+          val config = pProjectionToCharConfig(projection)
+          all {
+            assert(projection.subclasses == []),
+            assert(config.subclass == Evoker),
+            assert(config.fightingStyles == Set()),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_projection_wizard_sheet_projects_spellcasting_profile = {
+    val finalized = pFinalizeDraft(COMPLETE_WIZARD_DRAFT)
+    match finalized {
+      | Finalized(sheet) =>
+          val projection = pCharacterCreatureProjection(sheet)
+          val config = pSheetToCharConfig(sheet)
+          all {
+            assert(projection.primaryClass == Wizard),
+            assert(projection.subclasses == []),
+            assert(projection.creatureSize == Medium),
+            assert(projection.baseWalkSpeed == 30),
+            assert(projection.saveProficiencies == Set(Int_, Wis)),
+            assert(projection.skillProficiencies == Set(Arcana, History, Investigation, Medicine, Perception)),
+            assert(projection.armorProficiencies == Set()),
+            assert(projection.hasSpellcasting),
+            assert(projection.spellcastingAbility == Int_),
+            assert(config.className == Wizard),
+            assert(config.hasSpellcasting),
+            assert(config.spellcastingAbility == Int_),
+            assert(config.speeds.get(Walk) == 30),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_projection_non_caster_primary_multiclass_uses_first_caster_spellcasting_ability = {
+    val finalized = pFinalizeDraft(
+      COMPLETE_FIGHTER_DRAFT
+        .with("advancement", HasAdvancement([
+          { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+          { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+        ]))
+        .with("classLevels", HasClassLevels(ZERO_CLASS_LEVELS.set(Fighter, 1).set(Wizard, 1)))
+        .with("abilityScoreGeneration", HasAbilityScoreGeneration({
+          mode: StandardArray,
+          assignedScores: Map(
+            Str -> PresentScore(15),
+            Dex -> PresentScore(13),
+            Con -> PresentScore(14),
+            Int_ -> PresentScore(12),
+            Wis -> PresentScore(10),
+            Cha -> PresentScore(8),
+          ),
+        }))
+        .with("backgroundAbilityScoreIncrease", HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Str, plusOne: Int_ })))
+        .with("spellcasting", HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+          "wizard",
+          HasSpellcastingEntry({
+            cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+            preparedSpells: HasStringList(["burning_hands", "detect_magic", "magic_missile", "shield"]),
+            spellbook: HasStringList(["burning_hands", "detect_magic", "magic_missile", "shield", "identify", "sleep"]),
+          })
+        ))),
+    )
+    match finalized {
+      | Finalized(sheet) =>
+          val projection = pCharacterCreatureProjection(sheet)
+          val config = pSheetToCharConfig(sheet)
+          all {
+            assert(projection.hasSpellcasting),
+            assert(projection.spellcastingAbility == Int_),
+            assert(config.hasSpellcasting),
+            assert(config.spellcastingAbility == Int_),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run test_character_projection_non_champion_fighter_keeps_default_crit_range = {
+    val fighterEntry = { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection }
+    match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
+      | Finalized(sheet) =>
+          val levelThreeNoSubclass =
+            sheet
+              .with("advancement", [fighterEntry, fighterEntry, fighterEntry])
+              .with("classLevels", singleClassLevels(Fighter, 3))
+          val levelFifteenNoSubclass =
+            sheet
+              .with("advancement", [
+                fighterEntry, fighterEntry, fighterEntry, fighterEntry, fighterEntry,
+                fighterEntry, fighterEntry, fighterEntry, fighterEntry, fighterEntry,
+                fighterEntry, fighterEntry, fighterEntry, fighterEntry, fighterEntry,
+              ])
+              .with("classLevels", singleClassLevels(Fighter, 15))
+          all {
+            assert(pCharacterCreatureProjection(levelThreeNoSubclass).critRange == 20),
+            assert(pCharacterCreatureProjection(levelFifteenNoSubclass).critRange == 20),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
   run test_invariants_5steps =
     init.then(step).then(step).then(step).then(step).then(step)
         .then(all { assert(allInvariants), state' = state, turnState' = turnState, spellSlots' = spellSlots, turnPhase' = turnPhase, fighterState' = fighterState, classLevels' = classLevels, creatureKind' = creatureKind, monsterStatBlock' = monsterStatBlock, monsterResourceState' = monsterResourceState, barbarianState' = barbarianState, monkState' = monkState, paladinState' = paladinState, rogueState' = rogueState, clericState' = clericState, druidState' = druidState, sorcererState' = sorcererState, warlockState' = warlockState, wizardState' = wizardState, rangerState' = rangerState, bardState' = bardState })

@@ -1,7 +1,7 @@
 # POST3 - Formal Advancement And Higher-Level Starts
 
 Date: 2026-04-11
-Status: archived implementation note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) and partially landed in [character.qnt](./character.qnt)
+Status: archived implementation note; superseded as the primary implementation brief by [PRD_CHARACTER_FORMALIZATION.md](./PRD_CHARACTER_FORMALIZATION.md) and the landed formal surface in [character.qnt](./character.qnt)
 Depends on: CHAR7, POST1
 Blocks: POST4
 
@@ -22,7 +22,12 @@ Task `CQ2` has now landed the formal advancement owner in [character.qnt](./char
 - `pCanAdvance`
 - `pAdvanceLevel`
 
-The existing TypeScript helper in [packages/core/src/character-sheet-advancement.ts](./packages/core/src/character-sheet-advancement.ts) remains a thin adapter over the shared finalized-sheet boundary until the later parity and projection tasks close out the rest of the `CQ*` track.
+Task `CQ3` then landed the downstream character-to-creature handoff in the same module:
+
+- `pCharacterCreatureProjection`
+- `pProjectionToCharConfig`
+
+The existing TypeScript helper in [packages/core/src/character-sheet-advancement.ts](./packages/core/src/character-sheet-advancement.ts) remains a thin adapter over the shared finalized-sheet boundary, and the runtime-side handoff now routes through `packages/core/src/character-sheet-creature-projection.ts:characterSheetCreatureProjection()`.
 
 - `.references/srd-5.2.1/Character-Creation.md`
   - `Level Advancement`

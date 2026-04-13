@@ -60,13 +60,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 3,
       "id": "CQ3",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Character To Creature Projection Boundary"
     },
     {
       "number": 4,
       "id": "CQ4",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Character Quint Parity Harness"
     },
     {
@@ -86,6 +86,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "I",
       "status": "deferred",
       "title": "Build-Map / Hole Metadata"
+    },
+    {
+      "number": 8,
+      "id": "QFULL",
+      "status": "blocked",
+      "title": "Full Workspace Quality Run"
     }
   ]
 }
@@ -121,11 +127,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 0     | CQ1a - Freeze Character Creation Surface             | done                                   | none       | CQ1b         | Keep the frozen target in [plans/CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md](./CQ1_CHARACTER_CREATION_SURFACE_INVENTORY.md). Do not reopen this task unless a genuinely missing owned surface is discovered.                              | Completed. The inventory plus stable acceptance gates below define the implementation target.                                                                |
 | 1     | CQ1b - Implement Character Creation Module           | done                                   | CQ1a       | CQ2, CQ3, CQ4 | Landed `character-creation.qnt`, deterministic Quint coverage in `dndTest.qnt`, generated spell-data support, and a TS parity test scaffold for the frozen TS-owned creation surface. Keep shared fuzz/MBT tooling untouched and leave `POST1` for CQ4 cleanup. | Completed. The finalized-sheet boundary now exists in Quint, so downstream character formalization can build on it.                                      |
 | 2     | CQ2 - Formal Character Advancement Module            | done                                   | CQ1b   | CQ3, CQ4     | Landed `character.qnt` over finalized `CharacterSheet` semantics, including `pIsLegalSheet`, `pCanAdvance`, `pAdvanceLevel`, deterministic Quint coverage for higher-level starts and advancement legality, and the `POST3` status-note refresh pointing at the landed formal owner. | Completed. Advancement semantics now sit on the finalized-sheet boundary, so projection/parity work can size against the formal owner instead of the historical TS helper alone. |
-| 3     | CQ3 - Character To Creature Projection Boundary      | ready-for-implementation-after-light-research | CQ1b, CQ2  | CQ4          | Re-read the PRD/architecture handoff boundary, then implement the formal projection from `character.qnt` semantics into creature-facing execution semantics using `CharacterCreatureProjection` and the downstream mapping into `CharConfig`. Remove or redirect remaining references that still treat `POST1` / `POST3` as the current design authority. | Implementation-ready. Both formal prerequisites have landed, so the projection surface can now be sized once against the settled creation and advancement owners. |
-| 4     | CQ4 - Character Quint Parity Harness                 | blocked                                | CQ1b, CQ2, CQ3 | none   | After the formal modules land, add deterministic Quint tests and TS parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary against shared core functions rather than adapter shells. As part of closeout, delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` if their remaining value is fully subsumed by the landed `CQ*` artifacts and the current PRD. | Blocked on the formal modules and projection surface. Keep parity at shared-core depth; do not make MCP transport the first comparison target.             |
+| 3     | CQ3 - Character To Creature Projection Boundary      | done                                   | CQ1b, CQ2  | CQ4          | Landed `CharacterCreatureProjection` in `character.qnt`, the downstream `pProjectionToCharConfig` / `pSheetToCharConfig` mapping, the shared TypeScript helper in `packages/core/src/character-sheet-creature-projection.ts`, focused TS projection coverage, and status-note redirects away from `POST1` / `POST3` as the primary implementation brief. | Completed. The one-way character-to-creature handoff now exists in both Quint and shared TS, so CQ4 can target parity at that settled boundary instead of re-sizing the projection surface. |
+| 4     | CQ4 - Character Quint Parity Harness                 | ready-for-implementation-after-light-research | CQ1b, CQ2, CQ3 | none   | Read the landed projection helper and deterministic Quint coverage, then add shared-core parity for draft/finalization, advancement transitions, and the character-to-creature projection boundary. Delete `POST1_FORMAL_CREATION_SEMANTICS.md` and `POST3_FORMAL_ADVANCEMENT_AND_HIGHER_LEVEL_STARTS.md` only if the landed `CQ*` artifacts and current PRD fully subsume their remaining value. | Implementation-ready now that the formal modules and projection handoff are landed. Keep parity at shared-core depth; do not make MCP transport the first comparison target.             |
 | 5     | MCPA8 - Monster Control And Legendary Action Surface | ready-for-implementation-after-light-research | MCPA1, MON3 | none | Use `plans/MCPA8_MONSTER_CONTROL_AND_LEGENDARY_ACTION_SURFACE.md` to implement generic `execute_control_command` routes for named monster legendary/recharge/daily ability choice, then wire the attack-shaped legendary follow-up through the settled generic attack boundary plus stat-block `abilityId`. | Implementation-ready once the worker reads the MCPA8 writeup, re-checks `.references/srd-5.2.1/Monsters/Overview.md` and `UBIQUITOUS_LANGUAGE.md`, and keeps non-attack legendary options deferred. |
 | 6     | H - PassiveModifiers Sub-Record                      | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
 | 7     | I - Build-Map / Hole Metadata                        | deferred                               | none       | none         | Keep deferred. Do not pick up unless the batch objective changes back toward MCP/action-surface cleanup.                                                                                                                                    | Explicitly outside the current batch.                                                                                                                        |
+| 8     | QFULL - Full Workspace Quality Run                   | blocked                                | CQ3, CQ4, MCPA8 | none      | After the remaining active implementation tasks land, run the full workspace verification surface from a clean installed checkout: `pnpm quality`, the relevant deterministic Quint test commands, and the task-owned TS test commands needed to prove the integrated branch is coherent end-to-end. | Blocked until the remaining active implementation tasks settle; use this as the final integration-quality gate rather than widening feature tasks into repo-wide verification. |
 
 ## Current Integrated Baseline
 
@@ -173,12 +180,12 @@ Planning note:
 
 Recommended next coding-loop task:
 
-1. **CQ3 - Character To Creature Projection Boundary**
-   Both formal prerequisites are now landed. The next character-semantic loop should size and implement the one-way handoff from settled character semantics into creature-facing execution semantics.
+1. **CQ4 - Character Quint Parity Harness**
+   The projection boundary is now landed. The next character-semantic loop should prove shared-core parity across finalization, advancement, and the settled character-to-creature handoff.
 2. **MCPA8 - Monster Control And Legendary Action Surface**
    This remains implementation-ready and can proceed if the current loop intentionally chooses MCP work instead of the character-formalization track.
-3. **CQ4 - Character Quint Parity Harness**
-   Pick this up immediately after CQ3 lands the projection boundary.
+3. **QFULL - Full Workspace Quality Run**
+   Run this only after the remaining implementation tasks are landed, from a clean installed checkout, as the final broad quality gate.
 
 Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks inside the active queue. Use the archived foundation summary and git history when context is needed.
 
@@ -191,10 +198,11 @@ Do not reopen the completed `CHAR*`, `POST*`, or monster tracer-bullet tasks ins
    - [.references/srd-5.2.1/Character-Origins.md](../.references/srd-5.2.1/Character-Origins.md)
    - [creature.qnt](../creature.qnt)
 2. Treat CQ1a as frozen and done; do not reopen it unless the implementation uncovers a genuinely missing owned surface.
-3. Execute CQ3 after CQ1b and CQ2.
+3. CQ3 is complete; use the landed projection boundary as the shared-core target for CQ4.
 4. Execute CQ4 after CQ1b, CQ2, and CQ3.
 7. `MCPA8` may proceed in parallel only if the loop intentionally chooses MCP work and does not touch the character-formalization ownership surfaces.
 8. Keep H and I deferred.
+9. Execute `QFULL` only after `CQ3`, `CQ4`, and `MCPA8` are complete or intentionally deferred for the batch.
 
 ## Task Bodies
 
@@ -286,7 +294,7 @@ Verification requirements:
 
 ### Task 3 - CQ3 - Character To Creature Projection Boundary
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `CQ1b`, `CQ2`
 
@@ -300,17 +308,18 @@ Scope:
 
 Next action:
 
-- Re-read the PRD/architecture handoff boundary, then size the one-way projection against the landed `character-creation.qnt` and `character.qnt` owners before editing runtime-facing code.
+- None. This task is complete; use the landed `CharacterCreatureProjection` and shared TS helper as the fixed boundary for CQ4 parity work.
 
 Verification requirements:
 
-- Keep the projection one-way and derived from character-owned facts.
-- Maintain parity with the authoritative Quint semantics and downstream bridge expectations.
-- Include `/simplify` convergence in closeout with a minimum of two rounds unless the changeset is trivial.
+- Confirm the landed projection remains one-way and derived from character-owned facts.
+- Confirm the Quint-to-TS handoff still routes through the settled `CharacterCreatureProjection` boundary and downstream `CharConfig` mapping.
+- `/simplify` round 1 removed a broken optional-subclass assumption from the candidate merge and aligned the formal `CharConfig` mapping with the existing non-optional `creature.qnt:CharConfig.subclass` surface.
+- `/simplify` round 2 pulled the new TS projection helper off the `character-domain.ts` barrel and onto direct imports, eliminating an avoidable circular-dependency risk without changing the CQ3 behavior.
 
 ### Task 4 - CQ4 - Character Quint Parity Harness
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `CQ1b`, `CQ2`, `CQ3`
 
@@ -324,7 +333,7 @@ Scope:
 
 Next action:
 
-- Keep parity at shared-core depth; do not make MCP transport the first comparison target.
+- Read the landed `character.qnt` projection functions and `packages/core/src/character-sheet-creature-projection.ts`, then add shared-core parity checks without widening into MCP or battle MBT work.
 
 Verification requirements:
 
@@ -387,6 +396,33 @@ Scope:
 Next action:
 
 - Do not pick up in the current batch.
+
+### Task 8 - QFULL - Full Workspace Quality Run
+
+Status: `blocked`
+
+Depends on: `CQ3`, `CQ4`, `MCPA8`
+
+Blocks: none
+
+Scope:
+
+- Run the full integrated quality surface from a clean installed checkout after the remaining active implementation tasks land.
+- Use this task for broad repository verification rather than widening feature tasks into repo-wide cleanup mid-implementation.
+- Capture any remaining baseline failures as explicit follow-up work instead of folding unrelated cleanup into earlier character/MCP tasks.
+
+Next action:
+
+- Wait until `CQ3`, `CQ4`, and `MCPA8` are complete or intentionally deferred for the batch, then run:
+  - `pnpm quality`
+  - the deterministic Quint commands relevant to the landed character modules
+  - the task-owned TS test commands needed to validate the integrated branch end-to-end
+
+Verification requirements:
+
+- Run from a clean checkout with valid `node_modules`.
+- Record the exact commands used and whether failures are task-caused or baseline noise.
+- Do not treat this task as permission to reopen already-landed feature scope unless the failure proves a real integrated regression.
 
 ## Archived Done Foundations
 
