@@ -36,7 +36,7 @@ Every rerun of the same numbered task gets its own attempt directory:
 - `.ralph/runs/<run-id>/task-6/attempt-1/`
 - `.ralph/runs/<run-id>/task-6/attempt-2/`
 
-This avoids the old overwrite problem where later attempts destroyed the evidence from earlier ones.
+Each attempt keeps its own evidence instead of overwriting a prior attempt.
 
 Important: during a live run, the "source plan file" is the plan on the Ralph launcher worktree / integration branch, not `master`. If you add or reorder tasks while Ralph is running, committing the change on `master` is not enough for the active run. Sync the plan onto the live Ralph launcher branch too:
 
@@ -115,7 +115,7 @@ The `Task Disposition` section is therefore diagnostic rather than control-criti
 
 In addition, the decider must:
 
-1. choose `retry-same-task` only when the task is still implementation-ready right now and the next attempt has a concrete implementable delta;
+1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
 3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
 
@@ -156,18 +156,18 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
-Candidate execution is now pipeline-based. In dual mode, Claude and Codex still run in parallel, but each candidate follows:
+Candidate execution is pipeline-based. In dual mode, Claude and Codex still run in parallel, but each candidate follows:
 
 1. implement;
 2. immediate review;
 3. same-candidate handback if the review says `accept-with-fixes` or `reject`;
 4. decider only after the active candidate pipelines settle.
 
-This avoids the old full barrier where both implementers had to finish before either review could start.
+This lets review start as soon as an implementer finishes.
 
 The output branch must not already exist. This avoids silently resetting an existing run branch.
 
-To use the older behavior and commit reconciled results directly to `master`, pass:
+To commit reconciled results directly to `master`, pass:
 
 ```bash
 scripts/ralph-dual-run.sh plans/some-plan.md --commit-to-master
@@ -208,7 +208,7 @@ Broad verification is diagnostic, not an automatic scope-expander. When lint/typ
 
 The decider must leave the main worktree with no tracked staged or unstaged changes after each task. This makes git the persistent state boundary between task rotations.
 
-On integration-branch runs, Ralph now treats a dirty tracked main worktree after a decider commit as recoverable once: it hard-resets to `HEAD`, re-checks cleanliness, and logs a warning if recovery succeeds. This prevents leftover post-commit task debris from killing an otherwise valid run. In `--commit-to-base` mode, that automatic recovery is disabled because the base branch may be operator-owned.
+On integration-branch runs, Ralph treats a dirty tracked main worktree after a decider commit as recoverable once: it hard-resets to `HEAD`, re-checks cleanliness, and logs a warning if recovery succeeds. This prevents leftover post-commit task debris from killing an otherwise valid run. In `--commit-to-base` mode, that automatic recovery is disabled because the base branch may be operator-owned.
 
 ## Stop Conditions
 
