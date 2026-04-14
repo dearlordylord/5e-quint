@@ -93,6 +93,7 @@ const QuintCombatant = z.object({
   monkLevel: z.bigint(),
   hasEvasion: z.boolean(),
   saveMiscBonus: z.bigint(),
+  saveAdvantageContexts: z.any(),
   critRange: z.bigint(),
   isWearingArmor: z.boolean(),
   defenseArmorClassBonus: z.bigint(),
@@ -226,6 +227,7 @@ interface NormalizedBattleCreature {
   creatureSize: string;
   hasEvasion: boolean;
   saveMiscBonus: number;
+  saveAdvantageContexts: ReadonlySet<string>;
   critRange: number;
   isWearingArmor: boolean;
   defenseArmorClassBonus: number;
@@ -317,6 +319,11 @@ function quintCombatantToNormalized(
     creatureKind: c.kind,
     hasEvasion: c.hasEvasion,
     saveMiscBonus: Number(c.saveMiscBonus),
+    saveAdvantageContexts: new Set(
+      [...(c.saveAdvantageContexts as Set<unknown>)].map((value) =>
+        variantToString(value),
+      ),
+    ),
     critRange: Number(c.critRange),
     isWearingArmor: c.isWearingArmor,
     defenseArmorClassBonus: Number(c.defenseArmorClassBonus),
@@ -418,6 +425,7 @@ function xstateCreatureToNormalized(
     creatureKind: c.creatureKind,
     hasEvasion: c.hasEvasion,
     saveMiscBonus: c.saveMiscBonus,
+    saveAdvantageContexts: c.saveAdvantageContexts,
     critRange: c.critRange,
     isWearingArmor: c.isWearingArmor,
     defenseArmorClassBonus: c.defenseArmorClassBonus,
@@ -547,6 +555,7 @@ const battleDriverSchema = {
     targetId: OS,
     saveDC: OI,
     saveRoll: OI,
+    saveRollB: OI,
     dmgOnFail: OI,
     halfOnSave: OB,
     dt: OV,
@@ -581,7 +590,7 @@ const battleDriverSchema = {
     slotLvl: OI,
     ritual: OB,
   },
-  bResolveAoETarget: { targetId: OS, saveRoll: OI },
+  bResolveAoETarget: { targetId: OS, saveRoll: OI, saveRollB: OI },
   bMove: {
     threatened: z.any().optional(),
     provocationKind: OV,
@@ -696,6 +705,7 @@ const battleDriverSchema = {
   bReadySpellRelease: {
     releaserId: OS,
     saveRoll: OI,
+    saveRollB: OI,
   },
   bSearch: {
     targetId: OS,
@@ -705,6 +715,7 @@ const battleDriverSchema = {
     targetId: OS,
     saveDC: OI,
     saveRoll: OI,
+    saveRollB: OI,
     dmgOnFail: OI,
     halfOnSave: OB,
     dt: OV,
@@ -1013,6 +1024,9 @@ function createBattleMachineDriver() {
           targetId: pc(picks, "targetId", ""),
           saveDC: difficultyClass(p(picks, "saveDC", 15)),
           saveRoll: p(picks, "saveRoll", 10),
+          ...(picks["saveRollB"] != null
+            ? { saveRollB: p(picks, "saveRollB", 10) }
+            : {}),
           dmgOnFail: p(picks, "dmgOnFail", 10),
           halfOnSave: pb(picks, "halfOnSave", false),
           dt: mapDamageType(ps(picks, "dt", "Fire")),
@@ -1097,6 +1111,9 @@ function createBattleMachineDriver() {
           type: "BATTLE_RESOLVE_AOE_TARGET",
           targetId: pcn(picks, "targetId"),
           saveRoll: p(picks, "saveRoll", 10),
+          ...(picks["saveRollB"] != null
+            ? { saveRollB: p(picks, "saveRollB", 10) }
+            : {}),
         });
       },
       bMove: (picks: Record<string, unknown>) => {
@@ -1278,6 +1295,9 @@ function createBattleMachineDriver() {
           targetId: pc(picks, "targetId", ""),
           saveDC: difficultyClass(p(picks, "saveDC", 15)),
           saveRoll: p(picks, "saveRoll", 10),
+          ...(picks["saveRollB"] != null
+            ? { saveRollB: p(picks, "saveRollB", 10) }
+            : {}),
           dmgOnFail: p(picks, "dmgOnFail", 10),
           halfOnSave: pb(picks, "halfOnSave", false),
           dt: mapDamageType(ps(picks, "dt", "Fire")),
@@ -1295,6 +1315,9 @@ function createBattleMachineDriver() {
           type: "BATTLE_READY_SPELL_RELEASE",
           releaserId: pc(picks, "releaserId", ""),
           saveRoll: p(picks, "saveRoll", 10),
+          ...(picks["saveRollB"] != null
+            ? { saveRollB: p(picks, "saveRollB", 10) }
+            : {}),
         });
       },
       bSearch: (picks: Record<string, unknown>) => {

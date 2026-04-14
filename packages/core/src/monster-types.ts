@@ -143,6 +143,29 @@ export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
 export type MonsterBattleReactionOption =
   (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
 
+export const MONSTER_SAVE_TRIGGER_KINDS = ["spell", "magicalEffect"] as const;
+
+export type MonsterSaveTriggerKind =
+  (typeof MONSTER_SAVE_TRIGGER_KINDS)[number];
+
+export const MONSTER_CATALOG_BLOCKER_FAMILIES = [
+  "attackProjectionGap",
+  "attackRider",
+  "combatModifierTrait",
+  "controlAction",
+  "creatureCoordinationTrait",
+  "environmentalTrait",
+  "mobilityAction",
+  "reactiveDefense",
+  "saveEffectAction",
+  "saveEffectActionWithPrerequisite",
+  "skillUtilityTrait",
+  "spellReferenceGap",
+] as const;
+
+export type MonsterCatalogBlockerFamily =
+  (typeof MONSTER_CATALOG_BLOCKER_FAMILIES)[number];
+
 export interface MonsterAttackStockWeaponProjection {
   readonly kind: "stockWeapon";
 }
@@ -207,12 +230,26 @@ export interface MonsterAbilityBase {
 
 export interface MonsterTextAbility extends MonsterAbilityBase {
   readonly kind: "text";
+  readonly blockerFamily: Exclude<
+    MonsterCatalogBlockerFamily,
+    "spellReferenceGap"
+  >;
   readonly nonExecutableReason: string;
 }
 
 export interface MonsterExecutableAbility extends MonsterAbilityBase {
   readonly kind: "executable";
   readonly mechanic: string;
+}
+
+export interface MonsterSaveAdvantageModifier {
+  readonly kind: "advantage";
+  readonly appliesTo: ReadonlySet<MonsterSaveTriggerKind>;
+}
+
+export interface MonsterSaveModifierTrait extends MonsterAbilityBase {
+  readonly kind: "saveModifierTrait";
+  readonly saveModifier: MonsterSaveAdvantageModifier;
 }
 
 export interface MonsterAttackAbility extends MonsterAbilityBase {
@@ -258,6 +295,7 @@ export interface MonsterSpellcastingAbility extends MonsterAbilityBase {
 
 export type MonsterTrait =
   | MonsterExecutableAbility
+  | MonsterSaveModifierTrait
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
 export type MonsterAction =

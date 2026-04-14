@@ -91,6 +91,8 @@ module creature {
 
   type SenseType = Blindsight | Darkvision | Tremorsense | Truesight
 
+  type SaveTriggerKind = STKSpell | STKMagicalEffect
+
   type MonsterAttack = {
     name: str,
     attackBonus: int,
@@ -171,6 +173,7 @@ module creature {
     conditionImmunities: Set[Condition],
     exhaustionImmune: bool,
     senses: SenseType -> int,
+    saveAdvantageContexts: Set[SaveTriggerKind],
     attacks: str -> MonsterAttack,
     multiattack: List[MultiattackSlot],
     // Phase L: Legendary / Recharge / X-Day
@@ -206,6 +209,7 @@ module creature {
     conditionImmunities: Set(CPoisoned),
     exhaustionImmune: true,
     senses: Map(Darkvision -> 60),
+    saveAdvantageContexts: Set(),
     attacks: Map(
       "Shortsword" -> { name: "Shortsword", attackBonus: 5, reach: 5, rangeNormal: 0, rangeLong: 0, damageAmount: 6, damageType: Piercing, isRanged: false },
       "Shortbow" -> { name: "Shortbow", attackBonus: 5, reach: 0, rangeNormal: 80, rangeLong: 320, damageAmount: 6, damageType: Piercing, isRanged: true }
@@ -238,11 +242,47 @@ module creature {
     conditionImmunities: Set(),
     exhaustionImmune: false,
     senses: Map(Darkvision -> 60),
+    saveAdvantageContexts: Set(),
     attacks: Map(
       "Greatclub" -> { name: "Greatclub", attackBonus: 6, reach: 5, rangeNormal: 0, rangeLong: 0, damageAmount: 13, damageType: Bludgeoning, isRanged: false },
       "Javelin" -> { name: "Javelin", attackBonus: 6, reach: 5, rangeNormal: 30, rangeLong: 120, damageAmount: 11, damageType: Piercing, isRanged: false }
     ),
     multiattack: [],
+    legendaryActionUses: 0, legendaryResistanceUses: 0,
+    legendaryActions: Map(), rechargeAbilities: Map(), dailyAbilities: Map(),
+    inLair: false,
+  }
+
+  /// Pseudodragon (SRD 5.2.1, Monsters P-S)
+  /// MONFAC2 proof-of-concept: exercises Magic Resistance via generic
+  /// saveAdvantageContexts while keeping its conditional save-effect Sting
+  /// outside the helper stat-block surface.
+  pure val PSEUDODRAGON: StatBlock = {
+    name: "Pseudodragon",
+    creatureType: Dragon,
+    creatureSize: Tiny,
+    ac: 14,
+    initiativeMod: 2,
+    maxHp: 10,
+    hitDice: 3,
+    hitDieType: 4,
+    speeds: Map(Walk -> 15, Fly -> 60, Swim -> 0, Climb -> 0, Burrow -> 0),
+    abilityScores: Map(Str -> 6, Dex -> 15, Con -> 13, Int_ -> 10, Wis -> 12, Cha -> 10),
+    saveProficiencies: Set(),
+    skillBonuses: Map(Perception -> 5, Stealth -> 4),
+    cr: CR_Quarter,
+    proficiencyBonus: 2,
+    resistances: Set(),
+    vulnerabilities: Set(),
+    damageImmunities: Set(),
+    conditionImmunities: Set(),
+    exhaustionImmune: false,
+    senses: Map(Blindsight -> 10, Darkvision -> 60),
+    saveAdvantageContexts: Set(STKSpell, STKMagicalEffect),
+    attacks: Map(
+      "Bite" -> { name: "Bite", attackBonus: 4, reach: 5, rangeNormal: 0, rangeLong: 0, damageAmount: 4, damageType: Piercing, isRanged: false }
+    ),
+    multiattack: [MAttack("Bite"), MAttack("Bite")],
     legendaryActionUses: 0, legendaryResistanceUses: 0,
     legendaryActions: Map(), rechargeAbilities: Map(), dailyAbilities: Map(),
     inLair: false,
@@ -272,6 +312,7 @@ module creature {
     conditionImmunities: Set(),
     exhaustionImmune: false,
     senses: Map(Blindsight -> 60, Darkvision -> 120),
+    saveAdvantageContexts: Set(),
     attacks: Map(
       "Rend" -> { name: "Rend", attackBonus: 14, reach: 10, rangeNormal: 0, rangeLong: 0, damageAmount: 13, damageType: Slashing, isRanged: false }
     ),
@@ -312,6 +353,7 @@ module creature {
     conditionImmunities: Set(),
     exhaustionImmune: false,
     senses: Map(),
+    saveAdvantageContexts: Set(),
     attacks: Map(),
     multiattack: [],
     legendaryActionUses: 0, legendaryResistanceUses: 0,
@@ -4113,7 +4155,7 @@ module creature {
 
   // -- 19.4 Action Init --
 
-  pure val MONSTER_STAT_BLOCKS: Set[StatBlock] = Set(SKELETON, OGRE, ADULT_RED_DRAGON)
+  pure val MONSTER_STAT_BLOCKS: Set[StatBlock] = Set(SKELETON, OGRE, PSEUDODRAGON, ADULT_RED_DRAGON)
 
   action init = {
     nondet kind = Set(PC, Monster).oneOf()

@@ -67,6 +67,7 @@ import type {
   SpellId,
 } from "#/types.ts";
 import { resourceCount, spellId } from "#/types.ts";
+import type { MonsterSaveTriggerKind } from "#/monster-types.ts";
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag");
@@ -143,6 +144,35 @@ export function setCreature(
   const m = new Map(cs);
   m.set(id, c);
   return m;
+}
+
+function hasSaveAdvantageAgainst(
+  creature: BattleCreatureState,
+  triggerKind: MonsterSaveTriggerKind,
+): boolean {
+  return creature.saveAdvantageContexts.has(triggerKind);
+}
+
+function effectiveSaveRoll(
+  primaryRoll: number,
+  secondaryRoll: number | undefined,
+  hasAdvantage: boolean,
+): number {
+  if (!hasAdvantage) return primaryRoll;
+  return Math.max(primaryRoll, secondaryRoll ?? primaryRoll);
+}
+
+export function effectiveBattleSaveRollForCreature(
+  creature: BattleCreatureState,
+  triggerKind: MonsterSaveTriggerKind,
+  primaryRoll: number,
+  secondaryRoll?: number,
+): number {
+  return effectiveSaveRoll(
+    primaryRoll,
+    secondaryRoll,
+    hasSaveAdvantageAgainst(creature, triggerKind),
+  );
 }
 
 function battleEffectiveSpeed(c: BattleCreatureState): number {
@@ -876,7 +906,13 @@ export function resolveSave(
   returnTo: AfterDamageReturn,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const tgt = cs.get(save.target)!;
-  const saved = save.saveRoll + tgt.saveMiscBonus >= save.saveDC;
+  const saveRoll = effectiveBattleSaveRollForCreature(
+    tgt,
+    save.saveTriggerKind,
+    save.saveRoll,
+    save.saveRollB,
+  );
+  const saved = saveRoll + tgt.saveMiscBonus >= save.saveDC;
   const isDex = save.saveAbility === "dex";
   const tgtIncap = isIncapacitated(tgt);
   if (saved) {

@@ -3,6 +3,7 @@
 // Canonical spell-owned records plus lightweight lookup/projection helpers.
 
 import type {
+  BattleReadyableSpellDelivery,
   BattleReadyableSaveSpellMechanics,
   BattleReadyableSpellPayload,
   SpellModeledMechanics,
@@ -22,6 +23,7 @@ import type {
 import { spellId } from "#/types.ts";
 
 export type {
+  BattleReadyableSpellDelivery,
   BattleReadyableSaveSpellMechanics,
   BattleReadyableSpellPayload,
   SpellModeledMechanics,
@@ -4383,6 +4385,12 @@ export function getBattleReadyableSpellMechanics(
 ): BattleReadyableSaveSpellMechanics | null {
   const mechanics = getSpellRecord(idOrName)?.modeling.mechanics;
   return mechanics?.family === "battleReadyableSave" ? mechanics : null;
+}
+
+export function getBattleReadyableSpellDelivery(
+  idOrName: string,
+): BattleReadyableSpellDelivery | null {
+  return getBattleReadyableSpellMechanics(idOrName)?.delivery ?? null;
 }
 
 export function projectBattleReadyableSpellPayload(

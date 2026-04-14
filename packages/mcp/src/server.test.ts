@@ -462,6 +462,28 @@ function initBattleHostWithReadySpellActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithAoeSpellActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: preparedSpellIds("burning_hands", "fireball"),
+        initiativeRoll: 15,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithHellishRebukeWindow() {
   const actor = createActor(battleMachine);
   actor.start();
@@ -566,6 +588,8 @@ function initBattleHostWithCounterspellWindow() {
         kind: "PC",
         caster: true,
         preparedSpells: preparedSpellIds("hold_person"),
+        slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+        slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 15,
       },
       {
@@ -574,6 +598,8 @@ function initBattleHostWithCounterspellWindow() {
         kind: "PC",
         caster: true,
         preparedSpells: preparedSpellIds("counterspell"),
+        slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+        slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -591,7 +617,7 @@ function initBattleHostWithCounterspellWindow() {
     cond: "paralyzed",
     applyCond: true,
     saveAbility: "wis",
-    slotLvl: spellSlotLevel(1),
+    slotLvl: spellSlotLevel(2),
     spellName: "hold_person",
     ritual: false,
   });
@@ -4538,6 +4564,49 @@ describe("MCP server adapter", () => {
     );
   });
 
+  test("battle hosts surface and execute AoE spell setup through MCP", () => {
+    const host = initBattleHostWithAoeSpellActor();
+
+    expect(
+      readPayload(handleToolCall(host, "get_available_actions", {})),
+    ).toEqual(
+      expect.objectContaining({
+        action: expect.arrayContaining([
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "A",
+            type: "BATTLE_CAST_AOE",
+            spellId: "burning_hands",
+          }),
+          expect.objectContaining({
+            scope: "battle",
+            actorId: "A",
+            type: "BATTLE_CAST_AOE",
+            spellId: "fireball",
+            slotLevel: { options: [3] },
+          }),
+        ]),
+      }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_CAST_AOE",
+      spellId: "fireball",
+      slotLevel: 3,
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({
+        success: true,
+        outcome:
+          "Spend your action and a spell slot to cast Fireball through the battle-owned area save loop",
+      }),
+    );
+  });
+
   test("battle hosts surface and execute after-damage reactions through MCP", () => {
     const host = initBattleHostWithHellishRebukeWindow();
 
@@ -4590,7 +4659,7 @@ describe("MCP server adapter", () => {
           scope: "battle",
           actorId: "B",
           type: "CAST_COUNTERSPELL",
-          slotLevel: { options: [3] },
+          slotLevel: { options: [3, 4] },
           cost: cost(quota("reaction"), pool("spellSlot")),
           outcome: {
             summary:

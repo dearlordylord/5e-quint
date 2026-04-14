@@ -99,6 +99,7 @@ export const HOLD_PERSON_INFO: ConditionSpellInfo = {
 // SRD 5.2.1 Descriptions-E-L.md "Hold Person" plus UBIQUITOUS_LANGUAGE.md
 // terms "Saving Throw", "Concentration", and "Base Spell Level".
 export const HOLD_PERSON_MECHANICS = battleReadyableSaveSpell({
+  delivery: "singleTarget",
   baseLevel: HOLD_PERSON_INFO.level,
   saveAbility: "wis",
   halfOnSuccess: false,

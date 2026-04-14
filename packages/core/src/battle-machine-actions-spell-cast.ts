@@ -81,12 +81,14 @@ export function battleCastSaveSpell({
     target: e.targetId,
     saveDC: payload.release.saveDC,
     saveRoll: e.saveRoll,
+    ...(e.saveRollB != null ? { saveRollB: e.saveRollB } : {}),
     damageOnFail: payload.release.damageOnFail,
     halfOnSuccess: payload.release.halfOnSuccess,
     damageType: payload.release.damageType,
     conditionOnFail: payload.release.conditionOnFail,
     applyCondition: payload.release.applyCondition,
     saveAbility: payload.release.saveAbility,
+    saveTriggerKind: "spell" as const,
   };
   const spellCtx: SpellCastCtx = {
     caster: id,

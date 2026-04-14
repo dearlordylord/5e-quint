@@ -1,6 +1,8 @@
 import { isIncapacitated } from "#/battle-machine-creature.ts";
+import { monsterSpellDailyUseId } from "#/monster-catalog.ts";
 import {
   activeId,
+  effectiveBattleSaveRollForCreature,
   applyDamageWithAfterReactions,
   applyFailEffects,
   canProvideBattleSpellComponents,
@@ -16,6 +18,7 @@ import type {
   AoESpellCtx,
   BattleActionArgs,
   BattleContext,
+  BattleCreatureState,
   CreatureId,
   SaveFailedCtx,
   SpellCastCtx,
@@ -26,6 +29,24 @@ import {
   phaseResolvingAoE,
 } from "#/battle-machine-types.ts";
 import { evasionDamage } from "#/features/class-rogue.ts";
+import { spellId } from "#/types.ts";
+
+function expendMonsterSpellDailyUse(
+  actor: BattleCreatureState,
+  spellName: string,
+): BattleCreatureState | "unavailable" | null {
+  const usageId = monsterSpellDailyUseId(spellId(spellName));
+  const current = actor.dailyUsesRemaining[usageId];
+  if (current == null) return null;
+  if (current <= 0) return "unavailable";
+  return {
+    ...actor,
+    dailyUsesRemaining: {
+      ...actor.dailyUsesRemaining,
+      [usageId]: current - 1,
+    },
+  };
+}
 
 export function battleCastAoE({
   context: c,
@@ -40,7 +61,15 @@ export function battleCastAoE({
   if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
   const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
   let cs = setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
-  if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
+  const monsterDailyUser = expendMonsterSpellDailyUse(cs.get(id)!, e.spellName);
+  if (monsterDailyUser === "unavailable") {
+    return {};
+  }
+  if (monsterDailyUser != null) {
+    cs = setCreature(cs, id, monsterDailyUser);
+  } else if (!e.ritual) {
+    cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
+  }
   const liveTargets = new Set<CreatureId>();
   for (const [cid, cr] of cs) {
     if (cid !== id && !cr.dead) liveTargets.add(cid);
@@ -55,6 +84,7 @@ export function battleCastAoE({
     applyCondition: e.applyCond,
     remaining: liveTargets,
     saveAbility: e.saveAbility,
+    saveTriggerKind: "spell",
   };
   const spellCtx: SpellCastCtx = {
     caster: id,
@@ -93,7 +123,13 @@ export function battleResolveAoETarget({
   const tgt = c.creatures.get(e.targetId)!;
   const tgtIncap = isIncapacitated(tgt);
   const isDex = aoe.saveAbility === "dex";
-  const saved = e.saveRoll + tgt.saveMiscBonus >= aoe.saveDC;
+  const saveRoll = effectiveBattleSaveRollForCreature(
+    tgt,
+    aoe.saveTriggerKind,
+    e.saveRoll,
+    e.saveRollB,
+  );
+  const saved = saveRoll + tgt.saveMiscBonus >= aoe.saveDC;
   const aoeReturn = { tag: "ADRResolvingAoE" as const, aoe: updatedAoe };
   if (saved) {
     if (aoe.halfOnSuccess && aoe.damageOnFail > 0) {

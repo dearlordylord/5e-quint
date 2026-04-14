@@ -371,6 +371,7 @@ const battleDriverSchema = {
     targetId: OS,
     saveDC: OI,
     saveRoll: OI,
+    saveRollB: OI,
     dmgOnFail: OI,
     halfOnSave: OB,
     dt: OV,
@@ -405,7 +406,7 @@ const battleDriverSchema = {
     slotLvl: OI,
     ritual: OB,
   },
-  bResolveAoETarget: { targetId: OS, saveRoll: OI },
+  bResolveAoETarget: { targetId: OS, saveRoll: OI, saveRollB: OI },
   bMove: {
     threatened: z.any().optional(),
     provocationKind: OV.optional(),
@@ -492,11 +493,13 @@ const battleDriverSchema = {
   bReadySpellRelease: {
     releaserId: OS,
     saveRoll: OI,
+    saveRollB: OI,
   },
   bCastBonusActionSpell: {
     targetId: OS,
     saveDC: OI,
     saveRoll: OI,
+    saveRollB: OI,
     dmgOnFail: OI,
     halfOnSave: OB,
     dt: OV,
@@ -522,6 +525,7 @@ function createBattleProjectionDriver() {
       {
         multiattackLength: number;
         rechargeMinRolls: Record<string, number>;
+        saveAdvantageContexts?: ReadonlySet<"spell" | "magicalEffect">;
       }
     >();
     const creatureKinds = new Map<string, CreatureKind>();
@@ -1249,6 +1253,7 @@ function createBattleProjectionDriver() {
       target: string;
       saveDC: number;
       saveRoll: number;
+      saveRollB?: number;
       damageOnFail: number;
       halfOnSuccess: boolean;
       damageType: DamageType;
@@ -1292,8 +1297,28 @@ function createBattleProjectionDriver() {
      *  Used to determine if remaining reactors exist when CS chain unwinds. */
     const csWindowOffered = new Set<string>();
 
+    function effectiveSaveRollForTarget(
+      targetId: string,
+      saveRoll: number,
+      saveRollB: number | undefined,
+      triggerKind: "spell" | "magicalEffect",
+    ): number {
+      const hasAdvantage =
+        statBlocks.get(targetId)?.saveAdvantageContexts?.has(triggerKind) ??
+        false;
+      return hasAdvantage
+        ? Math.max(saveRoll, saveRollB ?? saveRoll)
+        : saveRoll;
+    }
+
     function resolveSpellSave(spell: NonNullable<typeof pendingSpell>) {
-      const saved = spell.saveRoll >= spell.saveDC;
+      const saved =
+        effectiveSaveRollForTarget(
+          spell.target,
+          spell.saveRoll,
+          spell.saveRollB,
+          "spell",
+        ) >= spell.saveDC;
       if (saved) {
         if (spell.halfOnSuccess && spell.damageOnFail > 0) {
           const halfDmg = Math.floor(spell.damageOnFail / 2);
@@ -1685,6 +1710,7 @@ function createBattleProjectionDriver() {
 
       const targetId = pickString(picks, "targetId");
       const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
+      const saveRollB = pickBigInt(picks, "saveRollB");
 
       if (!targetId) {
         // remaining == 0: all targets processed, back to active turn
@@ -1692,7 +1718,9 @@ function createBattleProjectionDriver() {
         return;
       }
 
-      const saved = saveRoll >= pendingAoE.saveDC;
+      const saved =
+        effectiveSaveRollForTarget(targetId, saveRoll, saveRollB, "spell") >=
+        pendingAoE.saveDC;
       if (saved) {
         if (pendingAoE.halfOnSuccess && pendingAoE.damageOnFail > 0) {
           const halfDmg = Math.floor(pendingAoE.damageOnFail / 2);
@@ -2011,6 +2039,7 @@ function createBattleProjectionDriver() {
       const targetId = pickString(picks, "targetId") ?? "";
       const saveDC = pickBigInt(picks, "saveDC") ?? 15;
       const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
+      const saveRollB = pickBigInt(picks, "saveRollB");
       const dmgOnFail = pickBigInt(picks, "dmgOnFail") ?? 10;
       const halfOnSave = pickBool(picks, "halfOnSave") ?? false;
       const dt = pickVariant(picks, "dt") ?? "Fire";
@@ -2023,6 +2052,7 @@ function createBattleProjectionDriver() {
         target: targetId,
         saveDC,
         saveRoll,
+        ...(saveRollB != null ? { saveRollB } : {}),
         damageOnFail: dmgOnFail,
         halfOnSuccess: halfOnSave,
         damageType: mapDamageType(dt),
@@ -2129,6 +2159,7 @@ function createBattleProjectionDriver() {
       if (!pendingEndTurn) return;
       const releaserId = pickString(picks, "releaserId") ?? "";
       const saveRoll = pickBigInt(picks, "saveRoll") ?? 10;
+      const saveRollB = pickBigInt(picks, "saveRollB");
 
       // Spend reaction
       send(releaserId, { type: "USE_REACTION" });
@@ -2145,6 +2176,7 @@ function createBattleProjectionDriver() {
         target: rsp.target,
         saveDC: rsp.saveDC,
         saveRoll,
+        ...(saveRollB != null ? { saveRollB } : {}),
         damageOnFail: rsp.damageOnFail,
         halfOnSuccess: rsp.halfOnSuccess,
         damageType: rsp.damageType,

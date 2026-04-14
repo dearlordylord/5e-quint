@@ -2,6 +2,7 @@ import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
+  MonsterSaveTriggerKind,
 } from "#/monster-types.ts";
 import type {
   ActiveEffect,
@@ -50,6 +51,7 @@ export interface InitCreatureConfig {
   readonly pactSlotLevel?: number;
   readonly hasEvasion?: boolean;
   readonly saveMiscBonus?: number;
+  readonly saveAdvantageContexts?: ReadonlySet<MonsterSaveTriggerKind>;
   readonly critRange?: number;
   readonly isWearingArmor?: boolean;
   readonly defenseArmorClassBonus?: number;

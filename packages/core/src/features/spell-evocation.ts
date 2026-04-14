@@ -105,6 +105,7 @@ export function burningHandsDamage(slotLevel: number): DiceDamage {
 // SRD 5.2.1 Descriptions-A-D.md "Burning Hands" plus UBIQUITOUS_LANGUAGE.md
 // terms "Saving Throw", "Base Spell Level", and "Using a Higher-Level Spell Slot".
 export const BURNING_HANDS_MECHANICS = battleReadyableSaveSpell({
+  delivery: "aoe",
   baseLevel: 1,
   saveAbility: "dex",
   halfOnSuccess: true,
@@ -132,6 +133,7 @@ export function fireballDamage(slotLevel: number): DiceDamage {
 // SRD 5.2.1 Descriptions-E-L.md "Fireball" plus UBIQUITOUS_LANGUAGE.md
 // terms "Saving Throw", "Base Spell Level", and "Using a Higher-Level Spell Slot".
 export const FIREBALL_MECHANICS = battleReadyableSaveSpell({
+  delivery: "aoe",
   baseLevel: SPELL_FIREBALL.level,
   saveAbility: "dex",
   halfOnSuccess: SPELL_FIREBALL.pattern === "saveForHalf",

@@ -214,6 +214,9 @@ export function buildCreatureState(
       ),
     ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
     ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
+    ...(cfg.saveAdvantageContexts != null
+      ? { saveAdvantageContexts: cfg.saveAdvantageContexts }
+      : {}),
     ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
     ...(cfg.isWearingArmor != null
       ? { isWearingArmor: cfg.isWearingArmor }
@@ -1344,12 +1347,14 @@ export function battleReadySpellRelease({
     target: rsp.target,
     saveDC: rsp.saveDC,
     saveRoll: e.saveRoll,
+    ...(e.saveRollB != null ? { saveRollB: e.saveRollB } : {}),
     damageOnFail: rsp.damageOnFail,
     halfOnSuccess: rsp.halfOnSuccess,
     damageType: rsp.damageType,
     conditionOnFail: rsp.conditionOnFail,
     applyCondition: rsp.applyCondition,
     saveAbility: rsp.saveAbility,
+    saveTriggerKind: "spell" as const,
   };
   const spellCtx = {
     caster: rsp.caster,

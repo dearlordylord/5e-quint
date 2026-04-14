@@ -16,6 +16,7 @@ import type {
   MonsterResourceState,
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
+  MonsterSaveTriggerKind,
 } from "#/monster-types.ts";
 import type {
   ActiveEffect,
@@ -122,6 +123,7 @@ export interface BattleCreatureState extends Pick<
   readonly hasEvasion: boolean;
   // Misc save bonus (Paladin Aura, Ring of Protection, etc.)
   readonly saveMiscBonus: number;
+  readonly saveAdvantageContexts: ReadonlySet<MonsterSaveTriggerKind>;
   // Natural roll >= critRange is a critical hit (default 20, Champion 19/18)
   readonly critRange: number;
   readonly isWearingArmor: boolean;
@@ -249,12 +251,14 @@ export interface SaveSpellCtx {
   readonly target: CreatureId;
   readonly saveDC: DifficultyClass;
   readonly saveRoll: number;
+  readonly saveRollB?: number;
   readonly damageOnFail: number;
   readonly halfOnSuccess: boolean;
   readonly damageType: DamageType;
   readonly conditionOnFail: Condition;
   readonly applyCondition: boolean;
   readonly saveAbility: Ability;
+  readonly saveTriggerKind: MonsterSaveTriggerKind;
 }
 
 export interface SaveFailedCtx {
@@ -278,6 +282,7 @@ export interface AoESpellCtx {
   readonly applyCondition: boolean;
   readonly remaining: ReadonlySet<CreatureId>;
   readonly saveAbility: Ability;
+  readonly saveTriggerKind: MonsterSaveTriggerKind;
 }
 
 export interface ConcentrationCtx {

@@ -4,14 +4,20 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
 import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
-import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
-import type { BattleEvent } from "#/battle-machine-types.ts";
+import {
+  breakConcentrationAndPropagate,
+  resolveSave,
+} from "#/battle-machine-helpers.ts";
+import { ADR_ACTIVE_TURN, type BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import {
   ABOLETH,
   CENTAUR_TROOPER,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
+  MAGE,
+  PSEUDODRAGON,
+  monsterSpellDailyUseId,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
 import type {
@@ -3802,6 +3808,189 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "C").hp).toBe(16);
     expect(ctx(actor).aoeCtx).toBeNull();
+  });
+
+  it("projects Magic Resistance through the generic spell-save resolution lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          caster: true,
+          initiativeRoll: 15,
+        },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("B"),
+          statBlock: PSEUDODRAGON,
+          initiativeRoll: 10,
+        }),
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 5,
+      saveRollB: 15,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "B").saveAdvantageContexts).toEqual(
+      new Set(["spell", "magicalEffect"]),
+    );
+    expect(creature(actor, "B").paralyzed).toBe(false);
+    expect(creature(actor, "B").hp).toBe(10);
+  });
+
+  it("applies Magic Resistance to generic magical-effect save resolution", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 15,
+        },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("B"),
+          statBlock: PSEUDODRAGON,
+          initiativeRoll: 10,
+        }),
+      ],
+    });
+
+    const result = resolveSave(
+      ctx(actor).creatures,
+      {
+        caster: CreatureId("A"),
+        target: CreatureId("B"),
+        saveDC: difficultyClass(13),
+        saveRoll: 5,
+        saveRollB: 15,
+        damageOnFail: 0,
+        halfOnSuccess: false,
+        damageType: "psychic",
+        conditionOnFail: "paralyzed",
+        applyCondition: true,
+        saveAbility: "wis",
+        saveTriggerKind: "magicalEffect",
+      },
+      ADR_ACTIVE_TURN,
+    );
+
+    expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
+  });
+
+  it("applies generic raw save-advantage contexts through BATTLE_ADD_CREATURE", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          caster: true,
+          initiativeRoll: 15,
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        {
+          id: CreatureId("B"),
+          kind: "Monster",
+          maxHp: 10,
+          saveAdvantageContexts: new Set(["spell", "magicalEffect"]),
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 5,
+      saveRollB: 15,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "B").saveAdvantageContexts).toEqual(
+      new Set(["spell", "magicalEffect"]),
+    );
+    expect(creature(actor, "B").paralyzed).toBe(false);
+  });
+
+  it("natural_20: a monster daily spellcast spends its daily use through the generic AoE spell lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        statBlockToInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlock: MAGE,
+          statBlockId: "mage",
+          initiativeRoll: 20,
+        }),
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+        { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+      ],
+    });
+
+    startTurn(actor);
+    expect(creature(actor, "A").dailyUsesRemaining).toMatchObject({
+      [monsterSpellDailyUseId(spellId("fireball"))]: 2,
+    });
+
+    send(actor, {
+      type: "BATTLE_CAST_AOE",
+      saveDC: difficultyClass(14),
+      dmgOnFail: 54,
+      halfOnSave: true,
+      dt: "fire",
+      cond: "blinded",
+      applyCond: false,
+      saveAbility: "dex",
+      slotLvl: spellSlotLevel(4),
+      spellName: "fireball",
+      ritual: false,
+    });
+
+    expect(creature(actor, "A").dailyUsesRemaining).toMatchObject({
+      [monsterSpellDailyUseId(spellId("fireball"))]: 1,
+    });
+    expect(ctx(actor).aoeCtx?.damageOnFail).toBe(54);
   });
 
   it("natural_20: Evasion turns a failed Dexterity AoE save into half damage and a successful save into no damage", () => {
