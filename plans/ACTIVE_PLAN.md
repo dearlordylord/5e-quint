@@ -72,13 +72,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 5,
       "id": "SPELL2b",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Battle Spell Projection For One Generic Spell Family"
     },
     {
       "number": 6,
       "id": "MONDB3",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Advanced Monster Pattern Tracer Bullet"
     },
     {
@@ -166,8 +166,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2     | MONDB2 - Second Monster Tracer Bullet                          | done                                          | MONDB1a            | SPELL1    | Landed on `integration`: `Harpy` now serves as the task-owned non-goblin tracer bullet in this batch, preserving `Luring Song` as explicit text-authored unsupported data while `Claw` projects through the same generic stat-block, battle-init, and battle-add paths used by goblins.                                                                                 | Complete. A materially different non-spellcasting monster now proves the shared `StatBlock` and MCP/battle projection seam without pulling spell ownership forward.         |
 | 3     | SPELL1 - Freeze Spell Ownership Surface                        | done                                          | MONDB2             | SPELL2a   | Landed on `integration`: [SPELL1_SPELL_OWNERSHIP_SURFACE.md](./SPELL1_SPELL_OWNERSHIP_SURFACE.md) now freezes the canonical spell owner, canonical `SpellId` identity, provenance/supporting-input split, and the exact authored-reference/battle/MCP boundary for the spell stack.                                                                                    | Complete. `SPELL2a` can now implement one canonical spell-owned record and one-way projection layer without reopening ownership or identity scope.                          |
 | 4     | SPELL2a - Canonical Spell Records And Identity Projection      | done                                          | SPELL1             | SPELL2b   | Landed on `integration`: canonical spell records now own `SpellId`, SRD provenance, and spell-authored mechanics/projection hooks in `packages/core/src/features/spell-registry.ts`, while character summaries, monster spell references, and current battle payload builders consume those records without restating authored spell facts.                                | Complete. Spell identity/provenance now lives on the spell side, and downstream layers reference the same canonical `SpellId` seam rather than parallel name-based spell owners. |
-| 5     | SPELL2b - Battle Spell Projection For One Generic Spell Family | ready-for-implementation-after-light-research | SPELL2a            | MONDB3    | Start with the save-spell family already modeled in the canonical registry (`burning_hands`, `fireball`, `hold_person`) and route one reusable battle spell path through the record-owned `modeling` / `toBattleReadyablePayload` projection seam rather than battle-local lookup tables.                                                                             | Ready after a light pass over the remaining battle spell entry points so the first generic family consumes the new canonical registry seam consistently end to end.         |
-| 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | blocked                                       | SPELL2b            | MONDB4a   | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers.                                                                                 | Blocked on SPELL2b because advanced monster continuation should consume the canonical spell/generic execution surfaces rather than inventing temporary ones.               |
+| 5     | SPELL2b - Battle Spell Projection For One Generic Spell Family | done                                          | SPELL2a            | MONDB3    | Landed on `integration`: the first generic save-spell battle family now resolves action discovery from canonical spell-owned mechanics and battle payload projection (`burning_hands`, `fireball`, `hold_person`) instead of battle-local spell tables, while counterspell timing remains battle-owned.                                                                | Complete. One bounded generic spell family now proves the canonical `SpellId` to battle-action seam end to end, including higher-slot Hold Person target projection and MCP exposure. |
+| 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | ready-for-implementation-after-light-research | SPELL2b            | MONDB4a   | Return to the monster database once one canonical spell/battle spell family path exists. Add one advanced repeated monster pattern such as recharge, legendary actions, stronger multiattack, or monster spellcasting through generic facilities rather than monster-specific handlers.                                                                                 | Ready after a light pass over the advanced monster candidates so the next tracer bullet consumes the now-landed canonical spell/generic execution surfaces instead of inventing temporary ones. |
 | 7     | MONDB4a - Freeze Dataset Expansion Scope                       | blocked                                       | MONDB3             | none      | After the advanced tracer bullet lands, freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern report shape before opening implementation tasks for bulk expansion.                                                                                                                                                                      | Blocked on MONDB3 because dataset expansion should be decomposed only after the reusable schema and facility set are proven.                                               |
 | 8     | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 9     | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
@@ -434,7 +434,7 @@ Closeout note:
 
 ### Task 5 - SPELL2b - Battle Spell Projection For One Generic Spell Family
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SPELL2a`
 
@@ -447,9 +447,10 @@ Scope:
 - Keep save/DC/damage loops, counterspell windows, concentration transitions, and per-target resolution battle-owned.
 - Do not widen this task to every battle spell family or all `BATTLE_CAST_*` surfaces at once.
 
-Next action:
+Outcome:
 
-- Start with the save-spell family already carried by canonical record projections, then wire one reusable battle spell path through that seam without widening to every spell event at once.
+- The save-spell family now routes battle discovery through canonical spell-owned mechanics and payload projection for `burning_hands`, `fireball`, and `hold_person`, without restoring a battle-local lookup table.
+- `hold_person` higher-slot targeting is projected from the canonical spell record into the battle-owned staged save loop, and counterspell slot handling remains battle-owned.
 
 Research note:
 
@@ -462,9 +463,26 @@ Verification requirements:
 - Run the narrowest relevant core/battle/MCP tests for the touched spell family path.
 - Include `/simplify` convergence, minimum two rounds.
 
+Verification evidence:
+
+- RAW check: reviewed `.references/srd-5.2.1/Spells/Descriptions-A-D.md` for `Burning Hands` and `Counterspell`, `.references/srd-5.2.1/Spells/Descriptions-E-L.md` for `Fireball` and `Hold Person`, and `UBIQUITOUS_LANGUAGE.md` spellcasting terminology before closeout.
+- `/simplify` round 1: re-reviewed the accepted Task 5 diff for task-local duplication, battle-local spell tables, and spell-owned versus battle-owned boundary drift; no additional task-owned reductions were needed beyond the accepted code change.
+- `/simplify` round 2: re-reviewed the post-fix diff and verification surface; no further task-owned issues remained, so the change converged.
+- Deterministic checks:
+  - `pnpm --dir packages/core exec vitest run src/available-actions.test.ts -t "battle discovery resolves AoE spell setup from canonical spell payload facts|battle discovery keeps non-AoE save spells off the AoE cast route|battle discovery resolves active save-spell casting from canonical spell payload facts|battle discovery filters save-spell targets to legal humanoids and carries higher-slot target selections"`
+  - `pnpm --dir packages/mcp exec vitest run src/server.test.ts -t "battle hosts surface and execute AoE spell setup through MCP|battle hosts surface CAST_COUNTERSPELL from the authoritative spell-cast window|execute_action routes CAST_COUNTERSPELL through the battle lane end to end"`
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `SPELL2b`: mark `done`
+  - `MONDB3`: unblock to `ready-for-implementation-after-light-research`
+- Plan edits: synchronized the task index, DAG row, and task body with the already-landed generic save-spell battle family implementation and its acceptance evidence.
+
 ### Task 6 - MONDB3 - Advanced Monster Pattern Tracer Bullet
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SPELL2b`
 
@@ -478,7 +496,7 @@ Scope:
 
 Next action:
 
-- Unblock after `SPELL2b`, then choose the smallest advanced pattern that proves the reusable facility.
+- Choose the smallest advanced pattern that proves the reusable facility on top of the now-landed canonical spell and generic execution surfaces.
 
 Research note:
 
