@@ -130,6 +130,8 @@ The remaining work should make that pipeline operationally explicit too:
 - **Rollback/checkpoints are deferred.** The current scope is preview-of-loss only. History/checkpoint semantics should be documented explicitly as follow-on work rather than implied or silently omitted.
 - **Subclass legality is advancement-owned.** Earlier versions validated subclass choices through a side-channel draft field. That ownership moved into ordered `advancement` entries, and replay is now the canonical legality path. Any remaining stub validator should be cleaned up to reflect that ownership line.
 - **Fighting Style ownership is still incomplete on the character side.** Both TypeScript and Quint currently project an empty set because the authored `CharacterSheet` surface does not yet own Fighting Style selections. This is an explicit ownership gap, not an accidental omission.
+- **Expertise ownership is also incomplete on the character side.** The projection surface already includes `expertiseSkills`, but both TypeScript and Quint currently thread the empty set because the character side does not yet own or derive those facts explicitly enough.
+- **Some public TypeScript result shapes are looser than the domain they represent.** In particular, assessment/finalization result types and advancement failure shapes should be strengthened so impossible combinations become unrepresentable at the result boundary even though drafts themselves remain editable and partial.
 
 ## Domain Model
 
@@ -273,6 +275,7 @@ Decision:
   - newly introduced illegal issues.
 - Commit remains a separate step after preview acceptance.
 - History, rollback, and checkpoints remain intentionally deferred for now.
+- The same domain should eventually expose an advancement-assessment/preview surface so callers can see open level-up holes separately from illegal advancement issues instead of receiving only the finalization-style failure result.
 
 ## Testing Decisions
 

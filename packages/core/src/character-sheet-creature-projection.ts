@@ -50,6 +50,11 @@ const CHARACTER_CREATURE_FEATURES = [
 type CharacterCreatureFeature = (typeof CHARACTER_CREATURE_FEATURES)[number];
 
 export interface CharacterCreatureProjection {
+  // This is a boundary packet, not a single conceptual family. It intentionally
+  // groups authored identity facts (for example `primaryClass`, `species`,
+  // `subclasses`) with execution-facing derived facts (for example
+  // `critRange`, `baseWalkSpeed`, `features`) because all of them cross the
+  // same character -> creature handoff boundary together.
   readonly primaryClass: CharacterSheet["primaryClass"];
   readonly subclasses: ReturnType<typeof characterSubclassSelections>;
   readonly species: CharacterSheet["species"];

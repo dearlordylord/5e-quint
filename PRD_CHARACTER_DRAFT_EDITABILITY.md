@@ -60,8 +60,10 @@ This PRD does not require full undo/redo or checkpoint history. It requires prev
 - The core semantic source remains the canonical current draft plus the candidate next draft. The preview API should expose the difference in a stable, domain-language form rather than forcing every caller to diff raw JSON ad hoc.
 - `applyCharacterDraftUpdate()` as it exists today remains useful as the canonical “compute the sanitized next draft” operation, but it is not sufficient as the final user-facing mutation boundary.
 - Commit must be a separate step after preview acceptance.
+- The first slice does not require a first-class exported dependency-graph object. It is sufficient to make dependency effects explicit through the preview result contract.
 - The first slice does not add rollback, undo, redo, or checkpoints.
 - The docs must record rollback/checkpoints as intentional future work rather than leaving that expectation ambiguous.
+- The same preview/assessment idea should later extend to advancement transitions so callers can distinguish open required level-up choices from illegal advancement attempts before requesting a committing transition.
 
 ## Testing Decisions
 
