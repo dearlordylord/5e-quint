@@ -62,6 +62,7 @@ export const GLADIATOR = {
       id: "spear",
       name: "Spear",
       text: "*Melee or Ranged Attack Roll:* +7, reach 5 ft. or range 20/60 ft. *Hit:* 11 (2d6 + 4) Piercing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
@@ -70,6 +71,7 @@ export const GLADIATOR = {
       id: "shieldBash",
       name: "Shield Bash",
       text: "*Strength Saving Throw:* DC 15, one creature within 5 feet that the gladiator can see. *Failure:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Prone condition.",
+      blockerFamily: "saveEffectAction",
       nonExecutableReason:
         "Saving-throw weapon maneuvers with a Prone rider are not yet projected into the generic monster runtime surface.",
     },
@@ -81,6 +83,7 @@ export const GLADIATOR = {
       id: "parry",
       name: "Parry",
       text: "*Trigger:* The gladiator is hit by a melee attack roll while holding a weapon. *Response:* The gladiator adds 3 to its AC against that attack, possibly causing it to miss.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
     },
@@ -213,6 +216,7 @@ export const GUARD_CAPTAIN = {
       id: "javelin",
       name: "Javelin",
       text: "*Melee or Ranged Attack Roll:* +6, reach 5 ft. or range 30/120 ft. *Hit:* 14 (3d6 + 4) Piercing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
@@ -221,6 +225,7 @@ export const GUARD_CAPTAIN = {
       id: "longsword",
       name: "Longsword",
       text: "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 15 (2d10 + 4) Slashing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },

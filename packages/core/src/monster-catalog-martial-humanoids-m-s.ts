@@ -74,6 +74,7 @@ export const NOBLE = {
       id: "parry",
       name: "Parry",
       text: "*Trigger:* The noble is hit by a melee attack roll while holding a weapon. *Response:* The noble adds 2 to its AC against that attack, possibly causing it to miss.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
     },
@@ -153,6 +154,7 @@ export const PIRATE = {
       id: "enthrallingPanache",
       name: "Enthralling Panache",
       text: "*Wisdom Saving Throw:* DC 12, one creature the pirate can see within 30 feet. *Failure:* The target has the Charmed condition until the start of the pirate's next turn.",
+      blockerFamily: "controlAction",
       nonExecutableReason:
         "Short-duration charm save actions are not yet projected into the generic monster runtime surface.",
     },
@@ -223,6 +225,7 @@ export const PIRATE_CAPTAIN = {
       id: "rapier",
       name: "Rapier",
       text: "*Melee Attack Roll:* +7, reach 5 ft. *Hit:* 13 (2d8 + 4) Piercing damage, and the pirate has Advantage on the next attack roll it makes before the end of this turn.",
+      blockerFamily: "attackRider",
       nonExecutableReason:
         "On-hit self-buff attack riders are not yet projected into the generic monster attack surface.",
     },
@@ -231,6 +234,7 @@ export const PIRATE_CAPTAIN = {
       id: "pistol",
       name: "Pistol",
       text: "*Ranged Attack Roll:* +7, range 30/90 ft. *Hit:* 15 (2d10 + 4) Piercing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
@@ -241,6 +245,7 @@ export const PIRATE_CAPTAIN = {
       id: "captainsCharm",
       name: "Captain's Charm",
       text: "*Wisdom Saving Throw:* DC 14, one creature the pirate can see within 30 feet. *Failure:* The target has the Charmed condition until the start of the pirate's next turn.",
+      blockerFamily: "controlAction",
       nonExecutableReason:
         "Short-duration charm save actions are not yet projected into the generic monster runtime surface.",
     },
@@ -251,6 +256,7 @@ export const PIRATE_CAPTAIN = {
       id: "riposte",
       name: "Riposte",
       text: "*Trigger:* The pirate is hit by a melee attack roll while holding a weapon. *Response:* The pirate adds 3 to its AC against that attack, possibly causing it to miss. On a miss, the pirate makes one Rapier attack against the triggering creature if within range.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
     },
@@ -309,6 +315,7 @@ export const SPY = {
       id: "shortsword",
       name: "Shortsword",
       text: "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -317,6 +324,7 @@ export const SPY = {
       id: "handCrossbow",
       name: "Hand Crossbow",
       text: "*Ranged Attack Roll:* +4, range 30/120 ft. *Hit:* 5 (1d6 + 2) Piercing damage plus 7 (2d6) Poison damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -327,6 +335,7 @@ export const SPY = {
       id: "cunningAction",
       name: "Cunning Action",
       text: "The spy takes the Dash, Disengage, or Hide action.",
+      blockerFamily: "mobilityAction",
       nonExecutableReason:
         "Bonus-action Dash/Disengage/Hide bundles are not yet projected into the generic monster runtime surface.",
     },

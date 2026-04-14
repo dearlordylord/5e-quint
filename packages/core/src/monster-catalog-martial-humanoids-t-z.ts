@@ -47,6 +47,7 @@ export const TOUGH = {
       id: "packTactics",
       name: "Pack Tactics",
       text: "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },
@@ -137,6 +138,7 @@ export const TOUGH_BOSS = {
       id: "packTactics",
       name: "Pack Tactics",
       text: "The tough has Advantage on an attack roll against a creature if at least one of the tough's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },
@@ -157,6 +159,7 @@ export const TOUGH_BOSS = {
       id: "warhammer",
       name: "Warhammer",
       text: "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 12 (2d8 + 3) Bludgeoning damage. If the target is a Large or smaller creature, the tough pushes the target up to 10 feet straight away from itself.",
+      blockerFamily: "attackRider",
       nonExecutableReason:
         "On-hit forced movement from monster weapon attacks is not yet projected into the generic monster attack surface.",
     },
@@ -165,6 +168,7 @@ export const TOUGH_BOSS = {
       id: "heavyCrossbow",
       name: "Heavy Crossbow",
       text: "*Ranged Attack Roll:* +4, range 100/400 ft. *Hit:* 13 (2d10 + 2) Piercing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
@@ -220,6 +224,7 @@ export const WARRIOR_INFANTRY = {
       id: "packTactics",
       name: "Pack Tactics",
       text: "The warrior has Advantage on an attack roll against a creature if at least one of the warrior's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },
@@ -327,6 +332,7 @@ export const WARRIOR_VETERAN = {
       id: "heavyCrossbow",
       name: "Heavy Crossbow",
       text: "*Ranged Attack Roll:* +3, range 100/400 ft. *Hit:* 12 (2d10 + 1) Piercing damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
@@ -338,6 +344,7 @@ export const WARRIOR_VETERAN = {
       id: "parry",
       name: "Parry",
       text: "*Trigger:* The warrior is hit by a melee attack roll while holding a weapon. *Response:* The warrior adds 2 to its AC against that attack, possibly causing it to miss.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
     },

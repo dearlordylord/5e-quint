@@ -143,6 +143,24 @@ export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
 export type MonsterBattleReactionOption =
   (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
 
+export const MONSTER_CATALOG_BLOCKER_FAMILIES = [
+  "attackProjectionGap",
+  "attackRider",
+  "combatModifierTrait",
+  "controlAction",
+  "creatureCoordinationTrait",
+  "environmentalTrait",
+  "mobilityAction",
+  "reactiveDefense",
+  "saveEffectAction",
+  "saveEffectActionWithPrerequisite",
+  "skillUtilityTrait",
+  "spellReferenceGap",
+] as const;
+
+export type MonsterCatalogBlockerFamily =
+  (typeof MONSTER_CATALOG_BLOCKER_FAMILIES)[number];
+
 export interface MonsterAttackStockWeaponProjection {
   readonly kind: "stockWeapon";
 }
@@ -207,6 +225,10 @@ export interface MonsterAbilityBase {
 
 export interface MonsterTextAbility extends MonsterAbilityBase {
   readonly kind: "text";
+  readonly blockerFamily: Exclude<
+    MonsterCatalogBlockerFamily,
+    "spellReferenceGap"
+  >;
   readonly nonExecutableReason: string;
 }
 

@@ -6,7 +6,10 @@ import {
   ControlCommandSchema,
   toBattleInitCreatureConfig,
 } from "#/available-actions.ts";
-import { MONSTER_CATALOG_UNSUPPORTED_AUDIT } from "#/monster-catalog-audit.ts";
+import {
+  MONSTER_CATALOG_UNSUPPORTED_AUDIT,
+  MONSTER_CATALOG_UNSUPPORTED_REPORT,
+} from "#/monster-catalog-audit.ts";
 import {
   CANONICAL_SRD_MONSTER_PROVENANCE,
   ABOLETH,
@@ -448,6 +451,7 @@ describe("monster catalog", () => {
       id: "riposte",
       name: "Riposte",
       text: "*Trigger:* The pirate is hit by a melee attack roll while holding a weapon. *Response:* The pirate adds 3 to its AC against that attack, possibly causing it to miss. On a miss, the pirate makes one Rapier attack against the triggering creature if within range.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
     });
@@ -522,6 +526,7 @@ describe("monster catalog", () => {
         id: "tramplingCharge",
         name: "Trampling Charge",
         text: "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. *Strength Saving Throw:* DC 14. *Failure:* 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
+        blockerFamily: "saveEffectAction",
         nonExecutableReason:
           "Recharge-gated movement plus saving-throw bonus-action resolution is not yet projected into the generic monster runtime surface.",
       },
@@ -590,6 +595,7 @@ describe("monster catalog", () => {
         id: "magicResistance",
         name: "Magic Resistance",
         text: "The pseudodragon has Advantage on saving throws against spells and other magical effects.",
+        blockerFamily: "combatModifierTrait",
         nonExecutableReason:
           "Saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
       },
@@ -632,6 +638,7 @@ describe("monster catalog", () => {
         id: "sting",
         name: "Sting",
         text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
+        blockerFamily: "saveEffectAction",
         nonExecutableReason:
           "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
       },
@@ -708,6 +715,7 @@ describe("monster catalog", () => {
         id: "luringSong",
         name: "Luring Song",
         text: "The harpy sings a magical melody, which lasts until the harpy's Concentration ends on it. *Wisdom Saving Throw:* DC 11, each Humanoid and Giant in a 300-foot Emanation originating from the harpy when the song starts. *Failure:* The target has the Charmed condition until the song ends and repeats the save at the end of each of its turns. While Charmed, the target has the Incapacitated condition and ignores the Luring Song of other harpies. If the target is more than 5 feet from the harpy, the target moves on its turn toward the harpy by the most direct route, trying to get within 5 feet of the harpy. It doesn't avoid Opportunity Attacks; however, before moving into damaging terrain (such as lava or a pit) and whenever it takes damage from a source other than the harpy, the target repeats the save. *Success:* The target is immune to this harpy's Luring Song for 24 hours.",
+        blockerFamily: "controlAction",
         nonExecutableReason:
           "Area charm songs with repeated saves, forced movement, and concentration are not yet projected into the generic monster runtime surface.",
       },
@@ -808,6 +816,7 @@ describe("monster catalog", () => {
         id: "packTactics",
         name: "Pack Tactics",
         text: "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        blockerFamily: "combatModifierTrait",
         nonExecutableReason:
           "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
       },
@@ -816,6 +825,7 @@ describe("monster catalog", () => {
         id: "sunlightSensitivity",
         name: "Sunlight Sensitivity",
         text: "While in sunlight, the kobold has Disadvantage on ability checks and attack rolls.",
+        blockerFamily: "combatModifierTrait",
         nonExecutableReason:
           "Environment-gated attack and test penalties from monster traits are not yet projected into the generic monster runtime surface.",
       },
@@ -826,6 +836,7 @@ describe("monster catalog", () => {
         id: "aquaticCharge",
         name: "Aquatic Charge",
         text: "The sahuagin swims up to its Swim Speed straight toward an enemy it can see.",
+        blockerFamily: "mobilityAction",
         nonExecutableReason:
           "Monster-only bonus-action movement without an attached generic attack or save effect is not yet projected into the generic monster runtime surface.",
       },
@@ -880,90 +891,344 @@ describe("monster catalog", () => {
     ]);
   });
 
+  it("keeps blocker-family ownership on authored text-only abilities", () => {
+    for (const row of MONSTER_CATALOG_UNSUPPORTED_AUDIT) {
+      if (row.pattern !== "textOnlyAbility") continue;
+
+      const statBlock = getMonsterStatBlock(row.statBlockId);
+      const ability = [
+        ...statBlock.traits,
+        ...statBlock.actions,
+        ...statBlock.bonusActions,
+        ...statBlock.reactions,
+        ...statBlock.legendaryActions,
+      ].find(
+        (
+          candidate,
+        ): candidate is Extract<typeof candidate, { kind: "text" }> => {
+          return candidate.kind === "text" && candidate.id === row.abilityId;
+        },
+      );
+
+      expect(ability).toBeDefined();
+      expect(ability?.blockerFamily).toBe(row.blockerFamily);
+      expect(ability?.nonExecutableReason).toBe(row.reason);
+    }
+  });
+
   it("publishes a code-derived audit of unsupported monster patterns", () => {
-    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toEqual(
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "pseudodragon",
+        monsterName: "Pseudodragon",
+        section: "actions",
+        abilityId: "sting",
+        abilityName: "Sting",
+        pattern: "textOnlyAbility",
+        blockerFamily: "saveEffectAction",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+          section: "Pseudodragon",
+        },
+        reason:
+          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "harpy",
+        monsterName: "Harpy",
+        section: "actions",
+        abilityId: "luringSong",
+        abilityName: "Luring Song",
+        pattern: "textOnlyAbility",
+        blockerFamily: "controlAction",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+          section: "Harpy",
+        },
+        reason:
+          "Area charm songs with repeated saves, forced movement, and concentration are not yet projected into the generic monster runtime surface.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "mage",
+        monsterName: "Mage",
+        section: "actions",
+        abilityId: "spellcasting",
+        abilityName: "Spellcasting",
+        pattern: "structuredSpellcasting",
+        blockerFamily: "spellReferenceGap",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
+          section: "Mage",
+        },
+        reason:
+          "This spellcasting entry still includes unmodeled spell references outside the current generic battle spell surface: detect_magic, light, mage_armor, mage_hand, prestidigitation, invisibility, cone_of_cold, fly.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "knight",
+        monsterName: "Knight",
+        section: "reactions",
+        abilityId: "parry",
+        abilityName: "Parry",
+        pattern: "textOnlyAbility",
+        blockerFamily: "reactiveDefense",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-H-L.md",
+          section: "Knight",
+        },
+        reason:
+          "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "cultistFanatic",
+        monsterName: "Cultist Fanatic",
+        section: "actions",
+        abilityId: "spellcasting",
+        abilityName: "Spellcasting",
+        pattern: "structuredSpellcasting",
+        blockerFamily: "spellReferenceGap",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+          section: "Cultists > Cultist Fanatic",
+        },
+        reason:
+          "This spellcasting entry has no modeled spell references on the current generic battle spell surface.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "gladiator",
+        monsterName: "Gladiator",
+        section: "actions",
+        abilityId: "spear",
+        abilityName: "Spear",
+        pattern: "textOnlyAbility",
+        blockerFamily: "attackProjectionGap",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+          section: "Gladiator",
+        },
+        reason:
+          "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "pirateCaptain",
+        monsterName: "Pirate Captain",
+        section: "reactions",
+        abilityId: "riposte",
+        abilityName: "Riposte",
+        pattern: "textOnlyAbility",
+        blockerFamily: "reactiveDefense",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+          section: "Pirates > Pirate Captain",
+        },
+        reason:
+          "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
+      }),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
+      expect.objectContaining({
+        statBlockId: "spy",
+        monsterName: "Spy",
+        section: "bonusActions",
+        abilityId: "cunningAction",
+        abilityName: "Cunning Action",
+        pattern: "textOnlyAbility",
+        blockerFamily: "mobilityAction",
+        srdCitation: {
+          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+          section: "Spy",
+        },
+        reason:
+          "Bonus-action Dash/Disengage/Hide bundles are not yet projected into the generic monster runtime surface.",
+      }),
+    );
+  });
+
+  it("publishes grouped unsupported blocker counts derived from the row audit", () => {
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.rows).toBe(
+      MONSTER_CATALOG_UNSUPPORTED_AUDIT,
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.countsByBlockerFamily).toEqual(
       expect.arrayContaining([
         {
-          statBlockId: "pseudodragon",
-          monsterName: "Pseudodragon",
-          section: "actions",
-          abilityId: "sting",
-          abilityName: "Sting",
-          pattern: "textOnlyAbility",
-          reason:
-            "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+          blockerFamily: "attackProjectionGap",
+          count: 13,
+          statBlockIds: [
+            "cultist",
+            "cultistFanatic",
+            "gladiator",
+            "guardCaptain",
+            "knight",
+            "pirateCaptain",
+            "priest",
+            "spy",
+            "toughBoss",
+            "warriorVeteran",
+          ],
         },
         {
-          statBlockId: "harpy",
-          monsterName: "Harpy",
-          section: "actions",
-          abilityId: "luringSong",
-          abilityName: "Luring Song",
-          pattern: "textOnlyAbility",
-          reason:
-            "Area charm songs with repeated saves, forced movement, and concentration are not yet projected into the generic monster runtime surface.",
+          blockerFamily: "combatModifierTrait",
+          count: 8,
+          statBlockIds: [
+            "berserker",
+            "koboldWarrior",
+            "pseudodragon",
+            "sahuaginWarrior",
+            "tough",
+            "toughBoss",
+            "warriorInfantry",
+          ],
         },
         {
-          statBlockId: "mage",
-          monsterName: "Mage",
-          section: "actions",
-          abilityId: "spellcasting",
-          abilityName: "Spellcasting",
-          pattern: "structuredSpellcasting",
-          reason:
-            "This spellcasting entry still includes unmodeled spell references outside the current generic battle spell surface: detect_magic, light, mage_armor, mage_hand, prestidigitation, invisibility, cone_of_cold, fly.",
+          blockerFamily: "spellReferenceGap",
+          count: 7,
+          statBlockIds: ["cultistFanatic", "mage", "priest"],
         },
         {
-          statBlockId: "knight",
-          monsterName: "Knight",
-          section: "reactions",
-          abilityId: "parry",
-          abilityName: "Parry",
-          pattern: "textOnlyAbility",
-          reason:
-            "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
+          blockerFamily: "reactiveDefense",
+          count: 6,
+          statBlockIds: [
+            "banditCaptain",
+            "gladiator",
+            "knight",
+            "noble",
+            "pirateCaptain",
+            "warriorVeteran",
+          ],
+        },
+        {
+          blockerFamily: "controlAction",
+          count: 4,
+          statBlockIds: ["aboleth", "harpy", "pirate", "pirateCaptain"],
+        },
+        {
+          blockerFamily: "saveEffectAction",
+          count: 3,
+          statBlockIds: ["centaurTrooper", "gladiator", "pseudodragon"],
+        },
+        {
+          blockerFamily: "attackRider",
+          count: 2,
+          statBlockIds: ["pirateCaptain", "toughBoss"],
+        },
+        {
+          blockerFamily: "environmentalTrait",
+          count: 2,
+          statBlockIds: ["aboleth", "sahuaginWarrior"],
+        },
+        {
+          blockerFamily: "mobilityAction",
+          count: 2,
+          statBlockIds: ["sahuaginWarrior", "spy"],
+        },
+        {
+          blockerFamily: "creatureCoordinationTrait",
+          count: 1,
+          statBlockIds: ["sahuaginWarrior"],
+        },
+        {
+          blockerFamily: "saveEffectActionWithPrerequisite",
+          count: 1,
+          statBlockIds: ["aboleth"],
+        },
+        {
+          blockerFamily: "skillUtilityTrait",
+          count: 1,
+          statBlockIds: ["commoner"],
+        },
+      ]),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.countsByStatBlock).toEqual(
+      expect.arrayContaining([
+        {
+          statBlockId: "pirateCaptain",
+          monsterName: "Pirate Captain",
+          count: 4,
+          blockerFamilies: [
+            { blockerFamily: "attackProjectionGap", count: 1 },
+            { blockerFamily: "attackRider", count: 1 },
+            { blockerFamily: "controlAction", count: 1 },
+            { blockerFamily: "reactiveDefense", count: 1 },
+          ],
+        },
+        {
+          statBlockId: "sahuaginWarrior",
+          monsterName: "Sahuagin Warrior",
+          count: 4,
+          blockerFamilies: [
+            { blockerFamily: "combatModifierTrait", count: 1 },
+            { blockerFamily: "creatureCoordinationTrait", count: 1 },
+            { blockerFamily: "environmentalTrait", count: 1 },
+            { blockerFamily: "mobilityAction", count: 1 },
+          ],
+        },
+        {
+          statBlockId: "aboleth",
+          monsterName: "Aboleth",
+          count: 3,
+          blockerFamilies: [
+            { blockerFamily: "controlAction", count: 1 },
+            { blockerFamily: "environmentalTrait", count: 1 },
+            { blockerFamily: "saveEffectActionWithPrerequisite", count: 1 },
+          ],
         },
         {
           statBlockId: "cultistFanatic",
           monsterName: "Cultist Fanatic",
-          section: "actions",
-          abilityId: "spellcasting",
-          abilityName: "Spellcasting",
-          pattern: "structuredSpellcasting",
-          reason:
-            "This spellcasting entry has no modeled spell references on the current generic battle spell surface.",
+          count: 3,
+          blockerFamilies: [
+            { blockerFamily: "spellReferenceGap", count: 2 },
+            { blockerFamily: "attackProjectionGap", count: 1 },
+          ],
         },
         {
           statBlockId: "gladiator",
           monsterName: "Gladiator",
-          section: "actions",
-          abilityId: "spear",
-          abilityName: "Spear",
-          pattern: "textOnlyAbility",
-          reason:
-            "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
+          count: 3,
+          blockerFamilies: [
+            { blockerFamily: "attackProjectionGap", count: 1 },
+            { blockerFamily: "reactiveDefense", count: 1 },
+            { blockerFamily: "saveEffectAction", count: 1 },
+          ],
         },
         {
-          statBlockId: "pirateCaptain",
-          monsterName: "Pirate Captain",
-          section: "reactions",
-          abilityId: "riposte",
-          abilityName: "Riposte",
-          pattern: "textOnlyAbility",
-          reason:
-            "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
+          statBlockId: "mage",
+          monsterName: "Mage",
+          count: 3,
+          blockerFamilies: [{ blockerFamily: "spellReferenceGap", count: 3 }],
         },
         {
-          statBlockId: "spy",
-          monsterName: "Spy",
-          section: "bonusActions",
-          abilityId: "cunningAction",
-          abilityName: "Cunning Action",
-          pattern: "textOnlyAbility",
-          reason:
-            "Bonus-action Dash/Disengage/Hide bundles are not yet projected into the generic monster runtime surface.",
+          statBlockId: "toughBoss",
+          monsterName: "Tough Boss",
+          count: 3,
+          blockerFamilies: [
+            { blockerFamily: "attackProjectionGap", count: 1 },
+            { blockerFamily: "attackRider", count: 1 },
+            { blockerFamily: "combatModifierTrait", count: 1 },
+          ],
         },
       ]),
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
+      "# Monster Catalog Unsupported Pattern Report",
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 50");
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
+      "- attackProjectionGap: 13 rows across 10 stat blocks",
+    );
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
+      "- Pirate Captain (pirateCaptain): 4 rows [attackProjectionGap x1, attackRider x1, controlAction x1, reactiveDefense x1]",
     );
   });
 

@@ -184,6 +184,7 @@ export const BANDIT_CAPTAIN = {
       id: "parry",
       name: "Parry",
       text: "*Trigger:* The bandit is hit by a melee attack roll while holding a weapon. *Response:* The bandit adds 2 to its AC against that attack, possibly causing it to miss.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
     },
@@ -234,6 +235,7 @@ export const BERSERKER = {
       id: "bloodiedFrenzy",
       name: "Bloodied Frenzy",
       text: "While Bloodied, the berserker has Advantage on attack rolls and saving throws.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Bloodied-gated attack and saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },

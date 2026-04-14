@@ -47,6 +47,7 @@ export const ABOLETH = {
       id: "amphibious",
       name: "Amphibious",
       text: "The aboleth can breathe air and water.",
+      blockerFamily: "environmentalTrait",
       nonExecutableReason:
         "Breathing-mode traits are not yet modeled on the combat runtime surface.",
     },
@@ -91,6 +92,7 @@ export const ABOLETH = {
       id: "consumeMemories",
       name: "Consume Memories",
       text: "*Intelligence Saving Throw:* DC 16, one creature within 30 feet that is Charmed or Grappled by the aboleth. *Failure:* 10 (3d6) Psychic damage. *Success:* Half damage.",
+      blockerFamily: "saveEffectActionWithPrerequisite",
       nonExecutableReason:
         "Conditional saving-throw abilities with grapple or charm prerequisites remain outside the generic monster runtime surface.",
     },
@@ -99,6 +101,7 @@ export const ABOLETH = {
       id: "dominateMind",
       name: "Dominate Mind",
       text: "*Wisdom Saving Throw:* DC 16, one creature the aboleth can see within 30 feet. *Failure:* The target has the Charmed condition until the aboleth dies or is on a different plane of existence from the target.",
+      blockerFamily: "controlAction",
       nonExecutableReason:
         "Long-duration domination effects are not yet projected into the generic monster runtime surface.",
     },

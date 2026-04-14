@@ -145,6 +145,7 @@ export const PRIEST = {
       id: "mace",
       name: "Mace",
       text: "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage plus 5 (2d4) Radiant damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage melee spell-weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -243,6 +244,7 @@ export const SAHUAGIN_WARRIOR = {
       id: "bloodFrenzy",
       name: "Blood Frenzy",
       text: "The sahuagin has Advantage on attack rolls against any creature that doesn't have all its Hit Points.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Current battle state does not expose a generic wounded-target attack-advantage facility for monster traits.",
     },
@@ -251,6 +253,7 @@ export const SAHUAGIN_WARRIOR = {
       id: "limitedAmphibiousness",
       name: "Limited Amphibiousness",
       text: "The sahuagin can breathe air and water, but it must be submerged at least once every 4 hours to avoid suffocating outside water.",
+      blockerFamily: "environmentalTrait",
       nonExecutableReason:
         "Long-horizon environmental suffocation constraints are out of scope for the current monster runtime surface.",
     },
@@ -259,6 +262,7 @@ export const SAHUAGIN_WARRIOR = {
       id: "sharkTelepathy",
       name: "Shark Telepathy",
       text: "The sahuagin can magically control sharks within 120 feet of itself, using a special telepathy.",
+      blockerFamily: "creatureCoordinationTrait",
       nonExecutableReason:
         "Monster-command relationships for external allied creatures are not yet modeled on the generic monster runtime surface.",
     },
@@ -303,6 +307,7 @@ export const SAHUAGIN_WARRIOR = {
       id: "aquaticCharge",
       name: "Aquatic Charge",
       text: "The sahuagin swims up to its Swim Speed straight toward an enemy it can see.",
+      blockerFamily: "mobilityAction",
       nonExecutableReason:
         "Monster-only bonus-action movement without an attached generic attack or save effect is not yet projected into the generic monster runtime surface.",
     },

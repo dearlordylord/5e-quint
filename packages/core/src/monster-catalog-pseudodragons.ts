@@ -51,6 +51,7 @@ export const PSEUDODRAGON = {
       id: "magicResistance",
       name: "Magic Resistance",
       text: "The pseudodragon has Advantage on saving throws against spells and other magical effects.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },
@@ -93,6 +94,7 @@ export const PSEUDODRAGON = {
       id: "sting",
       name: "Sting",
       text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
+      blockerFamily: "saveEffectAction",
       nonExecutableReason:
         "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
     },

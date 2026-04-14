@@ -59,6 +59,7 @@ export const KNIGHT = {
       id: "greatsword",
       name: "Greatsword",
       text: "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 10 (2d6 + 3) Slashing damage plus 4 (1d8) Radiant damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -67,6 +68,7 @@ export const KNIGHT = {
       id: "heavyCrossbow",
       name: "Heavy Crossbow",
       text: "*Ranged Attack Roll:* +2, range 100/400 ft. *Hit:* 11 (2d10) Piercing damage plus 4 (1d8) Radiant damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -78,6 +80,7 @@ export const KNIGHT = {
       id: "parry",
       name: "Parry",
       text: "*Trigger:* The knight is hit by a melee attack roll while holding a weapon. *Response:* The knight adds 2 to its AC against that attack, possibly causing it to miss.",
+      blockerFamily: "reactiveDefense",
       nonExecutableReason:
         "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
     },
@@ -131,6 +134,7 @@ export const KOBOLD_WARRIOR = {
       id: "packTactics",
       name: "Pack Tactics",
       text: "The kobold has Advantage on an attack roll against a creature if at least one of the kobold's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Conditional ally-based attack advantage from monster traits is not yet projected into the generic monster runtime surface.",
     },
@@ -139,6 +143,7 @@ export const KOBOLD_WARRIOR = {
       id: "sunlightSensitivity",
       name: "Sunlight Sensitivity",
       text: "While in sunlight, the kobold has Disadvantage on ability checks and attack rolls.",
+      blockerFamily: "combatModifierTrait",
       nonExecutableReason:
         "Environment-gated attack and test penalties from monster traits are not yet projected into the generic monster runtime surface.",
     },

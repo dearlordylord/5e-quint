@@ -47,6 +47,7 @@ export const COMMONER = {
       id: "training",
       name: "Training",
       text: "The commoner has proficiency in one skill of the GM's choice and has Advantage whenever it makes an ability check using that skill.",
+      blockerFamily: "skillUtilityTrait",
       nonExecutableReason:
         "GM-chosen skill proficiency and ability-check advantage are not yet projected into the generic monster runtime surface.",
     },
@@ -123,6 +124,7 @@ export const CULTIST = {
       id: "ritualSickle",
       name: "Ritual Sickle",
       text: "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 3 (1d4 + 1) Slashing damage plus 1 Necrotic damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },
@@ -183,6 +185,7 @@ export const CULTIST_FANATIC = {
       id: "pactBlade",
       name: "Pact Blade",
       text: "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 6 (1d8 + 2) Slashing damage plus 7 (2d6) Necrotic damage.",
+      blockerFamily: "attackProjectionGap",
       nonExecutableReason:
         "Mixed-damage weapon attacks are not yet normalized into the generic monster attack projection surface.",
     },

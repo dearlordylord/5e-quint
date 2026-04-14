@@ -96,7 +96,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 9,
       "id": "MONAUD1",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Stable Unsupported Pattern Report"
     },
     {
@@ -194,7 +194,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | done                                          | SPELL2b            | MONDB4a   | Landed on `integration`: `Mage` now proves the first advanced monster spellcasting slice by projecting action-section `Fireball (2/Day Each)` through the existing generic battle-owned AoE spell payload lane, spending a monster daily-use resource instead of a slot while keeping the remaining spell references explicit authored spellcasting data.                   | Complete. The advanced tracer bullet now proves reusable monster spellcasting on top of the canonical `SpellId` and battle payload surface without adding monster-specific battle or MCP APIs. |
 | 7     | MONDB4a - Freeze Dataset Expansion Scope                       | done                                          | MONDB3             | MONDB4b, MONAUD1 | Landed on `integration`: the post-tracer-bullet dataset policy is now frozen around one data-heavy first slice, one explicit unsupported-pattern report surface, and later one-facility-per-task generic-runtime follow-ons rather than a single open-ended expansion phase.                                                                                            | Complete. The queue now names a bounded first implementation slice and a stable audit/report target without reopening monster ownership or spell-boundary decisions.         |
 | 8     | MONDB4b - Martial Humanoid Dataset Slice                       | done                                          | MONDB4a            | MONAUD1   | Landed on `integration`: the first bounded bulk SRD roster slice now adds `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors` as hand-authored stat blocks, keeping compatible stock-weapon attacks on the current generic projection path and preserving unsupported clauses as explicit text-only or structured spellcasting entries. | Complete. The targeted martial-humanoid sections fit the existing stat-block, attack, multiattack, spellcasting-reference, and text-only unsupported surfaces without adding a new monster runtime facility. |
-| 9     | MONAUD1 - Stable Unsupported Pattern Report                    | ready-for-implementation-after-light-research | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | Turn the expanded unsupported audit into one stable code-derived report with explicit row fields, blocker-family grouping, SRD citations, and grouped counts by family and stat block. Use the larger post-slice catalog to freeze the first durable blocker-family report.                                                                                           | Ready now that `MONDB4b` has expanded the catalog with the bounded martial-humanoid slice. The report can now freeze blocker families and grouped counts against a meaningfully larger dataset. |
+| 9     | MONAUD1 - Stable Unsupported Pattern Report                    | done                                          | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | Landed on `integration`: the unsupported monster audit is now a stable code-derived report with explicit row fields, blocker-family ownership on authored text-only abilities, SRD citations, grouped counts by blocker family and stat block, and a generated markdown summary for planning review.                                                                  | Complete. Later monster-facility tasks can now choose from a frozen blocker-family inventory and grouped counts without re-deriving categories from prose or maintaining a parallel registry. |
 | 10    | MONFAC1 - Monster Save-Effect Action Surface                   | ready-for-research                            | MONAUD1            | none      | Choose one reusable save-effect action family from the report and model it through one generic runtime surface, starting from existing catalog blockers such as `Pseudodragon` `Sting` and then validating on one adjacent future monster.                                                                                                                              | Research-ready. The report should narrow the first family to a single durable surface instead of mixing conditional failure bands, charm prerequisites, and long control in one task. |
 | 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | ready-for-research                            | MONAUD1            | none      | Choose one reusable combat-modifier trait family from the report and land it as a generic runtime surface, starting from current blockers such as `Pack Tactics`, `Blood Frenzy`, `Magic Resistance`, or `Sunlight Sensitivity` without widening into full environment or domination simulation.                                                                   | Research-ready. The unsupported inventory is now explicit enough to split short-horizon combat modifiers from long-horizon environment/control effects.                    |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
@@ -252,9 +252,9 @@ Structure note:
 
 Recommended next coding-loop task:
 
-1. `MONAUD1 - Stable Unsupported Pattern Report`
+1. `MONFAC1 - Monster Save-Effect Action Surface`
 
-Do not skip ahead to generic-runtime monster facility work before the first bounded post-freeze data slice has been audited into one stable unsupported-pattern report. The current sequence is deliberate:
+Do not skip ahead to broader monster facility work or later character tasks. The current sequence is deliberate:
 
 1. prove the canonical stat-block owner on the narrowest monster slice;
 2. lock battle participation semantics on the goblin flow before widening the monster pattern;
@@ -265,7 +265,8 @@ Do not skip ahead to generic-runtime monster facility work before the first boun
 7. prove one advanced monster continuation slice on top of that settled spell boundary;
 8. freeze the next dataset expansion slice before opening bulk implementation tasks;
 9. land the first bounded martial-humanoid data slice without widening runtime ownership;
-10. harden the code-derived unsupported-pattern report against that larger catalog before choosing the next generic facility family.
+10. harden the code-derived unsupported-pattern report against that larger catalog before choosing the next generic facility family;
+11. start with the save-effect action family research slice before widening into other blocker families.
 
 ## Recommended Coding Loop
 
@@ -633,7 +634,7 @@ Verification requirements:
 
 ### Task 9 - MONAUD1 - Stable Unsupported Pattern Report
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `MONDB4a`, `MONDB4b`
 
@@ -648,7 +649,7 @@ Scope:
 
 Next action:
 
-- Wait for `MONDB4b` to land, then define the stable blocker-family vocabulary from the expanded audit inventory, thread it through the row shape, and add one human-readable grouped report surface for planning and review.
+- Complete. The stable blocker-family vocabulary now lives on authored text-only abilities, and the code-derived report publishes row-level citations plus grouped counts and markdown summary directly from the canonical catalog.
 
 Research note:
 
@@ -663,7 +664,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on `MONDB4b`. The report should freeze blocker families and grouped counts after the first bounded dataset slice expands the catalog, so later facility tasks choose from the post-slice inventory rather than the smaller tracer-bullet baseline.
+- Complete. `MONFAC1` and `MONFAC2` can now research against the landed blocker-family inventory and grouped report counts instead of the pre-slice tracer-bullet baseline.
 
 ### Task 10 - MONFAC1 - Monster Save-Effect Action Surface
 
