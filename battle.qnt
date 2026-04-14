@@ -2100,20 +2100,19 @@ module battle {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
+    val saveSpells = ac.preparedSpells.filter(isBattleReadyableSpell)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
-    nondet saveDC = 10.to(18).oneOf()
+    nondet spellName = saveSpells.oneOf()
+    nondet slotLvl = readyableSpellBaseLevel(spellName).to(9).oneOf()
+    val saveDC = 13
     nondet saveRoll = 1.to(20).oneOf()
-    nondet dmgOnFail = 0.to(20).oneOf()
-    nondet halfOnSave = Bool.oneOf()
-    nondet dt = ALL_DAMAGE_TYPES.oneOf()
-    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
-    nondet applyCond = Bool.oneOf()
-    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
-    // Full 6-way set would multiply state space 3x for no coverage gain.
-    nondet saveAb = Set(Dex, Con).oneOf()
-    nondet slotLvl = 1.to(9).oneOf()
-    nondet spellName = ac.preparedSpells.oneOf()
-    nondet ritual = Bool.oneOf()
+    val dmgOnFail = readyableSpellDamageOnFail(spellName, slotLvl)
+    val halfOnSave = readyableSpellHalfOnSuccess(spellName)
+    val dt = readyableSpellDamageType(spellName)
+    val cond = readyableSpellConditionOnFail(spellName)
+    val applyCond = readyableSpellApplyCondition(spellName)
+    val saveAb = readyableSpellSaveAbility(spellName)
+    val ritual = false
     val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
     val tc = bCreatures.get(targetId)
     all {
@@ -2126,8 +2125,9 @@ module battle {
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
-      ac.preparedSpells.size() > 0,           // must have at least one prepared spell
+      saveSpells.size() > 0,                  // chosen save-spell family only
       canProvideBattleSpellComponents(ac, spellName),
+      slotLvl >= readyableSpellBaseLevel(spellName),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)

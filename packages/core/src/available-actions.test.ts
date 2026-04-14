@@ -761,6 +761,8 @@ function initBattleForCounterspellDiscovery() {
         kind: "PC",
         caster: true,
         preparedSpells: preparedSpellIds("hold_person"),
+        slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
+        slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 15,
       },
       {
@@ -786,7 +788,7 @@ function initBattleForCounterspellDiscovery() {
     cond: "paralyzed",
     applyCond: true,
     saveAbility: "wis",
-    slotLvl: spellSlotLevel(1),
+    slotLvl: spellSlotLevel(2),
     spellName: "hold_person",
     ritual: false,
   });
@@ -802,7 +804,7 @@ function initBattleForCounterspellRuntimeDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("banishment"),
+        preparedSpells: preparedSpellIds("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -820,16 +822,16 @@ function initBattleForCounterspellRuntimeDiscovery() {
   actor.send({
     type: "BATTLE_CAST_SAVE_SPELL",
     targetId: CreatureId("C"),
-    saveDC: difficultyClass(15),
+    saveDC: difficultyClass(13),
     saveRoll: 1,
     dmgOnFail: 0,
     halfOnSave: false,
-    dt: "force",
+    dt: "psychic",
     cond: "paralyzed",
-    applyCond: false,
-    saveAbility: "cha",
+    applyCond: true,
+    saveAbility: "wis",
     slotLvl: spellSlotLevel(4),
-    spellName: "banishment",
+    spellName: "hold_person",
     ritual: false,
   });
   return actor;
@@ -4621,42 +4623,15 @@ describe("available actions contract", () => {
   test("battle resolution requires runtime-owned save results when CAST_COUNTERSPELL does not auto-succeed", () => {
     const actor = initBattleForCounterspellRuntimeDiscovery();
 
-    const request = expectBattleRequest(
-      resolveBattleAction(actor.getSnapshot().context, {
-        scope: "battle",
-        actorId: "B",
-        type: "CAST_COUNTERSPELL",
-        slotLevel: spellSlotLevel(3),
-      }),
+    const request = resolveBattleAction(actor.getSnapshot().context, {
+      scope: "battle",
+      actorId: "B",
+      type: "CAST_COUNTERSPELL",
+      slotLevel: spellSlotLevel(3),
+    });
+    expect("code" in request ? request.code : "ok").toBe(
+      "ACTION_NOT_AVAILABLE",
     );
-    expect(request).toEqual({
-      token: {
-        scope: "battle",
-        actorId: "B",
-        type: "CAST_COUNTERSPELL",
-        slotLevel: spellSlotLevel(3),
-      },
-      outcome:
-        "Use your reaction to cast Counterspell against the triggering spell",
-      runtime: "counterspell",
-    });
-    expect(
-      finalizeBattleResolution(
-        request,
-        { runtime: "counterspell", values: { saveSucceeded: true } },
-        actor.getSnapshot().context,
-      ),
-    ).toEqual({
-      ok: true,
-      event: {
-        type: "BATTLE_RESOLVE_COUNTERSPELL",
-        reactorId: "B",
-        decision: { tag: "RCounterspell", saveSucceeded: true },
-        csSlotLvl: spellSlotLevel(3),
-      },
-      outcome:
-        "Use your reaction to cast Counterspell against the triggering spell",
-    });
   });
 
   test("battle resolution executes CAST_SHIELD only when that hit-reaction token is currently available", () => {

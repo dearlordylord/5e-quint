@@ -4398,6 +4398,34 @@ export function projectBattleReadyableSpellPayload(
   );
 }
 
+export function resolveBattleReadyableSpellPayload(
+  idOrName: string,
+  slotLevel: SpellSlotLevel,
+  saveDC: DifficultyClass,
+  explicitPayload?: BattleReadyableSpellPayload,
+): BattleReadyableSpellPayload | null {
+  const projected = projectBattleReadyableSpellPayload(
+    idOrName,
+    slotLevel,
+    saveDC,
+  );
+  if (projected == null) return null;
+  if (explicitPayload == null) return projected;
+  return projected.baseLevel === explicitPayload.baseLevel &&
+    projected.slotLevel === explicitPayload.slotLevel &&
+    projected.release.kind === explicitPayload.release.kind &&
+    projected.release.saveAbility === explicitPayload.release.saveAbility &&
+    projected.release.saveDC === explicitPayload.release.saveDC &&
+    projected.release.halfOnSuccess === explicitPayload.release.halfOnSuccess &&
+    projected.release.damageType === explicitPayload.release.damageType &&
+    projected.release.damageOnFail === explicitPayload.release.damageOnFail &&
+    projected.release.conditionOnFail ===
+      explicitPayload.release.conditionOnFail &&
+    projected.release.applyCondition === explicitPayload.release.applyCondition
+    ? projected
+    : null;
+}
+
 export function spellReferenceProjection(
   idOrName: string,
 ): SpellReferenceProjection | null {

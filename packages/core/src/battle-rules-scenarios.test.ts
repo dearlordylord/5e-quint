@@ -1916,7 +1916,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -1931,7 +1931,7 @@ describe("battle rules scenario regressions", () => {
     });
 
     expect(ctx(actor).awaitCtx).toBeNull();
-    expect(creature(actor, "A").slotsCurrent[0]).toBe(3);
+    expect(creature(actor, "A").slotsCurrent[1]).toBe(2);
     expect(creature(actor, "C").legendaryResistancesRemaining).toBe(2);
     expect(creature(actor, "C").paralyzed).toBe(false);
   });
@@ -2015,7 +2015,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -2059,7 +2059,7 @@ describe("battle rules scenario regressions", () => {
       cond: "blinded",
       applyCond: false,
       saveAbility: "con",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "thunderwave",
       ritual: false,
     });
@@ -2362,7 +2362,7 @@ describe("battle rules scenario regressions", () => {
       cond: "paralyzed",
       applyCond: true,
       saveAbility: "wis",
-      slotLvl: spellSlotLevel(1),
+      slotLvl: spellSlotLevel(2),
       spellName: "hold_person",
       ritual: false,
     });
@@ -5488,6 +5488,45 @@ describe("battle rules scenario regressions", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
+          preparedSpells: new Set(["hold_person"]),
+          initiativeRoll: 20,
+          hiddenDiscoveryDc: 18,
+        },
+        { id: CreatureId("B"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 1,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+  });
+
+  it("runbook_7: the save-spell battle path rejects out-of-family spells", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          caster: true,
           preparedSpells: new Set(["guiding_bolt"]),
           initiativeRoll: 20,
           hiddenDiscoveryDc: 18,
@@ -5513,7 +5552,9 @@ describe("battle rules scenario regressions", () => {
       ritual: false,
     });
 
-    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(0);
+    expect(creature(actor, "A").hiddenDiscoveryDc).toBe(18);
+    expect(creature(actor, "A").slotsCurrent[0]).toBe(4);
+    expect(ctx(actor).awaitCtx).toBeNull();
   });
 
   it("runbook_7: hidden attacker gets unseen-attacker advantage and loses hidden after attacking", () => {
