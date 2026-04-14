@@ -57,10 +57,11 @@ import {
   rageResistances,
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
+import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 import {
-  battleReadyableSpellPayloadsFromPreparedSpells,
-  getBattleReadyableSpellPayloadForSlots,
-} from "#/features/spell-available-actions.ts";
+  getSpellRecordStrict,
+  resolveBattleReadyableSpellPayload,
+} from "#/features/spell-registry.ts";
 import {
   aggregateAttackMods,
   hasAttackDisadvantageSource,
@@ -71,11 +72,7 @@ import {
   getMonsterStatBlockByStateId,
   statBlockLegendaryAction,
 } from "#/monster-catalog.ts";
-import {
-  resourceCount,
-  spellId as mkSpellId,
-  type SpellName,
-} from "#/types.ts";
+import { resourceCount, spellId as mkSpellId, type SpellId } from "#/types.ts";
 
 // TODO style: combinators
 function readyEligible(
@@ -92,6 +89,14 @@ function readyEligible(
       result.add(id);
   }
   return result;
+}
+
+function canonicalPreparedSpellIds(
+  spellRefs: ReadonlySet<string>,
+): ReadonlySet<SpellId> {
+  return new Set(
+    [...spellRefs].map((spellRef) => getSpellRecordStrict(spellRef).id),
+  );
 }
 
 /** Check for ready-eligible creatures, enter ready window or advance turn. */
@@ -143,7 +148,10 @@ export function buildCreatureState(
     hasShieldEquipped: cfg.hasShieldEquipped ?? false,
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
-  const preparedSpells = cfg.preparedSpells ?? base.preparedSpells;
+  const preparedSpells =
+    cfg.preparedSpells == null
+      ? base.preparedSpells
+      : canonicalPreparedSpellIds(cfg.preparedSpells);
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   return {
@@ -1251,25 +1259,33 @@ export function battleReadySpell({
   )
     return {};
   if (ac.preparedSpells.size === 0) return {};
-  const readyableDefinition = ac.readyableSpellPayloads.get(e.spellName);
-  const readyablePayload =
+  const readyableDefinition = ac.readyableSpellPayloads.get(
+    mkSpellId(e.spellName),
+  );
+  const readyablePayload = resolveBattleReadyableSpellPayload(
+    e.spellName,
+    e.slotLvl,
+    e.saveDC,
     readyableDefinition == null
-      ? null
-      : getBattleReadyableSpellPayloadForSlots(
-          e.spellName as SpellName,
-          readyableDefinition.baseLevel,
-          ac.slotsCurrent,
-        );
+      ? undefined
+      : {
+          baseLevel: readyableDefinition.baseLevel,
+          slotLevel: e.slotLvl,
+          release: {
+            kind: "save",
+            saveAbility: e.saveAbility,
+            saveDC: e.saveDC,
+            halfOnSuccess: e.halfOnSave,
+            damageType: e.dt,
+            damageOnFail: e.dmgOnFail,
+            conditionOnFail: e.cond,
+            applyCondition: e.applyCond,
+          },
+        },
+  );
   if (readyablePayload == null) return {};
   if (e.slotLvl !== readyablePayload.slotLevel) return {};
   if ((ac.slotsCurrent[e.slotLvl - 1] ?? 0) <= 0) return {};
-  if (e.saveDC !== readyablePayload.release.saveDC) return {};
-  if (e.dmgOnFail !== readyablePayload.release.damageOnFail) return {};
-  if (e.halfOnSave !== readyablePayload.release.halfOnSuccess) return {};
-  if (e.dt !== readyablePayload.release.damageType) return {};
-  if (e.cond !== readyablePayload.release.conditionOnFail) return {};
-  if (e.applyCond !== readyablePayload.release.applyCondition) return {};
-  if (e.saveAbility !== readyablePayload.release.saveAbility) return {};
   if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
   const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
   const afterAction = spendAction(preparedCaster, "ready");

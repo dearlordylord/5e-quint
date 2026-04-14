@@ -66,7 +66,7 @@ import type {
   ExpiryPhase,
   SpellId,
 } from "#/types.ts";
-import { resourceCount } from "#/types.ts";
+import { resourceCount, spellId } from "#/types.ts";
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag");
@@ -571,7 +571,7 @@ export function legalHitReactions(
     if (
       id === atk.target &&
       canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
-      c.preparedSpells.has("shield") &&
+      c.preparedSpells.has(spellId("shield")) &&
       !c.slotExpendedThisTurn &&
       canProvideBattleSpellComponents(c, "shield")
     ) {
@@ -695,7 +695,7 @@ export function eligibleForCounterspell(
     }
     if (
       hasSlot &&
-      c.preparedSpells.has("counterspell") &&
+      c.preparedSpells.has(spellId("counterspell")) &&
       !c.slotExpendedThisTurn &&
       canProvideBattleSpellComponents(c, "counterspell")
     )

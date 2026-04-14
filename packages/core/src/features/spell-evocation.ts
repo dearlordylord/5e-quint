@@ -1,6 +1,10 @@
 // Evocation spells — SRD 5.2.1
 // Damage-dealing spells that channel magical energy.
 
+import {
+  battleReadyableSaveSpell,
+  diceMaximum,
+} from "#/features/spell-modeled-mechanics.ts";
 import type {
   DefenseSpellInfo,
   DiceDamage,
@@ -98,6 +102,19 @@ export function burningHandsDamage(slotLevel: number): DiceDamage {
   return scalingDice(3, 1, 6, slotLevel);
 }
 
+// SRD 5.2.1 Descriptions-A-D.md "Burning Hands" plus UBIQUITOUS_LANGUAGE.md
+// terms "Saving Throw", "Base Spell Level", and "Using a Higher-Level Spell Slot".
+export const BURNING_HANDS_MECHANICS = battleReadyableSaveSpell({
+  baseLevel: 1,
+  saveAbility: "dex",
+  halfOnSuccess: true,
+  damageType: "fire",
+  conditionOnFail: "blinded",
+  applyCondition: false,
+  damageOnFailAtSlotLevel: (slotLevel) =>
+    diceMaximum(burningHandsDamage(slotLevel)),
+});
+
 // --- Guiding Bolt ---
 
 /** Guiding Bolt (SRD 5.2.1): 4d6 Radiant at L1, +1d6 per slot level above 1. */
@@ -111,6 +128,19 @@ export function guidingBoltDamage(slotLevel: number): DiceDamage {
 export function fireballDamage(slotLevel: number): DiceDamage {
   return scalingDice(8, 3, 6, slotLevel);
 }
+
+// SRD 5.2.1 Descriptions-E-L.md "Fireball" plus UBIQUITOUS_LANGUAGE.md
+// terms "Saving Throw", "Base Spell Level", and "Using a Higher-Level Spell Slot".
+export const FIREBALL_MECHANICS = battleReadyableSaveSpell({
+  baseLevel: SPELL_FIREBALL.level,
+  saveAbility: "dex",
+  halfOnSuccess: SPELL_FIREBALL.pattern === "saveForHalf",
+  damageType: SPELL_FIREBALL.damageType,
+  conditionOnFail: "blinded",
+  applyCondition: false,
+  damageOnFailAtSlotLevel: (slotLevel) =>
+    diceMaximum(fireballDamage(slotLevel)),
+});
 
 // --- Magic Missile ---
 

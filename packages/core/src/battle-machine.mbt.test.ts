@@ -13,7 +13,6 @@ import { createActor } from "xstate";
 import { z } from "zod";
 
 import { battleMachine } from "#/battle-machine.ts";
-import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import {
   getBattleMbtRunShape,
   getMbtBackend,
@@ -46,7 +45,7 @@ import {
   QuintTurnState,
   variantToString,
 } from "#/mbt-shared.ts";
-import type { CreatureId, Size, SpellName } from "#/types.ts";
+import type { CreatureId, Size } from "#/types.ts";
 import {
   armorClass,
   CreatureId as mkCreatureId,
@@ -1021,7 +1020,7 @@ function createBattleMachineDriver() {
           applyCond: pb(picks, "applyCond", false),
           saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
-          spellName: ps(picks, "spellName", "guiding_bolt"),
+          spellName: ps(picks, "spellName", "hold_person"),
           ritual: pb(picks, "ritual", false),
         });
       },
@@ -1240,24 +1239,19 @@ function createBattleMachineDriver() {
       },
       bReadySpell: (picks: Record<string, unknown>) => {
         const slotLvl = p(picks, "slotLvl", 1);
-        const spellName = ps(picks, "spellName", "hold_person");
-        const payload = getBattleReadyableSpellPayload(
-          spellName as SpellName,
-          spellSlotLevel(slotLvl),
-        );
-        const release = payload?.release;
         send({
           type: "BATTLE_READY_SPELL",
           targetId: pc(picks, "targetId", ""),
-          saveDC: release?.saveDC ?? difficultyClass(13),
-          dmgOnFail: release?.damageOnFail ?? 0,
-          halfOnSave: release?.halfOnSuccess ?? false,
-          dt: release?.damageType ?? "slashing",
-          cond: release?.conditionOnFail ?? "blinded",
-          applyCond: release?.applyCondition ?? false,
-          saveAbility: release?.saveAbility ?? "dex",
+          saveDC: difficultyClass(p(picks, "saveDC", 13)),
+          dmgOnFail: p(picks, "dmgOnFail", 0),
+          halfOnSave: pb(picks, "halfOnSave", false),
+          dt: mapDamageType(ps(picks, "dt", "Psychic")),
+          cond:
+            QUINT_CONDITION_MAP[ps(picks, "cond", "CParalyzed")] ?? "paralyzed",
+          applyCond: pb(picks, "applyCond", true),
+          saveAbility: mapAbility(ps(picks, "saveAb", "Wis")),
           slotLvl: spellSlotLevel(slotLvl),
-          spellName,
+          spellName: ps(picks, "spellName", "hold_person"),
         });
       },
       bReadyPass: () => {
@@ -1291,7 +1285,7 @@ function createBattleMachineDriver() {
           applyCond: pb(picks, "applyCond", false),
           saveAbility: mapAbility(ps(picks, "saveAb", "Con")),
           slotLvl: spellSlotLevel(p(picks, "slotLvl", 1)),
-          spellName: ps(picks, "spellName", "guiding_bolt"),
+          spellName: ps(picks, "spellName", "hold_person"),
           ritual: false,
           bonusAction: true,
         });

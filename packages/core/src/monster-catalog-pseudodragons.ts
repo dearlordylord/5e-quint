@@ -81,6 +81,11 @@ export const PSEUDODRAGON = {
         damageType: "piercing",
         isRanged: false,
         attackMode: "melee",
+        battleProfile: {
+          kind: "naturalWeapon",
+          damageDie: 4,
+          properties: [],
+        },
       },
     },
     {

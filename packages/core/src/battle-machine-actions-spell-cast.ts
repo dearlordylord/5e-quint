@@ -11,6 +11,10 @@ import {
   setCreature,
   spendAction,
 } from "#/battle-machine-helpers.ts";
+import {
+  getSpellRecord,
+  resolveBattleReadyableSpellPayload,
+} from "#/features/spell-registry.ts";
 import { resolveConcentration } from "#/battle-machine-spells.ts";
 import type {
   BattleActionArgs,
@@ -32,6 +36,9 @@ export function battleCastSaveSpell({
   const ac = c.creatures.get(id)!;
   if (ac.dead || isIncapacitated(ac)) return {};
   if (ac.ragingBlocksSpells) return {};
+  const spellRecord = getSpellRecord(e.spellName);
+  if (spellRecord == null) return {};
+  if (e.ritual && !spellRecord.ritual) return {};
   if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
   const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
   if (e.bonusAction) {
@@ -41,6 +48,26 @@ export function battleCastSaveSpell({
     if (ac.actionsRemaining <= 0) return {};
     if (ac.slotExpendedThisTurn && !e.ritual) return {};
   }
+  const payload = resolveBattleReadyableSpellPayload(
+    e.spellName,
+    e.slotLvl,
+    e.saveDC,
+    {
+      baseLevel: e.slotLvl,
+      slotLevel: e.slotLvl,
+      release: {
+        kind: "save",
+        saveAbility: e.saveAbility,
+        saveDC: e.saveDC,
+        halfOnSuccess: e.halfOnSave,
+        damageType: e.dt,
+        damageOnFail: e.dmgOnFail,
+        conditionOnFail: e.cond,
+        applyCondition: e.applyCond,
+      },
+    },
+  );
+  if (payload == null) return {};
   let cs = e.bonusAction
     ? setCreature(c.creatures, id, {
         ...preparedCaster,
@@ -52,14 +79,14 @@ export function battleCastSaveSpell({
   const saveCtx = {
     caster: id,
     target: e.targetId,
-    saveDC: e.saveDC,
+    saveDC: payload.release.saveDC,
     saveRoll: e.saveRoll,
-    damageOnFail: e.dmgOnFail,
-    halfOnSuccess: e.halfOnSave,
-    damageType: e.dt,
-    conditionOnFail: e.cond,
-    applyCondition: e.applyCond,
-    saveAbility: e.saveAbility,
+    damageOnFail: payload.release.damageOnFail,
+    halfOnSuccess: payload.release.halfOnSuccess,
+    damageType: payload.release.damageType,
+    conditionOnFail: payload.release.conditionOnFail,
+    applyCondition: payload.release.applyCondition,
+    saveAbility: payload.release.saveAbility,
   };
   const spellCtx: SpellCastCtx = {
     caster: id,

@@ -1,4 +1,4 @@
-import type { BattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
+import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
@@ -11,6 +11,7 @@ import type {
   CreatureKind,
   QualifiedPhysicalBypass,
   Size,
+  SpellId,
 } from "#/types.ts";
 import type { BattlePosition } from "#/battle-machine-types.ts";
 
@@ -39,7 +40,7 @@ export interface InitCreatureConfig {
   readonly dailyUsesRemaining?: Readonly<Record<string, number>>;
   readonly preparedSpells?: ReadonlySet<string>;
   readonly readyableSpellPayloads?: ReadonlyMap<
-    string,
+    SpellId,
     BattleReadyableSpellPayload
   >;
   readonly slotsMax?: ReadonlyArray<number>;

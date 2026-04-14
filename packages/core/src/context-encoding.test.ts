@@ -7,6 +7,12 @@ import { classLevel, CreatureId, spellId as mkSpellId } from "#/types.ts";
 
 import { encodeDndContext, encodeDndSnapshot } from "./context-encoding.ts";
 
+function preparedSpellIds(
+  ...spells: ReadonlyArray<string>
+): ReadonlySet<ReturnType<typeof mkSpellId>> {
+  return new Set(spells.map(mkSpellId));
+}
+
 describe("context encoding", () => {
   it("encodes Option fields and canonicalizes set-derived arrays", () => {
     const actor = createActor(creatureMachine, {
@@ -23,7 +29,7 @@ describe("context encoding", () => {
     const encoded = encodeDndContext({
       ...base,
       concentrationSpellId: Option.some(mkSpellId("hold_person")),
-      preparedSpells: new Set(["hold_person", "bless"]),
+      preparedSpells: preparedSpellIds("hold_person", "bless"),
       incapacitatedSources: new Set(["direct", "paralyzed"]),
       activeEffects: [
         {

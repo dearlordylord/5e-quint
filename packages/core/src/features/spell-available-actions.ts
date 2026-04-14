@@ -1,22 +1,20 @@
 import { Schema } from "effect";
 
 import type { ClassName } from "#/features/class-tables.ts";
-import { HOLD_PERSON_INFO } from "#/features/spell-enchantment.ts";
 import {
-  SPELL_FIREBALL,
-  burningHandsDamage,
-  fireballDamage,
-} from "#/features/spell-evocation.ts";
-import { SRD_SPELLS } from "#/features/spell-registry.ts";
+  type BattleReadyableSpellPayload,
+  getSpellRecord,
+  getBattleReadyableSpellMechanics,
+  getSpellRecordStrict,
+  projectBattleReadyableSpellPayload,
+} from "#/features/spell-registry.ts";
 import type {
-  Ability,
-  Condition,
-  DamageType,
   DifficultyClass,
+  SpellId,
   SpellName,
   SpellSlotLevel,
 } from "#/types.ts";
-import { difficultyClass, spellSlotLevel } from "#/types.ts";
+import { difficultyClass, spellId, spellSlotLevel } from "#/types.ts";
 
 export const MODELED_PREPARED_SPELLS = [
   "bless",
@@ -54,23 +52,6 @@ export type SpellComponentRequirements = {
   readonly requiresHandComponent: boolean;
 };
 
-export type BattleReadyableSpellReleasePayload = {
-  readonly kind: "save";
-  readonly saveAbility: Ability;
-  readonly saveDC: DifficultyClass;
-  readonly halfOnSuccess: boolean;
-  readonly damageType: DamageType;
-  readonly damageOnFail: number;
-  readonly conditionOnFail: Condition;
-  readonly applyCondition: boolean;
-};
-
-export type BattleReadyableSpellPayload = {
-  readonly baseLevel: SpellSlotLevel;
-  readonly slotLevel: SpellSlotLevel;
-  readonly release: BattleReadyableSpellReleasePayload;
-};
-
 const DEFAULT_BATTLE_SPELL_SAVE_DC = difficultyClass(13);
 
 const MODELED_PREPARED_SPELLS_BY_CLASS = {
@@ -96,14 +77,6 @@ const MODELED_PREPARED_SPELLS_BY_CLASS = {
 } as const satisfies Readonly<
   Record<ClassName, ReadonlyArray<ModeledPreparedSpell>>
 >;
-
-function snakeCaseSpellName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
 
 function normalizeCastingTime(
   castingTime: string,
@@ -143,13 +116,7 @@ function parseSpellComponentRequirements(
 function requireSpellInfo(
   spellName: ModeledPreparedSpell,
 ): ModeledPreparedSpellInfo {
-  const entry = SRD_SPELLS.find(
-    (info) => snakeCaseSpellName(info.name) === spellName,
-  );
-  if (entry == null)
-    throw new Error(
-      `Missing SRD spell registry entry for modeled prepared spell ${spellName}`,
-    );
+  const entry = getSpellRecordStrict(spellName);
   const castingTime = normalizeCastingTime(entry.castingTime);
   if (castingTime == null)
     throw new Error(
@@ -183,93 +150,44 @@ export const MODELED_PREPARED_SPELL_INFO: Readonly<
   ]),
 ) as Readonly<Record<ModeledPreparedSpell, ModeledPreparedSpellInfo>>;
 
+function canonicalModeledPreparedSpell(
+  idOrName: string | SpellId,
+): ModeledPreparedSpell | null {
+  const record = getSpellRecord(idOrName);
+  if (record == null) return null;
+  const modeledName =
+    record.id in MODELED_PREPARED_SPELL_INFO
+      ? (record.id as ModeledPreparedSpell)
+      : null;
+  return modeledName;
+}
+
 export function getModeledPreparedSpellInfo(
-  spellName: SpellName,
+  spellName: string | SpellId,
 ): ModeledPreparedSpellInfo | null {
-  return spellName in MODELED_PREPARED_SPELL_INFO
-    ? MODELED_PREPARED_SPELL_INFO[spellName as ModeledPreparedSpell]
-    : null;
+  const canonical = canonicalModeledPreparedSpell(spellName);
+  return canonical == null ? null : MODELED_PREPARED_SPELL_INFO[canonical];
 }
 
 export function getSpellComponentRequirements(
-  spellName: string,
+  spellName: string | SpellId,
 ): SpellComponentRequirements | null {
-  const entry = SRD_SPELLS.find(
-    (info) => snakeCaseSpellName(info.name) === spellName,
-  );
+  const entry = getSpellRecord(spellName);
   return entry == null
     ? null
     : parseSpellComponentRequirements(entry.components);
 }
 
-function diceMaximum(dice: {
-  readonly dice: number;
-  readonly dieSize: number;
-}) {
-  return dice.dice * dice.dieSize;
-}
-
 export function getBattleReadyableSpellPayload(
-  spellName: SpellName,
+  spellName: string | SpellId,
   slotLevel: SpellSlotLevel,
   saveDC: DifficultyClass = DEFAULT_BATTLE_SPELL_SAVE_DC,
 ): BattleReadyableSpellPayload | null {
-  if (spellName === "burning_hands") {
-    return {
-      baseLevel: spellSlotLevel(1),
-      slotLevel,
-      release: {
-        kind: "save",
-        saveAbility: "dex",
-        saveDC,
-        halfOnSuccess: true,
-        damageType: "fire",
-        damageOnFail: diceMaximum(burningHandsDamage(slotLevel)),
-        conditionOnFail: "blinded",
-        applyCondition: false,
-      },
-    };
-  }
-  if (spellName === "fireball") {
-    return {
-      baseLevel: spellSlotLevel(SPELL_FIREBALL.level),
-      slotLevel,
-      release: {
-        kind: "save",
-        saveAbility: SPELL_FIREBALL.saveAbility ?? "dex",
-        saveDC,
-        halfOnSuccess: true,
-        damageType: SPELL_FIREBALL.damageType,
-        damageOnFail: diceMaximum(fireballDamage(slotLevel)),
-        conditionOnFail: "blinded",
-        applyCondition: false,
-      },
-    };
-  }
-  if (spellName === "hold_person") {
-    return {
-      baseLevel: spellSlotLevel(HOLD_PERSON_INFO.level),
-      slotLevel,
-      release: {
-        kind: "save",
-        saveAbility: HOLD_PERSON_INFO.saveAbility ?? "wis",
-        saveDC,
-        halfOnSuccess: false,
-        damageType: "psychic",
-        damageOnFail: 0,
-        conditionOnFail:
-          HOLD_PERSON_INFO.conditionApplied === "special"
-            ? "paralyzed"
-            : HOLD_PERSON_INFO.conditionApplied,
-        applyCondition: true,
-      },
-    };
-  }
-  return null;
+  return projectBattleReadyableSpellPayload(spellName, slotLevel, saveDC);
 }
 
 export function getBattleReadyableSpellPayloadForSlots(
-  spellName: SpellName,
+  spellName: string | SpellId,
   baseLevel: SpellSlotLevel,
   slotsCurrent: ReadonlyArray<number>,
   saveDC?: DifficultyClass,
@@ -286,21 +204,23 @@ export function getBattleReadyableSpellPayloadForSlots(
 }
 
 export function battleReadyableSpellPayloadsFromPreparedSpells(
-  preparedSpells: ReadonlySet<string>,
+  preparedSpells: ReadonlySet<SpellId>,
   slotsCurrent: ReadonlyArray<number>,
-  spellSaveDcBySpell?: ReadonlyMap<SpellName, DifficultyClass>,
-): ReadonlyMap<SpellName, BattleReadyableSpellPayload> {
-  const payloads = new Map<SpellName, BattleReadyableSpellPayload>();
-  for (const spellName of preparedSpells) {
-    const modeled = getModeledPreparedSpellInfo(spellName as SpellName);
+  spellSaveDcBySpell?: ReadonlyMap<SpellId, DifficultyClass>,
+): ReadonlyMap<SpellId, BattleReadyableSpellPayload> {
+  const payloads = new Map<SpellId, BattleReadyableSpellPayload>();
+  for (const spellId of preparedSpells) {
+    const modeled = getModeledPreparedSpellInfo(spellId);
     if (modeled == null || modeled.castingTime !== "action") continue;
+    const mechanics = getBattleReadyableSpellMechanics(spellId);
+    if (mechanics == null) continue;
     const payload = getBattleReadyableSpellPayloadForSlots(
-      spellName as SpellName,
-      spellSlotLevel(modeled.baseLevel),
+      spellId,
+      mechanics.baseLevel,
       slotsCurrent,
-      spellSaveDcBySpell?.get(spellName as SpellName),
+      spellSaveDcBySpell?.get(spellId),
     );
-    if (payload != null) payloads.set(spellName as SpellName, payload);
+    if (payload != null) payloads.set(spellId, payload);
   }
   return payloads;
 }
@@ -308,12 +228,12 @@ export function battleReadyableSpellPayloadsFromPreparedSpells(
 export function defaultPreparedSpellsForClassLevels(
   classLevels: Readonly<Partial<Record<ClassName, number>>>,
   slotsMax: ReadonlyArray<number>,
-): ReadonlySet<ModeledPreparedSpell> {
+): ReadonlySet<SpellId> {
   const highestSlotLevel = slotsMax.reduce(
     (current, count, index) => (count > 0 ? index + 1 : current),
     0,
   );
-  const prepared = new Set<ModeledPreparedSpell>();
+  const prepared = new Set<SpellId>();
   for (const [className, spells] of Object.entries(
     MODELED_PREPARED_SPELLS_BY_CLASS,
   ) as ReadonlyArray<
@@ -322,7 +242,7 @@ export function defaultPreparedSpellsForClassLevels(
     if ((classLevels[className] ?? 0) <= 0) continue;
     for (const spellName of spells) {
       if (MODELED_PREPARED_SPELL_INFO[spellName].baseLevel <= highestSlotLevel)
-        prepared.add(spellName);
+        prepared.add(spellId(spellName));
     }
   }
   return prepared;

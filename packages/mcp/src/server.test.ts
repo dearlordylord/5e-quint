@@ -46,6 +46,12 @@ function cost(
   return items;
 }
 
+function preparedSpellIds(
+  ...spells: ReadonlyArray<string>
+): ReadonlySet<ReturnType<typeof spellId>> {
+  return new Set(spells.map(spellId));
+}
+
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
 }
@@ -107,7 +113,7 @@ function initBattleHostWithHitWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["shield"]),
+        preparedSpells: preparedSpellIds("shield"),
         initiativeRoll: 15,
       },
       {
@@ -331,7 +337,7 @@ function initBattleHostWithPublicAttackReactionWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["shield"]),
+        preparedSpells: preparedSpellIds("shield"),
         initiativeRoll: 15,
       },
     ],
@@ -446,7 +452,7 @@ function initBattleHostWithReadySpellActor() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        preparedSpells: preparedSpellIds("hold_person"),
         initiativeRoll: 15,
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
@@ -468,7 +474,7 @@ function initBattleHostWithHellishRebukeWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hellish_rebuke"]),
+        preparedSpells: preparedSpellIds("hellish_rebuke"),
         initiativeRoll: 10,
       },
     ],
@@ -559,7 +565,7 @@ function initBattleHostWithCounterspellWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        preparedSpells: preparedSpellIds("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -567,7 +573,7 @@ function initBattleHostWithCounterspellWindow() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["counterspell"]),
+        preparedSpells: preparedSpellIds("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -826,6 +832,40 @@ describe("MCP server adapter", () => {
       success: true,
       state: {
         initiative: ["A"],
+      },
+    });
+  });
+
+  test("execute_control_command projects Harpy through the same battle lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    actor.send({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("fighter"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 20,
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const host = createBattleHost(actor);
+
+    const response = handleToolCall(host, "execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [{ id: "harpy-1", kind: "Monster", statBlockId: "harpy" }],
+    });
+
+    expect(readPayload(response)).toMatchObject({
+      success: true,
+      state: {
+        activeCreatureId: "fighter",
+        initiative: ["fighter", "harpy-1"],
+        creatureIds: ["fighter", "harpy-1"],
       },
     });
   });
@@ -1630,7 +1670,7 @@ describe("MCP server adapter", () => {
     const host = createDemoHost({
       maxHp: 36,
       wizardLevel: classLevel(14),
-      preparedSpells: new Set(["fireball"]),
+      preparedSpells: preparedSpellIds("fireball"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -2525,7 +2565,7 @@ describe("MCP server adapter", () => {
     const host = createDemoHost({
       maxHp: 32,
       clericLevel: classLevel(5),
-      preparedSpells: new Set(["bless", "healing_word"]),
+      preparedSpells: preparedSpellIds("bless", "healing_word"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -3120,7 +3160,11 @@ describe("MCP server adapter", () => {
     const host = createDemoHost({
       maxHp: 36,
       wizardLevel: classLevel(14),
-      preparedSpells: new Set(["burning_hands", "fireball", "hold_person"]),
+      preparedSpells: preparedSpellIds(
+        "burning_hands",
+        "fireball",
+        "hold_person",
+      ),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
@@ -3169,7 +3213,7 @@ describe("MCP server adapter", () => {
     const host = createDemoHost({
       maxHp: 36,
       wizardLevel: classLevel(14),
-      preparedSpells: new Set(["fireball"]),
+      preparedSpells: preparedSpellIds("fireball"),
       baseWalkSpeed: 30,
       effectiveSpeed: 30,
     });
