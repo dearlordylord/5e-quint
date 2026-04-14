@@ -585,6 +585,11 @@ Requirements:
   - blocked-needs-design
   - deferred
 - Use retry-same-task only when the task is still implementation-ready right now and the next attempt has a concrete implementable delta.
+- Use needs-more-research when Ralph can make progress without the user but the task still needs narrowing, decomposition, or research before implementation.
+- Use blocked-needs-design only when the next step genuinely requires either:
+  - an unfinished task dependency, or
+  - an explicit owner/user design decision that Ralph cannot answer itself.
+- Do not use blocked-needs-design for internal bucket-splitting, scoping refinement, family narrowing, or repo research that Ralph can perform on its own. Those cases must stay needs-more-research.
 - If Final allowed attempt in this Ralph run is true, you must not use `retry-same-task` or `needs-more-research`. On the final allowed attempt, either land the task as `done` or update the plan so the task becomes non-runnable (`blocked` or `deferred`) before you finish.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
@@ -599,6 +604,9 @@ At the end, report:
 - Task Disposition:
   - Status: done | retry-same-task | needs-more-research | blocked-needs-design | deferred
   - Why this disposition is correct now
+- If Status is blocked-needs-design, also include:
+  - Blocker Type: dependency | owner-decision
+  - Blocker Detail: the blocking task ID(s) or the exact owner question
 - New Information Gate:
   - What new fact was learned?
   - Why it was not already implied by the plan
@@ -936,6 +944,45 @@ process.stdout.write(raw)
 NODE
 }
 
+parse_decider_blocker_type() {
+  local report="$1"
+  node - "$report" <<'NODE'
+const fs = require("fs")
+const text = fs.readFileSync(process.argv[2], "utf8")
+const clean = (s) => s.replace(/[`*_]/g, "").trim().toLowerCase()
+const lines = text.split(/\r?\n/)
+let inBlockerSection = false
+let raw = ""
+
+for (const line of lines) {
+  const normalized = clean(line)
+  if (!inBlockerSection && /^#{0,6}\s*blocker type:?$/.test(normalized)) {
+    inBlockerSection = true
+    continue
+  }
+  if (!inBlockerSection && /^blocker type:\s*(.+)$/.test(normalized)) {
+    raw = normalized.replace(/^blocker type:\s*/, "")
+    break
+  }
+  if (inBlockerSection) {
+    if (/^#{1,6}\s+/.test(line) || /^\*\*[^*]+\*\*$/.test(line.trim())) {
+      break
+    }
+    const statusMatch = normalized.match(/^[-*]?\s*status:\s*(.+)$/)
+    if (statusMatch) {
+      raw = statusMatch[1]
+      break
+    }
+  }
+}
+
+raw = clean(raw)
+if (raw === "dependency" || raw === "owner-decision") {
+  process.stdout.write(raw)
+}
+NODE
+}
+
 disposition_from_task_status() {
   local status="$1"
   case "$status" in
@@ -1174,6 +1221,10 @@ run_task_attempt() {
     decider_disposition=""
     note "task" "warning-missing-task-disposition task=$task_no attempt=$attempt_no"
   fi
+  local decider_blocker_type=""
+  if [[ "$decider_disposition" == "blocked-needs-design" ]]; then
+    decider_blocker_type="$(parse_decider_blocker_type "$attempt_root/decider.final.md" || true)"
+  fi
 
   if ! assert_clean_main_worktree; then
     if recover_dirty_main_worktree_after_decider; then
@@ -1239,6 +1290,12 @@ run_task_attempt() {
       fi
       ;;
     blocked-needs-design)
+      if [[ "$decider_blocker_type" != "dependency" && "$decider_blocker_type" != "owner-decision" ]]; then
+        printf 'task %s attempt %s left the task blocked without a valid Blocker Type\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-blocker-type task=$task_no attempt=$attempt_no"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-blocker-type" "-" "blocked status without dependency or owner-decision"
+        return 2
+      fi
       ;;
     deferred)
       ;;

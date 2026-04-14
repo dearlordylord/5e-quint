@@ -113,11 +113,25 @@ The plan status after the decider run is authoritative. Ralph refreshes `plans/A
 
 The `Task Disposition` section is therefore diagnostic rather than control-critical. If the decider output omits it, uses unusual markdown, or even disagrees with the refreshed plan, Ralph continues from the refreshed plan status and records a warning instead of killing the loop.
 
+`blocked` has a narrow meaning in this harness. It is only valid for:
+
+- an unfinished task dependency, or
+- an explicit owner/user design decision that Ralph cannot answer itself
+
+If the next step is internal narrowing, family splitting, scoping refinement, or repo/source research that Ralph can perform on its own, the task must stay `ready-for-research`, not `blocked`.
+
 In addition, the decider must:
 
 1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
 2. keep attempt-specific failure notes in run-local review/decider artifacts instead of `plans/ACTIVE_PLAN.md`;
 3. edit the plan only when the rejection revealed a genuinely new durable planning fact.
+
+When the decider leaves a task `blocked`, it must also record:
+
+- `Blocker Type: dependency | owner-decision`
+- `Blocker Detail: ...`
+
+If a task ends `blocked` without one of those blocker types, Ralph treats that as invalid planning state and fails the task instead of silently accepting a fake blocker.
 
 On the final allowed attempt for a task in a Ralph run, `retry-same-task` and `needs-more-research` are forbidden. If the task still cannot land, the decider must mark it non-runnable (`blocked` or `deferred`) before finishing so the chooser can move on.
 
