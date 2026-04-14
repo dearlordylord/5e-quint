@@ -1,30 +1,17 @@
 import { Match } from "effect";
 
-import {
-  KNIGHT,
-  KOBOLD_WARRIOR,
-  MAGE,
-  OGRE,
-  PRIEST,
-  SAHUAGIN_WARRIOR,
-  SCOUT,
-} from "#/monster-catalog-srd-expanded.ts";
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
-import { ABOLETH } from "#/monster-catalog-aboleths.ts";
-import { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
-import {
-  GOBLIN_BOSS,
-  GOBLIN_MINION,
-  GOBLIN_WARRIOR,
-} from "#/monster-catalog-goblins.ts";
 export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
-import { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
-import { HARPY } from "#/monster-catalog-harpies.ts";
-import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
 import {
   getBattleReadyableSpellMechanics,
   projectBattleReadyableSpellPayload,
 } from "#/features/spell-registry.ts";
+export * from "#/monster-catalog-registry.ts";
+import {
+  getMonsterStatBlock,
+  MONSTER_STAT_BLOCKS,
+  type MonsterStatBlockId,
+} from "#/monster-catalog-registry.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import type { CharacterWeapon } from "#/character-equipment-weapon-data.ts";
 import { projectBattleWeaponProfile } from "#/character-equipment.ts";
@@ -39,108 +26,6 @@ import {
   spellId as makeSpellId,
   spellSlotLevel,
 } from "#/types.ts";
-
-export { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
-export { ABOLETH } from "#/monster-catalog-aboleths.ts";
-export {
-  GOBLIN_BOSS,
-  GOBLIN_MINION,
-  GOBLIN_WARRIOR,
-} from "#/monster-catalog-goblins.ts";
-export { HARPY } from "#/monster-catalog-harpies.ts";
-export { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
-export {
-  KNIGHT,
-  KOBOLD_WARRIOR,
-  MAGE,
-  OGRE,
-  PRIEST,
-  SAHUAGIN_WARRIOR,
-  SCOUT,
-} from "#/monster-catalog-srd-expanded.ts";
-
-/**
- * Core-owned runtime catalog for named monster stat blocks.
- *
- * This catalog is the source of truth for adapter/runtime flows that need a
- * named monster by ID, such as `BATTLE_INIT`.
- *
- * Existing named stat blocks in `creature.qnt` remain MBT/proof fixtures for
- * Quint-driven creature tests. Do not mirror new runtime catalog entries into
- * Quint unless a Quint consumer or parity test actually requires them.
- */
-
-export const MONSTER_STAT_BLOCK_IDS = [
-  "aboleth",
-  "centaurTrooper",
-  "goblinMinion",
-  "goblinWarrior",
-  "goblinBoss",
-  "harpy",
-  "knight",
-  "koboldWarrior",
-  "mage",
-  "ogre",
-  "pseudodragon",
-  "priest",
-  "sahuaginWarrior",
-  "scout",
-] as const;
-export type MonsterStatBlockId = (typeof MONSTER_STAT_BLOCK_IDS)[number];
-
-export const MONSTER_STAT_BLOCK_PROVENANCE = {
-  defaultSource: ".references/srd-5.2.1/",
-  defaultSourceName: CANONICAL_SRD_MONSTER_PROVENANCE.sourceName,
-  defaultSourceKind: CANONICAL_SRD_MONSTER_PROVENANCE.sourceKind,
-  defaultLicense: CANONICAL_SRD_MONSTER_PROVENANCE.license,
-  externalSourcePolicy:
-    "Any non-SRD corpus requires explicit owner approval before it becomes a catalog source of truth.",
-  researchOnlySources:
-    "5etools and similar corpora remain research-only until a later plan change explicitly promotes them.",
-  ownership:
-    "Core owns named monster stat blocks. MCP and other adapters must reference catalog IDs rather than restate RAW literals.",
-  quintFixtures:
-    "Existing named stat blocks in creature.qnt are MBT/proof fixtures unless a later task explicitly unifies Quint with the runtime catalog.",
-} as const;
-
-export const MONSTER_STAT_BLOCKS: Readonly<
-  Record<MonsterStatBlockId, StatBlock>
-> = {
-  aboleth: ABOLETH,
-  centaurTrooper: CENTAUR_TROOPER,
-  goblinMinion: GOBLIN_MINION,
-  goblinWarrior: GOBLIN_WARRIOR,
-  goblinBoss: GOBLIN_BOSS,
-  harpy: HARPY,
-  knight: KNIGHT,
-  koboldWarrior: KOBOLD_WARRIOR,
-  mage: MAGE,
-  ogre: OGRE,
-  pseudodragon: PSEUDODRAGON,
-  priest: PRIEST,
-  sahuaginWarrior: SAHUAGIN_WARRIOR,
-  scout: SCOUT,
-};
-
-export function getMonsterStatBlock(id: MonsterStatBlockId): StatBlock {
-  return Match.value(id).pipe(
-    Match.when("aboleth", () => MONSTER_STAT_BLOCKS.aboleth),
-    Match.when("centaurTrooper", () => MONSTER_STAT_BLOCKS.centaurTrooper),
-    Match.when("goblinMinion", () => MONSTER_STAT_BLOCKS.goblinMinion),
-    Match.when("goblinWarrior", () => MONSTER_STAT_BLOCKS.goblinWarrior),
-    Match.when("goblinBoss", () => MONSTER_STAT_BLOCKS.goblinBoss),
-    Match.when("harpy", () => MONSTER_STAT_BLOCKS.harpy),
-    Match.when("knight", () => MONSTER_STAT_BLOCKS.knight),
-    Match.when("koboldWarrior", () => MONSTER_STAT_BLOCKS.koboldWarrior),
-    Match.when("mage", () => MONSTER_STAT_BLOCKS.mage),
-    Match.when("ogre", () => MONSTER_STAT_BLOCKS.ogre),
-    Match.when("pseudodragon", () => MONSTER_STAT_BLOCKS.pseudodragon),
-    Match.when("priest", () => MONSTER_STAT_BLOCKS.priest),
-    Match.when("sahuaginWarrior", () => MONSTER_STAT_BLOCKS.sahuaginWarrior),
-    Match.when("scout", () => MONSTER_STAT_BLOCKS.scout),
-    Match.exhaustive,
-  );
-}
 
 export function getMonsterStatBlockByStateId(
   id: string | undefined,
@@ -280,14 +165,25 @@ export function statBlockInitiativeScore(statBlock: StatBlock): number {
 }
 
 const STOCK_MONSTER_ATTACK_WEAPONS = {
+  Club: "club",
   Dagger: "dagger",
+  Greataxe: "greataxe",
   Greatclub: "greatclub",
+  Greatsword: "greatsword",
+  "Hand Crossbow": "handCrossbow",
+  "Heavy Crossbow": "heavyCrossbow",
   Javelin: "javelin",
+  "Light Crossbow": "lightCrossbow",
+  Longsword: "longsword",
   Longbow: "longbow",
+  Mace: "mace",
   Pike: "pike",
+  Pistol: "pistol",
+  Rapier: "rapier",
   Scimitar: "scimitar",
   Shortbow: "shortbow",
   Shortsword: "shortsword",
+  Spear: "spear",
 } as const satisfies Readonly<Record<string, CharacterWeapon>>;
 
 function stockMonsterAttackWeapon(name: string): CharacterWeapon | null {

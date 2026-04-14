@@ -10,11 +10,20 @@ import { MONSTER_CATALOG_UNSUPPORTED_AUDIT } from "#/monster-catalog-audit.ts";
 import {
   CANONICAL_SRD_MONSTER_PROVENANCE,
   ABOLETH,
+  BANDIT,
+  BANDIT_CAPTAIN,
+  BERSERKER,
   CENTAUR_TROOPER,
+  COMMONER,
+  CULTIST,
+  CULTIST_FANATIC,
   getMonsterStatBlock,
   GOBLIN_BOSS,
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
+  GLADIATOR,
+  GUARD,
+  GUARD_CAPTAIN,
   HARPY,
   KNIGHT,
   KOBOLD_WARRIOR,
@@ -23,11 +32,15 @@ import {
   MONSTER_STAT_BLOCK_PROVENANCE,
   monsterSpellDailyUseId,
   monsterCatalogInitCreatureConfig,
+  NOBLE,
   OGRE,
+  PIRATE,
+  PIRATE_CAPTAIN,
   PSEUDODRAGON,
   PRIEST,
   SAHUAGIN_WARRIOR,
   SCOUT,
+  SPY,
   statBlockAttacks,
   statBlockAttackBattleProfile,
   statBlockAbilityName,
@@ -39,6 +52,10 @@ import {
   statBlockProjectedBattleReadyableMonsterSpells,
   statBlockRechargeMinRolls,
   statBlockToInitCreatureConfig,
+  TOUGH,
+  TOUGH_BOSS,
+  WARRIOR_INFANTRY,
+  WARRIOR_VETERAN,
 } from "#/monster-catalog.ts";
 import { CreatureId, abilityModifier, spellId } from "#/types.ts";
 
@@ -184,19 +201,36 @@ describe("monster catalog", () => {
   it("stores goblin rider metadata on authored attacks without exposing new public IDs", () => {
     expect(MONSTER_STAT_BLOCK_IDS).toEqual([
       "aboleth",
+      "bandit",
+      "banditCaptain",
+      "berserker",
       "centaurTrooper",
+      "commoner",
+      "cultist",
+      "cultistFanatic",
+      "gladiator",
       "goblinMinion",
       "goblinWarrior",
       "goblinBoss",
+      "guard",
+      "guardCaptain",
       "harpy",
       "knight",
       "koboldWarrior",
       "mage",
+      "noble",
       "ogre",
+      "pirate",
+      "pirateCaptain",
       "pseudodragon",
       "priest",
       "sahuaginWarrior",
       "scout",
+      "spy",
+      "tough",
+      "toughBoss",
+      "warriorInfantry",
+      "warriorVeteran",
     ]);
     expect(
       statBlockAttacks(GOBLIN_WARRIOR).scimitar.extraDamageOnAdvantageHit,
@@ -250,6 +284,173 @@ describe("monster catalog", () => {
   it("publishes Goblin Warrior and Goblin Boss through the generic catalog lookup", () => {
     expect(getMonsterStatBlock("goblinWarrior")).toBe(GOBLIN_WARRIOR);
     expect(getMonsterStatBlock("goblinBoss")).toBe(GOBLIN_BOSS);
+  });
+
+  it("cites the local SRD corpus directly for every martial-humanoid slice record", () => {
+    expect(getMonsterStatBlock("bandit")).toBe(BANDIT);
+    expect(getMonsterStatBlock("banditCaptain")).toBe(BANDIT_CAPTAIN);
+    expect(getMonsterStatBlock("berserker")).toBe(BERSERKER);
+    expect(getMonsterStatBlock("commoner")).toBe(COMMONER);
+    expect(getMonsterStatBlock("cultist")).toBe(CULTIST);
+    expect(getMonsterStatBlock("cultistFanatic")).toBe(CULTIST_FANATIC);
+    expect(getMonsterStatBlock("gladiator")).toBe(GLADIATOR);
+    expect(getMonsterStatBlock("guard")).toBe(GUARD);
+    expect(getMonsterStatBlock("guardCaptain")).toBe(GUARD_CAPTAIN);
+    expect(getMonsterStatBlock("noble")).toBe(NOBLE);
+    expect(getMonsterStatBlock("pirate")).toBe(PIRATE);
+    expect(getMonsterStatBlock("pirateCaptain")).toBe(PIRATE_CAPTAIN);
+    expect(getMonsterStatBlock("spy")).toBe(SPY);
+    expect(getMonsterStatBlock("tough")).toBe(TOUGH);
+    expect(getMonsterStatBlock("toughBoss")).toBe(TOUGH_BOSS);
+    expect(getMonsterStatBlock("warriorInfantry")).toBe(WARRIOR_INFANTRY);
+    expect(getMonsterStatBlock("warriorVeteran")).toBe(WARRIOR_VETERAN);
+
+    expect(
+      Object.fromEntries(
+        (
+          [
+            ["bandit", BANDIT],
+            ["banditCaptain", BANDIT_CAPTAIN],
+            ["berserker", BERSERKER],
+            ["commoner", COMMONER],
+            ["cultist", CULTIST],
+            ["cultistFanatic", CULTIST_FANATIC],
+            ["gladiator", GLADIATOR],
+            ["guard", GUARD],
+            ["guardCaptain", GUARD_CAPTAIN],
+            ["noble", NOBLE],
+            ["pirate", PIRATE],
+            ["pirateCaptain", PIRATE_CAPTAIN],
+            ["spy", SPY],
+            ["tough", TOUGH],
+            ["toughBoss", TOUGH_BOSS],
+            ["warriorInfantry", WARRIOR_INFANTRY],
+            ["warriorVeteran", WARRIOR_VETERAN],
+          ] as const
+        ).map(([id, statBlock]) => [
+          id,
+          statBlock.provenance.provenance.citation,
+        ]),
+      ),
+    ).toEqual({
+      bandit: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+        section: "Bandits > Bandit",
+      },
+      banditCaptain: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+        section: "Bandits > Bandit Captain",
+      },
+      berserker: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
+        section: "Berserker",
+      },
+      commoner: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+        section: "Commoner",
+      },
+      cultist: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+        section: "Cultists > Cultist",
+      },
+      cultistFanatic: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
+        section: "Cultists > Cultist Fanatic",
+      },
+      gladiator: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+        section: "Gladiator",
+      },
+      guard: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+        section: "Guards > Guard",
+      },
+      guardCaptain: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-E-G.md",
+        section: "Guards > Guard Captain",
+      },
+      noble: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-M-O.md",
+        section: "Noble",
+      },
+      pirate: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+        section: "Pirates > Pirate",
+      },
+      pirateCaptain: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+        section: "Pirates > Pirate Captain",
+      },
+      spy: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
+        section: "Spy",
+      },
+      tough: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+        section: "Toughs > Tough",
+      },
+      toughBoss: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+        section: "Toughs > Tough Boss",
+      },
+      warriorInfantry: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+        section: "Warriors > Warrior Infantry",
+      },
+      warriorVeteran: {
+        document: ".references/srd-5.2.1/Monsters/Monsters-T-Z.md",
+        section: "Warriors > Warrior Veteran",
+      },
+    });
+  });
+
+  it("keeps the martial-humanoid slice on the current generic stat-block surface", () => {
+    expect(statBlockAttackBattleProfile(BANDIT, "lightCrossbow")).toEqual({
+      ...projectBattleWeaponProfile("lightCrossbow"),
+      statBlockAttackSource: {
+        name: "Light Crossbow",
+      },
+    });
+    expect(statBlockAttackBattleProfile(BERSERKER, "greataxe")).toEqual({
+      ...projectBattleWeaponProfile("greataxe"),
+      statBlockAttackSource: {
+        name: "Greataxe",
+      },
+    });
+    expect(statBlockAttackBattleProfile(GLADIATOR, "spear")).toBeNull();
+    expect(statBlockAttackBattleProfile(GUARD_CAPTAIN, "longsword")).toBeNull();
+    expect(statBlockAttackBattleProfile(PIRATE_CAPTAIN, "pistol")).toBeNull();
+    expect(statBlockAttackBattleProfile(WARRIOR_VETERAN, "greatsword")).toEqual(
+      {
+        ...projectBattleWeaponProfile("greatsword"),
+        statBlockAttackSource: {
+          name: "Greatsword",
+        },
+      },
+    );
+    expect(CULTIST_FANATIC.actions).toContainEqual({
+      kind: "spellcasting",
+      id: "spellcasting",
+      name: "Spellcasting",
+      text: "The cultist casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12, +4 to hit with spell attacks):",
+      spellcastingAbility: "wis",
+      saveDc: 12,
+      attackBonus: 4,
+      spells: [
+        { spellId: spellId("light"), usage: "At Will" },
+        { spellId: spellId("thaumaturgy"), usage: "At Will" },
+        { spellId: spellId("command"), usage: "2/Day" },
+        { spellId: spellId("hold_person"), usage: "1/Day" },
+      ],
+    });
+    expect(PIRATE_CAPTAIN.reactions).toContainEqual({
+      kind: "text",
+      id: "riposte",
+      name: "Riposte",
+      text: "*Trigger:* The pirate is hit by a melee attack roll while holding a weapon. *Response:* The pirate adds 3 to its AC against that attack, possibly causing it to miss. On a miss, the pirate makes one Rapier attack against the triggering creature if within range.",
+      nonExecutableReason:
+        "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
+    });
   });
 
   it("stores Centaur Trooper as an SRD-backed stat block with authored recharge metadata", () => {
@@ -721,6 +922,46 @@ describe("monster catalog", () => {
           pattern: "textOnlyAbility",
           reason:
             "Reactive AC boosts are not yet projected into the generic monster runtime surface.",
+        },
+        {
+          statBlockId: "cultistFanatic",
+          monsterName: "Cultist Fanatic",
+          section: "actions",
+          abilityId: "spellcasting",
+          abilityName: "Spellcasting",
+          pattern: "structuredSpellcasting",
+          reason:
+            "This spellcasting entry has no modeled spell references on the current generic battle spell surface.",
+        },
+        {
+          statBlockId: "gladiator",
+          monsterName: "Gladiator",
+          section: "actions",
+          abilityId: "spear",
+          abilityName: "Spear",
+          pattern: "textOnlyAbility",
+          reason:
+            "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
+        },
+        {
+          statBlockId: "pirateCaptain",
+          monsterName: "Pirate Captain",
+          section: "reactions",
+          abilityId: "riposte",
+          abilityName: "Riposte",
+          pattern: "textOnlyAbility",
+          reason:
+            "Reactive AC boosts plus conditional counterattacks are not yet projected into the generic monster runtime surface.",
+        },
+        {
+          statBlockId: "spy",
+          monsterName: "Spy",
+          section: "bonusActions",
+          abilityId: "cunningAction",
+          abilityName: "Cunning Action",
+          pattern: "textOnlyAbility",
+          reason:
+            "Bonus-action Dash/Disengage/Hide bundles are not yet projected into the generic monster runtime surface.",
         },
       ]),
     );
