@@ -344,6 +344,36 @@ module battle {
     | PCEDone                     // placeholder for future spell types
 
   // Context for a save-based spell targeting one creature.
+  type SaveFailureConditionDuration = {
+    effectId: str,
+    turnsRemaining: int,
+    expiresAt: ExpiryPhase,
+    expiryOwnerId: CreatureId,
+  }
+
+  type SaveFailureBandCondition = {
+    minimumMargin: int,
+    condition: Condition,
+    whileCondition: Condition,
+    endsEarlyOnDamage: bool,
+    endsEarlyOnWakeActionWithinFeet: int,
+  }
+
+  pure val NO_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
+    effectId: "",
+    turnsRemaining: 0,
+    expiresAt: AtEndOfTurn,
+    expiryOwnerId: "",
+  }
+
+  pure val NO_SAVE_FAILURE_BAND_CONDITION: SaveFailureBandCondition = {
+    minimumMargin: 0,
+    condition: CBlinded,
+    whileCondition: CBlinded,
+    endsEarlyOnDamage: false,
+    endsEarlyOnWakeActionWithinFeet: 0,
+  }
+
   type SaveSpellCtx = {
     caster: CreatureId,
     target: CreatureId,
@@ -357,6 +387,8 @@ module battle {
     applyCondition: bool,       // true if spell actually applies a condition on fail
     saveAbility: Ability,       // which ability the save targets (Dex, Con, etc.)
     saveTriggerKind: SaveTriggerKind,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition,
   }
 
   // Context for a failed save (Legendary Resistance / Countercharm interrupt)
@@ -369,6 +401,9 @@ module battle {
     conditionOnFail: Condition,
     applyCondition: bool,
     saveSucceeded: bool,       // mutable — LR can flip this to true
+    failedMargin: int,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition,
   }
 
   // Context for an AoE spell affecting multiple targets (R32).
@@ -797,7 +832,10 @@ module battle {
     creature: CreatureState, effects: Set[ActiveEffect]
   ): CreatureState =
     effects.fold(creature, (acc, effect) =>
-      effect.grantedConditions.fold(acc, (acc2, condition) => pRemoveCondition(acc2, condition))
+      effect.conditionalGrantedConditions.fold(
+        effect.grantedConditions.fold(acc, (acc2, condition) => pRemoveCondition(acc2, condition)),
+        (acc2, conditional) => pRemoveCondition(acc2, conditional.condition)
+      )
     )
 
   pure def removeEffectFromCreature(creature: CreatureState, spellId: str): CreatureState = {
@@ -1231,12 +1269,18 @@ module battle {
   pure def mkSaveFailedCtx(
     casterId: CreatureId, targetId: CreatureId,
     dmg: int, half: bool, dt: DamageType,
-    cond: Condition, applyCond: bool
+    cond: Condition, applyCond: bool,
+    failedMargin: int,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition
   ): SaveFailedCtx = {
     caster: casterId, target: targetId,
     damageOnFail: dmg, halfOnSuccess: half, damageType: dt,
     conditionOnFail: cond, applyCondition: applyCond,
     saveSucceeded: false,
+    failedMargin: failedMargin,
+    conditionDurationOnFail: conditionDurationOnFail,
+    failureBandCondition: failureBandCondition,
   }
 
   pure def isPhysicalDamageType(dt: DamageType): bool =
@@ -2160,6 +2204,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
+        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -2216,12 +2262,14 @@ module battle {
     } else {
       // Save failed — Evasion on DEX save fail: half damage
       val evDmgOnFail = if (isDex) pApplyEvasion(save.damageOnFail, false, tgt.hasEvasion, tgtIncap) else save.damageOnFail
+      val failedMargin = save.saveDC - (effectiveRoll + tgt.saveMiscBonus)
       // Check for Legendary Resistance
       val elig = eligibleForLR(cs, save.target)
       val failCtx = mkSaveFailedCtx(
         save.caster, save.target,
         evDmgOnFail, save.halfOnSuccess, save.damageType,
-        save.conditionOnFail, save.applyCondition
+        save.conditionOnFail, save.applyCondition,
+        failedMargin, save.conditionDurationOnFail, save.failureBandCondition
       )
       if (elig.size() > 0) {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PISaveFailed(failCtx), TSaveFailed, elig)) }
@@ -2246,17 +2294,93 @@ module battle {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
-      // Full fail: condition first, then damage (condition applied before damage so
-      // after-damage reactions see the updated state).
-      val cs1 = if (ctx.applyCondition) {
-        val t = cs.get(ctx.target)
-        normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
-      } else cs
-      if (ctx.damageOnFail > 0) {
-        applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
-          ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+      val hasDuration = ctx.applyCondition and ctx.conditionDurationOnFail.effectId != ""
+      val conditionalGrantedConditions =
+        if (
+          ctx.failureBandCondition.minimumMargin > 0
+          and ctx.failedMargin >= ctx.failureBandCondition.minimumMargin
+        ) Set({
+          condition: ctx.failureBandCondition.condition,
+          whileCondition: ctx.failureBandCondition.whileCondition,
+          endsEarlyOnDamage: ctx.failureBandCondition.endsEarlyOnDamage,
+          endsEarlyOnWakeActionWithinFeet: ctx.failureBandCondition.endsEarlyOnWakeActionWithinFeet,
+        })
+        else Set()
+      if (hasDuration) {
+        if (ctx.damageOnFail > 0) {
+          val damaged = applyDamageWithAfterReactions(cs, ctx.target, ctx.caster,
+            ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+          val currentTarget = damaged.creatures.get(ctx.target)
+          if (currentTarget.creature.dead) {
+            { creatures: damaged.creatures, phase: damaged.phase }
+          } else {
+            val nextEffects = pAddEffectWithConditionalConditions(
+              currentTarget.creature.activeEffects,
+              ctx.conditionDurationOnFail.effectId,
+              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.expiresAt,
+              ctx.caster,
+              Set(ctx.conditionOnFail),
+              conditionalGrantedConditions,
+              Set(),
+              Set(),
+              Set(),
+            )
+            val conditioned = conditionalGrantedConditions.fold(
+              pApplyCondition(
+                currentTarget.creature.with("activeEffects", nextEffects),
+                ctx.conditionOnFail,
+                Set(),
+              ),
+              (acc, conditional) => pApplyCondition(acc, conditional.condition, Set())
+            )
+            {
+              creatures: normalizeBattleGrapples(setCreature(damaged.creatures, ctx.target, conditioned)),
+              phase: damaged.phase,
+            }
+          }
+        } else {
+          val currentTarget = cs.get(ctx.target)
+          if (currentTarget.creature.dead) {
+            { creatures: cs, phase: returnToPhase(returnTo) }
+          } else {
+            val nextEffects = pAddEffectWithConditionalConditions(
+              currentTarget.creature.activeEffects,
+              ctx.conditionDurationOnFail.effectId,
+              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.expiresAt,
+              ctx.caster,
+              Set(ctx.conditionOnFail),
+              conditionalGrantedConditions,
+              Set(),
+              Set(),
+              Set(),
+            )
+            val conditioned = conditionalGrantedConditions.fold(
+              pApplyCondition(
+                currentTarget.creature.with("activeEffects", nextEffects),
+                ctx.conditionOnFail,
+                Set(),
+              ),
+              (acc, conditional) => pApplyCondition(acc, conditional.condition, Set())
+            )
+            {
+              creatures: normalizeBattleGrapples(setCreature(cs, ctx.target, conditioned)),
+              phase: returnToPhase(returnTo),
+            }
+          }
+        }
       } else {
-        { creatures: cs1, phase: returnToPhase(returnTo) }
+        val cs1 = if (ctx.applyCondition) {
+          val t = cs.get(ctx.target)
+          normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
+        } else cs
+        if (ctx.damageOnFail > 0) {
+          applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
+            ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+        } else {
+          { creatures: cs1, phase: returnToPhase(returnTo) }
+        }
       }
     }
   }
@@ -2818,7 +2942,10 @@ module battle {
             val sfCtx = mkSaveFailedCtx(
               aoe.caster, targetId,
               evDmgOnFail, aoe.halfOnSuccess, aoe.damageType,
-              aoe.conditionOnFail, aoe.applyCondition
+              aoe.conditionOnFail, aoe.applyCondition,
+              aoe.saveDC - (effectiveRoll + tgt.saveMiscBonus),
+              NO_SAVE_FAILURE_CONDITION_DURATION,
+              NO_SAVE_FAILURE_BAND_CONDITION
             )
             val elig = eligibleForLR(bCreatures, targetId)
             if (elig.size() > 0) {
@@ -3213,6 +3340,8 @@ module battle {
             conditionOnFail: releaser.readiedSpellParams.conditionOnFail, applyCondition: releaser.readiedSpellParams.applyCondition,
             saveAbility: releaser.readiedSpellParams.saveAbility,
             saveTriggerKind: STKSpell,
+            conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+            failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
           }
           val spellCtx: SpellCastCtx = {
             caster: releaser.readiedSpellParams.caster,
@@ -3846,6 +3975,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
+        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,

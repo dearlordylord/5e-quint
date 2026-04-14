@@ -17,6 +17,7 @@ import {
   GOBLIN_WARRIOR,
   MAGE,
   PSEUDODRAGON,
+  monsterCatalogInitCreatureConfig,
   monsterSpellDailyUseId,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -3896,6 +3897,221 @@ describe("battle rules scenario regressions", () => {
     );
 
     expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
+  });
+
+  it("resolves Pseudodragon Sting through the generic conditional save surface", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").hp).toBe(15);
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(true);
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          grantedConditions: ["poisoned"],
+          conditionalGrantedConditions: [
+            {
+              condition: "unconscious",
+              whileCondition: "poisoned",
+              endsEarlyOnDamage: true,
+              endsEarlyOnWakeActionWithinFeet: 5,
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  it("leaves the target unchanged on a successful Sting save", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 5,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 18,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").poisoned).toBe(false);
+    expect(creature(actor, "B").unconscious).toBe(false);
+    expect(creature(actor, "B").activeEffects).toEqual([]);
+  });
+
+  it("ends Sting's unconscious rider on damage while leaving Poisoned in place", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 5,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 4,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(false);
+  });
+
+  it("lets an adjacent creature wake a Sting target without ending Poisoned", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 15,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_WAKE_EFFECT",
+      targetId: CreatureId("B"),
+    });
+
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(false);
+    expect(creature(actor, "C").actionsRemaining).toBe(0);
   });
 
   it("applies generic raw save-advantage contexts through BATTLE_ADD_CREATURE", () => {

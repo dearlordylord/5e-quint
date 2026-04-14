@@ -8,7 +8,6 @@ import type {
   BattleCreatureState,
   CreatureId,
 } from "#/battle-machine-types.ts";
-import { addAe } from "#/machine-endturn.ts";
 import {
   addIncapSource,
   ALL_DAMAGE_TYPES,
@@ -31,6 +30,10 @@ import type {
 } from "#/types.ts";
 import { armorClass, resourceCount, spellId } from "#/types.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
+
+function activeEffectId(effect: ActiveEffect): string {
+  return effect.spellId;
+}
 
 function applyDamageModifiers(
   amount: number,
@@ -201,6 +204,26 @@ export function isIncapacitated(c: BattleCreatureState): boolean {
   return c.incapacitatedSources.size > 0;
 }
 
+function hasConditionFlag(c: BattleCreatureState, cond: Condition): boolean {
+  return Match.value(cond).pipe(
+    Match.when("blinded", () => c.blinded),
+    Match.when("charmed", () => c.charmed),
+    Match.when("deafened", () => c.deafened),
+    Match.when("frightened", () => c.frightened),
+    Match.when("grappled", () => c.grappled),
+    Match.when("incapacitated", () => isIncapacitated(c)),
+    Match.when("invisible", () => c.invisible),
+    Match.when("paralyzed", () => c.paralyzed),
+    Match.when("petrified", () => c.petrified),
+    Match.when("poisoned", () => c.poisoned),
+    Match.when("prone", () => c.prone),
+    Match.when("restrained", () => c.restrained),
+    Match.when("stunned", () => c.stunned),
+    Match.when("unconscious", () => c.unconscious),
+    Match.exhaustive,
+  );
+}
+
 export function applyCondition(
   c: BattleCreatureState,
   cond: Condition,
@@ -247,7 +270,7 @@ export function applyCondition(
   );
 }
 
-export function removeCondition(
+function removeConditionRaw(
   c: BattleCreatureState,
   cond: Condition,
 ): BattleCreatureState {
@@ -299,6 +322,76 @@ export function removeCondition(
     })),
     Match.exhaustive,
   );
+}
+
+function preserveZeroHpUnconscious(
+  c: BattleCreatureState,
+  cond: Condition,
+): BattleCreatureState {
+  if (cond === "unconscious" && c.hp === 0 && !c.dead) return c;
+  return removeConditionRaw(c, cond);
+}
+
+function removeUnsatisfiedConditionalConditions(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  let next = c;
+  for (const effect of c.activeEffects) {
+    for (const conditional of effect.conditionalGrantedConditions ?? []) {
+      if (
+        hasConditionFlag(next, conditional.condition) &&
+        !hasConditionFlag(next, conditional.whileCondition)
+      ) {
+        next = preserveZeroHpUnconscious(next, conditional.condition);
+      }
+    }
+  }
+  return next;
+}
+
+export function removeCondition(
+  c: BattleCreatureState,
+  cond: Condition,
+): BattleCreatureState {
+  return removeUnsatisfiedConditionalConditions(removeConditionRaw(c, cond));
+}
+
+function removeConditionsEndedByDamage(
+  c: BattleCreatureState,
+): BattleCreatureState {
+  if (c.hp === 0 || c.dead) return c;
+  let next = c;
+  for (const effect of c.activeEffects) {
+    for (const conditional of effect.conditionalGrantedConditions ?? []) {
+      if (
+        conditional.endsEarlyOnDamage === true &&
+        hasConditionFlag(next, conditional.condition)
+      ) {
+        next = removeConditionRaw(next, conditional.condition);
+      }
+    }
+  }
+  return next;
+}
+
+export function wakeEffectTarget(
+  c: BattleCreatureState,
+  maxDistanceFeet: number,
+): BattleCreatureState {
+  if (c.hp === 0 || c.dead) return c;
+  let next = c;
+  for (const effect of c.activeEffects) {
+    for (const conditional of effect.conditionalGrantedConditions ?? []) {
+      if (
+        conditional.endsEarlyOnWakeActionWithinFeet != null &&
+        conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet &&
+        hasConditionFlag(next, conditional.condition)
+      ) {
+        next = preserveZeroHpUnconscious(next, conditional.condition);
+      }
+    }
+  }
+  return next;
 }
 
 function addDeathFailures(
@@ -421,7 +514,7 @@ export function takeDamage(
     if (overflow >= effMax) return markDead(c2);
     return applyCondition(c2, "unconscious");
   }
-  return { ...c1, hp: newHp };
+  return removeConditionsEndedByDamage({ ...c1, hp: newHp });
 }
 
 export function heal(
@@ -521,7 +614,7 @@ export function breakConcentration(
   return {
     ...c,
     concentrationSpellId: Option.none(),
-    activeEffects: c.activeEffects.filter((e) => e.spellId !== sid),
+    activeEffects: c.activeEffects.filter((e) => activeEffectId(e) !== sid),
     readiedSpellParams: null, // SRD 5.2.1: concentration break = readied spell fizzles
   };
 }
@@ -588,10 +681,13 @@ function removeGrantedConditions(
   let next = c;
   for (const effect of effects) {
     for (const condition of effect.grantedConditions ?? []) {
-      next = removeCondition(next, condition);
+      next = preserveZeroHpUnconscious(next, condition);
+    }
+    for (const conditional of effect.conditionalGrantedConditions ?? []) {
+      next = preserveZeroHpUnconscious(next, conditional.condition);
     }
   }
-  return next;
+  return removeUnsatisfiedConditionalConditions(next);
 }
 
 export function advanceEffectsForOwner(
@@ -624,7 +720,7 @@ export function advanceEffectsForOwner(
 
 export function addEffect(
   c: BattleCreatureState,
-  spellId: SpellId,
+  effectId: string,
   duration: number,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
@@ -634,27 +730,33 @@ export function addEffect(
 ): BattleCreatureState {
   return {
     ...c,
-    activeEffects: addAe(
-      c.activeEffects,
-      spellId,
-      duration,
-      expiresAt,
-      casterId,
-      options,
-    ),
+    activeEffects: [
+      ...c.activeEffects.filter(
+        (effect) => activeEffectId(effect) !== effectId,
+      ),
+      {
+        spellId: effectId,
+        turnsRemaining: duration,
+        expiresAt,
+        casterId,
+        ...options,
+      },
+    ],
   };
 }
 
 export function removeEffect(
   c: BattleCreatureState,
-  spellId: SpellId,
+  effectId: string,
 ): BattleCreatureState {
-  const removed = c.activeEffects.filter((e) => e.spellId === spellId);
+  const removed = c.activeEffects.filter((e) => activeEffectId(e) === effectId);
   if (removed.length === 0) return c;
   return removeGrantedConditions(
     {
       ...c,
-      activeEffects: c.activeEffects.filter((e) => e.spellId !== spellId),
+      activeEffects: c.activeEffects.filter(
+        (e) => activeEffectId(e) !== effectId,
+      ),
     },
     removed,
   );
@@ -679,7 +781,7 @@ export function removeEffectAndDependents(
   const removed = c.activeEffects.filter(
     (effect) =>
       (effect.casterId === parentCasterId &&
-        effect.spellId === parentSpellId) ||
+        activeEffectId(effect) === parentSpellId) ||
       dependsOnEffect(effect, parentCasterId, parentSpellId),
   );
   if (removed.length === 0) return c;
@@ -690,7 +792,7 @@ export function removeEffectAndDependents(
         (effect) =>
           !(
             (effect.casterId === parentCasterId &&
-              effect.spellId === parentSpellId) ||
+              activeEffectId(effect) === parentSpellId) ||
             dependsOnEffect(effect, parentCasterId, parentSpellId)
           ),
       ),

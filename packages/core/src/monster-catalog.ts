@@ -13,6 +13,7 @@ import {
   type MonsterStatBlockId,
 } from "#/monster-catalog-registry.ts";
 import {
+  type MonsterConditionalFailureBandSaveAction,
   type MonsterAttack,
   type MonsterSaveTriggerKind,
   type StatBlock,
@@ -116,6 +117,19 @@ export function statBlockAbilityName(statBlock: StatBlock, abilityId: string) {
     ...statBlock.reactions,
     ...statBlock.legendaryActions,
   ].find((ability) => ability.id === abilityId)?.name;
+}
+
+export function statBlockConditionalFailureBandSaveAction(
+  statBlock: StatBlock,
+  abilityId: string,
+): MonsterConditionalFailureBandSaveAction | null {
+  return (
+    statBlock.actions.find(
+      (ability): ability is MonsterConditionalFailureBandSaveAction =>
+        ability.kind === "conditionalFailureBandSaveAction" &&
+        ability.id === abilityId,
+    ) ?? null
+  );
 }
 
 const MONSTER_SPELL_DAILY_USE_PREFIX = "spell:";

@@ -10,6 +10,7 @@ import type {
   AdvantageDamageDice,
   Condition,
   DamageType,
+  ExpiryPhase,
   ResourceCount,
   Size,
   SpellId,
@@ -242,6 +243,29 @@ export interface MonsterExecutableAbility extends MonsterAbilityBase {
   readonly mechanic: string;
 }
 
+export interface MonsterConditionalFailureBandSaveAction extends MonsterAbilityBase {
+  readonly kind: "conditionalFailureBandSaveAction";
+  readonly save: {
+    readonly ability: Ability;
+    readonly dc: number;
+    readonly rangeFeet: number;
+    readonly target: "oneCreatureYouCanSee";
+    readonly damageOnFail: number;
+    readonly damageType: DamageType;
+    readonly baseCondition: Condition;
+    readonly baseConditionDurationRounds: number;
+    readonly baseConditionExpiresAt: ExpiryPhase;
+    readonly baseConditionExpiryOwner: "target";
+    readonly failureBand: {
+      readonly minimumMargin: number;
+      readonly condition: Condition;
+      readonly whileCondition: Condition;
+      readonly endsEarlyOnDamage: boolean;
+      readonly endsEarlyOnWakeActionWithinFeet?: number;
+    };
+  };
+}
+
 export interface MonsterSaveAdvantageModifier {
   readonly kind: "advantage";
   readonly appliesTo: ReadonlySet<MonsterSaveTriggerKind>;
@@ -300,6 +324,7 @@ export type MonsterTrait =
   | MonsterSpellcastingAbility;
 export type MonsterAction =
   | MonsterAttackAbility
+  | MonsterConditionalFailureBandSaveAction
   | MonsterExecutableAbility
   | MonsterMultiattackAbility
   | MonsterTextAbility

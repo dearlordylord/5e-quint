@@ -635,13 +635,29 @@ describe("monster catalog", () => {
         },
       },
       {
-        kind: "text",
+        kind: "conditionalFailureBandSaveAction",
         id: "sting",
         name: "Sting",
         text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
-        blockerFamily: "saveEffectAction",
-        nonExecutableReason:
-          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+        save: {
+          ability: "con",
+          dc: 12,
+          rangeFeet: 5,
+          target: "oneCreatureYouCanSee",
+          damageOnFail: 5,
+          damageType: "poison",
+          baseCondition: "poisoned",
+          baseConditionDurationRounds: 600,
+          baseConditionExpiresAt: "end",
+          baseConditionExpiryOwner: "target",
+          failureBand: {
+            minimumMargin: 5,
+            condition: "unconscious",
+            whileCondition: "poisoned",
+            endsEarlyOnDamage: true,
+            endsEarlyOnWakeActionWithinFeet: 5,
+          },
+        },
       },
     ]);
   });
@@ -920,23 +936,6 @@ describe("monster catalog", () => {
   it("publishes a code-derived audit of unsupported monster patterns", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
       expect.objectContaining({
-        statBlockId: "pseudodragon",
-        monsterName: "Pseudodragon",
-        section: "actions",
-        abilityId: "sting",
-        abilityName: "Sting",
-        pattern: "textOnlyAbility",
-        blockerFamily: "saveEffectAction",
-        srdCitation: {
-          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-          section: "Pseudodragon",
-        },
-        reason:
-          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
-      }),
-    );
-    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
-      expect.objectContaining({
         statBlockId: "harpy",
         monsterName: "Harpy",
         section: "actions",
@@ -1114,8 +1113,8 @@ describe("monster catalog", () => {
         },
         {
           blockerFamily: "saveEffectAction",
-          count: 3,
-          statBlockIds: ["centaurTrooper", "gladiator", "pseudodragon"],
+          count: 2,
+          statBlockIds: ["centaurTrooper", "gladiator"],
         },
         {
           blockerFamily: "attackRider",
@@ -1223,7 +1222,7 @@ describe("monster catalog", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "# Monster Catalog Unsupported Pattern Report",
     );
-    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 49");
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 48");
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "- attackProjectionGap: 13 rows across 10 stat blocks",
     );

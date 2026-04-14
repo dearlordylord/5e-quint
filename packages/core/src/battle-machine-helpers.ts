@@ -5,6 +5,7 @@
 import { Match, Option } from "effect";
 
 import {
+  addEffect,
   advanceEffectsForOwner,
   applyCondition,
   battleHasFreeHand,
@@ -32,6 +33,7 @@ import type {
   AttackDamageCtx,
   AttackHitCtx,
   AwaitCtx,
+  BattleSaveTriggerKind,
   BattleContext,
   BattleCreatureState,
   CreatureId,
@@ -61,13 +63,17 @@ import { getSpellComponentRequirements } from "#/features/spell-available-action
 import type {
   ActiveEffect,
   ArmorClass,
+  ConditionalGrantedCondition,
   DamageQualifier,
   DamageType,
   ExpiryPhase,
   SpellId,
 } from "#/types.ts";
 import { resourceCount, spellId } from "#/types.ts";
-import type { MonsterSaveTriggerKind } from "#/monster-types.ts";
+
+function activeEffectId(effect: ActiveEffect): string {
+  return effect.spellId;
+}
 
 /** Exhaustive discriminator for tagged unions using `tag` field. */
 export const byTag = Match.discriminator("tag");
@@ -148,8 +154,9 @@ export function setCreature(
 
 function hasSaveAdvantageAgainst(
   creature: BattleCreatureState,
-  triggerKind: MonsterSaveTriggerKind,
+  triggerKind: BattleSaveTriggerKind,
 ): boolean {
+  if (triggerKind === "none") return false;
   return creature.saveAdvantageContexts.has(triggerKind);
 }
 
@@ -164,7 +171,7 @@ function effectiveSaveRoll(
 
 export function effectiveBattleSaveRollForCreature(
   creature: BattleCreatureState,
-  triggerKind: MonsterSaveTriggerKind,
+  triggerKind: BattleSaveTriggerKind,
   primaryRoll: number,
   secondaryRoll?: number,
 ): number {
@@ -400,7 +407,7 @@ function autoBreakExpiredConcentration(
 ): BattleCreatureState {
   if (Option.isNone(c.concentrationSpellId)) return c;
   const cid = c.concentrationSpellId.value;
-  return c.activeEffects.some((a) => a.spellId === cid)
+  return c.activeEffects.some((a) => activeEffectId(a) === cid)
     ? c
     : breakConcentration(c);
 }
@@ -912,7 +919,8 @@ export function resolveSave(
     save.saveRoll,
     save.saveRollB,
   );
-  const saved = saveRoll + tgt.saveMiscBonus >= save.saveDC;
+  const totalSave = saveRoll + tgt.saveMiscBonus;
+  const saved = totalSave >= save.saveDC;
   const isDex = save.saveAbility === "dex";
   const tgtIncap = isIncapacitated(tgt);
   if (saved) {
@@ -951,6 +959,9 @@ export function resolveSave(
     conditionOnFail: save.conditionOnFail,
     applyCondition: save.applyCondition,
     saveSucceeded: false,
+    failedMargin: save.saveDC - totalSave,
+    conditionDurationOnFail: save.conditionDurationOnFail,
+    failureBandCondition: save.failureBandCondition,
   };
   if (elig.size > 0) {
     return {
@@ -985,7 +996,74 @@ export function applyFailEffects(
     return { creatures: new Map(cs), ...returnToState(returnTo) };
   }
   let cs1: Map<CreatureId, BattleCreatureState> = new Map(cs);
-  if (ctx.applyCondition) {
+  const applyDurationCondition = (
+    creatures: Map<CreatureId, BattleCreatureState>,
+  ): Map<CreatureId, BattleCreatureState> => {
+    const duration = ctx.conditionDurationOnFail;
+    if (duration == null) return creatures;
+    const conditionalGrantedConditions: Array<ConditionalGrantedCondition> = [];
+    if (
+      ctx.failureBandCondition != null &&
+      (ctx.failedMargin ?? 0) >= ctx.failureBandCondition.minimumMargin
+    ) {
+      conditionalGrantedConditions.push({
+        condition: ctx.failureBandCondition.condition,
+        whileCondition: ctx.failureBandCondition.whileCondition,
+        ...(ctx.failureBandCondition.endsEarlyOnDamage === true
+          ? { endsEarlyOnDamage: true }
+          : {}),
+        ...(ctx.failureBandCondition.endsEarlyOnWakeActionWithinFeet != null
+          ? {
+              endsEarlyOnWakeActionWithinFeet:
+                ctx.failureBandCondition.endsEarlyOnWakeActionWithinFeet,
+            }
+          : {}),
+      });
+    }
+    const currentTarget = creatures.get(ctx.target)!;
+    if (currentTarget.dead) return creatures;
+    let target = addEffect(
+      currentTarget,
+      duration.effectId,
+      duration.turnsRemaining,
+      duration.expiresAt,
+      ctx.caster,
+      {
+        ...(duration.expiryOwnerId != null
+          ? { expiryOwnerId: duration.expiryOwnerId }
+          : {}),
+        grantedConditions: [ctx.conditionOnFail],
+        ...(conditionalGrantedConditions.length > 0
+          ? { conditionalGrantedConditions }
+          : {}),
+      },
+    );
+    target = applyCondition(target, ctx.conditionOnFail);
+    for (const conditional of conditionalGrantedConditions) {
+      target = applyCondition(target, conditional.condition);
+    }
+    return normalizeBattleGrapples(setCreature(creatures, ctx.target, target));
+  };
+  if (ctx.applyCondition && ctx.conditionDurationOnFail != null) {
+    if (ctx.damageOnFail > 0) {
+      const damaged = applyDamageWithAfterReactions(
+        cs1,
+        ctx.target,
+        ctx.caster,
+        ctx.damageOnFail,
+        ctx.damageType,
+        new Set<DamageQualifier>(),
+        false,
+        false,
+        returnTo,
+      );
+      return {
+        ...damaged,
+        creatures: applyDurationCondition(damaged.creatures),
+      };
+    }
+    cs1 = applyDurationCondition(cs1);
+  } else if (ctx.applyCondition) {
     cs1 = normalizeBattleGrapples(
       setCreature(
         cs1,
@@ -1079,7 +1157,7 @@ export function applyOnHitEffect(
   const target = cs.get(targetId)!;
   const activeEffects = [
     ...target.activeEffects.filter(
-      (existing) => existing.spellId !== effect.spellId,
+      (existing) => activeEffectId(existing) !== activeEffectId(effect),
     ),
     effect,
   ];
@@ -1163,7 +1241,7 @@ export function processEndTurn(
   if (hasEotEffects && eotSaveSucceeded) {
     const idsToRemove = new Set<SpellId>();
     for (const ae of c.activeEffects) {
-      if (ae.expiresAt === "end") idsToRemove.add(ae.spellId);
+      if (ae.expiresAt === "end") idsToRemove.add(ae.spellId as SpellId);
     }
     if (idsToRemove.size > 0) {
       for (const spellId of idsToRemove) c = removeEffect(c, spellId);

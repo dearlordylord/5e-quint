@@ -12,6 +12,7 @@ import {
   freshCreature,
   isIncapacitated,
   startConcentration,
+  wakeEffectTarget,
 } from "#/battle-machine-creature.ts";
 import {
   activeId,
@@ -70,9 +71,15 @@ import {
 } from "#/machine-combat.ts";
 import {
   getMonsterStatBlockByStateId,
+  statBlockConditionalFailureBandSaveAction,
   statBlockLegendaryAction,
 } from "#/monster-catalog.ts";
-import { resourceCount, spellId as mkSpellId, type SpellId } from "#/types.ts";
+import {
+  resourceCount,
+  difficultyClass,
+  spellId as mkSpellId,
+  type SpellId,
+} from "#/types.ts";
 
 // TODO style: combinators
 function readyEligible(
@@ -89,6 +96,16 @@ function readyEligible(
       result.add(id);
   }
   return result;
+}
+
+function squaresBetween(
+  a: BattleCreatureState,
+  b: BattleCreatureState,
+): number {
+  return Math.max(
+    Math.abs(a.battlePosition.row - b.battlePosition.row),
+    Math.abs(a.battlePosition.col - b.battlePosition.col),
+  );
 }
 
 function canonicalPreparedSpellIds(
@@ -742,6 +759,111 @@ export function battleUseDailyAbility({
       monsterId: e.monsterId,
       abilityId: e.abilityId,
     },
+  };
+}
+
+export function battleMonsterConditionalSaveEffect({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const monsterId = activeId(c);
+  const monster = c.creatures.get(monsterId);
+  const target = c.creatures.get(e.targetId);
+  const statBlock = getMonsterStatBlockByStateId(monster?.monsterStatBlockId);
+  const ability =
+    statBlock == null
+      ? null
+      : statBlockConditionalFailureBandSaveAction(statBlock, e.abilityId);
+  if (
+    monster == null ||
+    target == null ||
+    monster.dead ||
+    target.dead ||
+    isIncapacitated(monster) ||
+    monster.actionsRemaining <= 0 ||
+    ability == null ||
+    e.actorCanSeeTarget !== true ||
+    squaresBetween(monster, target) * 5 > ability.save.rangeFeet
+  ) {
+    return {};
+  }
+  const cs = setCreature(
+    c.creatures,
+    monsterId,
+    spendAction(monster, "utilize"),
+  );
+  return resolveSave(
+    cs,
+    {
+      caster: monsterId,
+      target: e.targetId,
+      saveDC: difficultyClass(ability.save.dc),
+      saveRoll: e.saveRoll,
+      ...(e.saveRollB != null ? { saveRollB: e.saveRollB } : {}),
+      damageOnFail: ability.save.damageOnFail,
+      halfOnSuccess: false,
+      damageType: ability.save.damageType,
+      conditionOnFail: ability.save.baseCondition,
+      applyCondition: true,
+      saveAbility: ability.save.ability,
+      saveTriggerKind: "none",
+      conditionDurationOnFail: {
+        effectId: `monster:${monster.monsterStatBlockId ?? "unknown"}:${ability.id}`,
+        turnsRemaining: ability.save.baseConditionDurationRounds,
+        expiresAt: ability.save.baseConditionExpiresAt,
+        expiryOwnerId:
+          ability.save.baseConditionExpiryOwner === "target"
+            ? e.targetId
+            : monsterId,
+      },
+      failureBandCondition: {
+        minimumMargin: ability.save.failureBand.minimumMargin,
+        condition: ability.save.failureBand.condition,
+        whileCondition: ability.save.failureBand.whileCondition,
+        ...(ability.save.failureBand.endsEarlyOnDamage
+          ? { endsEarlyOnDamage: true }
+          : {}),
+        ...(ability.save.failureBand.endsEarlyOnWakeActionWithinFeet != null
+          ? {
+              endsEarlyOnWakeActionWithinFeet:
+                ability.save.failureBand.endsEarlyOnWakeActionWithinFeet,
+            }
+          : {}),
+      },
+    },
+    ADR_ACTIVE_TURN,
+  );
+}
+
+export function battleWakeEffect({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_WAKE_EFFECT">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const actorId = activeId(c);
+  const actor = c.creatures.get(actorId);
+  const target = c.creatures.get(e.targetId);
+  if (
+    actor == null ||
+    target == null ||
+    actor.dead ||
+    target.dead ||
+    isIncapacitated(actor) ||
+    actor.actionsRemaining <= 0 ||
+    actorId === e.targetId ||
+    squaresBetween(actor, target) > 1
+  ) {
+    return {};
+  }
+  const woken = wakeEffectTarget(target, 5);
+  if (woken === target) return {};
+  return {
+    creatures: setCreature(
+      setCreature(c.creatures, actorId, spendAction(actor, "utilize")),
+      e.targetId,
+      woken,
+    ),
   };
 }
 

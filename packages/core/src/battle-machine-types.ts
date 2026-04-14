@@ -29,6 +29,7 @@ import type {
   DamageQualifier,
   DamageType,
   DifficultyClass,
+  ExpiryPhase,
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
@@ -246,6 +247,23 @@ export type AfterDamageReturn =
 
 export const ADR_ACTIVE_TURN: AfterDamageReturn = { tag: "ADRActiveTurn" };
 
+export type BattleSaveTriggerKind = MonsterSaveTriggerKind | "none";
+
+export interface SaveFailureConditionDuration {
+  readonly effectId: string;
+  readonly turnsRemaining: number;
+  readonly expiresAt: ExpiryPhase;
+  readonly expiryOwnerId?: CreatureId;
+}
+
+export interface SaveFailureBandCondition {
+  readonly minimumMargin: number;
+  readonly condition: Condition;
+  readonly whileCondition: Condition;
+  readonly endsEarlyOnDamage?: boolean;
+  readonly endsEarlyOnWakeActionWithinFeet?: number;
+}
+
 export interface SaveSpellCtx {
   readonly caster: CreatureId;
   readonly target: CreatureId;
@@ -258,7 +276,9 @@ export interface SaveSpellCtx {
   readonly conditionOnFail: Condition;
   readonly applyCondition: boolean;
   readonly saveAbility: Ability;
-  readonly saveTriggerKind: MonsterSaveTriggerKind;
+  readonly saveTriggerKind: BattleSaveTriggerKind;
+  readonly conditionDurationOnFail?: SaveFailureConditionDuration;
+  readonly failureBandCondition?: SaveFailureBandCondition;
 }
 
 export interface SaveFailedCtx {
@@ -270,6 +290,9 @@ export interface SaveFailedCtx {
   readonly conditionOnFail: Condition;
   readonly applyCondition: boolean;
   readonly saveSucceeded: boolean;
+  readonly failedMargin?: number;
+  readonly conditionDurationOnFail?: SaveFailureConditionDuration;
+  readonly failureBandCondition?: SaveFailureBandCondition;
 }
 
 export interface AoESpellCtx {
@@ -282,7 +305,7 @@ export interface AoESpellCtx {
   readonly applyCondition: boolean;
   readonly remaining: ReadonlySet<CreatureId>;
   readonly saveAbility: Ability;
-  readonly saveTriggerKind: MonsterSaveTriggerKind;
+  readonly saveTriggerKind: BattleSaveTriggerKind;
 }
 
 export interface ConcentrationCtx {

@@ -56,6 +56,7 @@ import {
   battleInit,
   battleLegendaryAttack,
   battleLegendaryPass,
+  battleMonsterConditionalSaveEffect,
   battleOffHandAttack,
   battleReady,
   battleReadyPass,
@@ -68,6 +69,7 @@ import {
   battleUseDailyAbility,
   battleUseLegendaryAction,
   battleUseRechargeAbility,
+  battleWakeEffect,
 } from "#/battle-machine-actions-turn.ts";
 import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts";
 
@@ -163,6 +165,9 @@ export const battleMachine = setup({
     battleUseDailyAbility: narrow(battleUseDailyAbility),
     battleHeal: narrow(battleHeal),
     battleHelpAttack: narrow(battleHelpAttack),
+    battleMonsterConditionalSaveEffect: narrow(
+      battleMonsterConditionalSaveEffect,
+    ),
     battleHide: narrow(battleHide),
     battleBonusHide: narrow(battleBonusHide),
     battleSearch: narrow(battleSearch),
@@ -171,6 +176,7 @@ export const battleMachine = setup({
     battleDisengage: narrow(battleDisengage),
     battleBonusDisengage: narrow(battleBonusDisengage),
     battleDodge: narrow(battleDodge),
+    battleWakeEffect: narrow(battleWakeEffect),
     battleStandFromProne: narrow(battleStandFromProne),
     battleGrapple: narrow(battleGrapple),
     battleReleaseGrapple: narrow(battleReleaseGrapple),
@@ -223,6 +229,9 @@ export const battleMachine = setup({
             USE_DAILY_ABILITY: { actions: "battleUseDailyAbility" },
             BATTLE_HEAL: { actions: "battleHeal" },
             BATTLE_HELP_ATTACK: { actions: "battleHelpAttack" },
+            BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT: {
+              actions: "battleMonsterConditionalSaveEffect",
+            },
             BATTLE_HIDE: { actions: "battleHide" },
             BATTLE_BONUS_HIDE: { actions: "battleBonusHide" },
             BATTLE_SEARCH: { actions: "battleSearch" },
@@ -230,6 +239,7 @@ export const battleMachine = setup({
             BATTLE_DISENGAGE: { actions: "battleDisengage" },
             BATTLE_BONUS_DISENGAGE: { actions: "battleBonusDisengage" },
             BATTLE_DODGE: { actions: "battleDodge" },
+            BATTLE_WAKE_EFFECT: { actions: "battleWakeEffect" },
             BATTLE_STAND_FROM_PRONE: { actions: "battleStandFromProne" },
             BATTLE_OFF_HAND_ATTACK: { actions: "battleOffHandAttack" },
             BATTLE_GRAPPLE: { actions: "battleGrapple" },

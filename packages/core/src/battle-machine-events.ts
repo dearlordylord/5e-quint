@@ -188,6 +188,18 @@ export type BattleEvent =
       readonly bonusAction?: boolean;
     }
   | {
+      readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT";
+      readonly abilityId: string;
+      readonly targetId: CreatureId;
+      readonly saveRoll: number;
+      readonly saveRollB?: number;
+      readonly actorCanSeeTarget: boolean;
+    }
+  | {
+      readonly type: "BATTLE_WAKE_EFFECT";
+      readonly targetId: CreatureId;
+    }
+  | {
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL";
       readonly reactorId: CreatureId | null;
       readonly decision: CSDecision;

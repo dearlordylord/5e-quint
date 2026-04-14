@@ -233,13 +233,23 @@ const EffectTurnHookSchema = Schema.Struct({
   requiresConcentrationCheck: Schema.optional(Schema.Boolean),
 });
 
+const ConditionalGrantedConditionSchema = Schema.Struct({
+  condition: ConditionSchema,
+  whileCondition: ConditionSchema,
+  endsEarlyOnDamage: Schema.optional(Schema.Boolean),
+  endsEarlyOnWakeActionWithinFeet: Schema.optional(Schema.Number),
+});
+
 const ActiveEffectSchema = Schema.Struct({
-  spellId: Schema.String,
+  spellId: Schema.optional(Schema.String),
   turnsRemaining: Schema.Number,
   expiresAt: ExpiryPhaseSchema,
   casterId: Schema.String,
   expiryOwnerId: Schema.optional(Schema.String),
   grantedConditions: Schema.optional(Schema.Array(ConditionSchema)),
+  conditionalGrantedConditions: Schema.optional(
+    Schema.Array(ConditionalGrantedConditionSchema),
+  ),
   startOfTurnHook: Schema.optional(EffectTurnHookSchema),
   endOfTurnHook: Schema.optional(EffectTurnHookSchema),
   grantedResistances: Schema.optional(Schema.ReadonlySet(DamageTypeSchema)),

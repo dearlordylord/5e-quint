@@ -28,7 +28,7 @@ import {
   type TurnPhaseCtx,
   type TurnPhaseResult,
 } from "#/machine-types.ts";
-import type { ActiveEffect, DamageType, SpellId } from "#/types.ts";
+import type { ActiveEffect, DamageType } from "#/types.ts";
 import { deathSaveCount, hp, movementFeet, tempHp } from "#/types.ts";
 
 function effectOwnedBySelf(
@@ -67,10 +67,7 @@ function clearExpiredStartForOwner(
   );
 }
 
-function hasEffect(
-  aes: ReadonlyArray<ActiveEffect>,
-  spellId: SpellId,
-): boolean {
+function hasEffect(aes: ReadonlyArray<ActiveEffect>, spellId: string): boolean {
   return aes.some((a) => a.spellId === spellId && a.turnsRemaining > 0);
 }
 
@@ -105,7 +102,7 @@ function deriveStartTurnEffects(
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
   petrified: boolean,
 ): ReadonlyArray<{
-  readonly spellId: SpellId;
+  readonly spellId: string;
   readonly healAmount: number;
   readonly tempHpAmount: number;
   readonly saveSucceeded: boolean;
@@ -116,7 +113,7 @@ function deriveStartTurnEffects(
   readonly vulnerabilities: ReadonlySet<DamageType>;
   readonly immunities: ReadonlySet<DamageType>;
 }> {
-  const overrides = new Map(
+  const overrides = new Map<string, TurnHookResolution>(
     (runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]),
   );
   const damageMods = aggregateDamageModifiers(aes, petrified);

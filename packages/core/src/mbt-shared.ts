@@ -382,6 +382,13 @@ export const QuintCreatureState = z.object({
       casterId: string;
       parentSpellId: string;
       parentCasterId: string;
+      grantedConditions: ReadonlySet<string>;
+      conditionalGrantedConditions: ReadonlyArray<{
+        condition: string;
+        whileCondition: string;
+        endsEarlyOnDamage: boolean;
+        endsEarlyOnWakeActionWithinFeet: number;
+      }>;
       grantedResistances: ReadonlySet<string>;
       grantedVulnerabilities: ReadonlySet<string>;
       grantedImmunities: ReadonlySet<string>;
@@ -397,6 +404,52 @@ export const QuintCreatureState = z.object({
           casterId: String(r.casterId ?? ""),
           parentSpellId: String(r.parentSpellId ?? ""),
           parentCasterId: String(r.parentCasterId ?? ""),
+          grantedConditions:
+            r.grantedConditions instanceof Set
+              ? new Set(
+                  [...r.grantedConditions].map((value) =>
+                    String(
+                      QUINT_CONDITION_MAP[variantToString(value)] ?? value,
+                    ),
+                  ),
+                )
+              : Array.isArray(r.grantedConditions)
+                ? new Set(
+                    r.grantedConditions.map((value) =>
+                      String(
+                        QUINT_CONDITION_MAP[variantToString(value)] ?? value,
+                      ),
+                    ),
+                  )
+                : EMPTY_STRING_SET,
+          conditionalGrantedConditions:
+            r.conditionalGrantedConditions instanceof Set
+              ? [...r.conditionalGrantedConditions]
+                  .map((value) => {
+                    const conditional = value as Record<string, unknown>;
+                    return {
+                      condition: String(
+                        QUINT_CONDITION_MAP[
+                          variantToString(conditional.condition)
+                        ] ?? conditional.condition,
+                      ),
+                      whileCondition: String(
+                        QUINT_CONDITION_MAP[
+                          variantToString(conditional.whileCondition)
+                        ] ?? conditional.whileCondition,
+                      ),
+                      endsEarlyOnDamage: conditional.endsEarlyOnDamage === true,
+                      endsEarlyOnWakeActionWithinFeet: Number(
+                        conditional.endsEarlyOnWakeActionWithinFeet ?? 0,
+                      ),
+                    };
+                  })
+                  .sort((a, b) =>
+                    `${a.condition}:${a.whileCondition}`.localeCompare(
+                      `${b.condition}:${b.whileCondition}`,
+                    ),
+                  )
+              : [],
           grantedResistances: parseDamageTypeSet(r.grantedResistances),
           grantedVulnerabilities: parseDamageTypeSet(r.grantedVulnerabilities),
           grantedImmunities: parseDamageTypeSet(r.grantedImmunities),
@@ -640,6 +693,13 @@ export interface NormalizedState {
     casterId: string;
     parentSpellId: string;
     parentCasterId: string;
+    grantedConditions: ReadonlySet<string>;
+    conditionalGrantedConditions: ReadonlyArray<{
+      condition: string;
+      whileCondition: string;
+      endsEarlyOnDamage: boolean;
+      endsEarlyOnWakeActionWithinFeet: number;
+    }>;
     grantedResistances: ReadonlySet<string>;
     grantedVulnerabilities: ReadonlySet<string>;
     grantedImmunities: ReadonlySet<string>;
@@ -913,6 +973,19 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
         casterId: ae.casterId,
         parentSpellId: ae.parentSpellId ?? "",
         parentCasterId: ae.parentCasterId ?? "",
+        grantedConditions:
+          ae.grantedConditions == null
+            ? EMPTY_STRING_SET
+            : new Set(ae.grantedConditions),
+        conditionalGrantedConditions: (
+          ae.conditionalGrantedConditions ?? []
+        ).map((conditional) => ({
+          condition: conditional.condition,
+          whileCondition: conditional.whileCondition,
+          endsEarlyOnDamage: conditional.endsEarlyOnDamage === true,
+          endsEarlyOnWakeActionWithinFeet:
+            conditional.endsEarlyOnWakeActionWithinFeet ?? 0,
+        })),
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
         grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
@@ -1145,11 +1218,26 @@ export function activeEffectsEqual(
       a[i].parentSpellId !== b[i].parentSpellId ||
       a[i].parentCasterId !== b[i].parentCasterId ||
       a[i].reactivePayload !== b[i].reactivePayload ||
+      !setsEqual(a[i].grantedConditions, b[i].grantedConditions) ||
+      a[i].conditionalGrantedConditions.length !==
+        b[i].conditionalGrantedConditions.length ||
       !setsEqual(a[i].grantedResistances, b[i].grantedResistances) ||
       !setsEqual(a[i].grantedVulnerabilities, b[i].grantedVulnerabilities) ||
       !setsEqual(a[i].grantedImmunities, b[i].grantedImmunities)
     )
       return false;
+    for (let j = 0; j < a[i].conditionalGrantedConditions.length; j++) {
+      const left = a[i].conditionalGrantedConditions[j]!;
+      const right = b[i].conditionalGrantedConditions[j]!;
+      if (
+        left.condition !== right.condition ||
+        left.whileCondition !== right.whileCondition ||
+        left.endsEarlyOnDamage !== right.endsEarlyOnDamage ||
+        left.endsEarlyOnWakeActionWithinFeet !==
+          right.endsEarlyOnWakeActionWithinFeet
+      )
+        return false;
+    }
   }
   return true;
 }

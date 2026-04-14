@@ -163,6 +163,17 @@ export function buildBattleRuntimeInputs(
         values: { saveRoll },
       })),
     ),
+    Match.when({ runtime: "monsterConditionalSaveEffect" }, () =>
+      Effect.all({
+        saveRoll: Random.nextIntBetween(1, 21),
+        actorCanSeeTarget: Random.nextBoolean,
+      }).pipe(
+        Effect.map((values) => ({
+          runtime: "monsterConditionalSaveEffect" as const,
+          values,
+        })),
+      ),
+    ),
     Match.when({ runtime: "hellishRebuke" }, () =>
       Effect.all({
         damage: Random.nextIntBetween(1, 21),
