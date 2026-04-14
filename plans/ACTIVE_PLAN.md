@@ -249,26 +249,6 @@ Structure note:
   - one parked next-batch queue;
   - shared durable ownership notes referenced by both.
 
-## Task Selection Guidance
-
-Recommended next coding-loop task:
-
-1. `MONFAC1 - Monster Save-Effect Action Surface`
-
-Do not skip ahead to broader monster facility work or later character tasks. The current sequence is deliberate:
-
-1. prove the canonical stat-block owner on the narrowest monster slice;
-2. lock battle participation semantics on the goblin flow before widening the monster pattern;
-3. prove the schema on a second monster without preempting spell ownership;
-4. freeze the spell-content owner;
-5. implement canonical spell identity/projection;
-6. implement one battle spell family on top of that projection;
-7. prove one advanced monster continuation slice on top of that settled spell boundary;
-8. freeze the next dataset expansion slice before opening bulk implementation tasks;
-9. land the first bounded martial-humanoid data slice without widening runtime ownership;
-10. harden the code-derived unsupported-pattern report against that larger catalog before choosing the next generic facility family;
-11. start with the save-effect action family research slice before widening into other blocker families.
-
 ## Recommended Coding Loop
 
 1. Start with [PRD_MONSTER_DATABASE.md](../PRD_MONSTER_DATABASE.md), [plans/monster-database-plan.md](./monster-database-plan.md), [ARCHITECTURE.md](../ARCHITECTURE.md), and [UBIQUITOUS_LANGUAGE.md](../UBIQUITOUS_LANGUAGE.md).
