@@ -4038,7 +4038,7 @@ describe("available actions contract", () => {
     });
   });
 
-  test("battle discovery and resolution expose the generic monster conditional save action surface", () => {
+  test("battle discovery and resolution expose the generic monster save-effect action surface", () => {
     const actor = makeBattleActor({
       type: "BATTLE_INIT",
       creatures: [
@@ -4067,7 +4067,7 @@ describe("available actions contract", () => {
         {
           scope: "battle",
           actorId: "A",
-          type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
           abilityId: "sting",
           targetId: { options: ["B"] },
           cost: cost(quota("action")),
@@ -4083,7 +4083,7 @@ describe("available actions contract", () => {
       resolveBattleAction(context, {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
         abilityId: "sting",
         targetId: "B",
       }),
@@ -4092,20 +4092,20 @@ describe("available actions contract", () => {
       token: {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
         abilityId: "sting",
         targetId: "B",
       },
       outcome:
         "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
-      runtime: "monsterConditionalSaveEffect",
+      runtime: "monsterSaveEffect",
     });
 
     expect(
       finalizeBattleResolution(
         request,
         {
-          runtime: "monsterConditionalSaveEffect",
+          runtime: "monsterSaveEffect",
           values: {
             saveRoll: 4,
             actorCanSeeTarget: true,
@@ -4116,7 +4116,7 @@ describe("available actions contract", () => {
     ).toEqual({
       ok: true,
       event: {
-        type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
         abilityId: "sting",
         targetId: CreatureId("B"),
         saveRoll: 4,
@@ -4125,6 +4125,43 @@ describe("available actions contract", () => {
       outcome:
         "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
     });
+  });
+
+  test("battle discovery exposes Gladiator Shield Bash on the same monster save-effect runtime", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
+          abilityId: "shieldBash",
+          targetId: { options: ["B"] },
+        }),
+      ]),
+    );
   });
 
   test("battle discovery and resolution expose the wake-effect action for adjacent conditional unconscious targets", () => {
@@ -4157,7 +4194,7 @@ describe("available actions contract", () => {
     });
     actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
     actor.send({
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 1,
@@ -4254,7 +4291,7 @@ describe("available actions contract", () => {
     });
     actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
     actor.send({
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 1,

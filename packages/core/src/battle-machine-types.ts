@@ -273,7 +273,7 @@ export interface SaveSpellCtx {
   readonly damageOnFail: number;
   readonly halfOnSuccess: boolean;
   readonly damageType: DamageType;
-  readonly conditionOnFail: Condition;
+  readonly conditionOnFail?: Condition;
   readonly applyCondition: boolean;
   readonly saveAbility: Ability;
   readonly saveTriggerKind: BattleSaveTriggerKind;
@@ -287,7 +287,7 @@ export interface SaveFailedCtx {
   readonly damageOnFail: number;
   readonly halfOnSuccess: boolean;
   readonly damageType: DamageType;
-  readonly conditionOnFail: Condition;
+  readonly conditionOnFail?: Condition;
   readonly applyCondition: boolean;
   readonly saveSucceeded: boolean;
   readonly failedMargin?: number;

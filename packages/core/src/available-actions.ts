@@ -60,8 +60,8 @@ import {
   monsterSpellDailyUseId,
   monsterCatalogInitCreatureConfig,
   statBlockAttackBattleProfile,
-  statBlockConditionalFailureBandSaveAction,
   statBlockLegendaryAction,
+  statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
 import {
   MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
@@ -476,7 +476,7 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT";
+      readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
       readonly abilityId: string;
       readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
@@ -812,7 +812,7 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT";
+      readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
       readonly abilityId: string;
       readonly targetId: string;
     }
@@ -1355,9 +1355,9 @@ const BattleCastAoeResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
-const BattleMonsterConditionalSaveEffectResolvedActionSchema = Schema.Struct({
+const BattleMonsterSaveEffectResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
-  type: Schema.Literal("BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT"),
+  type: Schema.Literal("BATTLE_MONSTER_SAVE_EFFECT"),
   abilityId: Schema.String,
   targetId: Schema.String,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
@@ -1466,7 +1466,7 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
   BattleCastAoeResolvedActionSchema,
-  BattleMonsterConditionalSaveEffectResolvedActionSchema,
+  BattleMonsterSaveEffectResolvedActionSchema,
   BattleWakeEffectResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
@@ -2672,10 +2672,10 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
-        { readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT" }
+        { readonly type: "BATTLE_MONSTER_SAVE_EFFECT" }
       >;
       readonly outcome: string;
-      readonly runtime: "monsterConditionalSaveEffect";
+      readonly runtime: "monsterSaveEffect";
     }
   | {
       readonly token: Extract<
@@ -2894,7 +2894,7 @@ export type BattleResolutionRuntimeInputs =
       };
     }
   | {
-      readonly runtime: "monsterConditionalSaveEffect";
+      readonly runtime: "monsterSaveEffect";
       readonly values: {
         readonly saveRoll: number;
         readonly saveRollB?: number;
@@ -4541,7 +4541,7 @@ export function getAvailableBattleActions(
       );
       if (activeStatBlock != null) {
         for (const ability of activeStatBlock.actions) {
-          if (ability.kind !== "conditionalFailureBandSaveAction") continue;
+          if (ability.kind !== "saveEffectAction") continue;
           const targetOptions = [...context.creatures.entries()]
             .filter(
               ([targetId, target]) =>
@@ -4568,12 +4568,12 @@ export function getAvailableBattleActions(
               Extract<
                 BattleActionToken,
                 {
-                  readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT";
+                  readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
                 }
               >
             >({
               actorId: activeCreatureId,
-              type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+              type: "BATTLE_MONSTER_SAVE_EFFECT",
               abilityId: ability.id,
               targetId: { options: targetOptions },
               cost: costs(quotaCost("action")),
@@ -4761,8 +4761,8 @@ function availableBattleTokenForResolved(
       );
     }
     if (
-      candidate.type === "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT" &&
-      token.type === "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT"
+      candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
+      token.type === "BATTLE_MONSTER_SAVE_EFFECT"
     ) {
       return (
         candidate.abilityId === token.abilityId &&
@@ -4959,7 +4959,7 @@ export function resolveBattleAction(
       },
     };
   }
-  if (token.type === "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT") {
+  if (token.type === "BATTLE_MONSTER_SAVE_EFFECT") {
     if (
       !("abilityId" in availableToken) ||
       availableToken.abilityId !== token.abilityId ||
@@ -4974,7 +4974,7 @@ export function resolveBattleAction(
     return {
       token,
       outcome: availableToken.outcome.summary,
-      runtime: "monsterConditionalSaveEffect",
+      runtime: "monsterSaveEffect",
     };
   }
   if (token.type === "BATTLE_WAKE_EFFECT") {
@@ -5551,79 +5551,71 @@ export function finalizeBattleResolution(
         outcome: request.outcome,
       };
     }),
-    Match.when(
-      { runtime: "monsterConditionalSaveEffect" },
-      (): FinalizedBattleAction => {
-        if (runtimeInputs.runtime !== "monsterConditionalSaveEffect") {
-          return battleRuntimeMismatch(
-            "monsterConditionalSaveEffect",
-            runtimeInputs.runtime,
-          );
-        }
-        if (request.token.type !== "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT") {
-          return {
-            ok: false,
-            error: {
-              code: "ACTION_NOT_SUPPORTED",
-              message: `Monster conditional save runtime cannot finalize ${request.token.type}.`,
-            },
-          };
-        }
-        const actor = context.creatures.get(CreatureId(request.token.actorId));
-        const statBlock = getMonsterStatBlockByStateId(
-          actor?.monsterStatBlockId,
+    Match.when({ runtime: "monsterSaveEffect" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "monsterSaveEffect") {
+        return battleRuntimeMismatch(
+          "monsterSaveEffect",
+          runtimeInputs.runtime,
         );
-        const ability =
-          statBlock == null
-            ? null
-            : statBlockConditionalFailureBandSaveAction(
-                statBlock,
-                request.token.abilityId,
-              );
-        if (actor == null || ability == null) {
-          return {
-            ok: false,
-            error: {
-              code: "ACTION_NOT_AVAILABLE",
-              message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
-            },
-          };
-        }
-        const { saveRoll, saveRollB, actorCanSeeTarget } = runtimeInputs.values;
-        if (saveRoll < 1 || saveRoll > 20) {
-          return {
-            ok: false,
-            error: {
-              code: "INVALID_RUNTIME_INPUT",
-              message:
-                "Monster conditional save primary roll must be between 1 and 20.",
-            },
-          };
-        }
-        if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
-          return {
-            ok: false,
-            error: {
-              code: "INVALID_RUNTIME_INPUT",
-              message:
-                "Monster conditional save secondary roll must be between 1 and 20.",
-            },
-          };
-        }
+      }
+      if (request.token.type !== "BATTLE_MONSTER_SAVE_EFFECT") {
         return {
-          ok: true,
-          event: {
-            type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
-            abilityId: request.token.abilityId,
-            targetId: CreatureId(request.token.targetId),
-            saveRoll,
-            ...(saveRollB != null ? { saveRollB } : {}),
-            actorCanSeeTarget,
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Monster save-effect runtime cannot finalize ${request.token.type}.`,
           },
-          outcome: request.outcome,
         };
-      },
-    ),
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const statBlock = getMonsterStatBlockByStateId(actor?.monsterStatBlockId);
+      const ability =
+        statBlock == null
+          ? null
+          : statBlockSaveEffectAction(statBlock, request.token.abilityId);
+      if (actor == null || ability == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+          },
+        };
+      }
+      const { saveRoll, saveRollB, actorCanSeeTarget } = runtimeInputs.values;
+      if (saveRoll < 1 || saveRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Monster save-effect primary roll must be between 1 and 20.",
+          },
+        };
+      }
+      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Monster save-effect secondary roll must be between 1 and 20.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
+          abilityId: request.token.abilityId,
+          targetId: CreatureId(request.token.targetId),
+          saveRoll,
+          ...(saveRollB != null ? { saveRollB } : {}),
+          actorCanSeeTarget,
+        },
+        outcome: request.outcome,
+      };
+    }),
     Match.when({ runtime: "readySpellRelease" }, (): FinalizedBattleAction => {
       if (runtimeInputs.runtime !== "readySpellRelease") {
         return battleRuntimeMismatch(

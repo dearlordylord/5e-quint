@@ -243,27 +243,53 @@ export interface MonsterExecutableAbility extends MonsterAbilityBase {
   readonly mechanic: string;
 }
 
-export interface MonsterConditionalFailureBandSaveAction extends MonsterAbilityBase {
-  readonly kind: "conditionalFailureBandSaveAction";
-  readonly save: {
-    readonly ability: Ability;
-    readonly dc: number;
-    readonly rangeFeet: number;
-    readonly target: "oneCreatureYouCanSee";
-    readonly damageOnFail: number;
-    readonly damageType: DamageType;
-    readonly baseCondition: Condition;
-    readonly baseConditionDurationRounds: number;
-    readonly baseConditionExpiresAt: ExpiryPhase;
-    readonly baseConditionExpiryOwner: "target";
-    readonly failureBand: {
-      readonly minimumMargin: number;
-      readonly condition: Condition;
-      readonly whileCondition: Condition;
-      readonly endsEarlyOnDamage: boolean;
-      readonly endsEarlyOnWakeActionWithinFeet?: number;
-    };
+export interface MonsterSaveEffectConditionOnFail {
+  readonly condition: Condition;
+  readonly targetSizeAtMost?: Size;
+  readonly duration?: undefined;
+}
+
+export interface MonsterSaveEffectTimedConditionOnFail extends Omit<
+  MonsterSaveEffectConditionOnFail,
+  "duration"
+> {
+  readonly duration: {
+    readonly rounds: number;
+    readonly expiresAt: ExpiryPhase;
+    readonly expiryOwner: "target" | "caster";
   };
+}
+
+export interface MonsterSaveEffectFailureBand {
+  readonly minimumMargin: number;
+  readonly condition: Condition;
+  readonly whileCondition: Condition;
+  readonly endsEarlyOnDamage: boolean;
+  readonly endsEarlyOnWakeActionWithinFeet?: number;
+}
+
+export interface MonsterSaveEffectBaseSave {
+  readonly ability: Ability;
+  readonly dc: number;
+  readonly rangeFeet: number;
+  readonly target: "oneCreatureYouCanSee";
+  readonly damageOnFail: number;
+  readonly damageType: DamageType;
+}
+
+export type MonsterSaveEffectSave =
+  | MonsterSaveEffectBaseSave
+  | (MonsterSaveEffectBaseSave & {
+      readonly conditionOnFail: MonsterSaveEffectConditionOnFail;
+    })
+  | (MonsterSaveEffectBaseSave & {
+      readonly conditionOnFail: MonsterSaveEffectTimedConditionOnFail;
+      readonly failureBand?: MonsterSaveEffectFailureBand;
+    });
+
+export interface MonsterSaveEffectAction extends MonsterAbilityBase {
+  readonly kind: "saveEffectAction";
+  readonly save: MonsterSaveEffectSave;
 }
 
 export interface MonsterSaveAdvantageModifier {
@@ -324,9 +350,9 @@ export type MonsterTrait =
   | MonsterSpellcastingAbility;
 export type MonsterAction =
   | MonsterAttackAbility
-  | MonsterConditionalFailureBandSaveAction
   | MonsterExecutableAbility
   | MonsterMultiattackAbility
+  | MonsterSaveEffectAction
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
 export type MonsterBonusAction =

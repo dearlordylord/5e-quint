@@ -56,7 +56,7 @@ import {
   battleInit,
   battleLegendaryAttack,
   battleLegendaryPass,
-  battleMonsterConditionalSaveEffect,
+  battleMonsterSaveEffect,
   battleOffHandAttack,
   battleReady,
   battleReadyPass,
@@ -165,9 +165,7 @@ export const battleMachine = setup({
     battleUseDailyAbility: narrow(battleUseDailyAbility),
     battleHeal: narrow(battleHeal),
     battleHelpAttack: narrow(battleHelpAttack),
-    battleMonsterConditionalSaveEffect: narrow(
-      battleMonsterConditionalSaveEffect,
-    ),
+    battleMonsterSaveEffect: narrow(battleMonsterSaveEffect),
     battleHide: narrow(battleHide),
     battleBonusHide: narrow(battleBonusHide),
     battleSearch: narrow(battleSearch),
@@ -229,8 +227,8 @@ export const battleMachine = setup({
             USE_DAILY_ABILITY: { actions: "battleUseDailyAbility" },
             BATTLE_HEAL: { actions: "battleHeal" },
             BATTLE_HELP_ATTACK: { actions: "battleHelpAttack" },
-            BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT: {
-              actions: "battleMonsterConditionalSaveEffect",
+            BATTLE_MONSTER_SAVE_EFFECT: {
+              actions: "battleMonsterSaveEffect",
             },
             BATTLE_HIDE: { actions: "battleHide" },
             BATTLE_BONUS_HIDE: { actions: "battleBonusHide" },

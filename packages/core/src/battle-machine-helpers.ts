@@ -1000,7 +1000,7 @@ export function applyFailEffects(
     creatures: Map<CreatureId, BattleCreatureState>,
   ): Map<CreatureId, BattleCreatureState> => {
     const duration = ctx.conditionDurationOnFail;
-    if (duration == null) return creatures;
+    if (duration == null || ctx.conditionOnFail == null) return creatures;
     const conditionalGrantedConditions: Array<ConditionalGrantedCondition> = [];
     if (
       ctx.failureBandCondition != null &&
@@ -1044,7 +1044,11 @@ export function applyFailEffects(
     }
     return normalizeBattleGrapples(setCreature(creatures, ctx.target, target));
   };
-  if (ctx.applyCondition && ctx.conditionDurationOnFail != null) {
+  if (
+    ctx.applyCondition &&
+    ctx.conditionOnFail != null &&
+    ctx.conditionDurationOnFail != null
+  ) {
     if (ctx.damageOnFail > 0) {
       const damaged = applyDamageWithAfterReactions(
         cs1,
@@ -1063,7 +1067,7 @@ export function applyFailEffects(
       };
     }
     cs1 = applyDurationCondition(cs1);
-  } else if (ctx.applyCondition) {
+  } else if (ctx.applyCondition && ctx.conditionOnFail != null) {
     cs1 = normalizeBattleGrapples(
       setCreature(
         cs1,

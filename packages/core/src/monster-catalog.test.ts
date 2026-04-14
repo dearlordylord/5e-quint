@@ -635,7 +635,7 @@ describe("monster catalog", () => {
         },
       },
       {
-        kind: "conditionalFailureBandSaveAction",
+        kind: "saveEffectAction",
         id: "sting",
         name: "Sting",
         text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
@@ -646,10 +646,14 @@ describe("monster catalog", () => {
           target: "oneCreatureYouCanSee",
           damageOnFail: 5,
           damageType: "poison",
-          baseCondition: "poisoned",
-          baseConditionDurationRounds: 600,
-          baseConditionExpiresAt: "end",
-          baseConditionExpiryOwner: "target",
+          conditionOnFail: {
+            condition: "poisoned",
+            duration: {
+              rounds: 600,
+              expiresAt: "end",
+              expiryOwner: "target",
+            },
+          },
           failureBand: {
             minimumMargin: 5,
             condition: "unconscious",
@@ -660,6 +664,32 @@ describe("monster catalog", () => {
         },
       },
     ]);
+  });
+
+  it("stores Gladiator Shield Bash on the generic monster save-effect surface", () => {
+    const statBlock = getMonsterStatBlock("gladiator");
+    const shieldBash = statBlock.actions.find(
+      (action) => action.id === "shieldBash",
+    );
+
+    expect(shieldBash).toEqual({
+      kind: "saveEffectAction",
+      id: "shieldBash",
+      name: "Shield Bash",
+      text: "*Strength Saving Throw:* DC 15, one creature within 5 feet that the gladiator can see. *Failure:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Prone condition.",
+      save: {
+        ability: "str",
+        dc: 15,
+        rangeFeet: 5,
+        target: "oneCreatureYouCanSee",
+        damageOnFail: 9,
+        damageType: "bludgeoning",
+        conditionOnFail: {
+          condition: "prone",
+          targetSizeAtMost: "medium",
+        },
+      },
+    });
   });
 
   it("stores Harpy as an SRD-backed authored stat block with a text-preserved unsupported action", () => {
@@ -1113,8 +1143,8 @@ describe("monster catalog", () => {
         },
         {
           blockerFamily: "saveEffectAction",
-          count: 2,
-          statBlockIds: ["centaurTrooper", "gladiator"],
+          count: 1,
+          statBlockIds: ["centaurTrooper"],
         },
         {
           blockerFamily: "attackRider",
@@ -1194,11 +1224,10 @@ describe("monster catalog", () => {
         {
           statBlockId: "gladiator",
           monsterName: "Gladiator",
-          count: 3,
+          count: 2,
           blockerFamilies: [
             { blockerFamily: "attackProjectionGap", count: 1 },
             { blockerFamily: "reactiveDefense", count: 1 },
-            { blockerFamily: "saveEffectAction", count: 1 },
           ],
         },
         {
@@ -1222,7 +1251,7 @@ describe("monster catalog", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "# Monster Catalog Unsupported Pattern Report",
     );
-    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 48");
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 47");
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "- attackProjectionGap: 13 rows across 10 stat blocks",
     );

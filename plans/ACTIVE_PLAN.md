@@ -120,7 +120,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 20,
       "id": "MONFAC1B",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Save-Plus-Prone Maneuver Surface"
     },
     {
@@ -216,7 +216,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 10    | MONFAC1 - Monster Save-Effect Action Surface                   | done                                          | MONAUD1            | MONFAC1A, MONFAC1B, MONFAC1C | Landed in plan only: the coarse `saveEffectAction` audit bucket is now explicitly split into three child runtime families instead of being treated as one implementation task. `Pseudodragon` `Sting` anchors the conditional-failure-band save family, `Gladiator` `Shield Bash` anchors the save-plus-Prone maneuver family, and `Centaur Trooper` `Trampling Charge` anchors the movement-coupled save family. | Complete as research. The queue now exposes implementation-sized child slices instead of one mixed bucket that would have forced control, prone, and movement semantics into the same task. |
 | 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | done                                          | MONAUD1            | none      | Landed on `integration`: `Magic Resistance` now projects from `Pseudodragon` authored traits into the generic save-resolution lane, including stat-block battle init, raw battle creature command decoding, persisted battle state, and spell/magical-effect save resolution without adding monster-specific flags.                                                   | Complete. The first combat-modifier trait family now proves a reusable save-modifier surface, while `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain explicitly unsupported for later family-specific work. |
 | 19    | MONFAC1A - Conditional Failure-Band Save Effect Surface        | done                                          | MONFAC1            | none      | Landed on `integration`: `Pseudodragon` `Sting` now projects through one generic stat-block-authored save-effect runtime lane with a timed base `Poisoned` effect, a failure-by-5 conditional `Unconscious` rider, source-specific effect identities, and early-end handling for damage or a nearby wake action without broadening into attack-hit riders. | Complete. The first conditional failure-band save family now proves reusable save-only delivery and conditional rider cleanup while leaving `Homunculus`-style attack riders to later work. |
-| 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | ready-for-research                            | MONFAC1            | none      | Research the generic seam for single-target save actions whose failure deals damage and applies `Prone`, starting from `Gladiator` `Shield Bash`. Decide whether size gating belongs in the same facility and whether adjacent shapes like dragon repulsion breaths or `Whirlwind` are genuinely the same family or need later sub-splitting. | Ready for research. The `Prone` rider looks reusable, but the family boundary still needs a clean decision on target-shape, area, and push coupling before implementation. |
+| 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | done                                          | MONFAC1            | none      | Landed on `integration`: `Gladiator` `Shield Bash` now projects through the shared single-target monster save-effect lane as an immediate fail rider that deals damage and applies a size-gated `Prone` condition without timed-effect bookkeeping. | Complete. Size-gated direct `Prone` riders belong in the same single-target save-effect family, while area shapes, push-coupled riders, and movement-coupled targeting remain separate follow-on families. |
 | 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | ready-for-research                            | MONFAC1            | none      | Research movement-first save actions starting from `Centaur Trooper` `Trampling Charge`. Separate which semantics belong to a generic movement facility (`move up to Speed`, ignore opportunity attacks, move through creature spaces, target each creature once) versus which belong to the save-effect rider (`damage + Prone` on failure). | Ready for research. The save rider is not the hard part here; the unresolved ownership is the movement sequencing and target enumeration surface. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
@@ -256,6 +256,7 @@ Current architecture decisions for this batch:
 - Advanced monster spellcasting now reuses that same spell-owned payload surface: modeled monster action spells can seed `preparedSpells`, `readyableSpellPayloads`, and spell-scoped daily-use resources from authored stat-block sections without creating a monster-specific spell execution lane.
 - The unsupported report's `saveEffectAction` blocker family is currently an audit taxonomy, not an implementation taxonomy. Existing rows already split across distinct runtime families: conditional failure bands, save-plus-Prone maneuvers, and movement-coupled save effects.
 - The narrowest first child from that split is the conditional failure-band save-only family anchored by `Pseudodragon` `Sting`.
+- The shared single-target monster save-effect lane now covers both timed fail riders such as `Pseudodragon` `Sting` and immediate fail riders such as `Gladiator` `Shield Bash`; size-gated direct `Prone` stays in that lane, while area, push-coupled, and movement-coupled variants remain separate families.
 - Local SRD review did not find a second source-accurate peer with the same authored shape. `Homunculus` `Bite` is adjacent but not equivalent: it is attack-hit gated, has a different base failure duration, and its escalated `Unconscious` clause ends early only on damage, not on an adjacent creature's wake action.
 
 Planning note:
@@ -750,7 +751,7 @@ Handoff readiness:
 
 ### Task 20 - MONFAC1B - Save-Plus-Prone Maneuver Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `MONFAC1`
 
@@ -764,12 +765,11 @@ Scope:
 
 Next action:
 
-- Read the SRD text for `Gladiator` `Shield Bash` and nearby `Prone`-on-save examples before coding.
-- Split off any push-plus-Prone or area-plus-Prone shapes that would overload the first maneuver facility.
+- None. Keep push-coupled, area, and movement-coupled `Prone` shapes in their own follow-up families instead of widening this landed single-target save-effect lane.
 
-Research note:
+Implementation note:
 
-- The main open question is family boundary, not feasibility. `Prone` appears in many SRD actions, but not all of them share the same target shape or rider coupling.
+- `Gladiator` `Shield Bash` proves that immediate size-gated `Prone` riders can reuse the existing single-target save-effect runtime without timed-effect identities or failure-band cleanup. The same lane continues to carry timed riders such as `Pseudodragon` `Sting`.
 
 Verification requirements:
 
@@ -780,7 +780,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Ready for research. The task still needs one more family-boundary pass before implementation.
+- Complete. The family boundary is now settled for direct single-target save-plus-`Prone` maneuvers; later work should stay focused on area, push-coupled, or movement-coupled variants instead of reopening this lane.
 
 ### Task 21 - MONFAC1C - Movement-Coupled Save Effect Surface
 

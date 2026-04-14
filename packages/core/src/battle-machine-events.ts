@@ -188,7 +188,7 @@ export type BattleEvent =
       readonly bonusAction?: boolean;
     }
   | {
-      readonly type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT";
+      readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
       readonly abilityId: string;
       readonly targetId: CreatureId;
       readonly saveRoll: number;

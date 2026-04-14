@@ -13,8 +13,8 @@ import {
   type MonsterStatBlockId,
 } from "#/monster-catalog-registry.ts";
 import {
-  type MonsterConditionalFailureBandSaveAction,
   type MonsterAttack,
+  type MonsterSaveEffectAction,
   type MonsterSaveTriggerKind,
   type StatBlock,
 } from "#/monster-types.ts";
@@ -119,15 +119,14 @@ export function statBlockAbilityName(statBlock: StatBlock, abilityId: string) {
   ].find((ability) => ability.id === abilityId)?.name;
 }
 
-export function statBlockConditionalFailureBandSaveAction(
+export function statBlockSaveEffectAction(
   statBlock: StatBlock,
   abilityId: string,
-): MonsterConditionalFailureBandSaveAction | null {
+): MonsterSaveEffectAction | null {
   return (
     statBlock.actions.find(
-      (ability): ability is MonsterConditionalFailureBandSaveAction =>
-        ability.kind === "conditionalFailureBandSaveAction" &&
-        ability.id === abilityId,
+      (ability): ability is MonsterSaveEffectAction =>
+        ability.kind === "saveEffectAction" && ability.id === abilityId,
     ) ?? null
   );
 }

@@ -71,9 +71,10 @@ import {
 } from "#/machine-combat.ts";
 import {
   getMonsterStatBlockByStateId,
-  statBlockConditionalFailureBandSaveAction,
   statBlockLegendaryAction,
+  statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
+import { SIZE_ORDER } from "#/srd-constants.ts";
 import {
   resourceCount,
   difficultyClass,
@@ -762,10 +763,17 @@ export function battleUseDailyAbility({
   };
 }
 
-export function battleMonsterConditionalSaveEffect({
+function sizeAtMost(
+  targetSize: BattleCreatureState["creatureSize"],
+  maxSize: BattleCreatureState["creatureSize"],
+): boolean {
+  return SIZE_ORDER.indexOf(targetSize) <= SIZE_ORDER.indexOf(maxSize);
+}
+
+export function battleMonsterSaveEffect({
   context: c,
   event: e,
-}: BattleActionArgs<"BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT">): Partial<BattleContext> {
+}: BattleActionArgs<"BATTLE_MONSTER_SAVE_EFFECT">): Partial<BattleContext> {
   if (!c.turnStarted) return {};
   const monsterId = activeId(c);
   const monster = c.creatures.get(monsterId);
@@ -774,7 +782,7 @@ export function battleMonsterConditionalSaveEffect({
   const ability =
     statBlock == null
       ? null
-      : statBlockConditionalFailureBandSaveAction(statBlock, e.abilityId);
+      : statBlockSaveEffectAction(statBlock, e.abilityId);
   if (
     monster == null ||
     target == null ||
@@ -793,6 +801,20 @@ export function battleMonsterConditionalSaveEffect({
     monsterId,
     spendAction(monster, "utilize"),
   );
+  const conditionOnFail =
+    "conditionOnFail" in ability.save
+      ? ability.save.conditionOnFail
+      : undefined;
+  const appliesCondition =
+    conditionOnFail != null &&
+    (conditionOnFail.targetSizeAtMost == null ||
+      sizeAtMost(target.creatureSize, conditionOnFail.targetSizeAtMost));
+  const timedConditionOnFail =
+    appliesCondition && conditionOnFail?.duration != null
+      ? conditionOnFail
+      : null;
+  const failureBand =
+    "failureBand" in ability.save ? ability.save.failureBand : undefined;
   return resolveSave(
     cs,
     {
@@ -804,33 +826,43 @@ export function battleMonsterConditionalSaveEffect({
       damageOnFail: ability.save.damageOnFail,
       halfOnSuccess: false,
       damageType: ability.save.damageType,
-      conditionOnFail: ability.save.baseCondition,
-      applyCondition: true,
+      ...(appliesCondition
+        ? { conditionOnFail: conditionOnFail.condition }
+        : {}),
+      applyCondition: appliesCondition,
       saveAbility: ability.save.ability,
       saveTriggerKind: "none",
-      conditionDurationOnFail: {
-        effectId: `monster:${monsterId}:${ability.id}`,
-        turnsRemaining: ability.save.baseConditionDurationRounds,
-        expiresAt: ability.save.baseConditionExpiresAt,
-        expiryOwnerId:
-          ability.save.baseConditionExpiryOwner === "target"
-            ? e.targetId
-            : monsterId,
-      },
-      failureBandCondition: {
-        minimumMargin: ability.save.failureBand.minimumMargin,
-        condition: ability.save.failureBand.condition,
-        whileCondition: ability.save.failureBand.whileCondition,
-        ...(ability.save.failureBand.endsEarlyOnDamage
-          ? { endsEarlyOnDamage: true }
-          : {}),
-        ...(ability.save.failureBand.endsEarlyOnWakeActionWithinFeet != null
-          ? {
-              endsEarlyOnWakeActionWithinFeet:
-                ability.save.failureBand.endsEarlyOnWakeActionWithinFeet,
-            }
-          : {}),
-      },
+      ...(timedConditionOnFail != null
+        ? {
+            conditionDurationOnFail: {
+              effectId: `monster:${monsterId}:${ability.id}`,
+              turnsRemaining: timedConditionOnFail.duration.rounds,
+              expiresAt: timedConditionOnFail.duration.expiresAt,
+              expiryOwnerId:
+                timedConditionOnFail.duration.expiryOwner === "target"
+                  ? e.targetId
+                  : monsterId,
+            },
+          }
+        : {}),
+      ...(timedConditionOnFail != null && failureBand != null
+        ? {
+            failureBandCondition: {
+              minimumMargin: failureBand.minimumMargin,
+              condition: failureBand.condition,
+              whileCondition: failureBand.whileCondition,
+              ...(failureBand.endsEarlyOnDamage
+                ? { endsEarlyOnDamage: true }
+                : {}),
+              ...(failureBand.endsEarlyOnWakeActionWithinFeet != null
+                ? {
+                    endsEarlyOnWakeActionWithinFeet:
+                      failureBand.endsEarlyOnWakeActionWithinFeet,
+                  }
+                : {}),
+            },
+          }
+        : {}),
     },
     ADR_ACTIVE_TURN,
   );

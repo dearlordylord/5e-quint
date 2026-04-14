@@ -3899,7 +3899,7 @@ describe("battle rules scenario regressions", () => {
     expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
   });
 
-  it("resolves Pseudodragon Sting through the generic conditional save surface", () => {
+  it("resolves Pseudodragon Sting through the generic monster save-effect surface", () => {
     const actor = createActor(battleMachine);
     actor.start();
     send(actor, {
@@ -3925,7 +3925,7 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
 
     send(actor, {
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 1,
@@ -3987,7 +3987,7 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
 
     send(actor, {
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 18,
@@ -4033,7 +4033,7 @@ describe("battle rules scenario regressions", () => {
     });
     startTurn(actor);
     send(actor, {
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 1,
@@ -4094,7 +4094,7 @@ describe("battle rules scenario regressions", () => {
     });
     startTurn(actor);
     send(actor, {
-      type: "BATTLE_MONSTER_CONDITIONAL_SAVE_EFFECT",
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
       abilityId: "sting",
       targetId: CreatureId("B"),
       saveRoll: 1,
@@ -4112,6 +4112,85 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").poisoned).toBe(true);
     expect(creature(actor, "B").unconscious).toBe(false);
     expect(creature(actor, "C").actionsRemaining).toBe(0);
+  });
+
+  it("resolves Gladiator Shield Bash through the shared monster save-effect surface", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          creatureSize: "medium",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "shieldBash",
+      targetId: CreatureId("B"),
+      saveRoll: 4,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").prone).toBe(true);
+  });
+
+  it("does not apply Shield Bash prone to Large targets while still dealing damage", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          creatureSize: "large",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "shieldBash",
+      targetId: CreatureId("B"),
+      saveRoll: 4,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").prone).toBe(false);
   });
 
   it("applies generic raw save-advantage contexts through BATTLE_ADD_CREATURE", () => {

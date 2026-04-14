@@ -136,7 +136,9 @@ function interruptFrame(pi: PendingInterrupt, await_: BattleContext["awaitCtx"],
           ...(ctx.damageOnFail > 0
             ? [{ label: "Damage", value: `${ctx.damageOnFail} ${ctx.damageType}`, color: "text-red-400" }]
             : []),
-          ...(ctx.applyCondition ? [{ label: "Condition", value: ctx.conditionOnFail, color: "text-yellow-400" }] : [])
+          ...(ctx.applyCondition && ctx.conditionOnFail != null
+            ? [{ label: "Condition", value: ctx.conditionOnFail, color: "text-yellow-400" }]
+            : [])
         ],
         choices: [
           { label: "Legendary Resistance", color: "text-amber-400" },
