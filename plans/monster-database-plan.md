@@ -88,13 +88,48 @@ Add one monster that requires a genuine advanced repeated pattern such as rechar
 - As a contributor, I can tell which SRD monster abilities are already executable and which still need generic support.
 - As an adapter author, I can rely on the core-owned SRD stat block collection rather than maintaining my own monster data.
 
-### What to build
+### Frozen scope after `MONDB4a`
 
-Expand from the tracer-bullet monsters to the agreed hand-authored SRD dataset, using the proven schema and projection path from the earlier phases. Track unsupported patterns explicitly so future generic-facility work has a grounded queue, but keep the owned dataset shippable even when some abilities remain text-only.
+Phase 4 is no longer one open-ended expansion step. The post-tracer-bullet expansion policy is now:
 
-### Acceptance criteria
+- **Initial dataset slice**: land the martial-humanoid roster sections `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors` using the current `StatBlock` schema and projection lanes only.
+- **Batching rule**: group future monster additions by authored-shape complexity, not by alphabet or challenge rating.
+  - Data-heavy slices may cover about 8-12 SRD sections; the frozen first slice is an 11-section batch and later data-heavy slices should stay in that same order of magnitude as long as they fit current attack, multiattack, spell-reference, recharge, or text-only unsupported facilities.
+  - Generic-runtime slices must add at most one new reusable facility and pair it with 1-3 validation monsters.
+  - Long-horizon control, domination, breathing, suffocation, or external-companion command effects are intentionally not part of the initial data slices.
+- **Unsupported-pattern report shape**: keep one code-derived row per unsupported authored ability or structured spellcasting entry with stable fields for `statBlockId`, `monsterName`, `section`, `abilityId`, `abilityName`, blocker-family classification, SRD citation, and human-readable reason, so the report can also expose grouped counts by blocker family and by stat block without creating a second manual registry.
 
-- [ ] The agreed SRD monster dataset exists as hand-authored core-owned stat block data with explicit SRD provenance.
-- [ ] New monster additions are primarily data entry and projection, not monster-specific engine work.
-- [ ] The project has an explicit report or audit view of unsupported ability patterns to drive later generic-facility work.
-- [ ] MCP, app, and other adapters continue consuming the core-owned stat block collection instead of maintaining parallel monster registries.
+### Implementation slices
+
+#### Slice 4A: Martial Humanoid Dataset
+
+Add the initial bounded SRD roster using only the current authored-section model and runtime surfaces. Unsupported clauses remain text-only.
+
+Acceptance criteria:
+
+- [ ] Every added monster cites the local SRD corpus directly.
+- [ ] The slice reuses the existing `StatBlock` and projection path without monster-specific handlers.
+- [ ] Unsupported clauses remain explicit text-only entries with durable reasons.
+
+#### Slice 4B: Stable Unsupported Pattern Report
+
+Turn the current code-derived audit into the stable report surface for later generic-runtime work.
+
+Acceptance criteria:
+
+- [ ] The report remains derived from the canonical catalog rather than a second maintained registry.
+- [ ] Each row includes stable fields for `statBlockId`, `monsterName`, `section`, `abilityId`, `abilityName`, blocker-family classification, SRD citation, and human-readable reason.
+- [ ] The report exposes grouped counts by blocker family and by stat block.
+
+#### Slice 4C+: One-Facility Generic Runtime Follow-Ons
+
+After the report lands, choose later slices by blocker family rather than by arbitrary monster count. Initial candidate families are:
+
+- save-effect monster actions;
+- combat-modifier monster traits.
+
+Acceptance criteria:
+
+- [ ] Each slice adds at most one reusable generic runtime facility.
+- [ ] Each slice validates the facility on at least one existing blocker and one adjacent future monster when possible.
+- [ ] Unrelated long-horizon control or environment rules stay out of scope unless the chosen family cannot be expressed without them.

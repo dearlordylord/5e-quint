@@ -84,47 +84,71 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 7,
       "id": "MONDB4a",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Freeze Dataset Expansion Scope"
     },
     {
       "number": 8,
+      "id": "MONDB4b",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Martial Humanoid Dataset Slice"
+    },
+    {
+      "number": 9,
+      "id": "MONAUD1",
+      "status": "blocked",
+      "title": "Stable Unsupported Pattern Report"
+    },
+    {
+      "number": 10,
+      "id": "MONFAC1",
+      "status": "ready-for-research",
+      "title": "Monster Save-Effect Action Surface"
+    },
+    {
+      "number": 11,
+      "id": "MONFAC2",
+      "status": "ready-for-research",
+      "title": "Monster Combat Modifier Trait Surface"
+    },
+    {
+      "number": 12,
       "id": "CHAREDIT1",
       "status": "deferred",
       "title": "Mandatory Character Draft Update Preview"
     },
     {
-      "number": 9,
+      "number": 13,
       "id": "CHARMCP1",
       "status": "deferred",
       "title": "Stored Character MCP Surface"
     },
     {
-      "number": 10,
+      "number": 14,
       "id": "CHAROWN1",
       "status": "deferred",
       "title": "Character Ownership Gap Cleanup"
     },
     {
-      "number": 11,
+      "number": 15,
       "id": "CHAROWN2",
       "status": "deferred",
       "title": "Fighting Style And Expertise Ownership"
     },
     {
-      "number": 12,
+      "number": 16,
       "id": "CHARMODEL1",
       "status": "deferred",
       "title": "Make Invalid Character States Unrepresentable"
     },
     {
-      "number": 13,
+      "number": 17,
       "id": "CHARTYPE1",
       "status": "deferred",
       "title": "Strengthen Character Result Shapes"
     },
     {
-      "number": 14,
+      "number": 18,
       "id": "CHARAUTH1",
       "status": "deferred",
       "title": "Character Quint Authority Convergence"
@@ -168,14 +192,18 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 4     | SPELL2a - Canonical Spell Records And Identity Projection      | done                                          | SPELL1             | SPELL2b   | Landed on `integration`: canonical spell records now own `SpellId`, SRD provenance, and spell-authored mechanics/projection hooks in `packages/core/src/features/spell-registry.ts`, while character summaries, monster spell references, and current battle payload builders consume those records without restating authored spell facts.                                | Complete. Spell identity/provenance now lives on the spell side, and downstream layers reference the same canonical `SpellId` seam rather than parallel name-based spell owners. |
 | 5     | SPELL2b - Battle Spell Projection For One Generic Spell Family | done                                          | SPELL2a            | MONDB3    | Landed on `integration`: the first generic save-spell battle family now resolves action discovery from canonical spell-owned mechanics and battle payload projection (`burning_hands`, `fireball`, `hold_person`) instead of battle-local spell tables, while counterspell timing remains battle-owned.                                                                | Complete. One bounded generic spell family now proves the canonical `SpellId` to battle-action seam end to end, including higher-slot Hold Person target projection and MCP exposure. |
 | 6     | MONDB3 - Advanced Monster Pattern Tracer Bullet                | done                                          | SPELL2b            | MONDB4a   | Landed on `integration`: `Mage` now proves the first advanced monster spellcasting slice by projecting action-section `Fireball (2/Day Each)` through the existing generic battle-owned AoE spell payload lane, spending a monster daily-use resource instead of a slot while keeping the remaining spell references explicit authored spellcasting data.                   | Complete. The advanced tracer bullet now proves reusable monster spellcasting on top of the canonical `SpellId` and battle payload surface without adding monster-specific battle or MCP APIs. |
-| 7     | MONDB4a - Freeze Dataset Expansion Scope                       | ready-for-research                            | MONDB3             | none      | Freeze the next SRD monster dataset slice, batching strategy, and unsupported-pattern audit/report shape now that one advanced monster spellcasting facility is proven.                                                                                                                                                                                                 | Ready for planning research. The reusable facility set is now far enough along to choose a bounded first expansion slice and decompose it into implementation-sized follow-up tasks. |
-| 8     | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
-| 9     | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
-| 10    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
-| 11    | CHAROWN2 - Fighting Style And Expertise Ownership              | deferred                                      | CHAROWN1           | CHARMODEL1 | After `CHAROWN1`, add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, not cleanup. They should land before authored-model hardening, result-shape tightening, and the final convergence push so projection stops carrying placeholder empty sets. |
-| 12    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | deferred                                      | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | After the edit-preview and ownership-gap slices land, remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
-| 13    | CHARTYPE1 - Strengthen Character Result Shapes                 | deferred                                      | CHARMODEL1         | CHARMCP1, CHARAUTH1 | After the authored-model hardening slice lands, strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the cleaned-up canonical character model rather than freezing weak shapes too early. |
-| 14    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHARTYPE1 | none      | After the MCP surface, ownership gaps, authored-model hardening, and stronger result shapes land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                    | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
+| 7     | MONDB4a - Freeze Dataset Expansion Scope                       | done                                          | MONDB3             | MONDB4b, MONAUD1 | Landed on `integration`: the post-tracer-bullet dataset policy is now frozen around one data-heavy first slice, one explicit unsupported-pattern report surface, and later one-facility-per-task generic-runtime follow-ons rather than a single open-ended expansion phase.                                                                                            | Complete. The queue now names a bounded first implementation slice and a stable audit/report target without reopening monster ownership or spell-boundary decisions.         |
+| 8     | MONDB4b - Martial Humanoid Dataset Slice                       | ready-for-implementation-after-light-research | MONDB4a            | MONAUD1   | Add the first bounded hand-authored SRD dataset slice using only the current stat-block, attack, multiattack, spellcasting-reference, and text-only unsupported-ability facilities. Target the martial-humanoid roster sections: `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors`.          | Ready once the agent inventories the exact stat blocks inside those SRD sections and confirms each fits current facilities or explicit text-only unsupported entries.        |
+| 9     | MONAUD1 - Stable Unsupported Pattern Report                    | blocked                                       | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | After the first martial-humanoid dataset slice lands, turn the expanded unsupported audit into one stable code-derived report with explicit row fields, blocker-family grouping, SRD citations, and grouped counts by family and stat block.                                                                                                                       | Blocked on `MONDB4b`. The report should freeze blocker families and grouped counts against the larger post-slice catalog instead of the current tracer-bullet-only subset. |
+| 10    | MONFAC1 - Monster Save-Effect Action Surface                   | ready-for-research                            | MONAUD1            | none      | Choose one reusable save-effect action family from the report and model it through one generic runtime surface, starting from existing catalog blockers such as `Pseudodragon` `Sting` and then validating on one adjacent future monster.                                                                                                                              | Research-ready. The report should narrow the first family to a single durable surface instead of mixing conditional failure bands, charm prerequisites, and long control in one task. |
+| 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | ready-for-research                            | MONAUD1            | none      | Choose one reusable combat-modifier trait family from the report and land it as a generic runtime surface, starting from current blockers such as `Pack Tactics`, `Blood Frenzy`, `Magic Resistance`, or `Sunlight Sensitivity` without widening into full environment or domination simulation.                                                                   | Research-ready. The unsupported inventory is now explicit enough to split short-horizon combat modifiers from long-horizon environment/control effects.                    |
+| 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
+| 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
+| 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
+| 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | deferred                                      | CHAROWN1           | CHARMODEL1 | After `CHAROWN1`, add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, not cleanup. They should land before authored-model hardening, result-shape tightening, and the final convergence push so projection stops carrying placeholder empty sets. |
+| 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | deferred                                      | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | After the edit-preview and ownership-gap slices land, remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
+| 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | deferred                                      | CHARMODEL1         | CHARMCP1, CHARAUTH1 | After the authored-model hardening slice lands, strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the cleaned-up canonical character model rather than freezing weak shapes too early. |
+| 18    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHARTYPE1 | none      | After the MCP surface, ownership gaps, authored-model hardening, and stronger result shapes land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                    | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
 
 ## Current Integrated Baseline
 
@@ -224,9 +252,9 @@ Structure note:
 
 Recommended next coding-loop task:
 
-1. `MONDB4a - Freeze Dataset Expansion Scope`
+1. `MONDB4b - Martial Humanoid Dataset Slice`
 
-Do not skip ahead to bulk monster implementation before the dataset freeze lands. The current sequence is deliberate:
+Do not skip ahead to generic-runtime monster facility work before the first bounded post-freeze data slice lands. The current sequence is deliberate:
 
 1. prove the canonical stat-block owner on the narrowest monster slice;
 2. lock battle participation semantics on the goblin flow before widening the monster pattern;
@@ -235,7 +263,9 @@ Do not skip ahead to bulk monster implementation before the dataset freeze lands
 5. implement canonical spell identity/projection;
 6. implement one battle spell family on top of that projection;
 7. prove one advanced monster continuation slice on top of that settled spell boundary;
-8. freeze the next dataset expansion slice before opening bulk implementation tasks.
+8. freeze the next dataset expansion slice before opening bulk implementation tasks;
+9. land the first bounded martial-humanoid data slice without widening runtime ownership;
+10. harden the code-derived unsupported-pattern report against that larger catalog before choosing the next generic facility family.
 
 ## Recommended Coding Loop
 
@@ -521,11 +551,11 @@ Verification notes:
 
 ### Task 7 - MONDB4a - Freeze Dataset Expansion Scope
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `MONDB3`
 
-Blocks: none
+Blocks: `MONDB4b`, `MONAUD1`
 
 Scope:
 
@@ -535,18 +565,165 @@ Scope:
 
 Next action:
 
-- Freeze the next SRD monster slice and follow-on batching strategy now that monster spellcasting has one proven reusable execution lane, then write the concrete child implementation tasks back into this file.
+- None. Landed on `integration`: the first post-freeze dataset slice, the batching policy for later monster additions, and the report shape for unsupported patterns are now concrete enough to open child tasks without revisiting monster ownership.
 
 Research note:
 
 - This task exists to keep the queue implementation-sized. Do not treat the full dataset expansion as one coding-loop task.
+
+Findings:
+
+- The first bounded expansion slice is the martial-humanoid roster sections `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors`.
+- Data-heavy dataset slices are now frozen at about 8-12 SRD sections. The initial slice is explicitly 11 sections, and later data-heavy slices should stay in that same order of magnitude so batching does not need to be re-decided task by task.
+- Generic-runtime follow-ons remain one-facility slices with 1-3 validation monsters. Long-horizon control, domination, breathing, suffocation, and external-companion command effects remain outside the initial data slices.
+- The unsupported-pattern report shape is frozen to one code-derived row per unsupported authored ability or structured spellcasting entry, with stable fields for `statBlockId`, `monsterName`, `section`, `abilityId`, `abilityName`, blocker-family classification, SRD citation, and human-readable reason, plus grouped counts by blocker family and by stat block.
 
 Verification requirements:
 
 - Confirm the frozen dataset slice and batching strategy are specific enough to open concrete implementation tasks without reopening monster ownership decisions.
 - Confirm the unsupported-pattern report shape is explicit enough to guide later generic-facility work.
 
-### Task 8 - CHAREDIT1 - Mandatory Character Draft Update Preview
+Verification notes:
+
+- Research sources:
+  - `plans/monster-database-plan.md`
+  - `PRD_MONSTER_DATABASE.md`
+  - `UBIQUITOUS_LANGUAGE.md`
+  - `packages/core/src/monster-catalog.md`
+  - `packages/core/src/monster-catalog.ts`
+  - `packages/core/src/monster-catalog-audit.ts`
+  - `.references/srd-5.2.1/Monsters/Monsters-A-B.md`, `Monsters-C-D.md`, `Monsters-E-G.md`, `Monsters-M-O.md`, `Monsters-P-S.md`, and `Monsters-T-Z.md`
+- Current-state findings used to freeze the plan:
+  - the shipped catalog already contains 14 stat blocks;
+  - the current unsupported audit contains 22 rows across 9 monsters;
+  - the named first slice consists of SRD sections already present in the local corpus and mostly reuses the current attack, multiattack, stock-weapon, and text-only unsupported lanes.
+- `/simplify` round 1: removed the stale “one monolithic Phase 4 dataset expansion” framing and replaced it with explicit child tasks plus a concrete batching policy.
+- `/simplify` round 2: tightened the follow-on queue so only the first data slice is implementation-ready, the report surface is explicitly queued behind that slice, and generic runtime families remain research-scoped instead of being pre-expanded into a fuzzy batch.
+- Cross-check: verified the Ralph task index, DAG table, task bodies, and task-selection guidance all encode the same `MONDB4a -> MONDB4b -> MONAUD1 -> MONFAC{1,2}` ordering.
+
+### Task 8 - MONDB4b - Martial Humanoid Dataset Slice
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: `MONDB4a`
+
+Blocks: `MONAUD1`
+
+Scope:
+
+- Add the first bounded hand-authored SRD dataset slice using the current `StatBlock` schema and battle projection surfaces only.
+- Cover the martial-humanoid roster sections `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors`.
+- Preserve unsupported clauses as explicit text-only entries rather than widening battle ownership for this slice.
+- Do not add a new generic monster runtime facility in this task.
+
+Next action:
+
+- Inventory the exact stat blocks inside those SRD sections, confirm each one fits the current attack, multiattack, spellcasting-reference, or text-only unsupported model, then land them as hand-authored SRD records in `packages/core`.
+
+Research note:
+
+- This slice is deliberately data-heavy and facility-light. If a candidate monster would require a new runtime surface rather than a text-only unsupported entry, move it to a later facility task instead of widening this one.
+
+Verification requirements:
+
+- Confirm every added monster cites the local SRD corpus directly.
+- Verify the new additions reuse the current `StatBlock` and projection path without monster-specific handlers.
+- Run narrow core monster-catalog tests; only run Tier 1b MBT if the task unexpectedly changes creature-level projection semantics.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 9 - MONAUD1 - Stable Unsupported Pattern Report
+
+Status: `blocked`
+
+Depends on: `MONDB4a`, `MONDB4b`
+
+Blocks: `MONFAC1`, `MONFAC2`
+
+Scope:
+
+- Turn the current code-derived unsupported audit into the frozen report surface for later generic-runtime work.
+- Preserve one row per unsupported authored ability or structured spellcasting entry.
+- Keep stable fields for `statBlockId`, `monsterName`, `section`, `abilityId`, `abilityName`, blocker-family classification, SRD citation, and human-readable reason.
+- Publish grouped counts by blocker family and by stat block without changing monster runtime semantics.
+
+Next action:
+
+- Wait for `MONDB4b` to land, then define the stable blocker-family vocabulary from the expanded audit inventory, thread it through the row shape, and add one human-readable grouped report surface for planning and review.
+
+Research note:
+
+- This is a report-shape hardening task, not a monster-rules task. Do not widen it into new battle semantics or spell-family work.
+
+Verification requirements:
+
+- Confirm the row-level report remains code-derived from the canonical catalog rather than a second manually maintained registry.
+- Verify grouped outputs stay in sync with the row data.
+- Run narrow core tests around the audit/report surface only; MBT is out of scope.
+- Include `/simplify` convergence, minimum two rounds.
+
+Handoff readiness:
+
+- Blocked on `MONDB4b`. The report should freeze blocker families and grouped counts after the first bounded dataset slice expands the catalog, so later facility tasks choose from the post-slice inventory rather than the smaller tracer-bullet baseline.
+
+### Task 10 - MONFAC1 - Monster Save-Effect Action Surface
+
+Status: `ready-for-research`
+
+Depends on: `MONAUD1`
+
+Blocks: none
+
+Scope:
+
+- Choose one reusable save-effect action family from the unsupported-pattern report and land it as a generic runtime surface.
+- Start from existing blockers such as `Pseudodragon` `Sting` and validate the chosen family against one adjacent future monster that shares the same authored shape.
+- Keep long-duration control, charm prerequisites, and domination effects out of scope unless the research shows they are structurally required for the chosen family.
+
+Next action:
+
+- Use the stable report to choose the narrowest save-effect family that unlocks repeated monster actions without mixing unrelated control surfaces.
+
+Research note:
+
+- The first implementation cut should bias toward short-horizon combat resolution, not long-horizon control or environment simulation.
+
+Verification requirements:
+
+- Confirm the chosen family is expressed as one generic runtime facility rather than monster-specific handlers.
+- Verify existing text-only entries either become executable through that one family or remain explicit text with durable reasons.
+- Run narrow core tests plus the minimum relevant Tier 1b MBT only if creature-level projection semantics change.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 11 - MONFAC2 - Monster Combat Modifier Trait Surface
+
+Status: `ready-for-research`
+
+Depends on: `MONAUD1`
+
+Blocks: none
+
+Scope:
+
+- Choose one reusable combat-modifier trait family from the unsupported-pattern report and land it as a generic runtime surface.
+- Candidate starting points include `Pack Tactics`, `Blood Frenzy`, `Magic Resistance`, and `Sunlight Sensitivity`, but the task must pick one family rather than absorbing all trait modifiers at once.
+- Keep long-horizon environment rules and non-combat command relationships out of scope unless they are structurally inseparable from the chosen family.
+
+Next action:
+
+- Use the stable report to separate short-horizon combat modifiers from environment-only or control-only traits, then select the highest-leverage first family.
+
+Research note:
+
+- This task exists because the audit now makes the trait backlog visible. It should not silently become a broad “support monster traits” umbrella.
+
+Verification requirements:
+
+- Confirm the chosen trait family projects through generic battle/runtime questions rather than ad hoc monster flags.
+- Verify remaining unsupported traits keep explicit authored text and durable reasons.
+- Run narrow core tests plus the minimum relevant Tier 1b MBT only if creature-level projection semantics change.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 12 - CHAREDIT1 - Mandatory Character Draft Update Preview
 
 Status: `deferred`
 
@@ -582,7 +759,7 @@ Verification requirements:
 - Run task-scoped character-domain tests only; battle MBT is out of scope.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 9 - CHARMCP1 - Stored Character MCP Surface
+### Task 13 - CHARMCP1 - Stored Character MCP Surface
 
 Status: `deferred`
 
@@ -618,7 +795,7 @@ Verification requirements:
 - Run the narrowest relevant MCP and character-domain tests for the touched surface.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 10 - CHAROWN1 - Character Ownership Gap Cleanup
+### Task 14 - CHAROWN1 - Character Ownership Gap Cleanup
 
 Status: `deferred`
 
@@ -648,7 +825,7 @@ Verification requirements:
 - Run narrow character-domain and parity tests only.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 11 - CHAROWN2 - Fighting Style And Expertise Ownership
+### Task 15 - CHAROWN2 - Fighting Style And Expertise Ownership
 
 Status: `deferred`
 
@@ -684,7 +861,7 @@ Verification requirements:
 - Add or extend Quint parity where the new authored fact crosses the formal boundary.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 12 - CHARMODEL1 - Make Invalid Character States Unrepresentable
+### Task 16 - CHARMODEL1 - Make Invalid Character States Unrepresentable
 
 Status: `deferred`
 
@@ -733,7 +910,7 @@ Handoff readiness:
 
 - This is the structural authored-model cleanup slice. It should land before the narrower result-API hardening task because otherwise `CHARTYPE1` would freeze weak canonical models into a cleaner outer wrapper.
 
-### Task 13 - CHARTYPE1 - Strengthen Character Result Shapes
+### Task 17 - CHARTYPE1 - Strengthen Character Result Shapes
 
 Status: `deferred`
 
@@ -768,7 +945,7 @@ Verification requirements:
 - Run narrow character-domain, typecheck, and caller-surface tests.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 14 - CHARAUTH1 - Character Quint Authority Convergence
+### Task 18 - CHARAUTH1 - Character Quint Authority Convergence
 
 Status: `deferred`
 
