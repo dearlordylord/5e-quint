@@ -1184,6 +1184,29 @@ module creature {
     if (c == CUnconscious and (s.hp == 0 or s.dead)) s
     else pRemoveConditionRaw(s, c)
 
+  pure def pEffectGrantsCondition(
+    s: CreatureState,
+    effect: ActiveEffect,
+    c: Condition,
+  ): bool =
+    effect.grantedConditions.contains(c)
+    or effect.conditionalGrantedConditions.exists(conditional =>
+      conditional.condition == c and pHasCondition(s, conditional.whileCondition)
+    )
+
+  pure def pConditionGrantedByActiveEffects(
+    s: CreatureState,
+    c: Condition,
+  ): bool =
+    s.activeEffects.exists(effect => pEffectGrantsCondition(s, effect, c))
+
+  pure def pRemoveConditionIfNoRemainingEffectGrant(
+    s: CreatureState,
+    c: Condition,
+  ): CreatureState =
+    if (pConditionGrantedByActiveEffects(s, c)) s
+    else pRemoveConditionalConditionIfAllowed(s, c)
+
   pure def pRemoveUnsatisfiedConditionalConditions(
     s: CreatureState
   ): CreatureState =
@@ -1192,7 +1215,7 @@ module creature {
         if (
           pHasCondition(acc2, conditional.condition)
           and not(pHasCondition(acc2, conditional.whileCondition))
-        ) pRemoveConditionalConditionIfAllowed(acc2, conditional.condition)
+        ) pRemoveConditionIfNoRemainingEffectGrant(acc2, conditional.condition)
         else acc2
       )
     )
@@ -1204,34 +1227,60 @@ module creature {
     s: CreatureState,
     maxDistanceFeet: int,
   ): CreatureState =
-    pRemoveUnsatisfiedConditionalConditions(
-      s.activeEffects.fold(s, (acc, effect) =>
-        effect.conditionalGrantedConditions.fold(acc, (acc2, conditional) =>
-          if (
-            conditional.endsEarlyOnWakeActionWithinFeet > 0
-            and conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet
-            and pHasCondition(acc2, conditional.condition)
-          ) pRemoveConditionalConditionIfAllowed(acc2, conditional.condition)
-          else acc2
+    if (s.hp == 0 or s.dead) s
+    else {
+      val nextEffects = s.activeEffects.map(effect =>
+        effect.with(
+          "conditionalGrantedConditions",
+          effect.conditionalGrantedConditions.filter(conditional =>
+            not(
+              conditional.endsEarlyOnWakeActionWithinFeet > 0
+              and conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet
+            )
+          )
         )
       )
-    )
+      val ended = s.activeEffects.map(effect =>
+        effect.conditionalGrantedConditions.filter(conditional =>
+          conditional.endsEarlyOnWakeActionWithinFeet > 0
+          and conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet
+        )
+      ).flatten()
+      pRemoveUnsatisfiedConditionalConditions(
+        ended.fold(
+          s.with("activeEffects", nextEffects),
+          (acc, conditional) =>
+            pRemoveConditionIfNoRemainingEffectGrant(acc, conditional.condition)
+        )
+      )
+    }
 
   pure def pClearConditionalConditionsEndedByDamage(
     s: CreatureState
   ): CreatureState =
     if (s.hp == 0 or s.dead) s
-    else pRemoveUnsatisfiedConditionalConditions(
-      s.activeEffects.fold(s, (acc, effect) =>
-        effect.conditionalGrantedConditions.fold(acc, (acc2, conditional) =>
-          if (
-            conditional.endsEarlyOnDamage
-            and pHasCondition(acc2, conditional.condition)
-          ) pRemoveConditionalConditionIfAllowed(acc2, conditional.condition)
-          else acc2
+    else {
+      val nextEffects = s.activeEffects.map(effect =>
+        effect.with(
+          "conditionalGrantedConditions",
+          effect.conditionalGrantedConditions.filter(conditional =>
+            not(conditional.endsEarlyOnDamage)
+          )
         )
       )
-    )
+      val ended = s.activeEffects.map(effect =>
+        effect.conditionalGrantedConditions.filter(conditional =>
+          conditional.endsEarlyOnDamage
+        )
+      ).flatten()
+      pRemoveUnsatisfiedConditionalConditions(
+        ended.fold(
+          s.with("activeEffects", nextEffects),
+          (acc, conditional) =>
+            pRemoveConditionIfNoRemainingEffectGrant(acc, conditional.condition)
+        )
+      )
+    }
 
   /// Increment exhaustion. Level 6 = death. If dead or exhaustionImmune, no effect.
   pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState = {

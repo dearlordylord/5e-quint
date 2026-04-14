@@ -833,8 +833,12 @@ module battle {
   ): CreatureState =
     effects.fold(creature, (acc, effect) =>
       effect.conditionalGrantedConditions.fold(
-        effect.grantedConditions.fold(acc, (acc2, condition) => pRemoveCondition(acc2, condition)),
-        (acc2, conditional) => pRemoveCondition(acc2, conditional.condition)
+        effect.grantedConditions.fold(
+          acc,
+          (acc2, condition) => pRemoveConditionIfNoRemainingEffectGrant(acc2, condition)
+        ),
+        (acc2, conditional) =>
+          pRemoveConditionIfNoRemainingEffectGrant(acc2, conditional.condition)
       )
     )
 

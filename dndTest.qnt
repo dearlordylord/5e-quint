@@ -8117,8 +8117,15 @@ module dndTest::Impl {
     }
   }
 
-  pure val TEST_PSEUDODRAGON_STING_DURATION: SaveFailureConditionDuration = {
-    effectId: "monster:pseudodragon:sting",
+  pure val TEST_PSEUDODRAGON_STING_DURATION_A: SaveFailureConditionDuration = {
+    effectId: "monster:A:sting",
+    turnsRemaining: 600,
+    expiresAt: AtEndOfTurn,
+    expiryOwnerId: "B",
+  }
+
+  pure val TEST_PSEUDODRAGON_STING_DURATION_C: SaveFailureConditionDuration = {
+    effectId: "monster:C:sting",
     turnsRemaining: 600,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "B",
@@ -8145,7 +8152,7 @@ module dndTest::Impl {
       conditionOnFail: CPoisoned, applyCondition: true,
       saveAbility: Con,
       saveTriggerKind: STKNone,
-      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_A,
       failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
     }, ADRActiveTurn).creatures
     val target = result.get("B").creature
@@ -8153,7 +8160,7 @@ module dndTest::Impl {
       assert(target.hp == 15),
       assert(target.poisoned),
       assert(target.unconscious),
-      assert(target.activeEffects.exists(e => e.spellId == "monster:pseudodragon:sting")),
+      assert(target.activeEffects.exists(e => e.spellId == "monster:A:sting")),
     }
   }
 
@@ -8170,7 +8177,7 @@ module dndTest::Impl {
       conditionOnFail: CPoisoned, applyCondition: true,
       saveAbility: Con,
       saveTriggerKind: STKNone,
-      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_A,
       failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
     }, ADRActiveTurn).creatures
     val target = result.get("B").creature
@@ -8195,7 +8202,7 @@ module dndTest::Impl {
       conditionOnFail: CPoisoned, applyCondition: true,
       saveAbility: Con,
       saveTriggerKind: STKNone,
-      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_A,
       failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
     }, ADRActiveTurn).creatures
     val woken = setCreature(stung, "B", pWakeConditionalConditions(stung.get("B").creature, 5))
@@ -8203,7 +8210,7 @@ module dndTest::Impl {
     all {
       assert(target.poisoned),
       assert(not(target.unconscious)),
-      assert(target.activeEffects.exists(e => e.spellId == "monster:pseudodragon:sting")),
+      assert(target.activeEffects.exists(e => e.spellId == "monster:A:sting")),
     }
   }
 
@@ -8220,7 +8227,7 @@ module dndTest::Impl {
       conditionOnFail: CPoisoned, applyCondition: true,
       saveAbility: Con,
       saveTriggerKind: STKNone,
-      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_A,
       failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
     }, ADRActiveTurn).creatures
     val damaged = applyDamageWithAfterReactions(
@@ -8239,6 +8246,48 @@ module dndTest::Impl {
       assert(target.hp == 11),
       assert(target.poisoned),
       assert(not(target.unconscious)),
+    }
+  }
+
+  run test_battle_pseudodragon_sting_removing_one_source_keeps_other_source_conditions = {
+    val cs = Map(
+      "A" -> mkCombatant(10, Monster).with("statBlock", PSEUDODRAGON),
+      "B" -> mkCombatant(20, PC),
+      "C" -> mkCombatant(10, Monster).with("statBlock", PSEUDODRAGON)
+    )
+    val first = resolveSave(cs, {
+      caster: "A", target: "B",
+      saveDC: 12, saveRoll: 1, saveRollB: 1,
+      damageOnFail: 5, halfOnSuccess: false,
+      damageType: Poison,
+      conditionOnFail: CPoisoned, applyCondition: true,
+      saveAbility: Con,
+      saveTriggerKind: STKNone,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_A,
+      failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
+    }, ADRActiveTurn).creatures
+    val second = resolveSave(first, {
+      caster: "C", target: "B",
+      saveDC: 12, saveRoll: 1, saveRollB: 1,
+      damageOnFail: 5, halfOnSuccess: false,
+      damageType: Poison,
+      conditionOnFail: CPoisoned, applyCondition: true,
+      saveAbility: Con,
+      saveTriggerKind: STKNone,
+      conditionDurationOnFail: TEST_PSEUDODRAGON_STING_DURATION_C,
+      failureBandCondition: TEST_PSEUDODRAGON_STING_FAILURE_BAND,
+    }, ADRActiveTurn).creatures
+    val removed = setCreature(
+      second,
+      "B",
+      removeEffectFromCreature(second.get("B").creature, "monster:A:sting")
+    )
+    val target = removed.get("B").creature
+    all {
+      assert(target.poisoned),
+      assert(target.unconscious),
+      assert(target.activeEffects.size() == 1),
+      assert(target.activeEffects.exists(e => e.spellId == "monster:C:sting")),
     }
   }
 

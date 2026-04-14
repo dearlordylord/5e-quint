@@ -809,7 +809,7 @@ export function battleMonsterConditionalSaveEffect({
       saveAbility: ability.save.ability,
       saveTriggerKind: "none",
       conditionDurationOnFail: {
-        effectId: `monster:${monster.monsterStatBlockId ?? "unknown"}:${ability.id}`,
+        effectId: `monster:${monsterId}:${ability.id}`,
         turnsRemaining: ability.save.baseConditionDurationRounds,
         expiresAt: ability.save.baseConditionExpiresAt,
         expiryOwnerId:

@@ -114,7 +114,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 19,
       "id": "MONFAC1A",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Conditional Failure-Band Save Effect Surface"
     },
     {
@@ -215,7 +215,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 9     | MONAUD1 - Stable Unsupported Pattern Report                    | done                                          | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | Landed on `integration`: the unsupported monster audit is now a stable code-derived report with explicit row fields, blocker-family ownership on authored text-only abilities, SRD citations, grouped counts by blocker family and stat block, and a generated markdown summary for planning review.                                                                  | Complete. Later monster-facility tasks can now choose from a frozen blocker-family inventory and grouped counts without re-deriving categories from prose or maintaining a parallel registry. |
 | 10    | MONFAC1 - Monster Save-Effect Action Surface                   | done                                          | MONAUD1            | MONFAC1A, MONFAC1B, MONFAC1C | Landed in plan only: the coarse `saveEffectAction` audit bucket is now explicitly split into three child runtime families instead of being treated as one implementation task. `Pseudodragon` `Sting` anchors the conditional-failure-band save family, `Gladiator` `Shield Bash` anchors the save-plus-Prone maneuver family, and `Centaur Trooper` `Trampling Charge` anchors the movement-coupled save family. | Complete as research. The queue now exposes implementation-sized child slices instead of one mixed bucket that would have forced control, prone, and movement semantics into the same task. |
 | 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | done                                          | MONAUD1            | none      | Landed on `integration`: `Magic Resistance` now projects from `Pseudodragon` authored traits into the generic save-resolution lane, including stat-block battle init, raw battle creature command decoding, persisted battle state, and spell/magical-effect save resolution without adding monster-specific flags.                                                   | Complete. The first combat-modifier trait family now proves a reusable save-modifier surface, while `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain explicitly unsupported for later family-specific work. |
-| 19    | MONFAC1A - Conditional Failure-Band Save Effect Surface        | ready-for-implementation-after-light-research | MONFAC1            | none      | Before editing code, confirm the exact SRD wording for `Pseudodragon` `Sting`: one single-target Constitution save with a base failure package plus an escalated failure-by-5-or-more package, where the escalated `Unconscious` clause ends early from damage or a nearby creature spending an action to wake the target. Land only that save-driven runtime surface first; leave attack-hit-gated cousins such as `Homunculus` `Bite` to later follow-up work. | Ready for implementation after light research. This is the narrowest reusable child slice because it isolates one save-only failure-band family instead of mixing save delivery with separate attack-rider semantics. |
+| 19    | MONFAC1A - Conditional Failure-Band Save Effect Surface        | done                                          | MONFAC1            | none      | Landed on `integration`: `Pseudodragon` `Sting` now projects through one generic stat-block-authored save-effect runtime lane with a timed base `Poisoned` effect, a failure-by-5 conditional `Unconscious` rider, source-specific effect identities, and early-end handling for damage or a nearby wake action without broadening into attack-hit riders. | Complete. The first conditional failure-band save family now proves reusable save-only delivery and conditional rider cleanup while leaving `Homunculus`-style attack riders to later work. |
 | 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | ready-for-research                            | MONFAC1            | none      | Research the generic seam for single-target save actions whose failure deals damage and applies `Prone`, starting from `Gladiator` `Shield Bash`. Decide whether size gating belongs in the same facility and whether adjacent shapes like dragon repulsion breaths or `Whirlwind` are genuinely the same family or need later sub-splitting. | Ready for research. The `Prone` rider looks reusable, but the family boundary still needs a clean decision on target-shape, area, and push coupling before implementation. |
 | 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | ready-for-research                            | MONFAC1            | none      | Research movement-first save actions starting from `Centaur Trooper` `Trampling Charge`. Separate which semantics belong to a generic movement facility (`move up to Speed`, ignore opportunity attacks, move through creature spaces, target each creature once) versus which belong to the save-effect rider (`damage + Prone` on failure). | Ready for research. The save rider is not the hard part here; the unresolved ownership is the movement sequencing and target enumeration surface. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
@@ -608,7 +608,7 @@ Verification notes:
 
 ### Task 8 - MONDB4b - Martial Humanoid Dataset Slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `MONDB4a`
 
@@ -716,7 +716,7 @@ Handoff readiness:
 
 ### Task 19 - MONFAC1A - Conditional Failure-Band Save Effect Surface
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `MONFAC1`
 
@@ -730,9 +730,7 @@ Scope:
 
 Next action:
 
-- Read the SRD text for `Pseudodragon` and `Homunculus`, plus the relevant glossary language for `Poisoned` and `Unconscious`.
-- Confirm the first runtime surface only needs save-driven delivery plus the outcome package, not a broader generic attack-rider framework.
-- Record any later sibling work needed for attack-hit-gated variants rather than smuggling that ownership into this child.
+- None. Keep later save-effect follow-ups scoped to their own families instead of widening this landed save-only surface.
 
 Research note:
 
@@ -748,7 +746,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Ready for implementation after light research. The first task should stay save-driven and should not absorb `Shield Bash`, `Trampling Charge`, `Homunculus`-style attack riders, or broader control work.
+- Complete. `Pseudodragon` `Sting` now lands as the generic save-only conditional-failure-band tracer bullet, and later work should continue to keep `Shield Bash`, `Trampling Charge`, and `Homunculus`-style attack riders out of this ownership slice.
 
 ### Task 20 - MONFAC1B - Save-Plus-Prone Maneuver Surface
 

@@ -332,6 +332,37 @@ function preserveZeroHpUnconscious(
   return removeConditionRaw(c, cond);
 }
 
+function effectGrantsCondition(
+  c: BattleCreatureState,
+  effect: ActiveEffect,
+  cond: Condition,
+): boolean {
+  if (effect.grantedConditions?.includes(cond) === true) return true;
+  return (effect.conditionalGrantedConditions ?? []).some(
+    (conditional) =>
+      conditional.condition === cond &&
+      hasConditionFlag(c, conditional.whileCondition),
+  );
+}
+
+function conditionGrantedByActiveEffects(
+  c: BattleCreatureState,
+  cond: Condition,
+): boolean {
+  return c.activeEffects.some((effect) =>
+    effectGrantsCondition(c, effect, cond),
+  );
+}
+
+function removeConditionIfNoActiveEffectStillGrants(
+  c: BattleCreatureState,
+  cond: Condition,
+): BattleCreatureState {
+  return conditionGrantedByActiveEffects(c, cond)
+    ? c
+    : preserveZeroHpUnconscious(c, cond);
+}
+
 function removeUnsatisfiedConditionalConditions(
   c: BattleCreatureState,
 ): BattleCreatureState {
@@ -342,7 +373,10 @@ function removeUnsatisfiedConditionalConditions(
         hasConditionFlag(next, conditional.condition) &&
         !hasConditionFlag(next, conditional.whileCondition)
       ) {
-        next = preserveZeroHpUnconscious(next, conditional.condition);
+        next = removeConditionIfNoActiveEffectStillGrants(
+          next,
+          conditional.condition,
+        );
       }
     }
   }
@@ -360,18 +394,29 @@ function removeConditionsEndedByDamage(
   c: BattleCreatureState,
 ): BattleCreatureState {
   if (c.hp === 0 || c.dead) return c;
-  let next = c;
-  for (const effect of c.activeEffects) {
-    for (const conditional of effect.conditionalGrantedConditions ?? []) {
-      if (
-        conditional.endsEarlyOnDamage === true &&
-        hasConditionFlag(next, conditional.condition)
-      ) {
-        next = removeConditionRaw(next, conditional.condition);
-      }
-    }
+  const endedConditions: Array<Condition> = [];
+  const nextEffects: BattleCreatureState["activeEffects"] = c.activeEffects.map(
+    (effect) => {
+      const conditionalGrantedConditions =
+        effect.conditionalGrantedConditions?.filter((conditional) => {
+          const endsEarly = conditional.endsEarlyOnDamage === true;
+          if (endsEarly) endedConditions.push(conditional.condition);
+          return !endsEarly;
+        }) ?? [];
+      return conditionalGrantedConditions.length ===
+        (effect.conditionalGrantedConditions?.length ?? 0)
+        ? effect
+        : {
+            ...effect,
+            conditionalGrantedConditions,
+          };
+    },
+  );
+  let next: BattleCreatureState = { ...c, activeEffects: nextEffects };
+  for (const condition of endedConditions) {
+    next = removeConditionIfNoActiveEffectStillGrants(next, condition);
   }
-  return next;
+  return removeUnsatisfiedConditionalConditions(next);
 }
 
 export function wakeEffectTarget(
@@ -379,19 +424,31 @@ export function wakeEffectTarget(
   maxDistanceFeet: number,
 ): BattleCreatureState {
   if (c.hp === 0 || c.dead) return c;
-  let next = c;
-  for (const effect of c.activeEffects) {
-    for (const conditional of effect.conditionalGrantedConditions ?? []) {
-      if (
-        conditional.endsEarlyOnWakeActionWithinFeet != null &&
-        conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet &&
-        hasConditionFlag(next, conditional.condition)
-      ) {
-        next = preserveZeroHpUnconscious(next, conditional.condition);
-      }
-    }
+  const endedConditions: Array<Condition> = [];
+  const nextEffects: BattleCreatureState["activeEffects"] = c.activeEffects.map(
+    (effect) => {
+      const conditionalGrantedConditions =
+        effect.conditionalGrantedConditions?.filter((conditional) => {
+          const endsEarly =
+            conditional.endsEarlyOnWakeActionWithinFeet != null &&
+            conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet;
+          if (endsEarly) endedConditions.push(conditional.condition);
+          return !endsEarly;
+        }) ?? [];
+      return conditionalGrantedConditions.length ===
+        (effect.conditionalGrantedConditions?.length ?? 0)
+        ? effect
+        : {
+            ...effect,
+            conditionalGrantedConditions,
+          };
+    },
+  );
+  let next: BattleCreatureState = { ...c, activeEffects: nextEffects };
+  for (const condition of endedConditions) {
+    next = removeConditionIfNoActiveEffectStillGrants(next, condition);
   }
-  return next;
+  return removeUnsatisfiedConditionalConditions(next);
 }
 
 function addDeathFailures(
@@ -681,10 +738,13 @@ function removeGrantedConditions(
   let next = c;
   for (const effect of effects) {
     for (const condition of effect.grantedConditions ?? []) {
-      next = preserveZeroHpUnconscious(next, condition);
+      next = removeConditionIfNoActiveEffectStillGrants(next, condition);
     }
     for (const conditional of effect.conditionalGrantedConditions ?? []) {
-      next = preserveZeroHpUnconscious(next, conditional.condition);
+      next = removeConditionIfNoActiveEffectStillGrants(
+        next,
+        conditional.condition,
+      );
     }
   }
   return removeUnsatisfiedConditionalConditions(next);
