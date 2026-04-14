@@ -126,8 +126,14 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 21,
       "id": "MONFAC1C",
-      "status": "ready-for-research",
+      "status": "done",
       "title": "Movement-Coupled Save Effect Surface"
+    },
+    {
+      "number": 22,
+      "id": "MONMOB1",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Monster Traversal Movement Surface"
     },
     {
       "number": 12,
@@ -217,7 +223,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | done                                          | MONAUD1            | none      | Landed on `integration`: `Magic Resistance` now projects from `Pseudodragon` authored traits into the generic save-resolution lane, including stat-block battle init, raw battle creature command decoding, persisted battle state, and spell/magical-effect save resolution without adding monster-specific flags.                                                   | Complete. The first combat-modifier trait family now proves a reusable save-modifier surface, while `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain explicitly unsupported for later family-specific work. |
 | 19    | MONFAC1A - Conditional Failure-Band Save Effect Surface        | done                                          | MONFAC1            | none      | Landed on `integration`: `Pseudodragon` `Sting` now projects through one generic stat-block-authored save-effect runtime lane with a timed base `Poisoned` effect, a failure-by-5 conditional `Unconscious` rider, source-specific effect identities, and early-end handling for damage or a nearby wake action without broadening into attack-hit riders. | Complete. The first conditional failure-band save family now proves reusable save-only delivery and conditional rider cleanup while leaving `Homunculus`-style attack riders to later work. |
 | 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | done                                          | MONFAC1            | none      | Landed on `integration`: `Gladiator` `Shield Bash` now projects through the shared single-target monster save-effect lane as an immediate fail rider that deals damage and applies a size-gated `Prone` condition without timed-effect bookkeeping. | Complete. Size-gated direct `Prone` riders belong in the same single-target save-effect family, while area shapes, push-coupled riders, and movement-coupled targeting remain separate follow-on families. |
-| 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | ready-for-research                            | MONFAC1            | none      | Research movement-first save actions starting from `Centaur Trooper` `Trampling Charge`. Separate which semantics belong to a generic movement facility (`move up to Speed`, ignore opportunity attacks, move through creature spaces, target each creature once) versus which belong to the save-effect rider (`damage + Prone` on failure). | Ready for research. The save rider is not the hard part here; the unresolved ownership is the movement sequencing and target enumeration surface. |
+| 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | done                                          | MONFAC1            | MONMOB1   | Landed as research only: `Centaur Trooper` `Trampling Charge` should not extend the current single-target `saveEffectAction` lane. The durable prerequisite is a movement-owned traversal surface because the current battle movement event spends movement and handles opportunity attacks only; it does not own path, entered-creature enumeration, or position updates. | Complete as research. The family boundary is now explicit: traversal movement must land first, then `Trampling Charge` can consume it as the first entered-creature save rider. |
+| 22    | MONMOB1 - Monster Traversal Movement Surface                   | ready-for-implementation-after-light-research | MONFAC1C           | none      | Land one generic movement-owned monster traversal surface that accepts explicit caller-owned traversal facts (`move up to Speed`, no opportunity attacks, pass-through size cap, ordered entered-creature ids, target each creature once) and hook `Centaur Trooper` `Trampling Charge` onto it as the first rider. Keep `Gelatinous Cube` `Engulf`, `Aquatic Charge`, and move-then-attack actions out of scope. | Ready for implementation after light research. The movement owner and adjacent-family boundaries are now documented in `plans/monster-movement-coupled-save-effect-surface-research.md`. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
 | 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
@@ -257,6 +264,7 @@ Current architecture decisions for this batch:
 - The unsupported report's `saveEffectAction` blocker family is currently an audit taxonomy, not an implementation taxonomy. Existing rows already split across distinct runtime families: conditional failure bands, save-plus-Prone maneuvers, and movement-coupled save effects.
 - The narrowest first child from that split is the conditional failure-band save-only family anchored by `Pseudodragon` `Sting`.
 - The shared single-target monster save-effect lane now covers both timed fail riders such as `Pseudodragon` `Sting` and immediate fail riders such as `Gladiator` `Shield Bash`; size-gated direct `Prone` stays in that lane, while area, push-coupled, and movement-coupled variants remain separate families.
+- Movement-coupled monster actions require a movement-owned traversal surface before they can become executable runtime abilities: the current `BATTLE_MOVE` event spends movement and resolves opportunity-attack checkpoints only, while `Trampling Charge` needs explicit path traversal, entered-creature enumeration, and once-per-creature targeting facts.
 - Local SRD review did not find a second source-accurate peer with the same authored shape. `Homunculus` `Bite` is adjacent but not equivalent: it is attack-hit gated, has a different base failure duration, and its escalated `Unconscious` clause ends early only on damage, not on an adjacent creature's wake action.
 
 Planning note:
@@ -692,7 +700,8 @@ Research outcome:
   - `MONFAC1B`: save-plus-Prone maneuvers, anchored by `Gladiator` `Shield Bash`.
   - `MONFAC1C`: movement-coupled save effects, anchored by `Centaur Trooper` `Trampling Charge`.
 - `MONFAC1A` is the first implementation candidate because the reusable payload is narrow even without a second exact peer in the local SRD corpus: it is a save-only single-target failure-band action with explicit base-failure and failure-by-5-or-more outcomes.
-- `MONFAC1B` and `MONFAC1C` stay research tasks because they still mix additional unresolved seams: size gating and broader `Prone`/push/area variants for `MONFAC1B`, and movement sequencing plus per-entered-space targeting for `MONFAC1C`.
+- `MONFAC1B` proved that direct single-target save-plus-`Prone` maneuvers can reuse the shared save-effect lane.
+- `MONFAC1C` resolved as planning research: movement-coupled save effects require a movement-owned traversal surface before they become executable runtime abilities.
 
 Research note:
 
@@ -784,11 +793,11 @@ Handoff readiness:
 
 ### Task 21 - MONFAC1C - Movement-Coupled Save Effect Surface
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `MONFAC1`
 
-Blocks: none
+Blocks: `MONMOB1`
 
 Scope:
 
@@ -796,25 +805,63 @@ Scope:
 - Start from `Centaur Trooper` `Trampling Charge`.
 - Keep the save rider and the movement sequencing separate in the design unless the SRD wording makes them inseparable.
 
-Next action:
+Research outcome:
 
-- Read the SRD text for `Centaur Trooper` `Trampling Charge` and neighboring movement-first monster actions.
-- Decide whether this family should depend on a more general monster mobility-action surface before any save-effect implementation begins.
+- `Centaur Trooper` `Trampling Charge` does depend on a more general movement-owned traversal surface before any save-effect implementation begins.
+- The current generic save-effect lane is the wrong owner because it assumes one chosen target before resolution and has no path or traversal facts.
+- The current battle movement lane is also insufficient by itself because `BATTLE_MOVE` spends movement and handles opportunity-attack checkpoints, but it does not own path, entered-creature enumeration, or position updates.
+- Nearby SRD text confirms the boundary:
+  - `Gelatinous Cube` `Engulf` shares the traversal shell and proves the movement-owned requirement is durable.
+  - `Aquatic Charge`, `Charging Horn`, and dragon `Pounce` are adjacent movement-first families, but they are not the same traversal-triggered save-effect shape.
 
 Research note:
 
-- The hard part is not `damage + Prone`; it is the movement sequencing, target enumeration, and once-per-entered-space rule.
+- The hard part is not `damage + Prone`; it is the traversal owner: explicit movement path facts, entered-creature ordering, pass-through permissions, and once-per-creature targeting.
 
 Verification requirements:
 
 - Confirm the eventual facility is generic and movement-owned rather than a `Trampling Charge` special case.
 - Verify text-only entries remain explicit unless they match the exact same movement-first targeting shape.
-- Run narrow core tests plus the minimum relevant Tier 1b MBT only if creature-level projection semantics change.
+- No code changed in this research task, so no core or MBT verification run is required.
+- Include `/simplify` convergence, minimum two rounds, on the implementation task that lands the movement surface.
+
+Handoff readiness:
+
+- Complete as planning research. `MONMOB1` is now the implementation-ready follow-up, and `Trampling Charge` should not be widened into the current single-target save-effect lane.
+
+### Task 22 - MONMOB1 - Monster Traversal Movement Surface
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: `MONFAC1C`
+
+Blocks: none
+
+Scope:
+
+- Land one generic movement-owned monster traversal surface for actions that move through creature spaces and target entered creatures once during that traversal.
+- Start with `Centaur Trooper` `Trampling Charge`.
+- Keep the traversal shell separate from broader rider families such as `Gelatinous Cube` `Engulf`.
+
+Next action:
+
+- Re-read `plans/monster-movement-coupled-save-effect-surface-research.md` plus the local SRD passages for `Centaur Trooper` and `Gelatinous Cube`.
+- Thread an explicit traversal fact surface through battle discovery and resolution rather than widening `BATTLE_MONSTER_SAVE_EFFECT`.
+
+Research note:
+
+- The prerequisite is explicit traversal ownership, not a monster-specific action handler.
+
+Verification requirements:
+
+- Confirm the new runtime surface is movement-owned and generic rather than `Trampling Charge`-named.
+- Verify `Centaur Trooper` is the first consumer and adjacent actions remain text-only unless they match the landed movement shell.
+- Run narrow core tests around battle discovery/resolution; MBT only if creature-level projection semantics change.
 - Include `/simplify` convergence, minimum two rounds.
 
 Handoff readiness:
 
-- Ready for research. This slice should not be implemented until the movement ownership boundary is explicit.
+- Ready for implementation after light research. The movement ownership boundary and adjacent-family exclusions are now explicit.
 
 ### Task 11 - MONFAC2 - Monster Combat Modifier Trait Surface
 
