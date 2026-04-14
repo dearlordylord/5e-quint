@@ -208,6 +208,8 @@ Broad verification is diagnostic, not an automatic scope-expander. When lint/typ
 
 The decider must leave the main worktree with no tracked staged or unstaged changes after each task. This makes git the persistent state boundary between task rotations.
 
+On integration-branch runs, Ralph now treats a dirty tracked main worktree after a decider commit as recoverable once: it hard-resets to `HEAD`, re-checks cleanliness, and logs a warning if recovery succeeds. This prevents leftover post-commit task debris from killing an otherwise valid run. In `--commit-to-base` mode, that automatic recovery is disabled because the base branch may be operator-owned.
+
 ## Stop Conditions
 
 The loop stops only when one of these is true:

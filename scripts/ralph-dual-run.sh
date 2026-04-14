@@ -859,6 +859,15 @@ assert_clean_main_worktree() {
   git diff --cached --quiet || return 1
 }
 
+recover_dirty_main_worktree_after_decider() {
+  if [[ "$commit_to_base" == true ]]; then
+    return 1
+  fi
+
+  git reset --hard HEAD >/dev/null 2>&1 || return 1
+  assert_clean_main_worktree
+}
+
 parse_chooser_output() {
   local chooser_output="$1"
   node - "$chooser_output" <<'NODE'
@@ -1167,10 +1176,14 @@ run_task_attempt() {
   fi
 
   if ! assert_clean_main_worktree; then
-    printf 'task %s attempt %s left main worktree dirty\n' "$task_no" "$attempt_no" >"$last_error_file"
-    note "task" "fatal-dirty-main-worktree task=$task_no attempt=$attempt_no"
-    append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-dirty-main-worktree" "-" "decider left tracked changes"
-    return 2
+    if recover_dirty_main_worktree_after_decider; then
+      note "task" "warning-recovered-dirty-main-worktree task=$task_no attempt=$attempt_no"
+    else
+      printf 'task %s attempt %s left main worktree dirty\n' "$task_no" "$attempt_no" >"$last_error_file"
+      note "task" "fatal-dirty-main-worktree task=$task_no attempt=$attempt_no"
+      append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-dirty-main-worktree" "-" "decider left tracked changes"
+      return 2
+    fi
   fi
 
   if contains_attempt_specific_plan_notes "$plan_file"; then
