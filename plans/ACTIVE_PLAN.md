@@ -109,10 +109,16 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "number": 11,
       "id": "CHAROWN2",
       "status": "deferred",
-      "title": "Fighting Style Authored Ownership"
+      "title": "Fighting Style And Expertise Ownership"
     },
     {
       "number": 12,
+      "id": "CHARTYPE1",
+      "status": "deferred",
+      "title": "Strengthen Character Result Shapes"
+    },
+    {
+      "number": 13,
       "id": "CHARAUTH1",
       "status": "deferred",
       "title": "Character Quint Authority Convergence"
@@ -160,8 +166,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8     | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1  | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 9     | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
 | 10    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
-| 11    | CHAROWN2 - Fighting Style Authored Ownership                   | deferred                                      | CHAROWN1           | CHARAUTH1 | After `CHAROWN1`, add Fighting Style selections as authored character-side facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                        | This is a real missing authored-owner gap, not cleanup. It should land before the final convergence push so projection stops carrying placeholder empty sets.              |
-| 12    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHAROWN2 | none      | After the MCP surface and character-side ownership gaps land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                                                            | This is the convergence capstone, not the starting slice. It needs the MCP boundary and remaining character-side authored facts settled first.                             |
+| 11    | CHAROWN2 - Fighting Style And Expertise Ownership              | deferred                                      | CHAROWN1           | CHARTYPE1 | After `CHAROWN1`, add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, not cleanup. They should land before result-shape tightening and the final convergence push so projection stops carrying placeholder empty sets. |
+| 12    | CHARTYPE1 - Strengthen Character Result Shapes                 | deferred                                      | CHAREDIT1, CHAROWN2 | CHARMCP1, CHARAUTH1 | After the edit-preview and ownership-gap slices land, strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the completed owned projection facts rather than freezing weak shapes too early. |
+| 13    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHARTYPE1 | none      | After the MCP surface, ownership gaps, and stronger result shapes land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                                              | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
 
 ## Current Integrated Baseline
 
@@ -605,17 +612,17 @@ Verification requirements:
 - Run narrow character-domain and parity tests only.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 11 - CHAROWN2 - Fighting Style Authored Ownership
+### Task 11 - CHAROWN2 - Fighting Style And Expertise Ownership
 
 Status: `deferred`
 
 Depends on: `CHAROWN1`
 
-Blocks: `CHARAUTH1`
+Blocks: `CHARTYPE1`
 
 Scope:
 
-- Add Fighting Style selections as authored character-side facts using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).
+- Add Fighting Style selections and expertise as character-side owned or explicitly derived facts using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).
 - Thread those facts through:
   - draft/sheet ownership;
   - legality and timing validation;
@@ -631,20 +638,56 @@ Next action:
 
 Research note:
 
-- Both TypeScript and Quint currently document the same gap explicitly: the character side does not yet own Fighting Style selections, so projection can only thread the empty set.
+- Fighting Style is explicitly documented in both TypeScript and Quint as a missing character-side owner.
+- Expertise is in the same architectural category even though it is less explicitly documented today: the projection surface already includes `expertiseSkills`, but both TypeScript and Quint currently thread the empty set.
 
 Verification requirements:
 
-- Confirm Fighting Style selections persist on the character side before projection consumes them.
+- Confirm Fighting Style selections and expertise facts persist on or are explicitly derived from the character side before projection consumes them.
 - Verify legality/timing, sanitization, and projection outputs through task-scoped tests.
 - Add or extend Quint parity where the new authored fact crosses the formal boundary.
 - Include `/simplify` convergence, minimum two rounds.
 
-### Task 12 - CHARAUTH1 - Character Quint Authority Convergence
+### Task 12 - CHARTYPE1 - Strengthen Character Result Shapes
 
 Status: `deferred`
 
-Depends on: `CHARMCP1`, `CHAROWN2`
+Depends on: `CHAREDIT1`, `CHAROWN2`
+
+Blocks: `CHARMCP1`, `CHARAUTH1`
+
+Scope:
+
+- Strengthen the TypeScript result shapes for assessment, finalization, and advancement so impossible combinations become unrepresentable at the public domain API boundary.
+- Replace loose interfaces/results such as:
+  - `CharacterDraftAssessment`;
+  - `CharacterFinalizationResult`;
+  - advancement failure results that currently collapse open holes and illegal issues into one undifferentiated failure shape.
+- Add an advancement-assessment/preview surface that preserves the same open-hole versus illegal-issue distinction already present in draft assessment.
+- Use the preview-before-commit semantics from [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence goals in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).
+- Do not widen this task into full rollback/history or unrelated UX redesign.
+
+Next action:
+
+- When reprioritized, inspect the weakest current public result shapes and replace them with discriminated unions / stronger non-empty failure guarantees before updating callers.
+
+Research note:
+
+- The current domain semantics are stronger than some of the public TypeScript types that describe them.
+- This task exists to align the type-level API with the actual domain invariants while keeping drafts themselves editable and partial.
+
+Verification requirements:
+
+- Confirm impossible result combinations become unrepresentable at the public type boundary.
+- Verify advancement preview surfaces open required choices separately from illegal issues.
+- Run narrow character-domain, typecheck, and caller-surface tests.
+- Include `/simplify` convergence, minimum two rounds.
+
+### Task 13 - CHARAUTH1 - Character Quint Authority Convergence
+
+Status: `deferred`
+
+Depends on: `CHARMCP1`, `CHARTYPE1`
 
 Blocks: none
 

@@ -51,6 +51,11 @@ This PRD covers two initial categories:
   - projection currently exposes `fightingStyles`;
   - both TypeScript and Quint currently project an empty set because the character side does not yet own Fighting Style selections;
   - the correct fix is to add authored character-side ownership, validation, sanitization, and projection for those choices rather than teaching runtime or adapters to guess.
+- The second missing-semantics gap is **expertise ownership**:
+  - projection currently exposes `expertiseSkills`;
+  - both TypeScript and Quint currently project the empty set;
+  - unlike Fighting Style, this gap is currently under-documented in code comments and planning artifacts even though the projection shape already anticipated it;
+  - the correct fix is to add explicit character-side ownership and derivation for expertise-granting class features rather than leaving the projection field permanently placeholder-shaped.
 - Ownership-gap work should prefer changing the character-side model and its formal mirror directly rather than adding projection-side registries or adapter-side patches.
 
 ## Testing Decisions
@@ -63,6 +68,11 @@ This PRD covers two initial categories:
   - sanitization when upstream choices invalidate the selection;
   - projection into character-creature/runtime surfaces;
   - Quint parity where applicable.
+- Expertise tests should verify:
+  - explicit character-side ownership or derivation of expertise-granting class features;
+  - class-level legality and timing where relevant;
+  - projection into `expertiseSkills`;
+  - parity where the expertise fact crosses the formal boundary.
 
 ## Out of Scope
 
@@ -75,3 +85,4 @@ This PRD covers two initial categories:
 
 - This document is intentionally narrow. It exists to prevent “temporary” ownership gaps from becoming permanent architecture.
 - Future gaps of the same kind should be added here only if they are true character-side ownership problems, not general feature backlog items.
+- At the moment, both Fighting Style and expertise are in the same architectural category: projection fields that already exist, but whose authored owners have not yet been completed on the character side.
