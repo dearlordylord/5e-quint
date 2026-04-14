@@ -734,6 +734,31 @@ function initBattleForReadySpellDiscovery(
   return actor;
 }
 
+function initBattleForAoeSpellDiscovery(
+  actorConfig: Partial<
+    Extract<BattleEvent, { type: "BATTLE_INIT" }>["creatures"][number]
+  > = {},
+) {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        id: CreatureId("A"),
+        maxHp: 20,
+        kind: "PC",
+        caster: true,
+        preparedSpells: preparedSpellIds("burning_hands", "fireball"),
+        initiativeRoll: 15,
+        ...actorConfig,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
 function initBattleForDeflectDiscovery() {
   return makeBattleActor({
     type: "BATTLE_INIT",
@@ -4059,6 +4084,92 @@ describe("available actions contract", () => {
         spellName: "hold_person",
       },
     });
+  });
+
+  test("battle discovery resolves AoE spell setup from canonical spell payload facts", () => {
+    const actor = initBattleForAoeSpellDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_CAST_AOE",
+          spellId: spellId("burning_hands"),
+          slotLevel: {
+            options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
+          },
+          cost: cost(quota("action"), pool("spellSlot")),
+          outcome: {
+            summary:
+              "Spend your action and a spell slot to cast Burning Hands through the battle-owned area save loop",
+          },
+        },
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_CAST_AOE",
+          spellId: spellId("fireball"),
+          slotLevel: { options: [spellSlotLevel(3)] },
+          cost: cost(quota("action"), pool("spellSlot")),
+          outcome: {
+            summary:
+              "Spend your action and a spell slot to cast Fireball through the battle-owned area save loop",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_CAST_AOE",
+        spellId: spellId("fireball"),
+        slotLevel: spellSlotLevel(3),
+      }),
+    );
+
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_CAST_AOE",
+        spellId: spellId("fireball"),
+        slotLevel: spellSlotLevel(3),
+      },
+      outcome:
+        "Spend your action and a spell slot to cast Fireball through the battle-owned area save loop",
+      runtime: "none",
+      event: {
+        type: "BATTLE_CAST_AOE",
+        saveDC: difficultyClass(13),
+        dmgOnFail: 48,
+        halfOnSave: true,
+        dt: "fire",
+        cond: "blinded",
+        applyCond: false,
+        saveAbility: "dex",
+        slotLvl: spellSlotLevel(3),
+        spellName: "fireball",
+        ritual: false,
+      },
+    });
+  });
+
+  test("battle discovery keeps non-AoE save spells off the AoE cast route", () => {
+    const actor = initBattleForReadySpellDiscovery();
+
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context),
+    ).not.toContainEqual(
+      expect.objectContaining({
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_CAST_AOE",
+        spellId: spellId("hold_person"),
+      }),
+    );
   });
 
   test("battle discovery does not surface ready-spell setup without a modeled payload", () => {

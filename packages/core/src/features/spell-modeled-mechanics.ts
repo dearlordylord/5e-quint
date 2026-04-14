@@ -7,6 +7,14 @@ import type {
 } from "#/types.ts";
 import { spellSlotLevel } from "#/types.ts";
 
+export const BATTLE_READYABLE_SPELL_DELIVERIES = [
+  "singleTarget",
+  "aoe",
+] as const;
+
+export type BattleReadyableSpellDelivery =
+  (typeof BATTLE_READYABLE_SPELL_DELIVERIES)[number];
+
 export type BattleReadyableSpellReleasePayload = {
   readonly kind: "save";
   readonly saveAbility: Ability;
@@ -26,6 +34,7 @@ export type BattleReadyableSpellPayload = {
 
 export interface BattleReadyableSaveSpellMechanics {
   readonly family: "battleReadyableSave";
+  readonly delivery: BattleReadyableSpellDelivery;
   readonly baseLevel: SpellSlotLevel;
   readonly saveAbility: Ability;
   readonly halfOnSuccess: boolean;
@@ -49,6 +58,7 @@ export function diceMaximum(dice: {
 }
 
 export function battleReadyableSaveSpell(params: {
+  readonly delivery: BattleReadyableSpellDelivery;
   readonly baseLevel: number;
   readonly saveAbility: Ability;
   readonly halfOnSuccess: boolean;
@@ -60,6 +70,7 @@ export function battleReadyableSaveSpell(params: {
   const baseLevel = spellSlotLevel(params.baseLevel);
   return {
     family: "battleReadyableSave",
+    delivery: params.delivery,
     baseLevel,
     saveAbility: params.saveAbility,
     halfOnSuccess: params.halfOnSuccess,

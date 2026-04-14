@@ -9,7 +9,7 @@ import {
   type ModeledPreparedSpell,
 } from "#/features/spell-available-actions.ts";
 import {
-  getSpellRecord,
+  getBattleReadyableSpellDelivery,
   type BattleReadyableSpellPayload,
 } from "#/features/spell-registry.ts";
 import {
@@ -462,6 +462,15 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_CAST_AOE";
+      readonly spellId: string;
+      readonly slotLevel: Hole<SpellSlotLevelValue>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_READY";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -770,6 +779,13 @@ type SpecificBattleResolvedActionToken =
       readonly type: "BATTLE_SEARCH";
       readonly targetId: string;
       readonly perceptionTotal: number;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_CAST_AOE";
+      readonly spellId: string;
+      readonly slotLevel: SpellSlotLevelValue;
     }
   | {
       readonly scope: "battle";
@@ -1297,6 +1313,13 @@ const BattleSearchResolvedActionSchema = Schema.Struct({
   perceptionTotal: Schema.Number,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleCastAoeResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_CAST_AOE"),
+  spellId: Schema.String,
+  slotLevel: SpellSlotLevel,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleReadyResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_READY"),
@@ -1394,6 +1417,7 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleHideResolvedActionSchema,
   BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
+  BattleCastAoeResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
   BattleReadyReleaseResolvedActionSchema,
@@ -2583,6 +2607,18 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_CAST_AOE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_CAST_AOE" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_READY" }
       >;
       readonly outcome: string;
@@ -3741,6 +3777,57 @@ function battleCounterspellSlotLevels(
   );
 }
 
+function battleActiveAoeSpellTokens(
+  actorId: string,
+  actor: BattleCreatureState,
+): ReadonlyArray<BattleActionToken> {
+  if (
+    actor.actionSurgeActionPending ||
+    actor.ragingBlocksSpells ||
+    actor.slotExpendedThisTurn ||
+    actor.readyableSpellPayloads.size === 0
+  ) {
+    return [];
+  }
+  const tokens: Array<
+    Extract<BattleActionToken, { readonly type: "BATTLE_CAST_AOE" }>
+  > = [];
+  for (const [
+    currentSpellId,
+    payload,
+  ] of actor.readyableSpellPayloads.entries()) {
+    if (!actor.preparedSpells.has(currentSpellId)) continue;
+    if (getBattleReadyableSpellDelivery(currentSpellId) !== "aoe") continue;
+    const slotOptions = currentReadyableSpellPayloads(
+      actor,
+      currentSpellId,
+      payload,
+    )
+      .map((currentPayload) => currentPayload.slotLevel)
+      .sort((a, b) => a - b);
+    if (slotOptions.length === 0) continue;
+    tokens.push(
+      battleToken<
+        Extract<BattleActionToken, { readonly type: "BATTLE_CAST_AOE" }>
+      >({
+        actorId,
+        type: "BATTLE_CAST_AOE",
+        spellId: currentSpellId,
+        slotLevel: { options: slotOptions },
+        cost: costs(quotaCost("action"), poolCost("spellSlot")),
+        outcome: {
+          summary: `Spend your action and a spell slot to cast ${displaySpellName(
+            currentSpellId as SpellName,
+          )} through the battle-owned area save loop`,
+        },
+      }),
+    );
+  }
+  return tokens.sort((a, b) =>
+    String(a.spellId).localeCompare(String(b.spellId)),
+  );
+}
+
 function battleActiveReadyableSpellTokens(
   actorId: string,
   actor: BattleCreatureState,
@@ -3909,12 +3996,6 @@ function currentReadyableSpellPayload(
       (payload) => payload.slotLevel === slotLevel,
     ) ?? null
   );
-}
-
-function battleSpellBaseLevel(spellName: string): number | null {
-  const modeled = getModeledPreparedSpellInfo(spellName);
-  if (modeled != null) return modeled.baseLevel;
-  return getSpellRecord(spellName)?.level ?? null;
 }
 
 export function getAvailableBattleActions(
@@ -4348,6 +4429,9 @@ export function getAvailableBattleActions(
         }),
       );
       tokens.push(
+        ...battleActiveAoeSpellTokens(activeCreatureId, activeCreature),
+      );
+      tokens.push(
         ...battleActiveReadyableSpellTokens(
           activeCreatureId,
           activeCreature,
@@ -4475,6 +4559,15 @@ function availableBattleTokenForResolved(
       token.type === "BATTLE_GRAPPLE"
     ) {
       return candidate.targetId.options.includes(token.targetId);
+    }
+    if (
+      candidate.type === "BATTLE_CAST_AOE" &&
+      token.type === "BATTLE_CAST_AOE"
+    ) {
+      return (
+        candidate.spellId === token.spellId &&
+        candidate.slotLevel.options.includes(token.slotLevel)
+      );
     }
     if (
       candidate.type === "USE_REDIRECT_ATTACK" &&
@@ -4615,6 +4708,48 @@ export function resolveBattleAction(
         type: "BATTLE_SEARCH",
         targetId: CreatureId(token.targetId),
         perceptionTotal: token.perceptionTotal,
+      },
+    };
+  }
+  if (token.type === "BATTLE_CAST_AOE") {
+    if (
+      !("spellId" in availableToken) ||
+      availableToken.spellId !== token.spellId ||
+      !("slotLevel" in availableToken) ||
+      !availableToken.slotLevel.options.includes(token.slotLevel)
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} ${token.spellId} at slot level ${token.slotLevel} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    const actor = context.creatures.get(CreatureId(token.actorId));
+    const payload =
+      actor == null
+        ? null
+        : currentReadyableSpellPayload(actor, token.spellId, token.slotLevel);
+    if (payload == null) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.spellId} has no battle-owned AoE spell payload for ${token.actorId}.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_CAST_AOE",
+        saveDC: payload.release.saveDC,
+        dmgOnFail: payload.release.damageOnFail,
+        halfOnSave: payload.release.halfOnSuccess,
+        dt: payload.release.damageType,
+        cond: payload.release.conditionOnFail,
+        applyCond: payload.release.applyCondition,
+        saveAbility: payload.release.saveAbility,
+        slotLvl: payload.slotLevel,
+        spellName: token.spellId,
+        ritual: false,
       },
     };
   }
@@ -4759,7 +4894,7 @@ export function resolveBattleAction(
         message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
       };
     }
-    const targetSpellLevel = battleSpellBaseLevel(interrupt.ctx.spellName);
+    const targetSpellLevel = interrupt.ctx.slotLvl;
     if (targetSpellLevel == null) {
       return {
         code: "ACTION_NOT_SUPPORTED",
