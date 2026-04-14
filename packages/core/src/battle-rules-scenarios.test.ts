@@ -4,8 +4,11 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
 import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
-import { breakConcentrationAndPropagate } from "#/battle-machine-helpers.ts";
-import type { BattleEvent } from "#/battle-machine-types.ts";
+import {
+  breakConcentrationAndPropagate,
+  resolveSave,
+} from "#/battle-machine-helpers.ts";
+import { ADR_ACTIVE_TURN, type BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
 import {
   ABOLETH,
@@ -13,6 +16,7 @@ import {
   GOBLIN_MINION,
   GOBLIN_WARRIOR,
   MAGE,
+  PSEUDODRAGON,
   monsterSpellDailyUseId,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -3804,6 +3808,94 @@ describe("battle rules scenario regressions", () => {
 
     expect(creature(actor, "C").hp).toBe(16);
     expect(ctx(actor).aoeCtx).toBeNull();
+  });
+
+  it("projects Magic Resistance through the generic spell-save resolution lane", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          caster: true,
+          initiativeRoll: 15,
+        },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("B"),
+          statBlock: PSEUDODRAGON,
+          initiativeRoll: 10,
+        }),
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 5,
+      saveRollB: 15,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "B").saveAdvantageContexts).toEqual(
+      new Set(["spell", "magicalEffect"]),
+    );
+    expect(creature(actor, "B").paralyzed).toBe(false);
+    expect(creature(actor, "B").hp).toBe(10);
+  });
+
+  it("applies Magic Resistance to generic magical-effect save resolution", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 15,
+        },
+        statBlockToInitCreatureConfig({
+          id: CreatureId("B"),
+          statBlock: PSEUDODRAGON,
+          initiativeRoll: 10,
+        }),
+      ],
+    });
+
+    const result = resolveSave(
+      ctx(actor).creatures,
+      {
+        caster: CreatureId("A"),
+        target: CreatureId("B"),
+        saveDC: difficultyClass(13),
+        saveRoll: 5,
+        saveRollB: 15,
+        damageOnFail: 0,
+        halfOnSuccess: false,
+        damageType: "psychic",
+        conditionOnFail: "paralyzed",
+        applyCondition: true,
+        saveAbility: "wis",
+        saveTriggerKind: "magicalEffect",
+      },
+      ADR_ACTIVE_TURN,
+    );
+
+    expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
   });
 
   it("natural_20: a monster daily spellcast spends its daily use through the generic AoE spell lane", () => {

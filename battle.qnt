@@ -71,6 +71,7 @@ module battle {
     preparedSpells: Set[str],                // spells this creature has prepared (SRD 5.2.1 Gaining Spells)
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
+    saveAdvantageContexts: Set[SaveTriggerKind],  // battle-owned save advantage sources such as Magic Resistance
     critRange: int,                          // natural roll >= critRange is a critical hit (default 20, Champion 19/18)
     isWearingArmor: bool,                    // battle-owned worn armor fact for Defense
     defenseArmorClassBonus: int,             // Defense fighting style AC bonus while wearing armor
@@ -219,6 +220,13 @@ module battle {
   pure def readyableSpellSaveAbility(spellName: str): Ability =
     if (spellName == "hold_person") Wis else Dex
 
+  pure def effectiveSaveRoll(
+    rollA: int,
+    rollB: int,
+    hasAdvantage: bool,
+  ): int =
+    if (hasAdvantage and rollB > rollA) rollB else rollA
+
   type TriggerType =
     | TAttackHits       // "when hit by attack roll" — Shield, Parry
     | TAttackDamages    // "when you take damage from attack" — Uncanny Dodge
@@ -341,12 +349,14 @@ module battle {
     target: CreatureId,
     saveDC: int,               // caller-provided (8 + prof + ability mod)
     saveRoll: int,             // pre-resolved save roll
+    saveRollB: int,            // second save roll when Advantage applies; otherwise mirrors saveRoll
     damageOnFail: int,         // 0 if no damage
     halfOnSuccess: bool,       // true for spells like Fireball (half damage on save)
     damageType: DamageType,
     conditionOnFail: Condition, // CBlinded etc. Use CBlinded as "none" placeholder
     applyCondition: bool,       // true if spell actually applies a condition on fail
     saveAbility: Ability,       // which ability the save targets (Dex, Con, etc.)
+    saveTriggerKind: SaveTriggerKind,
   }
 
   // Context for a failed save (Legendary Resistance / Countercharm interrupt)
@@ -373,6 +383,7 @@ module battle {
     applyCondition: bool,
     remaining: Set[CreatureId], // targets not yet resolved
     saveAbility: Ability,       // which ability the save targets (Dex for Fireball, etc.)
+    saveTriggerKind: SaveTriggerKind,
   }
 
   // Context for a concentration spell (deferred until CS resolves).
@@ -582,6 +593,7 @@ module battle {
     preparedSpells: Set(),
     hasEvasion: false,
     saveMiscBonus: 0,
+    saveAdvantageContexts: Set(),
     critRange: 20,
     isWearingArmor: false,
     defenseArmorClassBonus: 0,
@@ -636,6 +648,7 @@ module battle {
     preparedSpells: CASTER_PREPARED_SPELLS,
     hasEvasion: false,
     saveMiscBonus: 0,
+    saveAdvantageContexts: Set(),
     critRange: 20,
     isWearingArmor: false,
     defenseArmorClassBonus: 0,
@@ -691,6 +704,7 @@ module battle {
       preparedSpells: Set(),
       hasEvasion: false,
       saveMiscBonus: 0,
+      saveAdvantageContexts: sb.saveAdvantageContexts,
       critRange: 20,
       isWearingArmor: false,
       defenseArmorClassBonus: 0,
@@ -2106,6 +2120,7 @@ module battle {
     nondet slotLvl = readyableSpellBaseLevel(spellName).to(9).oneOf()
     val saveDC = 13
     nondet saveRoll = 1.to(20).oneOf()
+    nondet saveRollB = 1.to(20).oneOf()
     val dmgOnFail = readyableSpellDamageOnFail(spellName, slotLvl)
     val halfOnSave = readyableSpellHalfOnSuccess(spellName)
     val dt = readyableSpellDamageType(spellName)
@@ -2139,11 +2154,12 @@ module battle {
       val cs2 = if (ritual) cs1 else expendSlot(cs1, activeId, slotLvl)
       val saveCtx: SaveSpellCtx = {
         caster: activeId, target: targetId,
-        saveDC: saveDC, saveRoll: saveRoll,
+        saveDC: saveDC, saveRoll: saveRoll, saveRollB: saveRollB,
         damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
         damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
+        saveTriggerKind: STKSpell,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -2174,7 +2190,12 @@ module battle {
     cs: CreatureId -> Combatant, save: SaveSpellCtx, returnTo: AfterDamageReturn
   ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
     val tgt = cs.get(save.target)
-    val saved = (save.saveRoll + tgt.saveMiscBonus) >= save.saveDC
+    val effectiveRoll = effectiveSaveRoll(
+      save.saveRoll,
+      save.saveRollB,
+      tgt.saveAdvantageContexts.contains(save.saveTriggerKind),
+    )
+    val saved = (effectiveRoll + tgt.saveMiscBonus) >= save.saveDC
     val isDex = save.saveAbility == Dex
     val tgtIncap = isIncapacitated(tgt.creature)
     if (saved) {
@@ -2723,6 +2744,7 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         remaining: liveTargets,
         saveAbility: saveAb,
+        saveTriggerKind: STKSpell,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -2761,12 +2783,18 @@ module battle {
         } else {
           nondet targetId = aoe.remaining.oneOf()
           nondet saveRoll = 1.to(20).oneOf()
+          nondet saveRollB = 1.to(20).oneOf()
           val newRemaining = aoe.remaining.exclude(Set(targetId))
           val updatedAoe = aoe.with("remaining", newRemaining)
           val tgt = bCreatures.get(targetId)
           val tgtIncap = isIncapacitated(tgt.creature)
           val isDex = aoe.saveAbility == Dex
-          val saved = (saveRoll + tgt.saveMiscBonus) >= aoe.saveDC
+          val effectiveRoll = effectiveSaveRoll(
+            saveRoll,
+            saveRollB,
+            tgt.saveAdvantageContexts.contains(aoe.saveTriggerKind),
+          )
+          val saved = (effectiveRoll + tgt.saveMiscBonus) >= aoe.saveDC
           val aoeReturn = ADRResolvingAoE(updatedAoe)
           if (saved) {
             // Save succeeded — half damage if applicable, no condition
@@ -3165,6 +3193,7 @@ module battle {
       | BPAwaitingReadiedAction(readyCtx) =>
         nondet releaserId = readyCtx.eligibleCreatures.oneOf()
         nondet saveRoll = 1.to(20).oneOf()
+        nondet saveRollB = 1.to(20).oneOf()
         val releaser = bCreatures.get(releaserId)
         all {
           hasReadiedSpell(releaser),  // spell release only
@@ -3178,11 +3207,12 @@ module battle {
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
           val saveCtx: SaveSpellCtx = {
             caster: releaser.readiedSpellParams.caster, target: releaser.readiedSpellParams.target,
-            saveDC: releaser.readiedSpellParams.saveDC, saveRoll: saveRoll,
+            saveDC: releaser.readiedSpellParams.saveDC, saveRoll: saveRoll, saveRollB: saveRollB,
             damageOnFail: releaser.readiedSpellParams.damageOnFail, halfOnSuccess: releaser.readiedSpellParams.halfOnSuccess,
             damageType: releaser.readiedSpellParams.damageType,
             conditionOnFail: releaser.readiedSpellParams.conditionOnFail, applyCondition: releaser.readiedSpellParams.applyCondition,
             saveAbility: releaser.readiedSpellParams.saveAbility,
+            saveTriggerKind: STKSpell,
           }
           val spellCtx: SpellCastCtx = {
             caster: releaser.readiedSpellParams.caster,
@@ -3777,6 +3807,7 @@ module battle {
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet saveDC = 10.to(18).oneOf()
     nondet saveRoll = 1.to(20).oneOf()
+    nondet saveRollB = 1.to(20).oneOf()
     nondet dmgOnFail = 0.to(20).oneOf()
     nondet halfOnSave = Bool.oneOf()
     nondet dt = ALL_DAMAGE_TYPES.oneOf()
@@ -3809,11 +3840,12 @@ module battle {
       val cs2 = expendSlot(cs1, activeId, slotLvl)
       val saveCtx: SaveSpellCtx = {
         caster: activeId, target: targetId,
-        saveDC: saveDC, saveRoll: saveRoll,
+        saveDC: saveDC, saveRoll: saveRoll, saveRollB: saveRollB,
         damageOnFail: dmgOnFail, halfOnSuccess: halfOnSave,
         damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
+        saveTriggerKind: STKSpell,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,

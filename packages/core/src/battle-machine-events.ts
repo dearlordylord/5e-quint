@@ -175,6 +175,7 @@ export type BattleEvent =
       readonly targetId: CreatureId;
       readonly saveDC: DifficultyClass;
       readonly saveRoll: number;
+      readonly saveRollB?: number;
       readonly dmgOnFail: number;
       readonly halfOnSave: boolean;
       readonly dt: DamageType;
@@ -229,6 +230,7 @@ export type BattleEvent =
       readonly type: "BATTLE_RESOLVE_AOE_TARGET";
       readonly targetId: CreatureId | null;
       readonly saveRoll: number;
+      readonly saveRollB?: number;
     }
   | {
       readonly type: "BATTLE_MOVE";
@@ -411,6 +413,7 @@ export type BattleEvent =
       readonly type: "BATTLE_READY_SPELL_RELEASE";
       readonly releaserId: CreatureId;
       readonly saveRoll: number;
+      readonly saveRollB?: number;
     };
 
 /** Narrows BattleEvent to a specific type member for action functions. */

@@ -188,7 +188,10 @@ export function directorStep(
   if (event.type === "BATTLE_RESOLVE_AOE_TARGET" && event.targetId) {
     const dc =
       snapshot.phase.type === "aoeResolving" ? snapshot.phase.saveDC : 0;
-    const saved = dc > 0 ? event.saveRoll >= dc : false;
+    const saved =
+      dc > 0
+        ? Math.max(event.saveRoll, event.saveRollB ?? event.saveRoll) >= dc
+        : false;
     applyCue(
       creatureCues,
       event.targetId,

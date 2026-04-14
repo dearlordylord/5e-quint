@@ -2835,7 +2835,10 @@ export type BattleResolutionRuntimeInputs =
     }
   | {
       readonly runtime: "readySpellRelease";
-      readonly values: { readonly saveRoll: number };
+      readonly values: {
+        readonly saveRoll: number;
+        readonly saveRollB?: number;
+      };
     }
   | {
       readonly runtime: "hellishRebuke";
@@ -5339,6 +5342,7 @@ export function finalizeBattleResolution(
         };
       }
       const saveRoll = runtimeInputs.values.saveRoll;
+      const saveRollB = runtimeInputs.values.saveRollB;
       if (saveRoll < 1 || saveRoll > 20) {
         return {
           ok: false,
@@ -5348,12 +5352,23 @@ export function finalizeBattleResolution(
           },
         };
       }
+      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Ready spell secondary save roll must be between 1 and 20.",
+          },
+        };
+      }
       return {
         ok: true,
         event: {
           type: "BATTLE_READY_SPELL_RELEASE",
           releaserId: CreatureId(request.token.actorId),
           saveRoll,
+          ...(saveRollB != null ? { saveRollB } : {}),
         },
         outcome: request.outcome,
       };

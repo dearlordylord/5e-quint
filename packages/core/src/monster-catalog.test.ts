@@ -536,7 +536,7 @@ describe("monster catalog", () => {
     });
   });
 
-  it("stores Pseudodragon as an SRD-backed authored stat block with text-preserved unsupported actions", () => {
+  it("stores Pseudodragon as an SRD-backed authored stat block with a generic save-modifier trait", () => {
     const statBlock = getMonsterStatBlock("pseudodragon");
 
     expect(statBlock).toBe(PSEUDODRAGON);
@@ -591,13 +591,14 @@ describe("monster catalog", () => {
     expect(statBlock.proficiencyBonus).toBe(2);
     expect(statBlock.traits).toEqual([
       {
-        kind: "text",
+        kind: "saveModifierTrait",
         id: "magicResistance",
         name: "Magic Resistance",
         text: "The pseudodragon has Advantage on saving throws against spells and other magical effects.",
-        blockerFamily: "combatModifierTrait",
-        nonExecutableReason:
-          "Saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
+        saveModifier: {
+          kind: "advantage",
+          appliesTo: new Set(["spell", "magicalEffect"]),
+        },
       },
     ]);
     expect(statBlock.actions).toEqual([
@@ -1079,11 +1080,10 @@ describe("monster catalog", () => {
         },
         {
           blockerFamily: "combatModifierTrait",
-          count: 8,
+          count: 7,
           statBlockIds: [
             "berserker",
             "koboldWarrior",
-            "pseudodragon",
             "sahuaginWarrior",
             "tough",
             "toughBoss",
@@ -1223,7 +1223,7 @@ describe("monster catalog", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "# Monster Catalog Unsupported Pattern Report",
     );
-    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 50");
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 49");
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "- attackProjectionGap: 13 rows across 10 stat blocks",
     );
@@ -1305,6 +1305,7 @@ describe("monster catalog", () => {
       baseWalkSpeed: 15,
       battleBonusActionOptions: [],
       battleReactionOptions: [],
+      saveAdvantageContexts: new Set(["spell", "magicalEffect"]),
       initiativeRoll: 12,
       mainHandWeapon: {
         name: "Bite",

@@ -2,6 +2,7 @@ import { isIncapacitated } from "#/battle-machine-creature.ts";
 import { monsterSpellDailyUseId } from "#/monster-catalog.ts";
 import {
   activeId,
+  effectiveBattleSaveRollForCreature,
   applyDamageWithAfterReactions,
   applyFailEffects,
   canProvideBattleSpellComponents,
@@ -83,6 +84,7 @@ export function battleCastAoE({
     applyCondition: e.applyCond,
     remaining: liveTargets,
     saveAbility: e.saveAbility,
+    saveTriggerKind: "spell",
   };
   const spellCtx: SpellCastCtx = {
     caster: id,
@@ -121,7 +123,13 @@ export function battleResolveAoETarget({
   const tgt = c.creatures.get(e.targetId)!;
   const tgtIncap = isIncapacitated(tgt);
   const isDex = aoe.saveAbility === "dex";
-  const saved = e.saveRoll + tgt.saveMiscBonus >= aoe.saveDC;
+  const saveRoll = effectiveBattleSaveRollForCreature(
+    tgt,
+    aoe.saveTriggerKind,
+    e.saveRoll,
+    e.saveRollB,
+  );
+  const saved = saveRoll + tgt.saveMiscBonus >= aoe.saveDC;
   const aoeReturn = { tag: "ADRResolvingAoE" as const, aoe: updatedAoe };
   if (saved) {
     if (aoe.halfOnSuccess && aoe.damageOnFail > 0) {

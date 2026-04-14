@@ -12,7 +12,11 @@ import {
   MONSTER_STAT_BLOCKS,
   type MonsterStatBlockId,
 } from "#/monster-catalog-registry.ts";
-import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
+import {
+  type MonsterAttack,
+  type MonsterSaveTriggerKind,
+  type StatBlock,
+} from "#/monster-types.ts";
 import type { CharacterWeapon } from "#/character-equipment-weapon-data.ts";
 import { projectBattleWeaponProfile } from "#/character-equipment.ts";
 import {
@@ -74,6 +78,24 @@ export function statBlockBattleReactionOptions(statBlock: StatBlock) {
   return statBlock.reactions.flatMap((reaction) =>
     reaction.kind === "battleReaction" ? [reaction.option] : [],
   );
+}
+
+export function statBlockSaveAdvantageContexts(
+  statBlock: StatBlock,
+): ReadonlySet<MonsterSaveTriggerKind> {
+  const contexts = new Set<MonsterSaveTriggerKind>();
+  for (const trait of statBlock.traits) {
+    if (
+      trait.kind !== "saveModifierTrait" ||
+      trait.saveModifier.kind !== "advantage"
+    ) {
+      continue;
+    }
+    for (const context of trait.saveModifier.appliesTo) {
+      contexts.add(context);
+    }
+  }
+  return contexts;
 }
 
 export function statBlockLegendaryAction(
@@ -270,6 +292,9 @@ export function statBlockToInitCreatureConfig(params: {
   const modeledActionSpellcasting = statBlockModeledActionSpellcasting(
     params.statBlock,
   );
+  const saveAdvantageContexts = statBlockSaveAdvantageContexts(
+    params.statBlock,
+  );
   const config: InitCreatureConfig = {
     id: CreatureId(params.id),
     kind: "Monster",
@@ -310,6 +335,7 @@ export function statBlockToInitCreatureConfig(params: {
             modeledActionSpellcasting.readyableSpellPayloads,
         }
       : {}),
+    ...(saveAdvantageContexts.size > 0 ? { saveAdvantageContexts } : {}),
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: statBlockBattleBonusActionOptions(
       params.statBlock,

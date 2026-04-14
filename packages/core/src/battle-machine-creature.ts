@@ -832,6 +832,7 @@ export function freshCreature(
     readyableSpellPayloads: new Map(),
     hasEvasion: false,
     saveMiscBonus: 0,
+    saveAdvantageContexts: new Set(),
     critRange: 20,
     isWearingArmor: false,
     defenseArmorClassBonus: 0,

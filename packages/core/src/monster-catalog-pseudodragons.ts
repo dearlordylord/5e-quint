@@ -47,13 +47,14 @@ export const PSEUDODRAGON = {
   languages: ["Understands Common and Draconic but can't speak"],
   traits: [
     {
-      kind: "text",
+      kind: "saveModifierTrait",
       id: "magicResistance",
       name: "Magic Resistance",
       text: "The pseudodragon has Advantage on saving throws against spells and other magical effects.",
-      blockerFamily: "combatModifierTrait",
-      nonExecutableReason:
-        "Saving-throw advantage from monster traits is not yet projected into the generic monster runtime surface.",
+      saveModifier: {
+        kind: "advantage",
+        appliesTo: new Set(["spell", "magicalEffect"]),
+      },
     },
   ],
   actions: [

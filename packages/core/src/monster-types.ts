@@ -143,6 +143,11 @@ export const MONSTER_BATTLE_REACTION_OPTIONS = ["redirectAttack"] as const;
 export type MonsterBattleReactionOption =
   (typeof MONSTER_BATTLE_REACTION_OPTIONS)[number];
 
+export const MONSTER_SAVE_TRIGGER_KINDS = ["spell", "magicalEffect"] as const;
+
+export type MonsterSaveTriggerKind =
+  (typeof MONSTER_SAVE_TRIGGER_KINDS)[number];
+
 export const MONSTER_CATALOG_BLOCKER_FAMILIES = [
   "attackProjectionGap",
   "attackRider",
@@ -237,6 +242,16 @@ export interface MonsterExecutableAbility extends MonsterAbilityBase {
   readonly mechanic: string;
 }
 
+export interface MonsterSaveAdvantageModifier {
+  readonly kind: "advantage";
+  readonly appliesTo: ReadonlySet<MonsterSaveTriggerKind>;
+}
+
+export interface MonsterSaveModifierTrait extends MonsterAbilityBase {
+  readonly kind: "saveModifierTrait";
+  readonly saveModifier: MonsterSaveAdvantageModifier;
+}
+
 export interface MonsterAttackAbility extends MonsterAbilityBase {
   readonly kind: "attack";
   readonly attack: MonsterAttack;
@@ -280,6 +295,7 @@ export interface MonsterSpellcastingAbility extends MonsterAbilityBase {
 
 export type MonsterTrait =
   | MonsterExecutableAbility
+  | MonsterSaveModifierTrait
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
 export type MonsterAction =
