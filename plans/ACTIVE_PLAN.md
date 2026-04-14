@@ -102,7 +102,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 10,
       "id": "MONFAC1",
-      "status": "blocked",
+      "status": "ready-for-research",
       "title": "Monster Save-Effect Action Surface"
     },
     {
@@ -195,7 +195,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7     | MONDB4a - Freeze Dataset Expansion Scope                       | done                                          | MONDB3             | MONDB4b, MONAUD1 | Landed on `integration`: the post-tracer-bullet dataset policy is now frozen around one data-heavy first slice, one explicit unsupported-pattern report surface, and later one-facility-per-task generic-runtime follow-ons rather than a single open-ended expansion phase.                                                                                            | Complete. The queue now names a bounded first implementation slice and a stable audit/report target without reopening monster ownership or spell-boundary decisions.         |
 | 8     | MONDB4b - Martial Humanoid Dataset Slice                       | done                                          | MONDB4a            | MONAUD1   | Landed on `integration`: the first bounded bulk SRD roster slice now adds `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors` as hand-authored stat blocks, keeping compatible stock-weapon attacks on the current generic projection path and preserving unsupported clauses as explicit text-only or structured spellcasting entries. | Complete. The targeted martial-humanoid sections fit the existing stat-block, attack, multiattack, spellcasting-reference, and text-only unsupported surfaces without adding a new monster runtime facility. |
 | 9     | MONAUD1 - Stable Unsupported Pattern Report                    | done                                          | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | Landed on `integration`: the unsupported monster audit is now a stable code-derived report with explicit row fields, blocker-family ownership on authored text-only abilities, SRD citations, grouped counts by blocker family and stat block, and a generated markdown summary for planning review.                                                                  | Complete. Later monster-facility tasks can now choose from a frozen blocker-family inventory and grouped counts without re-deriving categories from prose or maintaining a parallel registry. |
-| 10    | MONFAC1 - Monster Save-Effect Action Surface                   | blocked                                       | MONAUD1            | none      | First split the current `saveEffectAction` report bucket into implementable subfamilies. The present blockers mix at least three distinct shapes: conditional-failure-band single-target actions (`Pseudodragon` `Sting`), save-plus-Prone weapon maneuvers (`Gladiator` `Shield Bash`), and movement-coupled bonus-action save effects (`Centaur Trooper` `Trampling Charge`). | Not implementation-ready. The frozen report bucket is useful for auditing, but it is still too coarse to serve as one generic runtime facility without smuggling unrelated control and movement semantics into the same task. |
+| 10    | MONFAC1 - Monster Save-Effect Action Surface                   | ready-for-research                            | MONAUD1            | none      | First split the current `saveEffectAction` report bucket into implementable subfamilies. The present blockers mix at least three distinct shapes: conditional-failure-band single-target actions (`Pseudodragon` `Sting`), save-plus-Prone weapon maneuvers (`Gladiator` `Shield Bash`), and movement-coupled bonus-action save effects (`Centaur Trooper` `Trampling Charge`). | Ready for research. The frozen report bucket is useful for auditing, but it is still too coarse to serve as one generic runtime facility without smuggling unrelated control and movement semantics into the same task. |
 | 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | done                                          | MONAUD1            | none      | Landed on `integration`: `Magic Resistance` now projects from `Pseudodragon` authored traits into the generic save-resolution lane, including stat-block battle init, raw battle creature command decoding, persisted battle state, and spell/magical-effect save resolution without adding monster-specific flags.                                                   | Complete. The first combat-modifier trait family now proves a reusable save-modifier surface, while `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain explicitly unsupported for later family-specific work. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
@@ -253,7 +253,7 @@ Structure note:
 
 Recommended next coding-loop task:
 
-1. `MONFAC2 - Monster Combat Modifier Trait Surface`
+1. `MONFAC1 - Monster Save-Effect Action Surface`
 
 Do not skip ahead to broader monster facility work or later character tasks. The current sequence is deliberate:
 
@@ -669,7 +669,7 @@ Handoff readiness:
 
 ### Task 10 - MONFAC1 - Monster Save-Effect Action Surface
 
-Status: `blocked`
+Status: `ready-for-research`
 
 Depends on: `MONAUD1`
 
@@ -698,7 +698,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked pending a design/research pass that rewrites this task into narrower child slices. Do not reopen implementation until the plan names the specific save-effect subfamily and the second validation monster that actually shares that authored shape.
+- Ready for research. Ralph should first rewrite this bucket into narrower child slices, then reopen only the narrowest implementation-ready subfamily rather than treating the task as owner-blocked.
 
 ### Task 11 - MONFAC2 - Monster Combat Modifier Trait Surface
 
