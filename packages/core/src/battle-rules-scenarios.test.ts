@@ -3898,6 +3898,59 @@ describe("battle rules scenario regressions", () => {
     expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
   });
 
+  it("applies generic raw save-advantage contexts through BATTLE_ADD_CREATURE", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: CreatureId("A"),
+          kind: "PC",
+          maxHp: 20,
+          caster: true,
+          initiativeRoll: 15,
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        {
+          id: CreatureId("B"),
+          kind: "Monster",
+          maxHp: 10,
+          saveAdvantageContexts: new Set(["spell", "magicalEffect"]),
+          initiativeRoll: 10,
+        },
+      ],
+    });
+
+    send(actor, {
+      type: "BATTLE_CAST_SAVE_SPELL",
+      targetId: CreatureId("B"),
+      saveDC: difficultyClass(13),
+      saveRoll: 5,
+      saveRollB: 15,
+      dmgOnFail: 0,
+      halfOnSave: false,
+      dt: "psychic",
+      cond: "paralyzed",
+      applyCond: true,
+      saveAbility: "wis",
+      slotLvl: spellSlotLevel(2),
+      spellName: "hold_person",
+      ritual: false,
+    });
+
+    expect(creature(actor, "B").saveAdvantageContexts).toEqual(
+      new Set(["spell", "magicalEffect"]),
+    );
+    expect(creature(actor, "B").paralyzed).toBe(false);
+  });
+
   it("natural_20: a monster daily spellcast spends its daily use through the generic AoE spell lane", () => {
     const actor = createActor(battleMachine);
     actor.start();

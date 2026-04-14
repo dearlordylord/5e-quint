@@ -62,7 +62,10 @@ import {
   statBlockAttackBattleProfile,
   statBlockLegendaryAction,
 } from "#/monster-catalog.ts";
-import { MONSTER_BATTLE_BONUS_ACTION_OPTIONS } from "#/monster-types.ts";
+import {
+  MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
+  MONSTER_SAVE_TRIGGER_KINDS,
+} from "#/monster-types.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import { withinOneSize } from "#/machine-combat.ts";
@@ -1501,6 +1504,9 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   ),
   hasEvasion: Schema.optional(Schema.Boolean),
   saveMiscBonus: Schema.optional(Schema.Number.pipe(Schema.int())),
+  saveAdvantageContexts: Schema.optional(
+    Schema.Set(Schema.Literal(...MONSTER_SAVE_TRIGGER_KINDS)),
+  ),
   critRange: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
   ),

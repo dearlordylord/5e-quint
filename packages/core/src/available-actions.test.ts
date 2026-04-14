@@ -13,6 +13,7 @@ import {
   resolveBattleAction,
   resolveAction,
   TableEventCommandSchema,
+  toBattleInitCreatureConfig,
   type ResolutionRequest,
 } from "#/available-actions.ts";
 import { battleMachine } from "#/battle-machine.ts";
@@ -936,6 +937,57 @@ describe("available actions contract", () => {
         creatures: [{ id: "A", maxHp: 20, kind: "PC" }],
       })._tag,
     ).toBe("Right");
+  });
+
+  test("control command schema decodes generic save-advantage contexts on raw BATTLE_INIT creatures", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          id: "A",
+          maxHp: 10,
+          kind: "Monster",
+          saveAdvantageContexts: ["spell", "magicalEffect"],
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_INIT");
+    if (command.type !== "BATTLE_INIT") throw new Error("expected BATTLE_INIT");
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("A"),
+      kind: "Monster",
+      maxHp: 10,
+      saveAdvantageContexts: new Set(["spell", "magicalEffect"]),
+    });
+  });
+
+  test("control command schema decodes generic save-advantage contexts on raw BATTLE_ADD_CREATURE creatures", () => {
+    const command = Schema.decodeSync(ControlCommandSchema)({
+      scope: "battle",
+      type: "BATTLE_ADD_CREATURE",
+      insertAtIndex: 1,
+      creatures: [
+        {
+          id: "A",
+          maxHp: 10,
+          kind: "Monster",
+          saveAdvantageContexts: ["spell"],
+        },
+      ],
+    });
+
+    expect(command.type).toBe("BATTLE_ADD_CREATURE");
+    if (command.type !== "BATTLE_ADD_CREATURE") {
+      throw new Error("expected BATTLE_ADD_CREATURE");
+    }
+    expect(toBattleInitCreatureConfig(command.creatures[0])).toMatchObject({
+      id: CreatureId("A"),
+      kind: "Monster",
+      maxHp: 10,
+      saveAdvantageContexts: new Set(["spell"]),
+    });
   });
 
   test("control command schema decodes BATTLE_REMOVE_CREATURE", () => {
