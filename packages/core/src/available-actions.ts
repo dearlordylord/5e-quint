@@ -57,6 +57,7 @@ import {
 import {
   getMonsterStatBlockByStateId,
   MONSTER_STAT_BLOCK_IDS,
+  monsterSpellDailyUseId,
   monsterCatalogInitCreatureConfig,
   statBlockAttackBattleProfile,
   statBlockLegendaryAction,
@@ -3798,6 +3799,8 @@ function battleActiveAoeSpellTokens(
   ] of actor.readyableSpellPayloads.entries()) {
     if (!actor.preparedSpells.has(currentSpellId)) continue;
     if (getBattleReadyableSpellDelivery(currentSpellId) !== "aoe") continue;
+    const isDailyMonsterSpell =
+      actor.dailyUsesRemaining[monsterSpellDailyUseId(currentSpellId)] != null;
     const slotOptions = currentReadyableSpellPayloads(
       actor,
       currentSpellId,
@@ -3814,11 +3817,17 @@ function battleActiveAoeSpellTokens(
         type: "BATTLE_CAST_AOE",
         spellId: currentSpellId,
         slotLevel: { options: slotOptions },
-        cost: costs(quotaCost("action"), poolCost("spellSlot")),
+        cost: isDailyMonsterSpell
+          ? costs(quotaCost("action"))
+          : costs(quotaCost("action"), poolCost("spellSlot")),
         outcome: {
-          summary: `Spend your action and a spell slot to cast ${displaySpellName(
-            currentSpellId as SpellName,
-          )} through the battle-owned area save loop`,
+          summary: isDailyMonsterSpell
+            ? `Spend your action and one daily use to cast ${displaySpellName(
+                currentSpellId as SpellName,
+              )} through the battle-owned area save loop`
+            : `Spend your action and a spell slot to cast ${displaySpellName(
+                currentSpellId as SpellName,
+              )} through the battle-owned area save loop`,
         },
       }),
     );
@@ -3850,6 +3859,7 @@ function battleActiveReadyableSpellTokens(
   > = [];
   for (const [spellName, payload] of actor.readyableSpellPayloads.entries()) {
     if (!actor.preparedSpells.has(spellName)) continue;
+    if (getBattleReadyableSpellDelivery(spellName) === "aoe") continue;
     const slotOptions = currentReadyableSpellPayloads(actor, spellName, payload)
       .map((p) => p.slotLevel)
       .sort((a, b) => a - b);
@@ -3974,6 +3984,11 @@ function currentReadyableSpellPayloads(
   storedPayload: BattleReadyableSpellPayload | undefined,
 ): ReadonlyArray<BattleReadyableSpellPayload> {
   if (storedPayload == null) return [];
+  const monsterDailyUses =
+    actor.dailyUsesRemaining[monsterSpellDailyUseId(spellId(spellName))];
+  if (monsterDailyUses != null) {
+    return monsterDailyUses > 0 ? [storedPayload] : [];
+  }
   return actor.slotsCurrent.flatMap((remaining, index) => {
     const slotLevel = spellSlotLevel(index + 1);
     if (slotLevel < storedPayload.baseLevel || remaining <= 0) return [];

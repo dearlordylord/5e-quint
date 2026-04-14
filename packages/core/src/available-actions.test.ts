@@ -19,6 +19,7 @@ import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
 import {
+  monsterCatalogInitCreatureConfig,
   GOBLIN_WARRIOR,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -750,6 +751,25 @@ function initBattleForAoeSpellDiscovery(
         preparedSpells: preparedSpellIds("burning_hands", "fireball"),
         initiativeRoll: 15,
         ...actorConfig,
+      },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
+      { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return actor;
+}
+
+function initBattleForMageSpellDiscovery() {
+  const actor = makeBattleActor({
+    type: "BATTLE_INIT",
+    creatures: [
+      {
+        ...monsterCatalogInitCreatureConfig({
+          id: CreatureId("A"),
+          statBlockId: "mage",
+          initiativeRoll: 15,
+        }),
       },
       { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 10 },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -4168,6 +4188,37 @@ describe("available actions contract", () => {
         actorId: "A",
         type: "BATTLE_CAST_AOE",
         spellId: spellId("hold_person"),
+      }),
+    );
+  });
+
+  test("battle discovery surfaces monster daily action spells through the same generic AoE token", () => {
+    const actor = initBattleForMageSpellDiscovery();
+
+    expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_CAST_AOE",
+          spellId: spellId("fireball"),
+          slotLevel: { options: [spellSlotLevel(4)] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Spend your action and one daily use to cast Fireball through the battle-owned area save loop",
+          },
+        },
+      ]),
+    );
+    expect(
+      getAvailableBattleActions(actor.getSnapshot().context),
+    ).not.toContainEqual(
+      expect.objectContaining({
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_READY_SPELL",
+        spellName: "fireball",
       }),
     );
   });

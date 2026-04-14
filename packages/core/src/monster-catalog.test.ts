@@ -21,6 +21,7 @@ import {
   MAGE,
   MONSTER_STAT_BLOCK_IDS,
   MONSTER_STAT_BLOCK_PROVENANCE,
+  monsterSpellDailyUseId,
   monsterCatalogInitCreatureConfig,
   OGRE,
   PSEUDODRAGON,
@@ -35,6 +36,7 @@ import {
   statBlockInitiativeScore,
   statBlockLegendaryAction,
   statBlockMultiattack,
+  statBlockProjectedBattleReadyableMonsterSpells,
   statBlockRechargeMinRolls,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -552,6 +554,36 @@ describe("monster catalog", () => {
     });
   });
 
+  it("projects modeled monster action spells through the generic battle spell payload lane", () => {
+    expect(statBlockProjectedBattleReadyableMonsterSpells(MAGE)).toEqual(
+      new Set([spellId("fireball")]),
+    );
+
+    const config = monsterCatalogInitCreatureConfig({
+      id: CreatureId("mage-1"),
+      statBlockId: "mage",
+    });
+
+    expect(config.preparedSpells).toEqual(new Set(["fireball"]));
+    expect(config.dailyUsesRemaining).toMatchObject({
+      [monsterSpellDailyUseId(spellId("fireball"))]: 2,
+    });
+    expect(config.readyableSpellPayloads?.get(spellId("fireball"))).toEqual({
+      baseLevel: 3,
+      slotLevel: 4,
+      release: {
+        kind: "save",
+        saveAbility: "dex",
+        saveDC: 14,
+        halfOnSuccess: true,
+        damageType: "fire",
+        damageOnFail: 54,
+        conditionOnFail: "blinded",
+        applyCondition: false,
+      },
+    });
+  });
+
   it("adds the expanded SRD dataset as authored stat blocks with explicit provenance", () => {
     expect(getMonsterStatBlock("knight")).toBe(KNIGHT);
     expect(getMonsterStatBlock("koboldWarrior")).toBe(KOBOLD_WARRIOR);
@@ -678,7 +710,7 @@ describe("monster catalog", () => {
           abilityName: "Spellcasting",
           pattern: "structuredSpellcasting",
           reason:
-            "Spellcasting is cataloged structurally, but monster spell resolution still needs the generic spellcasting execution surface tracked by MCPA6.",
+            "This spellcasting entry still includes unmodeled spell references outside the current generic battle spell surface: detect_magic, light, mage_armor, mage_hand, prestidigitation, invisibility, cone_of_cold, fly.",
         },
         {
           statBlockId: "knight",

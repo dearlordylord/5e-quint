@@ -21,6 +21,10 @@ export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import { HARPY } from "#/monster-catalog-harpies.ts";
 import { PSEUDODRAGON } from "#/monster-catalog-pseudodragons.ts";
+import {
+  getBattleReadyableSpellMechanics,
+  projectBattleReadyableSpellPayload,
+} from "#/features/spell-registry.ts";
 import { type MonsterAttack, type StatBlock } from "#/monster-types.ts";
 import type { CharacterWeapon } from "#/character-equipment-weapon-data.ts";
 import { projectBattleWeaponProfile } from "#/character-equipment.ts";
@@ -30,6 +34,10 @@ import {
   abilityScoreToMod,
   type BattleWeaponProfile,
   type CreatureId as CreatureIdT,
+  difficultyClass,
+  type SpellId,
+  spellId as makeSpellId,
+  spellSlotLevel,
 } from "#/types.ts";
 
 export { CENTAUR_TROOPER } from "#/monster-catalog-centaurs.ts";
@@ -203,6 +211,66 @@ export function statBlockAbilityName(statBlock: StatBlock, abilityId: string) {
   ].find((ability) => ability.id === abilityId)?.name;
 }
 
+const MONSTER_SPELL_DAILY_USE_PREFIX = "spell:";
+
+export function monsterSpellDailyUseId(spellId: SpellId): string {
+  return `${MONSTER_SPELL_DAILY_USE_PREFIX}${spellId}`;
+}
+
+function parseMonsterSpellDailyUses(usage: string): number | null {
+  const match = /^(\d+)\/Day(?: Each)?$/.exec(usage);
+  return match == null ? null : Number(match[1]);
+}
+
+function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
+  const dailyUsesRemaining: Record<string, number> = {};
+  const preparedSpells = new Set<string>();
+  const readyableSpellPayloads = new Map();
+
+  for (const action of statBlock.actions) {
+    if (action.kind !== "spellcasting" || action.saveDc == null) continue;
+    for (const spell of action.spells) {
+      const mechanics = getBattleReadyableSpellMechanics(spell.spellId);
+      const dailyUses = parseMonsterSpellDailyUses(spell.usage);
+      if (mechanics?.delivery !== "aoe" || dailyUses == null) continue;
+      const castLevel =
+        spell.castLevel == null
+          ? mechanics.baseLevel
+          : spellSlotLevel(spell.castLevel);
+      const payload = projectBattleReadyableSpellPayload(
+        spell.spellId,
+        castLevel,
+        difficultyClass(action.saveDc),
+      );
+      if (payload == null) continue;
+      preparedSpells.add(String(spell.spellId));
+      readyableSpellPayloads.set(makeSpellId(String(spell.spellId)), payload);
+      dailyUsesRemaining[monsterSpellDailyUseId(spell.spellId)] = dailyUses;
+    }
+  }
+
+  return {
+    preparedSpells:
+      preparedSpells.size > 0 ? new Set(preparedSpells) : undefined,
+    readyableSpellPayloads:
+      readyableSpellPayloads.size > 0 ? readyableSpellPayloads : undefined,
+    dailyUsesRemaining:
+      Object.keys(dailyUsesRemaining).length > 0
+        ? dailyUsesRemaining
+        : undefined,
+  };
+}
+
+export function statBlockProjectedBattleReadyableMonsterSpells(
+  statBlock: StatBlock,
+): ReadonlySet<SpellId> {
+  const projected =
+    statBlockModeledActionSpellcasting(statBlock).preparedSpells;
+  return projected == null
+    ? new Set()
+    : new Set([...projected].map((spellRef) => makeSpellId(spellRef)));
+}
+
 /**
  * Use the stat block's Initiative entry as the no-roll fallback.
  * SRD Overview: this is not always equal to Dexterity modifier.
@@ -303,6 +371,9 @@ export function statBlockToInitCreatureConfig(params: {
     params.statBlock,
     params.primaryAttackName,
   );
+  const modeledActionSpellcasting = statBlockModeledActionSpellcasting(
+    params.statBlock,
+  );
   const config: InitCreatureConfig = {
     id: CreatureId(params.id),
     kind: "Monster",
@@ -329,8 +400,20 @@ export function statBlockToInitCreatureConfig(params: {
     rechargeAvailable: Object.fromEntries(
       Object.keys(params.statBlock.rechargeAbilities).map((id) => [id, false]),
     ),
-    dailyUsesRemaining: params.statBlock.dailyAbilities,
+    dailyUsesRemaining: {
+      ...params.statBlock.dailyAbilities,
+      ...(modeledActionSpellcasting.dailyUsesRemaining ?? {}),
+    },
     rechargeMinRolls: statBlockRechargeMinRolls(params.statBlock),
+    ...(modeledActionSpellcasting.preparedSpells != null
+      ? { preparedSpells: modeledActionSpellcasting.preparedSpells }
+      : {}),
+    ...(modeledActionSpellcasting.readyableSpellPayloads != null
+      ? {
+          readyableSpellPayloads:
+            modeledActionSpellcasting.readyableSpellPayloads,
+        }
+      : {}),
     baseWalkSpeed: params.statBlock.speeds.walk,
     battleBonusActionOptions: statBlockBattleBonusActionOptions(
       params.statBlock,

@@ -1,6 +1,7 @@
 import {
   getMonsterStatBlock,
   MONSTER_STAT_BLOCK_IDS,
+  statBlockProjectedBattleReadyableMonsterSpells,
   type MonsterStatBlockId,
 } from "#/monster-catalog.ts";
 import type {
@@ -58,6 +59,12 @@ function sectionEntries(
       continue;
     }
     if (ability.kind === "spellcasting") {
+      const projectedSpells =
+        statBlockProjectedBattleReadyableMonsterSpells(statBlock);
+      const unsupportedSpellIds = ability.spells
+        .map((spell) => spell.spellId)
+        .filter((spellId) => !projectedSpells.has(spellId));
+      if (unsupportedSpellIds.length === 0) continue;
       unsupported.push({
         statBlockId,
         monsterName: statBlock.name,
@@ -66,7 +73,9 @@ function sectionEntries(
         abilityName: ability.name,
         pattern: "structuredSpellcasting",
         reason:
-          "Spellcasting is cataloged structurally, but monster spell resolution still needs the generic spellcasting execution surface tracked by MCPA6.",
+          projectedSpells.size === 0
+            ? "This spellcasting entry has no modeled spell references on the current generic battle spell surface."
+            : `This spellcasting entry still includes unmodeled spell references outside the current generic battle spell surface: ${unsupportedSpellIds.join(", ")}.`,
       });
     }
   }
