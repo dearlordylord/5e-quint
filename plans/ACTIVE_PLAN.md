@@ -108,7 +108,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 11,
       "id": "MONFAC2",
-      "status": "ready-for-research",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Monster Combat Modifier Trait Surface"
     },
     {
@@ -196,7 +196,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8     | MONDB4b - Martial Humanoid Dataset Slice                       | done                                          | MONDB4a            | MONAUD1   | Landed on `integration`: the first bounded bulk SRD roster slice now adds `Bandits`, `Berserker`, `Commoner`, `Cultists`, `Gladiator`, `Guards`, `Noble`, `Pirates`, `Spy`, `Toughs`, and `Warriors` as hand-authored stat blocks, keeping compatible stock-weapon attacks on the current generic projection path and preserving unsupported clauses as explicit text-only or structured spellcasting entries. | Complete. The targeted martial-humanoid sections fit the existing stat-block, attack, multiattack, spellcasting-reference, and text-only unsupported surfaces without adding a new monster runtime facility. |
 | 9     | MONAUD1 - Stable Unsupported Pattern Report                    | done                                          | MONDB4a, MONDB4b   | MONFAC1, MONFAC2 | Landed on `integration`: the unsupported monster audit is now a stable code-derived report with explicit row fields, blocker-family ownership on authored text-only abilities, SRD citations, grouped counts by blocker family and stat block, and a generated markdown summary for planning review.                                                                  | Complete. Later monster-facility tasks can now choose from a frozen blocker-family inventory and grouped counts without re-deriving categories from prose or maintaining a parallel registry. |
 | 10    | MONFAC1 - Monster Save-Effect Action Surface                   | ready-for-research                            | MONAUD1            | none      | Choose one reusable save-effect action family from the report and model it through one generic runtime surface, starting from existing catalog blockers such as `Pseudodragon` `Sting` and then validating on one adjacent future monster.                                                                                                                              | Research-ready. The report should narrow the first family to a single durable surface instead of mixing conditional failure bands, charm prerequisites, and long control in one task. |
-| 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | ready-for-research                            | MONAUD1            | none      | Choose one reusable combat-modifier trait family from the report and land it as a generic runtime surface, starting from current blockers such as `Pack Tactics`, `Blood Frenzy`, `Magic Resistance`, or `Sunlight Sensitivity` without widening into full environment or domination simulation.                                                                   | Research-ready. The unsupported inventory is now explicit enough to split short-horizon combat modifiers from long-horizon environment/control effects.                    |
+| 11    | MONFAC2 - Monster Combat Modifier Trait Surface                | ready-for-implementation-after-light-research | MONAUD1            | none      | Implement `Magic Resistance` first as the initial generic combat-modifier trait family, starting with `Pseudodragon`, without widening into full environment or attack-position trait handling.                                                                                               | Ready for implementation after light research. `Magic Resistance` cleanly reuses the save-resolution lane, while `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain separate families. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
 | 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
 | 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
@@ -668,7 +668,7 @@ Handoff readiness:
 
 ### Task 10 - MONFAC1 - Monster Save-Effect Action Surface
 
-Status: `ready-for-research`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `MONAUD1`
 
@@ -706,16 +706,18 @@ Blocks: none
 Scope:
 
 - Choose one reusable combat-modifier trait family from the unsupported-pattern report and land it as a generic runtime surface.
-- Candidate starting points include `Pack Tactics`, `Blood Frenzy`, `Magic Resistance`, and `Sunlight Sensitivity`, but the task must pick one family rather than absorbing all trait modifiers at once.
+- Implement one reusable combat-modifier trait family from the unsupported-pattern report as a generic runtime surface.
+- This task is now scoped to `Magic Resistance`, starting with `Pseudodragon`.
 - Keep long-horizon environment rules and non-combat command relationships out of scope unless they are structurally inseparable from the chosen family.
 
 Next action:
 
-- Use the stable report to separate short-horizon combat modifiers from environment-only or control-only traits, then select the highest-leverage first family.
+- Read the relevant SRD text and ubiquitous-language entries, then implement `Magic Resistance` as a generic save-modifier trait that projects through battle init/state and save resolution.
 
 Research note:
 
-- This task exists because the audit now makes the trait backlog visible. It should not silently become a broad “support monster traits” umbrella.
+- `Magic Resistance` is the chosen first family because it reuses the generic save-resolution owner and does not require new environment-state ownership.
+- `Pack Tactics`, `Sunlight Sensitivity`, `Bloodied Frenzy`, and `Blood Frenzy` remain explicit unsupported text because they require different predicate families and should not be collapsed into this task.
 
 Verification requirements:
 
