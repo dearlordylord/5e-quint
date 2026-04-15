@@ -3,7 +3,11 @@ export {
   applyCharacterDraftUpdate,
   CHARACTER_OPEN_CHOICE_CODES,
   finalizeCharacterDraft,
+  previewCharacterDraftUpdate,
   type CharacterDraftAssessment,
+  type CharacterDraftDroppedFact,
+  type CharacterDraftPreviewValue,
+  type CharacterDraftUpdatePreview,
   type CharacterOpenChoice,
   type CharacterOpenChoiceCode,
 } from "#/character-draft-analysis.ts";

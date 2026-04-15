@@ -13,6 +13,7 @@ import {
   finalAbilityModifiers,
   ownedCombatEquipment,
   POINT_BUY_BUDGET,
+  previewCharacterDraftUpdate,
   projectBattleWeaponProfile,
   deriveProficiencyBonus,
   singleClassAdvancement,
@@ -1159,6 +1160,84 @@ describe("character-domain", () => {
     expect(updated.languages).toEqual(["Common", "Dwarvish", "Elvish"]);
   });
 
+  it("previews destructive draft edits without mutating the current draft", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      primaryClass: "wizard",
+      background: "acolyte",
+      species: "dwarf",
+    });
+
+    expect(current).toEqual(completeDraft());
+    expect(preview.candidateDraft).toEqual(
+      applyCharacterDraftUpdate(current, {
+        primaryClass: "wizard",
+        background: "acolyte",
+        species: "dwarf",
+      }),
+    );
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["advancement"],
+        before: [{ className: "fighter" }],
+        after: [{ className: "wizard" }],
+      },
+      {
+        path: ["backgroundAbilityScoreIncrease"],
+        before: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "str",
+          plusOne: "con",
+        },
+      },
+      {
+        path: ["choices", "primaryClassSkills"],
+        before: ["acrobatics", "perception"],
+      },
+      {
+        path: ["choices", "backgroundTool"],
+        before: "dice",
+      },
+      {
+        path: ["choices", "speciesSkill"],
+        before: "stealth",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "feat"],
+        before: "skilled",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "proficiencies"],
+        before: ["history", "thievesTools", "viol"],
+      },
+      {
+        path: ["equipment", "purchasedCombatEquipment"],
+        before: [],
+      },
+      {
+        path: ["equipment", "remainingGoldPieces"],
+        before: 18,
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeapon"],
+        before: "greatsword",
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeaponGrip"],
+        before: "twoHanded",
+      },
+    ]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingBackgroundAbilityScoreIncrease",
+      "missingPrimaryClassSkillChoices",
+      "missingRemainingGoldPieces",
+      "missingSpellcastingChoices",
+    ]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
+    expect(preview.candidateAssessment.status).toBe("incomplete");
+  });
+
   it("reopens overspent equipment and spellcasting-dependent extras after earlier choices change", () => {
     const updated = applyCharacterDraftUpdate(
       {
@@ -1218,6 +1297,199 @@ describe("character-domain", () => {
     expect(updated.equipment?.remainingGoldPieces).toBeUndefined();
     expect(updated.equipment?.loadout?.wornArmor).toBeUndefined();
     expect(updated.equipment?.loadout?.shield).toBeUndefined();
+  });
+
+  it("previews dropped spellcasting and equipment facts after an upstream cleric change", () => {
+    const current = completeDraft({
+      primaryClass: "cleric",
+      advancement: singleClassAdvancement("cleric", 1),
+      background: "acolyte",
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "wis",
+        plusOne: "int",
+      },
+      species: "dwarf",
+      choices: {
+        primaryClassSkills: ["history", "insight"],
+        clericDivineOrder: "thaumaturge",
+      },
+      spellcasting: {
+        cleric: {
+          cantrips: ["guidance", "light", "mending", "resistance"],
+          preparedSpells: [
+            "bless",
+            "cure_wounds",
+            "detect_magic",
+            "guiding_bolt",
+          ],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "gold",
+        purchasedCombatEquipment: ["chainMail", "shield"],
+        remainingGoldPieces: 78,
+        loadout: {
+          wornArmor: "chainMail",
+          shield: true,
+        },
+      },
+    });
+
+    const preview = previewCharacterDraftUpdate(current, {
+      background: "criminal",
+      choices: {
+        primaryClassSkills: ["history", "insight"],
+        clericDivineOrder: "protector",
+      },
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["backgroundAbilityScoreIncrease"],
+        before: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "wis",
+          plusOne: "int",
+        },
+      },
+      {
+        path: ["equipment", "purchasedCombatEquipment"],
+        before: ["chainMail", "shield"],
+      },
+      {
+        path: ["equipment", "remainingGoldPieces"],
+        before: 78,
+      },
+      {
+        path: ["equipment", "loadout", "wornArmor"],
+        before: "chainMail",
+      },
+      {
+        path: ["equipment", "loadout", "shield"],
+        before: true,
+      },
+      {
+        path: ["spellcasting", "cleric", "cantrips"],
+        before: ["guidance", "light", "mending", "resistance"],
+        after: ["guidance", "light", "mending"],
+      },
+    ]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingBackgroundAbilityScoreIncrease",
+      "missingRemainingGoldPieces",
+    ]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
+  });
+
+  it("reports sanitized losses inside a carried choices object when an upstream change invalidates them", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      species: "dwarf",
+      choices: current.choices,
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["choices", "speciesSkill"],
+        before: "stealth",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "feat"],
+        before: "skilled",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "proficiencies"],
+        before: ["history", "thievesTools", "viol"],
+      },
+    ]);
+    expect(preview.candidateDraft.choices).toEqual({
+      primaryClassSkills: ["acrobatics", "perception"],
+      backgroundTool: "dice",
+    });
+  });
+
+  it("treats omitted nested fields inside whole-object choice patches as direct edits", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      choices: {
+        backgroundTool: "dice",
+      },
+    });
+
+    expect(preview.droppedFacts).toEqual([]);
+    expect(preview.candidateDraft.choices).toEqual({
+      backgroundTool: "dice",
+    });
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingPrimaryClassSkillChoices",
+      "missingSpeciesSkillChoice",
+      "missingOriginFeatChoice",
+    ]);
+  });
+
+  it("previews newly introduced illegal issues without counting direct edits as dropped facts", () => {
+    const preview = previewCharacterDraftUpdate(completeDraft(), {
+      languages: ["Common", "Elvish", "Elvish"],
+    });
+
+    expect(preview.droppedFacts).toEqual([]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "tooFewLanguages",
+    ]);
+    expect(preview.newlyIntroducedIssues.map((issue) => issue.code)).toEqual([
+      "duplicateLanguages",
+    ]);
+    expect(preview.candidateDraft.languages).toEqual([
+      "Common",
+      "Elvish",
+      "Elvish",
+    ]);
+  });
+
+  it("does not report already-open spellcasting requirements as newly opened when only their messages change", () => {
+    const current = completeDraft({
+      primaryClass: "wizard",
+      advancement: singleClassAdvancement("wizard", 1),
+      choices: {
+        ...completeDraft().choices,
+        primaryClassSkills: ["arcana", "history"],
+      },
+      spellcasting: {
+        wizard: {
+          cantrips: ["acid_splash", "fire_bolt"],
+          preparedSpells: ["detect_magic"],
+          spellbook: ["detect_magic"],
+        },
+      },
+    });
+
+    const currentAssessment = assessCharacterDraft(current);
+    expect(currentAssessment.openChoices.map((choice) => choice.code)).toEqual([
+      "wrongCantripChoiceCount",
+      "wrongPreparedSpellChoiceCount",
+      "wrongWizardSpellbookChoiceCount",
+    ]);
+
+    const preview = previewCharacterDraftUpdate(current, {
+      advancement: singleClassAdvancement("wizard", 2),
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["equipment", "loadout", "wieldedWeapon"],
+        before: "greatsword",
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeaponGrip"],
+        before: "twoHanded",
+      },
+    ]);
+    expect(preview.newlyOpenedChoices).toEqual([]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
   });
 
   it("rejects invalid standard-array and language assignments", () => {

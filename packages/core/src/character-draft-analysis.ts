@@ -36,7 +36,18 @@ import {
   applyCharacterDraftUpdate,
   normalizeClassLevels,
 } from "#/character-draft-sanitizers.ts";
+import {
+  collectDroppedDraftFacts,
+  diffPreviewEntries,
+  filterDirectlyPatchedDroppedFacts,
+  type CharacterDraftDroppedFact,
+} from "#/character-draft-update-preview.ts";
 import { validateCharacterEquipment } from "#/character-equipment-validation.ts";
+
+export type {
+  CharacterDraftDroppedFact,
+  CharacterDraftPreviewValue,
+} from "#/character-draft-update-preview.ts";
 
 export const CHARACTER_OPEN_CHOICE_CODES = [
   "missingPrimaryClass",
@@ -91,6 +102,14 @@ export interface CharacterDraftAssessment {
   readonly issues: ReadonlyArray<CharacterFinalizationIssue>;
   readonly status: "complete" | "incomplete" | "invalid";
   readonly sheet?: CharacterSheet;
+}
+
+export interface CharacterDraftUpdatePreview {
+  readonly candidateDraft: CharacterDraft;
+  readonly candidateAssessment: CharacterDraftAssessment;
+  readonly droppedFacts: ReadonlyArray<CharacterDraftDroppedFact>;
+  readonly newlyOpenedChoices: ReadonlyArray<CharacterOpenChoice>;
+  readonly newlyIntroducedIssues: ReadonlyArray<CharacterFinalizationIssue>;
 }
 
 function isOpenChoiceCode(
@@ -278,6 +297,34 @@ export function assessCharacterDraft(
 }
 
 export { applyCharacterDraftUpdate };
+
+export function previewCharacterDraftUpdate(
+  current: CharacterDraft,
+  patch: Partial<CharacterDraft>,
+): CharacterDraftUpdatePreview {
+  const candidateDraft = applyCharacterDraftUpdate(current, patch);
+  const currentAssessment = assessCharacterDraft(current);
+  const candidateAssessment = assessCharacterDraft(candidateDraft);
+  const droppedFacts = filterDirectlyPatchedDroppedFacts({
+    current,
+    patch,
+    droppedFacts: collectDroppedDraftFacts(current, candidateDraft),
+  });
+
+  return {
+    candidateDraft,
+    candidateAssessment,
+    droppedFacts,
+    newlyOpenedChoices: diffPreviewEntries(
+      currentAssessment.openChoices,
+      candidateAssessment.openChoices,
+    ),
+    newlyIntroducedIssues: diffPreviewEntries(
+      currentAssessment.issues,
+      candidateAssessment.issues,
+    ),
+  };
+}
 
 export function finalizeCharacterDraft(
   draft: CharacterDraft,

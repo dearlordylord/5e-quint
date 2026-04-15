@@ -138,13 +138,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 12,
       "id": "CHAREDIT1",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Mandatory Character Draft Update Preview"
     },
     {
       "number": 13,
       "id": "CHARMCP1",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Stored Character MCP Surface"
     },
     {
@@ -225,8 +225,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | done                                          | MONFAC1            | none      | Landed on `integration`: `Gladiator` `Shield Bash` now projects through the shared single-target monster save-effect lane as an immediate fail rider that deals damage and applies a size-gated `Prone` condition without timed-effect bookkeeping. | Complete. Size-gated direct `Prone` riders belong in the same single-target save-effect family, while area shapes, push-coupled riders, and movement-coupled targeting remain separate follow-on families. |
 | 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | done                                          | MONFAC1            | MONMOB1   | Landed as research only: `Centaur Trooper` `Trampling Charge` should not extend the current single-target `saveEffectAction` lane. The durable prerequisite is a movement-owned traversal surface because the current battle movement event spends movement and handles opportunity attacks only; it does not own path, entered-creature enumeration, or position updates. | Complete as research. The family boundary is now explicit: traversal movement must land first, then `Trampling Charge` can consume it as the first entered-creature save rider. |
 | 22    | MONMOB1 - Monster Traversal Movement Surface                   | done                                          | MONFAC1C           | none      | Landed on `integration`: the battle runtime now owns one generic monster traversal movement surface with explicit destination, movement-spend, pass-through-size, and ordered entered-creature facts, and `Centaur Trooper` `Trampling Charge` is the first consumer. Traversal save continuation, Legendary Resistance, and half-on-success parity now resume through the same shared lane without widening adjacent families like `Engulf`, `Aquatic Charge`, or move-then-attack actions. | Complete. Traversal-triggered entered-creature save riders now have a movement-owned shell, while adjacent traversal families remain explicitly out of scope for later tasks. |
-| 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | ready-for-implementation-after-light-research | none               | CHARMCP1, CHARMODEL1 | Implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation. Do the light repo/SRD check, then land the canonical preview-before-commit seam.                                                     |
-| 13    | CHARMCP1 - Stored Character MCP Surface                        | blocked                                       | CHAREDIT1          | CHARAUTH1 | Wait for `CHAREDIT1`, then add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is well-scoped, but it should consume preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
+| 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | done                                          | none               | CHARMCP1, CHARMODEL1 | Landed on `integration`: the character domain now exports a first-class `previewCharacterDraftUpdate()` operation that computes the sanitized candidate draft, dropped authored facts, newly opened choices, and newly introduced illegal issues without mutating the current draft, with task-scoped regression coverage for class/background/species/equipment/spellcasting fallout and stable code-based diffing for already-open issues. | Complete. Downstream callers can now consume one core-owned preview-before-commit seam instead of inventing adapter-local diff logic over post-sanitized drafts. |
+| 13    | CHARMCP1 - Stored Character MCP Surface                        | ready-for-implementation-after-light-research | CHAREDIT1          | CHARAUTH1 | Use the landed `previewCharacterDraftUpdate()` seam as the stored-record preview boundary, then add the minimal server-side MCP storage and apply/finalize/advance surfaces over canonical `CharacterDraft` / `CharacterSheet` state using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                              | Implementation-ready. The core preview/apply split now exists, so MCP can stay thin and expose preview versus commit as separate downstream operations. |
 | 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | ready-for-implementation-after-light-research | none               | CHAROWN2  | Clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped. It is implementation-ready and no longer parked behind a fake batch boundary.                                     |
 | 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | blocked                                       | CHAROWN1           | CHARMODEL1 | Wait for `CHAROWN1`, then add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, but they should build on the cleanup slice first so the ownership line stays single-source. |
 | 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | blocked                                       | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | Wait for `CHAREDIT1` and `CHAROWN2`, then remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
@@ -883,7 +883,7 @@ Verification requirements:
 
 ### Task 12 - CHAREDIT1 - Mandatory Character Draft Update Preview
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -903,7 +903,7 @@ Scope:
 
 Next action:
 
-- Start from the current `applyCharacterDraftUpdate()` and `assessCharacterDraft()` surfaces and design the stable preview result shape before editing callers.
+- Landed on `integration`: `packages/core/src/character-draft-analysis.ts` now exports `previewCharacterDraftUpdate()` and the shared preview result types, while `packages/core/src/character-draft-update-preview.ts` owns dropped-fact collection, direct-edit filtering, and stable code-count diffing for newly opened choices and newly introduced illegal issues.
 
 Research note:
 
@@ -916,10 +916,12 @@ Verification requirements:
 - Verify destructive upstream changes surface dropped facts, reopened holes, and new illegal issues before commit.
 - Run task-scoped character-domain tests only; battle MBT is out of scope.
 - Include `/simplify` convergence, minimum two rounds.
+- `/simplify` round 1: kept the new preview surface inside the existing character-domain owner instead of adding a caller-local diff helper or a second draft-update path; no extra adapter registry or parallel preview state remained.
+- `/simplify` round 2: re-checked the preview diff identity and reduced it to stable code-count semantics so already-open choices/issues do not reappear as “new” when only validator message text changes.
 
 ### Task 13 - CHARMCP1 - Stored Character MCP Surface
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `CHAREDIT1`
 
@@ -939,7 +941,7 @@ Scope:
 
 Next action:
 
-- After `CHAREDIT1`, inventory the current MCP storage/runtime facilities and choose the minimal stored-record pattern that keeps the adapter thin.
+- Inventory the current MCP storage/runtime facilities and wire them to the landed `previewCharacterDraftUpdate()` plus the existing apply/finalize/advance surfaces, choosing the minimal stored-record pattern that keeps the adapter thin.
 
 Research note:
 
