@@ -12,9 +12,10 @@ import {
   type CharacterEquipmentChoicesDraft,
   type CharacterLoadoutDraft,
 } from "#/character-equipment.ts";
-import { CLASS_PACKAGE_DATA } from "#/character-equipment-data.ts";
-import { validateCharacterEquipment } from "#/character-equipment-validation.ts";
-import { type ClassName } from "#/features/class-tables.ts";
+import {
+  classOptionIsAllowed,
+  validateCharacterEquipment,
+} from "#/character-equipment-validation.ts";
 import { sanitizeSpellcastingChoices } from "#/character-draft-spell-sanitizers.ts";
 
 type MutableCharacterEquipmentChoicesDraft = {
@@ -32,16 +33,6 @@ export function normalizeClassLevels(
     ...ZERO_CLASS_LEVELS,
     ...partial,
   };
-}
-
-function classOptionIsAllowed(
-  primaryClass: ClassName,
-  option: CharacterEquipmentChoicesDraft["classOption"],
-): boolean {
-  if (option == null) return false;
-  return option === "gold" || option === "packageA"
-    ? true
-    : CLASS_PACKAGE_DATA[primaryClass].packageB != null;
 }
 
 function sanitizeEquipmentChoices(

@@ -25,6 +25,8 @@ const FIGHTING_STYLE_NAMES = [
   "twoWeaponFighting",
 ] as const;
 
+export const EXPERTISE_MESSAGE_PREFIX = "current class levels require" as const;
+
 function invalidFeatureChoiceIssue(
   message: string,
 ): CharacterFinalizationIssue {
@@ -190,7 +192,7 @@ export function validateFeatureChoices(
   ) {
     issues.push({
       code: "missingFeatureChoice",
-      message: `current class levels require ${expectedExpertiseChoices} Expertise skill choices.`,
+      message: `${EXPERTISE_MESSAGE_PREFIX} ${expectedExpertiseChoices} Expertise skill choices.`,
     });
   }
   if (expectedExpertiseChoices === 0 && expertiseSkills.length > 0) {

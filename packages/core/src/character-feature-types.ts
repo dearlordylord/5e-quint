@@ -1,4 +1,4 @@
-import type { CharacterLanguage } from "#/character-domain.ts";
+import { CHARACTER_LANGUAGES, type CharacterLanguage } from "#/character-domain-model.ts";
 import type { ClassName } from "#/features/class-tables.ts";
 import {
   FIGHTING_STYLES,
@@ -19,9 +19,13 @@ export const CHARACTER_RARE_LANGUAGES = [
   "Undercommon",
 ] as const;
 export type CharacterRareLanguage = (typeof CHARACTER_RARE_LANGUAGES)[number];
+
+export const CHARACTER_GRANTED_LANGUAGES = [
+  ...CHARACTER_LANGUAGES,
+  ...CHARACTER_RARE_LANGUAGES,
+] as const satisfies ReadonlyArray<CharacterLanguage | CharacterRareLanguage>;
 export type CharacterGrantedLanguage =
-  | CharacterLanguage
-  | CharacterRareLanguage;
+  (typeof CHARACTER_GRANTED_LANGUAGES)[number];
 
 export const ARTISAN_TOOLS = [
   "alchemistsSupplies",

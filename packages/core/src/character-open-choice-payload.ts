@@ -1,24 +1,53 @@
 import { advancementToClassLevels } from "#/character-advancement.ts";
-import type { CharacterOpenChoice } from "#/character-draft-analysis.ts";
-import type { CharacterDraft } from "#/character-domain-model.ts";
 import {
+  CHOICE_MESSAGE_PREFIXES,
+  multiclassSkillsMessagePrefix,
+} from "#/character-build-choice-validation.ts";
+import type {
+  CharacterOpenChoice,
+  CharacterOpenChoiceCode,
+} from "#/character-draft-analysis.ts";
+import type {
+  CharacterClassLevels,
+  CharacterDraft,
+} from "#/character-domain-model.ts";
+import { EXPERTISE_MESSAGE_PREFIX } from "#/character-feature-choice-validation.ts";
+import {
+  ARTISAN_TOOLS,
+  CHARACTER_GRANTED_LANGUAGES,
+  CHARACTER_TOOL_PROFICIENCIES,
   CLERIC_DIVINE_ORDERS,
   DRUID_PRIMAL_ORDERS,
+  GAMING_SETS,
+  MUSICAL_INSTRUMENTS,
+  ORIGIN_FEAT_IDS,
   PALADIN_FIGHTING_STYLE_CHOICES,
   RANGER_FIGHTING_STYLE_CHOICES,
+  type CharacterOriginFeatId,
+  type CharacterOriginFeatSelection,
 } from "#/character-feature-types.ts";
 import {
+  CHARACTER_BACKGROUND_EQUIPMENT_OPTIONS,
+  CHARACTER_CLASS_EQUIPMENT_OPTIONS,
+  type CharacterClassEquipmentOption,
+} from "#/character-equipment-data.ts";
+import { classOptionIsAllowed } from "#/character-equipment-validation.ts";
+import {
+  expectedExpertiseChoiceCount,
   hasChampionAdditionalFightingStyleSlot,
   hasFighterFightingStyleSlot,
   hasPaladinFightingStyleSlot,
   hasRangerFightingStyleSlot,
 } from "#/character-feature-choices.ts";
 import {
+  deriveGrantedSkillProficiencies,
   ELF_KEEN_SENSES_SKILLS,
+  MULTICLASS_PROFICIENCIES,
   PRIMARY_CLASS_PROFICIENCIES,
   SKILLS,
   speciesGrantsSkill,
 } from "#/character-proficiencies.ts";
+import type { ClassName } from "#/features/class-tables.ts";
 import { FIGHTING_STYLES } from "#/features/class-fighter.ts";
 
 export interface CharacterOpenChoicePayload {
@@ -27,41 +56,35 @@ export interface CharacterOpenChoicePayload {
   readonly pickCount: number;
   readonly writePath: ReadonlyArray<string>;
   readonly current: ReadonlyArray<string>;
+  readonly lift?: (
+    value: string | ReadonlyArray<string> | undefined,
+    draft: CharacterDraft,
+  ) => unknown;
 }
 
-function classLevelsFromDraft(draft: CharacterDraft) {
-  return draft.advancement == null
-    ? null
-    : advancementToClassLevels(draft.advancement);
+type MulticlassSkillClass = Extract<ClassName, "bard" | "ranger" | "rogue">;
+const MULTICLASS_SKILL_CLASSES = [
+  "bard",
+  "ranger",
+  "rogue",
+] as const satisfies ReadonlyArray<MulticlassSkillClass>;
+
+interface ResolverContext {
+  readonly draft: CharacterDraft;
+  readonly classLevels: CharacterClassLevels | null;
 }
 
-function payloadForPrimaryClassSkills(
-  draft: CharacterDraft,
-): CharacterOpenChoicePayload | null {
-  if (draft.primaryClass == null) return null;
-  const proficiency = PRIMARY_CLASS_PROFICIENCIES[draft.primaryClass];
+type PayloadResolver = (
+  context: ResolverContext,
+) => CharacterOpenChoicePayload | null;
+
+function resolverContext(draft: CharacterDraft): ResolverContext {
   return {
-    featureRef: `primary_class_skills:${draft.primaryClass}`,
-    options: [...proficiency.availableSkills],
-    pickCount: proficiency.skillChoiceCount,
-    writePath: ["choices", "primaryClassSkills"],
-    current: [...(draft.choices?.primaryClassSkills ?? [])],
-  };
-}
-
-function payloadForSpeciesSkill(
-  draft: CharacterDraft,
-): CharacterOpenChoicePayload | null {
-  if (draft.species == null || !speciesGrantsSkill(draft.species)) return null;
-  const options =
-    draft.species === "elf" ? [...ELF_KEEN_SENSES_SKILLS] : [...SKILLS];
-  return {
-    featureRef: `species_skill:${draft.species}`,
-    options,
-    pickCount: 1,
-    writePath: ["choices", "speciesSkill"],
-    current:
-      draft.choices?.speciesSkill == null ? [] : [draft.choices.speciesSkill],
+    draft,
+    classLevels:
+      draft.advancement == null
+        ? null
+        : advancementToClassLevels(draft.advancement),
   };
 }
 
@@ -80,6 +103,252 @@ function singlePickChoicePayload(params: {
   };
 }
 
+function multiPickChoicePayload(params: {
+  readonly featureRef: string;
+  readonly options: ReadonlyArray<string>;
+  readonly pickCount: number;
+  readonly writePath: ReadonlyArray<string>;
+  readonly currentValues: ReadonlyArray<string> | undefined;
+}): CharacterOpenChoicePayload {
+  return {
+    featureRef: params.featureRef,
+    options: [...params.options],
+    pickCount: params.pickCount,
+    writePath: params.writePath,
+    current: [...(params.currentValues ?? [])],
+  };
+}
+
+function payloadForPrimaryClassSkills({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.primaryClass == null) return null;
+  const proficiency = PRIMARY_CLASS_PROFICIENCIES[draft.primaryClass];
+  return multiPickChoicePayload({
+    featureRef: `primary_class_skills:${draft.primaryClass}`,
+    options: proficiency.availableSkills,
+    pickCount: proficiency.skillChoiceCount,
+    writePath: ["choices", "primaryClassSkills"],
+    currentValues: draft.choices?.primaryClassSkills,
+  });
+}
+
+function payloadForSpeciesSkill({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.species == null || !speciesGrantsSkill(draft.species)) return null;
+  const options =
+    draft.species === "elf" ? [...ELF_KEEN_SENSES_SKILLS] : [...SKILLS];
+  return singlePickChoicePayload({
+    featureRef: `species_skill:${draft.species}`,
+    options,
+    writePath: ["choices", "speciesSkill"],
+    currentValue: draft.choices?.speciesSkill,
+  });
+}
+
+function payloadForBackgroundTool({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.background !== "soldier") return null;
+  return singlePickChoicePayload({
+    featureRef: "background_tool:soldier",
+    options: GAMING_SETS,
+    writePath: ["choices", "backgroundTool"],
+    currentValue: draft.choices?.backgroundTool,
+  });
+}
+
+function payloadForMonkTool({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.primaryClass !== "monk") return null;
+  return singlePickChoicePayload({
+    featureRef: "monk_tool",
+    options: [...ARTISAN_TOOLS, ...MUSICAL_INSTRUMENTS],
+    writePath: ["choices", "monkTool"],
+    currentValue: draft.choices?.monkTool,
+  });
+}
+
+function payloadForBardInstruments({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.primaryClass !== "bard") return null;
+  return multiPickChoicePayload({
+    featureRef: "bard_instruments",
+    options: MUSICAL_INSTRUMENTS,
+    pickCount: 3,
+    writePath: ["choices", "bardInstruments"],
+    currentValues: draft.choices?.bardInstruments,
+  });
+}
+
+function payloadForMulticlassBardInstrument({
+  draft,
+  classLevels,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (classLevels == null || classLevels.bard <= 0) return null;
+  if (draft.primaryClass === "bard") return null;
+  return singlePickChoicePayload({
+    featureRef: "multiclass_bard_instrument",
+    options: MUSICAL_INSTRUMENTS,
+    writePath: ["choices", "multiclassBardInstrument"],
+    currentValue: draft.choices?.multiclassBardInstrument,
+  });
+}
+
+function payloadForRogueLanguage({
+  draft,
+  classLevels,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (classLevels == null || classLevels.rogue <= 0) return null;
+  return singlePickChoicePayload({
+    featureRef: "rogue_language",
+    options: CHARACTER_GRANTED_LANGUAGES.filter(
+      (lang) => lang !== "Thieves' Cant",
+    ),
+    writePath: ["choices", "rogueLanguage"],
+    currentValue: draft.choices?.rogueLanguage,
+  });
+}
+
+function payloadForRangerDeftExplorerLanguages({
+  draft,
+  classLevels,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (classLevels == null || classLevels.ranger < 2) return null;
+  return multiPickChoicePayload({
+    featureRef: "ranger_deft_explorer_languages",
+    options: CHARACTER_GRANTED_LANGUAGES,
+    pickCount: 2,
+    writePath: ["choices", "rangerDeftExplorerLanguages"],
+    currentValues: draft.choices?.rangerDeftExplorerLanguages,
+  });
+}
+
+function payloadForExpertiseSkills({
+  draft,
+  classLevels,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (classLevels == null) return null;
+  const pickCount = expectedExpertiseChoiceCount(classLevels);
+  if (pickCount === 0) return null;
+  const grantedSkills = deriveGrantedSkillProficiencies({
+    primaryClass: draft.primaryClass,
+    background: draft.background,
+    species: draft.species,
+    classLevels,
+    choices: draft.choices,
+    advancement: draft.advancement,
+  });
+  return multiPickChoicePayload({
+    featureRef: "expertise_skills",
+    options: grantedSkills,
+    pickCount,
+    writePath: ["choices", "expertiseSkills"],
+    currentValues: draft.choices?.expertiseSkills,
+  });
+}
+
+function payloadForMulticlassSkills(
+  { draft, classLevels }: ResolverContext,
+  className: MulticlassSkillClass,
+): CharacterOpenChoicePayload | null {
+  if (classLevels == null || classLevels[className] <= 0) return null;
+  if (draft.primaryClass === className) return null;
+  const gains = MULTICLASS_PROFICIENCIES[className];
+  if (gains.skillChoiceCount === 0) return null;
+  return multiPickChoicePayload({
+    featureRef: `multiclass_skills:${className}`,
+    options: gains.availableSkills,
+    pickCount: gains.skillChoiceCount,
+    writePath: ["choices", "multiclassSkills", className],
+    currentValues: draft.choices?.multiclassSkills?.[className],
+  });
+}
+
+function isOriginFeatId(value: unknown): value is CharacterOriginFeatId {
+  return (
+    typeof value === "string" &&
+    (ORIGIN_FEAT_IDS as ReadonlyArray<string>).includes(value)
+  );
+}
+
+function liftOriginFeatId(
+  value: string | ReadonlyArray<string> | undefined,
+  draft: CharacterDraft,
+): CharacterOriginFeatSelection | undefined {
+  if (!isOriginFeatId(value)) return undefined;
+  if (value === "skilled") {
+    const existing = draft.choices?.humanOriginFeat;
+    return {
+      feat: "skilled",
+      proficiencies:
+        existing?.feat === "skilled" ? existing.proficiencies : [],
+    };
+  }
+  return { feat: value };
+}
+
+function payloadForHumanOriginFeat({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.species !== "human") return null;
+  const current = draft.choices?.humanOriginFeat?.feat;
+  return {
+    featureRef: "human_origin_feat",
+    options: [...ORIGIN_FEAT_IDS],
+    pickCount: 1,
+    writePath: ["choices", "humanOriginFeat"],
+    current: current == null ? [] : [current],
+    lift: liftOriginFeatId,
+  };
+}
+
+function payloadForHumanOriginFeatSkilledProficiencies({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.species !== "human") return null;
+  const feat = draft.choices?.humanOriginFeat;
+  if (feat == null || feat.feat !== "skilled") return null;
+  return multiPickChoicePayload({
+    featureRef: "human_origin_feat_skilled_proficiencies",
+    options: [...SKILLS, ...CHARACTER_TOOL_PROFICIENCIES],
+    pickCount: 3,
+    writePath: ["choices", "humanOriginFeat", "proficiencies"],
+    currentValues: feat.proficiencies,
+  });
+}
+
+function payloadForEquipmentBackgroundOption({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.background == null) return null;
+  return singlePickChoicePayload({
+    featureRef: "equipment_background_option",
+    options: CHARACTER_BACKGROUND_EQUIPMENT_OPTIONS,
+    writePath: ["equipment", "backgroundOption"],
+    currentValue: draft.equipment?.backgroundOption,
+  });
+}
+
+function payloadForEquipmentClassOption({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.primaryClass == null) return null;
+  const primaryClass = draft.primaryClass;
+  return singlePickChoicePayload({
+    featureRef: "equipment_class_option",
+    options: CHARACTER_CLASS_EQUIPMENT_OPTIONS.filter(
+      (option: CharacterClassEquipmentOption) =>
+        classOptionIsAllowed(primaryClass, option),
+    ),
+    writePath: ["equipment", "classOption"],
+    currentValue: draft.equipment?.classOption,
+  });
+}
+
 interface SinglePickFeatureCandidate {
   readonly applicable: boolean;
   readonly messagePrefix: string;
@@ -89,10 +358,10 @@ interface SinglePickFeatureCandidate {
   readonly currentValue: string | undefined;
 }
 
-function singlePickFeatureCandidates(
-  draft: CharacterDraft,
-): ReadonlyArray<SinglePickFeatureCandidate> {
-  const classLevels = classLevelsFromDraft(draft);
+function singlePickFeatureCandidates({
+  draft,
+  classLevels,
+}: ResolverContext): ReadonlyArray<SinglePickFeatureCandidate> {
   if (classLevels == null) return [];
   return [
     {
@@ -160,22 +429,90 @@ function candidateToPayload(
   });
 }
 
-export function resolveOpenChoicePayload(
-  draft: CharacterDraft,
+interface PickerEntry {
+  readonly codes: ReadonlyArray<CharacterOpenChoiceCode>;
+  readonly messagePrefix?: string;
+  readonly resolver: PayloadResolver;
+}
+
+const MULTICLASS_SKILL_PICKER_ENTRIES: ReadonlyArray<PickerEntry> =
+  MULTICLASS_SKILL_CLASSES.map((className) => ({
+    codes: ["missingMulticlassSkillChoice", "wrongMulticlassSkillChoiceCount"],
+    messagePrefix: multiclassSkillsMessagePrefix(className),
+    resolver: (context) => payloadForMulticlassSkills(context, className),
+  }));
+
+const PICKER_ENTRIES: ReadonlyArray<PickerEntry> = [
+  {
+    codes: [
+      "missingPrimaryClassSkillChoices",
+      "wrongPrimaryClassSkillChoiceCount",
+    ],
+    resolver: payloadForPrimaryClassSkills,
+  },
+  {
+    codes: ["missingSpeciesSkillChoice"],
+    resolver: payloadForSpeciesSkill,
+  },
+  {
+    codes: ["missingToolChoice"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.soldierGamingSet,
+    resolver: payloadForBackgroundTool,
+  },
+  {
+    codes: ["missingToolChoice"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.monkTool,
+    resolver: payloadForMonkTool,
+  },
+  {
+    codes: ["invalidToolChoiceCount"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.bardInstruments,
+    resolver: payloadForBardInstruments,
+  },
+  {
+    codes: ["missingToolChoice"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.multiclassBardInstrument,
+    resolver: payloadForMulticlassBardInstrument,
+  },
+  {
+    codes: ["missingGrantedLanguageChoice"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.rogueLanguage,
+    resolver: payloadForRogueLanguage,
+  },
+  {
+    codes: ["wrongGrantedLanguageChoiceCount"],
+    messagePrefix: CHOICE_MESSAGE_PREFIXES.rangerDeftExplorerLanguages,
+    resolver: payloadForRangerDeftExplorerLanguages,
+  },
+  {
+    codes: ["missingFeatureChoice"],
+    messagePrefix: EXPERTISE_MESSAGE_PREFIX,
+    resolver: payloadForExpertiseSkills,
+  },
+  ...MULTICLASS_SKILL_PICKER_ENTRIES,
+  {
+    codes: ["missingOriginFeatChoice"],
+    resolver: payloadForHumanOriginFeat,
+  },
+  {
+    codes: ["wrongSkilledChoiceCount"],
+    resolver: payloadForHumanOriginFeatSkilledProficiencies,
+  },
+  {
+    codes: ["missingBackgroundEquipmentChoice"],
+    resolver: payloadForEquipmentBackgroundOption,
+  },
+  {
+    codes: ["missingClassEquipmentChoice"],
+    resolver: payloadForEquipmentClassOption,
+  },
+];
+
+function featureChoicePayload(
+  context: ResolverContext,
   choice: CharacterOpenChoice,
 ): CharacterOpenChoicePayload | null {
-  if (
-    choice.code === "missingPrimaryClassSkillChoices" ||
-    choice.code === "wrongPrimaryClassSkillChoiceCount"
-  ) {
-    return payloadForPrimaryClassSkills(draft);
-  }
-  if (choice.code === "missingSpeciesSkillChoice") {
-    return payloadForSpeciesSkill(draft);
-  }
-  if (choice.code !== "missingFeatureChoice") return null;
-
-  for (const candidate of singlePickFeatureCandidates(draft)) {
+  for (const candidate of singlePickFeatureCandidates(context)) {
     if (!candidate.applicable) continue;
     if (candidate.currentValue != null) continue;
     if (!choice.message.startsWith(candidate.messagePrefix)) continue;
@@ -184,19 +521,59 @@ export function resolveOpenChoicePayload(
   return null;
 }
 
+export function resolveOpenChoicePayload(
+  draft: CharacterDraft,
+  choice: CharacterOpenChoice,
+): CharacterOpenChoicePayload | null {
+  const context = resolverContext(draft);
+  for (const entry of PICKER_ENTRIES) {
+    if (!entry.codes.includes(choice.code)) continue;
+    if (
+      entry.messagePrefix != null &&
+      !choice.message.startsWith(entry.messagePrefix)
+    ) {
+      continue;
+    }
+    const payload = entry.resolver(context);
+    if (payload != null) return payload;
+  }
+  if (choice.code === "missingFeatureChoice") {
+    return featureChoicePayload(context, choice);
+  }
+  return null;
+}
+
 export function listCharacterFeaturePickers(
   draft: CharacterDraft,
 ): ReadonlyArray<CharacterOpenChoicePayload> {
+  const context = resolverContext(draft);
   const pickers: CharacterOpenChoicePayload[] = [];
-  const primary = payloadForPrimaryClassSkills(draft);
-  if (primary != null) pickers.push(primary);
-  const species = payloadForSpeciesSkill(draft);
-  if (species != null) pickers.push(species);
-  for (const candidate of singlePickFeatureCandidates(draft)) {
+  for (const entry of PICKER_ENTRIES) {
+    const payload = entry.resolver(context);
+    if (payload != null) pickers.push(payload);
+  }
+  for (const candidate of singlePickFeatureCandidates(context)) {
     if (!candidate.applicable) continue;
     pickers.push(candidateToPayload(candidate));
   }
   return pickers;
+}
+
+function writeAtPath(
+  existing: unknown,
+  writePath: ReadonlyArray<string>,
+  value: unknown,
+): unknown {
+  if (writePath.length === 0) return value;
+  const [head, ...rest] = writePath;
+  const existingObj =
+    existing != null && typeof existing === "object" && !Array.isArray(existing)
+      ? (existing as Record<string, unknown>)
+      : {};
+  return {
+    ...existingObj,
+    [head]: writeAtPath(existingObj[head], rest, value),
+  };
 }
 
 export function buildOpenChoicePatch(
@@ -207,18 +584,9 @@ export function buildOpenChoicePatch(
   if (payload.writePath.length === 0) {
     throw new Error("writePath cannot be empty");
   }
+  const leafValue = payload.lift != null ? payload.lift(value, draft) : value;
   const [head, ...rest] = payload.writePath;
-  if (rest.length === 0) {
-    return { [head]: value } as Partial<CharacterDraft>;
-  }
-  if (rest.length === 1) {
-    const existingBranch =
-      (draft as Record<string, unknown>)[head] &&
-      typeof (draft as Record<string, unknown>)[head] === "object"
-        ? ((draft as Record<string, unknown>)[head] as Record<string, unknown>)
-        : {};
-    const nextBranch = { ...existingBranch, [rest[0]]: value };
-    return { [head]: nextBranch } as Partial<CharacterDraft>;
-  }
-  throw new Error(`unsupported writePath depth: ${payload.writePath.length}`);
+  const existingBranch = (draft as Record<string, unknown>)[head];
+  const nextBranch = writeAtPath(existingBranch, rest, leafValue);
+  return { [head]: nextBranch } as Partial<CharacterDraft>;
 }

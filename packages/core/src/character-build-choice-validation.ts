@@ -10,7 +10,6 @@ import {
   type CharacterSkilledProficiencyChoice,
   CHARACTER_RARE_LANGUAGES,
 } from "#/character-feature-types.ts";
-export { validateFeatureChoices } from "#/character-feature-choice-validation.ts";
 import {
   BACKGROUND_SKILLS,
   MULTICLASS_PROFICIENCIES,
@@ -20,6 +19,20 @@ import {
   validSpeciesSkillChoice,
 } from "#/character-proficiencies.ts";
 import { CLASS_NAMES } from "#/features/class-tables.ts";
+export { validateFeatureChoices } from "#/character-feature-choice-validation.ts";
+
+export const CHOICE_MESSAGE_PREFIXES = {
+  soldierGamingSet: "soldier requires",
+  monkTool: "monk requires",
+  bardInstruments: "bard requires exactly three",
+  multiclassBardInstrument: "multiclass bard requires",
+  rogueLanguage: "rogue requires",
+  rangerDeftExplorerLanguages: "ranger Deft Explorer requires",
+} as const;
+
+export function multiclassSkillsMessagePrefix(className: string): string {
+  return `multiclass ${className}`;
+}
 
 function validateSkillSelection(
   skills: ReadonlyArray<Skill>,
@@ -92,7 +105,7 @@ export function validatePrimaryClassChoices(
     if (instruments.length !== 3) {
       issues.push({
         code: "invalidToolChoiceCount",
-        message: "bard requires exactly three musical instrument choices.",
+        message: `${CHOICE_MESSAGE_PREFIXES.bardInstruments} musical instrument choices.`,
       });
     }
     if (new Set(instruments).size !== instruments.length) {
@@ -106,8 +119,7 @@ export function validatePrimaryClassChoices(
   if (draft.primaryClass === "monk" && draft.choices?.monkTool == null) {
     issues.push({
       code: "missingToolChoice",
-      message:
-        "monk requires one Artisan's Tools or Musical Instrument choice.",
+      message: `${CHOICE_MESSAGE_PREFIXES.monkTool} one Artisan's Tools or Musical Instrument choice.`,
     });
   }
 
@@ -142,7 +154,7 @@ export function validateMulticlassChoices(
           "invalidMulticlassSkillChoice",
           "duplicateMulticlassSkillChoice",
           "wrongMulticlassSkillChoiceCount",
-          `multiclass ${className}`,
+          multiclassSkillsMessagePrefix(className),
         ),
       );
     }
@@ -152,7 +164,7 @@ export function validateMulticlassChoices(
     ) {
       issues.push({
         code: "missingToolChoice",
-        message: "multiclass bard requires one musical instrument choice.",
+        message: `${CHOICE_MESSAGE_PREFIXES.multiclassBardInstrument} one musical instrument choice.`,
       });
     }
   }
@@ -168,7 +180,7 @@ export function validateBackgroundToolChoice(
     ? [
         {
           code: "missingToolChoice",
-          message: "soldier requires one Gaming Set choice.",
+          message: `${CHOICE_MESSAGE_PREFIXES.soldierGamingSet} one Gaming Set choice.`,
         },
       ]
     : [];
@@ -293,7 +305,7 @@ export function validateGrantedLanguages(
     if (draft.choices?.rogueLanguage == null) {
       issues.push({
         code: "missingGrantedLanguageChoice",
-        message: "rogue requires one extra language choice for Thieves' Cant.",
+        message: `${CHOICE_MESSAGE_PREFIXES.rogueLanguage} one extra language choice for Thieves' Cant.`,
       });
     } else if (!isGrantedLanguage(draft.choices.rogueLanguage)) {
       issues.push({
@@ -308,7 +320,7 @@ export function validateGrantedLanguages(
     if (languages.length !== 2) {
       issues.push({
         code: "wrongGrantedLanguageChoiceCount",
-        message: "ranger Deft Explorer requires exactly two language choices.",
+        message: `${CHOICE_MESSAGE_PREFIXES.rangerDeftExplorerLanguages} exactly two language choices.`,
       });
     }
     if (new Set(languages).size !== languages.length) {

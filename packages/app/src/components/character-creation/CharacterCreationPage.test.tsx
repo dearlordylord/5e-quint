@@ -1,8 +1,13 @@
 // @vitest-environment jsdom
+import type { CharacterDraft } from "@dnd/core/character-domain.ts"
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { describe, expect, it } from "vitest"
 
 import { CharacterCreationPage } from "#/components/character-creation/CharacterCreationPage.tsx"
+
+function seedDraft(draft: Partial<CharacterDraft>): void {
+  window.localStorage.setItem("dnd.characterDraft.v1", JSON.stringify(draft))
+}
 
 describe("CharacterCreationPage", () => {
   it("loads a complete example through canonical finalization and persists the draft", async () => {
@@ -27,13 +32,10 @@ describe("CharacterCreationPage", () => {
 
   it("hydrates the persisted draft on mount", () => {
     window.localStorage.clear()
-    window.localStorage.setItem(
-      "dnd.characterDraft.v1",
-      JSON.stringify({
-        primaryClass: "fighter",
-        advancement: [{ className: "fighter" }]
-      })
-    )
+    seedDraft({
+      primaryClass: "fighter",
+      advancement: [{ className: "fighter" }]
+    })
 
     render(<CharacterCreationPage />)
 
@@ -97,13 +99,10 @@ describe("CharacterCreationPage", () => {
 
   it("dispatches single-pick open-choice payloads through core to commit a druid primal order", () => {
     window.localStorage.clear()
-    window.localStorage.setItem(
-      "dnd.characterDraft.v1",
-      JSON.stringify({
-        primaryClass: "druid",
-        advancement: [{ className: "druid" }]
-      })
-    )
+    seedDraft({
+      primaryClass: "druid",
+      advancement: [{ className: "druid" }]
+    })
 
     render(<CharacterCreationPage />)
 
@@ -122,14 +121,11 @@ describe("CharacterCreationPage", () => {
 
   it("keeps the druid primal order picker visible after commit, and supports change and clear", () => {
     window.localStorage.clear()
-    window.localStorage.setItem(
-      "dnd.characterDraft.v1",
-      JSON.stringify({
-        primaryClass: "druid",
-        advancement: [{ className: "druid" }],
-        choices: { druidPrimalOrder: "magician" }
-      })
-    )
+    seedDraft({
+      primaryClass: "druid",
+      advancement: [{ className: "druid" }],
+      choices: { druidPrimalOrder: "magician" }
+    })
 
     render(<CharacterCreationPage />)
 
@@ -158,15 +154,62 @@ describe("CharacterCreationPage", () => {
     expect(cleared.choices?.druidPrimalOrder).toBeUndefined()
   })
 
+  it("expands Skilled sub-pickers after picking the Skilled origin feat", () => {
+    window.localStorage.clear()
+    seedDraft({
+      primaryClass: "fighter",
+      advancement: [{ className: "fighter" }],
+      species: "human"
+    })
+
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /^5\. Fill In Details$/ }))
+
+    const featSelect = screen
+      .getAllByRole("combobox")
+      .find((el) => el instanceof HTMLSelectElement && Array.from(el.options).some((opt) => opt.value === "skilled"))
+    if (!(featSelect instanceof HTMLSelectElement)) throw new Error("expected human origin feat select")
+
+    expect(screen.queryByRole("checkbox", { name: "Smiths Tools" })).toBeNull()
+
+    fireEvent.change(featSelect, { target: { value: "skilled" } })
+
+    const stored = JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")
+    expect(stored.choices?.humanOriginFeat).toEqual({ feat: "skilled", proficiencies: [] })
+    expect(screen.getByRole("checkbox", { name: "Smiths Tools" })).toBeTruthy()
+  })
+
+  it("commits a ranger Deft Explorer multi-pick of languages through core", () => {
+    window.localStorage.clear()
+    seedDraft({
+      primaryClass: "ranger",
+      advancement: [{ className: "ranger" }, { className: "ranger" }],
+      choices: {
+        primaryClassSkills: ["nature", "perception", "survival"],
+        rangerFightingStyle: "archery"
+      }
+    })
+
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /^5\. Fill In Details$/ }))
+
+    const sylvan = screen.getByRole("checkbox", { name: "Sylvan" })
+    const draconic = screen.getByRole("checkbox", { name: "Draconic" })
+    fireEvent.click(sylvan)
+    fireEvent.click(draconic)
+
+    const stored = JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")
+    expect(stored.choices?.rangerDeftExplorerLanguages).toEqual(["Sylvan", "Draconic"])
+  })
+
   it("dispatches multi-pick open-choice payloads through core to commit primary class skill picks", () => {
     window.localStorage.clear()
-    window.localStorage.setItem(
-      "dnd.characterDraft.v1",
-      JSON.stringify({
-        primaryClass: "fighter",
-        advancement: [{ className: "fighter" }]
-      })
-    )
+    seedDraft({
+      primaryClass: "fighter",
+      advancement: [{ className: "fighter" }]
+    })
 
     render(<CharacterCreationPage />)
 

@@ -59,7 +59,7 @@ function countOccurrences<T extends string>(
   return items.filter((item) => item === target).length;
 }
 
-function classOptionIsAllowed(
+export function classOptionIsAllowed(
   primaryClass: ClassName,
   option: CharacterClassEquipmentOption,
 ): boolean {
