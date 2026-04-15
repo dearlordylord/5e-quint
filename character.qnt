@@ -49,6 +49,11 @@ module character {
     | _ => patch
   }
 
+  pure def pMergeOptionalStringList(base: OptionalStringList, patch: OptionalStringList): OptionalStringList = match patch {
+    | NoStringList => base
+    | _ => patch
+  }
+
   pure def pMergeMulticlassSkills(
     base: OptionalMulticlassSkills,
     patch: OptionalMulticlassSkills,
@@ -153,8 +158,17 @@ module character {
   pure def pMergeOptionalSpellcastingEntry(
     base: OptionalSpellcastingEntry,
     patch: OptionalSpellcastingEntry,
-  ): OptionalSpellcastingEntry = match patch {
-    | NoSpellcastingEntry => base
+  ): OptionalSpellcastingEntry = match base {
+    | HasSpellcastingEntry(baseEntry) =>
+        match patch {
+          | HasSpellcastingEntry(patchEntry) =>
+              HasSpellcastingEntry({
+                cantrips: pMergeOptionalStringList(baseEntry.cantrips, patchEntry.cantrips),
+                preparedSpells: pMergeOptionalStringList(baseEntry.preparedSpells, patchEntry.preparedSpells),
+                spellbook: pMergeOptionalStringList(baseEntry.spellbook, patchEntry.spellbook),
+              })
+          | _ => base
+        }
     | _ => patch
   }
 

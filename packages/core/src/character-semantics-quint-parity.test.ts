@@ -13,6 +13,8 @@ import {
   advanceCharacterSheet,
   characterDraftFromSheet,
   finalizeCharacterDraft,
+  previewCharacterDraftUpdate,
+  previewCharacterSheetAdvancement,
   singleClassAdvancement,
   type CharacterDraft,
 } from "#/character-domain.ts";
@@ -51,6 +53,11 @@ import {
 } from "#/types.ts";
 
 const execFileAsync = promisify(execFile);
+
+const alertFeat = {
+  slot: "feat",
+  choice: { tag: "feat", featId: "alert" },
+} as const;
 
 function advancementEntry(
   className: ClassName,
@@ -155,6 +162,140 @@ function completeWizardDraft(
     },
     ...overrides,
   });
+}
+
+function completeMulticlassDraft(
+  overrides: Partial<CharacterDraft> = {},
+): CharacterDraft {
+  return {
+    primaryClass: "paladin",
+    advancement: [
+      advancementEntry("paladin"),
+      advancementEntry("paladin"),
+      advancementEntry("paladin", {
+        subclass: { className: "paladin", subclass: "devotion" },
+      }),
+      advancementEntry("bard"),
+      advancementEntry("bard"),
+      advancementEntry("bard", {
+        subclass: { className: "bard", subclass: "lore" },
+      }),
+      advancementEntry("bard", { feat: alertFeat }),
+      advancementEntry("bard"),
+      advancementEntry("cleric"),
+      advancementEntry("cleric"),
+      advancementEntry("ranger"),
+      advancementEntry("ranger"),
+      advancementEntry("ranger", {
+        subclass: { className: "ranger", subclass: "hunter" },
+      }),
+      advancementEntry("ranger", { feat: alertFeat }),
+      advancementEntry("ranger"),
+      advancementEntry("ranger"),
+      advancementEntry("sorcerer"),
+      advancementEntry("sorcerer"),
+      advancementEntry("warlock"),
+      advancementEntry("warlock"),
+    ],
+    background: "acolyte",
+    abilityScoreGeneration: {
+      mode: "randomGeneration",
+      assignedScores: {
+        str: 15,
+        dex: 13,
+        con: 8,
+        int: 10,
+        wis: 13,
+        cha: 13,
+      },
+    },
+    backgroundAbilityScoreIncrease: {
+      kind: "plusOneToThree",
+    },
+    species: "human",
+    languages: ["Common", "Dwarvish", "Elvish"],
+    alignment: "LG",
+    choices: {
+      primaryClassSkills: ["athletics", "persuasion"],
+      speciesSkill: "perception",
+      humanOriginFeat: { feat: "alert" },
+      clericDivineOrder: "protector",
+      multiclassSkills: {
+        bard: ["history"],
+        ranger: ["survival"],
+      },
+      multiclassBardInstrument: "lute",
+      paladinFightingStyle: "defense",
+      rangerFightingStyle: "archery",
+      rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
+      expertiseSkills: ["history", "survival", "perception"],
+    },
+    spellcasting: {
+      bard: {
+        cantrips: ["mage_hand", "minor_illusion", "vicious_mockery"],
+        preparedSpells: [
+          "charm_person",
+          "cure_wounds",
+          "detect_magic",
+          "healing_word",
+          "identify",
+          "sleep",
+          "speak_with_animals",
+          "suggestion",
+          "thunderwave",
+        ],
+      },
+      cleric: {
+        cantrips: ["guidance", "sacred_flame", "thaumaturgy"],
+        preparedSpells: [
+          "bless",
+          "cure_wounds",
+          "detect_magic",
+          "guiding_bolt",
+          "healing_word",
+        ],
+      },
+      paladin: {
+        preparedSpells: ["bless", "cure_wounds", "detect_magic", "heroism"],
+      },
+      ranger: {
+        preparedSpells: [
+          "aid",
+          "cure_wounds",
+          "detect_magic",
+          "longstrider",
+          "speak_with_animals",
+          "spike_growth",
+        ],
+      },
+      sorcerer: {
+        cantrips: ["fire_bolt", "light", "mage_hand", "minor_illusion"],
+        preparedSpells: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+        ],
+      },
+      warlock: {
+        cantrips: ["eldritch_blast", "mage_hand"],
+        preparedSpells: ["charm_person", "detect_magic", "speak_with_animals"],
+      },
+    },
+    equipment: {
+      backgroundOption: "package",
+      classOption: "packageA",
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: 17,
+      loadout: {
+        wornArmor: "chainMail",
+        wieldedWeapon: "longsword",
+        shield: true,
+        wieldedWeaponGrip: "oneHanded",
+      },
+    },
+    ...overrides,
+  };
 }
 
 function toQuintPascal(value: string): string {
@@ -569,7 +710,7 @@ function renderLoadout(
     );
   }
   if (loadout.shield != null) {
-    patches.push(`.with("shield", ${loadout.shield})`);
+    patches.push(`.with("shield", HasBool(${loadout.shield}))`);
   }
   if (loadout.wieldedWeaponGrip != null) {
     const grip =
@@ -758,6 +899,32 @@ function renderProjectionAssertions(
   ].join(",\n            ");
 }
 
+function renderAssessmentStatus(
+  status: "complete" | "incomplete" | "invalid",
+): string {
+  return Match.value(status).pipe(
+    Match.when("complete", () => "DraftComplete"),
+    Match.when("incomplete", () => "DraftIncomplete"),
+    Match.when("invalid", () => "DraftInvalid"),
+    Match.exhaustive,
+  );
+}
+
+function renderAssessmentAssertions(
+  assessmentRef: string,
+  assessment: ReturnType<typeof assessCharacterDraft>,
+): string {
+  return [
+    `assert(pDraftStatus(${assessmentRef}) == ${renderAssessmentStatus(assessment.status)})`,
+    `assert(pOpenChoiceIssues(${assessmentRef}) == ${renderIssueSet(
+      assessment.openChoices.map((choice) => choice.code),
+    )})`,
+    `assert(pIllegalIssues(${assessmentRef}) == ${renderIssueSet(
+      assessment.issues.map((issue) => issue.code),
+    )})`,
+  ].join(",\n            ");
+}
+
 async function runQuintParityModule(body: string, stem: string): Promise<void> {
   const repoRoot = path.resolve(import.meta.dirname, "../../..");
   const tempDir = fs.mkdtempSync(
@@ -865,6 +1032,214 @@ describe("character semantics Quint parity", () => {
 }
 `,
         "character-finalization-parity",
+      );
+    },
+  );
+
+  it(
+    "keeps draft-edit and level-up previews aligned with Quint-owned candidate draft semantics",
+    { timeout: 240_000 },
+    async () => {
+      const draftPreview = previewCharacterDraftUpdate(completeFighterDraft(), {
+        primaryClass: "wizard",
+        background: "acolyte",
+        species: "dwarf",
+      });
+
+      const fighterLevelOne = finalizeCharacterDraft(completeFighterDraft());
+      expect(fighterLevelOne.ok).toBe(true);
+      if (!fighterLevelOne.ok) {
+        throw new Error("expected fighter level-one sheet");
+      }
+      const fighterLevelTwo = advanceCharacterSheet(fighterLevelOne.sheet, {
+        entry: advancementEntry("fighter"),
+      });
+      expect(fighterLevelTwo.ok).toBe(true);
+      if (!fighterLevelTwo.ok) {
+        throw new Error("expected fighter level-two sheet");
+      }
+
+      const advancementPreview = previewCharacterSheetAdvancement(
+        fighterLevelTwo.sheet,
+        {
+          entry: advancementEntry("fighter"),
+        },
+      );
+
+      const multiclassSheet = finalizeCharacterDraft(completeMulticlassDraft());
+      expect(multiclassSheet.ok).toBe(true);
+      if (!multiclassSheet.ok) {
+        throw new Error("expected multiclass sheet");
+      }
+      const multiclassPreview = previewCharacterSheetAdvancement(
+        multiclassSheet.sheet,
+        {
+          entry: advancementEntry("rogue"),
+          choices: {
+            multiclassSkills: {
+              rogue: ["stealth"],
+            },
+          },
+        },
+      );
+
+      const wizardSheet = finalizeCharacterDraft(completeWizardDraft());
+      expect(wizardSheet.ok).toBe(true);
+      if (!wizardSheet.ok) {
+        throw new Error("expected wizard sheet");
+      }
+      const wizardPreparedOnlyTransition: CharacterLevelUpTransition = {
+        entry: advancementEntry("wizard"),
+        spellcasting: {
+          wizard: {
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+              "shield",
+            ],
+          },
+        },
+      };
+      const wizardPreview = previewCharacterSheetAdvancement(
+        wizardSheet.sheet,
+        wizardPreparedOnlyTransition,
+      );
+
+      await runQuintParityModule(
+        `module characterDraftPreviewParity {
+  import creature.* from "../creature"
+  import characterCreation.* from "../character-creation"
+
+  pure val DRAFT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(draftPreview.candidateDraft)}
+
+  run parity_draft_preview_candidate_matches_ts = {
+    all {
+            ${renderAssessmentAssertions(
+              "DRAFT_PREVIEW_CANDIDATE",
+              draftPreview.candidateAssessment,
+            )}
+    }
+  }
+}
+`,
+        "character-draft-preview-parity",
+      );
+
+      await runQuintParityModule(
+        `module characterAdvancementPreviewParity {
+  import creature.* from "../creature"
+  import characterCreation.* from "../character-creation"
+
+  pure val ADVANCEMENT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(advancementPreview.candidateDraft)}
+
+  run parity_advancement_preview_candidate_matches_ts = {
+    all {
+            ${renderAssessmentAssertions(
+              "ADVANCEMENT_PREVIEW_CANDIDATE",
+              advancementPreview.candidateAssessment,
+            )}
+    }
+  }
+}
+`,
+        "character-advancement-preview-parity",
+      );
+
+      expect(
+        multiclassPreview.candidateDraft.choices?.multiclassSkills,
+      ).toEqual({
+        bard: ["history"],
+        ranger: ["survival"],
+        rogue: ["stealth"],
+      });
+      expect(wizardPreview.candidateDraft.spellcasting?.wizard).toEqual({
+        cantrips: ["fire_bolt", "light", "mage_hand"],
+        preparedSpells: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+          "shield",
+        ],
+        spellbook: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+          "identify",
+          "sleep",
+        ],
+      });
+
+      await runQuintParityModule(
+        `module characterPreviewMergeParity {
+  import creature.* from "../creature"
+  import characterCreation.* from "../character-creation"
+  import character.* from "../character"
+
+  pure val COMPLETE_MULTICLASS_DRAFT: CharacterDraft = ${renderDraft(completeMulticlassDraft())}
+  pure val COMPLETE_WIZARD_DRAFT: CharacterDraft = ${renderDraft(completeWizardDraft())}
+  pure val LEVEL_UP_ROGUE_PATCH: CharacterLevelUpTransition = ${renderTransition(
+    {
+      entry: advancementEntry("rogue"),
+      choices: {
+        multiclassSkills: {
+          rogue: ["stealth"],
+        },
+      },
+    },
+  )}
+  pure val LEVEL_UP_WIZARD_PREPARED_ONLY: CharacterLevelUpTransition = ${renderTransition(wizardPreparedOnlyTransition)}
+
+  run parity_advancement_preview_multiclass_merge_matches_ts = {
+    match pFinalizeDraft(COMPLETE_MULTICLASS_DRAFT) {
+      | Finalized(sheet) =>
+          match pDraftFromSheetTransition(sheet, LEVEL_UP_ROGUE_PATCH).choices {
+            | HasBuildChoices(choices) =>
+                assert(choices.multiclassSkills == ${renderMulticlassSkills({
+                  bard: ["history"],
+                  ranger: ["survival"],
+                  rogue: ["stealth"],
+                })})
+            | _ => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run parity_advancement_preview_spellcasting_merge_matches_ts = {
+    match pFinalizeDraft(COMPLETE_WIZARD_DRAFT) {
+      | Finalized(sheet) =>
+          match pDraftFromSheetTransition(sheet, LEVEL_UP_WIZARD_PREPARED_ONLY).spellcasting {
+            | HasSpellcastingChoices(spellcasting) =>
+                assert(spellcasting.wizard == ${renderSpellcastingEntry({
+                  cantrips: ["fire_bolt", "light", "mage_hand"],
+                  preparedSpells: [
+                    "burning_hands",
+                    "charm_person",
+                    "detect_magic",
+                    "magic_missile",
+                    "shield",
+                  ],
+                  spellbook: [
+                    "burning_hands",
+                    "charm_person",
+                    "detect_magic",
+                    "magic_missile",
+                    "identify",
+                    "sleep",
+                  ],
+                })})
+            | _ => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+}
+`,
+        "character-preview-merge-parity",
       );
     },
   );

@@ -131,6 +131,55 @@ function completeDraft(
   };
 }
 
+function completeWizardDraft(
+  overrides: Partial<CharacterDraft> = {},
+): CharacterDraft {
+  return completeDraft({
+    primaryClass: "wizard",
+    advancement: singleClassAdvancement("wizard", 1),
+    background: "sage",
+    backgroundAbilityScoreIncrease: {
+      kind: "plusTwoPlusOne",
+      plusTwo: "int",
+      plusOne: "wis",
+    },
+    species: "elf",
+    languages: ["Common", "Elvish", "Draconic"],
+    alignment: "LN",
+    choices: {
+      primaryClassSkills: ["investigation", "medicine"],
+      speciesSkill: "perception",
+    },
+    spellcasting: {
+      wizard: {
+        cantrips: ["fire_bolt", "light", "mage_hand"],
+        preparedSpells: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+        ],
+        spellbook: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+          "identify",
+          "sleep",
+        ],
+      },
+    },
+    equipment: {
+      backgroundOption: "package",
+      classOption: "gold",
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: 8,
+      loadout: {},
+    },
+    ...overrides,
+  });
+}
+
 function encodeStableJsonForTest(value: unknown): unknown {
   if (value instanceof Set) {
     const entries = [...value].map((entry) => encodeStableJsonForTest(entry));
@@ -1035,6 +1084,163 @@ describe("MCP server adapter", () => {
             sheet: finalized.sheet,
           },
       result: advanced,
+    });
+  });
+
+  test("character MCP previews and advances partial spellcasting transitions without dropping stored sheet facts", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeWizardDraft();
+    const finalized = finalizeCharacterDraft(draft);
+
+    expect(finalized.ok).toBe(true);
+    if (!finalized.ok) {
+      throw new Error("expected complete wizard draft to finalize");
+    }
+
+    router.handleToolCall("create_character_draft", { draft });
+    router.handleToolCall("finalize_character_draft", {});
+
+    const transition = {
+      entry: advancementEntry("wizard"),
+      spellcasting: {
+        wizard: {
+          preparedSpells: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "magic_missile",
+            "shield",
+          ],
+        },
+      },
+    } as const;
+
+    const preview = previewCharacterSheetAdvancement(finalized.sheet, transition);
+    const previewResponse = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      { transition },
+    );
+
+    expect("isError" in previewResponse).toBe(false);
+    expect(readPayload(previewResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      preview,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
+    });
+
+    const advanced = advanceCharacterSheet(finalized.sheet, transition);
+    const advanceResponse = router.handleToolCall("advance_character_sheet", {
+      transition,
+    });
+
+    expect("isError" in advanceResponse).toBe(false);
+    expect(readPayload(advanceResponse)).toEqual({
+      storedCharacter: advanced.ok
+        ? {
+            kind: "sheet",
+            sheet: advanced.sheet,
+          }
+        : {
+            kind: "sheet",
+            sheet: finalized.sheet,
+          },
+      result: advanced,
+    });
+  });
+
+  test("character MCP keeps stored state on blocked finalize and blocked advance results", () => {
+    const router = createSessionRouter(createDemoHost());
+    const incompleteDraft = completeDraft({
+      choices: {
+        backgroundTool: "dice",
+        speciesSkill: "stealth",
+        fighterFightingStyle: "defense",
+        humanOriginFeat: {
+          feat: "skilled",
+          proficiencies: ["history", "thievesTools", "viol"],
+        },
+      },
+    });
+    const blockedFinalization = finalizeCharacterDraft(incompleteDraft);
+
+    expect(blockedFinalization.ok).toBe(false);
+
+    router.handleToolCall("create_character_draft", { draft: incompleteDraft });
+
+    const finalizeResponse = router.handleToolCall(
+      "finalize_character_draft",
+      {},
+    );
+
+    expect("isError" in finalizeResponse).toBe(false);
+    expect(readPayload(finalizeResponse)).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft: incompleteDraft,
+      },
+      result: blockedFinalization,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft: incompleteDraft,
+    });
+
+    const complete = finalizeCharacterDraft(completeDraft());
+    expect(complete.ok).toBe(true);
+    if (!complete.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+    const levelTwo = advanceCharacterSheet(complete.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+    expect(levelTwo.ok).toBe(true);
+    if (!levelTwo.ok) {
+      throw new Error("expected level-two fighter sheet");
+    }
+
+    router.handleToolCall("create_character_draft", { draft: completeDraft() });
+    router.handleToolCall("finalize_character_draft", {});
+    router.handleToolCall("advance_character_sheet", {
+      transition: { entry: advancementEntry("fighter") },
+    });
+
+    const blockedTransition = {
+      entry: advancementEntry("fighter"),
+    } as const;
+    const blockedAdvance = advanceCharacterSheet(
+      levelTwo.sheet,
+      blockedTransition,
+    );
+
+    expect(blockedAdvance.ok).toBe(false);
+
+    const advanceResponse = router.handleToolCall("advance_character_sheet", {
+      transition: blockedTransition,
+    });
+
+    expect("isError" in advanceResponse).toBe(false);
+    expect(readPayload(advanceResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: levelTwo.sheet,
+      },
+      result: blockedAdvance,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: levelTwo.sheet,
     });
   });
 
