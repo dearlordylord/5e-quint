@@ -3,9 +3,12 @@ import { Schema } from "effect";
 import {
   CharacterDraftSchema,
   CharacterLevelUpTransitionSchema,
+  resolveOpenChoicePayload,
   strictCharacterParseOptions,
   type CharacterDraft,
+  type CharacterDraftAssessment,
   type CharacterLevelUpTransition,
+  type CharacterOpenChoice,
   type CharacterOpenChoicePayload,
 } from "@dnd/core/character-domain.ts";
 
@@ -283,4 +286,26 @@ export function encodeStableJson(value: unknown): unknown {
     );
   }
   return value;
+}
+
+export function enrichOpenChoices<T extends CharacterOpenChoice>(
+  draft: CharacterDraft,
+  choices: ReadonlyArray<T>,
+) {
+  return choices.map((choice) => {
+    const payload = resolveOpenChoicePayload(draft, choice);
+    return payload == null
+      ? choice
+      : { ...choice, featureRef: payload.featureRef };
+  });
+}
+
+export function enrichAssessment(
+  draft: CharacterDraft,
+  assessment: CharacterDraftAssessment,
+) {
+  return {
+    ...assessment,
+    openChoices: enrichOpenChoices(draft, assessment.openChoices),
+  };
 }

@@ -1,5 +1,7 @@
 import { Schema } from "effect";
 
+import { type CharacterSheet } from "@dnd/core/character-domain.ts";
+import { characterSheetBattleProjection } from "@dnd/core/character-sheet-derived.ts";
 import { MONSTER_STAT_BLOCK_IDS } from "@dnd/core/monster-catalog.ts";
 import { fighterStartBattleLoadout } from "@dnd/core/player-loadouts.ts";
 import type { BattleWeaponProfile } from "@dnd/core/types.ts";
@@ -26,6 +28,7 @@ export const StartBattleInputSchema = Schema.Struct({
   monsterInitiativeRoll: Schema.optional(InitiativeRollSchema),
   monsterInitiativeRollB: Schema.optional(InitiativeRollSchema),
   monsterSurprised: Schema.optional(Schema.Boolean),
+  useDemoHost: Schema.optional(Schema.Boolean),
 });
 
 export type StartBattleInput = Schema.Schema.Type<
@@ -55,6 +58,87 @@ export function decodeStartBattleInput(args: unknown) {
     return errorContent("Invalid start_battle input", String(decoded.left));
   }
   return decoded.right;
+}
+
+function monsterInitEntry(input: StartBattleInput) {
+  return {
+    id: input.monsterId,
+    kind: "Monster" as const,
+    statBlockId: input.monsterStatBlockId ?? "goblinMinion",
+    ...(defined(input.monsterInitiativeRoll)
+      ? { initiativeRoll: input.monsterInitiativeRoll }
+      : {}),
+    ...(defined(input.monsterInitiativeRollB)
+      ? { initiativeRollB: input.monsterInitiativeRollB }
+      : {}),
+    ...(defined(input.monsterSurprised)
+      ? { surprised: input.monsterSurprised }
+      : {}),
+  };
+}
+
+function fighterInitiativeFields(input: StartBattleInput) {
+  return {
+    ...(defined(input.fighterInitiativeRoll)
+      ? { initiativeRoll: input.fighterInitiativeRoll }
+      : {}),
+    ...(defined(input.fighterInitiativeRollB)
+      ? { initiativeRollB: input.fighterInitiativeRollB }
+      : {}),
+    ...(defined(input.fighterSurprised)
+      ? { surprised: input.fighterSurprised }
+      : {}),
+  };
+}
+
+type LoadoutFields = {
+  readonly mainHandWeapon?: BattleWeaponProfile;
+  readonly offHandWeapon?: BattleWeaponProfile;
+  readonly hasShieldEquipped?: boolean;
+  readonly isWearingArmor?: boolean;
+  readonly mainHandUsesTwoHands?: boolean;
+};
+
+function loadoutEntryFields(loadout: LoadoutFields) {
+  return {
+    ...(loadout.mainHandWeapon != null
+      ? { mainHandWeapon: encodeBattleWeaponProfile(loadout.mainHandWeapon) }
+      : {}),
+    ...(loadout.offHandWeapon != null
+      ? { offHandWeapon: encodeBattleWeaponProfile(loadout.offHandWeapon) }
+      : {}),
+    ...(defined(loadout.hasShieldEquipped)
+      ? { hasShieldEquipped: loadout.hasShieldEquipped }
+      : {}),
+    ...(defined(loadout.isWearingArmor)
+      ? { isWearingArmor: loadout.isWearingArmor }
+      : {}),
+    ...(defined(loadout.mainHandUsesTwoHands)
+      ? { mainHandUsesTwoHands: loadout.mainHandUsesTwoHands }
+      : {}),
+  };
+}
+
+function nonZeroLevelFields(
+  projection: Pick<
+    ReturnType<typeof characterSheetBattleProjection>,
+    "barbarianLevel" | "bardLevel" | "rogueLevel" | "monkLevel"
+  >,
+) {
+  return {
+    ...((projection.barbarianLevel ?? 0) > 0
+      ? { barbarianLevel: projection.barbarianLevel }
+      : {}),
+    ...((projection.bardLevel ?? 0) > 0
+      ? { bardLevel: projection.bardLevel }
+      : {}),
+    ...((projection.rogueLevel ?? 0) > 0
+      ? { rogueLevel: projection.rogueLevel }
+      : {}),
+    ...((projection.monkLevel ?? 0) > 0
+      ? { monkLevel: projection.monkLevel }
+      : {}),
+  };
 }
 
 export function buildStartBattleCommand(
@@ -92,53 +176,57 @@ export function buildStartBattleCommand(
         kind: "PC" as const,
         fighterLevel,
         baseWalkSpeed: context.baseWalkSpeed,
-        ...(fighterLoadout.mainHandWeapon != null
-          ? {
-              mainHandWeapon: encodeBattleWeaponProfile(
-                fighterLoadout.mainHandWeapon,
-              ),
-            }
-          : {}),
-        ...(fighterLoadout.offHandWeapon != null
-          ? {
-              offHandWeapon: encodeBattleWeaponProfile(
-                fighterLoadout.offHandWeapon,
-              ),
-            }
-          : {}),
-        ...(defined(fighterLoadout.hasShieldEquipped)
-          ? { hasShieldEquipped: fighterLoadout.hasShieldEquipped }
-          : {}),
-        ...(defined(fighterLoadout.isWearingArmor)
-          ? { isWearingArmor: fighterLoadout.isWearingArmor }
-          : {}),
-        ...(defined(fighterLoadout.mainHandUsesTwoHands)
-          ? { mainHandUsesTwoHands: fighterLoadout.mainHandUsesTwoHands }
-          : {}),
-        ...(defined(input.fighterInitiativeRoll)
-          ? { initiativeRoll: input.fighterInitiativeRoll }
-          : {}),
-        ...(defined(input.fighterInitiativeRollB)
-          ? { initiativeRollB: input.fighterInitiativeRollB }
-          : {}),
-        ...(defined(input.fighterSurprised)
-          ? { surprised: input.fighterSurprised }
-          : {}),
+        ...loadoutEntryFields(fighterLoadout),
+        ...fighterInitiativeFields(input),
       },
+      monsterInitEntry(input),
+    ],
+  };
+}
+
+export function buildStartBattleCommandFromSheet(
+  sheet: CharacterSheet,
+  input: StartBattleInput,
+) {
+  if (input.fighterId === input.monsterId) {
+    return errorContent(
+      "Battle creature IDs must be unique.",
+      "START_BATTLE_DUPLICATE_CREATURE_ID",
+    );
+  }
+
+  const projection = characterSheetBattleProjection(sheet);
+  if ((projection.fighterLevel ?? 0) <= 0) {
+    return errorContent(
+      "start_battle requires the stored character sheet to include Fighter levels.",
+      "START_BATTLE_REQUIRES_FIGHTER_SHEET",
+    );
+  }
+
+  return {
+    scope: "battle" as const,
+    type: "BATTLE_INIT" as const,
+    creatures: [
       {
-        id: input.monsterId,
-        kind: "Monster" as const,
-        statBlockId: input.monsterStatBlockId ?? "goblinMinion",
-        ...(defined(input.monsterInitiativeRoll)
-          ? { initiativeRoll: input.monsterInitiativeRoll }
+        id: input.fighterId,
+        kind: "PC" as const,
+        maxHp: projection.maxHp as number,
+        baseWalkSpeed: projection.baseWalkSpeed,
+        caster: projection.caster,
+        strMod: projection.strMod,
+        dexMod: projection.dexMod,
+        fighterLevel: projection.fighterLevel,
+        ...nonZeroLevelFields(projection),
+        ...(projection.critRange != null
+          ? { critRange: projection.critRange }
           : {}),
-        ...(defined(input.monsterInitiativeRollB)
-          ? { initiativeRollB: input.monsterInitiativeRollB }
+        ...((projection.sneakAttackDice ?? 0) > 0
+          ? { sneakAttackDice: projection.sneakAttackDice }
           : {}),
-        ...(defined(input.monsterSurprised)
-          ? { surprised: input.monsterSurprised }
-          : {}),
+        ...loadoutEntryFields(projection),
+        ...fighterInitiativeFields(input),
       },
+      monsterInitEntry(input),
     ],
   };
 }

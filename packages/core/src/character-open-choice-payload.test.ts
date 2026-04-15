@@ -104,10 +104,8 @@ describe("resolveOpenChoicePayload", () => {
   });
 
   it("returns null for unsupported open-choice codes", () => {
-    const draft = baseDraft({
-      abilityScoreGeneration: undefined,
-    });
-    const choice = findChoice(draft, "missingAbilityScoreGeneration");
+    const draft = baseDraft();
+    const choice = findChoice(draft, "missingEquipmentChoices");
     expect(choice).toBeDefined();
     expect(resolveOpenChoicePayload(draft, choice!)).toBeNull();
   });
@@ -180,6 +178,79 @@ describe("listCharacterFeaturePickers", () => {
     for (const ref of ["primary_class", "species", "background", "alignment"]) {
       expect(pickers.find((p) => p.featureRef === ref)).toBeUndefined();
     }
+  });
+
+  it("surfaces an ability_score_generation picker when the draft has no generation mode", () => {
+    const pickers = listCharacterFeaturePickers(
+      baseDraft({ abilityScoreGeneration: undefined }),
+    );
+    const picker = pickers.find(
+      (p) => p.featureRef === "ability_score_generation",
+    );
+    expect(picker).toBeDefined();
+    expect(picker?.options).toEqual([
+      "standardArray",
+      "randomGeneration",
+      "pointBuy",
+    ]);
+    expect(picker?.pickCount).toBe(1);
+    expect(picker?.writePath).toEqual(["abilityScoreGeneration"]);
+  });
+
+  it("surfaces a background_ability_score_increase picker with 2-pick semantics", () => {
+    const pickers = listCharacterFeaturePickers(
+      baseDraft({ backgroundAbilityScoreIncrease: undefined }),
+    );
+    const picker = pickers.find(
+      (p) => p.featureRef === "background_ability_score_increase:soldier",
+    );
+    expect(picker).toBeDefined();
+    expect(picker?.options).toEqual(["str", "dex", "con"]);
+    expect(picker?.pickCount).toBe(2);
+    expect(picker?.writePath).toEqual(["backgroundAbilityScoreIncrease"]);
+  });
+
+  it("surfaces a languages multi-pick when the draft has fewer than three languages", () => {
+    const pickers = listCharacterFeaturePickers(
+      baseDraft({ languages: ["Common"] }),
+    );
+    const picker = pickers.find((p) => p.featureRef === "languages");
+    expect(picker).toBeDefined();
+    expect(picker?.pickCount).toBe(3);
+    expect(picker?.current).toEqual(["Common"]);
+    expect(picker?.options).toContain("Elvish");
+  });
+
+  it("surfaces loadout pickers once primaryClass/background/equipment options are set", () => {
+    const draft: CharacterDraft = {
+      primaryClass: "fighter",
+      advancement: singleClassAdvancement("fighter", 1),
+      background: "soldier",
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+      },
+    };
+    const pickers = listCharacterFeaturePickers(draft);
+    const refs = pickers.map((p) => p.featureRef);
+    expect(refs).toContain("loadout_worn_armor");
+    expect(refs).toContain("loadout_wielded_weapon");
+  });
+
+  it("surfaces loadout_shield once a shield is in the owned equipment roster", () => {
+    const draft: CharacterDraft = {
+      primaryClass: "fighter",
+      advancement: singleClassAdvancement("fighter", 1),
+      background: "soldier",
+      equipment: {
+        backgroundOption: "package",
+        classOption: "gold",
+        purchasedCombatEquipment: ["shield"],
+      },
+    };
+    const pickers = listCharacterFeaturePickers(draft);
+    const refs = pickers.map((p) => p.featureRef);
+    expect(refs).toContain("loadout_shield");
   });
 });
 

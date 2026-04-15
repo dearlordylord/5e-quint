@@ -35,6 +35,7 @@ import {
 import {
   decodeBattleAttackRuntimeInputs,
   decodeBattleGrappleRuntimeInputs,
+  RUNTIME_SCHEMAS_BY_TAG,
 } from "./server-battle-attack-runtime.ts";
 import {
   type BattleActor,
@@ -378,6 +379,19 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
   );
 }
 
+type BattlePreview = ReturnType<typeof previewBattleAction>;
+
+function annotateBattlePreviewWithRuntimeSchema(preview: BattlePreview) {
+  if (!preview.ok) return preview;
+  if (preview.runtime !== "battleAttack" && preview.runtime !== "battleGrapple") {
+    return preview;
+  }
+  return {
+    ...preview,
+    runtimeSchema: RUNTIME_SCHEMAS_BY_TAG[preview.runtime],
+  };
+}
+
 function previewResolvedAction(host: SupportedActionHost, args: unknown) {
   const decoded = decodeResolvedActionInput("preview_action", args);
   if ("isError" in decoded) {
@@ -399,7 +413,9 @@ function previewResolvedAction(host: SupportedActionHost, args: unknown) {
         return scopeMismatchContent(decoded.scope, "battle");
       }
       return jsonContent(
-        previewBattleAction(actor.getSnapshot().context, decoded),
+        annotateBattlePreviewWithRuntimeSchema(
+          previewBattleAction(actor.getSnapshot().context, decoded),
+        ),
       );
     }),
     Match.exhaustive,

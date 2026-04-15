@@ -29,6 +29,8 @@ import {
   decodeLevelUpTransition,
   emptyObjectInputSchema,
   encodeStableJson,
+  enrichAssessment,
+  enrichOpenChoices,
   isCharacterToolError,
   readArgsRecord,
   rejectUnexpectedTopLevelFields,
@@ -167,6 +169,7 @@ function storedCharacterKindMismatchContent(
 
 export interface CharacterSession {
   getSnapshot(): CharacterSessionSnapshot;
+  getStoredSheet(): CharacterSheet | null;
   handleToolCall(name: string, args: unknown): CharacterToolResult;
   isCharacterToolName(name: string): name is CharacterToolName;
 }
@@ -203,6 +206,10 @@ export function createCharacterSession(): CharacterSession {
   return {
     getSnapshot() {
       return { storedCharacterState: storedCharacter.kind };
+    },
+
+    getStoredSheet() {
+      return storedCharacter.kind === "sheet" ? storedCharacter.sheet : null;
     },
 
     isCharacterToolName,
@@ -256,9 +263,21 @@ export function createCharacterSession(): CharacterSession {
         const patch = decodeDraftPatch(args, name);
         if (isCharacterToolError(patch)) return patch;
 
+        const preview = previewCharacterDraftUpdate(draft, patch);
+        const candidateDraft = preview.candidateDraft;
         return jsonContent({
           storedCharacter: encodeStoredCharacterState(storedCharacter),
-          preview: previewCharacterDraftUpdate(draft, patch),
+          preview: {
+            ...preview,
+            candidateAssessment: enrichAssessment(
+              candidateDraft,
+              preview.candidateAssessment,
+            ),
+            newlyOpenedChoices: enrichOpenChoices(
+              candidateDraft,
+              preview.newlyOpenedChoices,
+            ),
+          },
         });
       }
 
@@ -287,7 +306,7 @@ export function createCharacterSession(): CharacterSession {
 
         return jsonContent({
           storedCharacter: encodeStoredCharacterState(storedCharacter),
-          assessment: assessCharacterDraft(draft),
+          assessment: enrichAssessment(draft, assessCharacterDraft(draft)),
         });
       }
 

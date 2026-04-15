@@ -155,6 +155,24 @@ function sanitizeEquipmentChoices(
   return Object.keys(next).length === 0 ? undefined : next;
 }
 
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.getPrototypeOf(value) === Object.prototype
+  );
+}
+
+function deepMergeBranch(current: unknown, patch: unknown): unknown {
+  if (!isPlainObject(current) || !isPlainObject(patch)) return patch;
+  const merged: Record<string, unknown> = { ...current };
+  for (const key of Object.keys(patch)) {
+    merged[key] = deepMergeBranch(current[key], patch[key]);
+  }
+  return merged;
+}
+
 export function applyCharacterDraftUpdate(
   current: CharacterDraft,
   patch: Partial<CharacterDraft>,
@@ -166,6 +184,22 @@ export function applyCharacterDraftUpdate(
   let next: CharacterDraft = {
     ...current,
     ...patch,
+    ...(isPlainObject(patch.choices) && isPlainObject(current.choices)
+      ? {
+          choices: deepMergeBranch(
+            current.choices,
+            patch.choices,
+          ) as CharacterDraft["choices"],
+        }
+      : {}),
+    ...(isPlainObject(patch.equipment) && isPlainObject(current.equipment)
+      ? {
+          equipment: deepMergeBranch(
+            current.equipment,
+            patch.equipment,
+          ) as CharacterDraft["equipment"],
+        }
+      : {}),
   };
 
   if (primaryClassChanged && next.primaryClass != null) {

@@ -1,5 +1,14 @@
 import { advancementToClassLevels } from "#/character-advancement.ts";
-import { CHARACTER_BACKGROUNDS } from "#/character-ability-scores.ts";
+import {
+  ABILITY_SCORE_GENERATION_MODES,
+  BACKGROUND_ABILITY_SCORE_OPTIONS,
+  CHARACTER_BACKGROUNDS,
+  type AbilityScoreGenerationMode,
+  type BackgroundAbilityScoreIncrease,
+  type CharacterAbilityScoreGenerationDraft,
+} from "#/character-ability-scores.ts";
+import { ABILITIES, type Ability } from "#/types.ts";
+import { ownedCombatEquipment } from "#/character-equipment.ts";
 import {
   CHOICE_MESSAGE_PREFIXES,
   multiclassSkillsMessagePrefix,
@@ -10,9 +19,11 @@ import type {
 } from "#/character-draft-analysis.ts";
 import {
   ALIGNMENTS,
+  CHARACTER_LANGUAGES,
   CHARACTER_SPECIES,
   type CharacterClassLevels,
   type CharacterDraft,
+  type CharacterLanguage,
 } from "#/character-domain-model.ts";
 import { EXPERTISE_MESSAGE_PREFIX } from "#/character-feature-choice-validation.ts";
 import {
@@ -399,6 +410,198 @@ function payloadForEquipmentClassOption({
   });
 }
 
+function isAbilityScoreGenerationMode(
+  value: unknown,
+): value is AbilityScoreGenerationMode {
+  return (
+    typeof value === "string" &&
+    (ABILITY_SCORE_GENERATION_MODES as ReadonlyArray<string>).includes(value)
+  );
+}
+
+function liftAbilityScoreGenerationMode(
+  value: string | ReadonlyArray<string> | undefined,
+  draft: CharacterDraft,
+): CharacterAbilityScoreGenerationDraft | undefined {
+  if (!isAbilityScoreGenerationMode(value)) return undefined;
+  const existing = draft.abilityScoreGeneration;
+  const assignedScores = existing?.assignedScores ?? {};
+  return { mode: value, assignedScores };
+}
+
+function payloadForAbilityScoreGeneration({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.abilityScoreGeneration != null) return null;
+  return {
+    featureRef: "ability_score_generation",
+    options: [...ABILITY_SCORE_GENERATION_MODES],
+    pickCount: 1,
+    writePath: ["abilityScoreGeneration"],
+    current: [],
+    lift: liftAbilityScoreGenerationMode,
+  };
+}
+
+function isAbility(value: unknown): value is Ability {
+  return (
+    typeof value === "string" &&
+    (ABILITIES as ReadonlyArray<string>).includes(value)
+  );
+}
+
+function liftBackgroundAbilityScoreIncrease(
+  value: string | ReadonlyArray<string> | undefined,
+): BackgroundAbilityScoreIncrease | undefined {
+  if (!Array.isArray(value) || value.length !== 2) return undefined;
+  const [plusTwo, plusOne] = value;
+  if (!isAbility(plusTwo) || !isAbility(plusOne)) return undefined;
+  if (plusTwo === plusOne) return undefined;
+  return { kind: "plusTwoPlusOne", plusTwo, plusOne };
+}
+
+function payloadForBackgroundAbilityScoreIncrease({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.background == null) return null;
+  if (draft.backgroundAbilityScoreIncrease != null) return null;
+  const options = BACKGROUND_ABILITY_SCORE_OPTIONS[draft.background];
+  return {
+    featureRef: `background_ability_score_increase:${draft.background}`,
+    options: [...options],
+    pickCount: 2,
+    writePath: ["backgroundAbilityScoreIncrease"],
+    current: [],
+    lift: liftBackgroundAbilityScoreIncrease,
+  };
+}
+
+const EXPECTED_LANGUAGE_COUNT = 3;
+
+function payloadForLanguages({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  const existing = draft.languages ?? [];
+  if (existing.length === EXPECTED_LANGUAGE_COUNT) return null;
+  return multiPickChoicePayload({
+    featureRef: "languages",
+    options: CHARACTER_LANGUAGES,
+    pickCount: EXPECTED_LANGUAGE_COUNT,
+    writePath: ["languages"],
+    currentValues: existing as ReadonlyArray<CharacterLanguage>,
+  });
+}
+
+type LoadoutPrerequisites = {
+  readonly primaryClass: NonNullable<CharacterDraft["primaryClass"]>;
+  readonly background: NonNullable<CharacterDraft["background"]>;
+  readonly backgroundOption: NonNullable<
+    NonNullable<CharacterDraft["equipment"]>["backgroundOption"]
+  >;
+  readonly classOption: NonNullable<
+    NonNullable<CharacterDraft["equipment"]>["classOption"]
+  >;
+};
+
+function loadoutPrerequisites(
+  draft: CharacterDraft,
+): LoadoutPrerequisites | null {
+  if (draft.primaryClass == null || draft.background == null) return null;
+  if (
+    draft.equipment?.backgroundOption == null ||
+    draft.equipment?.classOption == null
+  ) {
+    return null;
+  }
+  return {
+    primaryClass: draft.primaryClass,
+    background: draft.background,
+    backgroundOption: draft.equipment.backgroundOption,
+    classOption: draft.equipment.classOption,
+  };
+}
+
+function ownedForLoadout(draft: CharacterDraft, prereqs: LoadoutPrerequisites) {
+  return ownedCombatEquipment({
+    primaryClass: prereqs.primaryClass,
+    background: prereqs.background,
+    equipment: {
+      backgroundOption: prereqs.backgroundOption,
+      classOption: prereqs.classOption,
+      purchasedCombatEquipment: draft.equipment?.purchasedCombatEquipment ?? [],
+      remainingGoldPieces: draft.equipment?.remainingGoldPieces ?? 0,
+      loadout: {
+        wornArmor: null,
+        wieldedWeapon: null,
+        secondaryWeapon: null,
+        shield: false,
+        wieldedWeaponGrip: null,
+      },
+    },
+  });
+}
+
+function uniqueStrings<T extends string>(values: ReadonlyArray<T>): T[] {
+  return [...new Set(values)];
+}
+
+function liftLoadoutShield(
+  value: string | ReadonlyArray<string> | undefined,
+): boolean {
+  return value === "yes";
+}
+
+function loadoutPickers(
+  draft: CharacterDraft,
+): ReadonlyArray<CharacterOpenChoicePayload> {
+  const prereqs = loadoutPrerequisites(draft);
+  if (prereqs == null) return [];
+  const owned = ownedForLoadout(draft, prereqs);
+  const pickers: CharacterOpenChoicePayload[] = [];
+  if (owned.armor.length > 0) {
+    pickers.push(
+      singlePickChoicePayload({
+        featureRef: "loadout_worn_armor",
+        options: uniqueStrings(owned.armor),
+        writePath: ["equipment", "loadout", "wornArmor"],
+        currentValue: draft.equipment?.loadout?.wornArmor ?? undefined,
+      }),
+    );
+  }
+  if (owned.weapons.length > 0) {
+    pickers.push(
+      singlePickChoicePayload({
+        featureRef: "loadout_wielded_weapon",
+        options: uniqueStrings(owned.weapons),
+        writePath: ["equipment", "loadout", "wieldedWeapon"],
+        currentValue: draft.equipment?.loadout?.wieldedWeapon ?? undefined,
+      }),
+    );
+  }
+  if (draft.equipment?.loadout?.wieldedWeapon != null) {
+    pickers.push(
+      singlePickChoicePayload({
+        featureRef: "loadout_wielded_weapon_grip",
+        options: ["oneHanded", "twoHanded"],
+        writePath: ["equipment", "loadout", "wieldedWeaponGrip"],
+        currentValue: draft.equipment.loadout.wieldedWeaponGrip ?? undefined,
+      }),
+    );
+  }
+  if (owned.shields >= 1) {
+    const currentShield = draft.equipment?.loadout?.shield === true;
+    pickers.push({
+      featureRef: "loadout_shield",
+      options: ["yes", "no"],
+      pickCount: 1,
+      writePath: ["equipment", "loadout", "shield"],
+      current: [currentShield ? "yes" : "no"],
+      lift: liftLoadoutShield,
+    });
+  }
+  return pickers;
+}
+
 interface SinglePickFeatureCandidate {
   readonly applicable: boolean;
   readonly messagePrefix: string;
@@ -572,7 +775,20 @@ const PICKER_ENTRIES: ReadonlyArray<PickerEntry> = [
     codes: ["missingClassEquipmentChoice"],
     resolver: payloadForEquipmentClassOption,
   },
+  {
+    codes: ["missingAbilityScoreGeneration"],
+    resolver: payloadForAbilityScoreGeneration,
+  },
+  {
+    codes: ["missingBackgroundAbilityScoreIncrease"],
+    resolver: payloadForBackgroundAbilityScoreIncrease,
+  },
+  {
+    codes: ["missingLanguages", "tooFewLanguages"],
+    resolver: payloadForLanguages,
+  },
 ];
+
 
 function featureChoicePayload(
   context: ResolverContext,
@@ -622,6 +838,7 @@ export function listCharacterFeaturePickers(
     if (!candidate.applicable) continue;
     pickers.push(candidateToPayload(candidate));
   }
+  pickers.push(...loadoutPickers(draft));
   return pickers;
 }
 

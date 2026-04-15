@@ -3,6 +3,7 @@ import { type ActorRefFrom, type SnapshotFrom } from "xstate";
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type {
   BattleContext,
+  BattleCreatureState,
   CreatureId,
 } from "@dnd/core/battle-machine-types.ts";
 import { encodeDndSnapshot } from "@dnd/core/context-encoding.ts";
@@ -58,7 +59,23 @@ function battlePhase(context: BattleContext) {
   if (context.movementCtx !== null) return "resolvingMovement" as const;
   if (context.laCtx !== null) return "awaitingLegendaryAction" as const;
   if (context.readyCtx !== null) return "awaitingReadiedAction" as const;
+  if (context.initiative.length > 0 && !context.turnStarted) {
+    return "awaitingStartTurn" as const;
+  }
   return "activeTurn" as const;
+}
+
+function nextRequiredAction(context: BattleContext) {
+  if (context.initiative.length === 0) return null;
+  if (!context.turnStarted && context.awaitCtx === null) {
+    return {
+      tool: "execute_control_command" as const,
+      scope: "battle" as const,
+      type: "BATTLE_START_TURN" as const,
+      note: "Battle initiative is set and the next turn has not begun. Issue BATTLE_START_TURN with explicit runtime facts to open the action window.",
+    };
+  }
+  return null;
 }
 
 function currentTurnCreatureId(context: BattleContext): CreatureId | null {
@@ -124,23 +141,70 @@ function encodeMonsterControlState(context: BattleContext) {
   );
 }
 
+const CREATURE_CONDITION_KEYS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "frightened",
+  "grappled",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const satisfies ReadonlyArray<keyof BattleCreatureState>;
+
+function activeConditions(creature: BattleCreatureState): ReadonlyArray<string> {
+  return CREATURE_CONDITION_KEYS.filter((key) => creature[key] === true);
+}
+
+function encodeCreatureSummary(creature: BattleCreatureState) {
+  return {
+    hp: creature.hp,
+    maxHp: creature.maxHp,
+    maxHpReduction: creature.maxHpReduction,
+    tempHp: creature.tempHp,
+    dead: creature.dead,
+    stable: creature.stable,
+    exhaustion: creature.exhaustion,
+    conditions: activeConditions(creature),
+    deathSaves: creature.deathSaves,
+    creatureKind: creature.creatureKind,
+  };
+}
+
+function encodeCreatureSummaries(context: BattleContext) {
+  return Object.fromEntries(
+    [...context.creatures.entries()]
+      .map(([id, creature]) => [id, encodeCreatureSummary(creature)] as const)
+      .sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
 export function encodeBattleRuntimeState(snapshot: BattleSnapshot) {
   const monsterControl = encodeMonsterControlState(snapshot.context);
+  const nextAction = nextRequiredAction(snapshot.context);
   return {
     scope: "battle" as const,
     machineState: snapshot.value,
     tags: [...snapshot.tags].sort(),
     round: snapshot.context.round,
     turnIndex: snapshot.context.turnIndex,
+    turnStarted: snapshot.context.turnStarted,
     activeCreatureId: currentTurnCreatureId(snapshot.context),
     initiative: snapshot.context.initiative,
     creatureIds: [...snapshot.context.creatures.keys()].sort(),
+    creatures: encodeCreatureSummaries(snapshot.context),
     phase: battlePhase(snapshot.context),
     awaitingReaction: snapshot.context.awaitCtx !== null,
     resolvingAoE: snapshot.context.aoeCtx !== null,
     resolvingMovement: snapshot.context.movementCtx !== null,
     awaitingLegendaryAction: snapshot.context.laCtx !== null,
     awaitingReadiedAction: snapshot.context.readyCtx !== null,
+    ...(nextAction != null ? { nextRequiredAction: nextAction } : {}),
     ...(Object.keys(monsterControl).length > 0 ? { monsterControl } : {}),
   };
 }

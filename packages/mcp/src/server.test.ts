@@ -12,8 +12,11 @@ import {
   listCharacterFeaturePickers,
   previewCharacterSheetAdvancement,
   previewCharacterDraftUpdate,
+  resolveOpenChoicePayload,
   singleClassAdvancement,
   type CharacterDraft,
+  type CharacterDraftAssessment,
+  type CharacterOpenChoice,
 } from "@dnd/core/character-domain.ts";
 import {
   characterSheetBattleProjection,
@@ -218,6 +221,28 @@ function encodeStableJsonForTest(value: unknown): unknown {
 
 function jsonRoundTripForTest(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));
+}
+
+function enrichOpenChoicesForTest(
+  draft: CharacterDraft,
+  choices: ReadonlyArray<CharacterOpenChoice>,
+) {
+  return choices.map((choice) => {
+    const payload = resolveOpenChoicePayload(draft, choice);
+    return payload == null
+      ? choice
+      : { ...choice, featureRef: payload.featureRef };
+  });
+}
+
+function enrichAssessmentForTest(
+  draft: CharacterDraft,
+  assessment: CharacterDraftAssessment,
+) {
+  return {
+    ...assessment,
+    openChoices: enrichOpenChoicesForTest(draft, assessment.openChoices),
+  };
 }
 
 function normalizeCharacterPreviewForTest(value: unknown): unknown {
@@ -950,6 +975,7 @@ describe("MCP server adapter", () => {
     expect("isError" in previewResponse).toBe(false);
     const previewPayload = readPayload(previewResponse);
 
+    const rawPreview = previewCharacterDraftUpdate(draft, patch);
     expect({
       ...previewPayload,
       preview: normalizeCharacterPreviewForTest(previewPayload.preview),
@@ -958,9 +984,17 @@ describe("MCP server adapter", () => {
         kind: "draft",
         draft,
       },
-      preview: normalizeCharacterPreviewForTest(
-        previewCharacterDraftUpdate(draft, patch),
-      ),
+      preview: normalizeCharacterPreviewForTest({
+        ...rawPreview,
+        candidateAssessment: enrichAssessmentForTest(
+          rawPreview.candidateDraft,
+          rawPreview.candidateAssessment,
+        ),
+        newlyOpenedChoices: enrichOpenChoicesForTest(
+          rawPreview.candidateDraft,
+          rawPreview.newlyOpenedChoices,
+        ),
+      }),
     });
     expect(
       readPayload(router.handleToolCall("get_character_state", {})),
@@ -1005,8 +1039,29 @@ describe("MCP server adapter", () => {
         kind: "draft",
         draft,
       },
-      assessment: assessCharacterDraft(draft),
+      assessment: enrichAssessmentForTest(draft, assessCharacterDraft(draft)),
     });
+  });
+
+  test("character MCP assessment cross-links each open choice to its picker featureRef", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", { draft: {} });
+
+    const assessed = readPayload(
+      router.handleToolCall("assess_character_draft", {}),
+    );
+    const byCode: Record<string, { featureRef?: string }> = {};
+    for (const choice of assessed.assessment.openChoices as ReadonlyArray<{
+      readonly code: string;
+      readonly featureRef?: string;
+    }>) {
+      byCode[choice.code] = choice;
+    }
+
+    expect(byCode.missingPrimaryClass?.featureRef).toBe("primary_class");
+    expect(byCode.missingSpecies?.featureRef).toBe("species");
+    expect(byCode.missingBackground?.featureRef).toBe("background");
+    expect(byCode.missingAlignment?.featureRef).toBe("alignment");
   });
 
   test("character MCP lists feature pickers as serializable payloads", () => {
@@ -4799,9 +4854,11 @@ describe("MCP server adapter", () => {
       tags: [],
       round: 0,
       turnIndex: 0,
+      turnStarted: false,
       activeCreatureId: null,
       initiative: [],
       creatureIds: [],
+      creatures: {},
       phase: "activeTurn",
       awaitingReaction: false,
       resolvingAoE: false,
@@ -5083,11 +5140,12 @@ describe("MCP server adapter", () => {
     });
 
     expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      error:
-        "BATTLE_GRAPPLE requires explicit runtime battleGrapple inputs on execute_action.",
-      details: "INVALID_RUNTIME_INPUT",
-    });
+    const grapplePayload = readPayload(response);
+    expect(grapplePayload.error).toContain(
+      "BATTLE_GRAPPLE requires explicit runtime battleGrapple inputs",
+    );
+    expect(grapplePayload.error).toContain("targetSaveFailed: boolean");
+    expect(grapplePayload.details).toBe("INVALID_RUNTIME_INPUT");
   });
 
   test("battle hosts execute public grapple through MCP", () => {
@@ -5139,12 +5197,21 @@ describe("MCP server adapter", () => {
     );
     const after = readPayload(handleToolCall(host, "get_state", {}));
 
-    expect(preview).toEqual({
+    expect(preview).toMatchObject({
       ok: true,
       summary:
         "Make a weapon or unarmed strike attack against the chosen target using explicit roll, AC, visibility, adjacency, and reaction-candidate facts",
       cost: cost(quota("action")),
       runtime: "battleAttack",
+      runtimeSchema: {
+        runtime: "battleAttack",
+        valueFields: expect.objectContaining({
+          attackRoll: expect.objectContaining({ type: "integer" }),
+          hitReactionCandidates: expect.objectContaining({
+            type: "array<string>",
+          }),
+        }),
+      },
     });
     expect(after).toEqual(before);
   });
@@ -5161,11 +5228,12 @@ describe("MCP server adapter", () => {
     });
 
     expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      error:
-        "BATTLE_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
-      details: "INVALID_RUNTIME_INPUT",
-    });
+    const payload = readPayload(response);
+    expect(payload.error).toContain(
+      "BATTLE_ATTACK requires explicit runtime battleAttack inputs",
+    );
+    expect(payload.error).toContain("attackRoll: integer");
+    expect(payload.details).toBe("INVALID_RUNTIME_INPUT");
   });
 
   test("execute_action rejects invalid BATTLE_ATTACK session facts", () => {
@@ -5230,11 +5298,12 @@ describe("MCP server adapter", () => {
     });
 
     expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      error:
-        'BATTLE_ATTACK requires runtime: { runtime: "battleAttack", values: ... } with explicit attack, AC, visibility, adjacency, and reaction-candidate facts.',
-      details: "INVALID_RUNTIME_INPUT",
-    });
+    const strayPayload = readPayload(response);
+    expect(strayPayload.error).toContain(
+      'BATTLE_ATTACK requires runtime: { runtime: "battleAttack"',
+    );
+    expect(strayPayload.error).toContain("attackRoll: integer");
+    expect(strayPayload.details).toBe("INVALID_RUNTIME_INPUT");
   });
 
   test("execute_action routes public BATTLE_ATTACK hits through the battle lane", () => {
@@ -5366,11 +5435,12 @@ describe("MCP server adapter", () => {
     });
 
     expect("isError" in response && response.isError).toBe(true);
-    expect(readPayload(response)).toEqual({
-      error:
-        "BATTLE_OFF_HAND_ATTACK requires explicit runtime battleAttack inputs on execute_action.",
-      details: "INVALID_RUNTIME_INPUT",
-    });
+    const offHandPayload = readPayload(response);
+    expect(offHandPayload.error).toContain(
+      "BATTLE_OFF_HAND_ATTACK requires explicit runtime battleAttack inputs",
+    );
+    expect(offHandPayload.error).toContain("attackRoll: integer");
+    expect(offHandPayload.details).toBe("INVALID_RUNTIME_INPUT");
   });
 
   test("execute_action routes public BATTLE_OFF_HAND_ATTACK through the shared battleAttack runtime", () => {
@@ -5575,7 +5645,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(response)).toEqual({
       success: true,
       outcome: "Decline to release your readied action",
-      state: {
+      state: expect.objectContaining({
         scope: "battle",
         machineState: { running: "activeTurn" },
         tags: ["playerTurn"],
@@ -5584,13 +5654,13 @@ describe("MCP server adapter", () => {
         activeCreatureId: "B",
         initiative: ["A", "B"],
         creatureIds: ["A", "B"],
-        phase: "activeTurn",
+        phase: "awaitingStartTurn",
         awaitingReaction: false,
         resolvingAoE: false,
         resolvingMovement: false,
         awaitingLegendaryAction: false,
         awaitingReadiedAction: false,
-      },
+      }),
     });
   });
 
@@ -5791,7 +5861,7 @@ describe("MCP server adapter", () => {
       success: true,
       outcome:
         "Use your reaction to halve the triggering attack's damage against you",
-      state: {
+      state: expect.objectContaining({
         scope: "battle",
         machineState: { running: "awaitingReaction" },
         tags: ["reactionWindow"],
@@ -5806,7 +5876,7 @@ describe("MCP server adapter", () => {
         resolvingMovement: false,
         awaitingLegendaryAction: false,
         awaitingReadiedAction: false,
-      },
+      }),
     });
   });
 
@@ -5846,7 +5916,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(response)).toEqual({
       success: true,
       outcome: "Use your reaction to cast Shield against the triggering attack",
-      state: {
+      state: expect.objectContaining({
         scope: "battle",
         machineState: { running: "awaitingReaction" },
         tags: ["reactionWindow"],
@@ -5861,7 +5931,7 @@ describe("MCP server adapter", () => {
         resolvingMovement: false,
         awaitingLegendaryAction: false,
         awaitingReadiedAction: false,
-      },
+      }),
     });
 
     expect(
@@ -5899,7 +5969,7 @@ describe("MCP server adapter", () => {
       success: true,
       outcome:
         "Use your reaction to add your Parry bonus against the triggering melee weapon attack",
-      state: {
+      state: expect.objectContaining({
         scope: "battle",
         machineState: { running: "awaitingReaction" },
         tags: ["reactionWindow"],
@@ -5914,7 +5984,7 @@ describe("MCP server adapter", () => {
         resolvingMovement: false,
         awaitingLegendaryAction: false,
         awaitingReadiedAction: false,
-      },
+      }),
     });
 
     expect(
@@ -5942,22 +6012,24 @@ describe("MCP server adapter", () => {
     expect(payload.outcome).toMatch(
       /^Use your reaction and expend Bardic Inspiration to reduce the triggering attack roll \([1-8]\)$/,
     );
-    expect(payload.state).toEqual({
-      scope: "battle",
-      machineState: { running: "awaitingReaction" },
-      tags: ["reactionWindow"],
-      round: 1,
-      turnIndex: 0,
-      activeCreatureId: "A",
-      initiative: ["A", "B", "C"],
-      creatureIds: ["A", "B", "C"],
-      phase: "awaitingReaction",
-      awaitingReaction: true,
-      resolvingAoE: false,
-      resolvingMovement: false,
-      awaitingLegendaryAction: false,
-      awaitingReadiedAction: false,
-    });
+    expect(payload.state).toEqual(
+      expect.objectContaining({
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "B", "C"],
+        creatureIds: ["A", "B", "C"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      }),
+    );
 
     expect(
       readPayload(handleToolCall(host, "get_available_actions", {})),
@@ -5995,22 +6067,24 @@ describe("MCP server adapter", () => {
     expect(payload.outcome).toMatch(
       /^Use your reaction to reduce the triggering attack's damage with Deflect Attacks \((?:[8-9]|1\d|17)\)$/,
     );
-    expect(payload.state).toEqual({
-      scope: "battle",
-      machineState: { running: "awaitingReaction" },
-      tags: ["reactionWindow"],
-      round: 1,
-      turnIndex: 0,
-      activeCreatureId: "A",
-      initiative: ["A", "B"],
-      creatureIds: ["A", "B"],
-      phase: "awaitingReaction",
-      awaitingReaction: true,
-      resolvingAoE: false,
-      resolvingMovement: false,
-      awaitingLegendaryAction: false,
-      awaitingReadiedAction: false,
-    });
+    expect(payload.state).toEqual(
+      expect.objectContaining({
+        scope: "battle",
+        machineState: { running: "awaitingReaction" },
+        tags: ["reactionWindow"],
+        round: 1,
+        turnIndex: 0,
+        activeCreatureId: "A",
+        initiative: ["A", "B"],
+        creatureIds: ["A", "B"],
+        phase: "awaitingReaction",
+        awaitingReaction: true,
+        resolvingAoE: false,
+        resolvingMovement: false,
+        awaitingLegendaryAction: false,
+        awaitingReadiedAction: false,
+      }),
+    );
 
     expect(
       readPayload(handleToolCall(host, "get_available_actions", {})),
@@ -6037,7 +6111,7 @@ describe("MCP server adapter", () => {
       success: true,
       outcome:
         "Use your reaction to cast Counterspell against the triggering spell",
-      state: {
+      state: expect.objectContaining({
         scope: "battle",
         machineState: { running: "awaitingReaction" },
         tags: ["reactionWindow"],
@@ -6052,7 +6126,7 @@ describe("MCP server adapter", () => {
         resolvingMovement: false,
         awaitingLegendaryAction: false,
         awaitingReadiedAction: false,
-      },
+      }),
     });
   });
 
@@ -6115,6 +6189,7 @@ describe("SessionRouter", () => {
       monsterId: "goblin-1",
       fighterInitiativeRoll: 20,
       monsterInitiativeRoll: 8,
+      useDemoHost: true,
     });
 
     expect("isError" in started).toBe(false);
@@ -6185,6 +6260,69 @@ describe("SessionRouter", () => {
     );
   });
 
+  test("battle get_state reports awaitingStartTurn phase and nextRequiredAction hint before BATTLE_START_TURN", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      monsterId: "goblin-1",
+      useDemoHost: true,
+    });
+
+    const state = readPayload(router.handleToolCall("get_state", {}));
+    expect(state.phase).toBe("awaitingStartTurn");
+    expect(state.turnStarted).toBe(false);
+    expect(state.nextRequiredAction).toEqual({
+      tool: "execute_control_command",
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      note: expect.stringContaining("BATTLE_START_TURN"),
+    });
+
+    router.handleToolCall("execute_control_command", {
+      scope: "battle",
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+    });
+    const stateAfter = readPayload(router.handleToolCall("get_state", {}));
+    expect(stateAfter.phase).toBe("activeTurn");
+    expect(stateAfter.turnStarted).toBe(true);
+    expect(stateAfter.nextRequiredAction).toBeUndefined();
+  });
+
+  test("battle get_state exposes per-creature hp, conditions, and death-save summary keyed by CreatureId", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "fighter",
+      monsterId: "goblin-1",
+      fighterInitiativeRoll: 20,
+      monsterInitiativeRoll: 8,
+      useDemoHost: true,
+    });
+    expect("isError" in started).toBe(false);
+
+    const state = readPayload(router.handleToolCall("get_state", {}));
+    expect(state.creatures).toEqual({
+      fighter: expect.objectContaining({
+        hp: 44,
+        maxHp: 44,
+        tempHp: 0,
+        dead: false,
+        stable: false,
+        exhaustion: 0,
+        conditions: [],
+        creatureKind: "PC",
+        deathSaves: { successes: 0, failures: 0 },
+      }),
+      "goblin-1": expect.objectContaining({
+        hp: 7,
+        maxHp: 7,
+        creatureKind: "Monster",
+      }),
+    });
+  });
+
   test("start_battle supports the full fighter vs monster MCP attack workflow without mutating pre-battle session state", () => {
     const creatureHost = createDemoHost();
     const router = createSessionRouter(creatureHost, {
@@ -6197,6 +6335,7 @@ describe("SessionRouter", () => {
       monsterId: "goblin-1",
       fighterInitiativeRoll: 20,
       monsterInitiativeRoll: 8,
+      useDemoHost: true,
     });
 
     expect("isError" in started).toBe(false);
@@ -6311,6 +6450,7 @@ describe("SessionRouter", () => {
     const started = router.handleToolCall("start_battle", {
       fighterId: "fighter",
       monsterId: "fighter",
+      useDemoHost: true,
     });
 
     expect("isError" in started && started.isError).toBe(true);
@@ -6327,11 +6467,13 @@ describe("SessionRouter", () => {
     router.handleToolCall("start_battle", {
       fighterId: "fighter",
       monsterId: "goblin-1",
+      useDemoHost: true,
     });
 
     const restarted = router.handleToolCall("start_battle", {
       fighterId: "fighter-2",
       monsterId: "goblin-2",
+      useDemoHost: true,
     });
 
     expect("isError" in restarted && restarted.isError).toBe(true);
@@ -6339,6 +6481,68 @@ describe("SessionRouter", () => {
       error:
         "start_battle can only be called while the session is on a creature host.",
       details: "START_BATTLE_SCOPE_MISMATCH",
+    });
+  });
+
+  test("start_battle defaults to the stored character sheet when no useDemoHost flag is set", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    router.handleToolCall("create_character_draft", { draft: completeDraft() });
+    const finalized = router.handleToolCall("finalize_character_draft", {});
+    expect("isError" in finalized).toBe(false);
+    expect(router.getSnapshot().storedCharacterState).toBe("sheet");
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "hero",
+      monsterId: "goblin-1",
+      fighterInitiativeRoll: 15,
+      monsterInitiativeRoll: 8,
+    });
+    expect("isError" in started).toBe(false);
+    expect(router.getSnapshot().activeScope).toBe("battle");
+
+    expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
+      scope: "battle",
+      initiative: ["hero", "goblin-1"],
+      creatureIds: ["goblin-1", "hero"],
+      creatures: {
+        hero: expect.objectContaining({ creatureKind: "PC" }),
+        "goblin-1": expect.objectContaining({ creatureKind: "Monster" }),
+      },
+    });
+  });
+
+  test("start_battle errors without a stored sheet when useDemoHost is not set", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "hero",
+      monsterId: "goblin-1",
+    });
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started)).toEqual({
+      error:
+        "start_battle requires a finalized stored character sheet. Finalize a draft first, or pass useDemoHost:true for the demo Fighter.",
+      details: {
+        code: "START_BATTLE_MISSING_SHEET",
+        storedCharacterState: "empty",
+      },
+    });
+    expect(router.getSnapshot().activeScope).toBe("creature");
+  });
+
+  test("start_battle errors when the stored character is still a draft", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", { draft: {} });
+
+    const started = router.handleToolCall("start_battle", {
+      fighterId: "hero",
+      monsterId: "goblin-1",
+    });
+    expect("isError" in started && started.isError).toBe(true);
+    expect(readPayload(started).details).toEqual({
+      code: "START_BATTLE_MISSING_SHEET",
+      storedCharacterState: "draft",
     });
   });
 
@@ -6368,15 +6572,21 @@ describe("SessionRouter", () => {
       scope: "battle",
       round: 1,
       turnIndex: 0,
+      turnStarted: false,
       activeCreatureId: "fighter",
       initiative: ["fighter", "goblin-1"],
       creatureIds: ["fighter", "goblin-1"],
-      phase: "activeTurn",
+      phase: "awaitingStartTurn",
       awaitingReaction: false,
       resolvingAoE: false,
       resolvingMovement: false,
       awaitingLegendaryAction: false,
       awaitingReadiedAction: false,
+      nextRequiredAction: expect.objectContaining({
+        tool: "execute_control_command",
+        scope: "battle",
+        type: "BATTLE_START_TURN",
+      }),
     });
   });
 

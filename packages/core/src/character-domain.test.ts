@@ -1428,6 +1428,63 @@ describe("character-domain", () => {
     expect(assessment.issues).toEqual([]);
   });
 
+  it("deep-merges choices siblings so raw patches preserve previously applied picks", () => {
+    const base = applyCharacterDraftUpdate(
+      {
+        primaryClass: "fighter",
+        advancement: singleClassAdvancement("fighter", 1),
+        species: "human",
+        background: "soldier",
+      },
+      {
+        choices: {
+          fighterFightingStyle: "defense",
+          primaryClassSkills: ["acrobatics", "perception"],
+          humanOriginFeat: { feat: "alert" },
+        },
+      },
+    );
+    expect(base.choices?.fighterFightingStyle).toBe("defense");
+
+    const updated = applyCharacterDraftUpdate(base, {
+      choices: { backgroundTool: "dice" },
+    });
+
+    expect(updated.choices?.backgroundTool).toBe("dice");
+    expect(updated.choices?.fighterFightingStyle).toBe("defense");
+    expect(updated.choices?.primaryClassSkills).toEqual([
+      "acrobatics",
+      "perception",
+    ]);
+    expect(updated.choices?.humanOriginFeat).toEqual({ feat: "alert" });
+  });
+
+  it("deep-merges equipment siblings so raw patches preserve previously applied choices", () => {
+    const base = applyCharacterDraftUpdate(
+      {
+        primaryClass: "fighter",
+        advancement: singleClassAdvancement("fighter", 1),
+        species: "human",
+        background: "soldier",
+      },
+      {
+        equipment: {
+          backgroundOption: "package",
+          classOption: "packageA",
+        },
+      },
+    );
+    expect(base.equipment?.backgroundOption).toBe("package");
+
+    const updated = applyCharacterDraftUpdate(base, {
+      equipment: { remainingGoldPieces: 10 },
+    });
+
+    expect(updated.equipment?.remainingGoldPieces).toBe(10);
+    expect(updated.equipment?.backgroundOption).toBe("package");
+    expect(updated.equipment?.classOption).toBe("packageA");
+  });
+
   it("selectively invalidates only dependent choices when earlier authored facts change", () => {
     const updated = applyCharacterDraftUpdate(completeDraft(), {
       primaryClass: "wizard",
@@ -1977,7 +2034,7 @@ describe("character-domain", () => {
     });
   });
 
-  it("treats omitted nested fields inside whole-object choice patches as direct edits", () => {
+  it("preserves sibling choices when a patch edits one nested choice field", () => {
     const current = completeDraft();
 
     const preview = previewCharacterDraftUpdate(current, {
@@ -1987,15 +2044,8 @@ describe("character-domain", () => {
     });
 
     expect(preview.droppedFacts).toEqual([]);
-    expect(preview.candidateDraft.choices).toEqual({
-      backgroundTool: "dice",
-    });
-    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
-      "missingPrimaryClassSkillChoices",
-      "missingSpeciesSkillChoice",
-      "missingOriginFeatChoice",
-      "missingFeatureChoice",
-    ]);
+    expect(preview.candidateDraft.choices).toEqual(current.choices);
+    expect(preview.newlyOpenedChoices).toEqual([]);
   });
 
   it("previews newly introduced illegal issues without counting direct edits as dropped facts", () => {
