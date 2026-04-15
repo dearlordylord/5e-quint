@@ -11,15 +11,15 @@ Species:
 Grounding:
 
 - `xphb-srd-pairing/SPECIES_BACKGROUND_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v3.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Character-Origins.md`
 
 ## Short Verdict
 
 Group B is the architecturally most informative group in the origin-side pass. Two major findings:
 
-- **Dragonborn Breath Weapon provides a second independent stream of pressure for the typed scaling split** (dice-count scaling at character-level tiers: 1d10 → 2d10 → 3d10 → 4d10). Combined with class-feature Sneak Attack, this crosses the "two independent streams" bar and justifies promoting the typed scaling split to `TAXONOMY_atoms_graph_v4.md`.
+- **Dragonborn Breath Weapon provides a second independent stream of pressure for the typed scaling split** (dice-count scaling at character-level tiers: 1d10 → 2d10 → 3d10 → 4d10). Combined with class-feature Sneak Attack, this crosses the "two independent streams" bar and justifies promoting the typed scaling split to `TAXONOMY_atoms_graph.md`.
 - **Scope-First Nested Selection is strongly validated** across four species (Elven Lineage, Fiendish Legacy, Gnomish Lineage, Goliath Giant Ancestry). Every case follows the same pattern: pick sublist at character creation, gain level-1 benefit, unlock level-3 and level-5 spells scoped to that sublist, sometimes with tier-gated reveal. The subgraph named from Magic Initiate and Wizard Spellcasting is confirmed.
 
 No new top-level node or edge family is forced.

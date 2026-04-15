@@ -23,25 +23,38 @@ If a duplicate appears, a proper merge must happen:
 
 The goal is one indexed home per pairing topic, not a pile of overlapping notes.
 
-## Current Next Step
+## Versioning Rule
 
-This workspace is still in research-shaping mode.
+Do **not** encode version numbers in filenames (`foo_v0.md`, `foo_v1.md`, `TAXONOMY_atoms_graph_v4.md`). Iterate a canonical file in place — git already tracks history.
+
+Rationale for the rule:
+
+- filename-versioning seeds a mental model where every iteration must produce a new file. This creates N superseded drafts that persist indefinitely as noise;
+- git history is a proper, queryable version control system. A filename suffix is a poor imitation;
+- numbered filenames get duplicated in indexes and reading orders, increasing cognitive load every time a reader has to decide which is current;
+- if the current contents become genuinely incompatible with the prior shape (removals, renames), document the transition in a compatibility note rather than freezing the old state as a parallel file.
+
+How this rule was re-established (recorded so the pattern does not recur):
+
+- `TAXONOMY_atoms_graph_v0.md` was created with an explicit `_v0` suffix, which seeded the expectation that revisions would be `_v1`, `_v2`, etc.;
+- the parent research note `../RESEARCH_XPHB_SRD_PAIRING.md` listed the numbered versions as canonical artifacts, institutionalizing the pattern;
+- this index listed each version as a separate entry in the reading order, reinforcing the pattern visually;
+- all three sources are now corrected. Current canonical filenames are suffix-free.
+
+Exceptions (narrow, explicitly authored):
+
+- files whose content is about a specific external version (e.g., a compatibility note that maps old atom names to current ones). The filename should describe the content's purpose, not encode a sequence.
+
+## Current Next Step
 
 The research-side taxonomy track is **closed**:
 
-- `TAXONOMY_atoms_graph_v4.md` is the final atom inventory;
-- `TAXONOMY_graph_representation_v1.md` is the current graph model with all 18 reusable subgraphs;
-- `COMPATIBILITY_v4_certification.md` cross-walks all historical validation artifacts to `v4` atom names;
-- `RESEARCH_capstone.md` summarizes the arc from `v0` to `v4`, the seven validation streams, and the handover inputs for a future schema-design phase.
+- `TAXONOMY_atoms_graph.md` is the final atom inventory;
+- `TAXONOMY_graph_representation.md` is the current graph model with all 18 reusable subgraphs;
+- `COMPATIBILITY_certification.md` cross-walks all historical validation artifacts to current atom names;
+- `RESEARCH_capstone.md` summarizes the `v0 → v4` arc, the seven validation streams, and handover inputs for a future schema-design phase.
 
-Schema design may resume whenever chosen. No further research-side widening is required.
-
-Current default rule:
-
-- do not treat the six family bundles as the final ontology;
-- do not foreground competitor research in public-facing framing;
-- do not advance to schema design yet;
-- keep widening validation until the lower-level taxonomy either exposes structural dishonesty (requiring `v3`) or converges across all source-root atoms.
+Schema design may resume whenever chosen. No further research-side widening is required against the SRD 5.2.1 public base. A PHB extension-corpus pass is the natural follow-up if product-side work needs confidence that the atom set carries private content too.
 
 ## Core Pairing Research
 
@@ -155,105 +168,106 @@ Current default rule:
   Canonical consolidation of reused, strengthened, and still-open pressure families across all current pilot syntheses.
 
 - [CANDIDATE_closed_extension_surface_v1.md](./CANDIDATE_closed_extension_surface_v1.md)  
-  First derived draft of a closed extension surface, grounded in the current synthesis notes.
+  Historical candidate closed-surface draft, superseded by the atom-graph track. Retained as evidence of a path explored and rejected.
 
 - [STRESS_TEST_closed_extension_surface_v1_spells.md](./STRESS_TEST_closed_extension_surface_v1_spells.md)  
-  Spell-focused stress test for `v1`, identifying where the candidate is structurally right and where it is still too flat.
+  Historical spell-focused stress test for the old candidate surface.
 
 - [STRESS_TEST_closed_extension_surface_v1_items_classes.md](./STRESS_TEST_closed_extension_surface_v1_items_classes.md)  
-  Item- and class-feature-focused stress test for `v1`, especially around rewrites, registries, and action-vs-reaction separation.
+  Historical item/class-feature stress test for the old candidate surface.
 
 - [DECISION_activation_vs_triggered_reaction.md](./DECISION_activation_vs_triggered_reaction.md)  
-  Current working decision to keep chosen activations and trigger-window reactions as separate authored payload families.
+  Working decision to keep chosen activations and trigger-window reactions as separate authored payload families.
 
 - [PLAN_closed_extension_surface_implementation.md](./PLAN_closed_extension_surface_implementation.md)  
-  Implementation-oriented follow-on plan for the current closed-surface draft and stress-test results.
+  Historical implementation-oriented follow-on plan for the old closed-surface draft. Superseded by the atom-graph track.
 
 ## Reset And Taxonomy Notes
 
 - [RESET_foundation_srd_base_phb_extension.md](./RESET_foundation_srd_base_phb_extension.md)  
-  Corrected foundation note for SRD base mechanics, PHB private extension content, licensing, and public/private research boundaries.
+  Corrected foundation note for SRD base mechatory, PHB private extension content, licensing, and public/private research boundaries.
 
-- [TAXONOMY_atoms_graph_v0.md](./TAXONOMY_atoms_graph_v0.md)  
-  First lower-level taxonomy pass, expressed as graphable atoms and relations instead of a finished family ontology.
+- [TAXONOMY_atoms_graph.md](./TAXONOMY_atoms_graph.md)  
+  Current atom inventory. The research-side taxonomy converged on this after four validation-driven revisions (see `RESEARCH_capstone.md` for the `v0 → v4` narrative). Iterate in place; do not create versioned filenames.
 
-- [TAXONOMY_atoms_graph_v1.md](./TAXONOMY_atoms_graph_v1.md)  
-  First revision after the initial 20-spell falsification pass.
+- [TAXONOMY_graph_representation.md](./TAXONOMY_graph_representation.md)  
+  Current graph/tag representation using the atom inventory end-to-end. Consolidates all 18 reusable subgraphs (A–R) with concrete pressure cases and example subgraphs.
 
-- [TAXONOMY_atoms_graph_v2.md](./TAXONOMY_atoms_graph_v2.md)  
-  Working taxonomy after three rounds of spell validation narrowed the residue.
-
-- [TAXONOMY_atoms_graph_v3.md](./TAXONOMY_atoms_graph_v3.md)  
-  Working taxonomy after the feat pass promoted accumulated refinement pressure to first-class atoms. Adds typed `modify_roll_*` split, `grant_sense` / `grant_proficiency` / `grant_spell_access` / `grant_resistance` / `bypass_resistance`, `initiative_window` / `post_action_window`, and `refund` / `refunds`.
-
-- [TAXONOMY_atoms_graph_v4.md](./TAXONOMY_atoms_graph_v4.md)  
-  Current working taxonomy after the species and class-feature passes pressured a typed scaling split. Splits `scale_damage` into `scale_die_count`, `scale_die_size`, `scale_attack_count`, and retains `scale_numeric_bonus` / `scale_target_count`. Every source-root atom now has at least one atom-level validation pass.
-
-- [TAXONOMY_graph_representation_v0.md](./TAXONOMY_graph_representation_v0.md)  
-  Historical graph/tag representation using `v2` atom names plus evolving subgraphs; superseded by `v1`.
-
-- [TAXONOMY_graph_representation_v1.md](./TAXONOMY_graph_representation_v1.md)  
-  Current graph/tag representation using `v4` atom names end-to-end. Consolidates all 18 reusable subgraphs (A–R) with concrete pressure cases, example subgraphs for Shield, Bless, Sap, Topple, Sneak Attack, Extra Attack, Arcane Recovery, Ring of Spell Storing, Attunement, Passive Worn/Held Defense.
-
-- [COMPATIBILITY_v4_certification.md](./COMPATIBILITY_v4_certification.md)  
-  Per-stream re-validation of all 87 historical unit entries against `v4` atom names. Documents the three retirements (`stored_spell_slot` in `v1`, `modify_roll` in `v3`, `scale_damage` in `v4`) with clean mapping rules and confirms every validation conclusion still holds under `v4`.
+- [COMPATIBILITY_certification.md](./COMPATIBILITY_certification.md)  
+  Per-stream re-validation of all historical unit entries against the current atom names. Documents the three retirements (`stored_spell_slot`, `modify_roll`, `scale_damage`) with clean mapping rules and confirms every validation conclusion still holds.
 
 - [RESEARCH_capstone.md](./RESEARCH_capstone.md)  
-  Single-file summary of the research arc: `v0 → v4` evolution, seven validation streams, final atom and pattern inventories, what survived / was refined / was retired / is recorded residue, and handover inputs for a future schema design phase.
+  Single-file summary of the research arc, the seven validation streams, and handover inputs for a future schema-design phase.
+
+## Validation Matrices And Rounds
+
+### Spells
 
 - [SPELL_VALIDATION_matrix_v0.md](./SPELL_VALIDATION_matrix_v0.md)  
-  Canonical 20-spell validation matrix for testing the current taxonomy against actual spell shapes.
+  Canonical 20-spell validation matrix.
 
 - [spell-validation/ROUND_1_synthesis.md](./spell-validation/ROUND_1_synthesis.md)  
-  First aggregate pass showing that `v0` was usable as a falsification target but too coarse as a real taxonomy.
+  First aggregate pass.
 
 - [spell-validation/ROUND_2_synthesis.md](./spell-validation/ROUND_2_synthesis.md)  
-  Second aggregate pass showing that `v1` fixed real compression but still justified one more revision.
+  Second aggregate pass.
 
 - [spell-validation/ROUND_3_synthesis.md](./spell-validation/ROUND_3_synthesis.md)  
-  Third aggregate pass showing that `v2` is good enough to stop iterating on the same 20-spell sample.
+  Third aggregate pass; convergence.
+
+### Magic items
 
 - [ITEM_VALIDATION_matrix_v0.md](./ITEM_VALIDATION_matrix_v0.md)  
-  Focused item-side validation matrix for attunement, stored spells, charges, and item-owned casting.
+  Focused item-side matrix for attunement, stored spells, charges, and item-owned casting.
 
 - [item-validation/ROUND_1_synthesis.md](./item-validation/ROUND_1_synthesis.md)  
-  First item-side aggregate pass showing that item pressure strengthens ownership/resource distinctions without forcing a new top-level graph family.
+  First item-side aggregate pass.
 
 - [ITEM_VALIDATION_matrix_v1_edge_items.md](./ITEM_VALIDATION_matrix_v1_edge_items.md)  
-  Second item-side widening sample focused on reaction items, passive rewrites, toggles, mobility utilities, and container behavior.
+  Second widening sample focused on reaction items, passive rewrites, toggles, mobility utilities, and container behavior.
 
 - [item-validation/ROUND_2_synthesis.md](./item-validation/ROUND_2_synthesis.md)  
-  Edge-item aggregate pass showing that the graph still holds and that the main new result is a reusable passive-projection subgraph, not a new top-level family.
+  Edge-item aggregate pass.
+
+### Masteries
 
 - [MASTERY_VALIDATION_matrix_v0.md](./MASTERY_VALIDATION_matrix_v0.md)  
-  Closed 2024 weapon-mastery sample for testing the atom graph against attack-roll rider composition, on-miss riders, attack-rooted save DCs, per-turn fences, and non-stacking policy.
+  Closed 2024 weapon-mastery sample (8 units).
 
 - [mastery-validation/ROUND_1_synthesis.md](./mastery-validation/ROUND_1_synthesis.md)  
-  Mastery-side aggregate pass showing that `v2` still holds, adds a reusable on-hit rider subgraph to the graph representation, and narrows the "exact attack-roll rider composition" weak spot into smaller residue observations.
+  Mastery aggregate pass; adds the On-Hit Rider subgraph.
+
+### Feats
 
 - [FEAT_VALIDATION_matrix_v0.md](./FEAT_VALIDATION_matrix_v0.md)  
-  Closed 2024 SRD feat-catalog sample (17 feats) for testing the atom graph against multi-benefit composition, sense/proficiency/spell-access grants, damage-defense family, initiative and post-action windows, and probabilistic resource refund.
+  Closed 2024 SRD feat catalog (17 feats).
 
 - [feat-validation/ROUND_1_synthesis.md](./feat-validation/ROUND_1_synthesis.md)  
-  Feat-side aggregate pass showing that `v2`'s top-level family shape still holds but that accumulated refinement pressure across four validation streams justifies promoting atom additions into `TAXONOMY_atoms_graph_v3.md`.
+  Feat aggregate pass; promoted the typed `modify_roll_*` split and several new grant atoms.
+
+### Class features
 
 - [CLASS_FEATURE_VALIDATION_matrix_v0.md](./CLASS_FEATURE_VALIDATION_matrix_v0.md)  
-  16-feature class-sample (across Barbarian, Bard, Wizard, Fighter, Monk, Rogue, Paladin) for stress-testing `v3` on stateful pools, reactions, persistent grants, and level scaling.
+  16-feature sample across Barbarian, Bard, Wizard, Fighter, Monk, Rogue, Paladin.
 
 - [class-feature-validation/ROUND_1_synthesis.md](./class-feature-validation/ROUND_1_synthesis.md)  
-  Class-feature aggregate pass showing that `v3` holds at the top level with second-data-point validation for `refund`, `initiative_window`, `grant_resistance`, and `grant_spell_access`; flags typed scaling split as the primary `v4` candidate; adds five graph-representation subgraphs (Pool With Options Menu, Cross-Rule Rewrite, Conditional Payment After Resolution, Usage-Count-Parameterized DC, Extend-By-Activity Duration).
+  Class-feature aggregate pass; flagged typed scaling split and added five subgraphs.
+
+### Species and backgrounds
 
 - [SPECIES_BACKGROUND_VALIDATION_matrix_v0.md](./SPECIES_BACKGROUND_VALIDATION_matrix_v0.md)  
-  Full SRD 5.2.1 origin-side sample (9 species + 4 backgrounds) for validating `v3`'s grant atoms and crossing the independent-stream bar for typed scaling split.
+  Full SRD 5.2.1 origin-side catalog (9 species + 4 backgrounds).
 
 - [species-background-validation/ROUND_1_synthesis.md](./species-background-validation/ROUND_1_synthesis.md)  
-  Species / background aggregate pass providing the cross-stream data point (Dragonborn Breath Weapon) that promotes typed scaling split to `v4`, plus seven-data-point anchoring for the Scope-First Nested Selection pattern.
+  Origin-side aggregate pass; provided the cross-stream data point (Dragonborn Breath Weapon) that promoted the typed scaling split.
+
+### Item properties
 
 - [ITEM_PROPERTY_VALIDATION_matrix_v0.md](./ITEM_PROPERTY_VALIDATION_matrix_v0.md)  
-  Full SRD 5.2.1 weapon property sample (9 properties) for validating cross-rule composition as the dominant structural pattern.
+  Full SRD 5.2.1 weapon property set (9 units).
 
 - [item-property-validation/ROUND_1.md](./item-property-validation/ROUND_1.md)  
-  Single-group item-property validation closing out source-root coverage; confirms no new atoms forced and cross-rule composition / rewrite patterns carry all 9 properties cleanly.
+  Item-property validation closing out source-root coverage.
 
 ## Private Cross-Check Notes
 
@@ -272,66 +286,17 @@ These are local supporting notes. They are not the public story of the pairing w
 
 ## Reading Order
 
-1. [RESEARCH_XPHB_SRD_PAIRING.md](../RESEARCH_XPHB_SRD_PAIRING.md)
-2. [DOMAIN_FAMILY_PRECIFICATION.md](./DOMAIN_FAMILY_PRECIFICATION.md)
-3. [COVERAGE_LEDGER.md](./COVERAGE_LEDGER.md)
-4. [UNITS_spells.md](./UNITS_spells.md)
-5. [UNITS_feats.md](./UNITS_feats.md)
-6. [UNITS_classes_and_features.md](./UNITS_classes_and_features.md)
-7. [UNITS_species_and_background_traits.md](./UNITS_species_and_background_traits.md)
-8. [UNITS_equipment_properties_and_masteries.md](./UNITS_equipment_properties_and_masteries.md)
-9. [UNITS_magic_items.md](./UNITS_magic_items.md)
-10. [SURFACES_spells.md](./SURFACES_spells.md)
-11. [SURFACES_feats.md](./SURFACES_feats.md)
-12. [SURFACES_classes_features.md](./SURFACES_classes_features.md)
-13. [SURFACES_species_background_traits.md](./SURFACES_species_background_traits.md)
-14. [SURFACES_equipment_magic_items.md](./SURFACES_equipment_magic_items.md)
-15. [ENRICHED_spells_pilot.md](./ENRICHED_spells_pilot.md)
-16. [ENRICHED_equipment_magic_items_pilot.md](./ENRICHED_equipment_magic_items_pilot.md)
-17. [ENRICHED_feats_pilot.md](./ENRICHED_feats_pilot.md)
-18. [ENRICHED_species_background_traits_pilot.md](./ENRICHED_species_background_traits_pilot.md)
-19. [ENRICHED_classes_features_pilot.md](./ENRICHED_classes_features_pilot.md)
-20. [SYNTHESIS_extension_surface_pressure_spells_items.md](./SYNTHESIS_extension_surface_pressure_spells_items.md)
-21. [SYNTHESIS_extension_surface_pressure_feats_traits.md](./SYNTHESIS_extension_surface_pressure_feats_traits.md)
-22. [SYNTHESIS_extension_surface_pressure_classes.md](./SYNTHESIS_extension_surface_pressure_classes.md)
-23. [SYNTHESIS_cross_family_pressure_matrix.md](./SYNTHESIS_cross_family_pressure_matrix.md)
-24. [GLOSSARY_DELTA_REVIEW.md](./GLOSSARY_DELTA_REVIEW.md)
-25. [CANDIDATE_closed_extension_surface_v1.md](./CANDIDATE_closed_extension_surface_v1.md)
-26. [STRESS_TEST_closed_extension_surface_v1_spells.md](./STRESS_TEST_closed_extension_surface_v1_spells.md)
-27. [STRESS_TEST_closed_extension_surface_v1_items_classes.md](./STRESS_TEST_closed_extension_surface_v1_items_classes.md)
-28. [DECISION_activation_vs_triggered_reaction.md](./DECISION_activation_vs_triggered_reaction.md)
-29. [RESET_foundation_srd_base_phb_extension.md](./RESET_foundation_srd_base_phb_extension.md)
-30. [TAXONOMY_atoms_graph_v0.md](./TAXONOMY_atoms_graph_v0.md)
-31. [spell-validation/ROUND_1_synthesis.md](./spell-validation/ROUND_1_synthesis.md)
-32. [TAXONOMY_atoms_graph_v1.md](./TAXONOMY_atoms_graph_v1.md)
-33. [spell-validation/ROUND_2_synthesis.md](./spell-validation/ROUND_2_synthesis.md)
-34. [TAXONOMY_atoms_graph_v2.md](./TAXONOMY_atoms_graph_v2.md)
-35. [TAXONOMY_graph_representation_v0.md](./TAXONOMY_graph_representation_v0.md)
-36. [SPELL_VALIDATION_matrix_v0.md](./SPELL_VALIDATION_matrix_v0.md)
-37. [spell-validation/ROUND_3_synthesis.md](./spell-validation/ROUND_3_synthesis.md)
-38. [ITEM_VALIDATION_matrix_v0.md](./ITEM_VALIDATION_matrix_v0.md)
-39. [item-validation/ROUND_1_synthesis.md](./item-validation/ROUND_1_synthesis.md)
-40. [ITEM_VALIDATION_matrix_v1_edge_items.md](./ITEM_VALIDATION_matrix_v1_edge_items.md)
-41. [item-validation/ROUND_2_synthesis.md](./item-validation/ROUND_2_synthesis.md)
-42. [MASTERY_VALIDATION_matrix_v0.md](./MASTERY_VALIDATION_matrix_v0.md)
-43. [mastery-validation/ROUND_1_synthesis.md](./mastery-validation/ROUND_1_synthesis.md)
-44. [FEAT_VALIDATION_matrix_v0.md](./FEAT_VALIDATION_matrix_v0.md)
-45. [feat-validation/ROUND_1_synthesis.md](./feat-validation/ROUND_1_synthesis.md)
-46. [TAXONOMY_atoms_graph_v3.md](./TAXONOMY_atoms_graph_v3.md)
-47. [CLASS_FEATURE_VALIDATION_matrix_v0.md](./CLASS_FEATURE_VALIDATION_matrix_v0.md)
-48. [class-feature-validation/ROUND_1_synthesis.md](./class-feature-validation/ROUND_1_synthesis.md)
-49. [SPECIES_BACKGROUND_VALIDATION_matrix_v0.md](./SPECIES_BACKGROUND_VALIDATION_matrix_v0.md)
-50. [species-background-validation/ROUND_1_synthesis.md](./species-background-validation/ROUND_1_synthesis.md)
-51. [ITEM_PROPERTY_VALIDATION_matrix_v0.md](./ITEM_PROPERTY_VALIDATION_matrix_v0.md)
-52. [item-property-validation/ROUND_1.md](./item-property-validation/ROUND_1.md)
-53. [TAXONOMY_atoms_graph_v4.md](./TAXONOMY_atoms_graph_v4.md)
-54. [TAXONOMY_graph_representation_v1.md](./TAXONOMY_graph_representation_v1.md)
-55. [COMPATIBILITY_v4_certification.md](./COMPATIBILITY_v4_certification.md)
-56. [RESEARCH_capstone.md](./RESEARCH_capstone.md)
-57. [PLAN_closed_extension_surface_implementation.md](./PLAN_closed_extension_surface_implementation.md)
-58. [WORKFLOW_STAGE_CANDIDATES.md](./WORKFLOW_STAGE_CANDIDATES.md)
-59. [LEARN_item_feature_scoped_runtime_payloads.md](../LEARN_item_feature_scoped_runtime_payloads.md)
-60. [RESEARCH_foundry_effect_staging.md](../RESEARCH_foundry_effect_staging.md)
-61. [LEARN_explicit_effect_phase_ownership.md](../LEARN_explicit_effect_phase_ownership.md)
-62. [LEARN_closed_mechanic_vocabularies.md](../LEARN_closed_mechanic_vocabularies.md)
-63. [LEARN_hard_provenance_package_boundaries.md](../LEARN_hard_provenance_package_boundaries.md)
+For a new reader, the shortest path through the research is:
+
+1. [../RESEARCH_XPHB_SRD_PAIRING.md](../RESEARCH_XPHB_SRD_PAIRING.md)
+2. [RESET_foundation_srd_base_phb_extension.md](./RESET_foundation_srd_base_phb_extension.md)
+3. [RESEARCH_capstone.md](./RESEARCH_capstone.md)
+4. [TAXONOMY_atoms_graph.md](./TAXONOMY_atoms_graph.md)
+5. [TAXONOMY_graph_representation.md](./TAXONOMY_graph_representation.md)
+6. [COMPATIBILITY_certification.md](./COMPATIBILITY_certification.md)
+
+For the full validation trail, read the validation matrices and round syntheses in source-root order (spells → items → masteries → feats → class features → species/backgrounds → item properties).
+
+For the domain / family shape, see `DOMAIN_FAMILY_PRECIFICATION.md` and `COVERAGE_LEDGER.md`.
+
+For authoring history of rejected paths (old family-bundle candidate surface), see the `CANDIDATE_*` / `STRESS_TEST_*` / `PLAN_*` notes under "Synthesis Notes".

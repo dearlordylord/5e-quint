@@ -2,7 +2,7 @@
 
 Purpose:
 
-- validate `TAXONOMY_atoms_graph_v3.md` against the last untouched origin-side source roots (`species_trait_root` and `background_trait_root`);
+- validate `TAXONOMY_atoms_graph.md` against the last untouched origin-side source roots (`species_trait_root` and `background_trait_root`);
 - confirm `v3`'s new grant atoms (`grant_sense`, `grant_proficiency`, `grant_resistance`, `grant_spell_access`) under wide sampling;
 - check whether species with level-scaling traits (Dragonborn Breath Weapon) provide a second independent data point for the typed scaling split residue recorded in `v3`'s post-class-feature notes;
 - stress the Scope-First Nested Selection pattern (Elven Lineage, Fiendish Legacy, Giant Ancestry, Gnomish Lineage) against class-feature Spellcasting and feat-level Magic Initiate.
@@ -109,6 +109,6 @@ If this pass exposes only:
 - reinforcement of the Scope-First Nested Selection pattern;
 - narrow resource-cadence observations;
 
-then the correct next step is to promote the typed scaling split to `TAXONOMY_atoms_graph_v4.md`.
+then the correct next step is to promote the typed scaling split to `TAXONOMY_atoms_graph.md`.
 
 If this pass exposes a structurally missing node or edge family, record it before considering `v4`.

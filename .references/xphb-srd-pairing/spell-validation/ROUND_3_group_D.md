@@ -8,7 +8,7 @@ Spells:
 - `Sleep`
 - `Spiritual Weapon`
 
-Grounding: re-check against `TAXONOMY_atoms_graph_v2.md` using the same five-spell slice from the validation matrix.
+Grounding: re-check against `TAXONOMY_atoms_graph.md` using the same five-spell slice from the validation matrix.
 
 ## `Shield`
 

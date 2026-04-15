@@ -2,7 +2,7 @@
 
 Purpose:
 
-- aggregate the first class-feature validation pass against `TAXONOMY_atoms_graph_v3.md`;
+- aggregate the first class-feature validation pass against `TAXONOMY_atoms_graph.md`;
 - determine whether `v3`'s newly added atoms survive contact with the largest and most stateful source root;
 - decide whether class-feature pressure justifies a `v4` draft or only narrow refinements.
 
@@ -169,9 +169,9 @@ All five compose cleanly from existing atoms. Worth naming in the graph represen
 
 The correct next moves are:
 
-1. update `TAXONOMY_graph_representation_v0.md` with the new pattern additions (Pool With Options Menu, AC formula override, save-branch rewrite, conditional payment after resolution, usage-count-parameterized DC, extend-by-activity duration);
-2. record the narrow `v4` pressure (typed scaling split) as the single clearest atom-level candidate in `TAXONOMY_atoms_graph_v3.md`'s "Known Remaining Weak Spots";
+1. update `TAXONOMY_graph_representation.md` with the new pattern additions (Pool With Options Menu, AC formula override, save-branch rewrite, conditional payment after resolution, usage-count-parameterized DC, extend-by-activity duration);
+2. record the narrow `v4` pressure (typed scaling split) as the single clearest atom-level candidate in `TAXONOMY_atoms_graph.md`'s "Known Remaining Weak Spots";
 3. do **not** draft `v4` yet. The class-feature pass proved `v3` holds; a second validation stream (species / background traits, item properties, or a subclass sample) should either reinforce the typed scaling split or discharge it before `v4` is drafted;
 4. the next widening target is **species and background traits** — expected to mostly confirm `v3`'s new `grant_sense`, `grant_proficiency`, and `grant_resistance` atoms without much stress;
 5. defer schema design until species / background traits and at least one more stream confirm the typed-scaling-split pressure;
-6. optionally refresh `TAXONOMY_graph_representation_v0.md` to `v1` with `v3` atom names and the new pattern subgraphs when convenient.
+6. optionally refresh `TAXONOMY_graph_representation.md` to `v1` with `v3` atom names and the new pattern subgraphs when convenient.

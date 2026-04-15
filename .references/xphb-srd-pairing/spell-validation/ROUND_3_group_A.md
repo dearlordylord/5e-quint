@@ -8,7 +8,7 @@ Spells:
 - `Banishment`
 - `Bless`
 
-This round re-checks Group A against `TAXONOMY_atoms_graph_v2.md` and the shared `SPELL_VALIDATION_matrix_v0.md` sample. The residue is now narrow enough to stop iterating on this group: no spell here forces a new major family, and the remaining gaps are mostly typed edge cases, not a missing architecture.
+This round re-checks Group A against `TAXONOMY_atoms_graph.md` and the shared `SPELL_VALIDATION_matrix_v0.md` sample. The residue is now narrow enough to stop iterating on this group: no spell here forces a new major family, and the remaining gaps are mostly typed edge cases, not a missing architecture.
 
 ## `Aid`
 

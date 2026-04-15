@@ -3,7 +3,7 @@
 Purpose:
 
 - widen validation beyond the 20-spell sample;
-- test `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md` against item-side pressure that the spell loop did not fully cover;
+- test `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md` against item-side pressure that the spell loop did not fully cover;
 - focus on the exact weak spots already identified:
   - attunement
   - stored spells
@@ -87,6 +87,6 @@ If the sample exposes only:
 - item-local state ownership,
 - more exact edges,
 
-then the next move is probably `TAXONOMY_atoms_graph_v3.md` only if the residue is still structural.
+then the next move is probably `TAXONOMY_atoms_graph.md` only if the residue is still structural.
 
 If the sample exposes a genuinely missing node/edge family, record that explicitly before any schema work resumes.

@@ -2,13 +2,13 @@
 
 Purpose:
 
-- aggregate the edge-item validation pass against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`;
+- aggregate the edge-item validation pass against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`;
 - determine whether reaction items, passive rewrite items, mobility toggles, and container items expose a missing reusable subgraph;
-- decide whether item pressure now justifies `TAXONOMY_atoms_graph_v3.md`.
+- decide whether item pressure now justifies `TAXONOMY_atoms_graph.md`.
 
 ## Short Answer
 
-This pass still does **not** justify `TAXONOMY_atoms_graph_v3.md`.
+This pass still does **not** justify `TAXONOMY_atoms_graph.md`.
 
 No edge-item group forced a new top-level node family or edge family.
 
@@ -134,7 +134,7 @@ None of those pressures yet requires a new top-level family.
 
 The correct next move is:
 
-1. keep `TAXONOMY_atoms_graph_v2.md` stable;
-2. enrich `TAXONOMY_graph_representation_v0.md` with the passive-projection subgraph;
+1. keep `TAXONOMY_atoms_graph.md` stable;
+2. enrich `TAXONOMY_graph_representation.md` with the passive-projection subgraph;
 3. continue widening validation rather than drafting `v3`;
 4. only draft `v3` if a broader sample exposes structural dishonesty instead of better graph composition.

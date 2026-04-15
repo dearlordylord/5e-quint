@@ -3,7 +3,7 @@
 Purpose:
 
 - widen item-side validation beyond the first pass;
-- test `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md` against edge-case items that pressure:
+- test `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md` against edge-case items that pressure:
   - reaction windows
   - passive rewrites and suppression
   - long-duration toggles

@@ -1,6 +1,6 @@
 # Round 2 Group B
 
-Grounding: local item text for `Cloak of Displacement`, `Shield of Missile Attraction`, and `Amulet of Proof against Detection and Location`, read against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`.
+Grounding: local item text for `Cloak of Displacement`, `Shield of Missile Attraction`, and `Amulet of Proof against Detection and Location`, read against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`.
 
 ## Short Verdict
 

@@ -10,8 +10,8 @@ Backgrounds:
 Grounding:
 
 - `xphb-srd-pairing/SPECIES_BACKGROUND_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v3.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Character-Origins.md`
 
 ## Short Verdict

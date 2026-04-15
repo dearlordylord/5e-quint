@@ -183,40 +183,20 @@ So the main unresolved research problem has shifted again:
 - it is no longer just "do later families force a separate execution model?";
 - it is now "what lower-level atom graph is actually forced by the corpus, and where did the earlier family language overclaim ontology?"
 
-That question is now being worked through in:
+That question was worked through in the atom-graph track. The canonical entry points are:
 
-- [`xphb-srd-pairing/RESET_foundation_srd_base_phb_extension.md`](./xphb-srd-pairing/RESET_foundation_srd_base_phb_extension.md)
-- [`xphb-srd-pairing/TAXONOMY_atoms_graph_v0.md`](./xphb-srd-pairing/TAXONOMY_atoms_graph_v0.md)
-- [`xphb-srd-pairing/TAXONOMY_atoms_graph_v1.md`](./xphb-srd-pairing/TAXONOMY_atoms_graph_v1.md)
-- [`xphb-srd-pairing/TAXONOMY_atoms_graph_v2.md`](./xphb-srd-pairing/TAXONOMY_atoms_graph_v2.md)
-- [`xphb-srd-pairing/SPELL_VALIDATION_matrix_v0.md`](./xphb-srd-pairing/SPELL_VALIDATION_matrix_v0.md)
-- [`xphb-srd-pairing/spell-validation/ROUND_1_synthesis.md`](./xphb-srd-pairing/spell-validation/ROUND_1_synthesis.md)
-- [`xphb-srd-pairing/spell-validation/ROUND_2_synthesis.md`](./xphb-srd-pairing/spell-validation/ROUND_2_synthesis.md)
-- [`xphb-srd-pairing/spell-validation/ROUND_3_synthesis.md`](./xphb-srd-pairing/spell-validation/ROUND_3_synthesis.md)
-
-Current status of that line of work:
-
-- the old closed-surface candidate is still useful as a derived design note, but it is no longer the main frontier;
-- the active frontier is the lower-level taxonomy / graph pass;
-- a 20-spell sample has now been run through three validation loops;
-- by round 3, the residue is narrow enough to stop iterating on the same sample;
-- the graph has now been widened once into item-side validation covering attunement, stored spells, charges, and item-owned casting;
-- that item pass strengthened ownership/resource distinctions but did not force a new top-level node or edge family;
-- a second edge-item widening pass has now tested reaction items, passive rewrites, toggles, mobility utilities, and container behavior;
-- that second item pass still did not force a new top-level family, but it did justify naming a reusable passive-projection subgraph for worn/held effects with suppression/restoration and optional target rewrite;
-- that does **not** mean schema design is next by default.
+- [`xphb-srd-pairing/RESET_foundation_srd_base_phb_extension.md`](./xphb-srd-pairing/RESET_foundation_srd_base_phb_extension.md) — public-base / private-extension boundary;
+- [`xphb-srd-pairing/TAXONOMY_atoms_graph.md`](./xphb-srd-pairing/TAXONOMY_atoms_graph.md) — current atom inventory (iterate in place; see INDEX.md's Versioning Rule);
+- [`xphb-srd-pairing/TAXONOMY_graph_representation.md`](./xphb-srd-pairing/TAXONOMY_graph_representation.md) — current graph model and pattern subgraphs;
+- [`xphb-srd-pairing/COMPATIBILITY_certification.md`](./xphb-srd-pairing/COMPATIBILITY_certification.md) — mapping from historical validation artifacts to current atom names;
+- [`xphb-srd-pairing/RESEARCH_capstone.md`](./xphb-srd-pairing/RESEARCH_capstone.md) — research arc summary, validation-stream count, handover inputs;
+- [`xphb-srd-pairing/INDEX.md`](./xphb-srd-pairing/INDEX.md) — full artifact inventory.
 
 ## Current Next Step
 
-The next step is no longer the old immediate schema handoff.
+The research-side taxonomy track is closed. Every source-root atom has at least one atom-level validation pass against the SRD 5.2.1 public base corpus. Details are in `xphb-srd-pairing/RESEARCH_capstone.md`.
 
-The next step is:
-
-- keep the corrected foundation in `RESET_foundation_srd_base_phb_extension.md`;
-- treat `TAXONOMY_atoms_graph_v2.md` as the current working atom inventory;
-- use `TAXONOMY_graph_representation_v0.md` as the explicit graphable layer for further validation;
-- widen validation beyond the current 20-spell sample and two item passes, especially into more spells and item procedures that pressure attunement, stored spells, item-owned resources, and prompt/commit architecture;
-- turn the prose atom inventory into a more explicit graph or tag relation structure before resuming schema work.
+Schema design may resume whenever chosen. The expected follow-up research-side work (if wanted) is a PHB extension-corpus pass — the current validation is only against the SRD public base.
 
 Current default rule:
 

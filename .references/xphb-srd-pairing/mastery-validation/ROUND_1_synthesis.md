@@ -2,13 +2,13 @@
 
 Purpose:
 
-- aggregate the first mastery-side validation pass against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`;
+- aggregate the first mastery-side validation pass against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`;
 - determine whether the closed 2024 mastery set forces a taxonomy revision;
-- decide whether mastery pressure justifies `TAXONOMY_atoms_graph_v3.md` or a targeted graph-representation refinement.
+- decide whether mastery pressure justifies `TAXONOMY_atoms_graph.md` or a targeted graph-representation refinement.
 
 ## Short Answer
 
-The eight masteries do **not** justify `TAXONOMY_atoms_graph_v3.md`.
+The eight masteries do **not** justify `TAXONOMY_atoms_graph.md`.
 
 No group forces a new top-level node family or edge family. The core shapes all reuse existing atoms: `mastery_root`, `attack_roll`, `on_hit_window`, `on_miss_window`, `target`, `force_move`, `modify_roll`, `modify_speed`, `damage`, `save_gate`, `branches_on_save`, `apply_condition`, `use_count`, `turn_start_window`, `turn_end_window`, `expire`, `replace`.
 
@@ -68,7 +68,7 @@ Seven of eight masteries instantiate the same core shape:
 - a `grants(effect)` edge into one or more effect atoms;
 - an optional `persists_until` edge into a later boundary.
 
-This is distinct enough from the existing `Prepare / Prompt / Commit` subgraph (which is about reaction-time resource decisions) that it deserves its own entry in `TAXONOMY_graph_representation_v0.md`.
+This is distinct enough from the existing `Prepare / Prompt / Commit` subgraph (which is about reaction-time resource decisions) that it deserves its own entry in `TAXONOMY_graph_representation.md`.
 
 It is also distinct from the existing `Passive Projection` subgraph (which is about worn/held continuous effects): on-hit riders are one-shot and attached to attack resolution, not continuous and attached to wear/hold state.
 
@@ -127,8 +127,8 @@ This is the third validation stream (after spells and items) to converge on "v2 
 
 The correct next move is:
 
-1. keep `TAXONOMY_atoms_graph_v2.md` stable — no `v3` draft justified yet;
-2. add a new "On-Hit Rider" subgraph entry to `TAXONOMY_graph_representation_v0.md`;
+1. keep `TAXONOMY_atoms_graph.md` stable — no `v3` draft justified yet;
+2. add a new "On-Hit Rider" subgraph entry to `TAXONOMY_graph_representation.md`;
 3. record the four narrow residue observations in the taxonomy's "Known Remaining Weak Spots" section so they are not lost between validation rounds;
 4. proceed to the next widening step — feats or class features — rather than iterating on masteries;
 5. only draft `v3` if a future widening exposes structural dishonesty instead of composition / policy refinement.

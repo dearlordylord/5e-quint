@@ -2,9 +2,9 @@
 
 Purpose:
 
-- aggregate the first feat-side validation pass against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`;
+- aggregate the first feat-side validation pass against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`;
 - determine whether the closed 2024 SRD feat catalog forces a taxonomy revision;
-- decide whether feat pressure justifies `TAXONOMY_atoms_graph_v3.md` or more targeted refinements.
+- decide whether feat pressure justifies `TAXONOMY_atoms_graph.md` or more targeted refinements.
 
 ## Short Answer
 
@@ -161,12 +161,12 @@ Composition patterns recorded but not requiring atoms:
 
 ## Research Conclusion
 
-For the first time across four validation streams (spells × 3 rounds, items × 2 rounds, masteries × 1 round, feats × 1 round), a validation pass exposes enough repeating, independent atom-level pressure to justify drafting `TAXONOMY_atoms_graph_v3.md`.
+For the first time across four validation streams (spells × 3 rounds, items × 2 rounds, masteries × 1 round, feats × 1 round), a validation pass exposes enough repeating, independent atom-level pressure to justify drafting `TAXONOMY_atoms_graph.md`.
 
 The correct next moves are:
 
-1. record the consolidated residue in `TAXONOMY_atoms_graph_v2.md`'s "Known Remaining Weak Spots" so future passes do not re-derive it;
-2. draft `TAXONOMY_atoms_graph_v3.md` with the new atom candidates:
+1. record the consolidated residue in `TAXONOMY_atoms_graph.md`'s "Known Remaining Weak Spots" so future passes do not re-derive it;
+2. draft `TAXONOMY_atoms_graph.md` with the new atom candidates:
    - effect atoms: `grant_sense`, `grant_proficiency`, `grant_spell_access`, `grant_resistance`, `bypass_resistance`;
    - window atoms: `initiative_window`, `post_action_window`;
    - procedure / relation: `refund` / `refunds`;

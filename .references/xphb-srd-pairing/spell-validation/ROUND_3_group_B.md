@@ -2,7 +2,7 @@
 
 Grounding:
 
-- `TAXONOMY_atoms_graph_v2.md`
+- `TAXONOMY_atoms_graph.md`
 - `SPELL_VALIDATION_matrix_v0.md`
 
 Spells:

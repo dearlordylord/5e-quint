@@ -9,8 +9,8 @@ Items:
 Grounding:
 
 - `xphb-srd-pairing/ITEM_VALIDATION_matrix_v1_edge_items.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v2.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `5etools-src/data/items.json`
 
 ## Short Verdict

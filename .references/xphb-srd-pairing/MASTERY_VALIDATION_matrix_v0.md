@@ -3,8 +3,8 @@
 Purpose:
 
 - widen validation beyond the 20-spell sample and the two item-side samples;
-- test `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md` against the closed set of 2024 weapon masteries;
-- directly stress the known weak spot "exact attack-roll rider composition" flagged at the bottom of `TAXONOMY_atoms_graph_v2.md`;
+- test `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md` against the closed set of 2024 weapon masteries;
+- directly stress the known weak spot "exact attack-roll rider composition" flagged at the bottom of `TAXONOMY_atoms_graph.md`;
 - exercise the `mastery_root` source atom, which has had no prior atom-level validation.
 
 This pass is intentionally narrow. The full mastery set is only eight units, so Round 1 covers the whole catalog in a single round.
@@ -65,7 +65,7 @@ For each mastery, check:
 
 1. which existing v2 nodes and edges actually fit?
 2. does it force any new top-level node or edge family?
-3. does it force or strengthen a reusable subgraph beyond what `TAXONOMY_graph_representation_v0.md` already names?
+3. does it force or strengthen a reusable subgraph beyond what `TAXONOMY_graph_representation.md` already names?
 4. is the rider expiry correctly representable with current lifecycle atoms, or does it expose a gap ("ends on first trigger or at turn boundary, whichever first")?
 5. does it expose non-stacking / capped-aggregate semantics that the graph has not yet named?
 6. does it pressure a typed distinction between numeric roll bonuses and advantage/disadvantage?
@@ -90,6 +90,6 @@ If this pass exposes only:
 - one or two narrow subgraph additions in the graph representation;
 - typed refinements to existing effect atoms;
 
-then the graph is still holding and `TAXONOMY_atoms_graph_v3.md` is not justified.
+then the graph is still holding and `TAXONOMY_atoms_graph.md` is not justified.
 
 If this pass exposes a genuinely missing node or edge family, record it explicitly before considering a `v3` draft.

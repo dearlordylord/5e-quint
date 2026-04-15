@@ -55,7 +55,7 @@ Total: **107 unit entries across all streams**. Every source-root atom now has a
 - **Lifecycle atoms (9)**: `concentrate`, `persist`, `expire`, `dismiss`, `complete`, `break`, `self_break`, `return_on_end`, `replace_on_recast`.
 - **Resource atoms (4)**: `spell_slot`, `charge`, `use_count`, `attunement_slot`.
 - **Scaling atoms (5)**: `scale_target_count`, `scale_numeric_bonus`, `scale_die_count`, `scale_die_size`, `scale_attack_count`.
-- **Effect atoms (37)**: see `TAXONOMY_atoms_graph_v4.md` § 9.
+- **Effect atoms (37)**: see `TAXONOMY_atoms_graph.md` § 9.
 - **Relation types (20)**: `roots`, `opens_window`, `requires`, `attaches_to`, `stores`, `releases`, `grants`, `consumes`, `refunds`, `suppresses`, `replaces`, `modifies`, `persists_until`, `branches_on_completion`, `branches_on_save`, `prepares`, `prompts`, `commits`, `transfers_to`, `returns_to`.
 
 ## 5. Final Pattern Inventory (18 Subgraphs)
@@ -81,7 +81,7 @@ Recurring composition patterns validated across at least one concrete unit:
 - **Q.** Extend-By-Activity Duration
 - **R.** Scope-First Nested Selection
 
-All 18 are documented in `TAXONOMY_graph_representation_v1.md` with concrete pressure cases.
+All 18 are documented in `TAXONOMY_graph_representation.md` with concrete pressure cases.
 
 ## 6. What Survived vs. What Got Refined
 
@@ -109,7 +109,7 @@ All 18 are documented in `TAXONOMY_graph_representation_v1.md` with concrete pre
 - effect: `modify_speed`, `grant_hover`, `grant_extra_action`, `restrict_action_set`, `transport_exile`, `command_companion`, `create_attack_proxy`, `mark_target`, `transfer_mark`, `alter_item_kind` (`v1`); `negate_named_effect`, `deny_opportunity_attack`, `fall_on_end` (`v2`); the typed `modify_roll_*` split, `grant_sense`, `grant_proficiency`, `grant_spell_access`, `grant_resistance`, `bypass_resistance` (`v3`);
 - relation: `branches_on_save`, `transfers_to` (`v1`), `returns_to` (`v2`), `refunds` (`v3`).
 
-### Retired (all documented in `COMPATIBILITY_v4_certification.md`)
+### Retired (all documented in `COMPATIBILITY_certification.md`)
 
 - `stored_spell_slot` (resource; retired in `v1` as a mislabel);
 - `modify_roll` (effect; retired in `v3` as dishonest compression);
@@ -138,9 +138,9 @@ None of these invalidate any `v4` atom. Any of them could be promoted by a futur
 To reconstruct the research efficiently, read in this order:
 
 1. `RESET_foundation_srd_base_phb_extension.md` — public-base / private-extension boundary;
-2. `TAXONOMY_atoms_graph_v4.md` — final atom inventory;
-3. `TAXONOMY_graph_representation_v1.md` — graph model + 18 subgraphs + example subgraphs;
-4. `COMPATIBILITY_v4_certification.md` — per-stream re-validation of 87 unit entries;
+2. `TAXONOMY_atoms_graph.md` — final atom inventory;
+3. `TAXONOMY_graph_representation.md` — graph model + 18 subgraphs + example subgraphs;
+4. `COMPATIBILITY_certification.md` — per-stream re-validation of 87 unit entries;
 5. This capstone (for the arc) and `INDEX.md` (for the full artifact inventory).
 
 Earlier versions (`v0`, `v1`, `v2`, `v3`) and their per-round validation files remain as the trail of the falsification process. They are not required for understanding the current state but are useful for understanding why each atom exists.
@@ -149,9 +149,9 @@ Earlier versions (`v0`, `v1`, `v2`, `v3`) and their per-round validation files r
 
 Schema design is a separate phase. When it resumes, these inputs are ready:
 
-- **atom inventory**: `TAXONOMY_atoms_graph_v4.md` — the vocabulary to encode.
-- **graph model**: `TAXONOMY_graph_representation_v1.md` — node/edge kinds and the 18 reusable subgraphs that concrete rule units instantiate.
-- **compatibility map**: `COMPATIBILITY_v4_certification.md` — how historical artifacts translate to `v4` names if they need to be ingested.
+- **atom inventory**: `TAXONOMY_atoms_graph.md` — the vocabulary to encode.
+- **graph model**: `TAXONOMY_graph_representation.md` — node/edge kinds and the 18 reusable subgraphs that concrete rule units instantiate.
+- **compatibility map**: `COMPATIBILITY_certification.md` — how historical artifacts translate to `v4` names if they need to be ingested.
 - **open residue**: this capstone's § 7 — items that may force schema refinements if hit during implementation.
 - **architecture boundary**: `RESET_foundation_srd_base_phb_extension.md` — the public-base / private-extension separation that must be preserved in the shipped product.
 

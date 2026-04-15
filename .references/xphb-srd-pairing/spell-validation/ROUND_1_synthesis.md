@@ -2,7 +2,7 @@
 
 Purpose:
 
-- aggregate the first 20-spell pass against `TAXONOMY_atoms_graph_v0.md`;
+- aggregate the first 20-spell pass against `TAXONOMY_atoms_graph.md`;
 - identify what `v0` got right, what it undernamed, and what it modeled dishonestly;
 - drive the first taxonomy revision.
 
@@ -132,6 +132,6 @@ It is not strong enough to justify schema work.
 
 The honest next move is:
 
-- write `TAXONOMY_atoms_graph_v1.md`;
+- write `TAXONOMY_atoms_graph.md`;
 - rerun the same 20 spells against `v1`;
 - see which round 1 failures disappear and which ones remain.

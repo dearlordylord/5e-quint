@@ -2,7 +2,7 @@
 
 Purpose:
 
-- aggregate the first item-side validation pass against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`;
+- aggregate the first item-side validation pass against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`;
 - determine whether the current taxonomy survives attunement, stored-spell, charge, and item-owned-casting pressure;
 - decide whether item pressure forces a taxonomy revision.
 
@@ -105,7 +105,7 @@ Attunement is important, but the sample keeps showing that it is:
 
 ### 4. The graph representation was worth adding
 
-`TAXONOMY_graph_representation_v0.md` helped because the item pass was really about reusable subgraphs:
+`TAXONOMY_graph_representation.md` helped because the item pass was really about reusable subgraphs:
 
 - attunement lifecycle;
 - store/release;
@@ -154,11 +154,11 @@ Those are timing refinements, not evidence that the graph is broken.
 
 ## Current Research Conclusion
 
-This item pass does not justify `TAXONOMY_atoms_graph_v3.md`.
+This item pass does not justify `TAXONOMY_atoms_graph.md`.
 
 The correct next move is narrower:
 
-1. keep `TAXONOMY_atoms_graph_v2.md` stable;
-2. keep `TAXONOMY_graph_representation_v0.md` as the explicit graphable layer;
+1. keep `TAXONOMY_atoms_graph.md` stable;
+2. keep `TAXONOMY_graph_representation.md` as the explicit graphable layer;
 3. record item-side ownership conclusions in the canonical notes;
 4. only draft `v3` if a broader item or spell sample exposes structural dishonesty rather than resource/timing refinement pressure.

@@ -11,8 +11,8 @@ Features:
 Grounding:
 
 - `xphb-srd-pairing/CLASS_FEATURE_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v3.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Classes/Barbarian.md`, `Bard.md`, `Wizard.md`, `Fighter.md`, `Monk.md`
 
 ## Short Verdict

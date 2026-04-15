@@ -1,6 +1,6 @@
 # Round 1 Group B
 
-Grounding: local `items.json` entries for `Ring of Spell Storing`, `Spell Scroll`, and `Rod of Absorption`, read against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`.
+Grounding: local `items.json` entries for `Ring of Spell Storing`, `Spell Scroll`, and `Rod of Absorption`, read against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`.
 
 ## Short Verdict
 
@@ -10,7 +10,7 @@ This group mostly validates the existing item-side graph. `Ring of Spell Storing
 
 - Nodes that fit: `magic_item_root`, `attune`, `item`, `store`, `release`, `stored_spell`, `spell_slot`.
 - Edges that fit: `requires` for attunement, `attaches_to` for the ring-item link, `stores` for the payload, `releases` for later casting, and `consumes` for the slot levels committed into the ring.
-- What fits cleanly: this is the exact `store / release` subgraph already sketched in `TAXONOMY_graph_representation_v0.md`. The ring has bounded capacity, keeps the payload until use, and then frees capacity again.
+- What fits cleanly: this is the exact `store / release` subgraph already sketched in `TAXONOMY_graph_representation.md`. The ring has bounded capacity, keeps the payload until use, and then frees capacity again.
 - What leaks: the spell keeps the original caster's slot level, save DC, attack bonus, and spellcasting ability. The current graph can hang that off `stored_spell`, but it does not name that metadata as a separate concern.
 - Does the item own state/resource? Yes. The ring owns a durable, bounded reservoir of spell levels. Attunement gates access, but the stored state is on the ring itself.
 
@@ -27,7 +27,7 @@ This group mostly validates the existing item-side graph. `Ring of Spell Storing
 - Nodes that fit: `magic_item_root`, `attune`, `item`, `respond`, `reaction_window`, `suppress`, `store`, `release`, `spell_slot`.
 - Edges that fit: `opens_window` for the reaction, `requires` for holding / attunement, `suppresses` for canceling the incoming spell, `stores` for the absorbed energy, and `releases` or `transfers_to` for converting stored energy into casting capacity.
 - What fits cleanly: the rod is clearly item-owned state. It remembers total absorbed levels, current stored levels, and later turns that reservoir into spell slots for the wielder.
-- What leaks: the stored object is spell energy, not a spell payload. `TAXONOMY_atoms_graph_v2.md` has `charge` and `spell_slot`, but neither one perfectly names the rod's cumulative energy reservoir.
+- What leaks: the stored object is spell energy, not a spell payload. `TAXONOMY_atoms_graph.md` has `charge` and `spell_slot`, but neither one perfectly names the rod's cumulative energy reservoir.
 - Does the item own state/resource? Yes. This is the strongest stateful item in the group: it owns a long-lived energy pool, not just a transient cast.
 
 ## Cross-Item Findings

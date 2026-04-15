@@ -2,7 +2,7 @@
 
 Purpose:
 
-- aggregate the second 20-spell pass against `TAXONOMY_atoms_graph_v1.md`;
+- aggregate the second 20-spell pass against `TAXONOMY_atoms_graph.md`;
 - determine whether `v1` removed enough false compression to stop iterating;
 - identify the smaller set of remaining taxonomy gaps.
 
@@ -107,7 +107,7 @@ But it is still incomplete enough that a round-3 revision is justified.
 
 The correct next move is:
 
-1. write `TAXONOMY_atoms_graph_v2.md`;
+1. write `TAXONOMY_atoms_graph.md`;
 2. focus the changes on the remaining narrow gaps;
 3. rerun the same 20 spells one more time;
 4. stop iterating after round 3 unless the result is still structurally dishonest.

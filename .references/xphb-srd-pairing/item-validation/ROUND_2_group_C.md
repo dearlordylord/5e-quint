@@ -1,6 +1,6 @@
 # Round 2 Group C
 
-Grounding: local `items.json` entries for the reprinted XDMG versions of `Boots of Speed`, `Cape of the Mountebank`, and `Helm of Teleportation`, read against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`.
+Grounding: local `items.json` entries for the reprinted XDMG versions of `Boots of Speed`, `Cape of the Mountebank`, and `Helm of Teleportation`, read against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`.
 
 ## Short Verdict
 

@@ -2,7 +2,7 @@
 
 Purpose:
 
-- validate `TAXONOMY_atoms_graph_v3.md` against the SRD class corpus;
+- validate `TAXONOMY_atoms_graph.md` against the SRD class corpus;
 - exercise the `class_feature_root` source atom, which has had pilot enrichment but no atom-level validation;
 - explicitly stress each atom `v3` added (typed `modify_roll_*`, `grant_sense` / `grant_proficiency` / `grant_spell_access` / `grant_resistance` / `bypass_resistance`, `initiative_window` / `post_action_window`, `refund` / `refunds`) so that the new atoms either survive contact with stateful, level-gated features or force revision;
 - stress patterns named in the graph representation (On-Hit Rider, Cross-Rule Composition, Relation-Scoped Effect, Cross-Actor Roll Observation, Environment-State Gate, Disjoint Reset Cadence) against class-feature pressure.

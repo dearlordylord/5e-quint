@@ -15,8 +15,8 @@ Properties (all 9 SRD 5.2.1 weapon properties):
 Grounding:
 
 - `xphb-srd-pairing/ITEM_PROPERTY_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v3.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Equipment.md`, section "Properties"
 
 ## Short Verdict
@@ -201,4 +201,4 @@ This closes source-root coverage. Every source atom in `v3` now has at least one
 
 `v3` holds across the entire SRD source-root spectrum. Item properties are the cleanest confirmation group: no new atoms, no new subgraphs, no residue observations.
 
-With source-root coverage complete and typed scaling split now supported by two independent streams (class features + species), the correct next move is to draft `TAXONOMY_atoms_graph_v4.md`.
+With source-root coverage complete and typed scaling split now supported by two independent streams (class features + species), the correct next move is to draft `TAXONOMY_atoms_graph.md`.

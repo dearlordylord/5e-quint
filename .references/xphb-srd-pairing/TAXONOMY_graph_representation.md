@@ -2,17 +2,17 @@
 
 Purpose:
 
-- refresh `TAXONOMY_graph_representation_v0.md` to reflect `TAXONOMY_atoms_graph_v4.md` atom names end-to-end;
+- refresh `TAXONOMY_graph_representation.md` to reflect `TAXONOMY_atoms_graph.md` atom names end-to-end;
 - consolidate all 18 reusable subgraphs (A through R) surfaced across the seven validation streams into a single clean listing;
 - keep `v0` as a historical artifact showing earlier atom names and the evolution of the pattern inventory.
 
 This file is still research, not engine design. It does **not** claim that the graph is final. The atom names are those of `v4`, which is the final taxonomy version of the research-side track.
 
-Relation to `TAXONOMY_atoms_graph_v4.md`:
+Relation to `TAXONOMY_atoms_graph.md`:
 
 - the node/edge inventory here is a one-to-one mirror of `v4`'s atom sections;
 - retired atoms (`stored_spell_slot` from `v0 → v1`, `modify_roll` from `v2 → v3`, `scale_damage` from `v3 → v4`) are not listed here — they only survive as historical labels in earlier files;
-- references to retired atoms in older validation artifacts are addressed in `COMPATIBILITY_v4_certification.md`.
+- references to retired atoms in older validation artifacts are addressed in `COMPATIBILITY_certification.md`.
 
 ## 1. Graph Model
 
@@ -615,7 +615,7 @@ The research-side taxonomy track is complete as of `v4`:
 - every source-root atom has at least one atom-level validation pass;
 - every `v3` / `v4` atom addition is backed by at least two independent data points;
 - the 18 reusable subgraphs above are all grounded in at least one concrete unit in the SRD 5.2.1 corpus;
-- retired atoms (`stored_spell_slot`, `modify_roll`, `scale_damage`) are documented in `COMPATIBILITY_v4_certification.md` along with their mappings in older validation artifacts.
+- retired atoms (`stored_spell_slot`, `modify_roll`, `scale_damage`) are documented in `COMPATIBILITY_certification.md` along with their mappings in older validation artifacts.
 
 Further widening (more spells beyond the 20, subclass-specific content, non-SRD corpora) may refine particular atoms or subgraphs but should not change the top-level family shape.
 

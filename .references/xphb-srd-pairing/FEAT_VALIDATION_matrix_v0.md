@@ -3,7 +3,7 @@
 Purpose:
 
 - widen validation beyond spells, items, and masteries;
-- test `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md` against the closed 2024 SRD feat catalog;
+- test `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md` against the closed 2024 SRD feat catalog;
 - exercise the `feat_root` source atom, which has had pilot enrichment but no atom-level validation;
 - stress multi-atom-per-unit composition, denser trigger vocabulary, mixed reset cadences, and non-attack rider shapes that masteries did not pressure.
 
@@ -126,6 +126,6 @@ If this pass exposes only:
 - a small number of additional reusable subgraphs;
 - typed refinements or noted gaps that do not individually force a new family;
 
-then the graph is still holding and `TAXONOMY_atoms_graph_v3.md` is not justified.
+then the graph is still holding and `TAXONOMY_atoms_graph.md` is not justified.
 
 If this pass exposes a repeated missing node or edge family across multiple feats, record it before considering a `v3` draft.

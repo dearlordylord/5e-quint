@@ -11,8 +11,8 @@ Feats:
 Grounding:
 
 - `xphb-srd-pairing/FEAT_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v2.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Feats.md`
 
 ## Short Verdict
@@ -144,4 +144,4 @@ It does expose two narrow effect-atom gaps that should be recorded:
 - `grant_sense` (Truesight, Darkvision, Blindsight, Tremorsense);
 - `grant_proficiency` (skill or tool training grants).
 
-These are candidate atom additions to `TAXONOMY_atoms_graph_v2.md`, not new families. They parallel the existing `grant_hover` pattern.
+These are candidate atom additions to `TAXONOMY_atoms_graph.md`, not new families. They parallel the existing `grant_hover` pattern.

@@ -2,7 +2,7 @@
 
 Purpose:
 
-- validate `TAXONOMY_atoms_graph_v3.md` against the last untouched source root (`item_property_root`);
+- validate `TAXONOMY_atoms_graph.md` against the last untouched source root (`item_property_root`);
 - stress the Cross-Rule Composition (H) and Cross-Rule Rewrite (N) subgraphs, which item properties pressure more than any other source kind;
 - confirm whether any weapon property forces a missing atom that masteries, feats, and class features did not surface.
 

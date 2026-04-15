@@ -1,6 +1,6 @@
 # Round 2 Group B
 
-Grounding: local `spells-xphb.json` entries for the five spells, read against `TAXONOMY_atoms_graph_v1.md`.
+Grounding: local `spells-xphb.json` entries for the five spells, read against `TAXONOMY_atoms_graph.md`.
 
 ## `Counterspell`
 

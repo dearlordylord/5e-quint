@@ -2,9 +2,9 @@
 
 Purpose:
 
-- aggregate the species and background validation pass against `TAXONOMY_atoms_graph_v3.md`;
+- aggregate the species and background validation pass against `TAXONOMY_atoms_graph.md`;
 - determine whether origin-side pressure confirms or discharges `v3`'s recorded residue and primary `v4` candidate;
-- decide whether species / background pressure justifies `TAXONOMY_atoms_graph_v4.md`.
+- decide whether species / background pressure justifies `TAXONOMY_atoms_graph.md`.
 
 ## Short Answer
 
@@ -74,7 +74,7 @@ Prior pressure from class features (Bardic Inspiration die-size, Sneak Attack di
 
 Dragonborn Breath Weapon's dice-count scaling is a **second independent stream**. The shape is identical to Sneak Attack's (dice count increases at specific character-level thresholds) but the source is origin-side, not class-side.
 
-Per the outcome rule set in the class-feature synthesis, this is enough to justify drafting `TAXONOMY_atoms_graph_v4.md`.
+Per the outcome rule set in the class-feature synthesis, this is enough to justify drafting `TAXONOMY_atoms_graph.md`.
 
 ### 3. Scope-First Nested Selection is architecturally central
 
@@ -119,11 +119,11 @@ Backgrounds author the outer scope of Magic Initiate. Narrow variant of the patt
 Next actions:
 
 1. Run the item-property validation pass to close out source-root coverage before drafting `v4`;
-2. Draft `TAXONOMY_atoms_graph_v4.md` promoting the typed scaling split. Candidate change:
+2. Draft `TAXONOMY_atoms_graph.md` promoting the typed scaling split. Candidate change:
    - retain: `scale_numeric_bonus`, `scale_target_count`;
    - add: `scale_die_count`, `scale_die_size`, `scale_attack_count`;
    - retire `scale_damage` as a grouping label (same treatment `v3` gave to `modify_roll`).
-3. After `v4`, refresh `TAXONOMY_graph_representation_v0.md` to `v1` with updated atom names and updated example subgraphs;
+3. After `v4`, refresh `TAXONOMY_graph_representation.md` to `v1` with updated atom names and updated example subgraphs;
 4. Only then resume schema design.
 
 The item-property pass is expected to be confirmatory and to not introduce new atoms, given item properties are almost entirely cross-rule composition — a pattern already strongly named.

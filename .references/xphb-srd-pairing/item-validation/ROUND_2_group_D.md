@@ -1,6 +1,6 @@
 # Round 2 Group D
 
-Grounding: local `items.json` records for the 2024/XDMG versions of `Gem of Seeing`, `Broom of Flying`, and `Bag of Holding`, read against `TAXONOMY_atoms_graph_v2.md` and `TAXONOMY_graph_representation_v0.md`.
+Grounding: local `items.json` records for the 2024/XDMG versions of `Gem of Seeing`, `Broom of Flying`, and `Bag of Holding`, read against `TAXONOMY_atoms_graph.md` and `TAXONOMY_graph_representation.md`.
 
 ## Short Verdict
 

@@ -2,7 +2,7 @@
 
 Purpose:
 
-- aggregate the third 20-spell pass against `TAXONOMY_atoms_graph_v2.md`;
+- aggregate the third 20-spell pass against `TAXONOMY_atoms_graph.md`;
 - determine whether the current atom graph is still structurally dishonest;
 - decide whether to keep iterating on the same spell sample or move to broader validation.
 
@@ -164,5 +164,5 @@ The current stop condition is met:
 So the correct next move is:
 
 1. keep `RESET_foundation_srd_base_phb_extension.md` as the correction layer;
-2. treat `TAXONOMY_atoms_graph_v2.md` as the current working atom inventory;
+2. treat `TAXONOMY_atoms_graph.md` as the current working atom inventory;
 3. widen validation, not by default to schema design, but to broader spell and item samples and to an actual graph representation.

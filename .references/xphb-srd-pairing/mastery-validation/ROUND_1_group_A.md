@@ -10,8 +10,8 @@ Masteries:
 Grounding:
 
 - `xphb-srd-pairing/MASTERY_VALIDATION_matrix_v0.md`
-- `xphb-srd-pairing/TAXONOMY_atoms_graph_v2.md`
-- `xphb-srd-pairing/TAXONOMY_graph_representation_v0.md`
+- `xphb-srd-pairing/TAXONOMY_atoms_graph.md`
+- `xphb-srd-pairing/TAXONOMY_graph_representation.md`
 - `.references/srd-5.2.1/Equipment.md` section "Mastery Properties"
 
 ## Short Verdict

@@ -2,7 +2,7 @@
 
 Purpose:
 
-- validate `TAXONOMY_atoms_graph_v0.md` against a broader spell sample;
+- validate `TAXONOMY_atoms_graph.md` against a broader spell sample;
 - force the taxonomy to explain real spell shapes instead of preferred abstractions;
 - keep the sample broad enough to hit preparation, reaction, storage, release, concentration, completion-branching, and persistent ownership pressure.
 
