@@ -12,6 +12,11 @@ export {
   type CharacterOpenChoiceCode,
 } from "#/character-draft-analysis.ts";
 export {
+  CharacterDraftSchema,
+  CharacterLevelUpTransitionSchema,
+  strictCharacterParseOptions,
+} from "#/character-domain-schema.ts";
+export {
   ALIGNMENTS,
   CHARACTER_FINALIZATION_ISSUE_CODES,
   CHARACTER_LANGUAGES,
