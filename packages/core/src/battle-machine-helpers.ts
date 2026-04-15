@@ -51,6 +51,7 @@ import {
   phaseAwaitReaction,
   phaseResolvingAoE,
   phaseResolvingMovement,
+  phaseResolvingTraversal,
 } from "#/battle-machine-types.ts";
 import {
   canDeflectAttacks,
@@ -140,6 +141,9 @@ export function piSaveFailed(pi: PendingInterrupt) {
 }
 export function piSaveFailedAoE(pi: PendingInterrupt) {
   return pi.tag === "PISaveFailedAoE" ? pi : null;
+}
+export function piSaveFailedTraversal(pi: PendingInterrupt) {
+  return pi.tag === "PISaveFailedTraversal" ? pi : null;
 }
 
 export function setCreature(
@@ -754,6 +758,7 @@ export function returnToState(r: AfterDamageReturn): PhaseFields {
     byTag("ADRActiveTurn", () => PHASE_ACTIVE),
     byTag("ADRResolvingAoE", (v) => phaseResolvingAoE(v.aoe)),
     byTag("ADRResolvingMovement", (v) => phaseResolvingMovement(v.mv)),
+    byTag("ADRResolvingTraversal", (v) => phaseResolvingTraversal(v.traversal)),
     byTag("ADRAwaitingLegendaryAction", (v) => phaseAwaitingLegendary(v.la)),
     byTag("ADRAwaitingReadiedAction", (v) => phaseAwaitingReady(v.ready)),
     Match.exhaustive,
@@ -911,6 +916,9 @@ export function resolveSave(
   cs: Creatures,
   save: SaveSpellCtx,
   returnTo: AfterDamageReturn,
+  saveFailedInterruptFactory:
+    | ((ctx: SaveFailedCtx) => PendingInterrupt)
+    | null = null,
 ): { creatures: Map<CreatureId, BattleCreatureState> } & PhaseFields {
   const tgt = cs.get(save.target)!;
   const saveRoll = effectiveBattleSaveRollForCreature(
@@ -967,7 +975,14 @@ export function resolveSave(
     return {
       creatures: new Map(cs),
       ...phaseAwaitReaction(
-        mkAwait({ tag: "PISaveFailed", ctx: failCtx }, "TSaveFailed", elig),
+        mkAwait(
+          saveFailedInterruptFactory?.(failCtx) ?? {
+            tag: "PISaveFailed",
+            ctx: failCtx,
+          },
+          "TSaveFailed",
+          elig,
+        ),
       ),
     };
   }

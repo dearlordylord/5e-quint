@@ -107,6 +107,7 @@ export function resolveSpellEntry(
         awaitCtx: r.awaitCtx,
         aoeCtx: r.aoeCtx,
         movementCtx: r.movementCtx,
+        traversalCtx: r.traversalCtx,
         laCtx: r.laCtx,
         readyCtx: r.readyCtx,
       };

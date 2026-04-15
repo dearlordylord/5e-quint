@@ -99,13 +99,28 @@ export const CENTAUR_TROOPER = {
   ],
   bonusActions: [
     {
-      kind: "text",
+      kind: "traversalMovementAction",
       id: "tramplingCharge",
       name: "Trampling Charge",
       text: "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. *Strength Saving Throw:* DC 14. *Failure:* 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
-      blockerFamily: "saveEffectAction",
-      nonExecutableReason:
-        "Recharge-gated movement plus saving-throw bonus-action resolution is not yet projected into the generic monster runtime surface.",
+      movement: {
+        maxDistance: { kind: "speed" },
+        provocationKind: "doesNotProvokeOpportunityAttacks",
+        passThroughCreatureSpacesUpToSize: "medium",
+      },
+      enteredCreatureEffect: {
+        targeting: "eachEnteredCreatureOnce",
+        save: {
+          ability: "str",
+          dc: 14,
+          damageOnFail: 7,
+          halfOnSuccess: false,
+          damageType: "bludgeoning",
+          conditionOnFail: {
+            condition: "prone",
+          },
+        },
+      },
     },
   ],
   reactions: [],

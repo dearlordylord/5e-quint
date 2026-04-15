@@ -1406,6 +1406,8 @@ function normalizeQuintPhase(raw: unknown): string {
       return "resolvingAoE";
     case "BPResolvingMovement":
       return "resolvingMovement";
+    case "BPResolvingTraversal":
+      return "resolvingTraversal";
     case "BPAwaitingLegendaryAction":
     case "BPAwaitingLegendaryAttack":
       return "awaitingLegendaryAction";

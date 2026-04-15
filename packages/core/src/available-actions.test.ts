@@ -4254,6 +4254,102 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle discovery and resolution expose the movement-owned monster traversal runtime for Centaur Trooper", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "centaurTrooper",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+      rechargeD6: 5,
+    });
+    actor.send({
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("A"),
+      abilityId: "tramplingCharge",
+    });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MONSTER_TRAVERSAL",
+          abilityId: "tramplingCharge",
+          cost: cost(quota("bonusAction")),
+          outcome: {
+            summary:
+              "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+      },
+      outcome:
+        "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+      runtime: "monsterTraversalMovement",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "monsterTraversalMovement",
+          values: {
+            destination: { row: 2, col: 0 },
+            movementSpent: 10,
+            enteredCreatures: [{ targetId: "B", saveRoll: 4 }],
+          },
+        },
+        context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+        destination: { row: 2, col: 0 },
+        movementSpent: 10,
+        enteredCreatures: [{ targetId: CreatureId("B"), saveRoll: 4 }],
+      },
+      outcome:
+        "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+    });
+  });
+
   test("battle discovery does not expose wake-effect for a 0 HP unconscious target", () => {
     const actor = makeBattleActor({
       type: "BATTLE_INIT",

@@ -2007,6 +2007,144 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "C").paralyzed).toBe(true);
   });
 
+  it("natural_20: Trampling Charge uses the generic traversal movement surface and targets each entered creature once", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("C"),
+            statBlockId: "centaurTrooper",
+            initiativeRoll: 20,
+          }),
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          creatureSize: "medium",
+          battlePosition: { row: 1, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 9,
+          creatureSize: "medium",
+          battlePosition: { row: 2, col: 0 },
+        },
+      ],
+    });
+
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    send(actor, {
+      type: "BATTLE_MONSTER_TRAVERSAL",
+      abilityId: "tramplingCharge",
+      destination: { row: 3, col: 0 },
+      movementSpent: 15,
+      enteredCreatures: [
+        { targetId: CreatureId("A"), saveRoll: 4 },
+        { targetId: CreatureId("B"), saveRoll: 18 },
+      ],
+    });
+
+    expect(creature(actor, "C").bonusActionUsed).toBe(true);
+    expect(creature(actor, "C").movementRemaining).toBe(35);
+    expect(creature(actor, "C").battlePosition).toEqual({ row: 3, col: 0 });
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: false,
+    });
+    expect(ctx(actor).selectedMonsterCommand).toBeNull();
+    expect(creature(actor, "A").hp).toBe(13);
+    expect(creature(actor, "A").prone).toBe(true);
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").prone).toBe(false);
+  });
+
+  it("natural_20: traversal save-failed reactions resume the remaining entered-creature queue", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("C"),
+            statBlockId: "centaurTrooper",
+            initiativeRoll: 20,
+          }),
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "Monster",
+          legendaryResistances: 1,
+          creatureSize: "medium",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          creatureSize: "medium",
+          initiativeRoll: 9,
+          battlePosition: { row: 2, col: 0 },
+        },
+      ],
+    });
+
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    send(actor, {
+      type: "BATTLE_MONSTER_TRAVERSAL",
+      abilityId: "tramplingCharge",
+      destination: { row: 3, col: 0 },
+      movementSpent: 15,
+      enteredCreatures: [
+        { targetId: CreatureId("A"), saveRoll: 1 },
+        { targetId: CreatureId("B"), saveRoll: 1 },
+      ],
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PISaveFailedTraversal");
+    expect(ctx(actor).traversalCtx).toBeNull();
+    expect(creature(actor, "A").legendaryResistancesRemaining).toBe(1);
+    expect(creature(actor, "A").hp).toBe(20);
+    expect(creature(actor, "A").prone).toBe(false);
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+      reactorId: CreatureId("A"),
+      decision: { tag: "RLegendaryResistance" },
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
+    send(actor, { type: "BATTLE_AFTER_DAMAGE_DECLINE", reactorId: null });
+
+    expect(ctx(actor).awaitCtx).toBeNull();
+    expect(ctx(actor).traversalCtx).toBeNull();
+    expect(creature(actor, "A").legendaryResistancesRemaining).toBe(0);
+    expect(creature(actor, "A").hp).toBe(20);
+    expect(creature(actor, "A").prone).toBe(false);
+    expect(creature(actor, "B").hp).toBe(13);
+    expect(creature(actor, "B").prone).toBe(true);
+  });
+
   it("natural_20: no Legendary Resistance uses means a failed save resolves immediately", () => {
     const actor = initLegendaryResistanceBattle(0);
     startTurn(actor);

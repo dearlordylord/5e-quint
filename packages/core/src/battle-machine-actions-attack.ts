@@ -404,6 +404,7 @@ export function battleResolveHitReaction({
       awaitCtx: result.awaitCtx,
       aoeCtx: result.aoeCtx,
       movementCtx: result.movementCtx,
+      traversalCtx: result.traversalCtx,
       laCtx: result.laCtx,
     };
   }
@@ -562,6 +563,7 @@ export function battleResolveDmgReaction({
       awaitCtx: result.awaitCtx,
       aoeCtx: result.aoeCtx,
       movementCtx: result.movementCtx,
+      traversalCtx: result.traversalCtx,
       laCtx: result.laCtx,
     };
   }

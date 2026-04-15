@@ -25,6 +25,8 @@ import {
   battleMove,
   battleMovementOADecline,
   battleMovementOAAttack,
+  battleMonsterTraversal,
+  battleResolveTraversalStep,
   battleStandFromProne,
 } from "#/battle-machine-actions-movement.ts";
 import {
@@ -102,6 +104,7 @@ const INITIAL_CONTEXT: BattleContext = {
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
+  traversalCtx: null,
   laCtx: null,
   readyCtx: null,
   spellStack: [],
@@ -120,6 +123,8 @@ export const battleMachine = setup({
       context.aoeCtx !== null,
     hasMovementCtx: ({ context }: { context: BattleContext }) =>
       context.movementCtx !== null,
+    hasTraversalCtx: ({ context }: { context: BattleContext }) =>
+      context.traversalCtx !== null,
     hasLaCtx: ({ context }: { context: BattleContext }) =>
       context.laCtx !== null,
     hasReadyCtx: ({ context }: { context: BattleContext }) =>
@@ -130,6 +135,8 @@ export const battleMachine = setup({
       context.aoeCtx === null,
     noMovementCtx: ({ context }: { context: BattleContext }) =>
       context.movementCtx === null,
+    noTraversalCtx: ({ context }: { context: BattleContext }) =>
+      context.traversalCtx === null,
     noLaCtx: ({ context }: { context: BattleContext }) =>
       context.laCtx === null,
     noReadyCtx: ({ context }: { context: BattleContext }) =>
@@ -157,6 +164,8 @@ export const battleMachine = setup({
     battleMove: narrow(battleMove),
     battleMovementOADecline: narrow(battleMovementOADecline),
     battleMovementOAAttack: narrow(battleMovementOAAttack),
+    battleMonsterTraversal: narrow(battleMonsterTraversal),
+    battleResolveTraversalStep: narrow(battleResolveTraversalStep),
     battleEndTurn: narrow(battleEndTurn),
     battleLegendaryPass: narrow(battleLegendaryPass),
     battleLegendaryAttack: narrow(battleLegendaryAttack),
@@ -207,6 +216,7 @@ export const battleMachine = setup({
             { guard: "hasAwaitCtx", target: "awaitingReaction" },
             { guard: "hasAoeCtx", target: "resolvingAoE" },
             { guard: "hasMovementCtx", target: "resolvingMovement" },
+            { guard: "hasTraversalCtx", target: "resolvingTraversal" },
             { guard: "hasLaCtx", target: "awaitingLegendaryAction" },
             { guard: "hasReadyCtx", target: "awaitingReadiedAction" },
           ],
@@ -222,6 +232,9 @@ export const battleMachine = setup({
             BATTLE_CONCENTRATION_CHECK: { actions: "battleConcentrationCheck" },
             BATTLE_CAST_AOE: { actions: "battleCastAoE" },
             BATTLE_MOVE: { actions: "battleMove" },
+            BATTLE_MONSTER_TRAVERSAL: {
+              actions: "battleMonsterTraversal",
+            },
             BATTLE_END_TURN: { actions: "battleEndTurn" },
             USE_RECHARGE_ABILITY: { actions: "battleUseRechargeAbility" },
             USE_DAILY_ABILITY: { actions: "battleUseDailyAbility" },
@@ -296,6 +309,17 @@ export const battleMachine = setup({
             },
             BATTLE_MOVEMENT_OA_ATTACK: { actions: "battleMovementOAAttack" },
           },
+        },
+        resolvingTraversal: {
+          tags: ["resolving"],
+          always: [
+            { guard: "noTraversalCtx", target: "activeTurn" },
+            {
+              guard: "hasTraversalCtx",
+              target: "activeTurn",
+              actions: "battleResolveTraversalStep",
+            },
+          ],
         },
         awaitingLegendaryAction: {
           tags: ["legendaryWindow"],

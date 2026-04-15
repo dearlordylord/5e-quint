@@ -17,6 +17,7 @@ import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
   MonsterSaveTriggerKind,
+  MonsterTraversalEnteredCreatureSave,
 } from "#/monster-types.ts";
 import type {
   ActiveEffect,
@@ -239,6 +240,10 @@ export type AfterDamageReturn =
   | { readonly tag: "ADRActiveTurn" }
   | { readonly tag: "ADRResolvingAoE"; readonly aoe: AoESpellCtx }
   | { readonly tag: "ADRResolvingMovement"; readonly mv: MovementCtx }
+  | {
+      readonly tag: "ADRResolvingTraversal";
+      readonly traversal: TraversalMovementCtx;
+    }
   | { readonly tag: "ADRAwaitingLegendaryAction"; readonly la: LAWindowCtx }
   | {
       readonly tag: "ADRAwaitingReadiedAction";
@@ -363,6 +368,19 @@ export interface MovementCtx {
   readonly processed: ReadonlySet<CreatureId>;
 }
 
+export interface TraversalEnteredCreatureTarget {
+  readonly targetId: CreatureId;
+  readonly saveRoll: number;
+  readonly saveRollB?: number;
+}
+
+export interface TraversalMovementCtx {
+  readonly mover: CreatureId;
+  readonly abilityId: string;
+  readonly save: MonsterTraversalEnteredCreatureSave;
+  readonly remaining: ReadonlyArray<TraversalEnteredCreatureTarget>;
+}
+
 export type { InitCreatureConfig } from "#/battle-init-creature-config.ts";
 export type {
   LAWindowCtx,
@@ -397,6 +415,7 @@ export interface BattleContext {
   readonly awaitCtx: AwaitCtx | null;
   readonly aoeCtx: AoESpellCtx | null;
   readonly movementCtx: MovementCtx | null;
+  readonly traversalCtx: TraversalMovementCtx | null;
   readonly laCtx: LAWindowCtx | null;
   readonly readyCtx: ReadyWindowCtx | null;
   readonly spellStack: ReadonlyArray<SpellStackEntry>;
@@ -410,6 +429,7 @@ export const PHASE_ACTIVE: Pick<
   | "awaitCtx"
   | "aoeCtx"
   | "movementCtx"
+  | "traversalCtx"
   | "laCtx"
   | "readyCtx"
 > = {
@@ -417,6 +437,7 @@ export const PHASE_ACTIVE: Pick<
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
+  traversalCtx: null,
   laCtx: null,
   readyCtx: null,
 };
@@ -431,6 +452,11 @@ export function phaseResolvingAoE(aoe: AoESpellCtx): PhaseFields {
 }
 export function phaseResolvingMovement(mv: MovementCtx): PhaseFields {
   return { ...PHASE_ACTIVE, movementCtx: mv };
+}
+export function phaseResolvingTraversal(
+  traversal: TraversalMovementCtx,
+): PhaseFields {
+  return { ...PHASE_ACTIVE, traversalCtx: traversal };
 }
 export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
   return { ...PHASE_ACTIVE, laCtx: la };

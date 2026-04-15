@@ -120,7 +120,11 @@ function passReactions(
       });
     } else if (pi.tag === "PIAfterDamage") {
       send(actor, { type: "BATTLE_AFTER_DAMAGE_DECLINE", reactorId: null });
-    } else if (pi.tag === "PISaveFailed") {
+    } else if (
+      pi.tag === "PISaveFailed" ||
+      pi.tag === "PISaveFailedAoE" ||
+      pi.tag === "PISaveFailedTraversal"
+    ) {
       send(actor, {
         type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
         reactorId: null,

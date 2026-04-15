@@ -92,6 +92,7 @@ const INTERRUPT_LABELS: Record<InterruptKind, string> = {
   PISpellCast: "COUNTERSPELL WINDOW",
   PISaveFailed: "SAVE FAILED — REACTION",
   PISaveFailedAoE: "SAVE FAILED — REACTION",
+  PISaveFailedTraversal: "SAVE FAILED — REACTION",
   PIAttackHit: "ATTACK HIT — REACTION",
   PIAttackDamage: "DAMAGE — REACTION",
   PIAfterDamage: "AFTER DAMAGE — REACTION",

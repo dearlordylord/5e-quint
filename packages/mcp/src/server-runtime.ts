@@ -174,6 +174,11 @@ export function buildBattleRuntimeInputs(
         })),
       ),
     ),
+    Match.when({ runtime: "monsterTraversalMovement" }, () =>
+      Effect.die(
+        "monsterTraversalMovement runtime inputs must be supplied explicitly by execute_action.",
+      ),
+    ),
     Match.when({ runtime: "hellishRebuke" }, () =>
       Effect.all({
         damage: Random.nextIntBetween(1, 21),

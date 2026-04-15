@@ -101,8 +101,14 @@ function interruptInternals(pi: PendingInterrupt): {
       };
     case "PISaveFailed":
     case "PISaveFailedAoE":
+    case "PISaveFailedTraversal":
       return {
-        label: pi.tag === "PISaveFailed" ? "saveFailed" : "saveFailedAoE",
+        label:
+          pi.tag === "PISaveFailed"
+            ? "saveFailed"
+            : pi.tag === "PISaveFailedAoE"
+              ? "saveFailedAoE"
+              : "saveFailedTraversal",
         states: {
           awaiting: {
             on: {
