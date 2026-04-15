@@ -126,6 +126,30 @@ module character {
     | _ => patch
   }
 
+  pure def pMergeOptionalFightingStyleFeat(
+    base: OptionalFightingStyleFeat,
+    patch: OptionalFightingStyleFeat,
+  ): OptionalFightingStyleFeat = match patch {
+    | NoFightingStyleFeat => base
+    | _ => patch
+  }
+
+  pure def pMergeOptionalPaladinFightingStyleChoice(
+    base: OptionalPaladinFightingStyleChoice,
+    patch: OptionalPaladinFightingStyleChoice,
+  ): OptionalPaladinFightingStyleChoice = match patch {
+    | NoPaladinFightingStyleChoice => base
+    | _ => patch
+  }
+
+  pure def pMergeOptionalRangerFightingStyleChoice(
+    base: OptionalRangerFightingStyleChoice,
+    patch: OptionalRangerFightingStyleChoice,
+  ): OptionalRangerFightingStyleChoice = match patch {
+    | NoRangerFightingStyleChoice => base
+    | _ => patch
+  }
+
   pure def pMergeOptionalSpellcastingEntry(
     base: OptionalSpellcastingEntry,
     patch: OptionalSpellcastingEntry,
@@ -221,6 +245,26 @@ module character {
     ),
     clericDivineOrder: pMergeOptionalString(choices.clericDivineOrder, transition.choices.clericDivineOrder),
     druidPrimalOrder: pMergeOptionalString(choices.druidPrimalOrder, transition.choices.druidPrimalOrder),
+    fighterFightingStyle: pMergeOptionalFightingStyleFeat(
+      choices.fighterFightingStyle,
+      transition.choices.fighterFightingStyle,
+    ),
+    championAdditionalFightingStyle: pMergeOptionalFightingStyleFeat(
+      choices.championAdditionalFightingStyle,
+      transition.choices.championAdditionalFightingStyle,
+    ),
+    paladinFightingStyle: pMergeOptionalPaladinFightingStyleChoice(
+      choices.paladinFightingStyle,
+      transition.choices.paladinFightingStyle,
+    ),
+    rangerFightingStyle: pMergeOptionalRangerFightingStyleChoice(
+      choices.rangerFightingStyle,
+      transition.choices.rangerFightingStyle,
+    ),
+    expertiseSkills: pMergeOptionalSkillList(
+      choices.expertiseSkills,
+      transition.choices.expertiseSkills,
+    ),
   }
 
   pure def pDraftFromSheetTransition(
@@ -290,7 +334,7 @@ module character {
   // - Fighter/Paladin/Ranger class tables place Fighting Style at levels 1/2/2.
   // - Spellcasting sections state the spellcasting ability for each caster class.
 
-  pure def pBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
+  pure def pSheetBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
     | Acolyte => Set(Insight, Religion)
     | Criminal => Set(SleightOfHand, Stealth)
     | Sage => Set(Arcana, History)
@@ -350,7 +394,7 @@ module character {
       | _ => acc
     })
 
-  pure def pAdvancementSkillProficiencies(
+  pure def pSheetAdvancementSkillProficiencies(
     advancement: List[CharacterAdvancementEntry],
   ): Set[Skill] =
     advancement.foldl(Set(), (acc, entry) => match entry.feat {
@@ -398,12 +442,12 @@ module character {
       | _ => Set()
     }
 
-    pBackgroundSkillProficiencies(sheet.background)
+    pSheetBackgroundSkillProficiencies(sheet.background)
       .union(pOptionalSkillSet(sheet.choices.primaryClassSkills))
       .union(multiclassSkills)
       .union(pSpeciesSkillProficiencies(sheet.choices))
       .union(originFeatSkills)
-      .union(pAdvancementSkillProficiencies(sheet.advancement))
+      .union(pSheetAdvancementSkillProficiencies(sheet.advancement))
   }
 
   pure def pSheetArmorProficiencies(sheet: CharacterSheet): Set[ArmorCategory] = {
@@ -560,11 +604,15 @@ module character {
       else acc
     )
 
-  // The current CharacterSheet surface does not yet own Fighting Style feat
-  // selections, so the formal projection can only thread the empty set until
-  // that authored choice exists on the character side.
-  pure def pProjectionFightingStyles(_sheet: CharacterSheet): Set[FightingStyleFeat] =
-    Set()
+  pure def pProjectionFightingStyles(sheet: CharacterSheet): Set[FightingStyleFeat] =
+    pSelectedFightingStyles(sheet.choices).foldl(Set(), (acc, style) =>
+      acc.union(Set(style)))
+
+  pure def pProjectionExpertiseSkills(sheet: CharacterSheet): Set[Skill] =
+    pSkillsValue(sheet.choices.expertiseSkills).foldl(Set(), (acc, skill) =>
+      if (pSheetSkillProficiencies(sheet).contains(skill))
+        acc.union(Set(skill))
+      else acc)
 
   pure def pCharacterCreatureProjection(sheet: CharacterSheet): CharacterCreatureProjection = {
     primaryClass: sheet.primaryClass,
@@ -577,7 +625,7 @@ module character {
     baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
     saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
     skillProficiencies: pSheetSkillProficiencies(sheet),
-    expertiseSkills: Set(),
+    expertiseSkills: pProjectionExpertiseSkills(sheet),
     armorProficiencies: pSheetArmorProficiencies(sheet),
     hitDieType: pHitDieType(sheet.primaryClass),
     spellcastingAbility: pProjectionSpellcastingAbility(sheet),

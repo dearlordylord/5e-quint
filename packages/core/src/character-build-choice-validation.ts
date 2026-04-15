@@ -1,5 +1,7 @@
 import {
   CHARACTER_LANGUAGES,
+  type CharacterClassLevels,
+  type CharacterDraft,
   type CharacterFinalizationIssue,
   type CharacterLanguage,
 } from "#/character-domain.ts";
@@ -8,6 +10,7 @@ import {
   type CharacterSkilledProficiencyChoice,
   CHARACTER_RARE_LANGUAGES,
 } from "#/character-feature-types.ts";
+export { validateFeatureChoices } from "#/character-feature-choice-validation.ts";
 import {
   BACKGROUND_SKILLS,
   MULTICLASS_PROFICIENCIES,
@@ -268,26 +271,6 @@ export function validateFeatChoices(
     );
   }
 
-  return issues;
-}
-
-export function validateFeatureChoices(
-  draft: CharacterDraft,
-  classLevels: CharacterClassLevels,
-): ReadonlyArray<CharacterFinalizationIssue> {
-  const issues: CharacterFinalizationIssue[] = [];
-  if (classLevels.cleric > 0 && draft.choices?.clericDivineOrder == null) {
-    issues.push({
-      code: "missingFeatureChoice",
-      message: "cleric requires a Divine Order choice.",
-    });
-  }
-  if (classLevels.druid > 0 && draft.choices?.druidPrimalOrder == null) {
-    issues.push({
-      code: "missingFeatureChoice",
-      message: "druid requires a Primal Order choice.",
-    });
-  }
   return issues;
 }
 

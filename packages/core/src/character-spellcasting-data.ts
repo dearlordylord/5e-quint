@@ -64,6 +64,18 @@ function extraCantripCount(
   if (className === "druid" && choices?.druidPrimalOrder === "magician") {
     return 1;
   }
+  if (
+    className === "paladin" &&
+    choices?.paladinFightingStyle === "blessedWarrior"
+  ) {
+    return 2;
+  }
+  if (
+    className === "ranger" &&
+    choices?.rangerFightingStyle === "druidicWarrior"
+  ) {
+    return 2;
+  }
   return 0;
 }
 
@@ -72,20 +84,36 @@ export function cantripChoiceCount(
   level: number,
   choices: CharacterBuildChoices | undefined,
 ): number {
+  const baseCantripCount =
+    className === "bard" ||
+    className === "cleric" ||
+    className === "druid" ||
+    className === "sorcerer" ||
+    className === "warlock" ||
+    className === "wizard"
+      ? countAtLevel(FULL_CASTER_CANTRIP_COUNTS[className], level)
+      : 0;
+
+  return baseCantripCount + extraCantripCount(className, choices);
+}
+
+export function cantripChoiceSourceClass(
+  className: CasterClass,
+  choices: CharacterBuildChoices | undefined,
+): CasterClass {
   if (
-    className !== "bard" &&
-    className !== "cleric" &&
-    className !== "druid" &&
-    className !== "sorcerer" &&
-    className !== "warlock" &&
-    className !== "wizard"
+    className === "paladin" &&
+    choices?.paladinFightingStyle === "blessedWarrior"
   ) {
-    return 0;
+    return "cleric";
   }
-  return (
-    countAtLevel(FULL_CASTER_CANTRIP_COUNTS[className], level) +
-    extraCantripCount(className, choices)
-  );
+  if (
+    className === "ranger" &&
+    choices?.rangerFightingStyle === "druidicWarrior"
+  ) {
+    return "druid";
+  }
+  return className;
 }
 
 export function preparedSpellChoiceCount(

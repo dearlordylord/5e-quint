@@ -1,12 +1,16 @@
-import {
-  characterSubclassSelections,
-  type CharacterSheet,
-} from "#/character-domain.ts";
+import { characterSubclassSelections } from "#/character-domain.ts";
 import type {
+  CharacterAdvancement,
+  CharacterClassLevels,
+  CharacterSheet,
+} from "#/character-domain-model.ts";
+import type {
+  CharacterBuildChoices,
   ArtisanTool,
   CharacterGrantedLanguage,
   CharacterOriginFeatSelection,
   CharacterProficiencySummary,
+  CharacterAdvancementEntry,
   CharacterToolProficiency,
   GamingSet,
   MusicalInstrument,
@@ -73,6 +77,15 @@ function pushUnique<T>(target: T[], values: ReadonlyArray<T>): void {
   }
 }
 
+export interface CharacterSkillProficiencySource {
+  readonly primaryClass?: CharacterSheet["primaryClass"];
+  readonly background?: CharacterSheet["background"];
+  readonly species?: CharacterSheet["species"];
+  readonly classLevels: CharacterClassLevels;
+  readonly choices?: CharacterBuildChoices;
+  readonly advancement?: CharacterAdvancement;
+}
+
 function primaryClassToolProficiencies(
   sheet: CharacterSheet,
 ): ReadonlyArray<CharacterToolProficiency> {
@@ -109,11 +122,77 @@ function multiclassToolProficiencies(
   return tools;
 }
 
+export function deriveGrantedSkillProficiencies(
+  source: CharacterSkillProficiencySource,
+): ReadonlyArray<Skill> {
+  const skills: Skill[] =
+    source.background == null ? [] : [...BACKGROUND_SKILLS[source.background]];
+
+  if (source.primaryClass != null) {
+    pushUnique(skills, source.choices?.primaryClassSkills ?? []);
+  }
+
+  for (const className of CLASS_NAMES) {
+    if (
+      source.primaryClass == null ||
+      className === source.primaryClass ||
+      source.classLevels[className] <= 0
+    ) {
+      continue;
+    }
+    if (className === "bard") {
+      pushUnique(skills, source.choices?.multiclassSkills?.bard ?? []);
+    }
+    if (className === "ranger") {
+      pushUnique(skills, source.choices?.multiclassSkills?.ranger ?? []);
+    }
+    if (className === "rogue") {
+      pushUnique(skills, source.choices?.multiclassSkills?.rogue ?? []);
+    }
+  }
+
+  if (source.choices?.speciesSkill != null) {
+    pushUnique(skills, [source.choices.speciesSkill]);
+  }
+
+  const originFeats: CharacterOriginFeatSelection[] = [];
+  if (source.species === "human" && source.choices?.humanOriginFeat != null) {
+    originFeats.push(source.choices.humanOriginFeat);
+  }
+  for (const feat of originFeats) {
+    if (feat.feat !== "skilled") continue;
+    for (const proficiency of feat.proficiencies) {
+      if ((SKILLS as ReadonlyArray<string>).includes(proficiency)) {
+        pushUnique(skills, [proficiency as Skill]);
+      }
+    }
+  }
+
+  for (const entry of source.advancement ??
+    ([] as CharacterAdvancementEntry[])) {
+    const choice = entry.feat?.choice;
+    if (
+      choice == null ||
+      choice.tag === "abilityScoreImprovement" ||
+      choice.featId !== "skilled"
+    ) {
+      continue;
+    }
+    for (const proficiency of choice.proficiencies ?? []) {
+      if ((SKILLS as ReadonlyArray<string>).includes(proficiency)) {
+        pushUnique(skills, [proficiency as Skill]);
+      }
+    }
+  }
+
+  return skills;
+}
+
 export function deriveCharacterProficiencies(
   sheet: CharacterSheet,
 ): CharacterProficiencySummary {
   const primary = PRIMARY_CLASS_PROFICIENCIES[sheet.primaryClass];
-  const skills: Skill[] = [...BACKGROUND_SKILLS[sheet.background]];
+  const skills = [...deriveGrantedSkillProficiencies(sheet)];
   const toolProficiencies: CharacterToolProficiency[] = [
     ...backgroundToolProficiencies(
       sheet.background,
@@ -127,7 +206,6 @@ export function deriveCharacterProficiencies(
     BACKGROUND_FIXED_ORIGIN_FEATS[sheet.background],
   ];
 
-  pushUnique(skills, sheet.choices?.primaryClassSkills ?? []);
   pushUnique(toolProficiencies, primaryClassToolProficiencies(sheet));
 
   for (const className of CLASS_NAMES) {
@@ -137,18 +215,9 @@ export function deriveCharacterProficiencies(
     const gains = MULTICLASS_PROFICIENCIES[className];
     pushUnique(armorTraining, gains.armorTraining);
     pushUnique(weaponProficiencies, gains.weaponProficiencies);
-    if (className === "bard")
-      pushUnique(skills, sheet.choices?.multiclassSkills?.bard ?? []);
-    if (className === "ranger")
-      pushUnique(skills, sheet.choices?.multiclassSkills?.ranger ?? []);
-    if (className === "rogue")
-      pushUnique(skills, sheet.choices?.multiclassSkills?.rogue ?? []);
   }
 
   pushUnique(toolProficiencies, multiclassToolProficiencies(sheet));
-  if (sheet.choices?.speciesSkill != null) {
-    pushUnique(skills, [sheet.choices.speciesSkill]);
-  }
   if (sheet.species === "human" && sheet.choices?.humanOriginFeat != null) {
     originFeats.push(sheet.choices.humanOriginFeat);
   }
@@ -156,9 +225,7 @@ export function deriveCharacterProficiencies(
   for (const feat of originFeats) {
     if (feat.feat !== "skilled") continue;
     for (const proficiency of feat.proficiencies) {
-      if ((SKILLS as ReadonlyArray<string>).includes(proficiency)) {
-        pushUnique(skills, [proficiency as Skill]);
-      } else {
+      if (!(SKILLS as ReadonlyArray<string>).includes(proficiency)) {
         pushUnique(toolProficiencies, [
           proficiency as CharacterToolProficiency,
         ]);
@@ -176,9 +243,7 @@ export function deriveCharacterProficiencies(
       continue;
     }
     for (const proficiency of choice.proficiencies ?? []) {
-      if ((SKILLS as ReadonlyArray<string>).includes(proficiency)) {
-        pushUnique(skills, [proficiency as Skill]);
-      } else {
+      if (!(SKILLS as ReadonlyArray<string>).includes(proficiency)) {
         pushUnique(toolProficiencies, [
           proficiency as CharacterToolProficiency,
         ]);

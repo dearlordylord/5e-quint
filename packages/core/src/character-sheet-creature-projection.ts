@@ -1,4 +1,5 @@
 import { characterSubclassSelections } from "#/character-advancement.ts";
+import { selectedFightingStyles } from "#/character-feature-choices.ts";
 import { type CharacterSheet } from "#/character-domain-model.ts";
 import { characterProficiencySummary } from "#/character-domain-derived.ts";
 import { SPELLCASTING_ABILITIES } from "#/character-spellcasting-data.ts";
@@ -8,7 +9,10 @@ import {
   championCritRange,
   type FightingStyle,
 } from "#/features/class-fighter.ts";
-import type { Skill } from "#/character-proficiencies.ts";
+import {
+  deriveGrantedSkillProficiencies,
+  type Skill,
+} from "#/character-proficiencies.ts";
 import {
   CASTER_CLASSES,
   type Ability,
@@ -84,11 +88,21 @@ function speciesCreatureSize(sheet: CharacterSheet): Size {
   return SPECIES_CREATURE_SIZE[sheet.species];
 }
 
-function selectedFightingStyles(
-  _sheet: CharacterSheet,
+function sheetFightingStyles(
+  sheet: CharacterSheet,
 ): ReadonlySet<FightingStyle> {
-  // The character-owned sheet does not yet persist Fighting Style feat choices.
-  return new Set();
+  return new Set(selectedFightingStyles(sheet.choices));
+}
+
+function expertiseSkills(sheet: CharacterSheet): ReadonlySet<Skill> {
+  const grantedSkillProficiencies = new Set(
+    deriveGrantedSkillProficiencies(sheet),
+  );
+  return new Set(
+    (sheet.choices.expertiseSkills ?? []).filter((skill) =>
+      grantedSkillProficiencies.has(skill),
+    ),
+  );
 }
 
 function armorProficiencies(sheet: CharacterSheet): ReadonlySet<ArmorCategory> {
@@ -186,13 +200,13 @@ export function characterSheetCreatureProjection(
     subclasses: proficiencySummary.subclasses,
     species: sheet.species,
     classLevels: sheet.classLevels,
-    fightingStyles: selectedFightingStyles(sheet),
+    fightingStyles: sheetFightingStyles(sheet),
     creatureSize: speciesCreatureSize(sheet),
     abilityScores: sheet.abilityScores,
     baseWalkSpeed: speciesWalkSpeed(sheet),
     saveProficiencies: new Set(proficiencySummary.savingThrows),
     skillProficiencies: new Set(proficiencySummary.skills),
-    expertiseSkills: new Set(),
+    expertiseSkills: expertiseSkills(sheet),
     armorProficiencies: armorProficiencies(sheet),
     hitDieType: classHitDie(sheet.primaryClass),
     spellcastingAbility: spellcastingAbility(sheet),

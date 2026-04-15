@@ -80,6 +80,8 @@ export {
   CHARACTER_WEAPON_PROFICIENCIES,
   CLERIC_DIVINE_ORDERS,
   DRUID_PRIMAL_ORDERS,
+  PALADIN_FIGHTING_STYLE_CHOICES,
+  RANGER_FIGHTING_STYLE_CHOICES,
   SRD_SUBCLASSES,
   type ArtisanTool,
   type CharacterArmorTraining,
@@ -98,6 +100,8 @@ export {
   type DruidPrimalOrder,
   type GamingSet,
   type MusicalInstrument,
+  type PaladinFightingStyleChoice,
+  type RangerFightingStyleChoice,
 } from "#/character-feature-types.ts";
 export { deriveProficiencyBonus } from "#/character-resources.ts";
 export {

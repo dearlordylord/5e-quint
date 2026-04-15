@@ -142,6 +142,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "wrongSkilledChoiceCount",
   "duplicateSkilledChoice",
   "missingFeatureChoice",
+  "invalidFeatureChoice",
   "missingAdvancementChoice",
   "invalidAdvancementChoice",
   "prematureFeatChoice",
