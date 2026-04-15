@@ -167,6 +167,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "CHARUI1",
       "status": "done",
       "title": "Atom-Graph-Compatible Open-Choice Payload"
+    },
+    {
+      "number": 24,
+      "id": "CHARUI2",
+      "status": "ready-for-implementation-after-light-research",
+      "title": "Non-Spellcasting Character Creation Pickers"
     }
   ]
 }
@@ -224,6 +230,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | done                                          | CHARMODEL1         | CHARMCP1, CHARAUTH1 | Landed on `integration`: `previewCharacterSheetAdvancement()` now exposes a non-mutating candidate draft plus candidate assessment that preserves open required choices separately from illegal issues, `advanceCharacterSheet()` now commits through that preview boundary, MCP exposes `preview_character_sheet_advancement`, and the character-creation UI consumes preview-before-commit semantics instead of projecting a committing level-up straight back into draft state. | Complete. The remaining character result-shape gap is closed on the owned TS/MCP/app seam, and downstream authority work can now treat advancement like draft editing: preview first, then commit. |
 | 18    | CHARAUTH1 - Character Quint Authority Convergence              | done                                          | CHARMCP1, CHARTYPE1 | none      | Landed on `integration`: `character.qnt` now keeps ordered `advancement` as the sole class-level owner when reconstructing drafts from finalized sheets or advancement previews, and parity coverage now checks the Quint handoff operators (`pSheetToDraft`, `pDraftFromSheetTransition`, `pSheetLegality`, `pCanAdvance`, projection) plus the settled MCP/app preview consumers against that owned seam. | Complete. Character draft reconstruction no longer restates derived `classLevels` once `advancement` exists, and the remaining character adapter surfaces are now regression-covered as thin consumers of the Quint-led ownership boundary. |
 | 23    | CHARUI1 - Atom-Graph-Compatible Open-Choice Payload            | done                                          | CHARAUTH1          | none      | Landed on `master`: core exposes `listCharacterFeaturePickers(draft)` and `resolveOpenChoicePayload(draft, choice)` returning `{ featureRef, options, pickCount, writePath, current }` for primary class skills, species skill, druid Primal Order, cleric Divine Order, and fighter / champion / paladin / ranger Fighting Styles. The `/character` step 5 renders a generic `<OpenChoicePicker>` per applicable feature with no per-class branches; pickers persist after commit so users can change or clear, and `buildOpenChoicePatch(draft, payload, value \| undefined)` composes the draft patch. | Complete. The picker contract matches the atom-graph `choose` + options shape so the schema-design phase can re-plumb `options` from authored graph data without changing `CharacterOpenChoice` or any UI code. |
+| 24    | CHARUI2 - Non-Spellcasting Character Creation Pickers          | ready-for-implementation-after-light-research | CHARUI1            | none      | Extend `listCharacterFeaturePickers` with the remaining non-spellcasting, non-loadout pickers needed to finalize a character without JSON editing: origin feat, background tool (gaming set / artisan's supplies), monk tool, bard instruments, rogue granted language, ranger Deft Explorer languages, expertise skills, multiclass skills, and the two equipment package choices (`backgroundOption`, `classOption`). Spellcasting and loadout/inventory remain JSON-only for later slices. | Ready. Contract and writePath shape stay fixed from CHARUI1; only new payload emitters plus any `buildOpenChoicePatch` depth bump (likely still at ≤2 levels) are in scope. |
 
 ## Current Integrated Baseline
 
@@ -1203,3 +1210,55 @@ Plan Impact:
 - Status: applied
 - Affected tasks: `CHARUI1` marked `done`. No downstream tasks unblocked (none were blocked).
 - Plan edits: Ralph task index + DAG row + task body now all say `done`.
+
+### Task 24 - CHARUI2 - Non-Spellcasting Character Creation Pickers
+
+Status: `ready-for-implementation-after-light-research`
+
+Depends on: `CHARUI1`
+
+Blocks: none
+
+Scope:
+
+- Extend `listCharacterFeaturePickers` in `packages/core/src/character-open-choice-payload.ts` so the `/character` step 5 can finalize a Fighter / Cleric / Rogue / etc. without touching the raw `choices` or `equipment` JSON editors.
+- Cover the remaining structured authored choices on the non-spellcasting, non-loadout surface:
+  - `choices.humanOriginFeat` — human species origin feat pick (and its sub-options for the `Skilled` feat: three of skill / tool / language, from closed enums).
+  - `choices.backgroundTool` — soldier's gaming-set pick.
+  - `choices.monkTool` — monk tool pick.
+  - `choices.bardInstruments` — bard's three musical instruments.
+  - `choices.rogueLanguage` — rogue's granted language.
+  - `choices.rangerDeftExplorerLanguages` — ranger Deft Explorer languages.
+  - `choices.expertiseSkills` — expertise slots (limited to already-granted skill proficiencies).
+  - `choices.multiclassSkills` — multiclass skill picks for bard / ranger / rogue.
+  - `equipment.backgroundOption` — package or `50 GP` alternate.
+  - `equipment.classOption` — package A or B per class.
+  - Subclass selection where it becomes open at creation (classes that pick subclass at level 1).
+- Keep spellcasting (cantrips / prepared spells / wizard spellbook) out of scope; tracked separately as a future CHARUI3 slice.
+- Keep the detailed equipment loadout (worn armor, wielded weapon, grip, shield, purchased combat equipment, remaining gold) out of scope; tracked separately as a future CHARUI4 slice.
+
+Non-goals:
+
+- Hand-maintained `CharacterOpenChoicePayload` union variants per feature — keep the generic `{ featureRef, options, pickCount, writePath, current }` shape from CHARUI1.
+- New open-choice codes or new validation semantics.
+- Redesigning `CharacterBuildChoices` or `CharacterEquipmentChoicesDraft` in core.
+- Preempting the atom-graph schema — option sources still come from the existing core constants (`ARTISAN_TOOLS`, `GAMING_SETS`, `MUSICAL_INSTRUMENTS`, `CHARACTER_RARE_LANGUAGES`, per-class background/class equipment packages, etc.).
+
+Research note:
+
+- The payload contract from CHARUI1 already fits every listed choice — each is either a closed-enum single pick or a closed-enum multi-pick.
+- The `Skilled` origin feat is the only nested case (a feat that itself opens three sub-picks). Treat it as one picker payload for the feat itself plus three derived sub-pickers surfaced when the feat is selected; do not collapse them into one multi-pick.
+- Expertise picker's `options` should be derived from currently-granted skill proficiencies (core already has `deriveGrantedSkillProficiencies`), not the full skill list — that's a narrowing on the core side, not new rule logic.
+- `buildOpenChoicePatch` today supports writePaths up to depth 2. Origin feat sub-choices, multiclass skills, and equipment options may need depth 3 (e.g., `["choices", "multiclassSkills", "ranger"]`). If so, generalize the helper; do not inline per-path composition in the UI.
+
+Verification requirements:
+
+- Confirm the UI still has no class-specific branches — all new pickers are new rows in the core-side registry.
+- Confirm `/simplify` convergence, minimum two rounds: watch for duplicated payload builders (consolidate via the existing `singlePickChoicePayload` helper or a matching multi-pick helper).
+- Add one UI regression for the hardest case (`humanOriginFeat` with `Skilled` sub-choices expanding) and one for a multi-pick (bard instruments or ranger languages).
+- Add core unit tests for each new payload resolver branch.
+- Confirm existing `CharacterCreationPage` tests still pass.
+
+Handoff readiness:
+
+- Ready for implementation. The CHARUI1 seam is the target surface; scope is a bounded list of pickers with known options sourced from existing core constants.
