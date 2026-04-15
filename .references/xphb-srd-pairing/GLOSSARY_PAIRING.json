@@ -1,0 +1,2655 @@
+{
+  "phbTerms": [
+    {
+      "name": "Ability Check",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Ability Score and Modifier",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Action",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Advantage",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Adventure",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Alignment",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Ally",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Area of Effect",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Armor Class",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Armor Training",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Attack",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Attack Roll",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Attitude",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Attunement",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Blinded",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Blindsight",
+      "tag": "sense",
+      "page": 360
+    },
+    {
+      "name": "Bloodied",
+      "tag": "status",
+      "page": 360
+    },
+    {
+      "name": "Bonus Action",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Breaking Objects",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Bright Light",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Burning",
+      "tag": "hazard",
+      "page": 360
+    },
+    {
+      "name": "Burrow Speed",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Campaign",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Cantrip",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Carrying Capacity",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Challenge Rating",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Character Sheet",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Charmed",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Climbing",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Climb Speed",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Concentration",
+      "tag": "status",
+      "page": 360
+    },
+    {
+      "name": "Condition",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Cone [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Cover",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Crawling",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Creature",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Creature Type",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Critical Hit",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Cube [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Curses",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Cylinder [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "D20 Test",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Damage",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Damage Roll",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Damage Threshold",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Damage Types",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Darkness",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Darkvision",
+      "tag": "sense",
+      "page": 360
+    },
+    {
+      "name": "Dash",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Dead",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Deafened",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Death Saving Throw",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Dehydration",
+      "tag": "hazard",
+      "page": 360
+    },
+    {
+      "name": "Difficult Terrain",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Difficulty Class",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Dim Light",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Disadvantage",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Disengage",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Dodge",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Emanation [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Encounter",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Enemy",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Exhaustion",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Experience Points",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Expertise",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Falling",
+      "tag": "hazard",
+      "page": 360
+    },
+    {
+      "name": "Flying",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Fly Speed",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Friendly [Attitude]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Frightened",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Grappled",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Grappling",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hazard",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Healing",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Heavily Obscured",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Help",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Heroic Inspiration",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hide",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "High Jump",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hit Point Dice",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hit Points",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hostile [Attitude]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Hover",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Illusions",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Immunity",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Improvised Weapons",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Incapacitated",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Indifferent [Attitude]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Influence",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Initiative",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Invisible",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Jumping",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Knocking Out a Creature",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Lightly Obscured",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Line [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Long Jump",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Long Rest",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Magic",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Magical Effect",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Malnutrition",
+      "tag": "hazard",
+      "page": 360
+    },
+    {
+      "name": "Monster",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Nonplayer Character",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Object",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Occupied Space",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Opportunity Attack",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Paralyzed",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Passive Perception",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Per Day",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Petrified",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Player Character",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Poisoned",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Possession",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Proficiency",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Prone",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Reaction",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Ready",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Resistance",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Restrained",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Ritual",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Round Down",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Save",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Saving Throw",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Search",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Shape-Shifting",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Short Rest",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Simultaneous Effects",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Size",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Skill",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Speed",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Spell",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Spell Attack",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Spellcasting Focus",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Sphere [Area of Effect]",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Stable",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Stat Block",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Study",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Stunned",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Suffocation",
+      "tag": "hazard",
+      "page": 360
+    },
+    {
+      "name": "Surprised",
+      "tag": "status",
+      "page": 360
+    },
+    {
+      "name": "Swimming",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Swim Speed",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Target",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Telepathy",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Teleportation",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Temporary Hit Points",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Tremorsense",
+      "tag": "sense",
+      "page": 360
+    },
+    {
+      "name": "Truesight",
+      "tag": "sense",
+      "page": 360
+    },
+    {
+      "name": "Unarmed Strike",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Unconscious",
+      "tag": "condition",
+      "page": 360
+    },
+    {
+      "name": "Unoccupied Space",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Utilize",
+      "tag": "action",
+      "page": 360
+    },
+    {
+      "name": "Vulnerability",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Weapon",
+      "tag": "variantrule",
+      "page": 360
+    },
+    {
+      "name": "Weapon Attack",
+      "tag": "variantrule",
+      "page": 360
+    }
+  ],
+  "srdTerms": [
+    {
+      "title": "Glossary Conventions",
+      "line": 3
+    },
+    {
+      "title": "Rules Definitions",
+      "line": 41
+    },
+    {
+      "title": "Ability Check",
+      "line": 45
+    },
+    {
+      "title": "Ability Score and Modifier",
+      "line": 49
+    },
+    {
+      "title": "Action",
+      "line": 53
+    },
+    {
+      "title": "Advantage",
+      "line": 63
+    },
+    {
+      "title": "Adventure",
+      "line": 67
+    },
+    {
+      "title": "Alignment",
+      "line": 71
+    },
+    {
+      "title": "Ally",
+      "line": 75
+    },
+    {
+      "title": "Area of Effect",
+      "line": 79
+    },
+    {
+      "title": "Armor Class",
+      "line": 92
+    },
+    {
+      "title": "Armor Training",
+      "line": 98
+    },
+    {
+      "title": "Attack [Action]",
+      "line": 102
+    },
+    {
+      "title": "Attack Roll",
+      "line": 110
+    },
+    {
+      "title": "Attitude",
+      "line": 114
+    },
+    {
+      "title": "Attunement",
+      "line": 118
+    },
+    {
+      "title": "Blinded [Condition]",
+      "line": 122
+    },
+    {
+      "title": "Blindsight",
+      "line": 130
+    },
+    {
+      "title": "Bloodied",
+      "line": 134
+    },
+    {
+      "title": "Bonus Action",
+      "line": 138
+    },
+    {
+      "title": "Breaking Objects",
+      "line": 142
+    },
+    {
+      "title": "Bright Light",
+      "line": 177
+    },
+    {
+      "title": "Burning [Hazard]",
+      "line": 181
+    },
+    {
+      "title": "Burrow Speed",
+      "line": 185
+    },
+    {
+      "title": "Campaign",
+      "line": 189
+    },
+    {
+      "title": "Cantrip",
+      "line": 193
+    },
+    {
+      "title": "Carrying Capacity",
+      "line": 197
+    },
+    {
+      "title": "Challenge Rating",
+      "line": 213
+    },
+    {
+      "title": "Character Sheet",
+      "line": 217
+    },
+    {
+      "title": "Charmed [Condition]",
+      "line": 221
+    },
+    {
+      "title": "Climbing",
+      "line": 229
+    },
+    {
+      "title": "Climb Speed",
+      "line": 235
+    },
+    {
+      "title": "Concentration",
+      "line": 239
+    },
+    {
+      "title": "Condition",
+      "line": 249
+    },
+    {
+      "title": "Cone [Area of Effect]",
+      "line": 263
+    },
+    {
+      "title": "Cover",
+      "line": 269
+    },
+    {
+      "title": "Crawling",
+      "line": 273
+    },
+    {
+      "title": "Creature",
+      "line": 277
+    },
+    {
+      "title": "Creature Type",
+      "line": 281
+    },
+    {
+      "title": "Critical Hit",
+      "line": 295
+    },
+    {
+      "title": "Cube [Area of Effect]",
+      "line": 299
+    },
+    {
+      "title": "Curses",
+      "line": 305
+    },
+    {
+      "title": "Cylinder [Area of Effect]",
+      "line": 309
+    },
+    {
+      "title": "D20 Test",
+      "line": 315
+    },
+    {
+      "title": "Damage",
+      "line": 319
+    },
+    {
+      "title": "Damage Roll",
+      "line": 323
+    },
+    {
+      "title": "Damage Threshold",
+      "line": 327
+    },
+    {
+      "title": "Damage Types",
+      "line": 331
+    },
+    {
+      "title": "Darkness",
+      "line": 353
+    },
+    {
+      "title": "Darkvision",
+      "line": 357
+    },
+    {
+      "title": "Dash [Action]",
+      "line": 361
+    },
+    {
+      "title": "Dead",
+      "line": 367
+    },
+    {
+      "title": "Deafened [Condition]",
+      "line": 373
+    },
+    {
+      "title": "Death Saving Throw",
+      "line": 379
+    },
+    {
+      "title": "Dehydration [Hazard]",
+      "line": 383
+    },
+    {
+      "title": "Difficult Terrain",
+      "line": 395
+    },
+    {
+      "title": "Difficulty Class",
+      "line": 408
+    },
+    {
+      "title": "Dim Light",
+      "line": 412
+    },
+    {
+      "title": "Disadvantage",
+      "line": 416
+    },
+    {
+      "title": "Disengage [Action]",
+      "line": 420
+    },
+    {
+      "title": "Dodge [Action]",
+      "line": 424
+    },
+    {
+      "title": "Emanation [Area of Effect]",
+      "line": 430
+    },
+    {
+      "title": "Encounter",
+      "line": 438
+    },
+    {
+      "title": "Enemy",
+      "line": 442
+    },
+    {
+      "title": "Exhaustion [Condition]",
+      "line": 446
+    },
+    {
+      "title": "Experience Points",
+      "line": 458
+    },
+    {
+      "title": "Expertise",
+      "line": 462
+    },
+    {
+      "title": "Falling [Hazard]",
+      "line": 470
+    },
+    {
+      "title": "Flying",
+      "line": 476
+    },
+    {
+      "title": "Fly Speed",
+      "line": 480
+    },
+    {
+      "title": "Friendly [Attitude]",
+      "line": 484
+    },
+    {
+      "title": "Frightened [Condition]",
+      "line": 488
+    },
+    {
+      "title": "Grappled [Condition]",
+      "line": 496
+    },
+    {
+      "title": "Grappling",
+      "line": 506
+    },
+    {
+      "title": "Hazard",
+      "line": 516
+    },
+    {
+      "title": "Healing",
+      "line": 520
+    },
+    {
+      "title": "Heavily Obscured",
+      "line": 524
+    },
+    {
+      "title": "Help [Action]",
+      "line": 528
+    },
+    {
+      "title": "Heroic Inspiration",
+      "line": 536
+    },
+    {
+      "title": "Hide [Action]",
+      "line": 542
+    },
+    {
+      "title": "High Jump",
+      "line": 550
+    },
+    {
+      "title": "Hit Point Dice",
+      "line": 556
+    },
+    {
+      "title": "Hit Points",
+      "line": 560
+    },
+    {
+      "title": "Hostile [Attitude]",
+      "line": 564
+    },
+    {
+      "title": "Hover",
+      "line": 568
+    },
+    {
+      "title": "Illusions",
+      "line": 572
+    },
+    {
+      "title": "Immunity",
+      "line": 578
+    },
+    {
+      "title": "Improvised Weapons",
+      "line": 582
+    },
+    {
+      "title": "Incapacitated [Condition]",
+      "line": 594
+    },
+    {
+      "title": "Indifferent [Attitude]",
+      "line": 606
+    },
+    {
+      "title": "Influence [Action]",
+      "line": 610
+    },
+    {
+      "title": "Initiative",
+      "line": 630
+    },
+    {
+      "title": "Invisible [Condition]",
+      "line": 636
+    },
+    {
+      "title": "Jumping",
+      "line": 646
+    },
+    {
+      "title": "Knocking Out a Creature",
+      "line": 650
+    },
+    {
+      "title": "Lightly Obscured",
+      "line": 656
+    },
+    {
+      "title": "Line [Area of Effect]",
+      "line": 660
+    },
+    {
+      "title": "Long Jump",
+      "line": 666
+    },
+    {
+      "title": "Long Rest",
+      "line": 674
+    },
+    {
+      "title": "Magic [Action]",
+      "line": 698
+    },
+    {
+      "title": "Magical Effect",
+      "line": 704
+    },
+    {
+      "title": "Malnutrition [Hazard]",
+      "line": 708
+    },
+    {
+      "title": "Monster",
+      "line": 722
+    },
+    {
+      "title": "Nonplayer Character",
+      "line": 726
+    },
+    {
+      "title": "Object",
+      "line": 730
+    },
+    {
+      "title": "Occupied Space",
+      "line": 734
+    },
+    {
+      "title": "Opportunity Attacks",
+      "line": 738
+    },
+    {
+      "title": "Paralyzed [Condition]",
+      "line": 742
+    },
+    {
+      "title": "Passive Perception",
+      "line": 756
+    },
+    {
+      "title": "Per Day",
+      "line": 762
+    },
+    {
+      "title": "Petrified [Condition]",
+      "line": 766
+    },
+    {
+      "title": "Player Character",
+      "line": 784
+    },
+    {
+      "title": "Poisoned [Condition]",
+      "line": 788
+    },
+    {
+      "title": "Possession",
+      "line": 794
+    },
+    {
+      "title": "Proficiency",
+      "line": 798
+    },
+    {
+      "title": "Prone [Condition]",
+      "line": 802
+    },
+    {
+      "title": "Reach",
+      "line": 810
+    },
+    {
+      "title": "Reaction",
+      "line": 814
+    },
+    {
+      "title": "Ready [Action]",
+      "line": 818
+    },
+    {
+      "title": "Resistance",
+      "line": 828
+    },
+    {
+      "title": "Restrained [Condition]",
+      "line": 832
+    },
+    {
+      "title": "Ritual",
+      "line": 842
+    },
+    {
+      "title": "Round Down",
+      "line": 846
+    },
+    {
+      "title": "Save",
+      "line": 850
+    },
+    {
+      "title": "Saving Throw",
+      "line": 854
+    },
+    {
+      "title": "Search [Action]",
+      "line": 858
+    },
+    {
+      "title": "Shape-Shifting",
+      "line": 871
+    },
+    {
+      "title": "Short Rest",
+      "line": 875
+    },
+    {
+      "title": "Simultaneous Effects",
+      "line": 892
+    },
+    {
+      "title": "Size",
+      "line": 896
+    },
+    {
+      "title": "Skill",
+      "line": 900
+    },
+    {
+      "title": "Speed",
+      "line": 904
+    },
+    {
+      "title": "Spell",
+      "line": 912
+    },
+    {
+      "title": "Spell Attack",
+      "line": 916
+    },
+    {
+      "title": "Spellcasting Focus",
+      "line": 920
+    },
+    {
+      "title": "Sphere [Area of Effect]",
+      "line": 924
+    },
+    {
+      "title": "Stable",
+      "line": 930
+    },
+    {
+      "title": "Stat Block",
+      "line": 934
+    },
+    {
+      "title": "Study [Action]",
+      "line": 978
+    },
+    {
+      "title": "Stunned [Condition]",
+      "line": 994
+    },
+    {
+      "title": "Suffocation [Hazard]",
+      "line": 1004
+    },
+    {
+      "title": "Surprise",
+      "line": 1008
+    },
+    {
+      "title": "Swimming",
+      "line": 1012
+    },
+    {
+      "title": "Swim Speed",
+      "line": 1016
+    },
+    {
+      "title": "Target",
+      "line": 1020
+    },
+    {
+      "title": "Telepathy",
+      "line": 1024
+    },
+    {
+      "title": "Teleportation",
+      "line": 1032
+    },
+    {
+      "title": "Temporary Hit Points",
+      "line": 1042
+    },
+    {
+      "title": "Tremorsense",
+      "line": 1046
+    },
+    {
+      "title": "Truesight",
+      "line": 1052
+    },
+    {
+      "title": "Unarmed Strike",
+      "line": 1066
+    },
+    {
+      "title": "Unconscious [Condition]",
+      "line": 1078
+    },
+    {
+      "title": "Unoccupied Space",
+      "line": 1094
+    },
+    {
+      "title": "Utilize [Action]",
+      "line": 1098
+    },
+    {
+      "title": "Vulnerability",
+      "line": 1102
+    },
+    {
+      "title": "Weapon",
+      "line": 1106
+    },
+    {
+      "title": "Weapon Attack",
+      "line": 1110
+    }
+  ],
+  "overlaps": [
+    {
+      "phb": "Ability Check",
+      "srd": "Ability Check",
+      "page": 360,
+      "line": 45,
+      "normalized": "ability check",
+      "sameText": true
+    },
+    {
+      "phb": "Ability Score and Modifier",
+      "srd": "Ability Score and Modifier",
+      "page": 360,
+      "line": 49,
+      "normalized": "ability score and modifier",
+      "sameText": true
+    },
+    {
+      "phb": "Action",
+      "srd": "Action",
+      "page": 360,
+      "line": 53,
+      "normalized": "action",
+      "sameText": true
+    },
+    {
+      "phb": "Advantage",
+      "srd": "Advantage",
+      "page": 360,
+      "line": 63,
+      "normalized": "advantage",
+      "sameText": true
+    },
+    {
+      "phb": "Adventure",
+      "srd": "Adventure",
+      "page": 360,
+      "line": 67,
+      "normalized": "adventure",
+      "sameText": true
+    },
+    {
+      "phb": "Alignment",
+      "srd": "Alignment",
+      "page": 360,
+      "line": 71,
+      "normalized": "alignment",
+      "sameText": true
+    },
+    {
+      "phb": "Ally",
+      "srd": "Ally",
+      "page": 360,
+      "line": 75,
+      "normalized": "ally",
+      "sameText": true
+    },
+    {
+      "phb": "Area of Effect",
+      "srd": "Area of Effect",
+      "page": 360,
+      "line": 79,
+      "normalized": "area of effect",
+      "sameText": true
+    },
+    {
+      "phb": "Armor Class",
+      "srd": "Armor Class",
+      "page": 360,
+      "line": 92,
+      "normalized": "armor class",
+      "sameText": true
+    },
+    {
+      "phb": "Armor Training",
+      "srd": "Armor Training",
+      "page": 360,
+      "line": 98,
+      "normalized": "armor training",
+      "sameText": true
+    },
+    {
+      "phb": "Attack",
+      "srd": "Attack [Action]",
+      "page": 360,
+      "line": 102,
+      "normalized": "attack",
+      "sameText": false
+    },
+    {
+      "phb": "Attack Roll",
+      "srd": "Attack Roll",
+      "page": 360,
+      "line": 110,
+      "normalized": "attack roll",
+      "sameText": true
+    },
+    {
+      "phb": "Attitude",
+      "srd": "Attitude",
+      "page": 360,
+      "line": 114,
+      "normalized": "attitude",
+      "sameText": true
+    },
+    {
+      "phb": "Attunement",
+      "srd": "Attunement",
+      "page": 360,
+      "line": 118,
+      "normalized": "attunement",
+      "sameText": true
+    },
+    {
+      "phb": "Blinded",
+      "srd": "Blinded [Condition]",
+      "page": 360,
+      "line": 122,
+      "normalized": "blinded",
+      "sameText": false
+    },
+    {
+      "phb": "Blindsight",
+      "srd": "Blindsight",
+      "page": 360,
+      "line": 130,
+      "normalized": "blindsight",
+      "sameText": true
+    },
+    {
+      "phb": "Bloodied",
+      "srd": "Bloodied",
+      "page": 360,
+      "line": 134,
+      "normalized": "bloodied",
+      "sameText": true
+    },
+    {
+      "phb": "Bonus Action",
+      "srd": "Bonus Action",
+      "page": 360,
+      "line": 138,
+      "normalized": "bonus action",
+      "sameText": true
+    },
+    {
+      "phb": "Breaking Objects",
+      "srd": "Breaking Objects",
+      "page": 360,
+      "line": 142,
+      "normalized": "breaking objects",
+      "sameText": true
+    },
+    {
+      "phb": "Bright Light",
+      "srd": "Bright Light",
+      "page": 360,
+      "line": 177,
+      "normalized": "bright light",
+      "sameText": true
+    },
+    {
+      "phb": "Burning",
+      "srd": "Burning [Hazard]",
+      "page": 360,
+      "line": 181,
+      "normalized": "burning",
+      "sameText": false
+    },
+    {
+      "phb": "Burrow Speed",
+      "srd": "Burrow Speed",
+      "page": 360,
+      "line": 185,
+      "normalized": "burrow speed",
+      "sameText": true
+    },
+    {
+      "phb": "Campaign",
+      "srd": "Campaign",
+      "page": 360,
+      "line": 189,
+      "normalized": "campaign",
+      "sameText": true
+    },
+    {
+      "phb": "Cantrip",
+      "srd": "Cantrip",
+      "page": 360,
+      "line": 193,
+      "normalized": "cantrip",
+      "sameText": true
+    },
+    {
+      "phb": "Carrying Capacity",
+      "srd": "Carrying Capacity",
+      "page": 360,
+      "line": 197,
+      "normalized": "carrying capacity",
+      "sameText": true
+    },
+    {
+      "phb": "Challenge Rating",
+      "srd": "Challenge Rating",
+      "page": 360,
+      "line": 213,
+      "normalized": "challenge rating",
+      "sameText": true
+    },
+    {
+      "phb": "Character Sheet",
+      "srd": "Character Sheet",
+      "page": 360,
+      "line": 217,
+      "normalized": "character sheet",
+      "sameText": true
+    },
+    {
+      "phb": "Charmed",
+      "srd": "Charmed [Condition]",
+      "page": 360,
+      "line": 221,
+      "normalized": "charmed",
+      "sameText": false
+    },
+    {
+      "phb": "Climbing",
+      "srd": "Climbing",
+      "page": 360,
+      "line": 229,
+      "normalized": "climbing",
+      "sameText": true
+    },
+    {
+      "phb": "Climb Speed",
+      "srd": "Climb Speed",
+      "page": 360,
+      "line": 235,
+      "normalized": "climb speed",
+      "sameText": true
+    },
+    {
+      "phb": "Concentration",
+      "srd": "Concentration",
+      "page": 360,
+      "line": 239,
+      "normalized": "concentration",
+      "sameText": true
+    },
+    {
+      "phb": "Condition",
+      "srd": "Condition",
+      "page": 360,
+      "line": 249,
+      "normalized": "condition",
+      "sameText": true
+    },
+    {
+      "phb": "Cone [Area of Effect]",
+      "srd": "Cone [Area of Effect]",
+      "page": 360,
+      "line": 263,
+      "normalized": "cone",
+      "sameText": true
+    },
+    {
+      "phb": "Cover",
+      "srd": "Cover",
+      "page": 360,
+      "line": 269,
+      "normalized": "cover",
+      "sameText": true
+    },
+    {
+      "phb": "Crawling",
+      "srd": "Crawling",
+      "page": 360,
+      "line": 273,
+      "normalized": "crawling",
+      "sameText": true
+    },
+    {
+      "phb": "Creature",
+      "srd": "Creature",
+      "page": 360,
+      "line": 277,
+      "normalized": "creature",
+      "sameText": true
+    },
+    {
+      "phb": "Creature Type",
+      "srd": "Creature Type",
+      "page": 360,
+      "line": 281,
+      "normalized": "creature type",
+      "sameText": true
+    },
+    {
+      "phb": "Critical Hit",
+      "srd": "Critical Hit",
+      "page": 360,
+      "line": 295,
+      "normalized": "critical hit",
+      "sameText": true
+    },
+    {
+      "phb": "Cube [Area of Effect]",
+      "srd": "Cube [Area of Effect]",
+      "page": 360,
+      "line": 299,
+      "normalized": "cube",
+      "sameText": true
+    },
+    {
+      "phb": "Curses",
+      "srd": "Curses",
+      "page": 360,
+      "line": 305,
+      "normalized": "curses",
+      "sameText": true
+    },
+    {
+      "phb": "Cylinder [Area of Effect]",
+      "srd": "Cylinder [Area of Effect]",
+      "page": 360,
+      "line": 309,
+      "normalized": "cylinder",
+      "sameText": true
+    },
+    {
+      "phb": "D20 Test",
+      "srd": "D20 Test",
+      "page": 360,
+      "line": 315,
+      "normalized": "d20 test",
+      "sameText": true
+    },
+    {
+      "phb": "Damage",
+      "srd": "Damage",
+      "page": 360,
+      "line": 319,
+      "normalized": "damage",
+      "sameText": true
+    },
+    {
+      "phb": "Damage Roll",
+      "srd": "Damage Roll",
+      "page": 360,
+      "line": 323,
+      "normalized": "damage roll",
+      "sameText": true
+    },
+    {
+      "phb": "Damage Threshold",
+      "srd": "Damage Threshold",
+      "page": 360,
+      "line": 327,
+      "normalized": "damage threshold",
+      "sameText": true
+    },
+    {
+      "phb": "Damage Types",
+      "srd": "Damage Types",
+      "page": 360,
+      "line": 331,
+      "normalized": "damage types",
+      "sameText": true
+    },
+    {
+      "phb": "Darkness",
+      "srd": "Darkness",
+      "page": 360,
+      "line": 353,
+      "normalized": "darkness",
+      "sameText": true
+    },
+    {
+      "phb": "Darkvision",
+      "srd": "Darkvision",
+      "page": 360,
+      "line": 357,
+      "normalized": "darkvision",
+      "sameText": true
+    },
+    {
+      "phb": "Dash",
+      "srd": "Dash [Action]",
+      "page": 360,
+      "line": 361,
+      "normalized": "dash",
+      "sameText": false
+    },
+    {
+      "phb": "Dead",
+      "srd": "Dead",
+      "page": 360,
+      "line": 367,
+      "normalized": "dead",
+      "sameText": true
+    },
+    {
+      "phb": "Deafened",
+      "srd": "Deafened [Condition]",
+      "page": 360,
+      "line": 373,
+      "normalized": "deafened",
+      "sameText": false
+    },
+    {
+      "phb": "Death Saving Throw",
+      "srd": "Death Saving Throw",
+      "page": 360,
+      "line": 379,
+      "normalized": "death saving throw",
+      "sameText": true
+    },
+    {
+      "phb": "Dehydration",
+      "srd": "Dehydration [Hazard]",
+      "page": 360,
+      "line": 383,
+      "normalized": "dehydration",
+      "sameText": false
+    },
+    {
+      "phb": "Difficult Terrain",
+      "srd": "Difficult Terrain",
+      "page": 360,
+      "line": 395,
+      "normalized": "difficult terrain",
+      "sameText": true
+    },
+    {
+      "phb": "Difficulty Class",
+      "srd": "Difficulty Class",
+      "page": 360,
+      "line": 408,
+      "normalized": "difficulty class",
+      "sameText": true
+    },
+    {
+      "phb": "Dim Light",
+      "srd": "Dim Light",
+      "page": 360,
+      "line": 412,
+      "normalized": "dim light",
+      "sameText": true
+    },
+    {
+      "phb": "Disadvantage",
+      "srd": "Disadvantage",
+      "page": 360,
+      "line": 416,
+      "normalized": "disadvantage",
+      "sameText": true
+    },
+    {
+      "phb": "Disengage",
+      "srd": "Disengage [Action]",
+      "page": 360,
+      "line": 420,
+      "normalized": "disengage",
+      "sameText": false
+    },
+    {
+      "phb": "Dodge",
+      "srd": "Dodge [Action]",
+      "page": 360,
+      "line": 424,
+      "normalized": "dodge",
+      "sameText": false
+    },
+    {
+      "phb": "Emanation [Area of Effect]",
+      "srd": "Emanation [Area of Effect]",
+      "page": 360,
+      "line": 430,
+      "normalized": "emanation",
+      "sameText": true
+    },
+    {
+      "phb": "Encounter",
+      "srd": "Encounter",
+      "page": 360,
+      "line": 438,
+      "normalized": "encounter",
+      "sameText": true
+    },
+    {
+      "phb": "Enemy",
+      "srd": "Enemy",
+      "page": 360,
+      "line": 442,
+      "normalized": "enemy",
+      "sameText": true
+    },
+    {
+      "phb": "Exhaustion",
+      "srd": "Exhaustion [Condition]",
+      "page": 360,
+      "line": 446,
+      "normalized": "exhaustion",
+      "sameText": false
+    },
+    {
+      "phb": "Experience Points",
+      "srd": "Experience Points",
+      "page": 360,
+      "line": 458,
+      "normalized": "experience points",
+      "sameText": true
+    },
+    {
+      "phb": "Expertise",
+      "srd": "Expertise",
+      "page": 360,
+      "line": 462,
+      "normalized": "expertise",
+      "sameText": true
+    },
+    {
+      "phb": "Falling",
+      "srd": "Falling [Hazard]",
+      "page": 360,
+      "line": 470,
+      "normalized": "falling",
+      "sameText": false
+    },
+    {
+      "phb": "Flying",
+      "srd": "Flying",
+      "page": 360,
+      "line": 476,
+      "normalized": "flying",
+      "sameText": true
+    },
+    {
+      "phb": "Fly Speed",
+      "srd": "Fly Speed",
+      "page": 360,
+      "line": 480,
+      "normalized": "fly speed",
+      "sameText": true
+    },
+    {
+      "phb": "Friendly [Attitude]",
+      "srd": "Friendly [Attitude]",
+      "page": 360,
+      "line": 484,
+      "normalized": "friendly",
+      "sameText": true
+    },
+    {
+      "phb": "Frightened",
+      "srd": "Frightened [Condition]",
+      "page": 360,
+      "line": 488,
+      "normalized": "frightened",
+      "sameText": false
+    },
+    {
+      "phb": "Grappled",
+      "srd": "Grappled [Condition]",
+      "page": 360,
+      "line": 496,
+      "normalized": "grappled",
+      "sameText": false
+    },
+    {
+      "phb": "Grappling",
+      "srd": "Grappling",
+      "page": 360,
+      "line": 506,
+      "normalized": "grappling",
+      "sameText": true
+    },
+    {
+      "phb": "Hazard",
+      "srd": "Hazard",
+      "page": 360,
+      "line": 516,
+      "normalized": "hazard",
+      "sameText": true
+    },
+    {
+      "phb": "Healing",
+      "srd": "Healing",
+      "page": 360,
+      "line": 520,
+      "normalized": "healing",
+      "sameText": true
+    },
+    {
+      "phb": "Heavily Obscured",
+      "srd": "Heavily Obscured",
+      "page": 360,
+      "line": 524,
+      "normalized": "heavily obscured",
+      "sameText": true
+    },
+    {
+      "phb": "Help",
+      "srd": "Help [Action]",
+      "page": 360,
+      "line": 528,
+      "normalized": "help",
+      "sameText": false
+    },
+    {
+      "phb": "Heroic Inspiration",
+      "srd": "Heroic Inspiration",
+      "page": 360,
+      "line": 536,
+      "normalized": "heroic inspiration",
+      "sameText": true
+    },
+    {
+      "phb": "Hide",
+      "srd": "Hide [Action]",
+      "page": 360,
+      "line": 542,
+      "normalized": "hide",
+      "sameText": false
+    },
+    {
+      "phb": "High Jump",
+      "srd": "High Jump",
+      "page": 360,
+      "line": 550,
+      "normalized": "high jump",
+      "sameText": true
+    },
+    {
+      "phb": "Hit Point Dice",
+      "srd": "Hit Point Dice",
+      "page": 360,
+      "line": 556,
+      "normalized": "hit point dice",
+      "sameText": true
+    },
+    {
+      "phb": "Hit Points",
+      "srd": "Hit Points",
+      "page": 360,
+      "line": 560,
+      "normalized": "hit points",
+      "sameText": true
+    },
+    {
+      "phb": "Hostile [Attitude]",
+      "srd": "Hostile [Attitude]",
+      "page": 360,
+      "line": 564,
+      "normalized": "hostile",
+      "sameText": true
+    },
+    {
+      "phb": "Hover",
+      "srd": "Hover",
+      "page": 360,
+      "line": 568,
+      "normalized": "hover",
+      "sameText": true
+    },
+    {
+      "phb": "Illusions",
+      "srd": "Illusions",
+      "page": 360,
+      "line": 572,
+      "normalized": "illusions",
+      "sameText": true
+    },
+    {
+      "phb": "Immunity",
+      "srd": "Immunity",
+      "page": 360,
+      "line": 578,
+      "normalized": "immunity",
+      "sameText": true
+    },
+    {
+      "phb": "Improvised Weapons",
+      "srd": "Improvised Weapons",
+      "page": 360,
+      "line": 582,
+      "normalized": "improvised weapons",
+      "sameText": true
+    },
+    {
+      "phb": "Incapacitated",
+      "srd": "Incapacitated [Condition]",
+      "page": 360,
+      "line": 594,
+      "normalized": "incapacitated",
+      "sameText": false
+    },
+    {
+      "phb": "Indifferent [Attitude]",
+      "srd": "Indifferent [Attitude]",
+      "page": 360,
+      "line": 606,
+      "normalized": "indifferent",
+      "sameText": true
+    },
+    {
+      "phb": "Influence",
+      "srd": "Influence [Action]",
+      "page": 360,
+      "line": 610,
+      "normalized": "influence",
+      "sameText": false
+    },
+    {
+      "phb": "Initiative",
+      "srd": "Initiative",
+      "page": 360,
+      "line": 630,
+      "normalized": "initiative",
+      "sameText": true
+    },
+    {
+      "phb": "Invisible",
+      "srd": "Invisible [Condition]",
+      "page": 360,
+      "line": 636,
+      "normalized": "invisible",
+      "sameText": false
+    },
+    {
+      "phb": "Jumping",
+      "srd": "Jumping",
+      "page": 360,
+      "line": 646,
+      "normalized": "jumping",
+      "sameText": true
+    },
+    {
+      "phb": "Knocking Out a Creature",
+      "srd": "Knocking Out a Creature",
+      "page": 360,
+      "line": 650,
+      "normalized": "knocking out a creature",
+      "sameText": true
+    },
+    {
+      "phb": "Lightly Obscured",
+      "srd": "Lightly Obscured",
+      "page": 360,
+      "line": 656,
+      "normalized": "lightly obscured",
+      "sameText": true
+    },
+    {
+      "phb": "Line [Area of Effect]",
+      "srd": "Line [Area of Effect]",
+      "page": 360,
+      "line": 660,
+      "normalized": "line",
+      "sameText": true
+    },
+    {
+      "phb": "Long Jump",
+      "srd": "Long Jump",
+      "page": 360,
+      "line": 666,
+      "normalized": "long jump",
+      "sameText": true
+    },
+    {
+      "phb": "Long Rest",
+      "srd": "Long Rest",
+      "page": 360,
+      "line": 674,
+      "normalized": "long rest",
+      "sameText": true
+    },
+    {
+      "phb": "Magic",
+      "srd": "Magic [Action]",
+      "page": 360,
+      "line": 698,
+      "normalized": "magic",
+      "sameText": false
+    },
+    {
+      "phb": "Magical Effect",
+      "srd": "Magical Effect",
+      "page": 360,
+      "line": 704,
+      "normalized": "magical effect",
+      "sameText": true
+    },
+    {
+      "phb": "Malnutrition",
+      "srd": "Malnutrition [Hazard]",
+      "page": 360,
+      "line": 708,
+      "normalized": "malnutrition",
+      "sameText": false
+    },
+    {
+      "phb": "Monster",
+      "srd": "Monster",
+      "page": 360,
+      "line": 722,
+      "normalized": "monster",
+      "sameText": true
+    },
+    {
+      "phb": "Nonplayer Character",
+      "srd": "Nonplayer Character",
+      "page": 360,
+      "line": 726,
+      "normalized": "nonplayer character",
+      "sameText": true
+    },
+    {
+      "phb": "Object",
+      "srd": "Object",
+      "page": 360,
+      "line": 730,
+      "normalized": "object",
+      "sameText": true
+    },
+    {
+      "phb": "Occupied Space",
+      "srd": "Occupied Space",
+      "page": 360,
+      "line": 734,
+      "normalized": "occupied space",
+      "sameText": true
+    },
+    {
+      "phb": "Opportunity Attack",
+      "srd": "Opportunity Attacks",
+      "page": 360,
+      "line": 738,
+      "normalized": "opportunity attack",
+      "sameText": false
+    },
+    {
+      "phb": "Paralyzed",
+      "srd": "Paralyzed [Condition]",
+      "page": 360,
+      "line": 742,
+      "normalized": "paralyzed",
+      "sameText": false
+    },
+    {
+      "phb": "Passive Perception",
+      "srd": "Passive Perception",
+      "page": 360,
+      "line": 756,
+      "normalized": "passive perception",
+      "sameText": true
+    },
+    {
+      "phb": "Per Day",
+      "srd": "Per Day",
+      "page": 360,
+      "line": 762,
+      "normalized": "per day",
+      "sameText": true
+    },
+    {
+      "phb": "Petrified",
+      "srd": "Petrified [Condition]",
+      "page": 360,
+      "line": 766,
+      "normalized": "petrified",
+      "sameText": false
+    },
+    {
+      "phb": "Player Character",
+      "srd": "Player Character",
+      "page": 360,
+      "line": 784,
+      "normalized": "player character",
+      "sameText": true
+    },
+    {
+      "phb": "Poisoned",
+      "srd": "Poisoned [Condition]",
+      "page": 360,
+      "line": 788,
+      "normalized": "poisoned",
+      "sameText": false
+    },
+    {
+      "phb": "Possession",
+      "srd": "Possession",
+      "page": 360,
+      "line": 794,
+      "normalized": "possession",
+      "sameText": true
+    },
+    {
+      "phb": "Proficiency",
+      "srd": "Proficiency",
+      "page": 360,
+      "line": 798,
+      "normalized": "proficiency",
+      "sameText": true
+    },
+    {
+      "phb": "Prone",
+      "srd": "Prone [Condition]",
+      "page": 360,
+      "line": 802,
+      "normalized": "prone",
+      "sameText": false
+    },
+    {
+      "phb": "Reaction",
+      "srd": "Reaction",
+      "page": 360,
+      "line": 814,
+      "normalized": "reaction",
+      "sameText": true
+    },
+    {
+      "phb": "Ready",
+      "srd": "Ready [Action]",
+      "page": 360,
+      "line": 818,
+      "normalized": "ready",
+      "sameText": false
+    },
+    {
+      "phb": "Resistance",
+      "srd": "Resistance",
+      "page": 360,
+      "line": 828,
+      "normalized": "resistance",
+      "sameText": true
+    },
+    {
+      "phb": "Restrained",
+      "srd": "Restrained [Condition]",
+      "page": 360,
+      "line": 832,
+      "normalized": "restrained",
+      "sameText": false
+    },
+    {
+      "phb": "Ritual",
+      "srd": "Ritual",
+      "page": 360,
+      "line": 842,
+      "normalized": "ritual",
+      "sameText": true
+    },
+    {
+      "phb": "Round Down",
+      "srd": "Round Down",
+      "page": 360,
+      "line": 846,
+      "normalized": "round down",
+      "sameText": true
+    },
+    {
+      "phb": "Save",
+      "srd": "Save",
+      "page": 360,
+      "line": 850,
+      "normalized": "save",
+      "sameText": true
+    },
+    {
+      "phb": "Saving Throw",
+      "srd": "Saving Throw",
+      "page": 360,
+      "line": 854,
+      "normalized": "saving throw",
+      "sameText": true
+    },
+    {
+      "phb": "Search",
+      "srd": "Search [Action]",
+      "page": 360,
+      "line": 858,
+      "normalized": "search",
+      "sameText": false
+    },
+    {
+      "phb": "Shape-Shifting",
+      "srd": "Shape-Shifting",
+      "page": 360,
+      "line": 871,
+      "normalized": "shape shifting",
+      "sameText": true
+    },
+    {
+      "phb": "Short Rest",
+      "srd": "Short Rest",
+      "page": 360,
+      "line": 875,
+      "normalized": "short rest",
+      "sameText": true
+    },
+    {
+      "phb": "Simultaneous Effects",
+      "srd": "Simultaneous Effects",
+      "page": 360,
+      "line": 892,
+      "normalized": "simultaneous effects",
+      "sameText": true
+    },
+    {
+      "phb": "Size",
+      "srd": "Size",
+      "page": 360,
+      "line": 896,
+      "normalized": "size",
+      "sameText": true
+    },
+    {
+      "phb": "Skill",
+      "srd": "Skill",
+      "page": 360,
+      "line": 900,
+      "normalized": "skill",
+      "sameText": true
+    },
+    {
+      "phb": "Speed",
+      "srd": "Speed",
+      "page": 360,
+      "line": 904,
+      "normalized": "speed",
+      "sameText": true
+    },
+    {
+      "phb": "Spell",
+      "srd": "Spell",
+      "page": 360,
+      "line": 912,
+      "normalized": "spell",
+      "sameText": true
+    },
+    {
+      "phb": "Spell Attack",
+      "srd": "Spell Attack",
+      "page": 360,
+      "line": 916,
+      "normalized": "spell attack",
+      "sameText": true
+    },
+    {
+      "phb": "Spellcasting Focus",
+      "srd": "Spellcasting Focus",
+      "page": 360,
+      "line": 920,
+      "normalized": "spellcasting focus",
+      "sameText": true
+    },
+    {
+      "phb": "Sphere [Area of Effect]",
+      "srd": "Sphere [Area of Effect]",
+      "page": 360,
+      "line": 924,
+      "normalized": "sphere",
+      "sameText": true
+    },
+    {
+      "phb": "Stable",
+      "srd": "Stable",
+      "page": 360,
+      "line": 930,
+      "normalized": "stable",
+      "sameText": true
+    },
+    {
+      "phb": "Stat Block",
+      "srd": "Stat Block",
+      "page": 360,
+      "line": 934,
+      "normalized": "stat block",
+      "sameText": true
+    },
+    {
+      "phb": "Study",
+      "srd": "Study [Action]",
+      "page": 360,
+      "line": 978,
+      "normalized": "study",
+      "sameText": false
+    },
+    {
+      "phb": "Stunned",
+      "srd": "Stunned [Condition]",
+      "page": 360,
+      "line": 994,
+      "normalized": "stunned",
+      "sameText": false
+    },
+    {
+      "phb": "Suffocation",
+      "srd": "Suffocation [Hazard]",
+      "page": 360,
+      "line": 1004,
+      "normalized": "suffocation",
+      "sameText": false
+    },
+    {
+      "phb": "Swimming",
+      "srd": "Swimming",
+      "page": 360,
+      "line": 1012,
+      "normalized": "swimming",
+      "sameText": true
+    },
+    {
+      "phb": "Swim Speed",
+      "srd": "Swim Speed",
+      "page": 360,
+      "line": 1016,
+      "normalized": "swim speed",
+      "sameText": true
+    },
+    {
+      "phb": "Target",
+      "srd": "Target",
+      "page": 360,
+      "line": 1020,
+      "normalized": "target",
+      "sameText": true
+    },
+    {
+      "phb": "Telepathy",
+      "srd": "Telepathy",
+      "page": 360,
+      "line": 1024,
+      "normalized": "telepathy",
+      "sameText": true
+    },
+    {
+      "phb": "Teleportation",
+      "srd": "Teleportation",
+      "page": 360,
+      "line": 1032,
+      "normalized": "teleportation",
+      "sameText": true
+    },
+    {
+      "phb": "Temporary Hit Points",
+      "srd": "Temporary Hit Points",
+      "page": 360,
+      "line": 1042,
+      "normalized": "temporary hit points",
+      "sameText": true
+    },
+    {
+      "phb": "Tremorsense",
+      "srd": "Tremorsense",
+      "page": 360,
+      "line": 1046,
+      "normalized": "tremorsense",
+      "sameText": true
+    },
+    {
+      "phb": "Truesight",
+      "srd": "Truesight",
+      "page": 360,
+      "line": 1052,
+      "normalized": "truesight",
+      "sameText": true
+    },
+    {
+      "phb": "Unarmed Strike",
+      "srd": "Unarmed Strike",
+      "page": 360,
+      "line": 1066,
+      "normalized": "unarmed strike",
+      "sameText": true
+    },
+    {
+      "phb": "Unconscious",
+      "srd": "Unconscious [Condition]",
+      "page": 360,
+      "line": 1078,
+      "normalized": "unconscious",
+      "sameText": false
+    },
+    {
+      "phb": "Unoccupied Space",
+      "srd": "Unoccupied Space",
+      "page": 360,
+      "line": 1094,
+      "normalized": "unoccupied space",
+      "sameText": true
+    },
+    {
+      "phb": "Utilize",
+      "srd": "Utilize [Action]",
+      "page": 360,
+      "line": 1098,
+      "normalized": "utilize",
+      "sameText": false
+    },
+    {
+      "phb": "Vulnerability",
+      "srd": "Vulnerability",
+      "page": 360,
+      "line": 1102,
+      "normalized": "vulnerability",
+      "sameText": true
+    },
+    {
+      "phb": "Weapon",
+      "srd": "Weapon",
+      "page": 360,
+      "line": 1106,
+      "normalized": "weapon",
+      "sameText": true
+    },
+    {
+      "phb": "Weapon Attack",
+      "srd": "Weapon Attack",
+      "page": 360,
+      "line": 1110,
+      "normalized": "weapon attack",
+      "sameText": true
+    }
+  ],
+  "onlyPhb": [
+    {
+      "name": "Surprised",
+      "tag": "status",
+      "page": 360
+    }
+  ],
+  "onlySrd": [
+    {
+      "title": "Glossary Conventions",
+      "line": 3
+    },
+    {
+      "title": "Rules Definitions",
+      "line": 41
+    },
+    {
+      "title": "Reach",
+      "line": 810
+    },
+    {
+      "title": "Surprise",
+      "line": 1008
+    }
+  ]
+}

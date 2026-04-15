@@ -1,0 +1,6986 @@
+[
+  {
+    "title": "Introduction: Welcome to Adventure",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure"
+    ],
+    "page": 4,
+    "slug": "introduction-welcome-to-adventure"
+  },
+  {
+    "title": "What You Need",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "What You Need"
+    ],
+    "page": 4,
+    "slug": "introduction-welcome-to-adventure-what-you-need"
+  },
+  {
+    "title": "Learn by Watching",
+    "type": "inset",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "What You Need",
+      "Learn by Watching"
+    ],
+    "page": 4,
+    "slug": "introduction-welcome-to-adventure-what-you-need-learn-by-watching"
+  },
+  {
+    "title": "Player's Handbook",
+    "type": "entries",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "What You Need",
+      "Player's Handbook"
+    ],
+    "page": 4,
+    "slug": "introduction-welcome-to-adventure-what-you-need-player-s-handbook"
+  },
+  {
+    "title": "Dungeon Master's Guide and Monster Manual",
+    "type": "entries",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "What You Need",
+      "Dungeon Master's Guide and Monster Manual"
+    ],
+    "page": 4,
+    "slug": "introduction-welcome-to-adventure-what-you-need-dungeon-master-s-guide-and-monster-manual"
+  },
+  {
+    "title": "Using This Book",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "Using This Book"
+    ],
+    "page": 5,
+    "slug": "introduction-welcome-to-adventure-using-this-book"
+  },
+  {
+    "title": "Worlds of Adventure",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "Worlds of Adventure"
+    ],
+    "page": 5,
+    "slug": "introduction-welcome-to-adventure-worlds-of-adventure"
+  },
+  {
+    "title": "What's new in the 2024 Version?",
+    "type": "inset",
+    "chapter": null,
+    "sectionPath": [
+      "Introduction: Welcome to Adventure",
+      "Worlds of Adventure",
+      "What's new in the 2024 Version?"
+    ],
+    "page": 5,
+    "slug": "introduction-welcome-to-adventure-worlds-of-adventure-what-s-new-in-the-2024-version"
+  },
+  {
+    "title": "Chapter 1: Playing the Game",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game"
+  },
+  {
+    "title": "Rules Glossary",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Rules Glossary"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-rules-glossary"
+  },
+  {
+    "title": "Player or DM?",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Player or DM?"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-player-or-dm"
+  },
+  {
+    "title": "Being a Player",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Player or DM?",
+      "Being a Player"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-player-or-dm-being-a-player"
+  },
+  {
+    "title": "Being the Dungeon Master",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Player or DM?",
+      "Being the Dungeon Master"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-player-or-dm-being-the-dungeon-master"
+  },
+  {
+    "title": "Rhythm of Play",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Rhythm of Play"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-rhythm-of-play"
+  },
+  {
+    "title": "Exceptions Supersede General Rules",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Rhythm of Play",
+      "Exceptions Supersede General Rules"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-rhythm-of-play-exceptions-supersede-general-rules"
+  },
+  {
+    "title": "An Ongoing Game",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "An Ongoing Game"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-an-ongoing-game"
+  },
+  {
+    "title": "Adventures",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "An Ongoing Game",
+      "Adventures"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-an-ongoing-game-adventures"
+  },
+  {
+    "title": "Campaigns",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "An Ongoing Game",
+      "Campaigns"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-an-ongoing-game-campaigns"
+  },
+  {
+    "title": "Dice",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice"
+  },
+  {
+    "title": "Round Down",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "Round Down"
+    ],
+    "page": 8,
+    "slug": "chapter-1-playing-the-game-dice-round-down"
+  },
+  {
+    "title": "Dice Notation",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "Dice Notation"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-dice-notation"
+  },
+  {
+    "title": "Percentile Dice",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "Dice Notation",
+      "Percentile Dice"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-dice-notation-percentile-dice"
+  },
+  {
+    "title": "D3",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "Dice Notation",
+      "D3"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-dice-notation-d3"
+  },
+  {
+    "title": "What Are Dice For?",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for"
+  },
+  {
+    "title": "D20 Test",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?",
+      "D20 Test"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for-d20-test"
+  },
+  {
+    "title": "Damage",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?",
+      "Damage"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for-damage"
+  },
+  {
+    "title": "Random Tables",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?",
+      "Random Tables"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for-random-tables"
+  },
+  {
+    "title": "Percentage Chances",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?",
+      "Percentage Chances"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for-percentage-chances"
+  },
+  {
+    "title": "Interpreting Die Rolls in the Story",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Dice",
+      "What Are Dice For?",
+      "Percentage Chances",
+      "Interpreting Die Rolls in the Story"
+    ],
+    "page": 9,
+    "slug": "chapter-1-playing-the-game-dice-what-are-dice-for-percentage-chances-interpreting-die-rolls-in-the-story"
+  },
+  {
+    "title": "The Six Abilities",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "The Six Abilities"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-the-six-abilities"
+  },
+  {
+    "title": "Ability Scores",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "The Six Abilities",
+      "Ability Scores"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-the-six-abilities-ability-scores"
+  },
+  {
+    "title": "Ability Modifiers",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "The Six Abilities",
+      "Ability Modifiers"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-the-six-abilities-ability-modifiers"
+  },
+  {
+    "title": "D20 Tests",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-d20-tests"
+  },
+  {
+    "title": "Ability Checks",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Ability Checks"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-d20-tests-ability-checks"
+  },
+  {
+    "title": "Ability Modifier",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Ability Checks",
+      "Ability Modifier"
+    ],
+    "page": 10,
+    "slug": "chapter-1-playing-the-game-d20-tests-ability-checks-ability-modifier"
+  },
+  {
+    "title": "Proficiency Bonus",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Ability Checks",
+      "Proficiency Bonus"
+    ],
+    "page": 11,
+    "slug": "chapter-1-playing-the-game-d20-tests-ability-checks-proficiency-bonus"
+  },
+  {
+    "title": "Difficulty Class",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Ability Checks",
+      "Difficulty Class"
+    ],
+    "page": 11,
+    "slug": "chapter-1-playing-the-game-d20-tests-ability-checks-difficulty-class"
+  },
+  {
+    "title": "Saving Throws",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Saving Throws"
+    ],
+    "page": 11,
+    "slug": "chapter-1-playing-the-game-d20-tests-saving-throws"
+  },
+  {
+    "title": "Ability Modifier",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Saving Throws",
+      "Ability Modifier"
+    ],
+    "page": 11,
+    "slug": "chapter-1-playing-the-game-d20-tests-saving-throws-ability-modifier"
+  },
+  {
+    "title": "Proficiency Bonus",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Saving Throws",
+      "Proficiency Bonus"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-saving-throws-proficiency-bonus"
+  },
+  {
+    "title": "Difficulty Class",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Saving Throws",
+      "Difficulty Class"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-saving-throws-difficulty-class"
+  },
+  {
+    "title": "Attack Rolls",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls"
+  },
+  {
+    "title": "Ability Modifier",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Ability Modifier"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-ability-modifier"
+  },
+  {
+    "title": "Proficiency Bonus",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Proficiency Bonus"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-proficiency-bonus"
+  },
+  {
+    "title": "Armor Class",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Armor Class"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-armor-class"
+  },
+  {
+    "title": "Calculating AC",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Armor Class",
+      "Calculating AC"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-armor-class-calculating-ac"
+  },
+  {
+    "title": "Only One Base AC",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Armor Class",
+      "Only One Base AC"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-armor-class-only-one-base-ac"
+  },
+  {
+    "title": "Rolling 20 or 1",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Attack Rolls",
+      "Rolling 20 or 1"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-attack-rolls-rolling-20-or-1"
+  },
+  {
+    "title": "Advantage/Disadvantage",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage"
+  },
+  {
+    "title": "Roll Two D20s",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "Roll Two D20s"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-roll-two-d20s"
+  },
+  {
+    "title": "They Don't Stack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "They Don't Stack"
+    ],
+    "page": 12,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-they-don-t-stack"
+  },
+  {
+    "title": "Interactions with Rerolls",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "Interactions with Rerolls"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-interactions-with-rerolls"
+  },
+  {
+    "title": "Heroic Inspiration",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "Interactions with Rerolls",
+      "Heroic Inspiration"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-interactions-with-rerolls-heroic-inspiration"
+  },
+  {
+    "title": "Only One at a Time",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "Interactions with Rerolls",
+      "Heroic Inspiration",
+      "Only One at a Time"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-interactions-with-rerolls-heroic-inspiration-only-one-at-a-time"
+  },
+  {
+    "title": "Gaining Heroic Inspiration",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "D20 Tests",
+      "Advantage/Disadvantage",
+      "Interactions with Rerolls",
+      "Heroic Inspiration",
+      "Gaining Heroic Inspiration"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-d20-tests-advantage-disadvantage-interactions-with-rerolls-heroic-inspiration-gaining-heroic-inspiration"
+  },
+  {
+    "title": "Proficiency",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-proficiency"
+  },
+  {
+    "title": "The Bonus Doesn't Stack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "The Bonus Doesn't Stack"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-proficiency-the-bonus-doesn-t-stack"
+  },
+  {
+    "title": "Skill Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Skill Proficiencies"
+    ],
+    "page": 13,
+    "slug": "chapter-1-playing-the-game-proficiency-skill-proficiencies"
+  },
+  {
+    "title": "Skill List",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Skill Proficiencies",
+      "Skill List"
+    ],
+    "page": 14,
+    "slug": "chapter-1-playing-the-game-proficiency-skill-proficiencies-skill-list"
+  },
+  {
+    "title": "Determining Skills",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Skill Proficiencies",
+      "Determining Skills"
+    ],
+    "page": 14,
+    "slug": "chapter-1-playing-the-game-proficiency-skill-proficiencies-determining-skills"
+  },
+  {
+    "title": "Skills with Different Abilities",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Skill Proficiencies",
+      "Determining Skills",
+      "Skills with Different Abilities"
+    ],
+    "page": 14,
+    "slug": "chapter-1-playing-the-game-proficiency-skill-proficiencies-determining-skills-skills-with-different-abilities"
+  },
+  {
+    "title": "Saving Throw Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Saving Throw Proficiencies"
+    ],
+    "page": 14,
+    "slug": "chapter-1-playing-the-game-proficiency-saving-throw-proficiencies"
+  },
+  {
+    "title": "Equipment Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Proficiency",
+      "Equipment Proficiencies"
+    ],
+    "page": 14,
+    "slug": "chapter-1-playing-the-game-proficiency-equipment-proficiencies"
+  },
+  {
+    "title": "Actions",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Actions"
+    ],
+    "page": 15,
+    "slug": "chapter-1-playing-the-game-actions"
+  },
+  {
+    "title": "One Thing at a Time",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Actions",
+      "One Thing at a Time"
+    ],
+    "page": 15,
+    "slug": "chapter-1-playing-the-game-actions-one-thing-at-a-time"
+  },
+  {
+    "title": "Bonus Actions",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Actions",
+      "Bonus Actions"
+    ],
+    "page": 15,
+    "slug": "chapter-1-playing-the-game-actions-bonus-actions"
+  },
+  {
+    "title": "Reactions",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Actions",
+      "Reactions"
+    ],
+    "page": 15,
+    "slug": "chapter-1-playing-the-game-actions-reactions"
+  },
+  {
+    "title": "What Would Your Character Do?",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Actions",
+      "Reactions",
+      "What Would Your Character Do?"
+    ],
+    "page": 15,
+    "slug": "chapter-1-playing-the-game-actions-reactions-what-would-your-character-do"
+  },
+  {
+    "title": "Social Interaction",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction"
+    ],
+    "page": 16,
+    "slug": "chapter-1-playing-the-game-social-interaction"
+  },
+  {
+    "title": "Roleplaying",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Roleplaying"
+    ],
+    "page": 16,
+    "slug": "chapter-1-playing-the-game-social-interaction-roleplaying"
+  },
+  {
+    "title": "Ability Checks",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Ability Checks"
+    ],
+    "page": 16,
+    "slug": "chapter-1-playing-the-game-social-interaction-ability-checks"
+  },
+  {
+    "title": "Social Interaction Example",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Social Interaction Example"
+    ],
+    "page": 17,
+    "slug": "chapter-1-playing-the-game-social-interaction-social-interaction-example"
+  },
+  {
+    "title": "Active Roleplaying",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Social Interaction Example",
+      "Active Roleplaying"
+    ],
+    "page": 17,
+    "slug": "chapter-1-playing-the-game-social-interaction-social-interaction-example-active-roleplaying"
+  },
+  {
+    "title": "Descriptive Roleplaying",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Social Interaction Example",
+      "Descriptive Roleplaying"
+    ],
+    "page": 17,
+    "slug": "chapter-1-playing-the-game-social-interaction-social-interaction-example-descriptive-roleplaying"
+  },
+  {
+    "title": "(1)—Ability Checks",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Social Interaction Example",
+      "(1)—Ability Checks"
+    ],
+    "page": 17,
+    "slug": "chapter-1-playing-the-game-social-interaction-social-interaction-example-1-ability-checks"
+  },
+  {
+    "title": "(2)—Influencing NPCs",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Social Interaction",
+      "Social Interaction Example",
+      "(2)—Influencing NPCs"
+    ],
+    "page": 18,
+    "slug": "chapter-1-playing-the-game-social-interaction-social-interaction-example-2-influencing-npcs"
+  },
+  {
+    "title": "Exploration",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration"
+  },
+  {
+    "title": "Adventuring Equipment",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Adventuring Equipment"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-adventuring-equipment"
+  },
+  {
+    "title": "Vision and Light",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light"
+  },
+  {
+    "title": "Obscured Areas",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Obscured Areas"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-obscured-areas"
+  },
+  {
+    "title": "Light",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Light"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-light"
+  },
+  {
+    "title": "Bright Light",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Light",
+      "Bright Light"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-light-bright-light"
+  },
+  {
+    "title": "Dim Light",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Light",
+      "Dim Light"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-light-dim-light"
+  },
+  {
+    "title": "Darkness",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Light",
+      "Darkness"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-light-darkness"
+  },
+  {
+    "title": "Special Senses",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Vision and Light",
+      "Special Senses"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-vision-and-light-special-senses"
+  },
+  {
+    "title": "Hiding",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Hiding"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-hiding"
+  },
+  {
+    "title": "Interacting with Objects",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects"
+    ],
+    "page": 19,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects"
+  },
+  {
+    "title": "What Is an Object?",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects",
+      "What Is an Object?"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects-what-is-an-object"
+  },
+  {
+    "title": "Time-Limited Object Interactions",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects",
+      "Time-Limited Object Interactions"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects-time-limited-object-interactions"
+  },
+  {
+    "title": "Finding Hidden Objects",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects",
+      "Finding Hidden Objects"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects-finding-hidden-objects"
+  },
+  {
+    "title": "Carrying Objects",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects",
+      "Carrying Objects"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects-carrying-objects"
+  },
+  {
+    "title": "Breaking Objects",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Interacting with Objects",
+      "Breaking Objects"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-interacting-with-objects-breaking-objects"
+  },
+  {
+    "title": "Hazards",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Hazards"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-hazards"
+  },
+  {
+    "title": "Travel",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel"
+  },
+  {
+    "title": "Marching Order",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Marching Order"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-marching-order"
+  },
+  {
+    "title": "Travel Pace",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Travel Pace"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-travel-pace"
+  },
+  {
+    "title": "Fast",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Travel Pace",
+      "Fast"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-travel-pace-fast"
+  },
+  {
+    "title": "Normal",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Travel Pace",
+      "Normal"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-travel-pace-normal"
+  },
+  {
+    "title": "Slow",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Travel Pace",
+      "Slow"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-travel-pace-slow"
+  },
+  {
+    "title": "Vehicles",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Travel",
+      "Vehicles"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-travel-vehicles"
+  },
+  {
+    "title": "Exploration Example",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example"
+    ],
+    "page": 20,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example"
+  },
+  {
+    "title": "Everyone Is Accounted For",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "Everyone Is Accounted For"
+    ],
+    "page": 21,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-everyone-is-accounted-for"
+  },
+  {
+    "title": "Teamwork Matters",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "Teamwork Matters"
+    ],
+    "page": 21,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-teamwork-matters"
+  },
+  {
+    "title": "(3)—Worth Rolling with or without Proficiency",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "(3)—Worth Rolling with or without Proficiency"
+    ],
+    "page": 21,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-3-worth-rolling-with-or-without-proficiency"
+  },
+  {
+    "title": "(4)—Finding Hidden Objects",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "(4)—Finding Hidden Objects"
+    ],
+    "page": 22,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-4-finding-hidden-objects"
+  },
+  {
+    "title": "(5)—Casting Spells",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "(5)—Casting Spells"
+    ],
+    "page": 22,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-5-casting-spells"
+  },
+  {
+    "title": "Know Your Spells!",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "Know Your Spells!"
+    ],
+    "page": 22,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-know-your-spells"
+  },
+  {
+    "title": "(6)—Vision and Light",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "(6)—Vision and Light"
+    ],
+    "page": 22,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-6-vision-and-light"
+  },
+  {
+    "title": "(7)—Saving Throws",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Exploration",
+      "Exploration Example",
+      "(7)—Saving Throws"
+    ],
+    "page": 22,
+    "slug": "chapter-1-playing-the-game-exploration-exploration-example-7-saving-throws"
+  },
+  {
+    "title": "Combat",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat"
+  },
+  {
+    "title": "The Order of Combat",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat"
+  },
+  {
+    "title": "Combat Step by Step",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Combat Step by Step"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-combat-step-by-step"
+  },
+  {
+    "title": "Initiative",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Initiative"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-initiative"
+  },
+  {
+    "title": "Surprise",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Initiative",
+      "Surprise"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-initiative-surprise"
+  },
+  {
+    "title": "Initiative Order",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Initiative",
+      "Initiative Order"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-initiative-initiative-order"
+  },
+  {
+    "title": "Ties",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Initiative",
+      "Ties"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-initiative-ties"
+  },
+  {
+    "title": "Your Turn",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Your Turn"
+    ],
+    "page": 23,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-your-turn"
+  },
+  {
+    "title": "Communicating",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Your Turn",
+      "Communicating"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-your-turn-communicating"
+  },
+  {
+    "title": "Interacting with Things",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Your Turn",
+      "Interacting with Things"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-your-turn-interacting-with-things"
+  },
+  {
+    "title": "Doing Nothing on Your Turn",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Your Turn",
+      "Doing Nothing on Your Turn"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-your-turn-doing-nothing-on-your-turn"
+  },
+  {
+    "title": "Ending Combat",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "The Order of Combat",
+      "Ending Combat"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-the-order-of-combat-ending-combat"
+  },
+  {
+    "title": "Movement and Position",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position"
+  },
+  {
+    "title": "Difficult Terrain",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain"
+    ],
+    "page": 24,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain"
+  },
+  {
+    "title": "Playing on a Grid",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid"
+  },
+  {
+    "title": "Squares",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid",
+      "Squares"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid-squares"
+  },
+  {
+    "title": "Speed",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid",
+      "Speed"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid-speed"
+  },
+  {
+    "title": "Entering a Square",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid",
+      "Entering a Square"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid-entering-a-square"
+  },
+  {
+    "title": "Corners",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid",
+      "Corners"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid-corners"
+  },
+  {
+    "title": "Ranges",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Difficult Terrain",
+      "Playing on a Grid",
+      "Ranges"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-difficult-terrain-playing-on-a-grid-ranges"
+  },
+  {
+    "title": "Breaking Up Your Move",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Breaking Up Your Move"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-breaking-up-your-move"
+  },
+  {
+    "title": "Dropping Prone",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Dropping Prone"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-dropping-prone"
+  },
+  {
+    "title": "Creature Size",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Creature Size"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-creature-size"
+  },
+  {
+    "title": "Moving around Other Creatures",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Movement and Position",
+      "Moving around Other Creatures"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-movement-and-position-moving-around-other-creatures"
+  },
+  {
+    "title": "Making an Attack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Making an Attack"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-making-an-attack"
+  },
+  {
+    "title": "Cover",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Cover"
+    ],
+    "page": 25,
+    "slug": "chapter-1-playing-the-game-combat-cover"
+  },
+  {
+    "title": "Unseen Attackers and Targets",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Cover",
+      "Unseen Attackers and Targets"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-cover-unseen-attackers-and-targets"
+  },
+  {
+    "title": "Ranged Attacks",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Ranged Attacks"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-ranged-attacks"
+  },
+  {
+    "title": "Range",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Ranged Attacks",
+      "Range"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-ranged-attacks-range"
+  },
+  {
+    "title": "Ranged Attacks in Close Combat",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Ranged Attacks",
+      "Ranged Attacks in Close Combat"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-ranged-attacks-ranged-attacks-in-close-combat"
+  },
+  {
+    "title": "Melee Attacks",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Melee Attacks"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-melee-attacks"
+  },
+  {
+    "title": "Reach",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Melee Attacks",
+      "Reach"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-melee-attacks-reach"
+  },
+  {
+    "title": "Opportunity Attacks",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Melee Attacks",
+      "Opportunity Attacks"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-melee-attacks-opportunity-attacks"
+  },
+  {
+    "title": "Avoiding Opportunity Attack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Melee Attacks",
+      "Opportunity Attacks",
+      "Avoiding Opportunity Attack"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-melee-attacks-opportunity-attacks-avoiding-opportunity-attack"
+  },
+  {
+    "title": "Making an Opportunity Attack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Melee Attacks",
+      "Opportunity Attacks",
+      "Making an Opportunity Attack"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-melee-attacks-opportunity-attacks-making-an-opportunity-attack"
+  },
+  {
+    "title": "Mounted Combat",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Mounted Combat"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-mounted-combat"
+  },
+  {
+    "title": "Mounting and Dismounting",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Mounted Combat",
+      "Mounting and Dismounting"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-mounted-combat-mounting-and-dismounting"
+  },
+  {
+    "title": "Controlling a Mount",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Mounted Combat",
+      "Controlling a Mount"
+    ],
+    "page": 26,
+    "slug": "chapter-1-playing-the-game-combat-mounted-combat-controlling-a-mount"
+  },
+  {
+    "title": "Falling Off",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Mounted Combat",
+      "Falling Off"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-combat-mounted-combat-falling-off"
+  },
+  {
+    "title": "Underwater Combat",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Underwater Combat"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-combat-underwater-combat"
+  },
+  {
+    "title": "Impeded Weapons",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Underwater Combat",
+      "Impeded Weapons"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-combat-underwater-combat-impeded-weapons"
+  },
+  {
+    "title": "Fire Resistance",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Combat",
+      "Underwater Combat",
+      "Fire Resistance"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-combat-underwater-combat-fire-resistance"
+  },
+  {
+    "title": "Damage and Healing",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-damage-and-healing"
+  },
+  {
+    "title": "Hit Points",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Hit Points"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-hit-points"
+  },
+  {
+    "title": "Resting",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Hit Points",
+      "Resting"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-hit-points-resting"
+  },
+  {
+    "title": "Damage Rolls",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Damage Rolls"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-damage-rolls"
+  },
+  {
+    "title": "Critical Hits",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Critical Hits"
+    ],
+    "page": 27,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-critical-hits"
+  },
+  {
+    "title": "Saving Throws and Damage",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Saving Throws and Damage"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-saving-throws-and-damage"
+  },
+  {
+    "title": "Damage against Multiple Targets",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Saving Throws and Damage",
+      "Damage against Multiple Targets"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-saving-throws-and-damage-damage-against-multiple-targets"
+  },
+  {
+    "title": "Half Damage",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Saving Throws and Damage",
+      "Half Damage"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-saving-throws-and-damage-half-damage"
+  },
+  {
+    "title": "Damage Types",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Damage Types"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-damage-types"
+  },
+  {
+    "title": "Resistance and Vulnerability",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Resistance and Vulnerability"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-resistance-and-vulnerability"
+  },
+  {
+    "title": "No Stacking",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Resistance and Vulnerability",
+      "No Stacking"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-resistance-and-vulnerability-no-stacking"
+  },
+  {
+    "title": "Order of Application",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Resistance and Vulnerability",
+      "Order of Application"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-resistance-and-vulnerability-order-of-application"
+  },
+  {
+    "title": "Immunity",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Immunity"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-immunity"
+  },
+  {
+    "title": "Healing",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Healing"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-healing"
+  },
+  {
+    "title": "Dropping to 0 Hit Points",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points"
+  },
+  {
+    "title": "Instant Death",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Instant Death"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-instant-death"
+  },
+  {
+    "title": "Monster Death",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Instant Death",
+      "Monster Death"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-instant-death-monster-death"
+  },
+  {
+    "title": "Hit Point Maximum of 0",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Instant Death",
+      "Hit Point Maximum of 0"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-instant-death-hit-point-maximum-of-0"
+  },
+  {
+    "title": "Massive Damage",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Instant Death",
+      "Massive Damage"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-instant-death-massive-damage"
+  },
+  {
+    "title": "Character Demise",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Character Demise"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-character-demise"
+  },
+  {
+    "title": "Falling Unconscious",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Falling Unconscious"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-falling-unconscious"
+  },
+  {
+    "title": "Knocking Out a Creature",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Falling Unconscious",
+      "Knocking Out a Creature"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-falling-unconscious-knocking-out-a-creature"
+  },
+  {
+    "title": "Death Saving Throws",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Death Saving Throws"
+    ],
+    "page": 28,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-death-saving-throws"
+  },
+  {
+    "title": "Three Successes/Failures",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Death Saving Throws",
+      "Three Successes/Failures"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-death-saving-throws-three-successes-failures"
+  },
+  {
+    "title": "Rolling a 1 or 20",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Death Saving Throws",
+      "Rolling a 1 or 20"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-death-saving-throws-rolling-a-1-or-20"
+  },
+  {
+    "title": "Damage at 0 Hit Points",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Death Saving Throws",
+      "Damage at 0 Hit Points"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-death-saving-throws-damage-at-0-hit-points"
+  },
+  {
+    "title": "Stabilizing a Character",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Dropping to 0 Hit Points",
+      "Stabilizing a Character"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-dropping-to-0-hit-points-stabilizing-a-character"
+  },
+  {
+    "title": "Temporary Hit Points",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Temporary Hit Points"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-temporary-hit-points"
+  },
+  {
+    "title": "Lose Temporary Hit Points First",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Temporary Hit Points",
+      "Lose Temporary Hit Points First"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-temporary-hit-points-lose-temporary-hit-points-first"
+  },
+  {
+    "title": "Duration",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Temporary Hit Points",
+      "Duration"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-temporary-hit-points-duration"
+  },
+  {
+    "title": "Temporary Hit Points Don't Stack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Temporary Hit Points",
+      "Temporary Hit Points Don't Stack"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-temporary-hit-points-temporary-hit-points-don-t-stack"
+  },
+  {
+    "title": "They're Not Hit Points or Healing",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Damage and Healing",
+      "Temporary Hit Points",
+      "They're Not Hit Points or Healing"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-damage-and-healing-temporary-hit-points-they-re-not-hit-points-or-healing"
+  },
+  {
+    "title": "Conditions",
+    "type": "section",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-conditions"
+  },
+  {
+    "title": "Duration",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Duration"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-conditions-duration"
+  },
+  {
+    "title": "Conditions Don't Stack",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Conditions Don't Stack"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-conditions-conditions-don-t-stack"
+  },
+  {
+    "title": "Combat and Damage Example",
+    "type": "entries",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example"
+    ],
+    "page": 29,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example"
+  },
+  {
+    "title": "(8)—Starting Combat",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(8)—Starting Combat"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-8-starting-combat"
+  },
+  {
+    "title": "(9)—Rolling Initiative",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(9)—Rolling Initiative"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-9-rolling-initiative"
+  },
+  {
+    "title": "(10)—Taking Turns",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(10)—Taking Turns"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-10-taking-turns"
+  },
+  {
+    "title": "(11)—Attack Rolls",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(11)—Attack Rolls"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-11-attack-rolls"
+  },
+  {
+    "title": "(12)—Spells and Reactions",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(12)—Spells and Reactions"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-12-spells-and-reactions"
+  },
+  {
+    "title": "(13)—Special Abilities",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(13)—Special Abilities"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-13-special-abilities"
+  },
+  {
+    "title": "(14)—Vulnerability",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(14)—Vulnerability"
+    ],
+    "page": 30,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-14-vulnerability"
+  },
+  {
+    "title": "(15)—Areas of Effect",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(15)—Areas of Effect"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-15-areas-of-effect"
+  },
+  {
+    "title": "(16)—Saving Throws",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(16)—Saving Throws"
+    ],
+    "page": 7,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-16-saving-throws"
+  },
+  {
+    "title": "Damage and Hit Points",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "Damage and Hit Points"
+    ],
+    "page": 31,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-damage-and-hit-points"
+  },
+  {
+    "title": "(17)—Saving Throws",
+    "type": "inset",
+    "chapter": "Chapter 1: Playing the Game",
+    "sectionPath": [
+      "Chapter 1: Playing the Game",
+      "Conditions",
+      "Combat and Damage Example",
+      "(17)—Saving Throws"
+    ],
+    "page": 31,
+    "slug": "chapter-1-playing-the-game-conditions-combat-and-damage-example-17-saving-throws"
+  },
+  {
+    "title": "Chapter 2: Creating a Character",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character"
+  },
+  {
+    "title": "Get Ready",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Get Ready"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-get-ready"
+  },
+  {
+    "title": "Talk with Your DM",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Get Ready",
+      "Talk with Your DM"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-get-ready-talk-with-your-dm"
+  },
+  {
+    "title": "Session Zero",
+    "type": "inset",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Get Ready",
+      "Talk with Your DM",
+      "Session Zero"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-get-ready-talk-with-your-dm-session-zero"
+  },
+  {
+    "title": "Choose a Character Sheet",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Get Ready",
+      "Choose a Character Sheet"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-get-ready-choose-a-character-sheet"
+  },
+  {
+    "title": "Create Your Character",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-create-your-character"
+  },
+  {
+    "title": "Step 1: Choose a Class",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class"
+    ],
+    "page": 33,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class"
+  },
+  {
+    "title": "A Balanced Party",
+    "type": "inset",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "A Balanced Party"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-a-balanced-party"
+  },
+  {
+    "title": "Write Your Level",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "Write Your Level"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-write-your-level"
+  },
+  {
+    "title": "Write Your XP",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "Write Your Level",
+      "Write Your XP"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-write-your-level-write-your-xp"
+  },
+  {
+    "title": "Starting at a Higher Level",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "Write Your Level",
+      "Starting at a Higher Level"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-write-your-level-starting-at-a-higher-level"
+  },
+  {
+    "title": "Note Armor Training",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "Note Armor Training"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-note-armor-training"
+  },
+  {
+    "title": "Hold That Thought",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 1: Choose a Class",
+      "Hold That Thought"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-1-choose-a-class-hold-that-thought"
+  },
+  {
+    "title": "Step 2: Determine Origin",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin"
+  },
+  {
+    "title": "Choose a Background",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose a Background"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-a-background"
+  },
+  {
+    "title": "Record Your Feat",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose a Background",
+      "Record Your Feat"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-a-background-record-your-feat"
+  },
+  {
+    "title": "Note Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose a Background",
+      "Note Proficiencies"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-a-background-note-proficiencies"
+  },
+  {
+    "title": "Choose Starting Equipment",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose Starting Equipment"
+    ],
+    "page": 36,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-starting-equipment"
+  },
+  {
+    "title": "Choose a Species",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose a Species"
+    ],
+    "page": 37,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-a-species"
+  },
+  {
+    "title": "Imagine Your Past and Present",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Imagine Your Past and Present"
+    ],
+    "page": 37,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-imagine-your-past-and-present"
+  },
+  {
+    "title": "Choose Languages",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 2: Determine Origin",
+      "Choose Languages"
+    ],
+    "page": 37,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-2-determine-origin-choose-languages"
+  },
+  {
+    "title": "Step 3: Determine Ability Scores",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores"
+  },
+  {
+    "title": "Generate Your Scores",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Generate Your Scores"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-generate-your-scores"
+  },
+  {
+    "title": "Standard Array",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Generate Your Scores",
+      "Standard Array"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-generate-your-scores-standard-array"
+  },
+  {
+    "title": "Random Generation",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Generate Your Scores",
+      "Random Generation"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-generate-your-scores-random-generation"
+  },
+  {
+    "title": "Point Cost",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Generate Your Scores",
+      "Point Cost"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-generate-your-scores-point-cost"
+  },
+  {
+    "title": "Assign Ability Scores",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Assign Ability Scores"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-assign-ability-scores"
+  },
+  {
+    "title": "Adjust Ability Scores",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Adjust Ability Scores"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-adjust-ability-scores"
+  },
+  {
+    "title": "Backgrounds and Species from Older Books",
+    "type": "inset",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Adjust Ability Scores",
+      "Backgrounds and Species from Older Books"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-adjust-ability-scores-backgrounds-and-species-from-older-books"
+  },
+  {
+    "title": "Determine Ability Modifiers",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Determine Ability Modifiers"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-determine-ability-modifiers"
+  },
+  {
+    "title": "Describe Appearance and Personality",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 3: Determine Ability Scores",
+      "Describe Appearance and Personality"
+    ],
+    "page": 38,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-3-determine-ability-scores-describe-appearance-and-personality"
+  },
+  {
+    "title": "Step 4: Choose an Alignment",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment"
+  },
+  {
+    "title": "The Nine Alignments",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments"
+  },
+  {
+    "title": "Lawful Good (LG)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Lawful Good (LG)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-lawful-good-lg"
+  },
+  {
+    "title": "Neutral Good (NG)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Neutral Good (NG)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-neutral-good-ng"
+  },
+  {
+    "title": "Chaotic Good (CG)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Chaotic Good (CG)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-chaotic-good-cg"
+  },
+  {
+    "title": "Lawful Neutral (LN)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Lawful Neutral (LN)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-lawful-neutral-ln"
+  },
+  {
+    "title": "Neutral (N)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Neutral (N)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-neutral-n"
+  },
+  {
+    "title": "Chaotic Neutral (CN)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Chaotic Neutral (CN)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-chaotic-neutral-cn"
+  },
+  {
+    "title": "Lawful Evil (LE)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Lawful Evil (LE)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-lawful-evil-le"
+  },
+  {
+    "title": "Neutral Evil (NE)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Neutral Evil (NE)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-neutral-evil-ne"
+  },
+  {
+    "title": "Chaotic Evil (CE)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Chaotic Evil (CE)"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-chaotic-evil-ce"
+  },
+  {
+    "title": "Unaligned Creatures",
+    "type": "inset",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "The Nine Alignments",
+      "Chaotic Evil (CE)",
+      "Unaligned Creatures"
+    ],
+    "page": 39,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-the-nine-alignments-chaotic-evil-ce-unaligned-creatures"
+  },
+  {
+    "title": "Alignment and Personality",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 4: Choose an Alignment",
+      "Alignment and Personality"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-4-choose-an-alignment-alignment-and-personality"
+  },
+  {
+    "title": "Step 5: Fill In Details",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details"
+  },
+  {
+    "title": "Record Class Features",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Record Class Features"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-record-class-features"
+  },
+  {
+    "title": "Fill In Numbers",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers"
+  },
+  {
+    "title": "Saving Throws",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Saving Throws"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-saving-throws"
+  },
+  {
+    "title": "Skills",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Skills"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-skills"
+  },
+  {
+    "title": "Passive Perception",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Passive Perception"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-passive-perception"
+  },
+  {
+    "title": "Hit Points",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Hit Points"
+    ],
+    "page": 40,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-hit-points"
+  },
+  {
+    "title": "Hit Point Dice",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Hit Point Dice"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-hit-point-dice"
+  },
+  {
+    "title": "Initiative",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Initiative"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-initiative"
+  },
+  {
+    "title": "Armor Class",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Armor Class"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-armor-class"
+  },
+  {
+    "title": "Attacks",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Attacks"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-attacks"
+  },
+  {
+    "title": "Spellcasting",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Spellcasting"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-spellcasting"
+  },
+  {
+    "title": "Spell Slots, Cantrips, and Prepared Spells",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Fill In Numbers",
+      "Spell Slots, Cantrips, and Prepared Spells"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-fill-in-numbers-spell-slots-cantrips-and-prepared-spells"
+  },
+  {
+    "title": "Name Your Character",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Name Your Character"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-name-your-character"
+  },
+  {
+    "title": "Create Final Details",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Create Your Character",
+      "Step 5: Fill In Details",
+      "Create Final Details"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-create-your-character-step-5-fill-in-details-create-final-details"
+  },
+  {
+    "title": "Level Advancement",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement"
+    ],
+    "page": 41,
+    "slug": "chapter-2-creating-a-character-level-advancement"
+  },
+  {
+    "title": "Gaining a Level",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Gaining a Level"
+    ],
+    "page": 42,
+    "slug": "chapter-2-creating-a-character-level-advancement-gaining-a-level"
+  },
+  {
+    "title": "Tiers of Play",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play"
+  },
+  {
+    "title": "Tier 1 (Levels 1–4)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play",
+      "Tier 1 (Levels 1–4)"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play-tier-1-levels-1-4"
+  },
+  {
+    "title": "Tier 2 (Levels 5–10)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play",
+      "Tier 2 (Levels 5–10)"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play-tier-2-levels-5-10"
+  },
+  {
+    "title": "Tier 3 (Levels 11–16)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play",
+      "Tier 3 (Levels 11–16)"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play-tier-3-levels-11-16"
+  },
+  {
+    "title": "Tier 4 (Levels 17–20)",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play",
+      "Tier 4 (Levels 17–20)"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play-tier-4-levels-17-20"
+  },
+  {
+    "title": "Bonus Feats at Level 20",
+    "type": "inset",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Level Advancement",
+      "Tiers of Play",
+      "Tier 4 (Levels 17–20)",
+      "Bonus Feats at Level 20"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-level-advancement-tiers-of-play-tier-4-levels-17-20-bonus-feats-at-level-20"
+  },
+  {
+    "title": "Starting at Higher Levels",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Starting at Higher Levels"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-starting-at-higher-levels"
+  },
+  {
+    "title": "Creating Your Character",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Starting at Higher Levels",
+      "Creating Your Character"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-starting-at-higher-levels-creating-your-character"
+  },
+  {
+    "title": "Starting Equipment",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Starting at Higher Levels",
+      "Starting Equipment"
+    ],
+    "page": 43,
+    "slug": "chapter-2-creating-a-character-starting-at-higher-levels-starting-equipment"
+  },
+  {
+    "title": "Multiclassing",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing"
+  },
+  {
+    "title": "Prerequisites",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Prerequisites"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-prerequisites"
+  },
+  {
+    "title": "Experience Points",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Experience Points"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-experience-points"
+  },
+  {
+    "title": "Hit Points and Hit Point Dice",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Hit Points and Hit Point Dice"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-hit-points-and-hit-point-dice"
+  },
+  {
+    "title": "Proficiency Bonus",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Proficiency Bonus"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-proficiency-bonus"
+  },
+  {
+    "title": "Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Proficiencies"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-proficiencies"
+  },
+  {
+    "title": "Class Features",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features"
+  },
+  {
+    "title": "Armor Class",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Armor Class"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-armor-class"
+  },
+  {
+    "title": "Extra Attack",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Extra Attack"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-extra-attack"
+  },
+  {
+    "title": "Spellcasting",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Spellcasting"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-spellcasting"
+  },
+  {
+    "title": "Spells Prepared",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Spellcasting",
+      "Spells Prepared"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-spellcasting-spells-prepared"
+  },
+  {
+    "title": "Cantrips",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Spellcasting",
+      "Cantrips"
+    ],
+    "page": 44,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-spellcasting-cantrips"
+  },
+  {
+    "title": "Spell Slots",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Spellcasting",
+      "Spell Slots"
+    ],
+    "page": 45,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-spellcasting-spell-slots"
+  },
+  {
+    "title": "Pact Magic",
+    "type": "entries",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Multiclassing",
+      "Class Features",
+      "Spellcasting",
+      "Pact Magic"
+    ],
+    "page": 45,
+    "slug": "chapter-2-creating-a-character-multiclassing-class-features-spellcasting-pact-magic"
+  },
+  {
+    "title": "Trinkets",
+    "type": "section",
+    "chapter": "Chapter 2: Creating a Character",
+    "sectionPath": [
+      "Chapter 2: Creating a Character",
+      "Trinkets"
+    ],
+    "page": 46,
+    "slug": "chapter-2-creating-a-character-trinkets"
+  },
+  {
+    "title": "Chapter 3: Character Classes",
+    "type": "section",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes"
+    ],
+    "page": 49,
+    "slug": "chapter-3-character-classes"
+  },
+  {
+    "title": "{@class Barbarian|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Barbarian|XPHB}"
+    ],
+    "page": 50,
+    "slug": "chapter-3-character-classes-class-barbarian-xphb"
+  },
+  {
+    "title": "{@class Bard|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Bard|XPHB}"
+    ],
+    "page": 58,
+    "slug": "chapter-3-character-classes-class-bard-xphb"
+  },
+  {
+    "title": "{@class Cleric|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Cleric|XPHB}"
+    ],
+    "page": 69,
+    "slug": "chapter-3-character-classes-class-cleric-xphb"
+  },
+  {
+    "title": "{@class Druid|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Druid|XPHB}"
+    ],
+    "page": 80,
+    "slug": "chapter-3-character-classes-class-druid-xphb"
+  },
+  {
+    "title": "{@class Fighter|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Fighter|XPHB}"
+    ],
+    "page": 90,
+    "slug": "chapter-3-character-classes-class-fighter-xphb"
+  },
+  {
+    "title": "{@class Monk|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Monk|XPHB}"
+    ],
+    "page": 100,
+    "slug": "chapter-3-character-classes-class-monk-xphb"
+  },
+  {
+    "title": "{@class Paladin|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Paladin|XPHB}"
+    ],
+    "page": 108,
+    "slug": "chapter-3-character-classes-class-paladin-xphb"
+  },
+  {
+    "title": "{@class Ranger|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Ranger|XPHB}"
+    ],
+    "page": 119,
+    "slug": "chapter-3-character-classes-class-ranger-xphb"
+  },
+  {
+    "title": "{@class Rogue|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Rogue|XPHB}"
+    ],
+    "page": 128,
+    "slug": "chapter-3-character-classes-class-rogue-xphb"
+  },
+  {
+    "title": "{@class Sorcerer|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Sorcerer|XPHB}"
+    ],
+    "page": 138,
+    "slug": "chapter-3-character-classes-class-sorcerer-xphb"
+  },
+  {
+    "title": "{@class Warlock|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Warlock|XPHB}"
+    ],
+    "page": 152,
+    "slug": "chapter-3-character-classes-class-warlock-xphb"
+  },
+  {
+    "title": "{@class Wizard|XPHB}",
+    "type": "entries",
+    "chapter": "Chapter 3: Character Classes",
+    "sectionPath": [
+      "Chapter 3: Character Classes",
+      "{@class Wizard|XPHB}"
+    ],
+    "page": 164,
+    "slug": "chapter-3-character-classes-class-wizard-xphb"
+  },
+  {
+    "title": "Chapter 4: Character Origins",
+    "type": "section",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins"
+    ],
+    "page": 176,
+    "slug": "chapter-4-character-origins"
+  },
+  {
+    "title": "Origin Components",
+    "type": "section",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components"
+  },
+  {
+    "title": "Character Backgrounds",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds"
+  },
+  {
+    "title": "Parts of a Background",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background"
+  },
+  {
+    "title": "Ability Scores",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background",
+      "Ability Scores"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background-ability-scores"
+  },
+  {
+    "title": "Feat",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background",
+      "Feat"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background-feat"
+  },
+  {
+    "title": "Skill Proficiencies",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background",
+      "Skill Proficiencies"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background-skill-proficiencies"
+  },
+  {
+    "title": "Tool Proficiency",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background",
+      "Tool Proficiency"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background-tool-proficiency"
+  },
+  {
+    "title": "Equipment",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Backgrounds",
+      "Parts of a Background",
+      "Equipment"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-backgrounds-parts-of-a-background-equipment"
+  },
+  {
+    "title": "Character Species",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species"
+  },
+  {
+    "title": "Parts of a Species",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species",
+      "Parts of a Species"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species-parts-of-a-species"
+  },
+  {
+    "title": "Creature Type",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species",
+      "Parts of a Species",
+      "Creature Type"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species-parts-of-a-species-creature-type"
+  },
+  {
+    "title": "Size",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species",
+      "Parts of a Species",
+      "Size"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species-parts-of-a-species-size"
+  },
+  {
+    "title": "Speed",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species",
+      "Parts of a Species",
+      "Speed"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species-parts-of-a-species-speed"
+  },
+  {
+    "title": "Special Traits",
+    "type": "entries",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Origin Components",
+      "Character Species",
+      "Parts of a Species",
+      "Special Traits"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-origin-components-character-species-parts-of-a-species-special-traits"
+  },
+  {
+    "title": "Background Descriptions",
+    "type": "section",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Background Descriptions"
+    ],
+    "page": 177,
+    "slug": "chapter-4-character-origins-background-descriptions"
+  },
+  {
+    "title": "Species Descriptions",
+    "type": "section",
+    "chapter": "Chapter 4: Character Origins",
+    "sectionPath": [
+      "Chapter 4: Character Origins",
+      "Species Descriptions"
+    ],
+    "page": 186,
+    "slug": "chapter-4-character-origins-species-descriptions"
+  },
+  {
+    "title": "Chapter 5: Feats",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats"
+  },
+  {
+    "title": "Feat Descriptions",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions"
+  },
+  {
+    "title": "Parts of a Feat",
+    "type": "entries",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions",
+      "Parts of a Feat"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions-parts-of-a-feat"
+  },
+  {
+    "title": "Category",
+    "type": "entries",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions",
+      "Parts of a Feat",
+      "Category"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions-parts-of-a-feat-category"
+  },
+  {
+    "title": "Prerequisite",
+    "type": "entries",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions",
+      "Parts of a Feat",
+      "Prerequisite"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions-parts-of-a-feat-prerequisite"
+  },
+  {
+    "title": "Benefit",
+    "type": "entries",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions",
+      "Parts of a Feat",
+      "Benefit"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions-parts-of-a-feat-benefit"
+  },
+  {
+    "title": "Repeatable",
+    "type": "entries",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Feat Descriptions",
+      "Parts of a Feat",
+      "Repeatable"
+    ],
+    "page": 199,
+    "slug": "chapter-5-feats-feat-descriptions-parts-of-a-feat-repeatable"
+  },
+  {
+    "title": "Origin Feats",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Origin Feats"
+    ],
+    "page": 200,
+    "slug": "chapter-5-feats-origin-feats"
+  },
+  {
+    "title": "General Feats",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "General Feats"
+    ],
+    "page": 202,
+    "slug": "chapter-5-feats-general-feats"
+  },
+  {
+    "title": "Fighting Style Feats",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Fighting Style Feats"
+    ],
+    "page": 209,
+    "slug": "chapter-5-feats-fighting-style-feats"
+  },
+  {
+    "title": "Epic Boon Feats",
+    "type": "section",
+    "chapter": "Chapter 5: Feats",
+    "sectionPath": [
+      "Chapter 5: Feats",
+      "Epic Boon Feats"
+    ],
+    "page": 210,
+    "slug": "chapter-5-feats-epic-boon-feats"
+  },
+  {
+    "title": "Chapter 6: Equipment",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment"
+  },
+  {
+    "title": "Coins",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Coins"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-coins"
+  },
+  {
+    "title": "Selling Equipment",
+    "type": "inset",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Coins",
+      "Selling Equipment"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-coins-selling-equipment"
+  },
+  {
+    "title": "Weapons",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons"
+  },
+  {
+    "title": "Weapon Proficiency",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Weapon Proficiency"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-weapon-proficiency"
+  },
+  {
+    "title": "Properties",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties"
+  },
+  {
+    "title": "Ammunition",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Ammunition"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties-ammunition"
+  },
+  {
+    "title": "Finesse",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Finesse"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties-finesse"
+  },
+  {
+    "title": "Heavy",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Heavy"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties-heavy"
+  },
+  {
+    "title": "Improvised Weapons",
+    "type": "inset",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Heavy",
+      "Improvised Weapons"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties-heavy-improvised-weapons"
+  },
+  {
+    "title": "Light",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Light"
+    ],
+    "page": 213,
+    "slug": "chapter-6-equipment-weapons-properties-light"
+  },
+  {
+    "title": "Loading",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Loading"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-loading"
+  },
+  {
+    "title": "Range",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Range"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-range"
+  },
+  {
+    "title": "Reach",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Reach"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-reach"
+  },
+  {
+    "title": "Thrown",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Thrown"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-thrown"
+  },
+  {
+    "title": "Two-Handed",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Two-Handed"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-two-handed"
+  },
+  {
+    "title": "Versatile",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Properties",
+      "Versatile"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-properties-versatile"
+  },
+  {
+    "title": "Mastery Properties",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties"
+  },
+  {
+    "title": "Cleave",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Cleave"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-cleave"
+  },
+  {
+    "title": "Graze",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Graze"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-graze"
+  },
+  {
+    "title": "Nick",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Nick"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-nick"
+  },
+  {
+    "title": "Push",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Push"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-push"
+  },
+  {
+    "title": "Sap",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Sap"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-sap"
+  },
+  {
+    "title": "Slow",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Slow"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-slow"
+  },
+  {
+    "title": "Topple",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Topple"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-topple"
+  },
+  {
+    "title": "Vex",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Weapons",
+      "Mastery Properties",
+      "Vex"
+    ],
+    "page": 214,
+    "slug": "chapter-6-equipment-weapons-mastery-properties-vex"
+  },
+  {
+    "title": "Armor",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor"
+  },
+  {
+    "title": "Armor Training",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor",
+      "Armor Training"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor-armor-training"
+  },
+  {
+    "title": "Light, Medium, or Heavy Armor",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor",
+      "Armor Training",
+      "Light, Medium, or Heavy Armor"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor-armor-training-light-medium-or-heavy-armor"
+  },
+  {
+    "title": "Shield",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor",
+      "Armor Training",
+      "Shield"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor-armor-training-shield"
+  },
+  {
+    "title": "One at a Time",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor",
+      "One at a Time"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor-one-at-a-time"
+  },
+  {
+    "title": "Variant: Equipment Sizes",
+    "type": "inset",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Armor",
+      "One at a Time",
+      "Variant: Equipment Sizes"
+    ],
+    "page": 219,
+    "slug": "chapter-6-equipment-armor-one-at-a-time-variant-equipment-sizes"
+  },
+  {
+    "title": "Tools",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools"
+  },
+  {
+    "title": "Tool Proficiency",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Tool Proficiency"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-tool-proficiency"
+  },
+  {
+    "title": "Artisan's Tools",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools"
+  },
+  {
+    "title": "Alchemist's Supplies (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Alchemist's Supplies (50 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-alchemist-s-supplies-50-gp"
+  },
+  {
+    "title": "Brewer's Supplies (20 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Brewer's Supplies (20 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-brewer-s-supplies-20-gp"
+  },
+  {
+    "title": "Calligrapher's Supplies (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Calligrapher's Supplies (10 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-calligrapher-s-supplies-10-gp"
+  },
+  {
+    "title": "Carpenter's Tools (8 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Carpenter's Tools (8 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-carpenter-s-tools-8-gp"
+  },
+  {
+    "title": "Cartographer's Tools (15 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Cartographer's Tools (15 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-cartographer-s-tools-15-gp"
+  },
+  {
+    "title": "Cobbler's Tools (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Cobbler's Tools (5 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-cobbler-s-tools-5-gp"
+  },
+  {
+    "title": "Cook's Utensils (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Cook's Utensils (1 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-cook-s-utensils-1-gp"
+  },
+  {
+    "title": "Glassblower's Tools (30 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Glassblower's Tools (30 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-glassblower-s-tools-30-gp"
+  },
+  {
+    "title": "Jeweler's Tools (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Jeweler's Tools (25 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-jeweler-s-tools-25-gp"
+  },
+  {
+    "title": "Leatherworker's Tools (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Leatherworker's Tools (5 GP)"
+    ],
+    "page": 220,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-leatherworker-s-tools-5-gp"
+  },
+  {
+    "title": "Mason's Tools (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Mason's Tools (10 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-mason-s-tools-10-gp"
+  },
+  {
+    "title": "Painter's Supplies (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Painter's Supplies (10 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-painter-s-supplies-10-gp"
+  },
+  {
+    "title": "Potter's Tools (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Potter's Tools (10 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-potter-s-tools-10-gp"
+  },
+  {
+    "title": "Smith's Tools (20 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Smith's Tools (20 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-smith-s-tools-20-gp"
+  },
+  {
+    "title": "Tinker's Tools (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Tinker's Tools (50 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-tinker-s-tools-50-gp"
+  },
+  {
+    "title": "Weaver's Tools (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Weaver's Tools (1 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-weaver-s-tools-1-gp"
+  },
+  {
+    "title": "Woodcarver's Tools (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Artisan's Tools",
+      "Woodcarver's Tools (1 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-artisan-s-tools-woodcarver-s-tools-1-gp"
+  },
+  {
+    "title": "Other Tools",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools"
+  },
+  {
+    "title": "Disguise Kit (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Disguise Kit (25 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-disguise-kit-25-gp"
+  },
+  {
+    "title": "Forgery Kit (15 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Forgery Kit (15 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-forgery-kit-15-gp"
+  },
+  {
+    "title": "Gaming Set (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Gaming Set (Varies)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-gaming-set-varies"
+  },
+  {
+    "title": "Herbalism Kit (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Herbalism Kit (5 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-herbalism-kit-5-gp"
+  },
+  {
+    "title": "Musical Instrument (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Musical Instrument (Varies)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-musical-instrument-varies"
+  },
+  {
+    "title": "Navigator's Tools (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Navigator's Tools (25 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-navigator-s-tools-25-gp"
+  },
+  {
+    "title": "Poisoner's Kit (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Poisoner's Kit (50 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-poisoner-s-kit-50-gp"
+  },
+  {
+    "title": "Thieves' Tools (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Tools",
+      "Other Tools",
+      "Thieves' Tools (25 GP)"
+    ],
+    "page": 221,
+    "slug": "chapter-6-equipment-tools-other-tools-thieves-tools-25-gp"
+  },
+  {
+    "title": "Adventuring Gear",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear"
+    ],
+    "page": 222,
+    "slug": "chapter-6-equipment-adventuring-gear"
+  },
+  {
+    "title": "Acid (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Acid (25 GP)"
+    ],
+    "page": 222,
+    "slug": "chapter-6-equipment-adventuring-gear-acid-25-gp"
+  },
+  {
+    "title": "Alchemist's Fire (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Alchemist's Fire (50 GP)"
+    ],
+    "page": 222,
+    "slug": "chapter-6-equipment-adventuring-gear-alchemist-s-fire-50-gp"
+  },
+  {
+    "title": "Ammunition (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ammunition (Varies)"
+    ],
+    "page": 222,
+    "slug": "chapter-6-equipment-adventuring-gear-ammunition-varies"
+  },
+  {
+    "title": "Antitoxin (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Antitoxin (50 GP)"
+    ],
+    "page": 222,
+    "slug": "chapter-6-equipment-adventuring-gear-antitoxin-50-gp"
+  },
+  {
+    "title": "Arcane Focus (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Arcane Focus (Varies)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-arcane-focus-varies"
+  },
+  {
+    "title": "Backpack (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Backpack (2 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-backpack-2-gp"
+  },
+  {
+    "title": "Ball Bearings (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ball Bearings (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-ball-bearings-1-gp"
+  },
+  {
+    "title": "Barrel (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Barrel (2 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-barrel-2-gp"
+  },
+  {
+    "title": "Basket (4 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Basket (4 SP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-basket-4-sp"
+  },
+  {
+    "title": "Bedroll (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Bedroll (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-bedroll-1-gp"
+  },
+  {
+    "title": "Bell (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Bell (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-bell-1-gp"
+  },
+  {
+    "title": "Blanket (5 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Blanket (5 SP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-blanket-5-sp"
+  },
+  {
+    "title": "Block and Tackle (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Block and Tackle (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-block-and-tackle-1-gp"
+  },
+  {
+    "title": "Book (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Book (25 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-book-25-gp"
+  },
+  {
+    "title": "Bottle, Glass (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Bottle, Glass (2 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-bottle-glass-2-gp"
+  },
+  {
+    "title": "Bucket (5 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Bucket (5 CP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-bucket-5-cp"
+  },
+  {
+    "title": "Burglar's Pack (16 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Burglar's Pack (16 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-burglar-s-pack-16-gp"
+  },
+  {
+    "title": "Caltrops (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Caltrops (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-caltrops-1-gp"
+  },
+  {
+    "title": "Candle (1 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Candle (1 CP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-candle-1-cp"
+  },
+  {
+    "title": "Case, Crossbow Bolt (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Case, Crossbow Bolt (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-case-crossbow-bolt-1-gp"
+  },
+  {
+    "title": "Case, Map or Scroll (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Case, Map or Scroll (1 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-case-map-or-scroll-1-gp"
+  },
+  {
+    "title": "Chain (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Chain (5 GP)"
+    ],
+    "page": 224,
+    "slug": "chapter-6-equipment-adventuring-gear-chain-5-gp"
+  },
+  {
+    "title": "Chest (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Chest (5 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-chest-5-gp"
+  },
+  {
+    "title": "Climber's Kit (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Climber's Kit (25 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-climber-s-kit-25-gp"
+  },
+  {
+    "title": "Clothes, Fine (15 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Clothes, Fine (15 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-clothes-fine-15-gp"
+  },
+  {
+    "title": "Clothes, Traveler's (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Clothes, Traveler's (2 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-clothes-traveler-s-2-gp"
+  },
+  {
+    "title": "Component Pouch (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Component Pouch (25 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-component-pouch-25-gp"
+  },
+  {
+    "title": "Costume (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Costume (5 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-costume-5-gp"
+  },
+  {
+    "title": "Crowbar (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Crowbar (2 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-crowbar-2-gp"
+  },
+  {
+    "title": "Diplomat's Pack (39 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Diplomat's Pack (39 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-diplomat-s-pack-39-gp"
+  },
+  {
+    "title": "Druidic Focus (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Druidic Focus (Varies)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-druidic-focus-varies"
+  },
+  {
+    "title": "Dungeoneer's Pack (12 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Dungeoneer's Pack (12 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-dungeoneer-s-pack-12-gp"
+  },
+  {
+    "title": "Entertainer's Pack (40 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Entertainer's Pack (40 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-entertainer-s-pack-40-gp"
+  },
+  {
+    "title": "Explorer's Pack (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Explorer's Pack (10 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-explorer-s-pack-10-gp"
+  },
+  {
+    "title": "Flask (2 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Flask (2 CP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-flask-2-cp"
+  },
+  {
+    "title": "Grappling Hook (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Grappling Hook (2 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-grappling-hook-2-gp"
+  },
+  {
+    "title": "Healer's Kit (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Healer's Kit (5 GP)"
+    ],
+    "page": 225,
+    "slug": "chapter-6-equipment-adventuring-gear-healer-s-kit-5-gp"
+  },
+  {
+    "title": "Holy Symbol (Varies)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Holy Symbol (Varies)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-holy-symbol-varies"
+  },
+  {
+    "title": "Holy Water (25 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Holy Water (25 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-holy-water-25-gp"
+  },
+  {
+    "title": "Hunting Trap (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Hunting Trap (5 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-hunting-trap-5-gp"
+  },
+  {
+    "title": "Ink (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ink (10 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-ink-10-gp"
+  },
+  {
+    "title": "Ink Pen (2 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ink Pen (2 CP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-ink-pen-2-cp"
+  },
+  {
+    "title": "Jug (2 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Jug (2 CP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-jug-2-cp"
+  },
+  {
+    "title": "Ladder (1 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ladder (1 SP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-ladder-1-sp"
+  },
+  {
+    "title": "Lamp (5 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Lamp (5 SP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-lamp-5-sp"
+  },
+  {
+    "title": "Lantern, Bullseye (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Lantern, Bullseye (10 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-lantern-bullseye-10-gp"
+  },
+  {
+    "title": "Lantern, Hooded (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Lantern, Hooded (5 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-lantern-hooded-5-gp"
+  },
+  {
+    "title": "Lock (10 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Lock (10 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-lock-10-gp"
+  },
+  {
+    "title": "Magnifying Glass (100 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Magnifying Glass (100 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-magnifying-glass-100-gp"
+  },
+  {
+    "title": "Manacles (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Manacles (2 GP)"
+    ],
+    "page": 226,
+    "slug": "chapter-6-equipment-adventuring-gear-manacles-2-gp"
+  },
+  {
+    "title": "Map (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Map (1 GP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-map-1-gp"
+  },
+  {
+    "title": "Mirror (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Mirror (5 GP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-mirror-5-gp"
+  },
+  {
+    "title": "Net (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Net (1 GP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-net-1-gp"
+  },
+  {
+    "title": "Oil (1 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Oil (1 SP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-oil-1-sp"
+  },
+  {
+    "title": "Dousing a Creature or an Object",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Oil (1 SP)",
+      "Dousing a Creature or an Object"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-oil-1-sp-dousing-a-creature-or-an-object"
+  },
+  {
+    "title": "Dousing a Space",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Oil (1 SP)",
+      "Dousing a Space"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-oil-1-sp-dousing-a-space"
+  },
+  {
+    "title": "Fuel",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Oil (1 SP)",
+      "Fuel"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-oil-1-sp-fuel"
+  },
+  {
+    "title": "Paper (2 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Paper (2 SP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-paper-2-sp"
+  },
+  {
+    "title": "Parchment (1 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Parchment (1 SP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-parchment-1-sp"
+  },
+  {
+    "title": "Perfume (5 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Perfume (5 GP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-perfume-5-gp"
+  },
+  {
+    "title": "Poison, Basic (100 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Poison, Basic (100 GP)"
+    ],
+    "page": 227,
+    "slug": "chapter-6-equipment-adventuring-gear-poison-basic-100-gp"
+  },
+  {
+    "title": "Pole (5 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Pole (5 CP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-pole-5-cp"
+  },
+  {
+    "title": "Pot, Iron (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Pot, Iron (2 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-pot-iron-2-gp"
+  },
+  {
+    "title": "Potion of Healing (50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Potion of Healing (50 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-potion-of-healing-50-gp"
+  },
+  {
+    "title": "Pouch (5 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Pouch (5 SP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-pouch-5-sp"
+  },
+  {
+    "title": "Priest's Pack (33 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Priest's Pack (33 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-priest-s-pack-33-gp"
+  },
+  {
+    "title": "Quiver (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Quiver (1 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-quiver-1-gp"
+  },
+  {
+    "title": "Ram, Portable (4 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Ram, Portable (4 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-ram-portable-4-gp"
+  },
+  {
+    "title": "Rations (5 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Rations (5 SP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-rations-5-sp"
+  },
+  {
+    "title": "Robe (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Robe (1 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-robe-1-gp"
+  },
+  {
+    "title": "Rope (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Rope (1 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-rope-1-gp"
+  },
+  {
+    "title": "Sack (1 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Sack (1 CP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-sack-1-cp"
+  },
+  {
+    "title": "Scholar's Pack (40 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Scholar's Pack (40 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-scholar-s-pack-40-gp"
+  },
+  {
+    "title": "Shovel (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Shovel (2 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-shovel-2-gp"
+  },
+  {
+    "title": "Signal Whistle (5 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Signal Whistle (5 CP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-signal-whistle-5-cp"
+  },
+  {
+    "title": "Spell Scroll (Cantrip, 30 GP Level 1, 50 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Spell Scroll (Cantrip, 30 GP Level 1, 50 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-spell-scroll-cantrip-30-gp-level-1-50-gp"
+  },
+  {
+    "title": "Spikes, Iron (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Spikes, Iron (1 GP)"
+    ],
+    "page": 228,
+    "slug": "chapter-6-equipment-adventuring-gear-spikes-iron-1-gp"
+  },
+  {
+    "title": "Spyglass (1,000 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Spyglass (1,000 GP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-spyglass-1-000-gp"
+  },
+  {
+    "title": "String (1 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "String (1 SP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-string-1-sp"
+  },
+  {
+    "title": "Tent (2 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Tent (2 GP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-tent-2-gp"
+  },
+  {
+    "title": "Tinderbox (5 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Tinderbox (5 SP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-tinderbox-5-sp"
+  },
+  {
+    "title": "Torch (1 CP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Torch (1 CP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-torch-1-cp"
+  },
+  {
+    "title": "Vial (1 GP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Vial (1 GP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-vial-1-gp"
+  },
+  {
+    "title": "Waterskin (2 SP)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Adventuring Gear",
+      "Waterskin (2 SP)"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-adventuring-gear-waterskin-2-sp"
+  },
+  {
+    "title": "Mounts and Vehicles",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-mounts-and-vehicles"
+  },
+  {
+    "title": "Mounts and Cargo",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Mounts and Cargo"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-mounts-and-cargo"
+  },
+  {
+    "title": "Barding",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Barding"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-barding"
+  },
+  {
+    "title": "Saddles",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Saddles"
+    ],
+    "page": 229,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-saddles"
+  },
+  {
+    "title": "Large Vehicles",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles"
+  },
+  {
+    "title": "Speed",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles",
+      "Speed"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles-speed"
+  },
+  {
+    "title": "Crew",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles",
+      "Crew"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles-crew"
+  },
+  {
+    "title": "Passengers",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles",
+      "Passengers"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles-passengers"
+  },
+  {
+    "title": "Damage Threshold",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles",
+      "Damage Threshold"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles-damage-threshold"
+  },
+  {
+    "title": "Ship Repair",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Mounts and Vehicles",
+      "Large Vehicles",
+      "Ship Repair"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-mounts-and-vehicles-large-vehicles-ship-repair"
+  },
+  {
+    "title": "Services",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-services"
+  },
+  {
+    "title": "Lifestyle Expenses",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses"
+  },
+  {
+    "title": "Wretched (Free)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Wretched (Free)"
+    ],
+    "page": 230,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-wretched-free"
+  },
+  {
+    "title": "Squalid (1 SP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Squalid (1 SP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-squalid-1-sp-per-day"
+  },
+  {
+    "title": "Poor (2 SP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Poor (2 SP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-poor-2-sp-per-day"
+  },
+  {
+    "title": "Modest (1 GP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Modest (1 GP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-modest-1-gp-per-day"
+  },
+  {
+    "title": "Comfortable (2 GP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Comfortable (2 GP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-comfortable-2-gp-per-day"
+  },
+  {
+    "title": "Wealthy (4 GP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Wealthy (4 GP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-wealthy-4-gp-per-day"
+  },
+  {
+    "title": "Aristocratic (10 GP per Day)",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Lifestyle Expenses",
+      "Aristocratic (10 GP per Day)"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-lifestyle-expenses-aristocratic-10-gp-per-day"
+  },
+  {
+    "title": "Food, Drink, and Lodging",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Food, Drink, and Lodging"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-food-drink-and-lodging"
+  },
+  {
+    "title": "Travel",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Travel"
+    ],
+    "page": 231,
+    "slug": "chapter-6-equipment-services-travel"
+  },
+  {
+    "title": "Hirelings",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Hirelings"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-services-hirelings"
+  },
+  {
+    "title": "Spellcasting",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Services",
+      "Spellcasting"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-services-spellcasting"
+  },
+  {
+    "title": "Magic Items",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items"
+  },
+  {
+    "title": "Identifying a Magic Item",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Identifying a Magic Item"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items-identifying-a-magic-item"
+  },
+  {
+    "title": "Attunement",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Attunement"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items-attunement"
+  },
+  {
+    "title": "Attune during a Short Rest",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Attunement",
+      "Attune during a Short Rest"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items-attunement-attune-during-a-short-rest"
+  },
+  {
+    "title": "No More Than Three Items",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Attunement",
+      "No More Than Three Items"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items-attunement-no-more-than-three-items"
+  },
+  {
+    "title": "Ending Attunement",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Attunement",
+      "Ending Attunement"
+    ],
+    "page": 232,
+    "slug": "chapter-6-equipment-magic-items-attunement-ending-attunement"
+  },
+  {
+    "title": "Wearing and Wielding Items",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Wearing and Wielding Items"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-magic-items-wearing-and-wielding-items"
+  },
+  {
+    "title": "Multiple Items of the Same Kind",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Wearing and Wielding Items",
+      "Multiple Items of the Same Kind"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-magic-items-wearing-and-wielding-items-multiple-items-of-the-same-kind"
+  },
+  {
+    "title": "Paired Items",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Magic Items",
+      "Wearing and Wielding Items",
+      "Paired Items"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-magic-items-wearing-and-wielding-items-paired-items"
+  },
+  {
+    "title": "Crafting Equipment",
+    "type": "section",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment"
+  },
+  {
+    "title": "Crafting Nonmagical Items",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Crafting Nonmagical Items"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-crafting-nonmagical-items"
+  },
+  {
+    "title": "Tools",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Crafting Nonmagical Items",
+      "Tools"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-crafting-nonmagical-items-tools"
+  },
+  {
+    "title": "Raw Materials",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Crafting Nonmagical Items",
+      "Raw Materials"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-crafting-nonmagical-items-raw-materials"
+  },
+  {
+    "title": "Time",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Crafting Nonmagical Items",
+      "Time"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-crafting-nonmagical-items-time"
+  },
+  {
+    "title": "Brewing Potions of Healing",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Brewing Potions of Healing"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-brewing-potions-of-healing"
+  },
+  {
+    "title": "Scribing Spell Scrolls",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Scribing Spell Scrolls"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-scribing-spell-scrolls"
+  },
+  {
+    "title": "Time and Cost",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Scribing Spell Scrolls",
+      "Time and Cost"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-scribing-spell-scrolls-time-and-cost"
+  },
+  {
+    "title": "Prerequisites for the Scribe",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Scribing Spell Scrolls",
+      "Prerequisites for the Scribe"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-scribing-spell-scrolls-prerequisites-for-the-scribe"
+  },
+  {
+    "title": "Cantrips",
+    "type": "entries",
+    "chapter": "Chapter 6: Equipment",
+    "sectionPath": [
+      "Chapter 6: Equipment",
+      "Crafting Equipment",
+      "Scribing Spell Scrolls",
+      "Cantrips"
+    ],
+    "page": 233,
+    "slug": "chapter-6-equipment-crafting-equipment-scribing-spell-scrolls-cantrips"
+  },
+  {
+    "title": "Chapter 7: Spells",
+    "type": "section",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells"
+  },
+  {
+    "title": "Gaining Spells",
+    "type": "section",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Gaining Spells"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-gaining-spells"
+  },
+  {
+    "title": "Preparing Spells",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Gaining Spells",
+      "Preparing Spells"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-gaining-spells-preparing-spells"
+  },
+  {
+    "title": "Always-Prepared Spells",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Gaining Spells",
+      "Always-Prepared Spells"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-gaining-spells-always-prepared-spells"
+  },
+  {
+    "title": "Casting in Armor",
+    "type": "inset",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Gaining Spells",
+      "Always-Prepared Spells",
+      "Casting in Armor"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-gaining-spells-always-prepared-spells-casting-in-armor"
+  },
+  {
+    "title": "Casting Spells",
+    "type": "section",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-casting-spells"
+  },
+  {
+    "title": "Spell Level",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Spell Level"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-casting-spells-spell-level"
+  },
+  {
+    "title": "Spell Slots",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Spell Level",
+      "Spell Slots"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-casting-spells-spell-level-spell-slots"
+  },
+  {
+    "title": "Casting without Slots",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Spell Level",
+      "Casting without Slots"
+    ],
+    "page": 235,
+    "slug": "chapter-7-spells-casting-spells-spell-level-casting-without-slots"
+  },
+  {
+    "title": "Using a Higher-Level Spell Slot",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Spell Level",
+      "Using a Higher-Level Spell Slot"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-spell-level-using-a-higher-level-spell-slot"
+  },
+  {
+    "title": "School of Magic",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "School of Magic"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-school-of-magic"
+  },
+  {
+    "title": "Class Spell Lists",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Class Spell Lists"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-class-spell-lists"
+  },
+  {
+    "title": "Casting Time",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Casting Time"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-casting-time"
+  },
+  {
+    "title": "One Spell with a Spell Slot per Turn",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Casting Time",
+      "One Spell with a Spell Slot per Turn"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-casting-time-one-spell-with-a-spell-slot-per-turn"
+  },
+  {
+    "title": "Reaction and Bonus Action Triggers",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Casting Time",
+      "Reaction and Bonus Action Triggers"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-casting-time-reaction-and-bonus-action-triggers"
+  },
+  {
+    "title": "Longer Casting Times",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Casting Time",
+      "Longer Casting Times"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-casting-time-longer-casting-times"
+  },
+  {
+    "title": "Range",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Range"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-range"
+  },
+  {
+    "title": "Components",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Components"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-components"
+  },
+  {
+    "title": "Verbal (V)",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Components",
+      "Verbal (V)"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-components-verbal-v"
+  },
+  {
+    "title": "Creating Verbal Components",
+    "type": "inset",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Components",
+      "Verbal (V)",
+      "Creating Verbal Components"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-components-verbal-v-creating-verbal-components"
+  },
+  {
+    "title": "Somatic (S)",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Components",
+      "Somatic (S)"
+    ],
+    "page": 236,
+    "slug": "chapter-7-spells-casting-spells-components-somatic-s"
+  },
+  {
+    "title": "Material (M)",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Components",
+      "Material (M)"
+    ],
+    "page": 237,
+    "slug": "chapter-7-spells-casting-spells-components-material-m"
+  },
+  {
+    "title": "Duration",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Duration"
+    ],
+    "page": 237,
+    "slug": "chapter-7-spells-casting-spells-duration"
+  },
+  {
+    "title": "Effects",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects"
+    ],
+    "page": 237,
+    "slug": "chapter-7-spells-casting-spells-effects"
+  },
+  {
+    "title": "Targets",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets"
+    ],
+    "page": 237,
+    "slug": "chapter-7-spells-casting-spells-effects-targets"
+  },
+  {
+    "title": "A Clear Path to the Target",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets",
+      "A Clear Path to the Target"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-targets-a-clear-path-to-the-target"
+  },
+  {
+    "title": "Targeting Yourself",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets",
+      "Targeting Yourself"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-targets-targeting-yourself"
+  },
+  {
+    "title": "Areas of Effect",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets",
+      "Areas of Effect"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-targets-areas-of-effect"
+  },
+  {
+    "title": "Awareness of Being Targeted",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets",
+      "Awareness of Being Targeted"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-targets-awareness-of-being-targeted"
+  },
+  {
+    "title": "Invalid Targets",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Targets",
+      "Invalid Targets"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-targets-invalid-targets"
+  },
+  {
+    "title": "Saving Throws",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Saving Throws"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-saving-throws"
+  },
+  {
+    "title": "Attack Rolls",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Attack Rolls"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-attack-rolls"
+  },
+  {
+    "title": "Combining Spell Effects",
+    "type": "entries",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Combining Spell Effects"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-combining-spell-effects"
+  },
+  {
+    "title": "Identifying an Ongoing Spell",
+    "type": "inset",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Casting Spells",
+      "Effects",
+      "Combining Spell Effects",
+      "Identifying an Ongoing Spell"
+    ],
+    "page": 238,
+    "slug": "chapter-7-spells-casting-spells-effects-combining-spell-effects-identifying-an-ongoing-spell"
+  },
+  {
+    "title": "Spell Descriptions",
+    "type": "section",
+    "chapter": "Chapter 7: Spells",
+    "sectionPath": [
+      "Chapter 7: Spells",
+      "Spell Descriptions"
+    ],
+    "page": 239,
+    "slug": "chapter-7-spells-spell-descriptions"
+  },
+  {
+    "title": "Appendix A: The Multiverse",
+    "type": "section",
+    "chapter": "Appendix A: The Multiverse",
+    "sectionPath": [
+      "Appendix A: The Multiverse"
+    ],
+    "page": 344,
+    "slug": "appendix-a-the-multiverse"
+  },
+  {
+    "title": "The Material Realms",
+    "type": "section",
+    "chapter": "Appendix A: The Multiverse",
+    "sectionPath": [
+      "Appendix A: The Multiverse",
+      "The Material Realms"
+    ],
+    "page": 344,
+    "slug": "appendix-a-the-multiverse-the-material-realms"
+  },
+  {
+    "title": "Transitive Planes",
+    "type": "section",
+    "chapter": "Appendix A: The Multiverse",
+    "sectionPath": [
+      "Appendix A: The Multiverse",
+      "Transitive Planes"
+    ],
+    "page": 344,
+    "slug": "appendix-a-the-multiverse-transitive-planes"
+  },
+  {
+    "title": "The Inner Planes",
+    "type": "section",
+    "chapter": "Appendix A: The Multiverse",
+    "sectionPath": [
+      "Appendix A: The Multiverse",
+      "The Inner Planes"
+    ],
+    "page": 344,
+    "slug": "appendix-a-the-multiverse-the-inner-planes"
+  },
+  {
+    "title": "The Outer Planes",
+    "type": "section",
+    "chapter": "Appendix A: The Multiverse",
+    "sectionPath": [
+      "Appendix A: The Multiverse",
+      "The Outer Planes"
+    ],
+    "page": 344,
+    "slug": "appendix-a-the-multiverse-the-outer-planes"
+  },
+  {
+    "title": "Appendix B: Creature Stat Blocks",
+    "type": "section",
+    "chapter": "Appendix B: Creature Stat Blocks",
+    "sectionPath": [
+      "Appendix B: Creature Stat Blocks"
+    ],
+    "page": 346,
+    "slug": "appendix-b-creature-stat-blocks"
+  },
+  {
+    "title": "Rules Glossary",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Rules Glossary"
+    ],
+    "page": 360,
+    "slug": "rules-glossary"
+  },
+  {
+    "title": "Glossary Conventions",
+    "type": "section",
+    "chapter": "Rules Glossary",
+    "sectionPath": [
+      "Rules Glossary",
+      "Glossary Conventions"
+    ],
+    "page": 360,
+    "slug": "rules-glossary-glossary-conventions"
+  },
+  {
+    "title": "Rules Definitions",
+    "type": "section",
+    "chapter": "Rules Glossary",
+    "sectionPath": [
+      "Rules Glossary",
+      "Rules Definitions"
+    ],
+    "page": 360,
+    "slug": "rules-glossary-rules-definitions"
+  },
+  {
+    "title": "Credits",
+    "type": "section",
+    "chapter": null,
+    "sectionPath": [
+      "Credits"
+    ],
+    "page": 2,
+    "slug": "credits"
+  }
+]

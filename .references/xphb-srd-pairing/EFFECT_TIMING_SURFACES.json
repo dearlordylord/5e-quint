@@ -1,0 +1,253 @@
+{
+  "generatedFrom": [
+    ".references/5etools-src/data/book/book-xphb.json",
+    ".references/srd-5.2.1/Rules-Glossary.md",
+    ".references/srd-5.2.1/Playing-the-Game.md",
+    ".references/RESEARCH_foundry_effect_staging.md",
+    ".references/LEARN_explicit_effect_phase_ownership.md",
+    ".references/LEARN_closed_mechanic_vocabularies.md"
+  ],
+  "notes": [
+    "This file records timing/workflow surfaces forced by corpus mechanics, not copied platform workflow names.",
+    "Competitor research is used only as a cross-check that a distinction matters in practice.",
+    "SRD remains provenance; XPHB/5etools here is structured input for pairing and mining."
+  ],
+  "stages": [
+    {
+      "stageId": "action_use",
+      "forcedByTerms": [
+        "Action",
+        "Attack",
+        "Dash",
+        "Disengage",
+        "Dodge",
+        "Help",
+        "Hide",
+        "Influence",
+        "Magic",
+        "Ready",
+        "Search",
+        "Study",
+        "Utilize"
+      ],
+      "likelyAppliesTo": [
+        "special actions",
+        "feature-granted actions",
+        "spell casting via action",
+        "equipment interaction"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "bonus_action_use",
+      "forcedByTerms": [
+        "Bonus Action"
+      ],
+      "likelyAppliesTo": [
+        "bonus-action spells",
+        "bonus-action features",
+        "resource-gated optional actions"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "reaction_window",
+      "forcedByTerms": [
+        "Reaction",
+        "Opportunity Attack"
+      ],
+      "likelyAppliesTo": [
+        "interrupts",
+        "defensive responses",
+        "opportunity attacks",
+        "reaction-consuming temporary effects"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "ready_resolution",
+      "forcedByTerms": [
+        "Ready"
+      ],
+      "likelyAppliesTo": [
+        "declared-later execution",
+        "triggered deferred actions"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "attack_resolution",
+      "forcedByTerms": [
+        "Attack Roll",
+        "Weapon Attack",
+        "Spell Attack",
+        "Unarmed Strike"
+      ],
+      "likelyAppliesTo": [
+        "hit vs miss branches",
+        "on-hit riders",
+        "attack-triggered temporary effects"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "save_resolution",
+      "forcedByTerms": [
+        "Saving Throw",
+        "Save"
+      ],
+      "likelyAppliesTo": [
+        "save-gated spells",
+        "save-gated hazards",
+        "partial-success effects"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "damage_resolution",
+      "forcedByTerms": [
+        "Damage",
+        "Damage Roll",
+        "Resistance",
+        "Vulnerability",
+        "Temporary Hit Points"
+      ],
+      "likelyAppliesTo": [
+        "damage riders",
+        "damage mitigation",
+        "damage-triggered concentration checks",
+        "on-damage reactions"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "condition_apply_remove",
+      "forcedByTerms": [
+        "Condition",
+        "Blinded",
+        "Charmed",
+        "Deafened",
+        "Exhaustion",
+        "Frightened",
+        "Grappled",
+        "Incapacitated",
+        "Invisible",
+        "Paralyzed",
+        "Petrified",
+        "Poisoned",
+        "Prone",
+        "Restrained",
+        "Stunned",
+        "Unconscious"
+      ],
+      "likelyAppliesTo": [
+        "condition application",
+        "condition immunity or prevention",
+        "condition cleanup"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "turn_start",
+      "forcedByTerms": [
+        "turn-based durations",
+        "start of turn phrasing"
+      ],
+      "likelyAppliesTo": [
+        "ongoing damage",
+        "timed effects",
+        "turn-bounded cleanup"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "turn_end",
+      "forcedByTerms": [
+        "turn-based durations",
+        "end of turn phrasing"
+      ],
+      "likelyAppliesTo": [
+        "expiry timing",
+        "end-step cleanup",
+        "deferred removals"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "concentration_start",
+      "forcedByTerms": [
+        "Concentration"
+      ],
+      "likelyAppliesTo": [
+        "ongoing spell ownership",
+        "source-linked active effects"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "concentration_end",
+      "forcedByTerms": [
+        "Concentration"
+      ],
+      "likelyAppliesTo": [
+        "cleanup on loss of concentration",
+        "dependent effect teardown"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "rest_completion",
+      "forcedByTerms": [
+        "Long Rest",
+        "Short Rest"
+      ],
+      "likelyAppliesTo": [
+        "resource recovery",
+        "rest-expiring effects",
+        "recharge mechanics"
+      ],
+      "status": "strong-candidate"
+    },
+    {
+      "stageId": "movement_trigger",
+      "forcedByTerms": [
+        "Opportunity Attack",
+        "Grappling",
+        "Difficult Terrain",
+        "Climbing",
+        "Flying",
+        "Swimming"
+      ],
+      "likelyAppliesTo": [
+        "leave-reach triggers",
+        "movement penalties",
+        "movement-gated effects"
+      ],
+      "status": "candidate"
+    },
+    {
+      "stageId": "equipment_interaction",
+      "forcedByTerms": [
+        "Utilize",
+        "Armor Training",
+        "Improvised Weapons",
+        "itemProperty",
+        "itemMastery"
+      ],
+      "likelyAppliesTo": [
+        "object interactions",
+        "weapon property handling",
+        "mastery-linked action branches"
+      ],
+      "status": "candidate"
+    }
+  ],
+  "doNotAdmitWithoutCorpusPressure": [
+    "pre_roll",
+    "post_roll",
+    "workflow_finished",
+    "macro_apply",
+    "macro_remove",
+    "chat_message_created"
+  ]
+}

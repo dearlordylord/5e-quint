@@ -1,0 +1,16 @@
+*
+!.gitignore
+!README.md
+!RESEARCH_XPHB_SRD_PAIRING.md
+!RESEARCH_5EQUINT.md
+!RESEARCH_foundry_effect_staging.md
+!RESEARCH_ecosystem_map.md
+!RESEARCH_pf2e_rule_elements.md
+!RESEARCH_runtime_replay_patterns.md
+!RESEARCH_verification_scenario_mining.md
+!LEARN_explicit_effect_phase_ownership.md
+!LEARN_closed_mechanic_vocabularies.md
+!LEARN_item_feature_scoped_runtime_payloads.md
+!LEARN_hard_provenance_package_boundaries.md
+!xphb-srd-pairing/
+!xphb-srd-pairing/**
