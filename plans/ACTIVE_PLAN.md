@@ -1,25 +1,10 @@
 # Active Plan
 
-Date: 2026-04-13
+Date: 2026-04-15
 
 This is the single active planning queue.
 
-The previous character-formalization and MCP monster-control batch is complete and no longer belongs in the active queue. This file now tracks the next sequenced architecture batch:
-
-- Monster database Phase 1-2 first;
-- spell ownership and generic spell execution surfaces second;
-- monster database continuation after the spell boundary lands.
-
-## Batch Objective
-
-Land the next content-architecture staircase without:
-
-- duplicating monster or spell authored facts across core, MCP, app, runtime, or battle layers;
-- collapsing provenance, structured input, and runtime projection into one type;
-- inventing monster-specific or spell-specific adapter APIs where generic engine facilities should own execution;
-- letting monster work become the owner of spell execution semantics;
-- letting spell work create a second monster registry or bypass stat-block ownership;
-- widening battle or MCP into the canonical owner of authored content.
+All tasks in this file are `done`. The monster database, spell ownership, monster facilities, and character convergence batches have landed on `master`. No new batch is scoped. Before starting new work, the plan owner must name the next batch and replace the task queue below accordingly.
 
 The coding loop should treat this file as the active queue. Do not start a task whose status is not `ready-for-implementation-after-light-research` or `ready-for-research` unless this file is updated first.
 
@@ -176,6 +161,12 @@ The Ralph harness reads this machine-readable index for task order and status. K
       "id": "CHARAUTH1",
       "status": "done",
       "title": "Character Quint Authority Convergence"
+    },
+    {
+      "number": 23,
+      "id": "CHARUI1",
+      "status": "done",
+      "title": "Atom-Graph-Compatible Open-Choice Payload"
     }
   ]
 }
@@ -232,6 +223,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | done                                          | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | Landed on `integration`: canonical finalized character ownership now lives on ordered `advancement` rather than duplicated `classLevels`; finalized sheet choices/loadout/spellcasting are totalized instead of draft-shaped optional bags; and assessment/finalization/advancement failure results now use discriminated unions that separate open required choices from illegal issues. Quint mirrors the same tightened sheet ownership and finalization boundary. | Complete. Invalid finalized character states are now structurally excluded at the owned character boundary, and downstream callers consume one canonical progression owner plus stronger result variants instead of contradictory sheet facts or flat failure bags. |
 | 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | done                                          | CHARMODEL1         | CHARMCP1, CHARAUTH1 | Landed on `integration`: `previewCharacterSheetAdvancement()` now exposes a non-mutating candidate draft plus candidate assessment that preserves open required choices separately from illegal issues, `advanceCharacterSheet()` now commits through that preview boundary, MCP exposes `preview_character_sheet_advancement`, and the character-creation UI consumes preview-before-commit semantics instead of projecting a committing level-up straight back into draft state. | Complete. The remaining character result-shape gap is closed on the owned TS/MCP/app seam, and downstream authority work can now treat advancement like draft editing: preview first, then commit. |
 | 18    | CHARAUTH1 - Character Quint Authority Convergence              | done                                          | CHARMCP1, CHARTYPE1 | none      | Landed on `integration`: `character.qnt` now keeps ordered `advancement` as the sole class-level owner when reconstructing drafts from finalized sheets or advancement previews, and parity coverage now checks the Quint handoff operators (`pSheetToDraft`, `pDraftFromSheetTransition`, `pSheetLegality`, `pCanAdvance`, projection) plus the settled MCP/app preview consumers against that owned seam. | Complete. Character draft reconstruction no longer restates derived `classLevels` once `advancement` exists, and the remaining character adapter surfaces are now regression-covered as thin consumers of the Quint-led ownership boundary. |
+| 23    | CHARUI1 - Atom-Graph-Compatible Open-Choice Payload            | done                                          | CHARAUTH1          | none      | Landed on `master`: core exposes `listCharacterFeaturePickers(draft)` and `resolveOpenChoicePayload(draft, choice)` returning `{ featureRef, options, pickCount, writePath, current }` for primary class skills, species skill, druid Primal Order, cleric Divine Order, and fighter / champion / paladin / ranger Fighting Styles. The `/character` step 5 renders a generic `<OpenChoicePicker>` per applicable feature with no per-class branches; pickers persist after commit so users can change or clear, and `buildOpenChoicePatch(draft, payload, value \| undefined)` composes the draft patch. | Complete. The picker contract matches the atom-graph `choose` + options shape so the schema-design phase can re-plumb `options` from authored graph data without changing `CharacterOpenChoice` or any UI code. |
 
 ## Current Integrated Baseline
 
@@ -240,10 +232,6 @@ Already wired on `master` / `integration` and relevant to this batch:
 - `battle.qnt` remains the authoritative combat boundary.
 - Monster control and legendary action MCP surfaces already exist and consume core-owned monster data through generic battle-facing routes rather than adapter-owned monster registries.
 - `packages/core/src/monster-types.ts`, `packages/core/src/monster-catalog.ts`, and `packages/core/src/monster-catalog.md` already provide the starting point for the monster catalog, but the current shape is intentionally narrow and still too goblin-specific for durable SRD dataset growth.
-- `CONTENT_ARCHITECTURE_ROADMAP.md` already establishes the intended sequence after the completed character batch:
-  - monsters first;
-  - spells second;
-  - monster continuation after the spell boundary exists.
 - `plans/monster-database-plan.md` already contains the durable phase structure for Monster DB phases 1-4.
 - `MCP_EVENT_SURFACE_AUDIT.md` already identifies generic battle spell surfaces as blocked on a canonical spell-content owner and battle-owned multi-phase spell resolution boundary.
 
@@ -285,7 +273,7 @@ Planning note:
 
 ### Task 0 - MONDB1 - Canonical Goblin Tracer Bullet
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -921,7 +909,7 @@ Verification requirements:
 
 ### Task 13 - CHARMCP1 - Stored Character MCP Surface
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `CHAREDIT1`
 
@@ -991,7 +979,7 @@ Verification requirements:
 
 ### Task 15 - CHAROWN2 - Fighting Style And Expertise Ownership
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `CHAROWN1`
 
@@ -1122,7 +1110,7 @@ Verification requirements:
 
 ### Task 18 - CHARAUTH1 - Character Quint Authority Convergence
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `CHARMCP1`, `CHARTYPE1`
 
@@ -1156,3 +1144,62 @@ Verification requirements:
 Handoff readiness:
 
 - Ready for implementation after light research. The remaining convergence task no longer needs adapter-surface cleanup first; it can now focus on Quint-led ownership and parity across the settled draft-preview, advancement-preview, MCP, and projection seams.
+
+### Task 23 - CHARUI1 - Atom-Graph-Compatible Open-Choice Payload
+
+Status: `done`
+
+Depends on: `CHARAUTH1`
+
+Blocks: none
+
+Scope:
+
+- Replace the raw-JSON editors and ad-hoc per-class pickers in the `/character` step 5 with generic pickers driven by a core-owned projection of each open choice.
+- Extend the character-domain so that every `CharacterOpenChoice` the UI can render has a derived `payload` with atom-graph-compatible shape: `{ featureRef, options, pickCount, writePath }`.
+- Keep the payload as a one-way runtime projection over the existing `CharacterOpenChoice` result — do not duplicate the assessment model, and do not widen the Quint `CharacterOpenChoice` semantic shape.
+- Cover at minimum the currently-emitted open-choice codes: `missingPrimaryClassSkillChoices`, `missingSpeciesSkillChoice`, `missingFeatureChoice` (druid Primal Order, cleric Divine Order, fighter / champion / paladin / ranger Fighting Styles), `missingToolChoice`, `missingFeatureChoice` (Expertise).
+- Keep `multiclassSkills`, `spellcasting`, and equipment loadout details on their existing JSON paths for a later slice; this task only delivers the shared picker surface plus the above codes.
+
+Non-goals:
+
+- Moving the open-choice semantic owner out of `character-creation.qnt` / `character-draft-analysis.ts`.
+- Adding a hand-maintained TypeScript union of per-feature payload kinds that would have to be replaced by the future atom-graph schema.
+- Designing the atom-graph schema itself (see `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — schema design is a separate phase).
+- Adding new open-choice codes or new validation behavior.
+- Threading equipment, spellcasting, or full multiclass coverage through pickers — those remain JSON in step 5 for now.
+
+Research note:
+
+- `.references/xphb-srd-pairing/RESEARCH_capstone.md` explicitly defers schema design. The taxonomy already names `choose` as a procedure atom (`TAXONOMY_atoms_graph.md` §2) and models closed option sets as the "Pool With Options Menu" subgraph (M).
+- The payload shape `{ featureRef, options, pickCount, writePath }` is what a `choose` atom with closed options would naturally project to a non-authoritative UI, regardless of the eventual storage shape.
+- When the schema-design phase lands, the `options` source gets re-plumbed from the existing class/species constants to the authored atom graph. Neither the payload contract nor the UI changes.
+- Do not introduce a hand-maintained `type CharacterOpenChoicePayload = { kind: "druidPrimalOrder"; ... } | { kind: "clericDivineOrder"; ... } | ...` union — that is the variant of this task that would churn when the schema lands.
+
+Verification requirements:
+
+- Confirm the payload resolver is a pure projection over `(draft, choice)` and does not duplicate validator logic.
+- Confirm the UI has no class-specific branches — adding a new open choice with a registered payload resolver must surface a picker automatically.
+- Confirm existing `CharacterCreationPage` tests still pass; add UI coverage for at least one single-pick (primal order) and one multi-pick (primary class skills) dispatch.
+- Include `/simplify` convergence, minimum two rounds.
+
+Handoff readiness:
+
+- Complete. Atom-graph-compatible payload seam landed, and the UI has no class-specific picker branches.
+
+Closeout notes:
+
+- `packages/core/src/character-open-choice-payload.ts` owns two projections: `listCharacterFeaturePickers(draft)` returns every applicable feature picker regardless of whether the slot is filled (so pickers stay visible for change / clear after commit), and `resolveOpenChoicePayload(draft, choice)` maps open-choice codes to the same payload shape for assessment-driven dispatch. Both return `{ featureRef, options, pickCount, writePath, current }`. `buildOpenChoicePatch(draft, payload, value | undefined)` composes the draft patch (undefined clears the slot).
+- Supported pickers in this pass: primary class skills (two open-choice codes collapse to one payload), species skill, druid Primal Order, cleric Divine Order, fighter / champion / paladin / ranger Fighting Styles. Multiclass skills, expertise, tools, granted languages, equipment options, and spellcasting remain on the JSON editors for a later slice.
+- `packages/app/src/components/character-creation/OpenChoicePicker.tsx` is the generic picker (single-select for `pickCount === 1`, checkbox grid for `pickCount > 1`) plus a `renderOpenChoicePickers` dispatch helper driven by `listCharacterFeaturePickers`. Single-select exposes "— not selected —" as a clear option.
+- `packages/app/src/components/character-creation/DetailsStep.tsx` and `AbilityScoresStep.tsx` were extracted to keep `CharacterCreationStepContent.tsx` under the 420-line cap after pickers were added.
+- No Quint parity change — `CharacterOpenChoice.payload` is kept as a one-way runtime projection; `character-creation.qnt` semantics are unchanged.
+- Core regression: `packages/core/src/character-open-choice-payload.test.ts` (6 tests). UI regression: `packages/app/src/components/character-creation/CharacterCreationPage.test.tsx` (7 tests, including single-pick druid primal order and multi-pick primary-class-skill dispatch).
+- `/simplify` round 1: consolidated six near-identical per-feature payload builders into one table-driven `singlePickCandidates` list + `singlePickChoicePayload` helper.
+- `/simplify` round 2: extracted `DetailsStep` and `AbilityScoresStep` files to bring `CharacterCreationStepContent.tsx` back under the eslint `max-lines` cap; dropped now-unused imports and local helpers in the parent component.
+
+Plan Impact:
+
+- Status: applied
+- Affected tasks: `CHARUI1` marked `done`. No downstream tasks unblocked (none were blocked).
+- Plan edits: Ralph task index + DAG row + task body now all say `done`.

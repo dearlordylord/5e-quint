@@ -1,8 +1,10 @@
 import {
-  applyCharacterDraftUpdate,
   assessCharacterDraft,
   type CharacterDraft,
+  type CharacterDraftUpdatePreview,
   type CharacterLevelUpTransition,
+  type CharacterSheetAdvancementPreview,
+  previewCharacterDraftUpdate,
   previewCharacterSheetAdvancement
 } from "@dnd/core/character-domain.ts"
 import {
@@ -10,8 +12,7 @@ import {
   characterSheetMachineInput,
   deriveCharacterSheetNumbers
 } from "@dnd/core/character-sheet-derived.ts"
-import { type Ability } from "@dnd/core/types.ts"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import {
   CLERIC_EXAMPLE_DRAFT,
@@ -44,13 +45,125 @@ function currentStepIndex(step: StepId): number {
   return STEP_ORDER.indexOf(step)
 }
 
+function formatDroppedPath(path: ReadonlyArray<string>): string {
+  return path.length === 0 ? "(root)" : path.join(".")
+}
+
+function LastChangePanel({ lastChange, onDismiss }: { lastChange: LastChange | null; onDismiss: () => void }) {
+  if (lastChange == null) return null
+  const dropped = lastChange.kind === "draft" ? lastChange.preview.droppedFacts : []
+  const newlyOpened =
+    lastChange.kind === "draft"
+      ? lastChange.preview.newlyOpenedChoices
+      : lastChange.preview.candidateAssessment.status === "complete"
+        ? []
+        : lastChange.preview.candidateAssessment.openChoices
+  const newlyIntroduced =
+    lastChange.kind === "draft"
+      ? lastChange.preview.newlyIntroducedIssues
+      : lastChange.preview.candidateAssessment.status === "invalid"
+        ? lastChange.preview.candidateAssessment.issues
+        : []
+
+  if (dropped.length === 0 && newlyOpened.length === 0 && newlyIntroduced.length === 0) return null
+
+  return (
+    <div className="mt-4 rounded-lg border border-amber-700/60 bg-amber-950/20 p-3 text-sm">
+      <div className="flex items-start justify-between gap-2">
+        <p className="font-medium text-amber-200">
+          Last {lastChange.kind === "draft" ? "edit" : "advancement preview"} impact
+        </p>
+        <button
+          aria-label="Dismiss last change panel"
+          className="rounded-md border border-gray-700 px-2 text-xs text-gray-300 hover:border-gray-500"
+          onClick={onDismiss}
+          type="button"
+        >
+          ✕
+        </button>
+      </div>
+      {dropped.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs uppercase tracking-wide text-amber-300">Dropped facts</p>
+          <ul className="mt-1 space-y-1 text-gray-200">
+            {dropped.map((fact) => (
+              <li key={fact.path.join(".")} className="rounded-md border border-gray-800 bg-gray-900 px-2 py-1">
+                <p className="font-mono text-xs text-amber-200">{formatDroppedPath(fact.path)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {newlyOpened.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs uppercase tracking-wide text-sky-300">Newly opened choices</p>
+          <ul className="mt-1 space-y-1 text-gray-200">
+            {newlyOpened.map((choice) => (
+              <li
+                key={`${choice.code}-${choice.message}`}
+                className="rounded-md border border-gray-800 bg-gray-900 px-2 py-1"
+              >
+                <p className="font-mono text-xs text-sky-300">{choice.code}</p>
+                <p className="text-xs text-gray-300">{choice.message}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {newlyIntroduced.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs uppercase tracking-wide text-rose-300">Newly introduced issues</p>
+          <ul className="mt-1 space-y-1 text-gray-200">
+            {newlyIntroduced.map((issue) => (
+              <li
+                key={`${issue.code}-${issue.message}`}
+                className="rounded-md border border-gray-800 bg-gray-900 px-2 py-1"
+              >
+                <p className="font-mono text-xs text-rose-300">{issue.code}</p>
+                <p className="text-xs text-gray-300">{issue.message}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+type LastChange =
+  | { readonly kind: "draft"; readonly preview: CharacterDraftUpdatePreview }
+  | { readonly kind: "advancement"; readonly preview: CharacterSheetAdvancementPreview }
+
 export function CharacterCreationPage() {
   const [draft, setDraft] = useState<CharacterDraft>(parseStoredDraft)
   const [currentStep, setCurrentStep] = useState<StepId>("class")
+  const [lastChange, setLastChange] = useState<LastChange | null>(null)
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
   }, [draft])
+
+  const goToStep = useCallback((offset: -1 | 1) => {
+    setCurrentStep((step) => {
+      const nextIndex = currentStepIndex(step) + offset
+      if (nextIndex < 0 || nextIndex >= STEP_ORDER.length) return step
+      return STEP_ORDER[nextIndex]
+    })
+  }, [])
+
+  useEffect(() => {
+    const handleKey = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target != null) {
+        const tag = target.tagName
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) return
+      }
+      if (event.key === "ArrowLeft") goToStep(-1)
+      else if (event.key === "ArrowRight") goToStep(1)
+    }
+    window.addEventListener("keydown", handleKey)
+    return () => window.removeEventListener("keydown", handleKey)
+  }, [goToStep])
 
   const assessment = assessCharacterDraft(draft)
   const completeSheet = assessment.status === "complete" ? assessment.sheet : null
@@ -65,27 +178,22 @@ export function CharacterCreationPage() {
         }
 
   function updateDraft(patch: Partial<CharacterDraft>) {
-    setDraft((current) => applyCharacterDraftUpdate(current, patch))
-  }
-
-  function setAbilityScore(ability: Ability, score: number) {
-    setDraft((current) =>
-      applyCharacterDraftUpdate(current, {
-        abilityScoreGeneration: {
-          mode: current.abilityScoreGeneration?.mode ?? "standardArray",
-          assignedScores: {
-            ...current.abilityScoreGeneration?.assignedScores,
-            [ability]: score
-          }
-        }
-      })
-    )
+    const preview = previewCharacterDraftUpdate(draft, patch)
+    setLastChange({ kind: "draft", preview })
+    setDraft(preview.candidateDraft)
   }
 
   function advanceDraftFromReview(transition: CharacterLevelUpTransition) {
     if (completeSheet == null) return
     const preview = previewCharacterSheetAdvancement(completeSheet, transition)
+    setLastChange({ kind: "advancement", preview })
     setDraft(preview.candidateDraft)
+  }
+
+  function loadPresetDraft(next: CharacterDraft, step: StepId) {
+    setDraft(next)
+    setCurrentStep(step)
+    setLastChange(null)
   }
 
   return (
@@ -95,40 +203,28 @@ export function CharacterCreationPage() {
         <div className="flex flex-wrap justify-center gap-2">
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
-            onClick={() => {
-              setDraft(FIGHTER_EXAMPLE_DRAFT)
-              setCurrentStep("review")
-            }}
+            onClick={() => loadPresetDraft(FIGHTER_EXAMPLE_DRAFT, "review")}
             type="button"
           >
             Load Fighter Example
           </button>
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
-            onClick={() => {
-              setDraft(FIGHTER_LEVEL5_EXAMPLE_DRAFT)
-              setCurrentStep("review")
-            }}
+            onClick={() => loadPresetDraft(FIGHTER_LEVEL5_EXAMPLE_DRAFT, "review")}
             type="button"
           >
             Load Fighter Lv5
           </button>
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300"
-            onClick={() => {
-              setDraft(CLERIC_EXAMPLE_DRAFT)
-              setCurrentStep("review")
-            }}
+            onClick={() => loadPresetDraft(CLERIC_EXAMPLE_DRAFT, "review")}
             type="button"
           >
             Load Cleric Example
           </button>
           <button
             className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-rose-500 hover:text-rose-300"
-            onClick={() => {
-              setDraft({})
-              setCurrentStep("class")
-            }}
+            onClick={() => loadPresetDraft({}, "class")}
             type="button"
           >
             Reset Draft
@@ -209,6 +305,7 @@ export function CharacterCreationPage() {
               </ul>
             )}
           </div>
+          <LastChangePanel lastChange={lastChange} onDismiss={() => setLastChange(null)} />
         </aside>
 
         <section className="space-y-6">
@@ -225,27 +322,29 @@ export function CharacterCreationPage() {
               displayValue={displayValue}
               draftStatus={assessment.status}
               reviewOutputs={reviewOutputs}
-              setAbilityScore={setAbilityScore}
               updateDraft={updateDraft}
             />
             <div className="mt-6 flex items-center justify-between border-t border-gray-800 pt-4">
               <button
-                className="rounded-md border border-gray-700 px-3 py-2 text-sm text-gray-200 transition hover:border-gray-500"
+                aria-label="Previous step"
+                className="rounded-md border border-gray-700 px-4 py-2 text-sm text-gray-200 transition hover:border-amber-400 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={currentStep === "class"}
-                onClick={() => setCurrentStep(STEP_ORDER[Math.max(0, currentStepIndex(currentStep) - 1)])}
+                onClick={() => goToStep(-1)}
                 type="button"
               >
-                Previous
+                <span aria-hidden="true">←</span> Previous
               </button>
+              <span className="text-xs text-gray-500">
+                Step {currentStepIndex(currentStep) + 1} of {STEP_ORDER.length} · use ← / → keys
+              </span>
               <button
-                className="rounded-md border border-amber-500 px-3 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10"
+                aria-label="Next step"
+                className="rounded-md border border-amber-500 px-4 py-2 text-sm text-amber-200 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                 disabled={currentStep === "review"}
-                onClick={() =>
-                  setCurrentStep(STEP_ORDER[Math.min(STEP_ORDER.length - 1, currentStepIndex(currentStep) + 1)])
-                }
+                onClick={() => goToStep(1)}
                 type="button"
               >
-                Next
+                Next <span aria-hidden="true">→</span>
               </button>
             </div>
           </div>

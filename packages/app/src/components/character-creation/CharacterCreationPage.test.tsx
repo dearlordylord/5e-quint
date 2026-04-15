@@ -91,7 +91,93 @@ describe("CharacterCreationPage", () => {
     fireEvent.click(screen.getByRole("button", { name: "+1 Fighter" }))
 
     expect(screen.getByText(/\d+ required choice\(s\) remain open\./)).toBeTruthy()
-    expect(screen.getByText("missingSubclassSelection")).toBeTruthy()
+    expect(screen.getAllByText("missingSubclassSelection").length).toBeGreaterThan(0)
     expect(screen.queryByText("Level Up (current: 3)")).toBeNull()
+  })
+
+  it("dispatches single-pick open-choice payloads through core to commit a druid primal order", () => {
+    window.localStorage.clear()
+    window.localStorage.setItem(
+      "dnd.characterDraft.v1",
+      JSON.stringify({
+        primaryClass: "druid",
+        advancement: [{ className: "druid" }]
+      })
+    )
+
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /^5\. Fill In Details$/ }))
+
+    const primalOrderSelect = screen
+      .getAllByRole("combobox")
+      .find((el) => el instanceof HTMLSelectElement && Array.from(el.options).some((opt) => opt.value === "magician"))
+    if (!(primalOrderSelect instanceof HTMLSelectElement)) throw new Error("expected druid primal order select")
+
+    fireEvent.change(primalOrderSelect, { target: { value: "magician" } })
+
+    const stored = JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")
+    expect(stored.choices?.druidPrimalOrder).toBe("magician")
+  })
+
+  it("keeps the druid primal order picker visible after commit, and supports change and clear", () => {
+    window.localStorage.clear()
+    window.localStorage.setItem(
+      "dnd.characterDraft.v1",
+      JSON.stringify({
+        primaryClass: "druid",
+        advancement: [{ className: "druid" }],
+        choices: { druidPrimalOrder: "magician" }
+      })
+    )
+
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /^5\. Fill In Details$/ }))
+
+    const pickPrimal = () =>
+      screen
+        .getAllByRole("combobox")
+        .find(
+          (el) => el instanceof HTMLSelectElement && Array.from(el.options).some((opt) => opt.value === "magician")
+        ) as HTMLSelectElement | undefined
+
+    const primal1 = pickPrimal()
+    if (primal1 == null) throw new Error("expected druid primal order select to remain after commit")
+    expect(primal1.value).toBe("magician")
+
+    fireEvent.change(primal1, { target: { value: "warden" } })
+    expect(JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null").choices?.druidPrimalOrder).toBe(
+      "warden"
+    )
+
+    const primal2 = pickPrimal()
+    if (primal2 == null) throw new Error("expected druid primal order select to remain visible after change")
+    fireEvent.change(primal2, { target: { value: "" } })
+    const cleared = JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")
+    expect(cleared.choices?.druidPrimalOrder).toBeUndefined()
+  })
+
+  it("dispatches multi-pick open-choice payloads through core to commit primary class skill picks", () => {
+    window.localStorage.clear()
+    window.localStorage.setItem(
+      "dnd.characterDraft.v1",
+      JSON.stringify({
+        primaryClass: "fighter",
+        advancement: [{ className: "fighter" }]
+      })
+    )
+
+    render(<CharacterCreationPage />)
+
+    fireEvent.click(screen.getByRole("button", { name: /^5\. Fill In Details$/ }))
+
+    const acrobatics = screen.getByRole("checkbox", { name: "Acrobatics" })
+    const perception = screen.getByRole("checkbox", { name: "Perception" })
+    fireEvent.click(acrobatics)
+    fireEvent.click(perception)
+
+    const stored = JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")
+    expect(stored.choices?.primaryClassSkills).toEqual(["acrobatics", "perception"])
   })
 })

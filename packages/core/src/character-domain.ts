@@ -12,6 +12,12 @@ export {
   type CharacterOpenChoiceCode,
 } from "#/character-draft-analysis.ts";
 export {
+  buildOpenChoicePatch,
+  listCharacterFeaturePickers,
+  resolveOpenChoicePayload,
+  type CharacterOpenChoicePayload,
+} from "#/character-open-choice-payload.ts";
+export {
   CharacterDraftSchema,
   CharacterLevelUpTransitionSchema,
   strictCharacterParseOptions,

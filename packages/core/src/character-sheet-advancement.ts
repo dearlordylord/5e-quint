@@ -1,5 +1,3 @@
-import { isDeepStrictEqual } from "node:util";
-
 import { cloneAdvancement } from "#/character-advancement.ts";
 import {
   assessCharacterDraft,
@@ -31,6 +29,33 @@ export interface CharacterLevelUpTransition {
 export interface CharacterSheetAdvancementPreview {
   readonly candidateDraft: CharacterDraft;
   readonly candidateAssessment: CharacterDraftAssessment;
+}
+
+function structuralEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (
+    typeof a !== "object" ||
+    typeof b !== "object" ||
+    a == null ||
+    b == null
+  ) {
+    return false;
+  }
+  if (Array.isArray(a)) {
+    if (!Array.isArray(b) || a.length !== b.length) return false;
+    return a.every((item, index) => structuralEqual(item, b[index]));
+  }
+  if (Array.isArray(b)) return false;
+  const keysA = Object.keys(a);
+  const keysB = Object.keys(b);
+  if (keysA.length !== keysB.length) return false;
+  const recordA = a as Record<string, unknown>;
+  const recordB = b as Record<string, unknown>;
+  return keysA.every(
+    (key) =>
+      Object.hasOwn(recordB, key) &&
+      structuralEqual(recordA[key], recordB[key]),
+  );
 }
 
 function cloneEquipmentChoices(
@@ -356,7 +381,7 @@ export function previewCharacterSheetAdvancement(
     };
   }
 
-  if (!isDeepStrictEqual(currentAssessment.sheet, sheet)) {
+  if (!structuralEqual(currentAssessment.sheet, sheet)) {
     return {
       candidateDraft,
       candidateAssessment:

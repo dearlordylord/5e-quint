@@ -167,13 +167,14 @@ function collectExplicitlyChangedPaths(params: {
     return [path];
   }
   if (detailedPath && isRecord(current) && isRecord(patch)) {
-    return [...new Set([...Object.keys(current), ...Object.keys(patch)])].flatMap(
-      (key) =>
-        collectExplicitlyChangedPaths({
-          current: current[key],
-          patch: patch[key],
-          path: [...path, key],
-        }),
+    return [
+      ...new Set([...Object.keys(current), ...Object.keys(patch)]),
+    ].flatMap((key) =>
+      collectExplicitlyChangedPaths({
+        current: current[key],
+        patch: patch[key],
+        path: [...path, key],
+      }),
     );
   }
 

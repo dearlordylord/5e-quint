@@ -1,18 +1,17 @@
-import { ABILITY_SCORE_GENERATION_MODES, BACKGROUND_ABILITY_SCORE_OPTIONS } from "@dnd/core/character-ability-scores.ts"
 import {
   ALIGNMENTS,
   CHARACTER_BACKGROUNDS,
   CHARACTER_LANGUAGES,
   CHARACTER_SPECIES,
   type CharacterDraft,
-  type CharacterLevelUpTransition,
-  STANDARD_ARRAY_SCORES,
-  totalPointBuyCost
+  type CharacterLevelUpTransition
 } from "@dnd/core/character-domain.ts"
 import { CLASS_NAMES, type ClassName } from "@dnd/core/features/class-tables.ts"
 import { ABILITIES, type Ability } from "@dnd/core/types.ts"
 
+import { AbilityScoresStep } from "#/components/character-creation/AbilityScoresStep.tsx"
 import { JsonEditor, titleCase } from "#/components/character-creation/characterCreationShared.tsx"
+import { DetailsStep } from "#/components/character-creation/DetailsStep.tsx"
 
 export const STEP_ORDER = ["class", "origin", "abilityScores", "alignment", "details", "review"] as const
 
@@ -65,7 +64,6 @@ export function CharacterCreationStepContent({
   draft,
   draftStatus,
   reviewOutputs,
-  setAbilityScore,
   updateDraft
 }: {
   advanceDraft: (transition: CharacterLevelUpTransition) => void
@@ -74,12 +72,9 @@ export function CharacterCreationStepContent({
   displayValue: (value: unknown) => string
   draftStatus: "complete" | "incomplete" | "invalid"
   reviewOutputs: Readonly<Record<"battleProjection" | "derived" | "machineInput" | "sheet", unknown>> | null
-  setAbilityScore: (ability: Ability, score: number) => void
   updateDraft: (patch: Partial<CharacterDraft>) => void
 }) {
   const assignedScores = completeAssignedScores(draft)
-  const plusTwoPlusOneIncrease =
-    draft.backgroundAbilityScoreIncrease?.kind === "plusTwoPlusOne" ? draft.backgroundAbilityScoreIncrease : undefined
 
   if (currentStep === "class") {
     return (
@@ -187,134 +182,7 @@ export function CharacterCreationStepContent({
   }
 
   if (currentStep === "abilityScores") {
-    return (
-      <div className="mt-5 space-y-5">
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-gray-200">Generation mode</span>
-            <select
-              className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-              onChange={(event) =>
-                updateDraft({
-                  abilityScoreGeneration: {
-                    mode: event.target.value as (typeof ABILITY_SCORE_GENERATION_MODES)[number],
-                    assignedScores: draft.abilityScoreGeneration?.assignedScores ?? {}
-                  }
-                })
-              }
-              value={draft.abilityScoreGeneration?.mode ?? ""}
-            >
-              <option value="">Select a mode</option>
-              {ABILITY_SCORE_GENERATION_MODES.map((mode) => (
-                <option key={mode} value={mode}>
-                  {titleCase(mode)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
-            <p className="font-medium text-gray-100">SRD reminders</p>
-            <p className="mt-2">Standard Array: {STANDARD_ARRAY_SCORES.join(", ")}</p>
-            <p className="mt-1">
-              Point-buy cost:{" "}
-              {assignedScores == null ? "complete all six scores to compute" : totalPointBuyCost(assignedScores)}
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {ABILITIES.map((ability) => (
-            <label key={ability} className="block space-y-2">
-              <span className="text-sm font-medium text-gray-200">{titleCase(ability)}</span>
-              <input
-                className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-                min={3}
-                max={20}
-                onChange={(event) => setAbilityScore(ability, Number(event.target.value))}
-                type="number"
-                value={draft.abilityScoreGeneration?.assignedScores[ability] ?? ""}
-              />
-            </label>
-          ))}
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block space-y-2">
-            <span className="text-sm font-medium text-gray-200">Background increase</span>
-            <select
-              className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-              onChange={(event) =>
-                updateDraft({
-                  backgroundAbilityScoreIncrease:
-                    event.target.value === "plusOneToThree"
-                      ? { kind: "plusOneToThree" }
-                      : { kind: "plusTwoPlusOne", plusTwo: "str", plusOne: "dex" }
-                })
-              }
-              value={draft.backgroundAbilityScoreIncrease?.kind ?? ""}
-            >
-              <option value="">Select an increase mode</option>
-              <option value="plusTwoPlusOne">+2 to one ability, +1 to a different ability</option>
-              <option value="plusOneToThree">+1 to all three background abilities</option>
-            </select>
-          </label>
-          <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-3 text-sm text-gray-300">
-            <p className="font-medium text-gray-100">Background abilities</p>
-            <p className="mt-2">
-              {draft.background == null
-                ? "Choose a background to see valid ability choices."
-                : BACKGROUND_ABILITY_SCORE_OPTIONS[draft.background].map(titleCase).join(", ")}
-            </p>
-          </div>
-        </div>
-        {plusTwoPlusOneIncrease == null ? null : (
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-gray-200">+2 ability</span>
-              <select
-                className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-                onChange={(event) =>
-                  updateDraft({
-                    backgroundAbilityScoreIncrease: {
-                      kind: "plusTwoPlusOne",
-                      plusTwo: event.target.value as Ability,
-                      plusOne: plusTwoPlusOneIncrease.plusOne
-                    }
-                  })
-                }
-                value={plusTwoPlusOneIncrease.plusTwo}
-              >
-                {ABILITIES.map((ability) => (
-                  <option key={ability} value={ability}>
-                    {titleCase(ability)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-gray-200">+1 ability</span>
-              <select
-                className="w-full rounded-lg border border-gray-800 bg-gray-950 px-3 py-2 text-gray-100"
-                onChange={(event) =>
-                  updateDraft({
-                    backgroundAbilityScoreIncrease: {
-                      kind: "plusTwoPlusOne",
-                      plusTwo: plusTwoPlusOneIncrease.plusTwo,
-                      plusOne: event.target.value as Ability
-                    }
-                  })
-                }
-                value={plusTwoPlusOneIncrease.plusOne}
-              >
-                {ABILITIES.map((ability) => (
-                  <option key={ability} value={ability}>
-                    {titleCase(ability)}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        )}
-      </div>
-    )
+    return <AbilityScoresStep assignedScores={assignedScores} draft={draft} updateDraft={updateDraft} />
   }
 
   if (currentStep === "alignment") {
@@ -344,29 +212,7 @@ export function CharacterCreationStepContent({
   }
 
   if (currentStep === "details") {
-    return (
-      <div className="mt-5 space-y-5">
-        <p className="text-sm text-gray-400">
-          Step 5 owns the remaining structured choices. This shell edits those draft slices directly rather than
-          duplicating class-specific validation or derivation logic in the UI.
-        </p>
-        <JsonEditor
-          label="Build choices JSON"
-          onChange={(value) => updateDraft({ choices: value as CharacterDraft["choices"] })}
-          value={draft.choices}
-        />
-        <JsonEditor
-          label="Equipment JSON"
-          onChange={(value) => updateDraft({ equipment: value as CharacterDraft["equipment"] })}
-          value={draft.equipment}
-        />
-        <JsonEditor
-          label="Spellcasting JSON"
-          onChange={(value) => updateDraft({ spellcasting: value as CharacterDraft["spellcasting"] })}
-          value={draft.spellcasting}
-        />
-      </div>
-    )
+    return <DetailsStep draft={draft} updateDraft={updateDraft} />
   }
 
   return (
