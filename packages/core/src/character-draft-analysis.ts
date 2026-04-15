@@ -12,7 +12,6 @@ import {
   validateMulticlassChoices,
   validatePrimaryClassChoices,
   validateSpeciesChoices,
-  validateSubclassSelections,
 } from "#/character-build-choice-validation.ts";
 import {
   advancementToClassLevels,
@@ -154,7 +153,6 @@ function buildCharacterDraftEvaluation(
     ...validateSpeciesChoices(draft),
     ...validateFeatChoices(draft),
     ...validateFeatureChoices(draft, provisionalClassLevels),
-    ...validateSubclassSelections(draft, provisionalClassLevels),
     ...validateGrantedLanguages(draft, provisionalClassLevels),
     ...(draft.languages == null ? [] : validateLanguages(draft.languages)),
     ...validateDuplicateGrantedProficiencies(draft),

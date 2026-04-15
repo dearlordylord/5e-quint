@@ -1,7 +1,5 @@
 import {
   CHARACTER_LANGUAGES,
-  type CharacterClassLevels,
-  type CharacterDraft,
   type CharacterFinalizationIssue,
   type CharacterLanguage,
 } from "#/character-domain.ts";
@@ -290,16 +288,6 @@ export function validateFeatureChoices(
       message: "druid requires a Primal Order choice.",
     });
   }
-  return issues;
-}
-
-export function validateSubclassSelections(
-  draft: CharacterDraft,
-  classLevels: CharacterClassLevels,
-): ReadonlyArray<CharacterFinalizationIssue> {
-  const issues: CharacterFinalizationIssue[] = [];
-  void draft;
-  void classLevels;
   return issues;
 }
 

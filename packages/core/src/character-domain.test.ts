@@ -636,6 +636,45 @@ describe("character-domain", () => {
     );
   });
 
+  it("surfaces subclass legality through draft assessment without a parallel validator", () => {
+    const assessment = assessCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        advancement: [
+          advancementEntry("wizard"),
+          advancementEntry("wizard"),
+          advancementEntry("wizard", {
+            subclass: { className: "wizard", subclass: "evoker" },
+          }),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+        ],
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        languages: ["Common", "Elvish", "Draconic"],
+        alignment: "LN",
+        choices: {
+          primaryClassSkills: ["arcana", "investigation"],
+          speciesSkill: "perception",
+        },
+      }),
+    );
+
+    expect(assessment.status).toBe("invalid");
+    expect(assessment.openChoices.map((choice) => choice.code)).not.toContain(
+      "prematureSubclassSelection",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).toContain(
+      "prematureSubclassSelection",
+    );
+  });
+
   it("validates multiclass prerequisites on the final ability scores", () => {
     const result = finalizeCharacterDraft(
       completeDraft({

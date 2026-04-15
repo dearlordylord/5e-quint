@@ -150,13 +150,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 14,
       "id": "CHAROWN1",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Character Ownership Gap Cleanup"
     },
     {
       "number": 15,
       "id": "CHAROWN2",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Fighting Style And Expertise Ownership"
     },
     {
@@ -227,8 +227,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 22    | MONMOB1 - Monster Traversal Movement Surface                   | done                                          | MONFAC1C           | none      | Landed on `integration`: the battle runtime now owns one generic monster traversal movement surface with explicit destination, movement-spend, pass-through-size, and ordered entered-creature facts, and `Centaur Trooper` `Trampling Charge` is the first consumer. Traversal save continuation, Legendary Resistance, and half-on-success parity now resume through the same shared lane without widening adjacent families like `Engulf`, `Aquatic Charge`, or move-then-attack actions. | Complete. Traversal-triggered entered-creature save riders now have a movement-owned shell, while adjacent traversal families remain explicitly out of scope for later tasks. |
 | 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | done                                          | none               | CHARMCP1, CHARMODEL1 | Landed on `integration`: the character domain now exports a first-class `previewCharacterDraftUpdate()` operation that computes the sanitized candidate draft, dropped authored facts, newly opened choices, and newly introduced illegal issues without mutating the current draft, with task-scoped regression coverage for class/background/species/equipment/spellcasting fallout and stable code-based diffing for already-open issues. | Complete. Downstream callers can now consume one core-owned preview-before-commit seam instead of inventing adapter-local diff logic over post-sanitized drafts. |
 | 13    | CHARMCP1 - Stored Character MCP Surface                        | ready-for-implementation-after-light-research | CHAREDIT1          | CHARAUTH1 | Use the landed `previewCharacterDraftUpdate()` seam as the stored-record preview boundary, then add the minimal server-side MCP storage and apply/finalize/advance surfaces over canonical `CharacterDraft` / `CharacterSheet` state using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                              | Implementation-ready. The core preview/apply split now exists, so MCP can stay thin and expose preview versus commit as separate downstream operations. |
-| 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | ready-for-implementation-after-light-research | none               | CHAROWN2  | Clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped. It is implementation-ready and no longer parked behind a fake batch boundary.                                     |
-| 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | blocked                                       | CHAROWN1           | CHARMODEL1 | Wait for `CHAROWN1`, then add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, but they should build on the cleanup slice first so the ownership line stays single-source. |
+| 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | done                                          | none               | CHAROWN2  | Landed on `integration`: the dead `validateSubclassSelections()` side-channel was removed from draft assessment, and subclass timing/legality now stays solely on ordered advancement replay, with regression coverage proving `prematureSubclassSelection` still surfaces through assessment and finalization. | Complete. The subclass ownership line is now explicit: ordered advancement replay is the only legality owner, and there is no parallel draft-side validator left to drift. |
+| 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | ready-for-implementation-after-light-research | CHAROWN1           | CHARMODEL1 | Freeze the authored Fighting Style and expertise ownership shape on the character side, then thread those facts through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | Implementation-ready. The subclass cleanup residue is gone, so the next ownership slice can add missing authored facts without competing with stale side-channel validation. |
 | 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | blocked                                       | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | Wait for `CHAREDIT1` and `CHAROWN2`, then remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
 | 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | blocked                                       | CHARMODEL1         | CHARMCP1, CHARAUTH1 | Wait for `CHARMODEL1`, then strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the cleaned-up canonical character model rather than freezing weak shapes too early. |
 | 18    | CHARAUTH1 - Character Quint Authority Convergence              | blocked                                       | CHARMCP1, CHARTYPE1 | none      | Wait for `CHARMCP1` and `CHARTYPE1`, then tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                    | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
@@ -957,7 +957,7 @@ Verification requirements:
 
 ### Task 14 - CHAROWN1 - Character Ownership Gap Cleanup
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -973,7 +973,7 @@ Scope:
 
 Next action:
 
-- Trace the residual subclass helper path from current code and tests, then remove or narrow it so the ownership line becomes explicit.
+- Landed on `integration`: `packages/core/src/character-build-choice-validation.ts` no longer exports the dead `validateSubclassSelections()` stub, `packages/core/src/character-draft-analysis.ts` no longer calls it during draft assessment, and `packages/core/src/character-domain.test.ts` proves `prematureSubclassSelection` still surfaces through advancement replay in both finalization and assessment.
 
 Research note:
 
@@ -984,10 +984,12 @@ Verification requirements:
 - Confirm subclass legality still surfaces correctly through advancement replay and assessment after cleanup.
 - Run narrow character-domain and parity tests only.
 - Include `/simplify` convergence, minimum two rounds.
+- `/simplify` round 1: removed the dead subclass side-channel entirely rather than rewriting or extending it, so subclass legality has one owner instead of a stub plus advancement replay.
+- `/simplify` round 2: added the assessment-level regression to prove the cleanup did not silently demote `prematureSubclassSelection` from an illegal issue into an open-choice path.
 
 ### Task 15 - CHAROWN2 - Fighting Style And Expertise Ownership
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `CHAROWN1`
 
@@ -1007,7 +1009,7 @@ Scope:
 
 Next action:
 
-- After `CHAROWN1`, freeze the authored Fighting Style shape and timing semantics on the character side first, then thread them through projection.
+- Freeze the authored Fighting Style shape and timing semantics on the character side first, then thread Fighting Style and expertise through validation, sanitization, projection, and Quint parity.
 
 Research note:
 
