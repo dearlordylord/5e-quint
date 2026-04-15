@@ -120,6 +120,8 @@ The `Task Disposition` section is therefore diagnostic rather than control-criti
 
 If the next step is internal narrowing, family splitting, scoping refinement, or repo/source research that Ralph can perform on its own, the task must stay `ready-for-research`, not `blocked`.
 
+`deferred` is even narrower. It is only valid when the owner/user has explicitly directed Ralph to park the task for now. It is not valid for "later in the queue", "next batch", or other scheduling-only reasons.
+
 In addition, the decider must:
 
 1. choose `retry-same-task` only when the task is still implementation-ready and the next attempt has a concrete implementable delta;
@@ -132,6 +134,12 @@ When the decider leaves a task `blocked`, it must also record:
 - `Blocker Detail: ...`
 
 If a task ends `blocked` without one of those blocker types, Ralph treats that as invalid planning state and fails the task instead of silently accepting a fake blocker.
+
+When the decider leaves a task `deferred`, it must also record:
+
+- `Deferred Detail: ...`
+
+That detail must name the explicit owner/user instruction that parked the task. If a task ends `deferred` without that explicit owner-directed detail, Ralph treats that as invalid planning state and fails the task instead of silently accepting a fake deferral.
 
 On the final allowed attempt for a task in a Ralph run, `retry-same-task` and `needs-more-research` are forbidden. If the task still cannot land, the decider must mark it non-runnable (`blocked` or `deferred`) before finishing so the chooser can move on.
 

@@ -28,7 +28,7 @@ The coding loop should treat this file as the active queue. Do not start a task 
 - `ready-for-research`: A coding agent may pick this up now. The next step is documentation/source/RAW/code research, not implementation unless the research resolves the open decision. Write results back into this file or a task-specific plan, then update the task status.
 - `ready-for-implementation-after-light-research`: The task shape is understood, but the coding agent must do the listed RAW or blast-radius check before editing code.
 - `blocked`: A dependency or ownership decision must land first.
-- `deferred`: Do not pick up unless the batch objective changes.
+- `deferred`: Only use when the owner explicitly says to park the task for now. Do not use for queue ordering or "later batch" scheduling.
 - `done`: Work completed and verification recorded.
 
 ## Ralph Task Index
@@ -138,43 +138,43 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 12,
       "id": "CHAREDIT1",
-      "status": "deferred",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Mandatory Character Draft Update Preview"
     },
     {
       "number": 13,
       "id": "CHARMCP1",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Stored Character MCP Surface"
     },
     {
       "number": 14,
       "id": "CHAROWN1",
-      "status": "deferred",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Character Ownership Gap Cleanup"
     },
     {
       "number": 15,
       "id": "CHAROWN2",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Fighting Style And Expertise Ownership"
     },
     {
       "number": 16,
       "id": "CHARMODEL1",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Make Invalid Character States Unrepresentable"
     },
     {
       "number": 17,
       "id": "CHARTYPE1",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Strengthen Character Result Shapes"
     },
     {
       "number": 18,
       "id": "CHARAUTH1",
-      "status": "deferred",
+      "status": "blocked",
       "title": "Character Quint Authority Convergence"
     }
   ]
@@ -195,9 +195,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 - Update the task status before ending the loop:
   - `done` if implementation/research and verification are complete;
   - `ready-for-implementation-after-light-research` if research made it implementable;
-  - `blocked` if a required ownership/API decision is still unresolved;
-  - `deferred` if research shows the task should not be in the current batch.
-- When a task is marked `done` or `deferred`, inspect every task listed in its `Blocks` column. If all dependencies for a blocked task are now satisfied, update that task from `blocked` to `ready-for-research` or `ready-for-implementation-after-light-research`, and update its `Next action` / `Handoff readiness` if needed.
+  - `blocked` if a required dependency or owner decision is still unresolved;
+  - `deferred` only if the owner explicitly directed the loop to park the task.
+- When a task is marked `done`, inspect every task listed in its `Blocks` column. If all dependencies for a blocked task are now satisfied, update that task from `blocked` to `ready-for-research` or `ready-for-implementation-after-light-research`, and update its `Next action` / `Handoff readiness` if needed.
 - For any implementation task, read the relevant SRD text in `.references/srd-5.2.1/` and check `UBIQUITOUS_LANGUAGE.md` before editing code.
 - For any task that changes modeled D&D rule semantics, make the RAW/ASSUMPTIONS decision in Quint first, then update XState/TS/MCP to match. Adapter-only tasks and documentation-only tasks are exempt.
 - For any implementation task, include `/simplify` convergence in the task closeout: minimum two rounds unless the changeset is trivial, and continue until no important fixes remain.
@@ -225,13 +225,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 20    | MONFAC1B - Save-Plus-Prone Maneuver Surface                    | done                                          | MONFAC1            | none      | Landed on `integration`: `Gladiator` `Shield Bash` now projects through the shared single-target monster save-effect lane as an immediate fail rider that deals damage and applies a size-gated `Prone` condition without timed-effect bookkeeping. | Complete. Size-gated direct `Prone` riders belong in the same single-target save-effect family, while area shapes, push-coupled riders, and movement-coupled targeting remain separate follow-on families. |
 | 21    | MONFAC1C - Movement-Coupled Save Effect Surface                | done                                          | MONFAC1            | MONMOB1   | Landed as research only: `Centaur Trooper` `Trampling Charge` should not extend the current single-target `saveEffectAction` lane. The durable prerequisite is a movement-owned traversal surface because the current battle movement event spends movement and handles opportunity attacks only; it does not own path, entered-creature enumeration, or position updates. | Complete as research. The family boundary is now explicit: traversal movement must land first, then `Trampling Charge` can consume it as the first entered-creature save rider. |
 | 22    | MONMOB1 - Monster Traversal Movement Surface                   | done                                          | MONFAC1C           | none      | Landed on `integration`: the battle runtime now owns one generic monster traversal movement surface with explicit destination, movement-spend, pass-through-size, and ordered entered-creature facts, and `Centaur Trooper` `Trampling Charge` is the first consumer. Traversal save continuation, Legendary Resistance, and half-on-success parity now resume through the same shared lane without widening adjacent families like `Engulf`, `Aquatic Charge`, or move-then-attack actions. | Complete. Traversal-triggered entered-creature save riders now have a movement-owned shell, while adjacent traversal families remain explicitly out of scope for later tasks. |
-| 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | deferred                                      | none               | CHARMCP1, CHARMODEL1 | After the current monster/spell staircase, implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation, but it is intentionally parked behind the current active batch.                                                     |
-| 13    | CHARMCP1 - Stored Character MCP Surface                        | deferred                                      | CHAREDIT1          | CHARAUTH1 | After `CHAREDIT1`, add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is now well-scoped, but it should consume the preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
-| 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | deferred                                      | none               | CHAROWN2  | After the current monster/spell staircase, clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped, but lower priority than the current batch and easier to land before broader character-side ownership additions.                                     |
-| 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | deferred                                      | CHAROWN1           | CHARMODEL1 | After `CHAROWN1`, add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, not cleanup. They should land before authored-model hardening, result-shape tightening, and the final convergence push so projection stops carrying placeholder empty sets. |
-| 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | deferred                                      | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | After the edit-preview and ownership-gap slices land, remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
-| 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | deferred                                      | CHARMODEL1         | CHARMCP1, CHARAUTH1 | After the authored-model hardening slice lands, strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the cleaned-up canonical character model rather than freezing weak shapes too early. |
-| 18    | CHARAUTH1 - Character Quint Authority Convergence              | deferred                                      | CHARMCP1, CHARTYPE1 | none      | After the MCP surface, ownership gaps, authored-model hardening, and stronger result shapes land, tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                    | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
+| 12    | CHAREDIT1 - Mandatory Character Draft Update Preview           | ready-for-implementation-after-light-research | none               | CHARMCP1, CHARMODEL1 | Implement the core-domain preview-before-commit operation for destructive character draft edits using [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md) and the convergence direction in [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                      | The shape is already stable enough for implementation. Do the light repo/SRD check, then land the canonical preview-before-commit seam.                                                     |
+| 13    | CHARMCP1 - Stored Character MCP Surface                        | blocked                                       | CHAREDIT1          | CHARAUTH1 | Wait for `CHAREDIT1`, then add the stored-server-side character MCP surface over canonical `CharacterDraft` / `CharacterSheet` operations using [PRD_CHARACTER_MCP_SURFACE.md](../PRD_CHARACTER_MCP_SURFACE.md).                                                                                                                                                                | The contract is well-scoped, but it should consume preview-before-commit semantics rather than inventing adapter-local draft mutation behavior.                    |
+| 14    | CHAROWN1 - Character Ownership Gap Cleanup                     | ready-for-implementation-after-light-research | none               | CHAROWN2  | Clean up stale character-side ownership residue, starting with subclass validation scaffolding that no longer matches advancement-owned subclass semantics, using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md). | Small and well-scoped. It is implementation-ready and no longer parked behind a fake batch boundary.                                     |
+| 15    | CHAROWN2 - Fighting Style And Expertise Ownership              | blocked                                       | CHAROWN1           | CHARMODEL1 | Wait for `CHAROWN1`, then add Fighting Style selections and expertise as character-side owned or explicitly derived facts and thread them through validation, sanitization, projection, and Quint parity using [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md) and [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).      | These are real missing character-side ownership gaps, but they should build on the cleanup slice first so the ownership line stays single-source. |
+| 16    | CHARMODEL1 - Make Invalid Character States Unrepresentable     | blocked                                       | CHAREDIT1, CHAROWN2 | CHARTYPE1, CHARAUTH1 | Wait for `CHAREDIT1` and `CHAROWN2`, then remove character-side representable invalid states by eliminating duplicated owned progression facts, replacing weak status/result bags with discriminated unions, and tightening finalized-sheet submodels so canonical character state cannot encode contradictions that core/Quint only repair after the fact. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md), [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md), and [PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md](../PRD_CHARACTER_SHEET_OWNERSHIP_GAPS.md). | This is the structural hardening slice for authored character state. It should land after preview semantics and missing ownership facts are settled, but before the narrower result-API hardening and final Quint-authority convergence passes. |
+| 17    | CHARTYPE1 - Strengthen Character Result Shapes                 | blocked                                       | CHARMODEL1         | CHARMCP1, CHARAUTH1 | Wait for `CHARMODEL1`, then strengthen the TypeScript result types for assessment/finalization/advancement so impossible combinations become unrepresentable and add an advancement-assessment/preview surface that preserves open-hole versus illegal-issue distinction. Use [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md) and [PRD_CHARACTER_DRAFT_EDITABILITY.md](../PRD_CHARACTER_DRAFT_EDITABILITY.md). | This is the domain API hardening slice. It should consume the settled preview semantics and the cleaned-up canonical character model rather than freezing weak shapes too early. |
+| 18    | CHARAUTH1 - Character Quint Authority Convergence              | blocked                                       | CHARMCP1, CHARTYPE1 | none      | Wait for `CHARMCP1` and `CHARTYPE1`, then tighten parity and ownership rules until the character stack is operationally Quint-led and TS is clearly adapter/runtime code, following [PRD_CHARACTER_FORMALIZATION.md](../PRD_CHARACTER_FORMALIZATION.md).                                                    | This is the convergence capstone, not the starting slice. It needs the MCP boundary, remaining authored character-side facts, and hardened public result shapes settled first. |
 
 ## Current Integrated Baseline
 
@@ -270,16 +270,7 @@ Current architecture decisions for this batch:
 Planning note:
 
 - The completed character-formalization and MCP monster-control work is intentionally removed from the active queue. Use git history and the supporting PRDs for context when needed; do not re-open that finished batch here.
-- The newly documented character-tail tasks below are parked intentionally. They are not blocked by monster or spell ownership in the abstract; they are deferred only because this file currently encodes one active staircase at a time.
-
-Structure note:
-
-- This file is strong at expressing one serial architecture staircase.
-- It is weaker at representing multiple independent future batches at once. The character tasks below are real and already shaped, but in this single-queue format they necessarily look more linearly blocked or deferred than the underlying ownership graph really is.
-- If the repo starts carrying multiple parallel future batches often, split this file into:
-  - one truly active queue;
-  - one parked next-batch queue;
-  - shared durable ownership notes referenced by both.
+- The character tasks below are real queue items. Keep them runnable when they can proceed now, or blocked only on concrete dependencies or explicit owner decisions.
 
 ## Recommended Coding Loop
 
@@ -892,7 +883,7 @@ Verification requirements:
 
 ### Task 12 - CHAREDIT1 - Mandatory Character Draft Update Preview
 
-Status: `deferred`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: none
 
@@ -912,7 +903,7 @@ Scope:
 
 Next action:
 
-- When this batch is reprioritized, start from the current `applyCharacterDraftUpdate()` and `assessCharacterDraft()` surfaces and design the stable preview result shape before editing callers.
+- Start from the current `applyCharacterDraftUpdate()` and `assessCharacterDraft()` surfaces and design the stable preview result shape before editing callers.
 
 Research note:
 
@@ -928,7 +919,7 @@ Verification requirements:
 
 ### Task 13 - CHARMCP1 - Stored Character MCP Surface
 
-Status: `deferred`
+Status: `blocked`
 
 Depends on: `CHAREDIT1`
 
@@ -948,7 +939,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, inventory the current MCP storage/runtime facilities and choose the minimal stored-record pattern that keeps the adapter thin.
+- After `CHAREDIT1`, inventory the current MCP storage/runtime facilities and choose the minimal stored-record pattern that keeps the adapter thin.
 
 Research note:
 
@@ -964,7 +955,7 @@ Verification requirements:
 
 ### Task 14 - CHAROWN1 - Character Ownership Gap Cleanup
 
-Status: `deferred`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: none
 
@@ -980,7 +971,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, trace the residual subclass helper path from current code and tests, then remove or narrow it so the ownership line becomes explicit.
+- Trace the residual subclass helper path from current code and tests, then remove or narrow it so the ownership line becomes explicit.
 
 Research note:
 
@@ -994,7 +985,7 @@ Verification requirements:
 
 ### Task 15 - CHAROWN2 - Fighting Style And Expertise Ownership
 
-Status: `deferred`
+Status: `blocked`
 
 Depends on: `CHAROWN1`
 
@@ -1014,7 +1005,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, freeze the authored Fighting Style shape and timing semantics on the character side first, then thread them through projection.
+- After `CHAROWN1`, freeze the authored Fighting Style shape and timing semantics on the character side first, then thread them through projection.
 
 Research note:
 
@@ -1030,7 +1021,7 @@ Verification requirements:
 
 ### Task 16 - CHARMODEL1 - Make Invalid Character States Unrepresentable
 
-Status: `deferred`
+Status: `blocked`
 
 Depends on: `CHAREDIT1`, `CHAROWN2`
 
@@ -1055,7 +1046,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, start with the canonical character-owner seam in [packages/core/src/character-domain-model.ts](../packages/core/src/character-domain-model.ts), [character-creation.qnt](../character-creation.qnt), and [character.qnt](../character.qnt), then remove duplicate progression ownership before tightening the downstream result wrappers.
+- After `CHAREDIT1` and `CHAROWN2`, start with the canonical character-owner seam in [packages/core/src/character-domain-model.ts](../packages/core/src/character-domain-model.ts), [character-creation.qnt](../character-creation.qnt), and [character.qnt](../character.qnt), then remove duplicate progression ownership before tightening the downstream result wrappers.
 
 Research note:
 
@@ -1079,7 +1070,7 @@ Handoff readiness:
 
 ### Task 17 - CHARTYPE1 - Strengthen Character Result Shapes
 
-Status: `deferred`
+Status: `blocked`
 
 Depends on: `CHARMODEL1`
 
@@ -1098,7 +1089,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, inspect the weakest current public result shapes and replace them with discriminated unions or stronger non-empty failure guarantees before updating callers.
+- After `CHARMODEL1`, inspect the weakest current public result shapes and replace them with discriminated unions or stronger non-empty failure guarantees before updating callers.
 
 Research note:
 
@@ -1114,7 +1105,7 @@ Verification requirements:
 
 ### Task 18 - CHARAUTH1 - Character Quint Authority Convergence
 
-Status: `deferred`
+Status: `blocked`
 
 Depends on: `CHARMCP1`, `CHARTYPE1`
 
@@ -1133,7 +1124,7 @@ Scope:
 
 Next action:
 
-- When reprioritized, inventory the remaining places where character semantics still feel operationally TypeScript-first, then narrow them one by one behind parity-backed ownership decisions.
+- After `CHARMCP1` and `CHARTYPE1`, inventory the remaining places where character semantics still feel operationally TypeScript-first, then narrow them one by one behind parity-backed ownership decisions.
 
 Research note:
 

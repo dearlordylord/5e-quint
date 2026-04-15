@@ -590,6 +590,7 @@ Requirements:
   - an unfinished task dependency, or
   - an explicit owner/user design decision that Ralph cannot answer itself.
 - Do not use blocked-needs-design for internal bucket-splitting, scoping refinement, family narrowing, or repo research that Ralph can perform on its own. Those cases must stay needs-more-research.
+- Use deferred only when the owner/user has explicitly directed Ralph to park the task for now. Do not use deferred for queue ordering, later-batch parking, or "we should do this later" scheduling.
 - If Final allowed attempt in this Ralph run is true, you must not use `retry-same-task` or `needs-more-research`. On the final allowed attempt, either land the task as `done` or update the plan so the task becomes non-runnable (`blocked` or `deferred`) before you finish.
 - Commit the reconciled Task $task_no result to $output_branch in the main worktree after verification. Use a concise task-scoped commit message. Do not leave tracked changes staged or unstaged; the next task worktrees are created from the updated integration HEAD.
 - For docs-only tasks, prefer the task-specific grep/search checks and git diff --check over broad formatters that churn unrelated Markdown. Do not run broad formatters unless the task explicitly requires formatting.
@@ -607,6 +608,8 @@ At the end, report:
 - If Status is blocked-needs-design, also include:
   - Blocker Type: dependency | owner-decision
   - Blocker Detail: the blocking task ID(s) or the exact owner question
+- If Status is deferred, also include:
+  - Deferred Detail: the explicit owner/user instruction that parks the task
 - New Information Gate:
   - What new fact was learned?
   - Why it was not already implied by the plan
@@ -983,6 +986,36 @@ if (raw === "dependency" || raw === "owner-decision") {
 NODE
 }
 
+parse_decider_deferred_detail() {
+  local report_file="$1"
+  node - "$report_file" <<'NODE'
+const fs = require("fs")
+const reportPath = process.argv[2]
+const text = fs.readFileSync(reportPath, "utf8")
+function clean(s) {
+  return s.replace(/\r/g, "").replace(/[`*_]/g, "")
+}
+const normalized = clean(text)
+const sameLine = normalized.match(/deferred detail:\s*(.+)/i)
+if (sameLine && sameLine[1].trim()) {
+  console.log(sameLine[1].trim())
+  process.exit(0)
+}
+const lines = normalized.split("\n")
+for (let i = 0; i < lines.length; i++) {
+  if (/^\s*deferred detail\s*:?\s*$/i.test(lines[i])) {
+    for (let j = i + 1; j < lines.length; j++) {
+      const candidate = lines[j].trim().replace(/^[-:]\s*/, "")
+      if (!candidate) continue
+      console.log(candidate)
+      process.exit(0)
+    }
+  }
+}
+process.exit(1)
+NODE
+}
+
 disposition_from_task_status() {
   local status="$1"
   case "$status" in
@@ -1225,6 +1258,10 @@ run_task_attempt() {
   if [[ "$decider_disposition" == "blocked-needs-design" ]]; then
     decider_blocker_type="$(parse_decider_blocker_type "$attempt_root/decider.final.md" || true)"
   fi
+  local decider_deferred_detail=""
+  if [[ "$decider_disposition" == "deferred" ]]; then
+    decider_deferred_detail="$(parse_decider_deferred_detail "$attempt_root/decider.final.md" || true)"
+  fi
 
   if ! assert_clean_main_worktree; then
     if recover_dirty_main_worktree_after_decider; then
@@ -1298,6 +1335,12 @@ run_task_attempt() {
       fi
       ;;
     deferred)
+      if [[ -z "$decider_deferred_detail" ]]; then
+        printf 'task %s attempt %s deferred the task without explicit owner-directed detail\n' "$task_no" "$attempt_no" >"$last_error_file"
+        note "task" "fatal-missing-deferred-detail task=$task_no attempt=$attempt_no"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-deferred-detail" "-" "deferred status without owner-directed detail"
+        return 2
+      fi
       ;;
     *)
       printf 'task %s attempt %s had unknown disposition: %s\n' "$task_no" "$attempt_no" "$decider_disposition" >"$last_error_file"
