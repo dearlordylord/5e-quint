@@ -49,6 +49,7 @@ export type {
 export {
   singleClassAdvancement,
   characterSubclassSelections,
+  sheetClassLevels,
 } from "#/character-advancement.ts";
 export {
   advanceCharacterSheet,
@@ -93,6 +94,7 @@ export {
   type CharacterOriginFeatId,
   type CharacterOriginFeatSelection,
   type CharacterProficiencySummary,
+  type CharacterSheetBuildChoices,
   type CharacterSubclassSelection,
   type CharacterToolProficiency,
   type CharacterWeaponProficiency,
@@ -128,6 +130,7 @@ export {
   type CharacterEquipmentChoices,
   type CharacterEquipmentChoicesDraft,
   type CharacterLoadout,
+  type CharacterLoadoutDraft,
   type CharacterOwnedCombatEquipment,
   type CharacterWeaponGrip,
 } from "#/character-equipment.ts";
@@ -137,3 +140,7 @@ export {
   type CharacterEquipmentIssue,
   type CharacterEquipmentIssueCode,
 } from "#/character-equipment-validation.ts";
+export type {
+  CharacterSheetSpellcastingChoices,
+  CharacterSheetSpellcastingEntry,
+} from "#/character-spellcasting.ts";

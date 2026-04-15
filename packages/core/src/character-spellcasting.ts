@@ -61,6 +61,16 @@ export type CharacterSpellcastingChoices = Partial<
   Readonly<Record<CasterClass, CharacterSpellcastingEntry>>
 >;
 
+export interface CharacterSheetSpellcastingEntry {
+  readonly cantrips: ReadonlyArray<string>;
+  readonly preparedSpells: ReadonlyArray<string>;
+  readonly spellbook: ReadonlyArray<string>;
+}
+
+export type CharacterSheetSpellcastingChoices = Readonly<
+  Record<CasterClass, CharacterSheetSpellcastingEntry>
+>;
+
 export interface CharacterSpellcastingClassSummary {
   readonly className: CasterClass;
   readonly spellcastingAbility: Ability;

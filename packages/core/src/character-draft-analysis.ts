@@ -23,13 +23,13 @@ import {
   type CharacterFinalizationIssue,
   type CharacterFinalizationIssueCode,
   type CharacterFinalizationResult,
+  type NonEmptyReadonlyArray,
   type CharacterSheet,
 } from "#/character-domain-model.ts";
 import {
   validateDraftFields,
   validateLanguages,
 } from "#/character-finalization-helpers.ts";
-import { type CharacterSpellcastingChoices } from "#/character-spellcasting.ts";
 import { validateCharacterSpellcastingChoices } from "#/character-spellcasting.ts";
 import {
   applyCharacterDraftUpdate,
@@ -42,6 +42,11 @@ import {
   type CharacterDraftDroppedFact,
 } from "#/character-draft-update-preview.ts";
 import { validateCharacterEquipment } from "#/character-equipment-validation.ts";
+import {
+  finalizedBuildChoices,
+  finalizedLoadout,
+  finalizedSpellcastingChoices,
+} from "#/character-sheet-finalizers.ts";
 
 export type {
   CharacterDraftDroppedFact,
@@ -96,12 +101,23 @@ export interface CharacterOpenChoice {
   readonly message: string;
 }
 
-export interface CharacterDraftAssessment {
-  readonly openChoices: ReadonlyArray<CharacterOpenChoice>;
-  readonly issues: ReadonlyArray<CharacterFinalizationIssue>;
-  readonly status: "complete" | "incomplete" | "invalid";
-  readonly sheet?: CharacterSheet;
-}
+export type CharacterDraftAssessment =
+  | {
+      readonly status: "complete";
+      readonly openChoices: readonly [];
+      readonly issues: readonly [];
+      readonly sheet: CharacterSheet;
+    }
+  | {
+      readonly status: "incomplete";
+      readonly openChoices: NonEmptyReadonlyArray<CharacterOpenChoice>;
+      readonly issues: readonly [];
+    }
+  | {
+      readonly status: "invalid";
+      readonly openChoices: ReadonlyArray<CharacterOpenChoice>;
+      readonly issues: NonEmptyReadonlyArray<CharacterFinalizationIssue>;
+    };
 
 export interface CharacterDraftUpdatePreview {
   readonly candidateDraft: CharacterDraft;
@@ -110,6 +126,27 @@ export interface CharacterDraftUpdatePreview {
   readonly newlyOpenedChoices: ReadonlyArray<CharacterOpenChoice>;
   readonly newlyIntroducedIssues: ReadonlyArray<CharacterFinalizationIssue>;
 }
+
+type CharacterDraftEvaluation =
+  | {
+      readonly allIssues: readonly [];
+      readonly openChoices: readonly [];
+      readonly issues: readonly [];
+      readonly status: "complete";
+      readonly sheet: CharacterSheet;
+    }
+  | {
+      readonly allIssues: ReadonlyArray<CharacterFinalizationIssue>;
+      readonly openChoices: ReadonlyArray<CharacterOpenChoice>;
+      readonly issues: readonly [];
+      readonly status: "incomplete";
+    }
+  | {
+      readonly allIssues: ReadonlyArray<CharacterFinalizationIssue>;
+      readonly openChoices: ReadonlyArray<CharacterOpenChoice>;
+      readonly issues: ReadonlyArray<CharacterFinalizationIssue>;
+      readonly status: "invalid";
+    };
 
 function isOpenChoiceCode(
   code: CharacterFinalizationIssueCode,
@@ -133,11 +170,16 @@ function shouldSuppressIllegalIssue(
   );
 }
 
+function asNonEmpty<T>(items: ReadonlyArray<T>): NonEmptyReadonlyArray<T> {
+  if (items.length === 0) {
+    throw new Error("Expected a non-empty array.");
+  }
+  return items as NonEmptyReadonlyArray<T>;
+}
+
 function buildCharacterDraftEvaluation(
   draft: CharacterDraft,
-): CharacterDraftAssessment & {
-  readonly allIssues: ReadonlyArray<CharacterFinalizationIssue>;
-} {
+): CharacterDraftEvaluation {
   const provisionalClassLevels =
     draft.advancement != null
       ? advancementToClassLevels(draft.advancement)
@@ -166,8 +208,8 @@ function buildCharacterDraftEvaluation(
 
   let abilityScores: CharacterAbilityScores | undefined;
   let advancement = draft.advancement;
-  let classLevels = provisionalClassLevels;
   let primaryClass = draft.primaryClass;
+  let finalizedClassLevels = provisionalClassLevels;
   if (
     draft.abilityScoreGeneration != null &&
     draft.background != null &&
@@ -184,8 +226,8 @@ function buildCharacterDraftEvaluation(
     );
     abilityScores = advancementReplay.abilityScores;
     advancement = advancementReplay.advancement;
-    classLevels = advancementReplay.classLevels;
     primaryClass = advancementReplay.primaryClass ?? primaryClass;
+    finalizedClassLevels = advancementReplay.classLevels;
     allIssues.push(...advancementReplay.issues);
   }
 
@@ -207,11 +249,19 @@ function buildCharacterDraftEvaluation(
   );
 
   if (allIssues.length > 0) {
+    if (issues.length > 0) {
+      return {
+        allIssues,
+        openChoices,
+        issues,
+        status: "invalid",
+      };
+    }
     return {
       allIssues,
       openChoices,
-      issues,
-      status: issues.length > 0 ? "invalid" : "incomplete",
+      issues: [],
+      status: "incomplete",
     };
   }
 
@@ -225,7 +275,6 @@ function buildCharacterDraftEvaluation(
   const sheet: CharacterSheet = {
     primaryClass: primaryClass!,
     advancement: cloneAdvancement(advancement!),
-    classLevels,
     background: draft.background!,
     abilityScoreGeneration,
     backgroundAbilityScoreIncrease: draft.backgroundAbilityScoreIncrease!,
@@ -233,7 +282,7 @@ function buildCharacterDraftEvaluation(
     species: draft.species!,
     languages: [...draft.languages!],
     alignment: draft.alignment!,
-    choices: draft.choices ?? {},
+    choices: finalizedBuildChoices(draft.choices),
     equipment: {
       backgroundOption: draft.equipment!.backgroundOption!,
       classOption: draft.equipment!.classOption!,
@@ -241,28 +290,13 @@ function buildCharacterDraftEvaluation(
         ...(draft.equipment!.purchasedCombatEquipment ?? []),
       ],
       remainingGoldPieces: draft.equipment!.remainingGoldPieces!,
-      loadout: { ...draft.equipment!.loadout! },
+      loadout: finalizedLoadout(draft.equipment!.loadout),
     },
-    ...(draft.spellcasting == null
-      ? {}
-      : {
-          spellcasting: Object.fromEntries(
-            Object.entries(draft.spellcasting).map(([className, entry]) => [
-              className,
-              {
-                ...(entry?.cantrips == null
-                  ? {}
-                  : { cantrips: [...entry.cantrips] }),
-                ...(entry?.preparedSpells == null
-                  ? {}
-                  : { preparedSpells: [...entry.preparedSpells] }),
-                ...(entry?.spellbook == null
-                  ? {}
-                  : { spellbook: [...entry.spellbook] }),
-              },
-            ]),
-          ) as CharacterSpellcastingChoices,
-        }),
+    spellcasting: finalizedSpellcastingChoices(
+      finalizedClassLevels,
+      draft.choices,
+      draft.spellcasting,
+    ),
   };
 
   return {
@@ -280,17 +314,23 @@ export function assessCharacterDraft(
   const evaluation = buildCharacterDraftEvaluation(draft);
   if (evaluation.status === "complete") {
     return {
+      status: "complete",
       openChoices: [],
       issues: [],
-      status: "complete",
-      sheet: evaluation.sheet,
+      sheet: evaluation.sheet!,
     };
   }
-
+  if (evaluation.status === "incomplete") {
+    return {
+      status: "incomplete",
+      openChoices: asNonEmpty(evaluation.openChoices),
+      issues: [],
+    };
+  }
   return {
+    status: "invalid",
     openChoices: evaluation.openChoices,
-    issues: evaluation.issues,
-    status: evaluation.status,
+    issues: asNonEmpty(evaluation.issues),
   };
 }
 
@@ -328,7 +368,21 @@ export function finalizeCharacterDraft(
   draft: CharacterDraft,
 ): CharacterFinalizationResult {
   const evaluation = buildCharacterDraftEvaluation(draft);
-  return evaluation.status === "complete"
-    ? { ok: true, sheet: evaluation.sheet! }
-    : { ok: false, issues: evaluation.allIssues };
+  if (evaluation.status === "complete") {
+    return { ok: true, sheet: evaluation.sheet! };
+  }
+  if (evaluation.status === "incomplete") {
+    return {
+      ok: false,
+      status: "incomplete",
+      openChoices: asNonEmpty(evaluation.openChoices),
+      issues: [],
+    };
+  }
+  return {
+    ok: false,
+    status: "invalid",
+    openChoices: evaluation.openChoices,
+    issues: asNonEmpty(evaluation.issues),
+  };
 }

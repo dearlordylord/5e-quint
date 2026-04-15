@@ -282,7 +282,7 @@ describe("character-sheet-derived", () => {
     if (result.ok) {
       throw new Error("expected spellcasting finalization failure");
     }
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingSpellcastingChoices",
     );
   });
@@ -538,12 +538,6 @@ describe("character-sheet-derived", () => {
       ...sheet,
       primaryClass: "fighter",
       advancement: [advancementEntry("fighter"), advancementEntry("wizard")],
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 1,
-        sorcerer: 0,
-        wizard: 1,
-      },
     });
 
     expect(projection.hasSpellcasting).toBe(true);
@@ -561,11 +555,6 @@ describe("character-sheet-derived", () => {
         advancementEntry("fighter"),
         advancementEntry("fighter"),
       ],
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 3,
-        sorcerer: 0,
-      },
     });
     const levelFifteenWithoutChampion = characterSheetCreatureProjection({
       ...sheet,
@@ -573,11 +562,6 @@ describe("character-sheet-derived", () => {
       advancement: Array.from({ length: 15 }, () =>
         advancementEntry("fighter"),
       ),
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 15,
-        sorcerer: 0,
-      },
     });
 
     expect(levelThreeWithoutChampion.critRange).toBe(20);

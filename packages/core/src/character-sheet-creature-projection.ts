@@ -2,6 +2,8 @@ import { characterSubclassSelections } from "#/character-advancement.ts";
 import { selectedFightingStyles } from "#/character-feature-choices.ts";
 import { type CharacterSheet } from "#/character-domain-model.ts";
 import { characterProficiencySummary } from "#/character-domain-derived.ts";
+import { sheetClassLevels } from "#/character-domain.ts";
+import type { CharacterClassLevels } from "#/character-domain-model.ts";
 import { SPELLCASTING_ABILITIES } from "#/character-spellcasting-data.ts";
 import type { CharacterAdvancementEntry } from "#/character-feature-types.ts";
 import { classHitDie } from "#/features/class-tables.ts";
@@ -62,7 +64,7 @@ export interface CharacterCreatureProjection {
   readonly primaryClass: CharacterSheet["primaryClass"];
   readonly subclasses: ReturnType<typeof characterSubclassSelections>;
   readonly species: CharacterSheet["species"];
-  readonly classLevels: CharacterSheet["classLevels"];
+  readonly classLevels: CharacterClassLevels;
   readonly fightingStyles: ReadonlySet<FightingStyle>;
   readonly creatureSize: Size;
   readonly abilityScores: CharacterSheet["abilityScores"];
@@ -95,8 +97,16 @@ function sheetFightingStyles(
 }
 
 function expertiseSkills(sheet: CharacterSheet): ReadonlySet<Skill> {
+  const classLevels = sheetClassLevels(sheet);
   const grantedSkillProficiencies = new Set(
-    deriveGrantedSkillProficiencies(sheet),
+    deriveGrantedSkillProficiencies({
+      primaryClass: sheet.primaryClass,
+      background: sheet.background,
+      species: sheet.species,
+      classLevels,
+      choices: sheet.choices,
+      advancement: sheet.advancement,
+    }),
   );
   return new Set(
     (sheet.choices.expertiseSkills ?? []).filter((skill) =>
@@ -146,17 +156,19 @@ function spellcastingAbility(sheet: CharacterSheet): Ability {
 }
 
 function hasSpellcasting(sheet: CharacterSheet): boolean {
-  return CASTER_CLASSES.some((className) => sheet.classLevels[className] > 0);
+  const classLevels = sheetClassLevels(sheet);
+  return CASTER_CLASSES.some((className) => classLevels[className] > 0);
 }
 
 function unarmoredDefense(sheet: CharacterSheet): UnarmoredDefense {
-  if (sheet.classLevels.barbarian > 0) return "barbarian";
-  if (sheet.classLevels.monk > 0) return "monk";
+  const classLevels = sheetClassLevels(sheet);
+  if (classLevels.barbarian > 0) return "barbarian";
+  if (classLevels.monk > 0) return "monk";
   return "none";
 }
 
 function creatureFeatures(
-  classLevels: CharacterSheet["classLevels"],
+  classLevels: ReturnType<typeof sheetClassLevels>,
 ): ReadonlySet<CharacterCreatureFeature> {
   const features = new Set<CharacterCreatureFeature>();
 
@@ -178,7 +190,7 @@ function creatureFeatures(
 }
 
 function hasFightingStyleFeature(
-  classLevels: CharacterSheet["classLevels"],
+  classLevels: ReturnType<typeof sheetClassLevels>,
 ): boolean {
   return (
     classLevels.fighter >= 1 ||
@@ -191,6 +203,7 @@ export function characterSheetCreatureProjection(
   sheet: CharacterSheet,
 ): CharacterCreatureProjection {
   const proficiencySummary = characterProficiencySummary(sheet);
+  const classLevels = sheetClassLevels(sheet);
   const fighterSubclass = characterSubclassSelections(sheet).find(
     (selection) => selection.className === "fighter",
   );
@@ -199,7 +212,7 @@ export function characterSheetCreatureProjection(
     primaryClass: sheet.primaryClass,
     subclasses: proficiencySummary.subclasses,
     species: sheet.species,
-    classLevels: sheet.classLevels,
+    classLevels,
     fightingStyles: sheetFightingStyles(sheet),
     creatureSize: speciesCreatureSize(sheet),
     abilityScores: sheet.abilityScores,
@@ -212,11 +225,11 @@ export function characterSheetCreatureProjection(
     spellcastingAbility: spellcastingAbility(sheet),
     hasSpellcasting: hasSpellcasting(sheet),
     unarmoredDefense: unarmoredDefense(sheet),
-    features: creatureFeatures(sheet.classLevels),
+    features: creatureFeatures(classLevels),
     critRange:
       fighterSubclass?.subclass === "champion"
-        ? championCritRange(sheet.classLevels.fighter)
+        ? championCritRange(classLevels.fighter)
         : 20,
-    hasFightingStyleFeature: hasFightingStyleFeature(sheet.classLevels),
+    hasFightingStyleFeature: hasFightingStyleFeature(classLevels),
   };
 }

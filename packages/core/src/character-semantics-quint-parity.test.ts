@@ -840,7 +840,6 @@ describe("character semantics Quint parity", () => {
             assert(open == ${renderIssueSet(completeAssessment.openChoices.map((choice) => choice.code))}),
             assert(illegal == ${renderIssueSet(completeAssessment.issues.map((issue) => issue.code))}),
             assert(sheet.primaryClass == ${renderClassName(completeFinalization.sheet.primaryClass)}),
-            assert(sheet.classLevels.get(${renderClassName(completeFinalization.sheet.primaryClass)}) == ${completeFinalization.sheet.classLevels[completeFinalization.sheet.primaryClass]}),
             assert(sheet.advancement.length() == ${completeFinalization.sheet.advancement.length}),
             assert(sheet.abilityScores.get(Str) == ${completeFinalization.sheet.abilityScores.str}),
             assert(sheet.abilityScores.get(Con) == ${completeFinalization.sheet.abilityScores.con}),
@@ -936,7 +935,6 @@ describe("character semantics Quint parity", () => {
           match pAdvanceLevel(sheet, LEVEL_UP_FIGHTER_NO_PATCH) {
             | Advanced(nextSheet) =>
                 all {
-                  assert(nextSheet.classLevels.get(Fighter) == ${fighterLevelTwo.sheet.classLevels.fighter}),
                   assert(nextSheet.advancement.length() == ${fighterLevelTwo.sheet.advancement.length}),
                   assert(nextSheet.abilityScores.get(Str) == ${fighterLevelTwo.sheet.abilityScores.str}),
                   assert(nextSheet.abilityScores.get(Con) == ${fighterLevelTwo.sheet.abilityScores.con}),
@@ -1007,7 +1005,6 @@ describe("character semantics Quint parity", () => {
           }),
           advancementEntry("fighter"),
         ],
-        classLevels: { fighter: 5 },
       });
       const fighterLevelFive = finalizeCharacterDraft(fighterLevelFiveDraft);
       expect(fighterLevelFive.ok).toBe(true);
@@ -1072,10 +1069,6 @@ describe("character semantics Quint parity", () => {
       const multiclassDraft = completeFighterDraft({
         primaryClass: "fighter",
         advancement: [advancementEntry("fighter"), advancementEntry("wizard")],
-        classLevels: {
-          fighter: 1,
-          wizard: 1,
-        },
         background: "sage",
         abilityScoreGeneration: {
           mode: "standardArray",
@@ -1148,10 +1141,7 @@ describe("character semantics Quint parity", () => {
             advancementEntry("fighter"),
             advancementEntry("fighter"),
           ],
-          classLevels: {
-            ...fighterLevelFive.sheet.classLevels,
-            fighter: 3,
-          },
+          // Contradiction now comes from rewinding the owned advancement path.
         },
       );
 
@@ -1220,7 +1210,6 @@ describe("character semantics Quint parity", () => {
                 { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
                 { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
               ])
-              .with("classLevels", singleClassLevels(Fighter, 3))
           val projection = pCharacterCreatureProjection(levelThreeWithoutSubclass)
           all {
             assert(projection.critRange == ${fighterWithoutSubclassProjection.critRange}),

@@ -183,7 +183,6 @@ module characterCreation {
 
   type CharacterSheet = {
     primaryClass: ClassName,
-    classLevels: ClassName -> int,
     advancement: List[CharacterAdvancementEntry],
     background: CharacterBackground,
     abilityScoreGeneration: {
@@ -421,6 +420,8 @@ module characterCreation {
       + (if (classLevels.get(Rogue) >= 6) 2 else 0)
       + (if (classLevels.get(Wizard) >= 2) 1 else 0)
 
+  // SRD 5.2.1 Rules Glossary "Expertise": you gain Expertise in a skill
+  // proficiency and can't gain Expertise in the same proficiency more than once.
   pure def pValidWizardScholarExpertiseSkill(skill: Skill): bool =
     skill == Arcana
       or skill == History
@@ -1249,6 +1250,8 @@ module characterCreation {
             pIssueIf(choices.rangerFightingStyle == NoRangerFightingStyleChoice, MissingFeatureChoice)
           else Set()
         )
+        // SRD 5.2.1 Paladin/Ranger "Level 2: Fighting Style" plus Ranger
+        // "Level 2/9: Expertise" determine when these owned choice slots exist.
         .union(
           if (expectedExpertiseChoices > 0)
             pIssueIf(choices.expertiseSkills == NoSkillList or expertiseSkills.length() < expectedExpertiseChoices, MissingFeatureChoice)
@@ -1675,7 +1678,6 @@ module characterCreation {
 
       Finalized({
         primaryClass: primaryClass,
-        classLevels: advancementReplay.classLevels,
         advancement: advancementReplay.advancement,
         background: background,
         abilityScoreGeneration: { mode: abilityScoreGeneration.mode, assignedScores: baseScores },

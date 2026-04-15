@@ -166,6 +166,12 @@ export function advancementToClassLevels(
   return classLevels;
 }
 
+export function sheetClassLevels(
+  sheet: Pick<CharacterSheet, "advancement">,
+): CharacterClassLevels {
+  return advancementToClassLevels(sheet.advancement);
+}
+
 export function cloneAdvancement(
   advancement: CharacterAdvancement,
 ): CharacterAdvancement {

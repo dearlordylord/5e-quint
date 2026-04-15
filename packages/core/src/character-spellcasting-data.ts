@@ -58,6 +58,10 @@ function extraCantripCount(
   className: CasterClass,
   choices: CharacterBuildChoices | undefined,
 ): number {
+  // SRD 5.2.1:
+  // Paladin "Level 2: Fighting Style" grants Blessed Warrior's two Cleric
+  // cantrips, and Ranger "Level 2: Fighting Style" grants Druidic Warrior's
+  // two Druid cantrips. Those extra cantrips count as Paladin/Ranger spells.
   if (className === "cleric" && choices?.clericDivineOrder === "thaumaturge") {
     return 1;
   }
@@ -101,6 +105,8 @@ export function cantripChoiceSourceClass(
   className: CasterClass,
   choices: CharacterBuildChoices | undefined,
 ): CasterClass {
+  // The class owning the spellcasting entry remains Paladin/Ranger, but the
+  // cantrip legality source list comes from the Fighting Style option's class.
   if (
     className === "paladin" &&
     choices?.paladinFightingStyle === "blessedWarrior"

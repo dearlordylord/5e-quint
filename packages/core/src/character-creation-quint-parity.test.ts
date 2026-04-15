@@ -214,7 +214,7 @@ function runCharacterCreationQuintParity(): void {
     spellcasting: NoSpellcastingChoices,
   }`,
       finalAssertions: [
-        "assert(sheet.classLevels.get(Fighter) == 4)",
+        "assert(sheet.advancement.length() == 4)",
         "assert(sheet.abilityScores.get(Str) == 19)",
         'assert(sheet.equipment.backgroundOption == "package")',
         'assert(sheet.equipment.classOption == "packageA")',
@@ -448,7 +448,7 @@ function runCharacterCreationQuintParity(): void {
     )),
   }`,
       finalAssertions: [
-        "assert(sheet.classLevels.get(Wizard) == 1)",
+        "assert(sheet.advancement.length() == 1)",
         "assert(sheet.abilityScores.get(Int_) == 10)",
         "assert(sheet.abilityScores.get(Wis) == 11)",
       ],
@@ -535,7 +535,7 @@ function runCharacterCreationQuintParity(): void {
     )),
   }`,
       finalAssertions: [
-        "assert(sheet.classLevels.get(Wizard) == 2)",
+        "assert(sheet.advancement.length() == 2)",
         "assert(sheet.choices.expertiseSkills == HasSkillList([Investigation]))",
       ],
     },

@@ -16,6 +16,7 @@ import {
   previewCharacterDraftUpdate,
   projectBattleWeaponProfile,
   deriveProficiencyBonus,
+  sheetClassLevels,
   singleClassAdvancement,
   startingGoldPieces,
   type CharacterDraft,
@@ -190,7 +191,7 @@ describe("character-domain", () => {
     if (!result.ok) throw new Error("expected successful finalization");
 
     expect(result.sheet.primaryClass).toBe("fighter");
-    expect(result.sheet.classLevels).toEqual({
+    expect(sheetClassLevels(result.sheet)).toEqual({
       ...ZERO_CLASS_LEVELS,
       fighter: 1,
     });
@@ -200,11 +201,14 @@ describe("character-domain", () => {
       purchasedCombatEquipment: [],
       remainingGoldPieces: 18,
       loadout: {
+        wornArmor: null,
         wieldedWeapon: "greatsword",
+        secondaryWeapon: null,
+        shield: false,
         wieldedWeaponGrip: "twoHanded",
       },
     });
-    expect(totalClassLevels(result.sheet.classLevels)).toBe(1);
+    expect(totalClassLevels(sheetClassLevels(result.sheet))).toBe(1);
     expect(result.sheet.abilityScores).toEqual({
       str: 17,
       dex: 13,
@@ -245,7 +249,7 @@ describe("character-domain", () => {
         "expected missing Fighting Style choice to block finalization",
       );
     }
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingFeatureChoice",
     );
   });
@@ -488,10 +492,10 @@ describe("character-domain", () => {
         "expected missing subclass selection to block finalization",
       );
     }
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingSubclassSelection",
     );
-    expect(result.issues.map((issue) => issue.code)).not.toContain(
+    expect(result.openChoices.map((issue) => issue.code)).not.toContain(
       "missingFeatureChoice",
     );
   });
@@ -528,7 +532,7 @@ describe("character-domain", () => {
         "expected Champion fighter level seven to require an additional Fighting Style choice",
       );
     }
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingFeatureChoice",
     );
   });
@@ -553,7 +557,7 @@ describe("character-domain", () => {
       throw new Error("expected illegal level-three advancement");
     }
 
-    expect(illegalLevelThree.issues).toEqual(
+    expect(illegalLevelThree.openChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "missingSubclassSelection" }),
       ]),
@@ -626,7 +630,7 @@ describe("character-domain", () => {
       throw new Error("expected successful direct multiclass sheet");
 
     expect(multiclassed.sheet).toEqual(direct.sheet);
-    expect(multiclassed.sheet.classLevels).toEqual({
+    expect(sheetClassLevels(multiclassed.sheet)).toEqual({
       ...ZERO_CLASS_LEVELS,
       fighter: 1,
       monk: 1,
@@ -832,7 +836,7 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingSpeciesSkillChoice",
     );
   });
@@ -1363,7 +1367,7 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingEquipmentChoices",
     );
   });
@@ -1374,11 +1378,10 @@ describe("character-domain", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
 
-    expect(result.issues.map((issue) => issue.code)).toEqual([
+    expect(result.openChoices.map((issue) => issue.code)).toEqual([
       "missingPrimaryClass",
       "missingClassLevels",
       "missingAdvancement",
-      "invalidTotalLevel",
       "missingBackground",
       "missingAbilityScoreGeneration",
       "missingBackgroundAbilityScoreIncrease",
@@ -1387,6 +1390,7 @@ describe("character-domain", () => {
       "missingAlignment",
       "missingEquipmentChoices",
     ]);
+    expect(result.issues).toEqual([]);
   });
 
   it("distinguishes open choices from illegal issues on the draft boundary", () => {
@@ -1655,7 +1659,7 @@ describe("character-domain", () => {
     if (missingCantrips.ok) {
       throw new Error("expected Blessed Warrior to require cantrips");
     }
-    expect(missingCantrips.issues.map((issue) => issue.code)).toContain(
+    expect(missingCantrips.openChoices.map((issue) => issue.code)).toContain(
       "missingCantripChoices",
     );
 
@@ -1730,7 +1734,7 @@ describe("character-domain", () => {
     if (missingCantrips.ok) {
       throw new Error("expected Druidic Warrior to require cantrips");
     }
-    expect(missingCantrips.issues.map((issue) => issue.code)).toContain(
+    expect(missingCantrips.openChoices.map((issue) => issue.code)).toContain(
       "missingCantripChoices",
     );
 
@@ -1761,6 +1765,42 @@ describe("character-domain", () => {
       },
     });
     expect(valid.ok).toBe(true);
+  });
+
+  it("drops stray finalized spellcasting entries for classes the sheet does not own", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+              "identify",
+              "sleep",
+            ],
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("expected fighter sheet finalization to succeed");
+    }
+    expect(result.sheet.spellcasting.wizard).toEqual({
+      cantrips: [],
+      preparedSpells: [],
+      spellbook: [],
+    });
   });
 
   it("reopens overspent equipment and spellcasting-dependent extras after earlier choices change", () => {
@@ -2045,7 +2085,10 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    const codes = result.issues.map((issue) => issue.code);
+    const codes = [
+      ...result.openChoices.map((issue) => issue.code),
+      ...result.issues.map((issue) => issue.code),
+    ];
     expect(codes).toContain("invalidStandardArray");
     expect(codes).toContain("duplicateLanguages");
     expect(codes).toContain("tooFewLanguages");

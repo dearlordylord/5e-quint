@@ -237,6 +237,31 @@ export interface CharacterBuildChoices {
   readonly expertiseSkills?: ReadonlyArray<Skill>;
 }
 
+export interface CharacterSheetBuildChoices {
+  readonly primaryClassSkills: ReadonlyArray<Skill>;
+  readonly multiclassSkills: Readonly<
+    Record<
+      Extract<ClassName, "bard" | "ranger" | "rogue">,
+      ReadonlyArray<Skill>
+    >
+  >;
+  readonly backgroundTool: GamingSet | undefined;
+  readonly bardInstruments: ReadonlyArray<MusicalInstrument>;
+  readonly multiclassBardInstrument: MusicalInstrument | undefined;
+  readonly monkTool: ArtisanTool | MusicalInstrument | undefined;
+  readonly speciesSkill: Skill | undefined;
+  readonly humanOriginFeat: CharacterOriginFeatSelection | undefined;
+  readonly rogueLanguage: CharacterGrantedLanguage | undefined;
+  readonly rangerDeftExplorerLanguages: ReadonlyArray<CharacterGrantedLanguage>;
+  readonly clericDivineOrder: ClericDivineOrder | undefined;
+  readonly druidPrimalOrder: DruidPrimalOrder | undefined;
+  readonly fighterFightingStyle: FightingStyle | undefined;
+  readonly championAdditionalFightingStyle: FightingStyle | undefined;
+  readonly paladinFightingStyle: PaladinFightingStyleChoice | undefined;
+  readonly rangerFightingStyle: RangerFightingStyleChoice | undefined;
+  readonly expertiseSkills: ReadonlyArray<Skill>;
+}
+
 export interface CharacterProficiencySummary {
   readonly savingThrows: readonly [Ability, Ability];
   readonly skills: ReadonlyArray<Skill>;

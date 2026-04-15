@@ -46,6 +46,14 @@ export const WEAPON_GRIPS = ["oneHanded", "twoHanded"] as const;
 export type CharacterWeaponGrip = (typeof WEAPON_GRIPS)[number];
 
 export interface CharacterLoadout {
+  readonly wornArmor: CharacterArmor | null;
+  readonly wieldedWeapon: CharacterWeapon | null;
+  readonly secondaryWeapon: CharacterWeapon | null;
+  readonly shield: boolean;
+  readonly wieldedWeaponGrip: CharacterWeaponGrip | null;
+}
+
+export interface CharacterLoadoutDraft {
   readonly wornArmor?: CharacterArmor;
   readonly wieldedWeapon?: CharacterWeapon;
   readonly secondaryWeapon?: CharacterWeapon;
@@ -58,7 +66,7 @@ export interface CharacterEquipmentChoicesDraft {
   readonly classOption?: CharacterClassEquipmentOption;
   readonly purchasedCombatEquipment?: ReadonlyArray<CharacterCombatEquipmentItem>;
   readonly remainingGoldPieces?: number;
-  readonly loadout?: CharacterLoadout;
+  readonly loadout?: CharacterLoadoutDraft;
 }
 
 export interface CharacterEquipmentChoices {

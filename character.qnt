@@ -210,7 +210,7 @@ module character {
 
   pure def pSheetToDraft(sheet: CharacterSheet): CharacterDraft = {
     primaryClass: HasPrimaryClass(sheet.primaryClass),
-    classLevels: HasClassLevels(sheet.classLevels),
+    classLevels: HasClassLevels(pClassLevelsFromAdvancement(sheet.advancement)),
     advancement: HasAdvancement(sheet.advancement),
     background: HasBackground(sheet.background),
     abilityScoreGeneration: HasAbilityScoreGeneration(pDraftAbilityScoreGenerationFromSheet(sheet)),
@@ -451,14 +451,15 @@ module character {
   }
 
   pure def pSheetArmorProficiencies(sheet: CharacterSheet): Set[ArmorCategory] = {
-    val multiclassArmor = sheet.classLevels.keys().fold(Set(), (acc, className) =>
-      if (className == sheet.primaryClass or sheet.classLevels.get(className) <= 0) acc
+    val classLevels = pClassLevelsFromAdvancement(sheet.advancement)
+    val multiclassArmor = classLevels.keys().fold(Set(), (acc, className) =>
+      if (className == sheet.primaryClass or classLevels.get(className) <= 0) acc
       else acc.union(pMulticlassArmorProficiencies(className)))
-    val clericArmor = if (sheet.classLevels.get(Cleric) > 0 and sheet.choices.clericDivineOrder == HasString("protector"))
+    val clericArmor = if (classLevels.get(Cleric) > 0 and sheet.choices.clericDivineOrder == HasString("protector"))
       Set(HeavyArmor)
     else
       Set()
-    val druidArmor = if (sheet.classLevels.get(Druid) > 0 and sheet.choices.druidPrimalOrder == HasString("warden"))
+    val druidArmor = if (classLevels.get(Druid) > 0 and sheet.choices.druidPrimalOrder == HasString("warden"))
       Set(MediumArmor)
     else
       Set()
@@ -484,14 +485,14 @@ module character {
   }
 
   pure def pHasSpellcasting(sheet: CharacterSheet): bool =
-    sheet.classLevels.get(Bard) > 0
-      or sheet.classLevels.get(Cleric) > 0
-      or sheet.classLevels.get(Druid) > 0
-      or sheet.classLevels.get(Paladin) > 0
-      or sheet.classLevels.get(Ranger) > 0
-      or sheet.classLevels.get(Sorcerer) > 0
-      or sheet.classLevels.get(Warlock) > 0
-      or sheet.classLevels.get(Wizard) > 0
+    pClassLevelsFromAdvancement(sheet.advancement).get(Bard) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Cleric) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Druid) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Paladin) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Ranger) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Sorcerer) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Warlock) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Wizard) > 0
 
   pure def pIsCasterClass(className: ClassName): bool =
     className == Bard
@@ -531,8 +532,8 @@ module character {
     else Wis
 
   pure def pUnarmoredDefense(sheet: CharacterSheet): UnarmoredDefense =
-    if (sheet.classLevels.get(Barbarian) > 0) BarbarianUD
-    else if (sheet.classLevels.get(Monk) > 0) MonkUD
+    if (pClassLevelsFromAdvancement(sheet.advancement).get(Barbarian) > 0) BarbarianUD
+    else if (pClassLevelsFromAdvancement(sheet.advancement).get(Monk) > 0) MonkUD
     else NoUnarmoredDefense
 
   pure def pCreatureFeatures(classLevels: ClassName -> int): Set[Feature] = {
@@ -614,26 +615,31 @@ module character {
         acc.union(Set(skill))
       else acc)
 
+  // CharacterSheet owns ordered advancement canonically; classLevels are always
+  // projected from advancement so contradictory finalized states are unrepresentable.
   pure def pCharacterCreatureProjection(sheet: CharacterSheet): CharacterCreatureProjection = {
-    primaryClass: sheet.primaryClass,
-    subclasses: pSubclassSelections(sheet.advancement),
-    species: sheet.species,
-    classLevels: sheet.classLevels,
-    fightingStyles: pProjectionFightingStyles(sheet),
-    abilityScores: sheet.abilityScores,
-    creatureSize: pSpeciesCreatureSize(sheet.species),
-    baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
-    saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
-    skillProficiencies: pSheetSkillProficiencies(sheet),
-    expertiseSkills: pProjectionExpertiseSkills(sheet),
-    armorProficiencies: pSheetArmorProficiencies(sheet),
-    hitDieType: pHitDieType(sheet.primaryClass),
-    spellcastingAbility: pProjectionSpellcastingAbility(sheet),
-    hasSpellcasting: pHasSpellcasting(sheet),
-    unarmoredDefense: pUnarmoredDefense(sheet),
-    features: pCreatureFeatures(sheet.classLevels),
-    critRange: pCritRange(pSubclassSelections(sheet.advancement), sheet.classLevels),
-    hasFightingStyleFeature: pHasFightingStyleFeature(sheet.classLevels),
+    val classLevels = pClassLevelsFromAdvancement(sheet.advancement)
+    {
+      primaryClass: sheet.primaryClass,
+      subclasses: pSubclassSelections(sheet.advancement),
+      species: sheet.species,
+      classLevels: classLevels,
+      fightingStyles: pProjectionFightingStyles(sheet),
+      abilityScores: sheet.abilityScores,
+      creatureSize: pSpeciesCreatureSize(sheet.species),
+      baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
+      saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
+      skillProficiencies: pSheetSkillProficiencies(sheet),
+      expertiseSkills: pProjectionExpertiseSkills(sheet),
+      armorProficiencies: pSheetArmorProficiencies(sheet),
+      hitDieType: pHitDieType(sheet.primaryClass),
+      spellcastingAbility: pProjectionSpellcastingAbility(sheet),
+      hasSpellcasting: pHasSpellcasting(sheet),
+      unarmoredDefense: pUnarmoredDefense(sheet),
+      features: pCreatureFeatures(classLevels),
+      critRange: pCritRange(pSubclassSelections(sheet.advancement), classLevels),
+      hasFightingStyleFeature: pHasFightingStyleFeature(classLevels),
+    }
   }
 
   pure def pProjectionToCharConfig(projection: CharacterCreatureProjection): CharConfig = {

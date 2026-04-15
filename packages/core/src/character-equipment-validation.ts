@@ -161,7 +161,13 @@ export function validateCharacterEquipment(params: {
     classOption: equipment.classOption ?? "packageA",
     purchasedCombatEquipment: [...(equipment.purchasedCombatEquipment ?? [])],
     remainingGoldPieces: equipment.remainingGoldPieces ?? 0,
-    loadout: equipment.loadout,
+    loadout: {
+      wornArmor: equipment.loadout.wornArmor ?? null,
+      wieldedWeapon: equipment.loadout.wieldedWeapon ?? null,
+      secondaryWeapon: equipment.loadout.secondaryWeapon ?? null,
+      shield: equipment.loadout.shield === true,
+      wieldedWeaponGrip: equipment.loadout.wieldedWeaponGrip ?? null,
+    },
   };
   const sheetLike: CharacterEquipmentSheetLike = {
     primaryClass: params.primaryClass,

@@ -31,7 +31,21 @@ function cloneEquipmentChoices(
     classOption: equipment.classOption,
     purchasedCombatEquipment: [...equipment.purchasedCombatEquipment],
     remainingGoldPieces: equipment.remainingGoldPieces,
-    loadout: { ...equipment.loadout },
+    loadout: {
+      ...(equipment.loadout.wornArmor == null
+        ? {}
+        : { wornArmor: equipment.loadout.wornArmor }),
+      ...(equipment.loadout.wieldedWeapon == null
+        ? {}
+        : { wieldedWeapon: equipment.loadout.wieldedWeapon }),
+      ...(equipment.loadout.secondaryWeapon == null
+        ? {}
+        : { secondaryWeapon: equipment.loadout.secondaryWeapon }),
+      ...(equipment.loadout.shield ? { shield: true } : {}),
+      ...(equipment.loadout.wieldedWeaponGrip == null
+        ? {}
+        : { wieldedWeaponGrip: equipment.loadout.wieldedWeaponGrip }),
+    },
   };
 }
 
@@ -109,13 +123,15 @@ export function advanceCharacterSheet(
   if (!isDeepStrictEqual(legalityCheck.sheet, sheet)) {
     return {
       ok: false,
+      status: "invalid",
+      openChoices: [],
       issues: [
         {
           code: "contradictoryFinalizedSheet",
           message:
             "Finalized sheet facts must match the replayed result of their owned draft state before advancement.",
         },
-      ],
+      ] as const,
     };
   }
 

@@ -1,4 +1,7 @@
-import { characterSubclassSelections } from "#/character-domain.ts";
+import {
+  characterSubclassSelections,
+  sheetClassLevels,
+} from "#/character-domain.ts";
 import type {
   CharacterAdvancement,
   CharacterClassLevels,
@@ -11,6 +14,7 @@ import type {
   CharacterOriginFeatSelection,
   CharacterProficiencySummary,
   CharacterAdvancementEntry,
+  CharacterSheetBuildChoices,
   CharacterToolProficiency,
   GamingSet,
   MusicalInstrument,
@@ -82,7 +86,7 @@ export interface CharacterSkillProficiencySource {
   readonly background?: CharacterSheet["background"];
   readonly species?: CharacterSheet["species"];
   readonly classLevels: CharacterClassLevels;
-  readonly choices?: CharacterBuildChoices;
+  readonly choices?: CharacterBuildChoices | CharacterSheetBuildChoices;
   readonly advancement?: CharacterAdvancement;
 }
 
@@ -107,15 +111,16 @@ function multiclassToolProficiencies(
   sheet: CharacterSheet,
 ): ReadonlyArray<CharacterToolProficiency> {
   const tools: CharacterToolProficiency[] = [];
+  const classLevels = sheetClassLevels(sheet);
 
   if (
-    sheet.classLevels.bard > 0 &&
+    classLevels.bard > 0 &&
     sheet.primaryClass !== "bard" &&
-    sheet.choices?.multiclassBardInstrument != null
+    sheet.choices.multiclassBardInstrument != null
   ) {
     tools.push(sheet.choices.multiclassBardInstrument);
   }
-  if (sheet.classLevels.rogue > 0 && sheet.primaryClass !== "rogue") {
+  if (classLevels.rogue > 0 && sheet.primaryClass !== "rogue") {
     tools.push("thievesTools");
   }
 
@@ -192,11 +197,21 @@ export function deriveCharacterProficiencies(
   sheet: CharacterSheet,
 ): CharacterProficiencySummary {
   const primary = PRIMARY_CLASS_PROFICIENCIES[sheet.primaryClass];
-  const skills = [...deriveGrantedSkillProficiencies(sheet)];
+  const classLevels = sheetClassLevels(sheet);
+  const skills = [
+    ...deriveGrantedSkillProficiencies({
+      primaryClass: sheet.primaryClass,
+      background: sheet.background,
+      species: sheet.species,
+      classLevels,
+      choices: sheet.choices,
+      advancement: sheet.advancement,
+    }),
+  ];
   const toolProficiencies: CharacterToolProficiency[] = [
     ...backgroundToolProficiencies(
       sheet.background,
-      sheet.choices?.backgroundTool,
+      sheet.choices.backgroundTool,
     ),
   ];
   const armorTraining = [...primary.armorTraining];
@@ -209,7 +224,7 @@ export function deriveCharacterProficiencies(
   pushUnique(toolProficiencies, primaryClassToolProficiencies(sheet));
 
   for (const className of CLASS_NAMES) {
-    if (className === sheet.primaryClass || sheet.classLevels[className] <= 0) {
+    if (className === sheet.primaryClass || classLevels[className] <= 0) {
       continue;
     }
     const gains = MULTICLASS_PROFICIENCIES[className];
@@ -218,7 +233,7 @@ export function deriveCharacterProficiencies(
   }
 
   pushUnique(toolProficiencies, multiclassToolProficiencies(sheet));
-  if (sheet.species === "human" && sheet.choices?.humanOriginFeat != null) {
+  if (sheet.species === "human" && sheet.choices.humanOriginFeat != null) {
     originFeats.push(sheet.choices.humanOriginFeat);
   }
 
@@ -252,33 +267,27 @@ export function deriveCharacterProficiencies(
   }
 
   if (
-    sheet.classLevels.cleric > 0 &&
-    sheet.choices?.clericDivineOrder === "protector"
+    classLevels.cleric > 0 &&
+    sheet.choices.clericDivineOrder === "protector"
   ) {
     pushUnique(armorTraining, ["heavy"]);
     pushUnique(weaponProficiencies, ["martial"]);
   }
-  if (
-    sheet.classLevels.druid > 0 &&
-    sheet.choices?.druidPrimalOrder === "warden"
-  ) {
+  if (classLevels.druid > 0 && sheet.choices.druidPrimalOrder === "warden") {
     pushUnique(armorTraining, ["medium"]);
     pushUnique(weaponProficiencies, ["martial"]);
   }
-  if (sheet.classLevels.druid > 0) {
+  if (classLevels.druid > 0) {
     pushUnique(grantedLanguages, ["Druidic"]);
   }
-  if (sheet.classLevels.rogue > 0) {
+  if (classLevels.rogue > 0) {
     pushUnique(grantedLanguages, ["Thieves' Cant"]);
-    if (sheet.choices?.rogueLanguage != null) {
+    if (sheet.choices.rogueLanguage != null) {
       pushUnique(grantedLanguages, [sheet.choices.rogueLanguage]);
     }
   }
-  if (sheet.classLevels.ranger >= 2) {
-    pushUnique(
-      grantedLanguages,
-      sheet.choices?.rangerDeftExplorerLanguages ?? [],
-    );
+  if (classLevels.ranger >= 2) {
+    pushUnique(grantedLanguages, sheet.choices.rangerDeftExplorerLanguages);
   }
 
   return {

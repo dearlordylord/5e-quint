@@ -3,6 +3,7 @@ import { characterBattleEquipmentProjection } from "#/character-equipment.ts";
 import {
   characterProficiencySummary,
   finalAbilityModifiers,
+  sheetClassLevels,
   type CharacterSheet,
 } from "#/character-domain.ts";
 import {
@@ -75,8 +76,9 @@ function hitPointMaximum(
   abilityModifiers: AbilityModifierMap,
 ): number {
   let hp = 0;
+  const classLevels = sheetClassLevels(sheet);
 
-  const primaryClassLevels = sheet.classLevels[sheet.primaryClass];
+  const primaryClassLevels = classLevels[sheet.primaryClass];
   if (primaryClassLevels <= 0) return 0;
 
   hp += levelOneHitPoints(
@@ -87,9 +89,9 @@ function hitPointMaximum(
     Math.max(0, primaryClassLevels - 1) *
     levelUpHitPoints(sheet.primaryClass, abilityModifiers.con);
 
-  for (const [className, level] of Object.entries(
-    sheet.classLevels,
-  ) as ReadonlyArray<readonly [ClassName, number]>) {
+  for (const [className, level] of Object.entries(classLevels) as ReadonlyArray<
+    readonly [ClassName, number]
+  >) {
     if (className === sheet.primaryClass || level <= 0) continue;
     hp += level * levelUpHitPoints(className, abilityModifiers.con);
   }
@@ -98,7 +100,7 @@ function hitPointMaximum(
 }
 
 function hitDiceRemaining(sheet: CharacterSheet): HitDiceRemaining {
-  return { ...sheet.classLevels };
+  return { ...sheetClassLevels(sheet) };
 }
 
 function shieldArmorClassBonus(sheet: CharacterSheet): number {
@@ -134,7 +136,8 @@ function barbarianArmorClass(
   sheet: CharacterSheet,
   abilityModifiers: AbilityModifierMap,
 ): number | null {
-  if (sheet.classLevels.barbarian <= 0) return null;
+  const classLevels = sheetClassLevels(sheet);
+  if (classLevels.barbarian <= 0) return null;
   if (sheet.equipment.loadout.wornArmor != null) return null;
   return (
     10 +
@@ -148,7 +151,8 @@ function monkArmorClass(
   sheet: CharacterSheet,
   abilityModifiers: AbilityModifierMap,
 ): number | null {
-  if (sheet.classLevels.monk <= 0) return null;
+  const classLevels = sheetClassLevels(sheet);
+  if (classLevels.monk <= 0) return null;
   if (sheet.equipment.loadout.wornArmor != null) return null;
   if (sheet.equipment.loadout.shield === true) return null;
   return 10 + abilityModifiers.dex + abilityModifiers.wis;
@@ -217,6 +221,7 @@ export function deriveCharacterSheetNumbers(
   const abilityModifiers = finalAbilityModifiers(sheet);
   const proficiencyBonus = deriveProficiencyBonus(sheet);
   const derivedSkillModifiers = skillModifiers(sheet);
+  const classLevels = sheetClassLevels(sheet);
 
   return {
     proficiencyBonus,
@@ -231,9 +236,9 @@ export function deriveCharacterSheetNumbers(
     passivePerception: 10 + derivedSkillModifiers.perception,
     spellcasting: deriveCharacterSpellcastingSummary({
       abilityScores: sheet.abilityScores,
-      classLevels: sheet.classLevels,
+      classLevels,
       choices: sheet.choices,
-      spellcasting: sheet.spellcasting ?? {},
+      spellcasting: sheet.spellcasting,
       proficiencyBonus,
     }),
   };
@@ -367,7 +372,7 @@ export function characterSheetBattleProjection(
     pactSlotsCurrent: derived.spellcasting.pactSlotsCurrent,
     pactSlotLevel: derived.spellcasting.pactSlotLevel,
     critRange: projection.critRange,
-    sneakAttackDice: sneakAttackDice(sheet.classLevels.rogue),
+    sneakAttackDice: sneakAttackDice(sheetClassLevels(sheet).rogue),
     ...battleEquipment,
   };
 }

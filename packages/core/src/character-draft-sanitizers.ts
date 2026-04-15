@@ -10,7 +10,7 @@ import {
 import {
   ownedCombatEquipment,
   type CharacterEquipmentChoicesDraft,
-  type CharacterLoadout,
+  type CharacterLoadoutDraft,
 } from "#/character-equipment.ts";
 import { CLASS_PACKAGE_DATA } from "#/character-equipment-data.ts";
 import { validateCharacterEquipment } from "#/character-equipment-validation.ts";
@@ -22,7 +22,7 @@ type MutableCharacterEquipmentChoicesDraft = {
 };
 
 type MutableCharacterLoadout = {
-  -readonly [K in keyof CharacterLoadout]: CharacterLoadout[K];
+  -readonly [K in keyof CharacterLoadoutDraft]: CharacterLoadoutDraft[K];
 };
 
 export function normalizeClassLevels(
@@ -114,7 +114,13 @@ function sanitizeEquipmentChoices(
       classOption: next.classOption!,
       purchasedCombatEquipment: next.purchasedCombatEquipment ?? [],
       remainingGoldPieces: next.remainingGoldPieces ?? 0,
-      loadout: next.loadout,
+      loadout: {
+        wornArmor: next.loadout.wornArmor ?? null,
+        wieldedWeapon: next.loadout.wieldedWeapon ?? null,
+        secondaryWeapon: next.loadout.secondaryWeapon ?? null,
+        shield: next.loadout.shield === true,
+        wieldedWeaponGrip: next.loadout.wieldedWeaponGrip ?? null,
+      },
     },
   });
   const loadout: MutableCharacterLoadout = { ...next.loadout };
