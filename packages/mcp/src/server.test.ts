@@ -1072,6 +1072,11 @@ describe("MCP server adapter", () => {
       },
       preview,
     });
+    expect(readPayload(previewResponse).preview.candidateDraft.classLevels).toBeUndefined();
+    expect(readPayload(previewResponse).preview.candidateDraft.advancement).toEqual([
+      advancementEntry("fighter"),
+      advancementEntry("fighter"),
+    ]);
     expect("isError" in advancedResponse).toBe(false);
     expect(readPayload(advancedResponse)).toEqual({
       storedCharacter: advanced.ok
@@ -1128,6 +1133,25 @@ describe("MCP server adapter", () => {
         sheet: finalized.sheet,
       },
       preview,
+    });
+    expect(readPayload(previewResponse).preview.candidateDraft.classLevels).toBeUndefined();
+    expect(readPayload(previewResponse).preview.candidateDraft.spellcasting?.wizard).toEqual({
+      cantrips: ["fire_bolt", "light", "mage_hand"],
+      preparedSpells: [
+        "burning_hands",
+        "charm_person",
+        "detect_magic",
+        "magic_missile",
+        "shield",
+      ],
+      spellbook: [
+        "burning_hands",
+        "charm_person",
+        "detect_magic",
+        "magic_missile",
+        "identify",
+        "sleep",
+      ],
     });
     expect(
       readPayload(router.handleToolCall("get_character_state", {})),
