@@ -38,7 +38,8 @@ export default [
       "src/machine-types.ts",
       "src/types.ts",
       "src/machine-helpers.ts",
-      "src/battle-machine-creature.ts"
+      "src/battle-machine-creature.ts",
+      "src/character-open-choice-payload.ts"
     ],
     rules: {
       "max-lines": "off"

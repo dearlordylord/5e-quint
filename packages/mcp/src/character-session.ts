@@ -1,17 +1,15 @@
-import { Match, Schema } from "effect";
+import { Match } from "effect";
 
 import {
   assessCharacterDraft,
   applyCharacterDraftUpdate,
   advanceCharacterSheet,
-  CharacterDraftSchema,
-  CharacterLevelUpTransitionSchema,
+  buildOpenChoicePatch,
   finalizeCharacterDraft,
+  listCharacterFeaturePickers,
   previewCharacterSheetAdvancement,
   previewCharacterDraftUpdate,
-  strictCharacterParseOptions,
   type CharacterDraft,
-  type CharacterLevelUpTransition,
   type CharacterSheet,
 } from "@dnd/core/character-domain.ts";
 import {
@@ -20,60 +18,24 @@ import {
 } from "@dnd/core/character-sheet-derived.ts";
 
 import {
+  advanceCharacterSheetInputSchema,
+  buildOpenChoicePatchInputSchema,
+  characterDraftPatchInputSchema,
+  createCharacterDraftInputSchema,
+  decodeBuildOpenChoicePatchArgs,
+  decodeCanonicalCharacterDraft,
+  decodeDraftPatch,
+  decodeEmptyArgs,
+  decodeLevelUpTransition,
+  emptyObjectInputSchema,
   encodeStableJson,
-  invalidCharacterInputContent,
+  isCharacterToolError,
   readArgsRecord,
   rejectUnexpectedTopLevelFields,
+  serializePickerPayload,
+  type CharacterToolError,
 } from "./character-session-helpers.ts";
 import { errorContent, jsonContent } from "./server-shared.ts";
-
-type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
-  readonly type: "object";
-};
-
-const emptyObjectInputSchema = {
-  type: "object",
-  properties: {},
-  additionalProperties: false,
-} as const satisfies McpObjectInputSchema;
-
-const createCharacterDraftInputSchema = {
-  type: "object",
-  properties: {
-    draft: {
-      type: "object",
-      description:
-        "Optional canonical @dnd/core CharacterDraft payload to seed stored draft state. Omit to create an empty draft.",
-    },
-  },
-  additionalProperties: false,
-} as const satisfies McpObjectInputSchema;
-
-const characterDraftPatchInputSchema = {
-  type: "object",
-  required: ["patch"],
-  properties: {
-    patch: {
-      type: "object",
-      description:
-        "Partial canonical @dnd/core CharacterDraft patch applied over the stored draft state.",
-    },
-  },
-  additionalProperties: false,
-} as const satisfies McpObjectInputSchema;
-
-const advanceCharacterSheetInputSchema = {
-  type: "object",
-  required: ["transition"],
-  properties: {
-    transition: {
-      type: "object",
-      description:
-        "Canonical core-owned CharacterLevelUpTransition payload applied to the stored finalized sheet.",
-    },
-  },
-  additionalProperties: false,
-} as const satisfies McpObjectInputSchema;
 
 export const characterToolDefinitions = [
   {
@@ -105,6 +67,18 @@ export const characterToolDefinitions = [
     description:
       "Assess the stored draft through core-owned semantics, separating open required choices from illegal issues.",
     inputSchema: emptyObjectInputSchema,
+  },
+  {
+    name: "list_character_feature_pickers",
+    description:
+      "List every open feature picker active for the stored draft. Each picker reports legal options, pick count, the draft write path, and the caller's current pick(s). Use the featureRef with build_open_choice_patch to construct a draft patch.",
+    inputSchema: emptyObjectInputSchema,
+  },
+  {
+    name: "build_open_choice_patch",
+    description:
+      "Build a canonical CharacterDraft patch from a picker selection. Resolves the picker by featureRef against the stored draft and applies any core-owned lifting (e.g. origin-feat tagged variants). The returned patch must then be applied via apply_character_draft_update.",
+    inputSchema: buildOpenChoicePatchInputSchema,
   },
   {
     name: "finalize_character_draft",
@@ -146,88 +120,10 @@ export interface CharacterSessionSnapshot {
   readonly storedCharacterState: StoredCharacterState["kind"];
 }
 
-type CharacterToolError = ReturnType<typeof errorContent>;
 type CharacterToolResult = ReturnType<typeof jsonContent> | CharacterToolError;
 
 function isCharacterToolName(name: string): name is CharacterToolName {
   return CHARACTER_TOOL_NAMES.includes(name as CharacterToolName);
-}
-
-function isCharacterToolError(value: unknown): value is CharacterToolError {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "isError" in value &&
-    value.isError === true &&
-    "content" in value
-  );
-}
-
-function decodeCanonicalCharacterDraft(
-  value: unknown,
-  toolName: CharacterToolName,
-  fieldName: string,
-): CharacterDraft | CharacterToolError {
-  const decoded = Schema.decodeUnknownEither(
-    CharacterDraftSchema,
-    strictCharacterParseOptions,
-  )(value);
-  if (decoded._tag === "Left") {
-    return invalidCharacterInputContent(toolName, fieldName, decoded.left);
-  }
-  return decoded.right;
-}
-
-function decodeDraftPatch(
-  args: unknown,
-  toolName: "preview_character_draft_update" | "apply_character_draft_update",
-): Partial<CharacterDraft> | CharacterToolError {
-  const decodedArgs = readArgsRecord(args, toolName);
-  if (isCharacterToolError(decodedArgs)) return decodedArgs;
-  const topLevelError = rejectUnexpectedTopLevelFields(decodedArgs, toolName, [
-    "patch",
-  ]);
-  if (topLevelError != null) return topLevelError;
-  return decodeCanonicalCharacterDraft(decodedArgs.patch, toolName, "patch");
-}
-
-function decodeLevelUpTransition(
-  args: unknown,
-  toolName: "preview_character_sheet_advancement" | "advance_character_sheet",
-): CharacterLevelUpTransition | CharacterToolError {
-  const decodedArgs = readArgsRecord(args, toolName);
-  if (isCharacterToolError(decodedArgs)) return decodedArgs;
-  const topLevelError = rejectUnexpectedTopLevelFields(decodedArgs, toolName, [
-    "transition",
-  ]);
-  if (topLevelError != null) return topLevelError;
-  const decoded = Schema.decodeUnknownEither(
-    CharacterLevelUpTransitionSchema,
-    strictCharacterParseOptions,
-  )(decodedArgs.transition);
-  if (decoded._tag === "Left") {
-    return invalidCharacterInputContent(toolName, "transition", decoded.left);
-  }
-  return decoded.right;
-}
-
-function decodeEmptyArgs(
-  args: unknown,
-  toolName:
-    | "get_character_state"
-    | "assess_character_draft"
-    | "finalize_character_draft"
-    | "project_character_sheet",
-): Record<string, never> | CharacterToolError {
-  const decodedArgs = readArgsRecord(args, toolName);
-  if (isCharacterToolError(decodedArgs)) return decodedArgs;
-  const topLevelError = rejectUnexpectedTopLevelFields(
-    decodedArgs,
-    toolName,
-    [],
-  );
-  if (topLevelError != null) return topLevelError;
-  return decodedArgs as Record<string, never>;
 }
 
 function encodeStoredCharacterState(state: StoredCharacterState) {
@@ -392,6 +288,45 @@ export function createCharacterSession(): CharacterSession {
         return jsonContent({
           storedCharacter: encodeStoredCharacterState(storedCharacter),
           assessment: assessCharacterDraft(draft),
+        });
+      }
+
+      if (name === "list_character_feature_pickers") {
+        const decodedArgs = decodeEmptyArgs(args, name);
+        if (isCharacterToolError(decodedArgs)) return decodedArgs;
+        const draft = requireStoredDraft(name);
+        if (isCharacterToolError(draft)) return draft;
+
+        return jsonContent({
+          storedCharacter: encodeStoredCharacterState(storedCharacter),
+          pickers: listCharacterFeaturePickers(draft).map(
+            serializePickerPayload,
+          ),
+        });
+      }
+
+      if (name === "build_open_choice_patch") {
+        const draft = requireStoredDraft(name);
+        if (isCharacterToolError(draft)) return draft;
+
+        const decoded = decodeBuildOpenChoicePatchArgs(args);
+        if (isCharacterToolError(decoded)) return decoded;
+
+        const pickers = listCharacterFeaturePickers(draft);
+        const payload = pickers.find(
+          (entry) => entry.featureRef === decoded.featureRef,
+        );
+        if (payload == null) {
+          return errorContent(`Unknown featureRef: ${decoded.featureRef}`, {
+            code: "UNKNOWN_FEATURE_REF",
+            featureRef: decoded.featureRef,
+            availableFeatureRefs: pickers.map((entry) => entry.featureRef),
+          });
+        }
+
+        return jsonContent({
+          storedCharacter: encodeStoredCharacterState(storedCharacter),
+          patch: buildOpenChoicePatch(draft, payload, decoded.value),
         });
       }
 

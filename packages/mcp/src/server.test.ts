@@ -7,7 +7,9 @@ import {
   assessCharacterDraft,
   advanceCharacterSheet,
   applyCharacterDraftUpdate,
+  buildOpenChoicePatch,
   finalizeCharacterDraft,
+  listCharacterFeaturePickers,
   previewCharacterSheetAdvancement,
   previewCharacterDraftUpdate,
   singleClassAdvancement,
@@ -858,6 +860,8 @@ describe("MCP server adapter", () => {
       "preview_character_draft_update",
       "apply_character_draft_update",
       "assess_character_draft",
+      "list_character_feature_pickers",
+      "build_open_choice_patch",
       "finalize_character_draft",
       "preview_character_sheet_advancement",
       "advance_character_sheet",
@@ -889,24 +893,9 @@ describe("MCP server adapter", () => {
   });
 
   test("tool definition input schemas satisfy MCP object-schema shape", () => {
-    expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-      "object",
-    ]);
+    for (const tool of toolDefinitions) {
+      expect(tool.inputSchema.type).toBe("object");
+    }
     for (const tool of toolDefinitions) {
       expect(tool.inputSchema).not.toHaveProperty("anyOf");
       expect(tool.inputSchema).not.toHaveProperty("oneOf");
@@ -1020,6 +1009,226 @@ describe("MCP server adapter", () => {
     });
   });
 
+  test("character MCP lists feature pickers as serializable payloads", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft: CharacterDraft = {
+      primaryClass: "bard",
+      advancement: singleClassAdvancement("bard", 1),
+      species: "human",
+    };
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const response = router.handleToolCall(
+      "list_character_feature_pickers",
+      {},
+    );
+
+    expect("isError" in response).toBe(false);
+    const payload = readPayload(response);
+    const expected = listCharacterFeaturePickers(draft).map((entry) => ({
+      featureRef: entry.featureRef,
+      options: entry.options,
+      pickCount: entry.pickCount,
+      writePath: entry.writePath,
+      current: entry.current,
+    }));
+    expect(payload).toEqual({
+      storedCharacter: { kind: "draft", draft },
+      pickers: expected,
+    });
+    expect(payload.pickers.length).toBeGreaterThan(0);
+    const featureRefs = payload.pickers.map(
+      (p: { readonly featureRef: string }) => p.featureRef,
+    );
+    expect(featureRefs).toContain("human_origin_feat");
+    expect(featureRefs).toContain("bard_instruments");
+    for (const picker of payload.pickers) {
+      expect(picker).not.toHaveProperty("lift");
+    }
+  });
+
+  test("character MCP builds open-choice patches with core-owned lifting", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft: CharacterDraft = {
+      primaryClass: "fighter",
+      advancement: singleClassAdvancement("fighter", 1),
+      species: "human",
+    };
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const response = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "human_origin_feat",
+      value: "skilled",
+    });
+
+    expect("isError" in response).toBe(false);
+    const pickers = listCharacterFeaturePickers(draft);
+    const humanOriginFeatPayload = pickers.find(
+      (entry) => entry.featureRef === "human_origin_feat",
+    )!;
+    expect(readPayload(response)).toEqual({
+      storedCharacter: { kind: "draft", draft },
+      patch: buildOpenChoicePatch(draft, humanOriginFeatPayload, "skilled"),
+    });
+  });
+
+  test("character MCP build_open_choice_patch accepts multi-pick arrays", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft: CharacterDraft = {
+      primaryClass: "bard",
+      advancement: singleClassAdvancement("bard", 1),
+    };
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const response = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "bard_instruments",
+      value: ["lute", "flute", "drum"],
+    });
+
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response).patch).toEqual({
+      choices: { bardInstruments: ["lute", "flute", "drum"] },
+    });
+  });
+
+  test("character MCP build_open_choice_patch rejects unknown featureRef", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", {
+      draft: { primaryClass: "fighter" },
+    });
+
+    const response = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "bogus",
+      value: "whatever",
+    });
+
+    expect("isError" in response).toBe(true);
+    expect(readPayload(response).error).toMatch(/Unknown featureRef: bogus/);
+    expect(readPayload(response).details.code).toBe("UNKNOWN_FEATURE_REF");
+  });
+
+  test("character MCP picker tools reject non-draft stored state", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const listEmpty = router.handleToolCall(
+      "list_character_feature_pickers",
+      {},
+    );
+    expect("isError" in listEmpty).toBe(true);
+    expect(readPayload(listEmpty).error).toMatch(
+      /Cannot call list_character_feature_pickers/,
+    );
+
+    const buildEmpty = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "human_origin_feat",
+    });
+    expect("isError" in buildEmpty).toBe(true);
+    expect(readPayload(buildEmpty).error).toMatch(
+      /Cannot call build_open_choice_patch/,
+    );
+  });
+
+  test("character MCP build_open_choice_patch validates value shape", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", {
+      draft: { primaryClass: "fighter" },
+    });
+
+    const response = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "human_origin_feat",
+      value: 42,
+    });
+
+    expect("isError" in response).toBe(true);
+    expect(readPayload(response).details.field).toBe("value");
+  });
+
+  test("character MCP surfaces bootstrap pickers from an empty draft", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", {});
+
+    const pickers = readPayload(
+      router.handleToolCall("list_character_feature_pickers", {}),
+    ).pickers as ReadonlyArray<{
+      readonly featureRef: string;
+      readonly options: ReadonlyArray<string>;
+      readonly writePath: ReadonlyArray<string>;
+    }>;
+    const primaryClassPicker = pickers.find(
+      (entry) => entry.featureRef === "primary_class",
+    );
+    expect(primaryClassPicker?.options).toContain("fighter");
+    expect(primaryClassPicker?.writePath).toEqual(["primaryClass"]);
+
+    const buildResponse = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "primary_class",
+      value: "fighter",
+    });
+    const patch = readPayload(buildResponse).patch;
+    expect(patch).toEqual({ primaryClass: "fighter" });
+
+    router.handleToolCall("apply_character_draft_update", { patch });
+
+    const followup = readPayload(
+      router.handleToolCall("list_character_feature_pickers", {}),
+    ).pickers as ReadonlyArray<{ readonly featureRef: string }>;
+    expect(followup.map((entry) => entry.featureRef)).not.toContain(
+      "primary_class",
+    );
+    expect(followup.map((entry) => entry.featureRef)).toContain(
+      "fighter_fighting_style",
+    );
+  });
+
+  test("character MCP picker surface closes the LLM feedback loop", () => {
+    const router = createSessionRouter(createDemoHost());
+    router.handleToolCall("create_character_draft", {
+      draft: {
+        primaryClass: "fighter",
+        advancement: singleClassAdvancement("fighter", 1),
+        species: "human",
+      },
+    });
+
+    const pickers = readPayload(
+      router.handleToolCall("list_character_feature_pickers", {}),
+    ).pickers as ReadonlyArray<{
+      readonly featureRef: string;
+      readonly pickCount: number;
+    }>;
+    expect(
+      pickers.find((entry) => entry.featureRef === "human_origin_feat")
+        ?.pickCount,
+    ).toBe(1);
+
+    const buildResponse = router.handleToolCall("build_open_choice_patch", {
+      featureRef: "human_origin_feat",
+      value: "skilled",
+    });
+    const patch = readPayload(buildResponse).patch;
+    expect(patch).toEqual({
+      choices: { humanOriginFeat: { feat: "skilled", proficiencies: [] } },
+    });
+
+    const applied = router.handleToolCall("apply_character_draft_update", {
+      patch,
+    });
+    expect("isError" in applied).toBe(false);
+    expect(
+      readPayload(applied).storedCharacter.draft.choices.humanOriginFeat,
+    ).toEqual({ feat: "skilled", proficiencies: [] });
+
+    const followup = readPayload(
+      router.handleToolCall("list_character_feature_pickers", {}),
+    ).pickers as ReadonlyArray<{ readonly featureRef: string }>;
+    expect(followup.map((entry) => entry.featureRef)).toContain(
+      "human_origin_feat_skilled_proficiencies",
+    );
+  });
+
   test("character MCP finalizes stored drafts and previews then advances stored sheets through core-owned semantics", () => {
     const router = createSessionRouter(createDemoHost());
     const draft = completeDraft();
@@ -1072,11 +1281,12 @@ describe("MCP server adapter", () => {
       },
       preview,
     });
-    expect(readPayload(previewResponse).preview.candidateDraft.classLevels).toBeUndefined();
-    expect(readPayload(previewResponse).preview.candidateDraft.advancement).toEqual([
-      advancementEntry("fighter"),
-      advancementEntry("fighter"),
-    ]);
+    expect(
+      readPayload(previewResponse).preview.candidateDraft.classLevels,
+    ).toBeUndefined();
+    expect(
+      readPayload(previewResponse).preview.candidateDraft.advancement,
+    ).toEqual([advancementEntry("fighter"), advancementEntry("fighter")]);
     expect("isError" in advancedResponse).toBe(false);
     expect(readPayload(advancedResponse)).toEqual({
       storedCharacter: advanced.ok
@@ -1120,7 +1330,10 @@ describe("MCP server adapter", () => {
       },
     } as const;
 
-    const preview = previewCharacterSheetAdvancement(finalized.sheet, transition);
+    const preview = previewCharacterSheetAdvancement(
+      finalized.sheet,
+      transition,
+    );
     const previewResponse = router.handleToolCall(
       "preview_character_sheet_advancement",
       { transition },
@@ -1134,8 +1347,12 @@ describe("MCP server adapter", () => {
       },
       preview,
     });
-    expect(readPayload(previewResponse).preview.candidateDraft.classLevels).toBeUndefined();
-    expect(readPayload(previewResponse).preview.candidateDraft.spellcasting?.wizard).toEqual({
+    expect(
+      readPayload(previewResponse).preview.candidateDraft.classLevels,
+    ).toBeUndefined();
+    expect(
+      readPayload(previewResponse).preview.candidateDraft.spellcasting?.wizard,
+    ).toEqual({
       cantrips: ["fire_bolt", "light", "mage_hand"],
       preparedSpells: [
         "burning_hands",

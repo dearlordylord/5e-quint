@@ -9,6 +9,7 @@ import {
   singleClassAdvancement,
   type CharacterDraft,
 } from "#/character-domain.ts";
+import { CLASS_NAMES } from "#/features/class-tables.ts";
 
 function baseDraft(overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -104,12 +105,28 @@ describe("resolveOpenChoicePayload", () => {
 
   it("returns null for unsupported open-choice codes", () => {
     const draft = baseDraft({
+      abilityScoreGeneration: undefined,
+    });
+    const choice = findChoice(draft, "missingAbilityScoreGeneration");
+    expect(choice).toBeDefined();
+    expect(resolveOpenChoicePayload(draft, choice!)).toBeNull();
+  });
+
+  it("resolves missingPrimaryClass to a primary_class picker", () => {
+    const draft = baseDraft({
       primaryClass: undefined,
       advancement: undefined,
     });
     const choice = findChoice(draft, "missingPrimaryClass");
     expect(choice).toBeDefined();
-    expect(resolveOpenChoicePayload(draft, choice!)).toBeNull();
+    const payload = resolveOpenChoicePayload(draft, choice!);
+    expect(payload).toEqual({
+      featureRef: "primary_class",
+      options: [...CLASS_NAMES],
+      pickCount: 1,
+      writePath: ["primaryClass"],
+      current: [],
+    });
   });
 });
 
@@ -132,9 +149,37 @@ describe("listCharacterFeaturePickers", () => {
       advancement: singleClassAdvancement("fighter", 1),
     });
     const pickers = listCharacterFeaturePickers(draft);
-    expect(pickers.find((p) => p.featureRef === "druid_primal_order")).toBeUndefined();
-    expect(pickers.find((p) => p.featureRef === "cleric_divine_order")).toBeUndefined();
-    expect(pickers.find((p) => p.featureRef === "fighter_fighting_style")).toBeDefined();
+    expect(
+      pickers.find((p) => p.featureRef === "druid_primal_order"),
+    ).toBeUndefined();
+    expect(
+      pickers.find((p) => p.featureRef === "cleric_divine_order"),
+    ).toBeUndefined();
+    expect(
+      pickers.find((p) => p.featureRef === "fighter_fighting_style"),
+    ).toBeDefined();
+  });
+
+  it("surfaces bootstrap pickers for unset root draft fields", () => {
+    const pickers = listCharacterFeaturePickers({});
+    const primaryClass = pickers.find((p) => p.featureRef === "primary_class");
+    expect(primaryClass).toEqual({
+      featureRef: "primary_class",
+      options: [...CLASS_NAMES],
+      pickCount: 1,
+      writePath: ["primaryClass"],
+      current: [],
+    });
+    expect(pickers.map((p) => p.featureRef)).toEqual(
+      expect.arrayContaining(["species", "background", "alignment"]),
+    );
+  });
+
+  it("omits bootstrap pickers once their root fields are set", () => {
+    const pickers = listCharacterFeaturePickers(baseDraft());
+    for (const ref of ["primary_class", "species", "background", "alignment"]) {
+      expect(pickers.find((p) => p.featureRef === ref)).toBeUndefined();
+    }
   });
 });
 
@@ -275,11 +320,7 @@ describe("resolveOpenChoicePayload: new pickers", () => {
       primaryClass: "fighter",
       advancement: [{ className: "fighter" }, { className: "bard" }],
     });
-    const choice = findChoice(
-      draft,
-      "missingToolChoice",
-      "multiclass bard",
-    );
+    const choice = findChoice(draft, "missingToolChoice", "multiclass bard");
     expect(choice).toBeDefined();
     const payload = resolveOpenChoicePayload(draft, choice!)!;
     expect(payload.featureRef).toBe("multiclass_bard_instrument");
@@ -328,7 +369,12 @@ describe("resolveOpenChoicePayload: new pickers", () => {
       primaryClass: "rogue",
       advancement: singleClassAdvancement("rogue", 1),
       choices: {
-        primaryClassSkills: ["stealth", "perception", "investigation", "insight"],
+        primaryClassSkills: [
+          "stealth",
+          "perception",
+          "investigation",
+          "insight",
+        ],
         rogueLanguage: "Draconic",
       },
     });

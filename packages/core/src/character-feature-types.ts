@@ -1,4 +1,7 @@
-import { CHARACTER_LANGUAGES, type CharacterLanguage } from "#/character-domain-model.ts";
+import {
+  CHARACTER_LANGUAGES,
+  type CharacterLanguage,
+} from "#/character-domain-model.ts";
 import type { ClassName } from "#/features/class-tables.ts";
 import {
   FIGHTING_STYLES,

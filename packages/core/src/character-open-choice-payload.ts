@@ -1,4 +1,5 @@
 import { advancementToClassLevels } from "#/character-advancement.ts";
+import { CHARACTER_BACKGROUNDS } from "#/character-ability-scores.ts";
 import {
   CHOICE_MESSAGE_PREFIXES,
   multiclassSkillsMessagePrefix,
@@ -7,9 +8,11 @@ import type {
   CharacterOpenChoice,
   CharacterOpenChoiceCode,
 } from "#/character-draft-analysis.ts";
-import type {
-  CharacterClassLevels,
-  CharacterDraft,
+import {
+  ALIGNMENTS,
+  CHARACTER_SPECIES,
+  type CharacterClassLevels,
+  type CharacterDraft,
 } from "#/character-domain-model.ts";
 import { EXPERTISE_MESSAGE_PREFIX } from "#/character-feature-choice-validation.ts";
 import {
@@ -47,7 +50,7 @@ import {
   SKILLS,
   speciesGrantsSkill,
 } from "#/character-proficiencies.ts";
-import type { ClassName } from "#/features/class-tables.ts";
+import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
 import { FIGHTING_STYLES } from "#/features/class-fighter.ts";
 
 export interface CharacterOpenChoicePayload {
@@ -117,6 +120,54 @@ function multiPickChoicePayload(params: {
     writePath: params.writePath,
     current: [...(params.currentValues ?? [])],
   };
+}
+
+function payloadForPrimaryClass({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.primaryClass != null) return null;
+  return singlePickChoicePayload({
+    featureRef: "primary_class",
+    options: CLASS_NAMES,
+    writePath: ["primaryClass"],
+    currentValue: undefined,
+  });
+}
+
+function payloadForSpecies({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.species != null) return null;
+  return singlePickChoicePayload({
+    featureRef: "species",
+    options: CHARACTER_SPECIES,
+    writePath: ["species"],
+    currentValue: undefined,
+  });
+}
+
+function payloadForBackground({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.background != null) return null;
+  return singlePickChoicePayload({
+    featureRef: "background",
+    options: CHARACTER_BACKGROUNDS,
+    writePath: ["background"],
+    currentValue: undefined,
+  });
+}
+
+function payloadForAlignment({
+  draft,
+}: ResolverContext): CharacterOpenChoicePayload | null {
+  if (draft.alignment != null) return null;
+  return singlePickChoicePayload({
+    featureRef: "alignment",
+    options: ALIGNMENTS,
+    writePath: ["alignment"],
+    currentValue: undefined,
+  });
 }
 
 function payloadForPrimaryClassSkills({
@@ -284,8 +335,7 @@ function liftOriginFeatId(
     const existing = draft.choices?.humanOriginFeat;
     return {
       feat: "skilled",
-      proficiencies:
-        existing?.feat === "skilled" ? existing.proficiencies : [],
+      proficiencies: existing?.feat === "skilled" ? existing.proficiencies : [],
     };
   }
   return { feat: value };
@@ -443,6 +493,22 @@ const MULTICLASS_SKILL_PICKER_ENTRIES: ReadonlyArray<PickerEntry> =
   }));
 
 const PICKER_ENTRIES: ReadonlyArray<PickerEntry> = [
+  {
+    codes: ["missingPrimaryClass"],
+    resolver: payloadForPrimaryClass,
+  },
+  {
+    codes: ["missingSpecies"],
+    resolver: payloadForSpecies,
+  },
+  {
+    codes: ["missingBackground"],
+    resolver: payloadForBackground,
+  },
+  {
+    codes: ["missingAlignment"],
+    resolver: payloadForAlignment,
+  },
   {
     codes: [
       "missingPrimaryClassSkillChoices",
