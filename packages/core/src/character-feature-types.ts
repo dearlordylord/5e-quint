@@ -1,5 +1,9 @@
 import type { CharacterLanguage } from "#/character-domain.ts";
 import type { ClassName } from "#/features/class-tables.ts";
+import {
+  FIGHTING_STYLES,
+  type FightingStyle,
+} from "#/features/class-fighter.ts";
 import type { Skill } from "#/monster-types.ts";
 import type { Ability } from "#/types.ts";
 
@@ -192,6 +196,20 @@ export type ClericDivineOrder = (typeof CLERIC_DIVINE_ORDERS)[number];
 export const DRUID_PRIMAL_ORDERS = ["magician", "warden"] as const;
 export type DruidPrimalOrder = (typeof DRUID_PRIMAL_ORDERS)[number];
 
+export const PALADIN_FIGHTING_STYLE_CHOICES = [
+  ...FIGHTING_STYLES,
+  "blessedWarrior",
+] as const satisfies ReadonlyArray<FightingStyle | "blessedWarrior">;
+export type PaladinFightingStyleChoice =
+  (typeof PALADIN_FIGHTING_STYLE_CHOICES)[number];
+
+export const RANGER_FIGHTING_STYLE_CHOICES = [
+  ...FIGHTING_STYLES,
+  "druidicWarrior",
+] as const satisfies ReadonlyArray<FightingStyle | "druidicWarrior">;
+export type RangerFightingStyleChoice =
+  (typeof RANGER_FIGHTING_STYLE_CHOICES)[number];
+
 export interface CharacterBuildChoices {
   readonly primaryClassSkills?: ReadonlyArray<Skill>;
   readonly multiclassSkills?: Partial<
@@ -212,6 +230,36 @@ export interface CharacterBuildChoices {
   readonly rangerDeftExplorerLanguages?: ReadonlyArray<CharacterGrantedLanguage>;
   readonly clericDivineOrder?: ClericDivineOrder;
   readonly druidPrimalOrder?: DruidPrimalOrder;
+  readonly fighterFightingStyle?: FightingStyle;
+  readonly championAdditionalFightingStyle?: FightingStyle;
+  readonly paladinFightingStyle?: PaladinFightingStyleChoice;
+  readonly rangerFightingStyle?: RangerFightingStyleChoice;
+  readonly expertiseSkills?: ReadonlyArray<Skill>;
+}
+
+export interface CharacterSheetBuildChoices {
+  readonly primaryClassSkills: ReadonlyArray<Skill>;
+  readonly multiclassSkills: Readonly<
+    Record<
+      Extract<ClassName, "bard" | "ranger" | "rogue">,
+      ReadonlyArray<Skill>
+    >
+  >;
+  readonly backgroundTool: GamingSet | undefined;
+  readonly bardInstruments: ReadonlyArray<MusicalInstrument>;
+  readonly multiclassBardInstrument: MusicalInstrument | undefined;
+  readonly monkTool: ArtisanTool | MusicalInstrument | undefined;
+  readonly speciesSkill: Skill | undefined;
+  readonly humanOriginFeat: CharacterOriginFeatSelection | undefined;
+  readonly rogueLanguage: CharacterGrantedLanguage | undefined;
+  readonly rangerDeftExplorerLanguages: ReadonlyArray<CharacterGrantedLanguage>;
+  readonly clericDivineOrder: ClericDivineOrder | undefined;
+  readonly druidPrimalOrder: DruidPrimalOrder | undefined;
+  readonly fighterFightingStyle: FightingStyle | undefined;
+  readonly championAdditionalFightingStyle: FightingStyle | undefined;
+  readonly paladinFightingStyle: PaladinFightingStyleChoice | undefined;
+  readonly rangerFightingStyle: RangerFightingStyleChoice | undefined;
+  readonly expertiseSkills: ReadonlyArray<Skill>;
 }
 
 export interface CharacterProficiencySummary {

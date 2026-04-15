@@ -26,6 +26,7 @@ import {
   type BattleActionHost,
   type CreatureActionHost,
 } from "./host-factories.ts";
+import { characterToolDefinitions } from "./character-session.ts";
 import { executeControlCommand } from "./server-control.ts";
 import {
   buildBattleRuntimeInputs,
@@ -138,6 +139,7 @@ export const toolDefinitions = [
     description: "Returns the current creature or battle host state as JSON.",
     inputSchema: { type: "object" as const, properties: {} },
   },
+  ...characterToolDefinitions,
   {
     name: "start_battle",
     description:

@@ -80,6 +80,14 @@ module characterCreation {
     subclass: str,
   }
 
+  type PaladinFightingStyleChoice =
+    | PaladinFightingStyleFeat(FightingStyleFeat)
+    | BlessedWarrior
+
+  type RangerFightingStyleChoice =
+    | RangerFightingStyleFeat(FightingStyleFeat)
+    | DruidicWarrior
+
   type CharacterAdvancementEntry = {
     className: ClassName,
     subclass: OptionalSubclassSelection,
@@ -146,6 +154,11 @@ module characterCreation {
     rangerDeftExplorerLanguages: OptionalGrantedLanguageList,
     clericDivineOrder: OptionalString,
     druidPrimalOrder: OptionalString,
+    fighterFightingStyle: OptionalFightingStyleFeat,
+    championAdditionalFightingStyle: OptionalFightingStyleFeat,
+    paladinFightingStyle: OptionalPaladinFightingStyleChoice,
+    rangerFightingStyle: OptionalRangerFightingStyleChoice,
+    expertiseSkills: OptionalSkillList,
   }
 
   type CharacterAbilityScoreGeneration = {
@@ -170,7 +183,6 @@ module characterCreation {
 
   type CharacterSheet = {
     primaryClass: ClassName,
-    classLevels: ClassName -> int,
     advancement: List[CharacterAdvancementEntry],
     background: CharacterBackground,
     abilityScoreGeneration: {
@@ -211,6 +223,9 @@ module characterCreation {
   type OptionalOriginFeatSelection = NoOriginFeatSelection | HasOriginFeatSelection(CharacterOriginFeatSelection)
   type OptionalGrantedLanguage = NoGrantedLanguage | HasGrantedLanguage(CharacterGrantedLanguage)
   type OptionalGrantedLanguageList = NoGrantedLanguageList | HasGrantedLanguageList(List[CharacterGrantedLanguage])
+  type OptionalFightingStyleFeat = NoFightingStyleFeat | HasFightingStyleFeat(FightingStyleFeat)
+  type OptionalPaladinFightingStyleChoice = NoPaladinFightingStyleChoice | HasPaladinFightingStyleChoice(PaladinFightingStyleChoice)
+  type OptionalRangerFightingStyleChoice = NoRangerFightingStyleChoice | HasRangerFightingStyleChoice(RangerFightingStyleChoice)
   type OptionalBool = NoBool | HasBool(bool)
   type OptionalInt = NoInt | HasInt(int)
   type OptionalString = NoString | HasString(str)
@@ -242,7 +257,7 @@ module characterCreation {
     | MissingToolChoice | InvalidToolChoiceCount | DuplicateToolChoice
     | MissingSpeciesSkillChoice | InvalidSpeciesSkillChoice
     | MissingOriginFeatChoice | InvalidOriginFeatChoice | WrongSkilledChoiceCount | DuplicateSkilledChoice
-    | MissingFeatureChoice | MissingAdvancementChoice | InvalidAdvancementChoice | PrematureFeatChoice | PrematureEpicBoonChoice
+    | MissingFeatureChoice | InvalidFeatureChoice | MissingAdvancementChoice | InvalidAdvancementChoice | PrematureFeatChoice | PrematureEpicBoonChoice
     | MissingSubclassSelection | InvalidSubclassSelection | PrematureSubclassSelection
     | MissingGrantedLanguageChoice | WrongGrantedLanguageChoiceCount | InvalidGrantedLanguageChoice | DuplicateGrantedLanguageChoice
     | DuplicateGrantedProficiency | MulticlassPrerequisiteNotMet | AbilityScoreIncreaseExceedsThirty
@@ -294,6 +309,11 @@ module characterCreation {
     rangerDeftExplorerLanguages: NoGrantedLanguageList,
     clericDivineOrder: NoString,
     druidPrimalOrder: NoString,
+    fighterFightingStyle: NoFightingStyleFeat,
+    championAdditionalFightingStyle: NoFightingStyleFeat,
+    paladinFightingStyle: NoPaladinFightingStyleChoice,
+    rangerFightingStyle: NoRangerFightingStyleChoice,
+    expertiseSkills: NoSkillList,
   }
 
   pure val EMPTY_LOADOUT: CharacterLoadout = {
@@ -389,6 +409,167 @@ module characterCreation {
   pure def pGrantedLanguagesValue(v: OptionalGrantedLanguageList): List[CharacterGrantedLanguage] = match v {
     | HasGrantedLanguageList(items) => items
     | _ => []
+  }
+
+  pure def pExpectedExpertiseChoiceCount(classLevels: ClassName -> int): int =
+    (if (classLevels.get(Bard) >= 2) 2 else 0)
+      + (if (classLevels.get(Bard) >= 9) 2 else 0)
+      + (if (classLevels.get(Ranger) >= 2) 1 else 0)
+      + (if (classLevels.get(Ranger) >= 9) 2 else 0)
+      + (if (classLevels.get(Rogue) >= 1) 2 else 0)
+      + (if (classLevels.get(Rogue) >= 6) 2 else 0)
+      + (if (classLevels.get(Wizard) >= 2) 1 else 0)
+
+  // SRD 5.2.1 Rules Glossary "Expertise": you gain Expertise in a skill
+  // proficiency and can't gain Expertise in the same proficiency more than once.
+  pure def pValidWizardScholarExpertiseSkill(skill: Skill): bool =
+    skill == Arcana
+      or skill == History
+      or skill == Investigation
+      or skill == Medicine
+      or skill == Nature
+      or skill == Religion
+
+  pure def pHasFighterFightingStyleSlot(classLevels: ClassName -> int): bool =
+    classLevels.get(Fighter) >= 1
+
+  pure def pHasChampionSubclass(advancement: List[CharacterAdvancementEntry]): bool =
+    advancement.foldl(false, (hasChampion, entry) =>
+      hasChampion or match entry.subclass {
+        | HasSubclassSelection(selection) =>
+            selection.className == Fighter and selection.subclass == "champion"
+        | _ => false
+      }
+    )
+
+  pure def pHasChampionAdditionalFightingStyleSlot(
+    classLevels: ClassName -> int,
+    advancement: List[CharacterAdvancementEntry],
+  ): bool =
+    classLevels.get(Fighter) >= 7 and pHasChampionSubclass(advancement)
+
+  pure def pHasPaladinFightingStyleSlot(classLevels: ClassName -> int): bool =
+    classLevels.get(Paladin) >= 2
+
+  pure def pHasRangerFightingStyleSlot(classLevels: ClassName -> int): bool =
+    classLevels.get(Ranger) >= 2
+
+  pure def pSelectedFightingStyles(choices: CharacterBuildChoices): List[FightingStyleFeat] = {
+    val fighterStyles = match choices.fighterFightingStyle {
+      | HasFightingStyleFeat(style) => [style]
+      | _ => []
+    }
+    val championStyles = match choices.championAdditionalFightingStyle {
+      | HasFightingStyleFeat(style) => [style]
+      | _ => []
+    }
+    val paladinStyles = match choices.paladinFightingStyle {
+      | HasPaladinFightingStyleChoice(choice) =>
+          match choice {
+            | PaladinFightingStyleFeat(style) => [style]
+            | _ => []
+          }
+      | _ => []
+    }
+    val rangerStyles = match choices.rangerFightingStyle {
+      | HasRangerFightingStyleChoice(choice) =>
+          match choice {
+            | RangerFightingStyleFeat(style) => [style]
+            | _ => []
+          }
+      | _ => []
+    }
+    fighterStyles.concat(championStyles).concat(paladinStyles).concat(rangerStyles)
+  }
+
+  pure def pDuplicateFightingStyles(styles: List[FightingStyleFeat]): bool = {
+    val result = styles.foldl({ seen: Set(), dup: false }, (acc, style) =>
+      if (acc.seen.contains(style)) { seen: acc.seen, dup: true }
+      else { seen: acc.seen.union(Set(style)), dup: acc.dup })
+    result.dup
+  }
+
+  pure def pDraftSkillSet(skills: List[Skill]): Set[Skill] =
+    skills.foldl(Set(), (acc, skill) => acc.union(Set(skill)))
+
+  pure def pDraftOptionalSkillSet(optionalSkills: OptionalSkillList): Set[Skill] =
+    pDraftSkillSet(pSkillsValue(optionalSkills))
+
+  pure def pDraftSkilledSkillProficiencies(
+    proficiencies: List[CharacterSkilledProficiencyChoice],
+  ): Set[Skill] =
+    proficiencies.foldl(Set(), (acc, choice) => match choice {
+      | SkilledSkill(skill) => acc.union(Set(skill))
+      | _ => acc
+    })
+
+  pure def pOriginFeatSkillProficiencies(
+    species: OptionalSpecies,
+    choices: CharacterBuildChoices,
+  ): Set[Skill] =
+    if (species == HasSpecies(Human))
+      match choices.humanOriginFeat {
+        | HasOriginFeatSelection(originFeat) =>
+            match originFeat {
+              | OriginSkilled(proficiencies) => pDraftSkilledSkillProficiencies(proficiencies)
+              | _ => Set()
+            }
+        | _ => Set()
+      }
+    else Set()
+
+  pure def pAdvancementSkillProficiencies(
+    advancement: List[CharacterAdvancementEntry],
+  ): Set[Skill] =
+    advancement.foldl(Set(), (acc, entry) => match entry.feat {
+      | HasAdvancementFeatSelection(selection) =>
+          match selection.choice {
+            | AdvancementFeat(feat) =>
+                match feat.proficiencies {
+                  | HasSkilledProficiencyChoices(proficiencies) => acc.union(pDraftSkilledSkillProficiencies(proficiencies))
+                  | _ => acc
+                }
+            | EpicBoonFeat(feat) =>
+                match feat.proficiencies {
+                  | HasSkilledProficiencyChoices(proficiencies) => acc.union(pDraftSkilledSkillProficiencies(proficiencies))
+                  | _ => acc
+                }
+            | _ => acc
+          }
+      | _ => acc
+    })
+
+  pure def pDraftGrantedSkillProficiencies(
+    draft: CharacterDraft,
+    classLevels: ClassName -> int,
+    choices: CharacterBuildChoices,
+  ): Set[Skill] = {
+    val multiclassSkills = match choices.multiclassSkills {
+      | HasMulticlassSkills(multiclassChoices) =>
+          pDraftOptionalSkillSet(multiclassChoices.bard)
+            .union(pDraftOptionalSkillSet(multiclassChoices.ranger))
+            .union(pDraftOptionalSkillSet(multiclassChoices.rogue))
+      | _ => Set()
+    }
+    val primarySkills = pDraftOptionalSkillSet(choices.primaryClassSkills)
+    val speciesSkills = match choices.speciesSkill {
+      | HasSkill(skill) => Set(skill)
+      | _ => Set()
+    }
+    val backgroundSkills = match draft.background {
+      | HasBackground(background) => pBackgroundSkillProficiencies(background)
+      | _ => Set()
+    }
+
+    backgroundSkills
+      .union(primarySkills)
+      .union(multiclassSkills)
+      .union(speciesSkills)
+      .union(pOriginFeatSkillProficiencies(draft.species, choices))
+      .union(match draft.advancement {
+        | HasAdvancement(advancement) => pAdvancementSkillProficiencies(advancement)
+        | _ => Set()
+      })
   }
 
   pure def pChoicesValue(v: OptionalBuildChoices): CharacterBuildChoices = match v {
@@ -512,6 +693,13 @@ module characterCreation {
   pure def pValidSpeciesSkillChoice(species: Species, skill: Skill): bool =
     if (species == Elf) skill == Insight or skill == Perception or skill == Survival
     else species == Human
+
+  pure def pBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
+    | Acolyte => Set(Insight, Religion)
+    | Criminal => Set(SleightOfHand, Stealth)
+    | Sage => Set(Arcana, History)
+    | Soldier => Set(Athletics, Intimidation)
+  }
 
   pure def pBackgroundSkillKeys(background: CharacterBackground): List[str] = match background {
     | Acolyte => ["skill:insight", "skill:religion"]
@@ -675,6 +863,13 @@ module characterCreation {
     pBaseCantripChoiceCount(className, level)
       + (if (className == Cleric and choices.clericDivineOrder == HasString("thaumaturge")) 1 else 0)
       + (if (className == Druid and choices.druidPrimalOrder == HasString("magician")) 1 else 0)
+      + (if (className == Paladin and choices.paladinFightingStyle == HasPaladinFightingStyleChoice(BlessedWarrior)) 2 else 0)
+      + (if (className == Ranger and choices.rangerFightingStyle == HasRangerFightingStyleChoice(DruidicWarrior)) 2 else 0)
+
+  pure def pCantripSourceClass(className: ClassName, choices: CharacterBuildChoices): ClassName =
+    if (className == Paladin and choices.paladinFightingStyle == HasPaladinFightingStyleChoice(BlessedWarrior)) Cleric
+    else if (className == Ranger and choices.rangerFightingStyle == HasRangerFightingStyleChoice(DruidicWarrior)) Druid
+    else className
 
   pure def pClassRequiresOwnedSpellcasting(className: ClassName, level: int, choices: CharacterBuildChoices): bool =
     pCantripChoiceCount(className, level, choices) > 0
@@ -695,6 +890,11 @@ module characterCreation {
               }
           | _ => NoAdvancement
         }
+  }
+
+  pure def pResolvedAdvancementValue(draft: CharacterDraft): List[CharacterAdvancementEntry] = match pResolvedAdvancement(draft) {
+    | HasAdvancement(advancement) => advancement
+    | _ => []
   }
 
   pure def pClassLevelsMatch(left: ClassName -> int, right: ClassName -> int): bool =
@@ -1026,10 +1226,42 @@ module characterCreation {
           .union(pIssueIf(choices.rangerDeftExplorerLanguages != NoGrantedLanguageList and pGrantedLanguagesValue(choices.rangerDeftExplorerLanguages).length() != 2, WrongGrantedLanguageChoiceCount))
       else open6
 
+    val expertiseSkills = pSkillsValue(choices.expertiseSkills)
+    val expectedExpertiseChoices = pExpectedExpertiseChoiceCount(classLevels)
+    val advancement = pResolvedAdvancementValue(draft)
+
+    val open7b =
+      open7
+        .union(if (classLevels.get(Cleric) > 0) pIssueIf(choices.clericDivineOrder == NoString, MissingFeatureChoice) else Set())
+        .union(if (classLevels.get(Druid) > 0) pIssueIf(choices.druidPrimalOrder == NoString, MissingFeatureChoice) else Set())
+        .union(if (pHasFighterFightingStyleSlot(classLevels)) pIssueIf(choices.fighterFightingStyle == NoFightingStyleFeat, MissingFeatureChoice) else Set())
+        .union(
+          if (pHasChampionAdditionalFightingStyleSlot(classLevels, advancement))
+            pIssueIf(choices.championAdditionalFightingStyle == NoFightingStyleFeat, MissingFeatureChoice)
+          else Set()
+        )
+        .union(
+          if (pHasPaladinFightingStyleSlot(classLevels))
+            pIssueIf(choices.paladinFightingStyle == NoPaladinFightingStyleChoice, MissingFeatureChoice)
+          else Set()
+        )
+        .union(
+          if (pHasRangerFightingStyleSlot(classLevels))
+            pIssueIf(choices.rangerFightingStyle == NoRangerFightingStyleChoice, MissingFeatureChoice)
+          else Set()
+        )
+        // SRD 5.2.1 Paladin/Ranger "Level 2: Fighting Style" plus Ranger
+        // "Level 2/9: Expertise" determine when these owned choice slots exist.
+        .union(
+          if (expectedExpertiseChoices > 0)
+            pIssueIf(choices.expertiseSkills == NoSkillList or expertiseSkills.length() < expectedExpertiseChoices, MissingFeatureChoice)
+          else Set()
+        )
+
     val open8 = match draft.equipment {
-      | NoEquipmentChoices => open7.union(Set(MissingEquipmentChoices))
+      | NoEquipmentChoices => open7b.union(Set(MissingEquipmentChoices))
       | HasEquipmentChoices(equipment) =>
-          open7
+          open7b
             .union(pIssueIf(equipment.backgroundOption == NoString, MissingBackgroundEquipmentChoice))
             .union(pIssueIf(equipment.classOption == NoString, MissingClassEquipmentChoice))
             .union(pIssueIf(equipment.remainingGoldPieces == NoInt, MissingRemainingGoldPieces))
@@ -1185,6 +1417,52 @@ module characterCreation {
           | _ => Set()
         })
 
+    val expertiseSkills = pSkillsValue(choices.expertiseSkills)
+    val expectedExpertiseChoices = pExpectedExpertiseChoiceCount(classLevels)
+    val grantedSkillProficiencies = pDraftGrantedSkillProficiencies(draft, classLevels, choices)
+    val advancement = pResolvedAdvancementValue(draft)
+
+    val illegal8b =
+      illegal8
+        .union(if (not(pHasFighterFightingStyleSlot(classLevels)) and choices.fighterFightingStyle != NoFightingStyleFeat) Set(InvalidFeatureChoice) else Set())
+        .union(
+          if (not(pHasChampionAdditionalFightingStyleSlot(classLevels, advancement)) and choices.championAdditionalFightingStyle != NoFightingStyleFeat)
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+        .union(
+          if (not(pHasPaladinFightingStyleSlot(classLevels)) and choices.paladinFightingStyle != NoPaladinFightingStyleChoice)
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+        .union(
+          if (not(pHasRangerFightingStyleSlot(classLevels)) and choices.rangerFightingStyle != NoRangerFightingStyleChoice)
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+        .union(pIssueIf(pDuplicateFightingStyles(pSelectedFightingStyles(choices)), InvalidFeatureChoice))
+        .union(
+          if (expectedExpertiseChoices == 0 and choices.expertiseSkills != NoSkillList)
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+        .union(
+          if (expertiseSkills.length() > expectedExpertiseChoices)
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+        .union(pIssueIf(pDuplicateSkills(expertiseSkills), InvalidFeatureChoice))
+        .union(
+          expertiseSkills.foldl(Set(), (acc, skill) =>
+            acc.union(pIssueIf(not(grantedSkillProficiencies.contains(skill)), InvalidFeatureChoice)))
+        )
+        .union(
+          if (classLevels.get(Wizard) >= 2 and not(expertiseSkills.foldl(false, (hasScholarSkill, skill) =>
+            hasScholarSkill or pValidWizardScholarExpertiseSkill(skill))))
+            Set(InvalidFeatureChoice)
+          else Set()
+        )
+
     val illegal9 = match draft.background {
       | HasBackground(background) =>
           match draft.abilityScoreGeneration {
@@ -1197,15 +1475,15 @@ module characterCreation {
                         | PlusTwoPlusOne(v) => not(pAllowedBackgroundAbility(background, v.plusTwo)) or not(pAllowedBackgroundAbility(background, v.plusOne))
                       }
                       val finalScores = pApplyBackgroundIncrease(pResolvedAbilityScores(generation.assignedScores), background, increase)
-                      illegal8
+                      illegal8b
                         .union(pIssueIf(invalidChoice, InvalidBackgroundAbilityScoreIncrease))
                         .union(pIssueIf(pAbilityScoreList(finalScores).foldl(false, (acc, score) => acc or score > 20), AbilityScoreIncreaseExceedsTwenty))
                     }
-                  | _ => illegal8
+                  | _ => illegal8b
                 }
-            | _ => illegal8
+            | _ => illegal8b
           }
-      | _ => illegal8
+      | _ => illegal8b
     }
 
     val illegal10 =
@@ -1308,7 +1586,7 @@ module characterCreation {
               .union(cantrips.foldl(Set(), (issues, spellId) =>
                 issues
                   .union(pIssueIf(not(pSpellExists(spellId)) or not(pSpellIsCantrip(spellId)), InvalidCantripChoice))
-                  .union(pIssueIf(pSpellExists(spellId) and not(pSpellAvailableForClass(spellId, className)), CantripNotAvailableForClass))))
+                  .union(pIssueIf(pSpellExists(spellId) and not(pSpellAvailableForClass(spellId, pCantripSourceClass(className, choices))), CantripNotAvailableForClass))))
               .union(prepared.foldl(Set(), (issues, spellId) =>
                 issues
                   .union(pIssueIf(not(pSpellExists(spellId)) or pSpellIsCantrip(spellId), InvalidPreparedSpellChoice))
@@ -1400,7 +1678,6 @@ module characterCreation {
 
       Finalized({
         primaryClass: primaryClass,
-        classLevels: advancementReplay.classLevels,
         advancement: advancementReplay.advancement,
         background: background,
         abilityScoreGeneration: { mode: abilityScoreGeneration.mode, assignedScores: baseScores },

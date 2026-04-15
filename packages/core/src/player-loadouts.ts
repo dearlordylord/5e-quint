@@ -35,6 +35,7 @@ function canonicalFighterStartBattleSheet(): CharacterSheet {
       backgroundTool: "dice",
       speciesSkill: "survival",
       humanOriginFeat: { feat: "alert" },
+      fighterFightingStyle: "defense",
     },
     equipment: {
       backgroundOption: "package",
@@ -52,9 +53,10 @@ function canonicalFighterStartBattleSheet(): CharacterSheet {
 
   if (!result.ok) {
     throw new Error(
-      `canonical fighter start-battle sheet is invalid: ${result.issues
-        .map((issue) => issue.code)
-        .join(", ")}`,
+      `canonical fighter start-battle sheet is invalid: ${[
+        ...result.openChoices.map((issue) => issue.code),
+        ...result.issues.map((issue) => issue.code),
+      ].join(", ")}`,
     );
   }
 

@@ -3,10 +3,19 @@ export {
   applyCharacterDraftUpdate,
   CHARACTER_OPEN_CHOICE_CODES,
   finalizeCharacterDraft,
+  previewCharacterDraftUpdate,
   type CharacterDraftAssessment,
+  type CharacterDraftDroppedFact,
+  type CharacterDraftPreviewValue,
+  type CharacterDraftUpdatePreview,
   type CharacterOpenChoice,
   type CharacterOpenChoiceCode,
 } from "#/character-draft-analysis.ts";
+export {
+  CharacterDraftSchema,
+  CharacterLevelUpTransitionSchema,
+  strictCharacterParseOptions,
+} from "#/character-domain-schema.ts";
 export {
   ALIGNMENTS,
   CHARACTER_FINALIZATION_ISSUE_CODES,
@@ -45,11 +54,14 @@ export type {
 export {
   singleClassAdvancement,
   characterSubclassSelections,
+  sheetClassLevels,
 } from "#/character-advancement.ts";
 export {
   advanceCharacterSheet,
   characterDraftFromSheet,
+  previewCharacterSheetAdvancement,
   type CharacterLevelUpTransition,
+  type CharacterSheetAdvancementPreview,
 } from "#/character-sheet-advancement.ts";
 export {
   characterClassResources,
@@ -76,6 +88,8 @@ export {
   CHARACTER_WEAPON_PROFICIENCIES,
   CLERIC_DIVINE_ORDERS,
   DRUID_PRIMAL_ORDERS,
+  PALADIN_FIGHTING_STYLE_CHOICES,
+  RANGER_FIGHTING_STYLE_CHOICES,
   SRD_SUBCLASSES,
   type ArtisanTool,
   type CharacterArmorTraining,
@@ -87,6 +101,7 @@ export {
   type CharacterOriginFeatId,
   type CharacterOriginFeatSelection,
   type CharacterProficiencySummary,
+  type CharacterSheetBuildChoices,
   type CharacterSubclassSelection,
   type CharacterToolProficiency,
   type CharacterWeaponProficiency,
@@ -94,6 +109,8 @@ export {
   type DruidPrimalOrder,
   type GamingSet,
   type MusicalInstrument,
+  type PaladinFightingStyleChoice,
+  type RangerFightingStyleChoice,
 } from "#/character-feature-types.ts";
 export { deriveProficiencyBonus } from "#/character-resources.ts";
 export {
@@ -120,6 +137,7 @@ export {
   type CharacterEquipmentChoices,
   type CharacterEquipmentChoicesDraft,
   type CharacterLoadout,
+  type CharacterLoadoutDraft,
   type CharacterOwnedCombatEquipment,
   type CharacterWeaponGrip,
 } from "#/character-equipment.ts";
@@ -129,3 +147,7 @@ export {
   type CharacterEquipmentIssue,
   type CharacterEquipmentIssueCode,
 } from "#/character-equipment-validation.ts";
+export type {
+  CharacterSheetSpellcastingChoices,
+  CharacterSheetSpellcastingEntry,
+} from "#/character-spellcasting.ts";

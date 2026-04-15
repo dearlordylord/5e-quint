@@ -49,6 +49,11 @@ module character {
     | _ => patch
   }
 
+  pure def pMergeOptionalStringList(base: OptionalStringList, patch: OptionalStringList): OptionalStringList = match patch {
+    | NoStringList => base
+    | _ => patch
+  }
+
   pure def pMergeMulticlassSkills(
     base: OptionalMulticlassSkills,
     patch: OptionalMulticlassSkills,
@@ -126,11 +131,44 @@ module character {
     | _ => patch
   }
 
+  pure def pMergeOptionalFightingStyleFeat(
+    base: OptionalFightingStyleFeat,
+    patch: OptionalFightingStyleFeat,
+  ): OptionalFightingStyleFeat = match patch {
+    | NoFightingStyleFeat => base
+    | _ => patch
+  }
+
+  pure def pMergeOptionalPaladinFightingStyleChoice(
+    base: OptionalPaladinFightingStyleChoice,
+    patch: OptionalPaladinFightingStyleChoice,
+  ): OptionalPaladinFightingStyleChoice = match patch {
+    | NoPaladinFightingStyleChoice => base
+    | _ => patch
+  }
+
+  pure def pMergeOptionalRangerFightingStyleChoice(
+    base: OptionalRangerFightingStyleChoice,
+    patch: OptionalRangerFightingStyleChoice,
+  ): OptionalRangerFightingStyleChoice = match patch {
+    | NoRangerFightingStyleChoice => base
+    | _ => patch
+  }
+
   pure def pMergeOptionalSpellcastingEntry(
     base: OptionalSpellcastingEntry,
     patch: OptionalSpellcastingEntry,
-  ): OptionalSpellcastingEntry = match patch {
-    | NoSpellcastingEntry => base
+  ): OptionalSpellcastingEntry = match base {
+    | HasSpellcastingEntry(baseEntry) =>
+        match patch {
+          | HasSpellcastingEntry(patchEntry) =>
+              HasSpellcastingEntry({
+                cantrips: pMergeOptionalStringList(baseEntry.cantrips, patchEntry.cantrips),
+                preparedSpells: pMergeOptionalStringList(baseEntry.preparedSpells, patchEntry.preparedSpells),
+                spellbook: pMergeOptionalStringList(baseEntry.spellbook, patchEntry.spellbook),
+              })
+          | _ => base
+        }
     | _ => patch
   }
 
@@ -186,7 +224,7 @@ module character {
 
   pure def pSheetToDraft(sheet: CharacterSheet): CharacterDraft = {
     primaryClass: HasPrimaryClass(sheet.primaryClass),
-    classLevels: HasClassLevels(sheet.classLevels),
+    classLevels: HasClassLevels(pClassLevelsFromAdvancement(sheet.advancement)),
     advancement: HasAdvancement(sheet.advancement),
     background: HasBackground(sheet.background),
     abilityScoreGeneration: HasAbilityScoreGeneration(pDraftAbilityScoreGenerationFromSheet(sheet)),
@@ -221,6 +259,26 @@ module character {
     ),
     clericDivineOrder: pMergeOptionalString(choices.clericDivineOrder, transition.choices.clericDivineOrder),
     druidPrimalOrder: pMergeOptionalString(choices.druidPrimalOrder, transition.choices.druidPrimalOrder),
+    fighterFightingStyle: pMergeOptionalFightingStyleFeat(
+      choices.fighterFightingStyle,
+      transition.choices.fighterFightingStyle,
+    ),
+    championAdditionalFightingStyle: pMergeOptionalFightingStyleFeat(
+      choices.championAdditionalFightingStyle,
+      transition.choices.championAdditionalFightingStyle,
+    ),
+    paladinFightingStyle: pMergeOptionalPaladinFightingStyleChoice(
+      choices.paladinFightingStyle,
+      transition.choices.paladinFightingStyle,
+    ),
+    rangerFightingStyle: pMergeOptionalRangerFightingStyleChoice(
+      choices.rangerFightingStyle,
+      transition.choices.rangerFightingStyle,
+    ),
+    expertiseSkills: pMergeOptionalSkillList(
+      choices.expertiseSkills,
+      transition.choices.expertiseSkills,
+    ),
   }
 
   pure def pDraftFromSheetTransition(
@@ -290,7 +348,7 @@ module character {
   // - Fighter/Paladin/Ranger class tables place Fighting Style at levels 1/2/2.
   // - Spellcasting sections state the spellcasting ability for each caster class.
 
-  pure def pBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
+  pure def pSheetBackgroundSkillProficiencies(background: CharacterBackground): Set[Skill] = match background {
     | Acolyte => Set(Insight, Religion)
     | Criminal => Set(SleightOfHand, Stealth)
     | Sage => Set(Arcana, History)
@@ -350,7 +408,7 @@ module character {
       | _ => acc
     })
 
-  pure def pAdvancementSkillProficiencies(
+  pure def pSheetAdvancementSkillProficiencies(
     advancement: List[CharacterAdvancementEntry],
   ): Set[Skill] =
     advancement.foldl(Set(), (acc, entry) => match entry.feat {
@@ -398,23 +456,24 @@ module character {
       | _ => Set()
     }
 
-    pBackgroundSkillProficiencies(sheet.background)
+    pSheetBackgroundSkillProficiencies(sheet.background)
       .union(pOptionalSkillSet(sheet.choices.primaryClassSkills))
       .union(multiclassSkills)
       .union(pSpeciesSkillProficiencies(sheet.choices))
       .union(originFeatSkills)
-      .union(pAdvancementSkillProficiencies(sheet.advancement))
+      .union(pSheetAdvancementSkillProficiencies(sheet.advancement))
   }
 
   pure def pSheetArmorProficiencies(sheet: CharacterSheet): Set[ArmorCategory] = {
-    val multiclassArmor = sheet.classLevels.keys().fold(Set(), (acc, className) =>
-      if (className == sheet.primaryClass or sheet.classLevels.get(className) <= 0) acc
+    val classLevels = pClassLevelsFromAdvancement(sheet.advancement)
+    val multiclassArmor = classLevels.keys().fold(Set(), (acc, className) =>
+      if (className == sheet.primaryClass or classLevels.get(className) <= 0) acc
       else acc.union(pMulticlassArmorProficiencies(className)))
-    val clericArmor = if (sheet.classLevels.get(Cleric) > 0 and sheet.choices.clericDivineOrder == HasString("protector"))
+    val clericArmor = if (classLevels.get(Cleric) > 0 and sheet.choices.clericDivineOrder == HasString("protector"))
       Set(HeavyArmor)
     else
       Set()
-    val druidArmor = if (sheet.classLevels.get(Druid) > 0 and sheet.choices.druidPrimalOrder == HasString("warden"))
+    val druidArmor = if (classLevels.get(Druid) > 0 and sheet.choices.druidPrimalOrder == HasString("warden"))
       Set(MediumArmor)
     else
       Set()
@@ -440,14 +499,14 @@ module character {
   }
 
   pure def pHasSpellcasting(sheet: CharacterSheet): bool =
-    sheet.classLevels.get(Bard) > 0
-      or sheet.classLevels.get(Cleric) > 0
-      or sheet.classLevels.get(Druid) > 0
-      or sheet.classLevels.get(Paladin) > 0
-      or sheet.classLevels.get(Ranger) > 0
-      or sheet.classLevels.get(Sorcerer) > 0
-      or sheet.classLevels.get(Warlock) > 0
-      or sheet.classLevels.get(Wizard) > 0
+    pClassLevelsFromAdvancement(sheet.advancement).get(Bard) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Cleric) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Druid) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Paladin) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Ranger) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Sorcerer) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Warlock) > 0
+      or pClassLevelsFromAdvancement(sheet.advancement).get(Wizard) > 0
 
   pure def pIsCasterClass(className: ClassName): bool =
     className == Bard
@@ -487,8 +546,8 @@ module character {
     else Wis
 
   pure def pUnarmoredDefense(sheet: CharacterSheet): UnarmoredDefense =
-    if (sheet.classLevels.get(Barbarian) > 0) BarbarianUD
-    else if (sheet.classLevels.get(Monk) > 0) MonkUD
+    if (pClassLevelsFromAdvancement(sheet.advancement).get(Barbarian) > 0) BarbarianUD
+    else if (pClassLevelsFromAdvancement(sheet.advancement).get(Monk) > 0) MonkUD
     else NoUnarmoredDefense
 
   pure def pCreatureFeatures(classLevels: ClassName -> int): Set[Feature] = {
@@ -560,32 +619,41 @@ module character {
       else acc
     )
 
-  // The current CharacterSheet surface does not yet own Fighting Style feat
-  // selections, so the formal projection can only thread the empty set until
-  // that authored choice exists on the character side.
-  pure def pProjectionFightingStyles(_sheet: CharacterSheet): Set[FightingStyleFeat] =
-    Set()
+  pure def pProjectionFightingStyles(sheet: CharacterSheet): Set[FightingStyleFeat] =
+    pSelectedFightingStyles(sheet.choices).foldl(Set(), (acc, style) =>
+      acc.union(Set(style)))
 
+  pure def pProjectionExpertiseSkills(sheet: CharacterSheet): Set[Skill] =
+    pSkillsValue(sheet.choices.expertiseSkills).foldl(Set(), (acc, skill) =>
+      if (pSheetSkillProficiencies(sheet).contains(skill))
+        acc.union(Set(skill))
+      else acc)
+
+  // CharacterSheet owns ordered advancement canonically; classLevels are always
+  // projected from advancement so contradictory finalized states are unrepresentable.
   pure def pCharacterCreatureProjection(sheet: CharacterSheet): CharacterCreatureProjection = {
-    primaryClass: sheet.primaryClass,
-    subclasses: pSubclassSelections(sheet.advancement),
-    species: sheet.species,
-    classLevels: sheet.classLevels,
-    fightingStyles: pProjectionFightingStyles(sheet),
-    abilityScores: sheet.abilityScores,
-    creatureSize: pSpeciesCreatureSize(sheet.species),
-    baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
-    saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
-    skillProficiencies: pSheetSkillProficiencies(sheet),
-    expertiseSkills: Set(),
-    armorProficiencies: pSheetArmorProficiencies(sheet),
-    hitDieType: pHitDieType(sheet.primaryClass),
-    spellcastingAbility: pProjectionSpellcastingAbility(sheet),
-    hasSpellcasting: pHasSpellcasting(sheet),
-    unarmoredDefense: pUnarmoredDefense(sheet),
-    features: pCreatureFeatures(sheet.classLevels),
-    critRange: pCritRange(pSubclassSelections(sheet.advancement), sheet.classLevels),
-    hasFightingStyleFeature: pHasFightingStyleFeature(sheet.classLevels),
+    val classLevels = pClassLevelsFromAdvancement(sheet.advancement)
+    {
+      primaryClass: sheet.primaryClass,
+      subclasses: pSubclassSelections(sheet.advancement),
+      species: sheet.species,
+      classLevels: classLevels,
+      fightingStyles: pProjectionFightingStyles(sheet),
+      abilityScores: sheet.abilityScores,
+      creatureSize: pSpeciesCreatureSize(sheet.species),
+      baseWalkSpeed: pSpeciesBaseWalkSpeed(sheet.species),
+      saveProficiencies: pPrimarySaveProficiencies(sheet.primaryClass),
+      skillProficiencies: pSheetSkillProficiencies(sheet),
+      expertiseSkills: pProjectionExpertiseSkills(sheet),
+      armorProficiencies: pSheetArmorProficiencies(sheet),
+      hitDieType: pHitDieType(sheet.primaryClass),
+      spellcastingAbility: pProjectionSpellcastingAbility(sheet),
+      hasSpellcasting: pHasSpellcasting(sheet),
+      unarmoredDefense: pUnarmoredDefense(sheet),
+      features: pCreatureFeatures(classLevels),
+      critRange: pCritRange(pSubclassSelections(sheet.advancement), classLevels),
+      hasFightingStyleFeature: pHasFightingStyleFeature(classLevels),
+    }
   }
 
   pure def pProjectionToCharConfig(projection: CharacterCreatureProjection): CharConfig = {

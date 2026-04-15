@@ -111,6 +111,137 @@ describe("character-sheet-derived", () => {
     return result.sheet;
   }
 
+  function finalizeRogueSheet() {
+    const result = finalizeCharacterDraft({
+      primaryClass: "rogue",
+      advancement: [advancementEntry("rogue")],
+      background: "criminal",
+      abilityScoreGeneration: {
+        mode: "standardArray",
+        assignedScores: {
+          str: 8,
+          dex: 15,
+          con: 13,
+          int: 12,
+          wis: 14,
+          cha: 10,
+        },
+      },
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "dex",
+        plusOne: "int",
+      },
+      species: "elf",
+      languages: ["Common", "Elvish", "Draconic"],
+      alignment: "CN",
+      choices: {
+        primaryClassSkills: [
+          "acrobatics",
+          "athletics",
+          "investigation",
+          "persuasion",
+        ],
+        speciesSkill: "perception",
+        rogueLanguage: "Sylvan",
+        expertiseSkills: ["stealth", "perception"],
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 8,
+        loadout: {
+          wieldedWeapon: "shortsword",
+        },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error(
+        `expected successful rogue finalization: ${result.issues
+          .map((issue) => issue.code)
+          .join(", ")}`,
+      );
+    }
+    return result.sheet;
+  }
+
+  function finalizeWizardScholarSheet() {
+    const result = finalizeCharacterDraft({
+      primaryClass: "wizard",
+      advancement: [advancementEntry("wizard"), advancementEntry("wizard")],
+      background: "sage",
+      abilityScoreGeneration: {
+        mode: "standardArray",
+        assignedScores: {
+          str: 8,
+          dex: 14,
+          con: 13,
+          int: 15,
+          wis: 12,
+          cha: 10,
+        },
+      },
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "int",
+        plusOne: "wis",
+      },
+      species: "elf",
+      languages: ["Common", "Elvish", "Draconic"],
+      alignment: "LN",
+      choices: {
+        primaryClassSkills: ["investigation", "medicine"],
+        speciesSkill: "perception",
+        expertiseSkills: ["investigation"],
+      },
+      spellcasting: {
+        wizard: {
+          cantrips: ["fire_bolt", "light", "mage_hand"],
+          preparedSpells: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "identify",
+            "magic_missile",
+          ],
+          spellbook: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "identify",
+            "magic_missile",
+            "shield",
+            "sleep",
+            "thunderwave",
+          ],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 13,
+        loadout: {
+          wieldedWeapon: "quarterstaff",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error(
+        `expected successful wizard scholar finalization: ${result.issues
+          .map((issue) => issue.code)
+          .join(", ")}`,
+      );
+    }
+    return result.sheet;
+  }
+
   it("requires owned spellcasting choices before finalizing a spellcaster", () => {
     const result = finalizeCharacterDraft({
       primaryClass: "wizard",
@@ -151,7 +282,7 @@ describe("character-sheet-derived", () => {
     if (result.ok) {
       throw new Error("expected spellcasting finalization failure");
     }
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingSpellcastingChoices",
     );
   });
@@ -227,6 +358,76 @@ describe("character-sheet-derived", () => {
     }
     expect(result.issues.map((issue) => issue.code)).toContain(
       "spellLevelNotCastableForClass",
+    );
+  });
+
+  it("projects character-owned fighting styles and expertise into creature input", () => {
+    const fighterResult = finalizeCharacterDraft({
+      primaryClass: "fighter",
+      advancement: [advancementEntry("fighter")],
+      background: "soldier",
+      abilityScoreGeneration: {
+        mode: "standardArray",
+        assignedScores: {
+          str: 15,
+          dex: 13,
+          con: 14,
+          int: 8,
+          wis: 10,
+          cha: 12,
+        },
+      },
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "str",
+        plusOne: "con",
+      },
+      species: "human",
+      languages: ["Common", "Dwarvish", "Elvish"],
+      alignment: "NG",
+      choices: {
+        primaryClassSkills: ["acrobatics", "perception"],
+        backgroundTool: "dice",
+        speciesSkill: "stealth",
+        fighterFightingStyle: "defense",
+        humanOriginFeat: {
+          feat: "skilled",
+          proficiencies: ["history", "thievesTools", "viol"],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 18,
+        loadout: {
+          wieldedWeapon: "greatsword",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
+    });
+
+    expect(fighterResult.ok).toBe(true);
+    if (!fighterResult.ok) {
+      throw new Error("expected successful fighter finalization");
+    }
+
+    const fighterProjection = characterSheetCreatureProjection(
+      fighterResult.sheet,
+    );
+    expect(fighterProjection.fightingStyles).toEqual(new Set(["defense"]));
+
+    const rogueProjection =
+      characterSheetCreatureProjection(finalizeRogueSheet());
+    expect(rogueProjection.expertiseSkills).toEqual(
+      new Set(["stealth", "perception"]),
+    );
+
+    const wizardProjection = characterSheetCreatureProjection(
+      finalizeWizardScholarSheet(),
+    );
+    expect(wizardProjection.expertiseSkills).toEqual(
+      new Set(["investigation"]),
     );
   });
 
@@ -337,12 +538,6 @@ describe("character-sheet-derived", () => {
       ...sheet,
       primaryClass: "fighter",
       advancement: [advancementEntry("fighter"), advancementEntry("wizard")],
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 1,
-        sorcerer: 0,
-        wizard: 1,
-      },
     });
 
     expect(projection.hasSpellcasting).toBe(true);
@@ -360,11 +555,6 @@ describe("character-sheet-derived", () => {
         advancementEntry("fighter"),
         advancementEntry("fighter"),
       ],
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 3,
-        sorcerer: 0,
-      },
     });
     const levelFifteenWithoutChampion = characterSheetCreatureProjection({
       ...sheet,
@@ -372,11 +562,6 @@ describe("character-sheet-derived", () => {
       advancement: Array.from({ length: 15 }, () =>
         advancementEntry("fighter"),
       ),
-      classLevels: {
-        ...sheet.classLevels,
-        fighter: 15,
-        sorcerer: 0,
-      },
     });
 
     expect(levelThreeWithoutChampion.critRange).toBe(20);

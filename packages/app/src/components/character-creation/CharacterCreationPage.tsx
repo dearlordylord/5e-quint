@@ -2,8 +2,8 @@ import {
   applyCharacterDraftUpdate,
   assessCharacterDraft,
   type CharacterDraft,
-  characterDraftFromSheet,
-  type CharacterLevelUpTransition
+  type CharacterLevelUpTransition,
+  previewCharacterSheetAdvancement
 } from "@dnd/core/character-domain.ts"
 import {
   characterSheetBattleProjection,
@@ -84,7 +84,8 @@ export function CharacterCreationPage() {
 
   function advanceDraftFromReview(transition: CharacterLevelUpTransition) {
     if (completeSheet == null) return
-    setDraft(characterDraftFromSheet(completeSheet, transition))
+    const preview = previewCharacterSheetAdvancement(completeSheet, transition)
+    setDraft(preview.candidateDraft)
   }
 
   return (

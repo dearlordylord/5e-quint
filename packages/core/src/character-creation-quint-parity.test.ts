@@ -52,6 +52,7 @@ function completeDraft(
       primaryClassSkills: ["acrobatics", "perception"],
       backgroundTool: "dice",
       speciesSkill: "stealth",
+      fighterFightingStyle: "defense",
       humanOriginFeat: {
         feat: "skilled",
         proficiencies: ["history", "thievesTools", "viol"],
@@ -70,6 +71,11 @@ function completeDraft(
     ...overrides,
   };
 }
+
+const alertFeat = {
+  slot: "feat",
+  choice: { tag: "feat", featId: "alert" },
+} as const;
 
 function issueCodeToQuint(code: string): string {
   return `${code[0]!.toUpperCase()}${code.slice(1)}`;
@@ -107,6 +113,11 @@ const COMPLETE_FIGHTER_CHOICES_QUINT = `{
       rangerDeftExplorerLanguages: NoGrantedLanguageList,
       clericDivineOrder: NoString,
       druidPrimalOrder: NoString,
+      fighterFightingStyle: HasFightingStyleFeat(FSDefense),
+      championAdditionalFightingStyle: NoFightingStyleFeat,
+      paladinFightingStyle: NoPaladinFightingStyleChoice,
+      rangerFightingStyle: NoRangerFightingStyleChoice,
+      expertiseSkills: NoSkillList,
     }`;
 
 const WIZARD_CHOICES_QUINT = `{
@@ -122,6 +133,31 @@ const WIZARD_CHOICES_QUINT = `{
       rangerDeftExplorerLanguages: NoGrantedLanguageList,
       clericDivineOrder: NoString,
       druidPrimalOrder: NoString,
+      fighterFightingStyle: NoFightingStyleFeat,
+      championAdditionalFightingStyle: NoFightingStyleFeat,
+      paladinFightingStyle: NoPaladinFightingStyleChoice,
+      rangerFightingStyle: NoRangerFightingStyleChoice,
+      expertiseSkills: NoSkillList,
+    }`;
+
+const WIZARD_SCHOLAR_CHOICES_QUINT = `{
+      primaryClassSkills: HasSkillList([Investigation, Medicine]),
+      multiclassSkills: NoMulticlassSkills,
+      backgroundTool: NoGamingSet,
+      bardInstruments: NoMusicalInstrumentList,
+      multiclassBardInstrument: NoMusicalInstrument,
+      monkTool: NoMonkTool,
+      speciesSkill: HasSkill(Perception),
+      humanOriginFeat: NoOriginFeatSelection,
+      rogueLanguage: NoGrantedLanguage,
+      rangerDeftExplorerLanguages: NoGrantedLanguageList,
+      clericDivineOrder: NoString,
+      druidPrimalOrder: NoString,
+      fighterFightingStyle: NoFightingStyleFeat,
+      championAdditionalFightingStyle: NoFightingStyleFeat,
+      paladinFightingStyle: NoPaladinFightingStyleChoice,
+      rangerFightingStyle: NoRangerFightingStyleChoice,
+      expertiseSkills: HasSkillList([Investigation]),
     }`;
 
 function runCharacterCreationQuintParity(): void {
@@ -178,7 +214,7 @@ function runCharacterCreationQuintParity(): void {
     spellcasting: NoSpellcastingChoices,
   }`,
       finalAssertions: [
-        "assert(sheet.classLevels.get(Fighter) == 4)",
+        "assert(sheet.advancement.length() == 4)",
         "assert(sheet.abilityScores.get(Str) == 19)",
         'assert(sheet.equipment.backgroundOption == "package")',
         'assert(sheet.equipment.classOption == "packageA")',
@@ -276,6 +312,68 @@ function runCharacterCreationQuintParity(): void {
     }`,
     },
     {
+      name: "fighter_level_seven_without_champion_does_not_open_additional_style",
+      draft: completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: {
+                tag: "abilityScoreImprovement",
+                abilities: ["str"],
+              },
+            },
+          }),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", { feat: alertFeat }),
+          advancementEntry("fighter"),
+        ],
+        classLevels: { fighter: 7 },
+      }),
+      quintDraft: `{
+    primaryClass: HasPrimaryClass(Fighter),
+    classLevels: HasClassLevels(singleClassLevels(Fighter, 7)),
+    advancement: HasAdvancement([
+      { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      { className: Fighter, subclass: NoSubclassSelection, feat: HasAdvancementFeatSelection({ slot: FeatSlot, choice: AbilityScoreImprovement([Str]) }) },
+      { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      {
+        className: Fighter,
+        subclass: NoSubclassSelection,
+        feat: HasAdvancementFeatSelection({
+          slot: FeatSlot,
+          choice: AdvancementFeat({
+            featId: "alert",
+            abilityScoreIncrease: NoAbility,
+            proficiencies: NoSkilledProficiencyChoices,
+          }),
+        }),
+      },
+      { className: Fighter, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+    ]),
+    background: HasBackground(Soldier),
+    abilityScoreGeneration: HasAbilityScoreGeneration({ mode: StandardArray, assignedScores: ${FIGHTER_STANDARD_SCORES_QUINT} }),
+    backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Str, plusOne: Con })),
+    species: HasSpecies(Human),
+    languages: HasLanguages([Common, Dwarvish, Elvish]),
+    alignment: HasAlignment(NG),
+    choices: HasBuildChoices(${COMPLETE_FIGHTER_CHOICES_QUINT}),
+    equipment: HasEquipmentChoices({
+      backgroundOption: HasString("package"),
+      classOption: HasString("packageA"),
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: HasInt(18),
+      loadout: HasLoadout(EMPTY_LOADOUT.with("wieldedWeapon", HasString("greatsword")).with("wieldedWeaponGrip", TwoHandedGrip)),
+      }),
+      spellcasting: NoSpellcastingChoices,
+    }`,
+    },
+    {
       name: "wizard_level_one_full_registry",
       draft: completeDraft({
         primaryClass: "wizard",
@@ -350,10 +448,180 @@ function runCharacterCreationQuintParity(): void {
     )),
   }`,
       finalAssertions: [
-        "assert(sheet.classLevels.get(Wizard) == 1)",
+        "assert(sheet.advancement.length() == 1)",
         "assert(sheet.abilityScores.get(Int_) == 10)",
         "assert(sheet.abilityScores.get(Wis) == 11)",
       ],
+    },
+    {
+      name: "wizard_level_two_scholar_expertise",
+      draft: completeDraft({
+        primaryClass: "wizard",
+        advancement: [advancementEntry("wizard"), advancementEntry("wizard")],
+        classLevels: { wizard: 2 },
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        choices: {
+          primaryClassSkills: ["investigation", "medicine"],
+          speciesSkill: "perception",
+          expertiseSkills: ["investigation"],
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {},
+        },
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+              "shield",
+              "sleep",
+              "thunderwave",
+            ],
+          },
+        },
+      }),
+      quintDraft: `{
+    primaryClass: HasPrimaryClass(Wizard),
+    classLevels: HasClassLevels(singleClassLevels(Wizard, 2)),
+    advancement: HasAdvancement([
+      { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+    ]),
+    background: HasBackground(Sage),
+    abilityScoreGeneration: HasAbilityScoreGeneration({
+      mode: StandardArray,
+      assignedScores: Map(Str -> PresentScore(15), Dex -> PresentScore(13), Con -> PresentScore(14), Int_ -> PresentScore(8), Wis -> PresentScore(10), Cha -> PresentScore(12)),
+    }),
+    backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })),
+    species: HasSpecies(Elf),
+    languages: HasLanguages([Common, Dwarvish, Elvish]),
+    alignment: HasAlignment(NG),
+    choices: HasBuildChoices(${WIZARD_SCHOLAR_CHOICES_QUINT}),
+    equipment: HasEquipmentChoices({
+      backgroundOption: HasString("package"),
+      classOption: HasString("gold"),
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: HasInt(8),
+      loadout: HasLoadout(EMPTY_LOADOUT),
+    }),
+    spellcasting: HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+      "wizard",
+      HasSpellcastingEntry({
+        cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+        preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "identify", "magic_missile"]),
+        spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "identify", "magic_missile", "shield", "sleep", "thunderwave"]),
+      })
+    )),
+  }`,
+      finalAssertions: [
+        "assert(sheet.advancement.length() == 2)",
+        "assert(sheet.choices.expertiseSkills == HasSkillList([Investigation]))",
+      ],
+    },
+    {
+      name: "wizard_level_two_scholar_rejects_non_scholar_expertise",
+      draft: completeDraft({
+        primaryClass: "wizard",
+        advancement: [advancementEntry("wizard"), advancementEntry("wizard")],
+        classLevels: { wizard: 2 },
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        choices: {
+          primaryClassSkills: ["investigation", "medicine"],
+          speciesSkill: "perception",
+          expertiseSkills: ["perception"],
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {},
+        },
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+              "shield",
+              "sleep",
+              "thunderwave",
+            ],
+          },
+        },
+      }),
+      quintDraft: `{
+    primaryClass: HasPrimaryClass(Wizard),
+    classLevels: HasClassLevels(singleClassLevels(Wizard, 2)),
+    advancement: HasAdvancement([
+      { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+      { className: Wizard, subclass: NoSubclassSelection, feat: NoAdvancementFeatSelection },
+    ]),
+    background: HasBackground(Sage),
+    abilityScoreGeneration: HasAbilityScoreGeneration({
+      mode: StandardArray,
+      assignedScores: Map(Str -> PresentScore(15), Dex -> PresentScore(13), Con -> PresentScore(14), Int_ -> PresentScore(8), Wis -> PresentScore(10), Cha -> PresentScore(12)),
+    }),
+    backgroundAbilityScoreIncrease: HasBackgroundAbilityScoreIncrease(PlusTwoPlusOne({ plusTwo: Int_, plusOne: Wis })),
+    species: HasSpecies(Elf),
+    languages: HasLanguages([Common, Dwarvish, Elvish]),
+    alignment: HasAlignment(NG),
+    choices: HasBuildChoices({
+      ${WIZARD_SCHOLAR_CHOICES_QUINT.slice(8, -1).replace("HasSkillList([Investigation])", "HasSkillList([Perception])")}
+    }),
+    equipment: HasEquipmentChoices({
+      backgroundOption: HasString("package"),
+      classOption: HasString("gold"),
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: HasInt(8),
+      loadout: HasLoadout(EMPTY_LOADOUT),
+    }),
+    spellcasting: HasSpellcastingChoices(EMPTY_SPELLCASTING_CHOICES.with(
+      "wizard",
+      HasSpellcastingEntry({
+        cantrips: HasStringList(["fire_bolt", "light", "mage_hand"]),
+        preparedSpells: HasStringList(["burning_hands", "charm_person", "detect_magic", "identify", "magic_missile"]),
+        spellbook: HasStringList(["burning_hands", "charm_person", "detect_magic", "identify", "magic_missile", "shield", "sleep", "thunderwave"]),
+      })
+    )),
+  }`,
     },
   ] as const;
 

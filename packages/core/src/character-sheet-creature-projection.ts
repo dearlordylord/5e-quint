@@ -1,6 +1,9 @@
 import { characterSubclassSelections } from "#/character-advancement.ts";
+import { selectedFightingStyles } from "#/character-feature-choices.ts";
 import { type CharacterSheet } from "#/character-domain-model.ts";
 import { characterProficiencySummary } from "#/character-domain-derived.ts";
+import { sheetClassLevels } from "#/character-domain.ts";
+import type { CharacterClassLevels } from "#/character-domain-model.ts";
 import { SPELLCASTING_ABILITIES } from "#/character-spellcasting-data.ts";
 import type { CharacterAdvancementEntry } from "#/character-feature-types.ts";
 import { classHitDie } from "#/features/class-tables.ts";
@@ -8,7 +11,10 @@ import {
   championCritRange,
   type FightingStyle,
 } from "#/features/class-fighter.ts";
-import type { Skill } from "#/character-proficiencies.ts";
+import {
+  deriveGrantedSkillProficiencies,
+  type Skill,
+} from "#/character-proficiencies.ts";
 import {
   CASTER_CLASSES,
   type Ability,
@@ -58,7 +64,7 @@ export interface CharacterCreatureProjection {
   readonly primaryClass: CharacterSheet["primaryClass"];
   readonly subclasses: ReturnType<typeof characterSubclassSelections>;
   readonly species: CharacterSheet["species"];
-  readonly classLevels: CharacterSheet["classLevels"];
+  readonly classLevels: CharacterClassLevels;
   readonly fightingStyles: ReadonlySet<FightingStyle>;
   readonly creatureSize: Size;
   readonly abilityScores: CharacterSheet["abilityScores"];
@@ -84,11 +90,29 @@ function speciesCreatureSize(sheet: CharacterSheet): Size {
   return SPECIES_CREATURE_SIZE[sheet.species];
 }
 
-function selectedFightingStyles(
-  _sheet: CharacterSheet,
+function sheetFightingStyles(
+  sheet: CharacterSheet,
 ): ReadonlySet<FightingStyle> {
-  // The character-owned sheet does not yet persist Fighting Style feat choices.
-  return new Set();
+  return new Set(selectedFightingStyles(sheet.choices));
+}
+
+function expertiseSkills(sheet: CharacterSheet): ReadonlySet<Skill> {
+  const classLevels = sheetClassLevels(sheet);
+  const grantedSkillProficiencies = new Set(
+    deriveGrantedSkillProficiencies({
+      primaryClass: sheet.primaryClass,
+      background: sheet.background,
+      species: sheet.species,
+      classLevels,
+      choices: sheet.choices,
+      advancement: sheet.advancement,
+    }),
+  );
+  return new Set(
+    (sheet.choices.expertiseSkills ?? []).filter((skill) =>
+      grantedSkillProficiencies.has(skill),
+    ),
+  );
 }
 
 function armorProficiencies(sheet: CharacterSheet): ReadonlySet<ArmorCategory> {
@@ -132,17 +156,19 @@ function spellcastingAbility(sheet: CharacterSheet): Ability {
 }
 
 function hasSpellcasting(sheet: CharacterSheet): boolean {
-  return CASTER_CLASSES.some((className) => sheet.classLevels[className] > 0);
+  const classLevels = sheetClassLevels(sheet);
+  return CASTER_CLASSES.some((className) => classLevels[className] > 0);
 }
 
 function unarmoredDefense(sheet: CharacterSheet): UnarmoredDefense {
-  if (sheet.classLevels.barbarian > 0) return "barbarian";
-  if (sheet.classLevels.monk > 0) return "monk";
+  const classLevels = sheetClassLevels(sheet);
+  if (classLevels.barbarian > 0) return "barbarian";
+  if (classLevels.monk > 0) return "monk";
   return "none";
 }
 
 function creatureFeatures(
-  classLevels: CharacterSheet["classLevels"],
+  classLevels: ReturnType<typeof sheetClassLevels>,
 ): ReadonlySet<CharacterCreatureFeature> {
   const features = new Set<CharacterCreatureFeature>();
 
@@ -164,7 +190,7 @@ function creatureFeatures(
 }
 
 function hasFightingStyleFeature(
-  classLevels: CharacterSheet["classLevels"],
+  classLevels: ReturnType<typeof sheetClassLevels>,
 ): boolean {
   return (
     classLevels.fighter >= 1 ||
@@ -177,6 +203,7 @@ export function characterSheetCreatureProjection(
   sheet: CharacterSheet,
 ): CharacterCreatureProjection {
   const proficiencySummary = characterProficiencySummary(sheet);
+  const classLevels = sheetClassLevels(sheet);
   const fighterSubclass = characterSubclassSelections(sheet).find(
     (selection) => selection.className === "fighter",
   );
@@ -185,24 +212,24 @@ export function characterSheetCreatureProjection(
     primaryClass: sheet.primaryClass,
     subclasses: proficiencySummary.subclasses,
     species: sheet.species,
-    classLevels: sheet.classLevels,
-    fightingStyles: selectedFightingStyles(sheet),
+    classLevels,
+    fightingStyles: sheetFightingStyles(sheet),
     creatureSize: speciesCreatureSize(sheet),
     abilityScores: sheet.abilityScores,
     baseWalkSpeed: speciesWalkSpeed(sheet),
     saveProficiencies: new Set(proficiencySummary.savingThrows),
     skillProficiencies: new Set(proficiencySummary.skills),
-    expertiseSkills: new Set(),
+    expertiseSkills: expertiseSkills(sheet),
     armorProficiencies: armorProficiencies(sheet),
     hitDieType: classHitDie(sheet.primaryClass),
     spellcastingAbility: spellcastingAbility(sheet),
     hasSpellcasting: hasSpellcasting(sheet),
     unarmoredDefense: unarmoredDefense(sheet),
-    features: creatureFeatures(sheet.classLevels),
+    features: creatureFeatures(classLevels),
     critRange:
       fighterSubclass?.subclass === "champion"
-        ? championCritRange(sheet.classLevels.fighter)
+        ? championCritRange(classLevels.fighter)
         : 20,
-    hasFightingStyleFeature: hasFightingStyleFeature(sheet.classLevels),
+    hasFightingStyleFeature: hasFightingStyleFeature(classLevels),
   };
 }

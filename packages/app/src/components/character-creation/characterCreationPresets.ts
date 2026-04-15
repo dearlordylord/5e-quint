@@ -3,6 +3,7 @@ import {
   advanceCharacterSheet,
   characterDraftFromSheet,
   finalizeCharacterDraft,
+  previewCharacterSheetAdvancement,
   singleClassAdvancement
 } from "@dnd/core/character-domain.ts"
 
@@ -32,6 +33,7 @@ export const FIGHTER_EXAMPLE_DRAFT: CharacterDraft = {
   choices: {
     primaryClassSkills: ["acrobatics", "perception"],
     backgroundTool: "dice",
+    fighterFightingStyle: "defense",
     speciesSkill: "stealth",
     humanOriginFeat: {
       feat: "alert"
@@ -70,6 +72,11 @@ function buildAdvancedExampleDraft(
 
   let sheet = finalized.sheet
   for (const transition of transitions) {
+    const preview = previewCharacterSheetAdvancement(sheet, transition)
+    if (preview.candidateAssessment.status !== "complete") {
+      throw new Error("expected example advancement preview to stay complete")
+    }
+
     const advanced = advanceCharacterSheet(sheet, transition)
     if (!advanced.ok) throw new Error("expected example advancement transition to finalize")
     sheet = advanced.sheet

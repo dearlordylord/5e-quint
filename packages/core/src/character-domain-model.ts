@@ -12,9 +12,13 @@ import type {
 import type {
   CharacterAdvancementEntry,
   CharacterBuildChoices,
+  CharacterSheetBuildChoices,
 } from "#/character-feature-types.ts";
 import { CLASS_NAMES, type ClassName } from "#/features/class-tables.ts";
-import type { CharacterSpellcastingChoices } from "#/character-spellcasting.ts";
+import type {
+  CharacterSheetSpellcastingChoices,
+  CharacterSpellcastingChoices,
+} from "#/character-spellcasting.ts";
 import { CHARACTER_EQUIPMENT_ISSUE_CODES } from "#/character-equipment-validation.ts";
 import { CHARACTER_SPELLCASTING_ISSUE_CODES } from "#/character-spellcasting.ts";
 
@@ -84,7 +88,6 @@ export interface CharacterDraft {
 export interface CharacterSheet {
   readonly primaryClass: ClassName;
   readonly advancement: CharacterAdvancement;
-  readonly classLevels: CharacterClassLevels;
   readonly background: CharacterBackground;
   readonly abilityScoreGeneration: CharacterAbilityScoreGeneration;
   readonly backgroundAbilityScoreIncrease: BackgroundAbilityScoreIncrease;
@@ -92,10 +95,12 @@ export interface CharacterSheet {
   readonly species: CharacterSpecies;
   readonly languages: ReadonlyArray<CharacterLanguage>;
   readonly alignment: Alignment;
-  readonly choices: CharacterBuildChoices;
+  readonly choices: CharacterSheetBuildChoices;
   readonly equipment: CharacterEquipmentChoices;
-  readonly spellcasting?: CharacterSpellcastingChoices;
+  readonly spellcasting: CharacterSheetSpellcastingChoices;
 }
+
+export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "missingPrimaryClass",
@@ -142,6 +147,7 @@ export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "wrongSkilledChoiceCount",
   "duplicateSkilledChoice",
   "missingFeatureChoice",
+  "invalidFeatureChoice",
   "missingAdvancementChoice",
   "invalidAdvancementChoice",
   "prematureFeatChoice",
@@ -172,5 +178,13 @@ export type CharacterFinalizationResult =
   | { readonly ok: true; readonly sheet: CharacterSheet }
   | {
       readonly ok: false;
-      readonly issues: ReadonlyArray<CharacterFinalizationIssue>;
+      readonly status: "incomplete";
+      readonly openChoices: NonEmptyReadonlyArray<CharacterFinalizationIssue>;
+      readonly issues: readonly [];
+    }
+  | {
+      readonly ok: false;
+      readonly status: "invalid";
+      readonly openChoices: ReadonlyArray<CharacterFinalizationIssue>;
+      readonly issues: NonEmptyReadonlyArray<CharacterFinalizationIssue>;
     };

@@ -1,4 +1,4 @@
-import type { CharacterSheet } from "#/character-domain.ts";
+import { sheetClassLevels, type CharacterSheet } from "#/character-domain.ts";
 import type { CharacterClassResourcePool } from "#/character-feature-types.ts";
 import { totalClassLevels } from "#/character-domain.ts";
 import { rageMaxCharges } from "#/features/class-barbarian.ts";
@@ -29,7 +29,8 @@ const PROFICIENCY_BONUS_BY_LEVEL = [
 ] as const;
 
 export function deriveProficiencyBonus(sheet: CharacterSheet): number {
-  const totalLevel = totalClassLevels(sheet.classLevels);
+  const classLevels = sheetClassLevels(sheet);
+  const totalLevel = totalClassLevels(classLevels);
   return PROFICIENCY_BONUS_BY_LEVEL[Math.max(0, totalLevel - 1)] ?? 6;
 }
 
@@ -39,25 +40,26 @@ export function deriveCharacterClassResources(
   const resources: CharacterClassResourcePool[] = [];
   const chaMod = Math.trunc((sheet.abilityScores.cha - 10) / 2);
   const wisMod = Math.trunc((sheet.abilityScores.wis - 10) / 2);
+  const classLevels = sheetClassLevels(sheet);
 
-  if (sheet.classLevels.barbarian > 0) {
+  if (classLevels.barbarian > 0) {
     resources.push({
       name: "Rage",
-      uses: rageMaxCharges(sheet.classLevels.barbarian),
+      uses: rageMaxCharges(classLevels.barbarian),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.bard > 0) {
+  if (classLevels.bard > 0) {
     resources.push({
       name: "Bardic Inspiration",
       uses: bardicInspirationMaxCharges(chaMod),
-      rechargesOn: sheet.classLevels.bard >= 5 ? "shortOrLongRest" : "longRest",
+      rechargesOn: classLevels.bard >= 5 ? "shortOrLongRest" : "longRest",
     });
   }
-  if (sheet.classLevels.cleric > 0 || sheet.classLevels.paladin > 0) {
+  if (classLevels.cleric > 0 || classLevels.paladin > 0) {
     const uses = channelDivinityMax({
-      clericLevel: sheet.classLevels.cleric,
-      paladinLevel: sheet.classLevels.paladin,
+      clericLevel: classLevels.cleric,
+      paladinLevel: classLevels.paladin,
     });
     if (uses > 0) {
       resources.push({
@@ -67,8 +69,8 @@ export function deriveCharacterClassResources(
       });
     }
   }
-  if (sheet.classLevels.druid > 0) {
-    const uses = wildShapeMaxCharges(sheet.classLevels.druid);
+  if (classLevels.druid > 0) {
+    const uses = wildShapeMaxCharges(classLevels.druid);
     if (uses > 0) {
       resources.push({
         name: "Wild Shape",
@@ -77,83 +79,83 @@ export function deriveCharacterClassResources(
       });
     }
   }
-  if (sheet.classLevels.fighter > 0) {
+  if (classLevels.fighter > 0) {
     resources.push({
       name: "Second Wind",
-      uses: secondWindMaxCharges(sheet.classLevels.fighter),
+      uses: secondWindMaxCharges(classLevels.fighter),
       rechargesOn: "shortRest",
     });
   }
-  if (sheet.classLevels.fighter >= 2) {
+  if (classLevels.fighter >= 2) {
     resources.push({
       name: "Action Surge",
-      uses: actionSurgeMaxCharges(sheet.classLevels.fighter),
+      uses: actionSurgeMaxCharges(classLevels.fighter),
       rechargesOn: "shortRest",
     });
   }
-  if (sheet.classLevels.fighter >= 9) {
+  if (classLevels.fighter >= 9) {
     resources.push({
       name: "Indomitable",
-      uses: indomitableMaxCharges(sheet.classLevels.fighter),
+      uses: indomitableMaxCharges(classLevels.fighter),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.monk >= 2) {
+  if (classLevels.monk >= 2) {
     resources.push({
       name: "Focus Points",
-      uses: pFocusMax(sheet.classLevels.monk),
+      uses: pFocusMax(classLevels.monk),
       rechargesOn: "shortOrLongRest",
     });
   }
-  if (sheet.classLevels.paladin > 0) {
+  if (classLevels.paladin > 0) {
     resources.push({
       name: "Lay on Hands",
-      uses: layOnHandsPoolMax(sheet.classLevels.paladin),
+      uses: layOnHandsPoolMax(classLevels.paladin),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.ranger > 0) {
+  if (classLevels.ranger > 0) {
     resources.push({
       name: "Favored Enemy",
-      uses: favoredEnemyFreeUses(sheet.classLevels.ranger),
+      uses: favoredEnemyFreeUses(classLevels.ranger),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.ranger >= 10) {
+  if (classLevels.ranger >= 10) {
     resources.push({
       name: "Tireless",
       uses: tirelessMaxCharges(wisMod),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.ranger >= 14) {
+  if (classLevels.ranger >= 14) {
     resources.push({
       name: "Nature's Veil",
       uses: naturesVeilMaxCharges(wisMod),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.sorcerer >= 2) {
+  if (classLevels.sorcerer >= 2) {
     resources.push({
       name: "Sorcery Points",
-      uses: sorceryPointsMax(sheet.classLevels.sorcerer),
+      uses: sorceryPointsMax(classLevels.sorcerer),
       rechargesOn: "longRest",
     });
   }
-  if (sheet.classLevels.warlock > 0) {
+  if (classLevels.warlock > 0) {
     resources.push({
       name: "Pact Slots",
-      uses: pactSlotCount(sheet.classLevels.warlock),
+      uses: pactSlotCount(classLevels.warlock),
       rechargesOn: "shortRest",
     });
     resources.push({
-      name: `Pact Slot Level ${pactSlotLevel(sheet.classLevels.warlock)}`,
-      uses: pactSlotLevel(sheet.classLevels.warlock),
+      name: `Pact Slot Level ${pactSlotLevel(classLevels.warlock)}`,
+      uses: pactSlotLevel(classLevels.warlock),
       rechargesOn: "longRest",
     });
     resources.push({
       name: "Invocations Known",
-      uses: invocationsKnown(sheet.classLevels.warlock),
+      uses: invocationsKnown(classLevels.warlock),
       rechargesOn: "longRest",
     });
   }

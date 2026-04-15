@@ -5,6 +5,7 @@ import {
 } from "#/features/spell-available-actions.ts";
 import {
   cantripChoiceCount,
+  cantripChoiceSourceClass,
   classRequiresOwnedSpellcasting,
   classSpellSlots,
   maxSpellLevelForClass,
@@ -60,6 +61,16 @@ export type CharacterSpellcastingChoices = Partial<
   Readonly<Record<CasterClass, CharacterSpellcastingEntry>>
 >;
 
+export interface CharacterSheetSpellcastingEntry {
+  readonly cantrips: ReadonlyArray<string>;
+  readonly preparedSpells: ReadonlyArray<string>;
+  readonly spellbook: ReadonlyArray<string>;
+}
+
+export type CharacterSheetSpellcastingChoices = Readonly<
+  Record<CasterClass, CharacterSheetSpellcastingEntry>
+>;
+
 export interface CharacterSpellcastingClassSummary {
   readonly className: CasterClass;
   readonly spellcastingAbility: Ability;
@@ -87,6 +98,16 @@ interface SpellcastingValidationParams {
   readonly spellcasting?: CharacterSpellcastingChoices;
 }
 
+function spellSourceClass(
+  className: CasterClass,
+  requireCantrip: boolean,
+  choices: CharacterBuildChoices | undefined,
+): CasterClass {
+  return requireCantrip
+    ? cantripChoiceSourceClass(className, choices)
+    : className;
+}
+
 type SpellcastingIssue = {
   readonly code: CharacterSpellcastingIssueCode;
   readonly message: string;
@@ -110,6 +131,7 @@ function canonicalSpellIds(
 
 function validateSpellList(params: {
   readonly className: CasterClass;
+  readonly choices: CharacterBuildChoices | undefined;
   readonly spells: ReadonlyArray<string>;
   readonly expectedCount: number;
   readonly level: number;
@@ -125,6 +147,11 @@ function validateSpellList(params: {
   };
 }): ReadonlyArray<SpellcastingIssue> {
   const issues: SpellcastingIssue[] = [];
+  const sourceClass = spellSourceClass(
+    params.className,
+    params.requireCantrip,
+    params.choices,
+  );
   if (params.spells.length !== params.expectedCount) {
     issues.push({
       code: params.codes.wrongCount,
@@ -153,10 +180,10 @@ function validateSpellList(params: {
         message: `${spellId} must ${params.requireCantrip ? "" : "not "}be a cantrip.`,
       });
     }
-    if (!(spell.classes as ReadonlyArray<string>).includes(params.className)) {
+    if (!(spell.classes as ReadonlyArray<string>).includes(sourceClass)) {
       issues.push({
         code: params.codes.unavailable,
-        message: `${spellId} is not on the ${params.className} spell list.`,
+        message: `${spellId} is not on the ${sourceClass} spell list required by ${params.className}.`,
       });
     }
     if (!params.requireCantrip && spell.level > params.maxSpellLevel) {
@@ -205,6 +232,7 @@ export function validateCharacterSpellcastingChoices(
         issues.push(
           ...validateSpellList({
             className,
+            choices: params.choices,
             spells: entry.cantrips,
             expectedCount: expectedCantrips,
             level,
@@ -234,6 +262,7 @@ export function validateCharacterSpellcastingChoices(
         issues.push(
           ...validateSpellList({
             className,
+            choices: params.choices,
             spells: entry.preparedSpells,
             expectedCount: expectedPreparedSpells,
             level,
@@ -264,6 +293,7 @@ export function validateCharacterSpellcastingChoices(
     issues.push(
       ...validateSpellList({
         className,
+        choices: params.choices,
         spells: entry.spellbook,
         expectedCount: wizardSpellbookCount(level),
         level,

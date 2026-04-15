@@ -385,8 +385,8 @@ export function CharacterCreationStepContent({
         <div className="rounded-lg border border-gray-800 bg-gray-950/60 p-4">
           <p className="font-medium text-gray-100">Level Up (current: {draft.advancement?.length ?? 0})</p>
           <p className="mt-1 text-xs text-gray-500">
-            Starts from the finalized sheet, projects one canonical advancement transition back to draft, and lets the
-            assessment pipeline surface any newly opened choices.
+            Starts from the finalized sheet, previews the next canonical advancement draft, and lets the assessment
+            pipeline surface any newly opened choices before a finalized sheet exists again.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {CLASS_NAMES.map((className) => (

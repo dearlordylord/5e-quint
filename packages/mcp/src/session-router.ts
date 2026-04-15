@@ -1,3 +1,7 @@
+import {
+  createCharacterSession,
+  type CharacterSessionSnapshot,
+} from "./character-session.ts";
 import { errorContent, type SupportedActionHost } from "./server-shared.ts";
 import { handleToolCall } from "./server.ts";
 import {
@@ -22,6 +26,7 @@ export type SessionRouterSnapshot = {
   readonly activeScope: "creature" | "battle";
   readonly encounterDraft: EncounterDraft | null;
   readonly characterListRefs: ReadonlyArray<SessionCharacterListRef>;
+  readonly storedCharacterState: CharacterSessionSnapshot["storedCharacterState"];
 };
 
 export type ToolCallResult = ReturnType<typeof handleToolCall>;
@@ -65,6 +70,7 @@ export function createSessionRouter(
   options: CreateSessionRouterOptions = {},
 ): SessionRouter {
   let activeHost: SupportedActionHost = initialHost;
+  const characterSession = createCharacterSession();
   const encounterDraft = cloneEncounterDraft(options.encounterDraft ?? null);
   const characterListRefs = [...(options.characterListRefs ?? [])];
 
@@ -92,10 +98,16 @@ export function createSessionRouter(
         activeScope: activeHost.scope,
         encounterDraft: cloneEncounterDraft(encounterDraft),
         characterListRefs: [...characterListRefs],
+        storedCharacterState:
+          characterSession.getSnapshot().storedCharacterState,
       };
     },
 
     handleToolCall(name: string, args: unknown): ToolCallResult {
+      if (characterSession.isCharacterToolName(name)) {
+        return characterSession.handleToolCall(name, args);
+      }
+
       if (name === "start_battle") {
         if (activeHost.scope !== "creature") {
           return errorContent(

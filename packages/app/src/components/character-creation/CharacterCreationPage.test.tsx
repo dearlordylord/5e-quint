@@ -69,11 +69,16 @@ describe("CharacterCreationPage", () => {
     })
   })
 
-  it("levels up from review by projecting the finalized sheet back to draft", () => {
+  it("levels up from review by previewing the next advancement draft before reassessment", () => {
     window.localStorage.clear()
     render(<CharacterCreationPage />)
 
     fireEvent.click(screen.getByRole("button", { name: "Load Fighter Example" }))
+    expect(
+      screen.getByText(
+        "Starts from the finalized sheet, previews the next canonical advancement draft, and lets the assessment pipeline surface any newly opened choices before a finalized sheet exists again."
+      )
+    ).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "+1 Fighter" }))
 
     expect(screen.getByText("Draft is ready for review.")).toBeTruthy()

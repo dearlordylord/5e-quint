@@ -13,8 +13,10 @@ import {
   finalAbilityModifiers,
   ownedCombatEquipment,
   POINT_BUY_BUDGET,
+  previewCharacterDraftUpdate,
   projectBattleWeaponProfile,
   deriveProficiencyBonus,
+  sheetClassLevels,
   singleClassAdvancement,
   startingGoldPieces,
   type CharacterDraft,
@@ -162,6 +164,7 @@ describe("character-domain", () => {
         primaryClassSkills: ["acrobatics", "perception"],
         backgroundTool: "dice",
         speciesSkill: "stealth",
+        fighterFightingStyle: "defense",
         humanOriginFeat: {
           feat: "skilled",
           proficiencies: ["history", "thievesTools", "viol"],
@@ -188,7 +191,7 @@ describe("character-domain", () => {
     if (!result.ok) throw new Error("expected successful finalization");
 
     expect(result.sheet.primaryClass).toBe("fighter");
-    expect(result.sheet.classLevels).toEqual({
+    expect(sheetClassLevels(result.sheet)).toEqual({
       ...ZERO_CLASS_LEVELS,
       fighter: 1,
     });
@@ -198,11 +201,14 @@ describe("character-domain", () => {
       purchasedCombatEquipment: [],
       remainingGoldPieces: 18,
       loadout: {
+        wornArmor: null,
         wieldedWeapon: "greatsword",
+        secondaryWeapon: null,
+        shield: false,
         wieldedWeaponGrip: "twoHanded",
       },
     });
-    expect(totalClassLevels(result.sheet.classLevels)).toBe(1);
+    expect(totalClassLevels(sheetClassLevels(result.sheet))).toBe(1);
     expect(result.sheet.abilityScores).toEqual({
       str: 17,
       dex: 13,
@@ -220,6 +226,163 @@ describe("character-domain", () => {
       cha: 1,
     });
     expect(JSON.parse(JSON.stringify(result.sheet))).toEqual(result.sheet);
+  });
+
+  it("requires a fighter fighting style choice once fighter level 1 is owned", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        choices: {
+          primaryClassSkills: ["acrobatics", "perception"],
+          backgroundTool: "dice",
+          speciesSkill: "stealth",
+          humanOriginFeat: {
+            feat: "skilled",
+            proficiencies: ["history", "thievesTools", "viol"],
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error(
+        "expected missing Fighting Style choice to block finalization",
+      );
+    }
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
+      "missingFeatureChoice",
+    );
+  });
+
+  it("rejects malformed fighting style values instead of finalizing them", () => {
+    const result = finalizeCharacterDraft({
+      ...completeDraft(),
+      choices: {
+        ...completeDraft().choices,
+        fighterFightingStyle: "notAStyle" as never,
+        paladinFightingStyle: "alsoNotAStyle" as never,
+      },
+      advancement: [advancementEntry("fighter"), advancementEntry("paladin")],
+      classLevels: {
+        ...ZERO_CLASS_LEVELS,
+        fighter: 1,
+        paladin: 1,
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error("expected malformed Fighting Style choices to fail");
+    }
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "invalidFeatureChoice",
+    );
+  });
+
+  it("rejects expertise skills that are not current skill proficiencies", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "rogue",
+        advancement: singleClassAdvancement("rogue", 1),
+        background: "criminal",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "dex",
+          plusOne: "int",
+        },
+        species: "elf",
+        choices: {
+          primaryClassSkills: [
+            "acrobatics",
+            "athletics",
+            "deception",
+            "stealth",
+          ],
+          speciesSkill: "perception",
+          rogueLanguage: "Sylvan",
+          expertiseSkills: ["arcana", "stealth"],
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "packageA",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {
+            wieldedWeapon: "shortsword",
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error(
+        "expected invalid Expertise choice to block finalization",
+      );
+    }
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "invalidFeatureChoice",
+    );
+  });
+
+  it("rejects wizard Scholar expertise outside the SRD scholar skill list", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        advancement: [advancementEntry("wizard"), advancementEntry("wizard")],
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        choices: {
+          primaryClassSkills: ["investigation", "medicine"],
+          speciesSkill: "perception",
+          expertiseSkills: ["perception"],
+        },
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "identify",
+              "magic_missile",
+              "shield",
+              "sleep",
+              "thunderwave",
+            ],
+          },
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "gold",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 8,
+          loadout: {},
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error(
+        "expected wizard Scholar to reject expertise outside the scholar skill list",
+      );
+    }
+    expect(result.issues.map((issue) => issue.code)).toContain(
+      "invalidFeatureChoice",
+    );
   });
 
   it("models higher-level starts as repeated legal sheet-to-sheet advancement", () => {
@@ -298,6 +461,82 @@ describe("character-domain", () => {
     });
   });
 
+  it("does not open Champion's additional fighting style slot on a non-Champion fighter-7 draft", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: {
+                tag: "abilityScoreImprovement",
+                abilities: ["str"],
+              },
+            },
+          }),
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", { feat: alertFeat }),
+          advancementEntry("fighter"),
+        ],
+        classLevels: { fighter: 7 },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error(
+        "expected missing subclass selection to block finalization",
+      );
+    }
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
+      "missingSubclassSelection",
+    );
+    expect(result.openChoices.map((issue) => issue.code)).not.toContain(
+      "missingFeatureChoice",
+    );
+  });
+
+  it("requires Champion's additional fighting style once fighter level 7 Champion is owned", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+          advancementEntry("fighter", {
+            feat: {
+              slot: "feat",
+              choice: {
+                tag: "abilityScoreImprovement",
+                abilities: ["str"],
+              },
+            },
+          }),
+          advancementEntry("fighter"),
+          advancementEntry("fighter", { feat: alertFeat }),
+          advancementEntry("fighter"),
+        ],
+        classLevels: { fighter: 7 },
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    if (result.ok) {
+      throw new Error(
+        "expected Champion fighter level seven to require an additional Fighting Style choice",
+      );
+    }
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
+      "missingFeatureChoice",
+    );
+  });
+
   it("rejects illegal advancement transitions instead of creating a bespoke higher-level path", () => {
     const levelOne = finalizeCharacterDraft(completeDraft());
     expect(levelOne.ok).toBe(true);
@@ -318,7 +557,7 @@ describe("character-domain", () => {
       throw new Error("expected illegal level-three advancement");
     }
 
-    expect(illegalLevelThree.issues).toEqual(
+    expect(illegalLevelThree.openChoices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ code: "missingSubclassSelection" }),
       ]),
@@ -391,7 +630,7 @@ describe("character-domain", () => {
       throw new Error("expected successful direct multiclass sheet");
 
     expect(multiclassed.sheet).toEqual(direct.sheet);
-    expect(multiclassed.sheet.classLevels).toEqual({
+    expect(sheetClassLevels(multiclassed.sheet)).toEqual({
       ...ZERO_CLASS_LEVELS,
       fighter: 1,
       monk: 1,
@@ -461,6 +700,9 @@ describe("character-domain", () => {
 
     const levelTwo = advanceCharacterSheet(levelOne.sheet, {
       entry: advancementEntry("wizard"),
+      choices: {
+        expertiseSkills: ["investigation"],
+      },
       spellcasting: {
         wizard: {
           cantrips: ["fire_bolt", "light", "mage_hand"],
@@ -503,6 +745,7 @@ describe("character-domain", () => {
         choices: {
           primaryClassSkills: ["investigation", "medicine"],
           speciesSkill: "perception",
+          expertiseSkills: ["investigation"],
         },
         spellcasting: {
           wizard: {
@@ -593,7 +836,7 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingSpeciesSkillChoice",
     );
   });
@@ -631,6 +874,45 @@ describe("character-domain", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
     expect(result.issues.map((issue) => issue.code)).toContain(
+      "prematureSubclassSelection",
+    );
+  });
+
+  it("surfaces subclass legality through draft assessment without a parallel validator", () => {
+    const assessment = assessCharacterDraft(
+      completeDraft({
+        primaryClass: "wizard",
+        advancement: [
+          advancementEntry("wizard"),
+          advancementEntry("wizard"),
+          advancementEntry("wizard", {
+            subclass: { className: "wizard", subclass: "evoker" },
+          }),
+          advancementEntry("fighter", {
+            subclass: { className: "fighter", subclass: "champion" },
+          }),
+        ],
+        background: "sage",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "int",
+          plusOne: "wis",
+        },
+        species: "elf",
+        languages: ["Common", "Elvish", "Draconic"],
+        alignment: "LN",
+        choices: {
+          primaryClassSkills: ["arcana", "investigation"],
+          speciesSkill: "perception",
+        },
+      }),
+    );
+
+    expect(assessment.status).toBe("invalid");
+    expect(assessment.openChoices.map((choice) => choice.code)).not.toContain(
+      "prematureSubclassSelection",
+    );
+    expect(assessment.issues.map((issue) => issue.code)).toContain(
       "prematureSubclassSelection",
     );
   });
@@ -722,7 +1004,10 @@ describe("character-domain", () => {
             ranger: ["survival"],
           },
           multiclassBardInstrument: "lute",
+          paladinFightingStyle: "defense",
+          rangerFightingStyle: "archery",
           rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
+          expertiseSkills: ["history", "survival", "perception"],
         },
         spellcasting: multiclassCasterSpellcasting,
         equipment: {
@@ -795,7 +1080,9 @@ describe("character-domain", () => {
         primaryClassSkills: ["animalHandling", "nature", "survival"],
         speciesSkill: "perception",
         humanOriginFeat: { feat: "alert" },
+        rangerFightingStyle: "archery",
         rangerDeftExplorerLanguages: ["Primordial", "Undercommon"],
+        expertiseSkills: ["animalHandling", "survival", "perception"],
       },
       spellcasting: rangerLevelFourteenSpellcasting,
       equipment: {
@@ -1080,7 +1367,7 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    expect(result.issues.map((issue) => issue.code)).toContain(
+    expect(result.openChoices.map((issue) => issue.code)).toContain(
       "missingEquipmentChoices",
     );
   });
@@ -1091,11 +1378,10 @@ describe("character-domain", () => {
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
 
-    expect(result.issues.map((issue) => issue.code)).toEqual([
+    expect(result.openChoices.map((issue) => issue.code)).toEqual([
       "missingPrimaryClass",
       "missingClassLevels",
       "missingAdvancement",
-      "invalidTotalLevel",
       "missingBackground",
       "missingAbilityScoreGeneration",
       "missingBackgroundAbilityScoreIncrease",
@@ -1104,6 +1390,7 @@ describe("character-domain", () => {
       "missingAlignment",
       "missingEquipmentChoices",
     ]);
+    expect(result.issues).toEqual([]);
   });
 
   it("distinguishes open choices from illegal issues on the draft boundary", () => {
@@ -1152,11 +1439,368 @@ describe("character-domain", () => {
     expect(updated.advancement).toEqual([{ className: "wizard" }]);
     expect(updated.backgroundAbilityScoreIncrease).toBeUndefined();
     expect(updated.choices?.backgroundTool).toBeUndefined();
+    expect(updated.choices?.fighterFightingStyle).toBeUndefined();
     expect(updated.choices?.humanOriginFeat).toBeUndefined();
     expect(updated.choices?.primaryClassSkills).toBeUndefined();
     expect(updated.equipment?.loadout?.wieldedWeapon).toBeUndefined();
     expect(updated.equipment?.loadout?.wieldedWeaponGrip).toBeUndefined();
     expect(updated.languages).toEqual(["Common", "Dwarvish", "Elvish"]);
+  });
+
+  it("sanitizes fighting style and expertise choices when the owning class levels shrink", () => {
+    const updated = applyCharacterDraftUpdate(
+      completeDraft({
+        primaryClass: "ranger",
+        advancement: [
+          advancementEntry("ranger"),
+          advancementEntry("ranger"),
+          advancementEntry("ranger", {
+            subclass: { className: "ranger", subclass: "hunter" },
+          }),
+          advancementEntry("ranger", { feat: alertFeat }),
+          advancementEntry("ranger"),
+          advancementEntry("ranger"),
+          advancementEntry("ranger"),
+          advancementEntry("ranger", { feat: alertFeat }),
+          advancementEntry("ranger"),
+        ],
+        background: "acolyte",
+        backgroundAbilityScoreIncrease: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "dex",
+          plusOne: "wis",
+        },
+        species: "elf",
+        choices: {
+          primaryClassSkills: ["animalHandling", "nature", "survival"],
+          rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
+          rangerFightingStyle: "archery",
+          expertiseSkills: ["nature", "survival", "perception"],
+        },
+        spellcasting: {
+          ranger: {
+            preparedSpells: [
+              "aid",
+              "cure_wounds",
+              "detect_magic",
+              "goodberry",
+              "longstrider",
+              "pass_without_trace",
+              "silence",
+              "speak_with_animals",
+              "spike_growth",
+            ],
+          },
+        },
+        equipment: {
+          backgroundOption: "package",
+          classOption: "packageA",
+          purchasedCombatEquipment: [],
+          remainingGoldPieces: 7,
+          loadout: {
+            wieldedWeapon: "longbow",
+            wieldedWeaponGrip: "twoHanded",
+          },
+        },
+      }),
+      {
+        advancement: [advancementEntry("ranger")],
+      },
+    );
+
+    expect(updated.choices?.rangerFightingStyle).toBeUndefined();
+    expect(updated.choices?.expertiseSkills).toBeUndefined();
+  });
+
+  it("sanitizes malformed fighting style values instead of carrying them through", () => {
+    const updated = applyCharacterDraftUpdate(
+      completeDraft({
+        choices: {
+          ...completeDraft().choices,
+          fighterFightingStyle: "notAStyle" as never,
+          paladinFightingStyle: "stillNotAStyle" as never,
+          rangerFightingStyle: "alsoNotAStyle" as never,
+        },
+        advancement: [
+          advancementEntry("fighter"),
+          advancementEntry("paladin"),
+          advancementEntry("paladin"),
+        ],
+        classLevels: {
+          ...ZERO_CLASS_LEVELS,
+          fighter: 1,
+          paladin: 2,
+        },
+      }),
+      {},
+    );
+
+    expect(updated.choices?.fighterFightingStyle).toBeUndefined();
+    expect(updated.choices?.paladinFightingStyle).toBeUndefined();
+    expect(updated.choices?.rangerFightingStyle).toBeUndefined();
+  });
+
+  it("previews destructive draft edits without mutating the current draft", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      primaryClass: "wizard",
+      background: "acolyte",
+      species: "dwarf",
+    });
+
+    expect(current).toEqual(completeDraft());
+    expect(preview.candidateDraft).toEqual(
+      applyCharacterDraftUpdate(current, {
+        primaryClass: "wizard",
+        background: "acolyte",
+        species: "dwarf",
+      }),
+    );
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["advancement"],
+        before: [{ className: "fighter" }],
+        after: [{ className: "wizard" }],
+      },
+      {
+        path: ["backgroundAbilityScoreIncrease"],
+        before: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "str",
+          plusOne: "con",
+        },
+      },
+      {
+        path: ["choices", "primaryClassSkills"],
+        before: ["acrobatics", "perception"],
+      },
+      {
+        path: ["choices", "backgroundTool"],
+        before: "dice",
+      },
+      {
+        path: ["choices", "speciesSkill"],
+        before: "stealth",
+      },
+      {
+        path: ["choices", "fighterFightingStyle"],
+        before: "defense",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "feat"],
+        before: "skilled",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "proficiencies"],
+        before: ["history", "thievesTools", "viol"],
+      },
+      {
+        path: ["equipment", "purchasedCombatEquipment"],
+        before: [],
+      },
+      {
+        path: ["equipment", "remainingGoldPieces"],
+        before: 18,
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeapon"],
+        before: "greatsword",
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeaponGrip"],
+        before: "twoHanded",
+      },
+    ]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingBackgroundAbilityScoreIncrease",
+      "missingPrimaryClassSkillChoices",
+      "missingRemainingGoldPieces",
+      "missingSpellcastingChoices",
+    ]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
+    expect(preview.candidateAssessment.status).toBe("incomplete");
+  });
+
+  it("requires Blessed Warrior cantrips and validates them against the cleric list", () => {
+    const draft = completeDraft({
+      primaryClass: "paladin",
+      advancement: [advancementEntry("paladin"), advancementEntry("paladin")],
+      background: "acolyte",
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "wis",
+        plusOne: "cha",
+      },
+      species: "elf",
+      languages: ["Common", "Elvish", "Draconic"],
+      alignment: "LG",
+      choices: {
+        primaryClassSkills: ["athletics", "persuasion"],
+        speciesSkill: "perception",
+        paladinFightingStyle: "blessedWarrior",
+      },
+      spellcasting: {
+        paladin: {
+          preparedSpells: ["bless", "cure_wounds", "detect_magic"],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "gold",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 9,
+        loadout: {},
+      },
+    });
+
+    const missingCantrips = finalizeCharacterDraft(draft);
+    expect(missingCantrips.ok).toBe(false);
+    if (missingCantrips.ok) {
+      throw new Error("expected Blessed Warrior to require cantrips");
+    }
+    expect(missingCantrips.openChoices.map((issue) => issue.code)).toContain(
+      "missingCantripChoices",
+    );
+
+    const wrongList = finalizeCharacterDraft({
+      ...draft,
+      spellcasting: {
+        paladin: {
+          cantrips: ["guidance", "fire_bolt"],
+          preparedSpells: ["bless", "cure_wounds", "detect_magic"],
+        },
+      },
+    });
+    expect(wrongList.ok).toBe(false);
+    if (wrongList.ok) {
+      throw new Error("expected cleric-list validation failure");
+    }
+    expect(wrongList.issues.map((issue) => issue.code)).toContain(
+      "cantripNotAvailableForClass",
+    );
+
+    const valid = finalizeCharacterDraft({
+      ...draft,
+      spellcasting: {
+        paladin: {
+          cantrips: ["guidance", "sacred_flame"],
+          preparedSpells: ["bless", "cure_wounds", "detect_magic"],
+        },
+      },
+    });
+    expect(valid.ok).toBe(true);
+  });
+
+  it("requires Druidic Warrior cantrips and validates them against the druid list", () => {
+    const draft = completeDraft({
+      primaryClass: "ranger",
+      advancement: [advancementEntry("ranger"), advancementEntry("ranger")],
+      background: "criminal",
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "dex",
+        plusOne: "int",
+      },
+      species: "elf",
+      languages: ["Common", "Elvish", "Draconic"],
+      alignment: "NG",
+      choices: {
+        primaryClassSkills: ["animalHandling", "nature", "survival"],
+        speciesSkill: "perception",
+        rangerDeftExplorerLanguages: ["Sylvan", "Primordial"],
+        rangerFightingStyle: "druidicWarrior",
+        expertiseSkills: ["nature"],
+      },
+      spellcasting: {
+        ranger: {
+          preparedSpells: ["cure_wounds", "detect_magic", "goodberry"],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "packageA",
+        purchasedCombatEquipment: [],
+        remainingGoldPieces: 8,
+        loadout: {
+          wieldedWeapon: "longbow",
+          wieldedWeaponGrip: "twoHanded",
+        },
+      },
+    });
+
+    const missingCantrips = finalizeCharacterDraft(draft);
+    expect(missingCantrips.ok).toBe(false);
+    if (missingCantrips.ok) {
+      throw new Error("expected Druidic Warrior to require cantrips");
+    }
+    expect(missingCantrips.openChoices.map((issue) => issue.code)).toContain(
+      "missingCantripChoices",
+    );
+
+    const wrongList = finalizeCharacterDraft({
+      ...draft,
+      spellcasting: {
+        ranger: {
+          cantrips: ["guidance", "sacred_flame"],
+          preparedSpells: ["cure_wounds", "detect_magic", "goodberry"],
+        },
+      },
+    });
+    expect(wrongList.ok).toBe(false);
+    if (wrongList.ok) {
+      throw new Error("expected druid-list validation failure");
+    }
+    expect(wrongList.issues.map((issue) => issue.code)).toContain(
+      "cantripNotAvailableForClass",
+    );
+
+    const valid = finalizeCharacterDraft({
+      ...draft,
+      spellcasting: {
+        ranger: {
+          cantrips: ["guidance", "produce_flame"],
+          preparedSpells: ["cure_wounds", "detect_magic", "goodberry"],
+        },
+      },
+    });
+    expect(valid.ok).toBe(true);
+  });
+
+  it("drops stray finalized spellcasting entries for classes the sheet does not own", () => {
+    const result = finalizeCharacterDraft(
+      completeDraft({
+        spellcasting: {
+          wizard: {
+            cantrips: ["fire_bolt", "light", "mage_hand"],
+            preparedSpells: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+            ],
+            spellbook: [
+              "burning_hands",
+              "charm_person",
+              "detect_magic",
+              "magic_missile",
+              "identify",
+              "sleep",
+            ],
+          },
+        },
+      }),
+    );
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      throw new Error("expected fighter sheet finalization to succeed");
+    }
+    expect(result.sheet.spellcasting.wizard).toEqual({
+      cantrips: [],
+      preparedSpells: [],
+      spellbook: [],
+    });
   });
 
   it("reopens overspent equipment and spellcasting-dependent extras after earlier choices change", () => {
@@ -1220,6 +1864,207 @@ describe("character-domain", () => {
     expect(updated.equipment?.loadout?.shield).toBeUndefined();
   });
 
+  it("previews dropped spellcasting and equipment facts after an upstream cleric change", () => {
+    const current = completeDraft({
+      primaryClass: "cleric",
+      advancement: singleClassAdvancement("cleric", 1),
+      background: "acolyte",
+      backgroundAbilityScoreIncrease: {
+        kind: "plusTwoPlusOne",
+        plusTwo: "wis",
+        plusOne: "int",
+      },
+      species: "dwarf",
+      choices: {
+        primaryClassSkills: ["history", "insight"],
+        clericDivineOrder: "thaumaturge",
+      },
+      spellcasting: {
+        cleric: {
+          cantrips: ["guidance", "light", "mending", "resistance"],
+          preparedSpells: [
+            "bless",
+            "cure_wounds",
+            "detect_magic",
+            "guiding_bolt",
+          ],
+        },
+      },
+      equipment: {
+        backgroundOption: "package",
+        classOption: "gold",
+        purchasedCombatEquipment: ["chainMail", "shield"],
+        remainingGoldPieces: 78,
+        loadout: {
+          wornArmor: "chainMail",
+          shield: true,
+        },
+      },
+    });
+
+    const preview = previewCharacterDraftUpdate(current, {
+      background: "criminal",
+      choices: {
+        primaryClassSkills: ["history", "insight"],
+        clericDivineOrder: "protector",
+      },
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["backgroundAbilityScoreIncrease"],
+        before: {
+          kind: "plusTwoPlusOne",
+          plusTwo: "wis",
+          plusOne: "int",
+        },
+      },
+      {
+        path: ["equipment", "purchasedCombatEquipment"],
+        before: ["chainMail", "shield"],
+      },
+      {
+        path: ["equipment", "remainingGoldPieces"],
+        before: 78,
+      },
+      {
+        path: ["equipment", "loadout", "wornArmor"],
+        before: "chainMail",
+      },
+      {
+        path: ["equipment", "loadout", "shield"],
+        before: true,
+      },
+      {
+        path: ["spellcasting", "cleric", "cantrips"],
+        before: ["guidance", "light", "mending", "resistance"],
+        after: ["guidance", "light", "mending"],
+      },
+    ]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingBackgroundAbilityScoreIncrease",
+      "missingRemainingGoldPieces",
+    ]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
+  });
+
+  it("reports sanitized losses inside a carried choices object when an upstream change invalidates them", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      species: "dwarf",
+      choices: current.choices,
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["choices", "speciesSkill"],
+        before: "stealth",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "feat"],
+        before: "skilled",
+      },
+      {
+        path: ["choices", "humanOriginFeat", "proficiencies"],
+        before: ["history", "thievesTools", "viol"],
+      },
+    ]);
+    expect(preview.candidateDraft.choices).toEqual({
+      primaryClassSkills: ["acrobatics", "perception"],
+      backgroundTool: "dice",
+      fighterFightingStyle: "defense",
+    });
+  });
+
+  it("treats omitted nested fields inside whole-object choice patches as direct edits", () => {
+    const current = completeDraft();
+
+    const preview = previewCharacterDraftUpdate(current, {
+      choices: {
+        backgroundTool: "dice",
+      },
+    });
+
+    expect(preview.droppedFacts).toEqual([]);
+    expect(preview.candidateDraft.choices).toEqual({
+      backgroundTool: "dice",
+    });
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingPrimaryClassSkillChoices",
+      "missingSpeciesSkillChoice",
+      "missingOriginFeatChoice",
+      "missingFeatureChoice",
+    ]);
+  });
+
+  it("previews newly introduced illegal issues without counting direct edits as dropped facts", () => {
+    const preview = previewCharacterDraftUpdate(completeDraft(), {
+      languages: ["Common", "Elvish", "Elvish"],
+    });
+
+    expect(preview.droppedFacts).toEqual([]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "tooFewLanguages",
+    ]);
+    expect(preview.newlyIntroducedIssues.map((issue) => issue.code)).toEqual([
+      "duplicateLanguages",
+    ]);
+    expect(preview.candidateDraft.languages).toEqual([
+      "Common",
+      "Elvish",
+      "Elvish",
+    ]);
+  });
+
+  it("does not report already-open spellcasting requirements as newly opened when only their messages change", () => {
+    const current = completeDraft({
+      primaryClass: "wizard",
+      advancement: singleClassAdvancement("wizard", 1),
+      choices: {
+        ...completeDraft().choices,
+        primaryClassSkills: ["arcana", "history"],
+      },
+      spellcasting: {
+        wizard: {
+          cantrips: ["acid_splash", "fire_bolt"],
+          preparedSpells: ["detect_magic"],
+          spellbook: ["detect_magic"],
+        },
+      },
+    });
+
+    const currentAssessment = assessCharacterDraft(current);
+    expect(currentAssessment.openChoices.map((choice) => choice.code)).toEqual([
+      "wrongCantripChoiceCount",
+      "wrongPreparedSpellChoiceCount",
+      "wrongWizardSpellbookChoiceCount",
+    ]);
+
+    const preview = previewCharacterDraftUpdate(current, {
+      advancement: singleClassAdvancement("wizard", 2),
+    });
+
+    expect(preview.droppedFacts).toEqual([
+      {
+        path: ["choices", "fighterFightingStyle"],
+        before: "defense",
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeapon"],
+        before: "greatsword",
+      },
+      {
+        path: ["equipment", "loadout", "wieldedWeaponGrip"],
+        before: "twoHanded",
+      },
+    ]);
+    expect(preview.newlyOpenedChoices.map((choice) => choice.code)).toEqual([
+      "missingFeatureChoice",
+    ]);
+    expect(preview.newlyIntroducedIssues).toEqual([]);
+  });
+
   it("rejects invalid standard-array and language assignments", () => {
     const result = finalizeCharacterDraft(
       completeDraft({
@@ -1240,7 +2085,10 @@ describe("character-domain", () => {
 
     expect(result.ok).toBe(false);
     if (result.ok) throw new Error("expected failed finalization");
-    const codes = result.issues.map((issue) => issue.code);
+    const codes = [
+      ...result.openChoices.map((issue) => issue.code),
+      ...result.issues.map((issue) => issue.code),
+    ];
     expect(codes).toContain("invalidStandardArray");
     expect(codes).toContain("duplicateLanguages");
     expect(codes).toContain("tooFewLanguages");

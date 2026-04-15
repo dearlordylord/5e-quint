@@ -3,6 +3,20 @@ import { createActor } from "xstate";
 
 import { battleMachine } from "@dnd/core/battle-machine.ts";
 import type { BattleEvent } from "@dnd/core/battle-machine-types.ts";
+import {
+  assessCharacterDraft,
+  advanceCharacterSheet,
+  applyCharacterDraftUpdate,
+  finalizeCharacterDraft,
+  previewCharacterSheetAdvancement,
+  previewCharacterDraftUpdate,
+  singleClassAdvancement,
+  type CharacterDraft,
+} from "@dnd/core/character-domain.ts";
+import {
+  characterSheetBattleProjection,
+  characterSheetCreatureProjection,
+} from "@dnd/core/character-sheet-derived.ts";
 import { TABLE_EVENT_WARNING_CODES } from "@dnd/core/available-actions.ts";
 import type { BattleWeaponProfile } from "@dnd/core/types.ts";
 import {
@@ -14,6 +28,7 @@ import {
   spellId,
   spellSlotLevel,
 } from "@dnd/core/types.ts";
+import type { ClassName } from "@dnd/core/features/class-tables.ts";
 
 import {
   createBattleHost,
@@ -54,6 +69,174 @@ function preparedSpellIds(
 
 function readPayload(response: ReturnType<typeof handleToolCall>) {
   return JSON.parse(response.content[0]?.text ?? "null");
+}
+
+function advancementEntry(
+  className: ClassName,
+  entry: Omit<
+    NonNullable<CharacterDraft["advancement"]>[number],
+    "className"
+  > = {},
+): NonNullable<CharacterDraft["advancement"]>[number] {
+  return { className, ...entry };
+}
+
+function completeDraft(
+  overrides: Partial<CharacterDraft> = {},
+): CharacterDraft {
+  return {
+    primaryClass: "fighter",
+    advancement: singleClassAdvancement("fighter", 1),
+    background: "soldier",
+    abilityScoreGeneration: {
+      mode: "standardArray",
+      assignedScores: {
+        str: 15,
+        dex: 13,
+        con: 14,
+        int: 8,
+        wis: 10,
+        cha: 12,
+      },
+    },
+    backgroundAbilityScoreIncrease: {
+      kind: "plusTwoPlusOne",
+      plusTwo: "str",
+      plusOne: "con",
+    },
+    species: "human",
+    languages: ["Common", "Dwarvish", "Elvish"],
+    alignment: "NG",
+    choices: {
+      primaryClassSkills: ["acrobatics", "perception"],
+      backgroundTool: "dice",
+      speciesSkill: "stealth",
+      fighterFightingStyle: "defense",
+      humanOriginFeat: {
+        feat: "skilled",
+        proficiencies: ["history", "thievesTools", "viol"],
+      },
+    },
+    equipment: {
+      backgroundOption: "package",
+      classOption: "packageA",
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: 18,
+      loadout: {
+        wieldedWeapon: "greatsword",
+        wieldedWeaponGrip: "twoHanded",
+      },
+    },
+    ...overrides,
+  };
+}
+
+function completeWizardDraft(
+  overrides: Partial<CharacterDraft> = {},
+): CharacterDraft {
+  return completeDraft({
+    primaryClass: "wizard",
+    advancement: singleClassAdvancement("wizard", 1),
+    background: "sage",
+    backgroundAbilityScoreIncrease: {
+      kind: "plusTwoPlusOne",
+      plusTwo: "int",
+      plusOne: "wis",
+    },
+    species: "elf",
+    languages: ["Common", "Elvish", "Draconic"],
+    alignment: "LN",
+    choices: {
+      primaryClassSkills: ["investigation", "medicine"],
+      speciesSkill: "perception",
+    },
+    spellcasting: {
+      wizard: {
+        cantrips: ["fire_bolt", "light", "mage_hand"],
+        preparedSpells: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+        ],
+        spellbook: [
+          "burning_hands",
+          "charm_person",
+          "detect_magic",
+          "magic_missile",
+          "identify",
+          "sleep",
+        ],
+      },
+    },
+    equipment: {
+      backgroundOption: "package",
+      classOption: "gold",
+      purchasedCombatEquipment: [],
+      remainingGoldPieces: 8,
+      loadout: {},
+    },
+    ...overrides,
+  });
+}
+
+function encodeStableJsonForTest(value: unknown): unknown {
+  if (value instanceof Set) {
+    const entries = [...value].map((entry) => encodeStableJsonForTest(entry));
+    if (entries.every((entry) => typeof entry === "string")) {
+      return [...(entries as string[])].sort();
+    }
+    if (entries.every((entry) => typeof entry === "number")) {
+      return [...(entries as number[])].sort((left, right) => left - right);
+    }
+    return entries;
+  }
+  if (value instanceof Map) {
+    return Object.fromEntries(
+      [...value.entries()]
+        .map(
+          ([key, entry]) =>
+            [String(key), encodeStableJsonForTest(entry)] as const,
+        )
+        .sort(([left], [right]) => left.localeCompare(right)),
+    );
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => encodeStableJsonForTest(entry));
+  }
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, entry]) => [key, encodeStableJsonForTest(entry)] as const)
+        .sort(([left], [right]) => left.localeCompare(right)),
+    );
+  }
+  return value;
+}
+
+function jsonRoundTripForTest(value: unknown): unknown {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function normalizeCharacterPreviewForTest(value: unknown): unknown {
+  const preview = jsonRoundTripForTest(value);
+  if (
+    typeof preview !== "object" ||
+    preview === null ||
+    !("droppedFacts" in preview) ||
+    !Array.isArray((preview as { droppedFacts?: unknown }).droppedFacts)
+  ) {
+    return preview;
+  }
+
+  return {
+    ...preview,
+    droppedFacts: [
+      ...(preview as { droppedFacts: ReadonlyArray<unknown> }).droppedFacts,
+    ].sort((left, right) =>
+      JSON.stringify(left).localeCompare(JSON.stringify(right)),
+    ),
+  };
 }
 
 function creatureToken<T extends object>(token: T) {
@@ -670,6 +853,15 @@ describe("MCP server adapter", () => {
   test("tool definitions include control command and table event skeletons", () => {
     expect(toolDefinitions.map((tool) => tool.name)).toEqual([
       "get_state",
+      "get_character_state",
+      "create_character_draft",
+      "preview_character_draft_update",
+      "apply_character_draft_update",
+      "assess_character_draft",
+      "finalize_character_draft",
+      "preview_character_sheet_advancement",
+      "advance_character_sheet",
+      "project_character_sheet",
       "start_battle",
       "get_available_actions",
       "execute_action",
@@ -705,12 +897,685 @@ describe("MCP server adapter", () => {
       "object",
       "object",
       "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
+      "object",
     ]);
     for (const tool of toolDefinitions) {
       expect(tool.inputSchema).not.toHaveProperty("anyOf");
       expect(tool.inputSchema).not.toHaveProperty("oneOf");
       expect(tool.inputSchema).not.toHaveProperty("allOf");
     }
+  });
+
+  test("character MCP stores and returns canonical draft state", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft();
+
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "empty",
+    });
+
+    const created = router.handleToolCall("create_character_draft", { draft });
+
+    expect("isError" in created).toBe(false);
+    expect(readPayload(created)).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft,
+      },
+    });
+    expect(router.getSnapshot().storedCharacterState).toBe("draft");
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft,
+    });
+  });
+
+  test("character MCP previews draft updates without mutating stored draft and applies them separately", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft();
+    const patch = {
+      primaryClass: "wizard",
+      background: "acolyte",
+      species: "dwarf",
+    } as const;
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const previewResponse = router.handleToolCall(
+      "preview_character_draft_update",
+      { patch },
+    );
+
+    expect("isError" in previewResponse).toBe(false);
+    const previewPayload = readPayload(previewResponse);
+
+    expect({
+      ...previewPayload,
+      preview: normalizeCharacterPreviewForTest(previewPayload.preview),
+    }).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft,
+      },
+      preview: normalizeCharacterPreviewForTest(
+        previewCharacterDraftUpdate(draft, patch),
+      ),
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft,
+    });
+
+    const applied = router.handleToolCall("apply_character_draft_update", {
+      patch,
+    });
+    const updatedDraft = applyCharacterDraftUpdate(draft, patch);
+
+    expect("isError" in applied).toBe(false);
+    expect(readPayload(applied)).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft: updatedDraft,
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft: updatedDraft,
+    });
+  });
+
+  test("character MCP assesses stored drafts through core-owned semantics", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft({
+      languages: ["Common", "Elvish", "Elvish"],
+    });
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const assessed = router.handleToolCall("assess_character_draft", {});
+
+    expect("isError" in assessed).toBe(false);
+    expect(readPayload(assessed)).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft,
+      },
+      assessment: assessCharacterDraft(draft),
+    });
+  });
+
+  test("character MCP finalizes stored drafts and previews then advances stored sheets through core-owned semantics", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft();
+    const finalized = finalizeCharacterDraft(draft);
+
+    if (!finalized.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const finalizedResponse = router.handleToolCall(
+      "finalize_character_draft",
+      {},
+    );
+
+    expect("isError" in finalizedResponse).toBe(false);
+    expect(readPayload(finalizedResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      result: finalized,
+    });
+    expect(router.getSnapshot().storedCharacterState).toBe("sheet");
+
+    const transition = {
+      entry: advancementEntry("fighter"),
+    } as const;
+    const preview = previewCharacterSheetAdvancement(
+      finalized.sheet,
+      transition,
+    );
+    const previewResponse = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition,
+      },
+    );
+    const advanced = advanceCharacterSheet(finalized.sheet, transition);
+    const advancedResponse = router.handleToolCall("advance_character_sheet", {
+      transition,
+    });
+
+    expect("isError" in previewResponse).toBe(false);
+    expect(readPayload(previewResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      preview,
+    });
+    expect("isError" in advancedResponse).toBe(false);
+    expect(readPayload(advancedResponse)).toEqual({
+      storedCharacter: advanced.ok
+        ? {
+            kind: "sheet",
+            sheet: advanced.sheet,
+          }
+        : {
+            kind: "sheet",
+            sheet: finalized.sheet,
+          },
+      result: advanced,
+    });
+  });
+
+  test("character MCP previews and advances partial spellcasting transitions without dropping stored sheet facts", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeWizardDraft();
+    const finalized = finalizeCharacterDraft(draft);
+
+    expect(finalized.ok).toBe(true);
+    if (!finalized.ok) {
+      throw new Error("expected complete wizard draft to finalize");
+    }
+
+    router.handleToolCall("create_character_draft", { draft });
+    router.handleToolCall("finalize_character_draft", {});
+
+    const transition = {
+      entry: advancementEntry("wizard"),
+      spellcasting: {
+        wizard: {
+          preparedSpells: [
+            "burning_hands",
+            "charm_person",
+            "detect_magic",
+            "magic_missile",
+            "shield",
+          ],
+        },
+      },
+    } as const;
+
+    const preview = previewCharacterSheetAdvancement(finalized.sheet, transition);
+    const previewResponse = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      { transition },
+    );
+
+    expect("isError" in previewResponse).toBe(false);
+    expect(readPayload(previewResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      preview,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
+    });
+
+    const advanced = advanceCharacterSheet(finalized.sheet, transition);
+    const advanceResponse = router.handleToolCall("advance_character_sheet", {
+      transition,
+    });
+
+    expect("isError" in advanceResponse).toBe(false);
+    expect(readPayload(advanceResponse)).toEqual({
+      storedCharacter: advanced.ok
+        ? {
+            kind: "sheet",
+            sheet: advanced.sheet,
+          }
+        : {
+            kind: "sheet",
+            sheet: finalized.sheet,
+          },
+      result: advanced,
+    });
+  });
+
+  test("character MCP keeps stored state on blocked finalize and blocked advance results", () => {
+    const router = createSessionRouter(createDemoHost());
+    const incompleteDraft = completeDraft({
+      choices: {
+        backgroundTool: "dice",
+        speciesSkill: "stealth",
+        fighterFightingStyle: "defense",
+        humanOriginFeat: {
+          feat: "skilled",
+          proficiencies: ["history", "thievesTools", "viol"],
+        },
+      },
+    });
+    const blockedFinalization = finalizeCharacterDraft(incompleteDraft);
+
+    expect(blockedFinalization.ok).toBe(false);
+
+    router.handleToolCall("create_character_draft", { draft: incompleteDraft });
+
+    const finalizeResponse = router.handleToolCall(
+      "finalize_character_draft",
+      {},
+    );
+
+    expect("isError" in finalizeResponse).toBe(false);
+    expect(readPayload(finalizeResponse)).toEqual({
+      storedCharacter: {
+        kind: "draft",
+        draft: incompleteDraft,
+      },
+      result: blockedFinalization,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft: incompleteDraft,
+    });
+
+    const complete = finalizeCharacterDraft(completeDraft());
+    expect(complete.ok).toBe(true);
+    if (!complete.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+    const levelTwo = advanceCharacterSheet(complete.sheet, {
+      entry: advancementEntry("fighter"),
+    });
+    expect(levelTwo.ok).toBe(true);
+    if (!levelTwo.ok) {
+      throw new Error("expected level-two fighter sheet");
+    }
+
+    router.handleToolCall("create_character_draft", { draft: completeDraft() });
+    router.handleToolCall("finalize_character_draft", {});
+    router.handleToolCall("advance_character_sheet", {
+      transition: { entry: advancementEntry("fighter") },
+    });
+
+    const blockedTransition = {
+      entry: advancementEntry("fighter"),
+    } as const;
+    const blockedAdvance = advanceCharacterSheet(
+      levelTwo.sheet,
+      blockedTransition,
+    );
+
+    expect(blockedAdvance.ok).toBe(false);
+
+    const advanceResponse = router.handleToolCall("advance_character_sheet", {
+      transition: blockedTransition,
+    });
+
+    expect("isError" in advanceResponse).toBe(false);
+    expect(readPayload(advanceResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: levelTwo.sheet,
+      },
+      result: blockedAdvance,
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: levelTwo.sheet,
+    });
+  });
+
+  test("character MCP projects stored finalized sheets through core-owned projection helpers", () => {
+    const router = createSessionRouter(createDemoHost());
+    const finalized = finalizeCharacterDraft(completeDraft());
+
+    if (!finalized.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+
+    router.handleToolCall("create_character_draft", { draft: completeDraft() });
+    router.handleToolCall("finalize_character_draft", {});
+
+    const projected = router.handleToolCall("project_character_sheet", {});
+
+    expect("isError" in projected).toBe(false);
+    expect(readPayload(projected)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      projections: {
+        creature: encodeStableJsonForTest(
+          characterSheetCreatureProjection(finalized.sheet),
+        ),
+        battle: encodeStableJsonForTest(
+          characterSheetBattleProjection(finalized.sheet),
+        ),
+      },
+    });
+  });
+
+  test("character MCP rejects malformed draft payloads before storage", () => {
+    const router = createSessionRouter(createDemoHost());
+
+    const created = router.handleToolCall("create_character_draft", {
+      draft: { advancement: "oops" },
+    });
+
+    expect("isError" in created && created.isError).toBe(true);
+    expect(readPayload(created)).toMatchObject({
+      error: "Invalid create_character_draft input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "draft",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "empty",
+    });
+
+    const assessed = router.handleToolCall("assess_character_draft", {});
+
+    expect("isError" in assessed && assessed.isError).toBe(true);
+    expect(readPayload(assessed)).toEqual({
+      error:
+        "Cannot call assess_character_draft without stored character state.",
+      details: {
+        code: "MISSING_STORED_CHARACTER",
+      },
+    });
+  });
+
+  test("character MCP rejects malformed patch and transition payloads without mutating stored state", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft();
+    const finalized = finalizeCharacterDraft(draft);
+
+    if (!finalized.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const previewError = router.handleToolCall(
+      "preview_character_draft_update",
+      {
+        patch: { languages: "Common" },
+      },
+    );
+
+    expect("isError" in previewError && previewError.isError).toBe(true);
+    expect(readPayload(previewError)).toMatchObject({
+      error: "Invalid preview_character_draft_update input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "patch",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft,
+    });
+
+    router.handleToolCall("finalize_character_draft", {});
+
+    const previewAdvanceError = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition: { entry: { className: ["fighter"] } },
+      },
+    );
+
+    expect(
+      "isError" in previewAdvanceError && previewAdvanceError.isError,
+    ).toBe(true);
+    expect(readPayload(previewAdvanceError)).toMatchObject({
+      error: "Invalid preview_character_sheet_advancement input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "transition",
+      },
+    });
+
+    const advanceError = router.handleToolCall("advance_character_sheet", {
+      transition: { entry: { className: ["fighter"] } },
+    });
+
+    expect("isError" in advanceError && advanceError.isError).toBe(true);
+    expect(readPayload(advanceError)).toMatchObject({
+      error: "Invalid advance_character_sheet input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "transition",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
+    });
+  });
+
+  test("character MCP rejects unexpected top-level fields on stored-character tools", () => {
+    const router = createSessionRouter(createDemoHost());
+    const draft = completeDraft();
+    const finalized = finalizeCharacterDraft(draft);
+
+    if (!finalized.ok) {
+      throw new Error("expected complete draft to finalize");
+    }
+
+    const createError = router.handleToolCall("create_character_draft", {
+      draft,
+      extra: 1,
+    });
+
+    expect("isError" in createError && createError.isError).toBe(true);
+    expect(readPayload(createError)).toEqual({
+      error: "Invalid create_character_draft input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: draft.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "empty",
+    });
+
+    const getStateError = router.handleToolCall("get_character_state", {
+      extra: 1,
+    });
+
+    expect("isError" in getStateError && getStateError.isError).toBe(true);
+    expect(readPayload(getStateError)).toEqual({
+      error: "Invalid get_character_state input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: (none).",
+      },
+    });
+
+    router.handleToolCall("create_character_draft", { draft });
+
+    const previewError = router.handleToolCall(
+      "preview_character_draft_update",
+      {
+        patch: { alignment: "CG" },
+        extra: 1,
+      },
+    );
+
+    expect("isError" in previewError && previewError.isError).toBe(true);
+    expect(readPayload(previewError)).toEqual({
+      error: "Invalid preview_character_draft_update input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: patch.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft,
+    });
+
+    const assessError = router.handleToolCall("assess_character_draft", {
+      extra: 1,
+    });
+
+    expect("isError" in assessError && assessError.isError).toBe(true);
+    expect(readPayload(assessError)).toEqual({
+      error: "Invalid assess_character_draft input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: (none).",
+      },
+    });
+
+    const applyError = router.handleToolCall("apply_character_draft_update", {
+      patch: { alignment: "CG" },
+      extra: 1,
+    });
+
+    expect("isError" in applyError && applyError.isError).toBe(true);
+    expect(readPayload(applyError)).toEqual({
+      error: "Invalid apply_character_draft_update input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: patch.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "draft",
+      draft,
+    });
+
+    router.handleToolCall("finalize_character_draft", {});
+
+    const finalizeError = router.handleToolCall("finalize_character_draft", {
+      extra: 1,
+    });
+
+    expect("isError" in finalizeError && finalizeError.isError).toBe(true);
+    expect(readPayload(finalizeError)).toEqual({
+      error: "Invalid finalize_character_draft input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: (none).",
+      },
+    });
+
+    const previewAdvanceError = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition: {
+          entry: {
+            className: "fighter",
+            feat: {
+              slot: "feat",
+              choice: { tag: "abilityScoreImprovement", abilities: ["str"] },
+            },
+          },
+        },
+        extra: 1,
+      },
+    );
+
+    expect(
+      "isError" in previewAdvanceError && previewAdvanceError.isError,
+    ).toBe(true);
+    expect(readPayload(previewAdvanceError)).toEqual({
+      error: "Invalid preview_character_sheet_advancement input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: transition.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
+    });
+
+    const advanceError = router.handleToolCall("advance_character_sheet", {
+      transition: {
+        entry: {
+          className: "fighter",
+          feat: {
+            slot: "feat",
+            choice: { tag: "abilityScoreImprovement", abilities: ["str"] },
+          },
+        },
+      },
+      extra: 1,
+    });
+
+    expect("isError" in advanceError && advanceError.isError).toBe(true);
+    expect(readPayload(advanceError)).toEqual({
+      error: "Invalid advance_character_sheet input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: transition.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
+    });
+
+    const projectError = router.handleToolCall("project_character_sheet", {
+      extra: 1,
+    });
+
+    expect("isError" in projectError && projectError.isError).toBe(true);
+    expect(readPayload(projectError)).toEqual({
+      error: "Invalid project_character_sheet input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: (none).",
+      },
+    });
   });
 
   test("execute_control_command validates a narrow command shape", () => {
@@ -4994,6 +5859,7 @@ describe("SessionRouter", () => {
       activeScope: "creature",
       encounterDraft: null,
       characterListRefs: [],
+      storedCharacterState: "empty",
     });
   });
 
@@ -5015,6 +5881,7 @@ describe("SessionRouter", () => {
       activeScope: "battle",
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
       characterListRefs: [{ listId: "party-alpha" }],
+      storedCharacterState: "empty",
     });
     expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
       scope: "battle",
@@ -5151,6 +6018,7 @@ describe("SessionRouter", () => {
       activeScope: "battle",
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
       characterListRefs: [{ listId: "party-alpha" }],
+      storedCharacterState: "empty",
     });
 
     if (router.activeHost.scope !== "battle") {
@@ -5253,6 +6121,7 @@ describe("SessionRouter", () => {
       activeScope: "battle",
       encounterDraft: { participantIds: ["fighter", "goblin-1"] },
       characterListRefs: [{ listId: "party-alpha" }],
+      storedCharacterState: "empty",
     });
     expect(readPayload(router.handleToolCall("get_state", {}))).toMatchObject({
       scope: "battle",
@@ -5328,6 +6197,7 @@ describe("SessionRouter", () => {
       activeScope: "creature",
       encounterDraft: null,
       characterListRefs: [],
+      storedCharacterState: "empty",
     });
   });
 
