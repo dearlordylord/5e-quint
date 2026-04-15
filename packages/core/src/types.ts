@@ -281,8 +281,15 @@ export type ReactiveEffectPayload = {
   readonly damageType: "fire" | "cold";
 };
 
+export interface ConditionalGrantedCondition {
+  readonly condition: Condition;
+  readonly whileCondition: Condition;
+  readonly endsEarlyOnDamage?: boolean;
+  readonly endsEarlyOnWakeActionWithinFeet?: number;
+}
+
 export interface ActiveEffect {
-  readonly spellId: SpellId;
+  readonly spellId: string;
   readonly turnsRemaining: number;
   readonly expiresAt: ExpiryPhase;
   readonly casterId: CreatureId;
@@ -290,6 +297,7 @@ export interface ActiveEffect {
   readonly parentCasterId?: CreatureId;
   readonly expiryOwnerId?: CreatureId;
   readonly grantedConditions?: ReadonlyArray<Condition>;
+  readonly conditionalGrantedConditions?: ReadonlyArray<ConditionalGrantedCondition>;
   readonly startOfTurnHook?: EffectTurnHook;
   readonly endOfTurnHook?: EffectTurnHook;
   readonly grantedResistances?: ReadonlySet<DamageType>;

@@ -91,13 +91,33 @@ export const PSEUDODRAGON = {
       },
     },
     {
-      kind: "text",
+      kind: "saveEffectAction",
       id: "sting",
       name: "Sting",
       text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
-      blockerFamily: "saveEffectAction",
-      nonExecutableReason:
-        "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+      save: {
+        ability: "con",
+        dc: 12,
+        rangeFeet: 5,
+        target: "oneCreatureYouCanSee",
+        damageOnFail: 5,
+        damageType: "poison",
+        conditionOnFail: {
+          condition: "poisoned",
+          duration: {
+            rounds: 600,
+            expiresAt: "end",
+            expiryOwner: "target",
+          },
+        },
+        failureBand: {
+          minimumMargin: 5,
+          condition: "unconscious",
+          whileCondition: "poisoned",
+          endsEarlyOnDamage: true,
+          endsEarlyOnWakeActionWithinFeet: 5,
+        },
+      },
     },
   ],
   bonusActions: [],

@@ -136,7 +136,9 @@ function interruptFrame(pi: PendingInterrupt, await_: BattleContext["awaitCtx"],
           ...(ctx.damageOnFail > 0
             ? [{ label: "Damage", value: `${ctx.damageOnFail} ${ctx.damageType}`, color: "text-red-400" }]
             : []),
-          ...(ctx.applyCondition ? [{ label: "Condition", value: ctx.conditionOnFail, color: "text-yellow-400" }] : [])
+          ...(ctx.applyCondition && ctx.conditionOnFail != null
+            ? [{ label: "Condition", value: ctx.conditionOnFail, color: "text-yellow-400" }]
+            : [])
         ],
         choices: [
           { label: "Legendary Resistance", color: "text-amber-400" },
@@ -160,6 +162,33 @@ function interruptFrame(pi: PendingInterrupt, await_: BattleContext["awaitCtx"],
         stats: [
           ...(sf.damageOnFail > 0
             ? [{ label: "Damage", value: `${sf.damageOnFail} ${sf.damageType}`, color: "text-red-400" }]
+            : [])
+        ],
+        choices: [
+          { label: "Legendary Resistance", color: "text-amber-400" },
+          { label: "Pass", color: "text-gray-500" }
+        ],
+        depth: 0
+      }
+    }
+    case "PISaveFailedTraversal": {
+      const sf = pi.sf
+      return {
+        id: "saveFailedTraversal",
+        kind: "SAVE",
+        title: "Traversal Save Failed",
+        subtitle: "Failed traversal saving throw",
+        participants: [
+          { role: "Mover", name: n(names, sf.caster), highlight: "red" },
+          { role: "Target", name: n(names, sf.target), highlight: "blue" },
+          ...waiting.map((id) => ({ role: "Can React", name: n(names, id), highlight: "amber" as const }))
+        ],
+        stats: [
+          ...(sf.damageOnFail > 0
+            ? [{ label: "Damage", value: `${sf.damageOnFail} ${sf.damageType}`, color: "text-red-400" }]
+            : []),
+          ...(sf.applyCondition && sf.conditionOnFail != null
+            ? [{ label: "Condition", value: sf.conditionOnFail, color: "text-yellow-400" }]
             : [])
         ],
         choices: [

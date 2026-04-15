@@ -522,13 +522,28 @@ describe("monster catalog", () => {
     ]);
     expect(statBlock.bonusActions).toEqual([
       {
-        kind: "text",
+        kind: "traversalMovementAction",
         id: "tramplingCharge",
         name: "Trampling Charge",
         text: "The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. *Strength Saving Throw:* DC 14. *Failure:* 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",
-        blockerFamily: "saveEffectAction",
-        nonExecutableReason:
-          "Recharge-gated movement plus saving-throw bonus-action resolution is not yet projected into the generic monster runtime surface.",
+        movement: {
+          maxDistance: { kind: "speed" },
+          provocationKind: "doesNotProvokeOpportunityAttacks",
+          passThroughCreatureSpacesUpToSize: "medium",
+        },
+        enteredCreatureEffect: {
+          targeting: "eachEnteredCreatureOnce",
+          save: {
+            ability: "str",
+            dc: 14,
+            damageOnFail: 7,
+            halfOnSuccess: false,
+            damageType: "bludgeoning",
+            conditionOnFail: {
+              condition: "prone",
+            },
+          },
+        },
       },
     ]);
     expect(statBlockRechargeMinRolls(statBlock)).toEqual({
@@ -635,15 +650,61 @@ describe("monster catalog", () => {
         },
       },
       {
-        kind: "text",
+        kind: "saveEffectAction",
         id: "sting",
         name: "Sting",
         text: "*Constitution Saving Throw:* DC 12, one creature the pseudodragon can see within 5 feet. *Failure:* 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. *Failure by 5 or More:* While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",
-        blockerFamily: "saveEffectAction",
-        nonExecutableReason:
-          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
+        save: {
+          ability: "con",
+          dc: 12,
+          rangeFeet: 5,
+          target: "oneCreatureYouCanSee",
+          damageOnFail: 5,
+          damageType: "poison",
+          conditionOnFail: {
+            condition: "poisoned",
+            duration: {
+              rounds: 600,
+              expiresAt: "end",
+              expiryOwner: "target",
+            },
+          },
+          failureBand: {
+            minimumMargin: 5,
+            condition: "unconscious",
+            whileCondition: "poisoned",
+            endsEarlyOnDamage: true,
+            endsEarlyOnWakeActionWithinFeet: 5,
+          },
+        },
       },
     ]);
+  });
+
+  it("stores Gladiator Shield Bash on the generic monster save-effect surface", () => {
+    const statBlock = getMonsterStatBlock("gladiator");
+    const shieldBash = statBlock.actions.find(
+      (action) => action.id === "shieldBash",
+    );
+
+    expect(shieldBash).toEqual({
+      kind: "saveEffectAction",
+      id: "shieldBash",
+      name: "Shield Bash",
+      text: "*Strength Saving Throw:* DC 15, one creature within 5 feet that the gladiator can see. *Failure:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Prone condition.",
+      save: {
+        ability: "str",
+        dc: 15,
+        rangeFeet: 5,
+        target: "oneCreatureYouCanSee",
+        damageOnFail: 9,
+        damageType: "bludgeoning",
+        conditionOnFail: {
+          condition: "prone",
+          targetSizeAtMost: "medium",
+        },
+      },
+    });
   });
 
   it("stores Harpy as an SRD-backed authored stat block with a text-preserved unsupported action", () => {
@@ -920,23 +981,6 @@ describe("monster catalog", () => {
   it("publishes a code-derived audit of unsupported monster patterns", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
       expect.objectContaining({
-        statBlockId: "pseudodragon",
-        monsterName: "Pseudodragon",
-        section: "actions",
-        abilityId: "sting",
-        abilityName: "Sting",
-        pattern: "textOnlyAbility",
-        blockerFamily: "saveEffectAction",
-        srdCitation: {
-          document: ".references/srd-5.2.1/Monsters/Monsters-P-S.md",
-          section: "Pseudodragon",
-        },
-        reason:
-          "Saving-throw actions with conditional failure bands are not yet projected into the generic monster runtime surface.",
-      }),
-    );
-    expect(MONSTER_CATALOG_UNSUPPORTED_AUDIT).toContainEqual(
-      expect.objectContaining({
         statBlockId: "harpy",
         monsterName: "Harpy",
         section: "actions",
@@ -1113,11 +1157,6 @@ describe("monster catalog", () => {
           statBlockIds: ["aboleth", "harpy", "pirate", "pirateCaptain"],
         },
         {
-          blockerFamily: "saveEffectAction",
-          count: 3,
-          statBlockIds: ["centaurTrooper", "gladiator", "pseudodragon"],
-        },
-        {
           blockerFamily: "attackRider",
           count: 2,
           statBlockIds: ["pirateCaptain", "toughBoss"],
@@ -1195,11 +1234,10 @@ describe("monster catalog", () => {
         {
           statBlockId: "gladiator",
           monsterName: "Gladiator",
-          count: 3,
+          count: 2,
           blockerFamilies: [
             { blockerFamily: "attackProjectionGap", count: 1 },
             { blockerFamily: "reactiveDefense", count: 1 },
-            { blockerFamily: "saveEffectAction", count: 1 },
           ],
         },
         {
@@ -1223,7 +1261,7 @@ describe("monster catalog", () => {
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "# Monster Catalog Unsupported Pattern Report",
     );
-    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 49");
+    expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain("Rows: 46");
     expect(MONSTER_CATALOG_UNSUPPORTED_REPORT.markdown).toContain(
       "- attackProjectionGap: 13 rows across 10 stat blocks",
     );

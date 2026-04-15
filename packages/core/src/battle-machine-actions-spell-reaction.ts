@@ -7,6 +7,7 @@ import {
   mkAwait,
   piSaveFailed,
   piSaveFailedAoE,
+  piSaveFailedTraversal,
   piSpellCast,
   prepareBattleCasterForSpell,
   setCreature,
@@ -26,6 +27,7 @@ import type {
   SaveFailedCtx,
   SpellCastCtx,
   SpellStackEntry,
+  TraversalMovementCtx,
 } from "#/battle-machine-types.ts";
 import {
   ADR_ACTIVE_TURN,
@@ -144,13 +146,23 @@ export function battleResolveSaveFailedReaction({
   if (!aw2) return {};
   const piSF = piSaveFailed(aw2.interrupt);
   const piSFAoE = piSaveFailedAoE(aw2.interrupt);
-  if (!piSF && !piSFAoE) return {};
-  const sf: SaveFailedCtx = piSF ? piSF.ctx : piSFAoE!.sf;
+  const piSFTraversal = piSaveFailedTraversal(aw2.interrupt);
+  if (!piSF && !piSFAoE && !piSFTraversal) return {};
+  const sf: SaveFailedCtx = piSF
+    ? piSF.ctx
+    : piSFAoE
+      ? piSFAoE.sf
+      : piSFTraversal!.sf;
   const aoe: AoESpellCtx | undefined = piSFAoE ? piSFAoE.aoe : undefined;
+  const traversal: TraversalMovementCtx | undefined = piSFTraversal
+    ? piSFTraversal.traversal
+    : undefined;
   const returnTo =
     aoe && aoe.remaining.size > 0
       ? { tag: "ADRResolvingAoE" as const, aoe }
-      : ADR_ACTIVE_TURN;
+      : traversal && traversal.remaining.length > 0
+        ? { tag: "ADRResolvingTraversal" as const, traversal }
+        : ADR_ACTIVE_TURN;
   if (
     setDifference(aw2.eligible, aw2.offered).size === 0 ||
     e.reactorId === null
@@ -161,6 +173,7 @@ export function battleResolveSaveFailedReaction({
       awaitCtx: result.awaitCtx,
       aoeCtx: result.aoeCtx,
       movementCtx: result.movementCtx,
+      traversalCtx: result.traversalCtx,
       laCtx: result.laCtx,
     };
   }
@@ -176,6 +189,7 @@ export function battleResolveSaveFailedReaction({
       awaitCtx: result.awaitCtx,
       aoeCtx: result.aoeCtx,
       movementCtx: result.movementCtx,
+      traversalCtx: result.traversalCtx,
       laCtx: result.laCtx,
     };
   }

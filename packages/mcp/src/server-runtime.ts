@@ -163,6 +163,22 @@ export function buildBattleRuntimeInputs(
         values: { saveRoll },
       })),
     ),
+    Match.when({ runtime: "monsterSaveEffect" }, () =>
+      Effect.all({
+        saveRoll: Random.nextIntBetween(1, 21),
+        actorCanSeeTarget: Random.nextBoolean,
+      }).pipe(
+        Effect.map((values) => ({
+          runtime: "monsterSaveEffect" as const,
+          values,
+        })),
+      ),
+    ),
+    Match.when({ runtime: "monsterTraversalMovement" }, () =>
+      Effect.die(
+        "monsterTraversalMovement runtime inputs must be supplied explicitly by execute_action.",
+      ),
+    ),
     Match.when({ runtime: "hellishRebuke" }, () =>
       Effect.all({
         damage: Random.nextIntBetween(1, 21),

@@ -17,6 +17,7 @@ import {
   GOBLIN_WARRIOR,
   MAGE,
   PSEUDODRAGON,
+  monsterCatalogInitCreatureConfig,
   monsterSpellDailyUseId,
   statBlockToInitCreatureConfig,
 } from "#/monster-catalog.ts";
@@ -2006,6 +2007,144 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "C").paralyzed).toBe(true);
   });
 
+  it("natural_20: Trampling Charge uses the generic traversal movement surface and targets each entered creature once", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("C"),
+            statBlockId: "centaurTrooper",
+            initiativeRoll: 20,
+          }),
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          creatureSize: "medium",
+          battlePosition: { row: 1, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 9,
+          creatureSize: "medium",
+          battlePosition: { row: 2, col: 0 },
+        },
+      ],
+    });
+
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    send(actor, {
+      type: "BATTLE_MONSTER_TRAVERSAL",
+      abilityId: "tramplingCharge",
+      destination: { row: 3, col: 0 },
+      movementSpent: 15,
+      enteredCreatures: [
+        { targetId: CreatureId("A"), saveRoll: 4 },
+        { targetId: CreatureId("B"), saveRoll: 18 },
+      ],
+    });
+
+    expect(creature(actor, "C").bonusActionUsed).toBe(true);
+    expect(creature(actor, "C").movementRemaining).toBe(35);
+    expect(creature(actor, "C").battlePosition).toEqual({ row: 3, col: 0 });
+    expect(creature(actor, "C").rechargeAvailable).toEqual({
+      tramplingCharge: false,
+    });
+    expect(ctx(actor).selectedMonsterCommand).toBeNull();
+    expect(creature(actor, "A").hp).toBe(13);
+    expect(creature(actor, "A").prone).toBe(true);
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").prone).toBe(false);
+  });
+
+  it("natural_20: traversal save-failed reactions resume the remaining entered-creature queue", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("C"),
+            statBlockId: "centaurTrooper",
+            initiativeRoll: 20,
+          }),
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("A"),
+          maxHp: 20,
+          kind: "Monster",
+          legendaryResistances: 1,
+          creatureSize: "medium",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          creatureSize: "medium",
+          initiativeRoll: 9,
+          battlePosition: { row: 2, col: 0 },
+        },
+      ],
+    });
+
+    startTurn(actor, { rechargeD6: 5 });
+    send(actor, {
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("C"),
+      abilityId: "tramplingCharge",
+    });
+    send(actor, {
+      type: "BATTLE_MONSTER_TRAVERSAL",
+      abilityId: "tramplingCharge",
+      destination: { row: 3, col: 0 },
+      movementSpent: 15,
+      enteredCreatures: [
+        { targetId: CreatureId("A"), saveRoll: 1 },
+        { targetId: CreatureId("B"), saveRoll: 1 },
+      ],
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PISaveFailedTraversal");
+    expect(ctx(actor).traversalCtx).toBeNull();
+    expect(creature(actor, "A").legendaryResistancesRemaining).toBe(1);
+    expect(creature(actor, "A").hp).toBe(20);
+    expect(creature(actor, "A").prone).toBe(false);
+
+    send(actor, {
+      type: "BATTLE_RESOLVE_SAVE_FAILED_REACTION",
+      reactorId: CreatureId("A"),
+      decision: { tag: "RLegendaryResistance" },
+    });
+
+    expect(ctx(actor).awaitCtx?.interrupt.tag).toBe("PIAfterDamage");
+    send(actor, { type: "BATTLE_AFTER_DAMAGE_DECLINE", reactorId: null });
+
+    expect(ctx(actor).awaitCtx).toBeNull();
+    expect(ctx(actor).traversalCtx).toBeNull();
+    expect(creature(actor, "A").legendaryResistancesRemaining).toBe(0);
+    expect(creature(actor, "A").hp).toBe(20);
+    expect(creature(actor, "A").prone).toBe(false);
+    expect(creature(actor, "B").hp).toBe(13);
+    expect(creature(actor, "B").prone).toBe(true);
+  });
+
   it("natural_20: no Legendary Resistance uses means a failed save resolves immediately", () => {
     const actor = initLegendaryResistanceBattle(0);
     startTurn(actor);
@@ -3896,6 +4035,300 @@ describe("battle rules scenario regressions", () => {
     );
 
     expect(result.creatures.get(CreatureId("B"))?.paralyzed).toBe(false);
+  });
+
+  it("resolves Pseudodragon Sting through the generic monster save-effect surface", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").hp).toBe(15);
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(true);
+    expect(creature(actor, "B").activeEffects).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          grantedConditions: ["poisoned"],
+          conditionalGrantedConditions: [
+            {
+              condition: "unconscious",
+              whileCondition: "poisoned",
+              endsEarlyOnDamage: true,
+              endsEarlyOnWakeActionWithinFeet: 5,
+            },
+          ],
+        }),
+      ]),
+    );
+  });
+
+  it("leaves the target unchanged on a successful Sting save", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 5,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 18,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(20);
+    expect(creature(actor, "B").poisoned).toBe(false);
+    expect(creature(actor, "B").unconscious).toBe(false);
+    expect(creature(actor, "B").activeEffects).toEqual([]);
+  });
+
+  it("ends Sting's unconscious rider on damage while leaving Poisoned in place", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 5,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 4,
+      dmg: 4,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      ...DEFAULT_ATTACK_CONTEXT,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(false);
+  });
+
+  it("lets an adjacent creature wake a Sting target without ending Poisoned", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 15,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+    endTurn(actor);
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_WAKE_EFFECT",
+      targetId: CreatureId("B"),
+    });
+
+    expect(creature(actor, "B").poisoned).toBe(true);
+    expect(creature(actor, "B").unconscious).toBe(false);
+    expect(creature(actor, "C").actionsRemaining).toBe(0);
+  });
+
+  it("resolves Gladiator Shield Bash through the shared monster save-effect surface", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          creatureSize: "medium",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "shieldBash",
+      targetId: CreatureId("B"),
+      saveRoll: 4,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "A").actionsRemaining).toBe(0);
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").prone).toBe(true);
+  });
+
+  it("does not apply Shield Bash prone to Large targets while still dealing damage", () => {
+    const actor = createActor(battleMachine);
+    actor.start();
+    send(actor, {
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 15,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          kind: "PC",
+          maxHp: 20,
+          creatureSize: "large",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    startTurn(actor);
+
+    send(actor, {
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "shieldBash",
+      targetId: CreatureId("B"),
+      saveRoll: 4,
+      actorCanSeeTarget: true,
+    });
+    resolveAttackWindows(actor);
+
+    expect(creature(actor, "B").hp).toBe(11);
+    expect(creature(actor, "B").prone).toBe(false);
   });
 
   it("applies generic raw save-advantage contexts through BATTLE_ADD_CREATURE", () => {

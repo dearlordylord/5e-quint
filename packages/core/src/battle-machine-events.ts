@@ -1,10 +1,6 @@
-/**
- * Battle events, reaction decisions, and pending interrupt types.
- * Split from battle-machine-types.ts for eslint max-lines compliance.
- */
+/** Battle events, reaction decisions, and pending interrupt types. */
 import type {
   AfterDamageCtx,
-  AoESpellCtx,
   AttackDamageCtx,
   AttackHitCtx,
   BattleContext,
@@ -13,12 +9,21 @@ import type {
   SpellCastCtx,
 } from "#/battle-machine-types.ts";
 import type {
+  BattleMonsterSaveEffectEvent,
+  BattleMonsterTraversalEvent,
+  BattleMoveEvent,
+  BattleMovementOADeclineEvent,
+  BattleMovementOAAttackEvent,
+  SaveFailedAoEInterrupt,
+  SaveFailedTraversalInterrupt,
+} from "#/battle-machine-event-fragments.ts";
+import type {
   ActiveEffect,
   Ability,
   ArmorClass,
-  DamageQualifier,
   Condition,
   CreatureId,
+  DamageQualifier,
   DamageType,
   DifficultyClass,
   SpellId,
@@ -70,11 +75,8 @@ export type PendingInterrupt =
   | { readonly tag: "PIAttackDamage"; readonly ctx: AttackDamageCtx }
   | { readonly tag: "PISpellCast"; readonly ctx: SpellCastCtx }
   | { readonly tag: "PISaveFailed"; readonly ctx: SaveFailedCtx }
-  | {
-      readonly tag: "PISaveFailedAoE";
-      readonly sf: SaveFailedCtx;
-      readonly aoe: AoESpellCtx;
-    }
+  | SaveFailedAoEInterrupt
+  | SaveFailedTraversalInterrupt
   | { readonly tag: "PIAfterDamage"; readonly ctx: AfterDamageCtx };
 
 export type BattleEvent =
@@ -187,6 +189,12 @@ export type BattleEvent =
       readonly ritual: boolean;
       readonly bonusAction?: boolean;
     }
+  | BattleMonsterSaveEffectEvent
+  | BattleMonsterTraversalEvent
+  | {
+      readonly type: "BATTLE_WAKE_EFFECT";
+      readonly targetId: CreatureId;
+    }
   | {
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL";
       readonly reactorId: CreatureId | null;
@@ -232,38 +240,9 @@ export type BattleEvent =
       readonly saveRoll: number;
       readonly saveRollB?: number;
     }
-  | {
-      readonly type: "BATTLE_MOVE";
-      readonly provocationKind: MovementProvocationKind;
-      readonly threatened: ReadonlySet<CreatureId>;
-    }
-  | {
-      readonly type: "BATTLE_MOVEMENT_OA_DECLINE";
-      readonly reactorId: CreatureId | null;
-    }
-  | {
-      readonly type: "BATTLE_MOVEMENT_OA_ATTACK";
-      readonly reactorId: CreatureId | null;
-      readonly oaAtkRoll: number;
-      readonly oaDmg: number;
-      readonly oaDt: DamageType;
-      readonly oaDamageQualifiers?: ReadonlySet<DamageQualifier>;
-      readonly oaCrit: boolean;
-      readonly oaTgtAc: ArmorClass;
-      readonly knockOut: boolean;
-      readonly isMelee: true; // OA attacks are always melee per RAW
-      readonly weaponProperties?: ReadonlySet<WeaponProperty>;
-      readonly isFinesse?: boolean;
-      readonly attackerWithin5ft: boolean;
-      readonly attackerWithin60ft?: boolean;
-      readonly hostileWithin5ft: boolean;
-      readonly targetCanSeeAttacker: boolean;
-      readonly attackerCanSeeTarget: boolean;
-      readonly frightSourceInLOS: boolean;
-      readonly hasAllyAdjacentToTarget: boolean;
-      readonly saDmg: number;
-      readonly hitReactionCandidates: ReadonlySet<CreatureId>;
-    }
+  | BattleMoveEvent
+  | BattleMovementOADeclineEvent
+  | BattleMovementOAAttackEvent
   | {
       readonly type: "BATTLE_END_TURN";
       readonly eotSaveSucceeded: boolean;

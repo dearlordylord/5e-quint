@@ -4038,6 +4038,421 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle discovery and resolution expose the generic monster save-effect action surface", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
+          abilityId: "sting",
+          targetId: { options: ["B"] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
+        abilityId: "sting",
+        targetId: "B",
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
+        abilityId: "sting",
+        targetId: "B",
+      },
+      outcome:
+        "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
+      runtime: "monsterSaveEffect",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "monsterSaveEffect",
+          values: {
+            saveRoll: 4,
+            actorCanSeeTarget: true,
+          },
+        },
+        context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_MONSTER_SAVE_EFFECT",
+        abilityId: "sting",
+        targetId: CreatureId("B"),
+        saveRoll: 4,
+        actorCanSeeTarget: true,
+      },
+      outcome:
+        "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
+    });
+  });
+
+  test("battle discovery exposes Gladiator Shield Bash on the same monster save-effect runtime", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "gladiator",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
+          abilityId: "shieldBash",
+          targetId: { options: ["B"] },
+        }),
+      ]),
+    );
+  });
+
+  test("battle discovery and resolution expose the wake-effect action for adjacent conditional unconscious targets", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 15,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    actor.send({
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    actor.send({
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
+      reactorId: null,
+    });
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "C",
+          type: "BATTLE_WAKE_EFFECT",
+          targetId: { options: ["B"] },
+          cost: cost(quota("action")),
+          outcome: {
+            summary:
+              "Take an action to wake the chosen adjacent creature from a conditional unconscious effect while leaving the underlying condition in place",
+          },
+        },
+      ]),
+    );
+
+    expect(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "C",
+        type: "BATTLE_WAKE_EFFECT",
+        targetId: "B",
+      }),
+    ).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "C",
+        type: "BATTLE_WAKE_EFFECT",
+        targetId: "B",
+      },
+      outcome:
+        "Take an action to wake the chosen adjacent creature from a conditional unconscious effect while leaving the underlying condition in place",
+      runtime: "none",
+      event: {
+        type: "BATTLE_WAKE_EFFECT",
+        targetId: CreatureId("B"),
+      },
+    });
+  });
+
+  test("battle discovery and resolution expose the movement-owned monster traversal runtime for Centaur Trooper", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "centaurTrooper",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({
+      type: "BATTLE_START_TURN",
+      ...ZERO_BATTLE_SOT,
+      rechargeD6: 5,
+    });
+    actor.send({
+      type: "USE_RECHARGE_ABILITY",
+      monsterId: CreatureId("A"),
+      abilityId: "tramplingCharge",
+    });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).toEqual(
+      expect.arrayContaining([
+        {
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MONSTER_TRAVERSAL",
+          abilityId: "tramplingCharge",
+          cost: cost(quota("bonusAction")),
+          outcome: {
+            summary:
+              "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+          },
+        },
+      ]),
+    );
+
+    const request = expectBattleRequest(
+      resolveBattleAction(context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+      }),
+    );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+      },
+      outcome:
+        "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+      runtime: "monsterTraversalMovement",
+    });
+
+    expect(
+      finalizeBattleResolution(
+        request,
+        {
+          runtime: "monsterTraversalMovement",
+          values: {
+            destination: { row: 2, col: 0 },
+            movementSpent: 10,
+            enteredCreatures: [{ targetId: "B", saveRoll: 4 }],
+          },
+        },
+        context,
+      ),
+    ).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_MONSTER_TRAVERSAL",
+        abilityId: "tramplingCharge",
+        destination: { row: 2, col: 0 },
+        movementSpent: 10,
+        enteredCreatures: [{ targetId: CreatureId("B"), saveRoll: 4 }],
+      },
+      outcome:
+        "Spend your bonus action to move through creature spaces with explicit destination, movement, and entered-creature save facts",
+    });
+  });
+
+  test("battle discovery does not expose wake-effect for a 0 HP unconscious target", () => {
+    const actor = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        {
+          ...monsterCatalogInitCreatureConfig({
+            id: CreatureId("A"),
+            statBlockId: "pseudodragon",
+          }),
+          initiativeRoll: 20,
+          battlePosition: { row: 0, col: 0 },
+        },
+        {
+          id: CreatureId("C"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 15,
+          battlePosition: { row: 2, col: 0 },
+        },
+        {
+          id: CreatureId("D"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 12,
+          battlePosition: { row: 1, col: 1 },
+        },
+        {
+          id: CreatureId("B"),
+          maxHp: 20,
+          kind: "PC",
+          initiativeRoll: 10,
+          battlePosition: { row: 1, col: 0 },
+        },
+      ],
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    actor.send({
+      type: "BATTLE_MONSTER_SAVE_EFFECT",
+      abilityId: "sting",
+      targetId: CreatureId("B"),
+      saveRoll: 1,
+      actorCanSeeTarget: true,
+    });
+    actor.send({
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
+      reactorId: null,
+    });
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    actor.send({
+      type: "BATTLE_ATTACK",
+      targetId: CreatureId("B"),
+      attackRoll: 15,
+      diceCount: 1,
+      dieSize: 4,
+      dmg: 15,
+      dt: "piercing",
+      crit: false,
+      tAc: armorClass(10),
+      knockOut: false,
+      isMelee: true,
+      isFinesse: false,
+      attackerWithin5ft: true,
+      hostileWithin5ft: false,
+      targetCanSeeAttacker: true,
+      attackerCanSeeTarget: true,
+      frightSourceInLOS: false,
+      hasAllyAdjacentToTarget: false,
+      saDmg: 0,
+      hitReactionCandidates: new Set(),
+    });
+    actor.send({
+      type: "BATTLE_AFTER_DAMAGE_DECLINE",
+      reactorId: null,
+    });
+    actor.send({
+      type: "BATTLE_END_TURN",
+      eotSaveSucceeded: false,
+      eotDmg: 0,
+      eotDt: "bludgeoning",
+      eotConSave: true,
+    });
+    actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const context = actor.getSnapshot().context;
+
+    expect(getAvailableBattleActions(context)).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "D",
+          type: "BATTLE_WAKE_EFFECT",
+          targetId: { options: ["B"] },
+        }),
+      ]),
+    );
+  });
+
   test("battle discovery and resolution expose search against hidden combatants", () => {
     const actor = initBattleForReleaseGrappleDiscovery({
       withGrapple: false,

@@ -17,6 +17,7 @@ import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
   MonsterSaveTriggerKind,
+  MonsterTraversalEnteredCreatureSave,
 } from "#/monster-types.ts";
 import type {
   ActiveEffect,
@@ -29,6 +30,7 @@ import type {
   DamageQualifier,
   DamageType,
   DifficultyClass,
+  ExpiryPhase,
   HandUse,
   IncapSource,
   QualifiedPhysicalBypass,
@@ -238,6 +240,10 @@ export type AfterDamageReturn =
   | { readonly tag: "ADRActiveTurn" }
   | { readonly tag: "ADRResolvingAoE"; readonly aoe: AoESpellCtx }
   | { readonly tag: "ADRResolvingMovement"; readonly mv: MovementCtx }
+  | {
+      readonly tag: "ADRResolvingTraversal";
+      readonly traversal: TraversalMovementCtx;
+    }
   | { readonly tag: "ADRAwaitingLegendaryAction"; readonly la: LAWindowCtx }
   | {
       readonly tag: "ADRAwaitingReadiedAction";
@@ -245,6 +251,23 @@ export type AfterDamageReturn =
     };
 
 export const ADR_ACTIVE_TURN: AfterDamageReturn = { tag: "ADRActiveTurn" };
+
+export type BattleSaveTriggerKind = MonsterSaveTriggerKind | "none";
+
+export interface SaveFailureConditionDuration {
+  readonly effectId: string;
+  readonly turnsRemaining: number;
+  readonly expiresAt: ExpiryPhase;
+  readonly expiryOwnerId?: CreatureId;
+}
+
+export interface SaveFailureBandCondition {
+  readonly minimumMargin: number;
+  readonly condition: Condition;
+  readonly whileCondition: Condition;
+  readonly endsEarlyOnDamage?: boolean;
+  readonly endsEarlyOnWakeActionWithinFeet?: number;
+}
 
 export interface SaveSpellCtx {
   readonly caster: CreatureId;
@@ -255,10 +278,12 @@ export interface SaveSpellCtx {
   readonly damageOnFail: number;
   readonly halfOnSuccess: boolean;
   readonly damageType: DamageType;
-  readonly conditionOnFail: Condition;
+  readonly conditionOnFail?: Condition;
   readonly applyCondition: boolean;
   readonly saveAbility: Ability;
-  readonly saveTriggerKind: MonsterSaveTriggerKind;
+  readonly saveTriggerKind: BattleSaveTriggerKind;
+  readonly conditionDurationOnFail?: SaveFailureConditionDuration;
+  readonly failureBandCondition?: SaveFailureBandCondition;
 }
 
 export interface SaveFailedCtx {
@@ -267,9 +292,12 @@ export interface SaveFailedCtx {
   readonly damageOnFail: number;
   readonly halfOnSuccess: boolean;
   readonly damageType: DamageType;
-  readonly conditionOnFail: Condition;
+  readonly conditionOnFail?: Condition;
   readonly applyCondition: boolean;
   readonly saveSucceeded: boolean;
+  readonly failedMargin?: number;
+  readonly conditionDurationOnFail?: SaveFailureConditionDuration;
+  readonly failureBandCondition?: SaveFailureBandCondition;
 }
 
 export interface AoESpellCtx {
@@ -282,7 +310,7 @@ export interface AoESpellCtx {
   readonly applyCondition: boolean;
   readonly remaining: ReadonlySet<CreatureId>;
   readonly saveAbility: Ability;
-  readonly saveTriggerKind: MonsterSaveTriggerKind;
+  readonly saveTriggerKind: BattleSaveTriggerKind;
 }
 
 export interface ConcentrationCtx {
@@ -340,6 +368,19 @@ export interface MovementCtx {
   readonly processed: ReadonlySet<CreatureId>;
 }
 
+export interface TraversalEnteredCreatureTarget {
+  readonly targetId: CreatureId;
+  readonly saveRoll: number;
+  readonly saveRollB?: number;
+}
+
+export interface TraversalMovementCtx {
+  readonly mover: CreatureId;
+  readonly abilityId: string;
+  readonly save: MonsterTraversalEnteredCreatureSave;
+  readonly remaining: ReadonlyArray<TraversalEnteredCreatureTarget>;
+}
+
 export type { InitCreatureConfig } from "#/battle-init-creature-config.ts";
 export type {
   LAWindowCtx,
@@ -374,6 +415,7 @@ export interface BattleContext {
   readonly awaitCtx: AwaitCtx | null;
   readonly aoeCtx: AoESpellCtx | null;
   readonly movementCtx: MovementCtx | null;
+  readonly traversalCtx: TraversalMovementCtx | null;
   readonly laCtx: LAWindowCtx | null;
   readonly readyCtx: ReadyWindowCtx | null;
   readonly spellStack: ReadonlyArray<SpellStackEntry>;
@@ -387,6 +429,7 @@ export const PHASE_ACTIVE: Pick<
   | "awaitCtx"
   | "aoeCtx"
   | "movementCtx"
+  | "traversalCtx"
   | "laCtx"
   | "readyCtx"
 > = {
@@ -394,6 +437,7 @@ export const PHASE_ACTIVE: Pick<
   awaitCtx: null,
   aoeCtx: null,
   movementCtx: null,
+  traversalCtx: null,
   laCtx: null,
   readyCtx: null,
 };
@@ -408,6 +452,11 @@ export function phaseResolvingAoE(aoe: AoESpellCtx): PhaseFields {
 }
 export function phaseResolvingMovement(mv: MovementCtx): PhaseFields {
   return { ...PHASE_ACTIVE, movementCtx: mv };
+}
+export function phaseResolvingTraversal(
+  traversal: TraversalMovementCtx,
+): PhaseFields {
+  return { ...PHASE_ACTIVE, traversalCtx: traversal };
 }
 export function phaseAwaitingLegendary(la: LAWindowCtx): PhaseFields {
   return { ...PHASE_ACTIVE, laCtx: la };

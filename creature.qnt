@@ -91,7 +91,7 @@ module creature {
 
   type SenseType = Blindsight | Darkvision | Tremorsense | Truesight
 
-  type SaveTriggerKind = STKSpell | STKMagicalEffect
+  type SaveTriggerKind = STKSpell | STKMagicalEffect | STKNone
 
   type MonsterAttack = {
     name: str,
@@ -889,6 +889,13 @@ module creature {
     | NoReactivePayload
     | MeleeHitWithin5ft(DamageType)
 
+  type ConditionalGrantedCondition = {
+    condition: Condition,
+    whileCondition: Condition,
+    endsEarlyOnDamage: bool,
+    endsEarlyOnWakeActionWithinFeet: int,
+  }
+
   /// Timed effect on a creature (spell, ability, etc.) with duration in turns.
   /// Instant spells (Fireball, Healing Word) don't create an ActiveEffect —
   /// they just apply damage/healing/conditions directly.
@@ -897,6 +904,7 @@ module creature {
     spellId: str, turnsRemaining: int, expiresAt: ExpiryPhase, casterId: str,
     parentSpellId: str, parentCasterId: str,
     grantedConditions: Set[Condition],
+    conditionalGrantedConditions: Set[ConditionalGrantedCondition],
     grantedResistances: Set[DamageType], grantedVulnerabilities: Set[DamageType], grantedImmunities: Set[DamageType],
     consumeOnQualifiedHit: OneShotRiderTrigger,
     reactivePayload: ReactiveEffectPayload,
@@ -1009,9 +1017,25 @@ module creature {
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
       parentSpellId: "", parentCasterId: "",
       grantedConditions: grantedC,
+      conditionalGrantedConditions: Set(),
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
       consumeOnQualifiedHit: NoOneShotRider,
       reactivePayload: reactivePayload,
+    }))
+
+  pure def pAddEffectWithConditionalConditions(
+    effects: Set[ActiveEffect], spellId: str, durationTurns: int, expiresAt: ExpiryPhase, casterId: str,
+    grantedC: Set[Condition], conditionalGrantedC: Set[ConditionalGrantedCondition],
+    grantedR: Set[DamageType], grantedV: Set[DamageType], grantedI: Set[DamageType]
+  ): Set[ActiveEffect] =
+    effects.filter(e => e.spellId != spellId).union(Set({
+      spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
+      parentSpellId: "", parentCasterId: "",
+      grantedConditions: grantedC,
+      conditionalGrantedConditions: conditionalGrantedC,
+      grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
+      consumeOnQualifiedHit: NoOneShotRider,
+      reactivePayload: NoReactivePayload,
     }))
 
   /// Add an effect that depends on a battle-owned parent effect identity.
@@ -1024,6 +1048,7 @@ module creature {
       spellId: spellId, turnsRemaining: durationTurns, expiresAt: expiresAt, casterId: casterId,
       parentSpellId: parentSpellId, parentCasterId: parentCasterId,
       grantedConditions: grantedC,
+      conditionalGrantedConditions: Set(),
       grantedResistances: grantedR, grantedVulnerabilities: grantedV, grantedImmunities: grantedI,
       consumeOnQualifiedHit: NoOneShotRider,
       reactivePayload: NoReactivePayload,
@@ -1109,7 +1134,24 @@ module creature {
 
   /// Remove a condition, re-deriving implications.
   /// Prone is NOT removed when unconscious is removed — creature must stand up.
-  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState = if (s.dead) s else match c {
+  pure def pHasCondition(s: CreatureState, c: Condition): bool = match c {
+    | CBlinded => s.blinded
+    | CCharmed => s.charmed
+    | CDeafened => s.deafened
+    | CFrightened => s.frightened
+    | CGrappled => s.grappled
+    | CIncapacitated => s.incapacitatedSources.contains(ISDirect)
+    | CInvisible => s.invisible
+    | CParalyzed => s.paralyzed
+    | CPetrified => s.petrified
+    | CPoisoned => s.poisoned
+    | CProne => s.prone
+    | CRestrained => s.restrained
+    | CStunned => s.stunned
+    | CUnconscious => s.unconscious
+  }
+
+  pure def pRemoveConditionRaw(s: CreatureState, c: Condition): CreatureState = if (s.dead) s else match c {
     | CBlinded => s.with("blinded", false)
     | CCharmed => s.with("charmed", false)
     | CDeafened => s.with("deafened", false)
@@ -1134,6 +1176,111 @@ module creature {
         s.with("unconscious", false)
          .with("incapacitatedSources", s.incapacitatedSources.exclude(Set(ISUnconscious)))
   }
+
+  pure def pRemoveConditionalConditionIfAllowed(
+    s: CreatureState,
+    c: Condition,
+  ): CreatureState =
+    if (c == CUnconscious and (s.hp == 0 or s.dead)) s
+    else pRemoveConditionRaw(s, c)
+
+  pure def pEffectGrantsCondition(
+    s: CreatureState,
+    effect: ActiveEffect,
+    c: Condition,
+  ): bool =
+    effect.grantedConditions.contains(c)
+    or effect.conditionalGrantedConditions.exists(conditional =>
+      conditional.condition == c and pHasCondition(s, conditional.whileCondition)
+    )
+
+  pure def pConditionGrantedByActiveEffects(
+    s: CreatureState,
+    c: Condition,
+  ): bool =
+    s.activeEffects.exists(effect => pEffectGrantsCondition(s, effect, c))
+
+  pure def pRemoveConditionIfNoRemainingEffectGrant(
+    s: CreatureState,
+    c: Condition,
+  ): CreatureState =
+    if (pConditionGrantedByActiveEffects(s, c)) s
+    else pRemoveConditionalConditionIfAllowed(s, c)
+
+  pure def pRemoveUnsatisfiedConditionalConditions(
+    s: CreatureState
+  ): CreatureState =
+    s.activeEffects.fold(s, (acc, effect) =>
+      effect.conditionalGrantedConditions.fold(acc, (acc2, conditional) =>
+        if (
+          pHasCondition(acc2, conditional.condition)
+          and not(pHasCondition(acc2, conditional.whileCondition))
+        ) pRemoveConditionIfNoRemainingEffectGrant(acc2, conditional.condition)
+        else acc2
+      )
+    )
+
+  pure def pRemoveCondition(s: CreatureState, c: Condition): CreatureState =
+    pRemoveUnsatisfiedConditionalConditions(pRemoveConditionRaw(s, c))
+
+  pure def pWakeConditionalConditions(
+    s: CreatureState,
+    maxDistanceFeet: int,
+  ): CreatureState =
+    if (s.hp == 0 or s.dead) s
+    else {
+      val nextEffects = s.activeEffects.map(effect =>
+        effect.with(
+          "conditionalGrantedConditions",
+          effect.conditionalGrantedConditions.filter(conditional =>
+            not(
+              conditional.endsEarlyOnWakeActionWithinFeet > 0
+              and conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet
+            )
+          )
+        )
+      )
+      val ended = s.activeEffects.map(effect =>
+        effect.conditionalGrantedConditions.filter(conditional =>
+          conditional.endsEarlyOnWakeActionWithinFeet > 0
+          and conditional.endsEarlyOnWakeActionWithinFeet >= maxDistanceFeet
+        )
+      ).flatten()
+      pRemoveUnsatisfiedConditionalConditions(
+        ended.fold(
+          s.with("activeEffects", nextEffects),
+          (acc, conditional) =>
+            pRemoveConditionIfNoRemainingEffectGrant(acc, conditional.condition)
+        )
+      )
+    }
+
+  pure def pClearConditionalConditionsEndedByDamage(
+    s: CreatureState
+  ): CreatureState =
+    if (s.hp == 0 or s.dead) s
+    else {
+      val nextEffects = s.activeEffects.map(effect =>
+        effect.with(
+          "conditionalGrantedConditions",
+          effect.conditionalGrantedConditions.filter(conditional =>
+            not(conditional.endsEarlyOnDamage)
+          )
+        )
+      )
+      val ended = s.activeEffects.map(effect =>
+        effect.conditionalGrantedConditions.filter(conditional =>
+          conditional.endsEarlyOnDamage
+        )
+      ).flatten()
+      pRemoveUnsatisfiedConditionalConditions(
+        ended.fold(
+          s.with("activeEffects", nextEffects),
+          (acc, conditional) =>
+            pRemoveConditionIfNoRemainingEffectGrant(acc, conditional.condition)
+        )
+      )
+    }
 
   /// Increment exhaustion. Level 6 = death. If dead or exhaustionImmune, no effect.
   pure def pAddExhaustion(s: CreatureState, levels: int, exhaustionImmune: bool): CreatureState = {
@@ -1296,7 +1443,7 @@ module creature {
                 else pApplyCondition(s2, CUnconscious, Set())
               }
             }
-          } else s1.with("hp", newHp)
+          } else pClearConditionalConditionsEndedByDamage(s1.with("hp", newHp))
         }
       }
     }

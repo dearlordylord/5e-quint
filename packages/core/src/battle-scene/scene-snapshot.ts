@@ -62,6 +62,7 @@ export type PhaseSnapshot =
       remainingCount: number;
       saveDC: number;
     }
+  | { type: "traversalResolving"; remainingCount: number }
   | { type: "movement" }
   | { type: "legendaryAction" };
 
@@ -171,6 +172,12 @@ function derivePhase(ctx: BattleContext): PhaseSnapshot {
       spellName: "AoE",
       remainingCount: ctx.aoeCtx.remaining.size,
       saveDC: ctx.aoeCtx.saveDC,
+    };
+  }
+  if (ctx.traversalCtx) {
+    return {
+      type: "traversalResolving",
+      remainingCount: ctx.traversalCtx.remaining.length,
     };
   }
   if (ctx.movementCtx) return { type: "movement" };

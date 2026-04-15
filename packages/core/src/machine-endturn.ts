@@ -19,7 +19,6 @@ import type {
   CreatureId,
   DamageType,
   ExpiryPhase,
-  SpellId,
 } from "#/types.ts";
 import { deathSaveCount, hp, tempHp } from "#/types.ts";
 
@@ -27,7 +26,7 @@ import { deathSaveCount, hp, tempHp } from "#/types.ts";
 
 export function addAe(
   aes: ReadonlyArray<ActiveEffect>,
-  spellId: SpellId,
+  spellId: string,
   turnsRemaining: number,
   expiresAt: ExpiryPhase,
   casterId: CreatureId,
@@ -43,7 +42,7 @@ export function addAe(
 
 export function removeAe(
   aes: ReadonlyArray<ActiveEffect>,
-  spellId: SpellId,
+  spellId: string,
 ): ReadonlyArray<ActiveEffect> {
   return aes.filter((ae) => ae.spellId !== spellId);
 }
@@ -79,7 +78,7 @@ function deriveEndTurnEffects(
   runtimeResolutions: ReadonlyArray<TurnHookResolution> | undefined,
   petrified: boolean,
 ): ReadonlyArray<{
-  readonly spellId: SpellId;
+  readonly spellId: string;
   readonly saveSucceeded: boolean;
   readonly conditionsToRemove: ReadonlyArray<Condition>;
   readonly damageAmount: number;
@@ -89,11 +88,11 @@ function deriveEndTurnEffects(
   readonly vulnerabilities: ReadonlySet<DamageType>;
   readonly immunities: ReadonlySet<DamageType>;
 }> {
-  const overrides = new Map(
+  const overrides = new Map<string, TurnHookResolution>(
     (runtimeResolutions ?? []).map((effect) => [effect.spellId, effect]),
   );
   const damageMods = aggregateDamageModifiers(aes, petrified);
-  const matchedSpellIds = new Set<SpellId>();
+  const matchedSpellIds = new Set<string>();
   const fromEffects = aes.flatMap((effect) => {
     if (effect.expiryOwnerId != null && effect.expiryOwnerId !== selfId)
       return [];
@@ -181,7 +180,7 @@ export function computeEndTurn(
   let deathFailures = ctx.deathSaves.failures as number;
   const deathSuccesses = ctx.deathSaves.successes;
 
-  const removeIds = new Set<SpellId>();
+  const removeIds = new Set<string>();
   const effects = deriveEndTurnEffects(
     selfId,
     ctx.activeEffects,

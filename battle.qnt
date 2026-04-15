@@ -258,6 +258,38 @@ module battle {
     processed: Set[CreatureId],      // already offered OA
   }
 
+  type TraversalActionCost = | TACostAction | TACostBonusAction
+  type TraversalResourceKind = | TRNoResource | TRRecharge | TRDaily
+
+  type TraversalSaveCtx = {
+    saveDC: int,
+    damageOnFail: int,
+    halfOnSuccess: bool,
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    saveAbility: Ability,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition,
+  }
+
+  // Traversal continuation context for entered-creature movement effects.
+  // Geometry stays caller-owned; battle semantics live here.
+  type TraversalEnteredCreatureCtx = {
+    targetId: CreatureId,
+    saveRoll: int,
+    saveRollB: int,
+  }
+
+  type TraversalMovementCtx = {
+    mover: CreatureId,
+    abilityId: str,
+    actionCost: TraversalActionCost,
+    resourceKind: TraversalResourceKind,
+    save: TraversalSaveCtx,
+    remaining: List[TraversalEnteredCreatureCtx],
+  }
+
   type AttackHitCtx = {
     attacker: CreatureId,
     target: CreatureId,
@@ -344,6 +376,36 @@ module battle {
     | PCEDone                     // placeholder for future spell types
 
   // Context for a save-based spell targeting one creature.
+  type SaveFailureConditionDuration = {
+    effectId: str,
+    turnsRemaining: int,
+    expiresAt: ExpiryPhase,
+    expiryOwnerId: CreatureId,
+  }
+
+  type SaveFailureBandCondition = {
+    minimumMargin: int,
+    condition: Condition,
+    whileCondition: Condition,
+    endsEarlyOnDamage: bool,
+    endsEarlyOnWakeActionWithinFeet: int,
+  }
+
+  pure val NO_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
+    effectId: "",
+    turnsRemaining: 0,
+    expiresAt: AtEndOfTurn,
+    expiryOwnerId: "",
+  }
+
+  pure val NO_SAVE_FAILURE_BAND_CONDITION: SaveFailureBandCondition = {
+    minimumMargin: 0,
+    condition: CBlinded,
+    whileCondition: CBlinded,
+    endsEarlyOnDamage: false,
+    endsEarlyOnWakeActionWithinFeet: 0,
+  }
+
   type SaveSpellCtx = {
     caster: CreatureId,
     target: CreatureId,
@@ -357,6 +419,8 @@ module battle {
     applyCondition: bool,       // true if spell actually applies a condition on fail
     saveAbility: Ability,       // which ability the save targets (Dex, Con, etc.)
     saveTriggerKind: SaveTriggerKind,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition,
   }
 
   // Context for a failed save (Legendary Resistance / Countercharm interrupt)
@@ -369,6 +433,9 @@ module battle {
     conditionOnFail: Condition,
     applyCondition: bool,
     saveSucceeded: bool,       // mutable — LR can flip this to true
+    failedMargin: int,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition,
   }
 
   // Context for an AoE spell affecting multiple targets (R32).
@@ -421,6 +488,7 @@ module battle {
     | ADRActiveTurn
     | ADRResolvingAoE(AoESpellCtx)
     | ADRResolvingMovement(MovementCtx)
+    | ADRResolvingTraversal(TraversalMovementCtx)
     | ADRAwaitingLegendaryAction(LAWindowCtx)
     | ADRAwaitingReadiedAction(ReadyWindowCtx)
 
@@ -445,11 +513,17 @@ module battle {
     | PISpellCast(SpellCastCtx)
     | PISaveFailed(SaveFailedCtx)
     | PISaveFailedAoE(AoESaveFailedCtx)  // save failed during AoE, with continuation
+    | PISaveFailedTraversal(TraversalSaveFailedCtx)  // save failed during traversal, with continuation
     | PIAfterDamage(AfterDamageCtx)      // after damage applied (R10.4)
 
   type AoESaveFailedCtx = {
     sf: SaveFailedCtx,
     aoe: AoESpellCtx,
+  }
+
+  type TraversalSaveFailedCtx = {
+    sf: SaveFailedCtx,
+    traversal: TraversalMovementCtx,
   }
 
   type AwaitCtx = {
@@ -484,6 +558,7 @@ module battle {
     // Note: AoE with zero remaining targets is valid per RAW ("Each creature in the area"
     // applies to an empty set — the spell still occurs, it just affects no creatures).
     | BPResolvingMovement(MovementCtx)   // processing OAs one by one (R5, R22)
+    | BPResolvingTraversal(TraversalMovementCtx)  // processing traversal-entered creatures one by one
     | BPAwaitingLegendaryAction(LAWindowCtx)  // LA window at end of turn (R7)
     | BPAwaitingLegendaryAttack(SelectedLegendaryActionCtx)  // named LA selected, waiting for attack follow-up
     | BPAwaitingReadiedAction(ReadyWindowCtx)  // readied action window after LA (R-ready)
@@ -519,6 +594,11 @@ module battle {
     cs: CreatureId -> Combatant, id: CreatureId, s: SpellSlotState
   ): (CreatureId -> Combatant) =
     cs.set(id, cs.get(id).with("slots", s))
+
+  pure def setMonsterResources(
+    cs: CreatureId -> Combatant, id: CreatureId, mrs: MonsterResourceState
+  ): (CreatureId -> Combatant) =
+    cs.set(id, cs.get(id).with("monsterResources", mrs))
 
   /// Expend a spell slot and mark "slot expended this turn" (SRD 5.2.1).
   pure def expendSlot(
@@ -797,7 +877,14 @@ module battle {
     creature: CreatureState, effects: Set[ActiveEffect]
   ): CreatureState =
     effects.fold(creature, (acc, effect) =>
-      effect.grantedConditions.fold(acc, (acc2, condition) => pRemoveCondition(acc2, condition))
+      effect.conditionalGrantedConditions.fold(
+        effect.grantedConditions.fold(
+          acc,
+          (acc2, condition) => pRemoveConditionIfNoRemainingEffectGrant(acc2, condition)
+        ),
+        (acc2, conditional) =>
+          pRemoveConditionIfNoRemainingEffectGrant(acc2, conditional.condition)
+      )
     )
 
   pure def removeEffectFromCreature(creature: CreatureState, spellId: str): CreatureState = {
@@ -1231,12 +1318,18 @@ module battle {
   pure def mkSaveFailedCtx(
     casterId: CreatureId, targetId: CreatureId,
     dmg: int, half: bool, dt: DamageType,
-    cond: Condition, applyCond: bool
+    cond: Condition, applyCond: bool,
+    failedMargin: int,
+    conditionDurationOnFail: SaveFailureConditionDuration,
+    failureBandCondition: SaveFailureBandCondition
   ): SaveFailedCtx = {
     caster: casterId, target: targetId,
     damageOnFail: dmg, halfOnSuccess: half, damageType: dt,
     conditionOnFail: cond, applyCondition: applyCond,
     saveSucceeded: false,
+    failedMargin: failedMargin,
+    conditionDurationOnFail: conditionDurationOnFail,
+    failureBandCondition: failureBandCondition,
   }
 
   pure def isPhysicalDamageType(dt: DamageType): bool =
@@ -1316,9 +1409,71 @@ module battle {
       | ADRActiveTurn => BPActiveTurn
       | ADRResolvingAoE(aoe) => BPResolvingAoE(aoe)
       | ADRResolvingMovement(mv) => BPResolvingMovement(mv)
+      | ADRResolvingTraversal(traversal) => BPResolvingTraversal(traversal)
       | ADRAwaitingLegendaryAction(la) => BPAwaitingLegendaryAction(la)
       | ADRAwaitingReadiedAction(r) => BPAwaitingReadiedAction(r)
     }
+
+  pure def saveFailedReturnTo(interrupt: PendingInterrupt): AfterDamageReturn =
+    match interrupt {
+      | PISaveFailed(_) => ADRActiveTurn
+      | PISaveFailedAoE(combo) =>
+        if (combo.aoe.remaining.size() > 0) ADRResolvingAoE(combo.aoe) else ADRActiveTurn
+      | PISaveFailedTraversal(combo) =>
+        if (combo.traversal.remaining.length() > 0) ADRResolvingTraversal(combo.traversal) else ADRActiveTurn
+      | _ => ADRActiveTurn
+    }
+
+  pure def pSpendTraversalQuota(
+    turn: TurnState,
+    creature: CreatureState,
+    actionCost: TraversalActionCost,
+  ): TurnState =
+    match actionCost {
+      | TACostAction =>
+        if (turn.actionsRemaining <= 0 or isIncapacitated(creature)) turn
+        else turn.with("actionsRemaining", turn.actionsRemaining - 1)
+      | TACostBonusAction => pUseBonusAction(turn, creature)
+    }
+
+  pure def pSpendTraversalResource(
+    monsterResources: MonsterResourceState,
+    abilityId: str,
+    resourceKind: TraversalResourceKind,
+  ): MonsterResourceState =
+    match resourceKind {
+      | TRNoResource => monsterResources
+      | TRRecharge => pUseRechargeAbility(monsterResources, abilityId)
+      | TRDaily => pUseDailyAbility(monsterResources, abilityId)
+    }
+
+  pure def pStartTraversalMovement(
+    cs: CreatureId -> Combatant,
+    moverId: CreatureId,
+    traversal: TraversalMovementCtx,
+    movementSpent: int,
+  ): { creatures: CreatureId -> Combatant, phase: BattlePhase } = {
+    val mover = cs.get(moverId)
+    val dragCost = if (mover.grapplingTarget != "" and not(mover.grappledTargetTwoSizesSmaller)) 2 else 1
+    val spentTurn = pSpendTraversalQuota(
+      pUseMovement(mover.turn, movementSpent, dragCost),
+      mover.creature,
+      traversal.actionCost,
+    )
+    val cs1 = setTurn(cs, moverId, spentTurn)
+    val updatedCreatures =
+      if (mover.kind == Monster)
+        setMonsterResources(
+          cs1,
+          moverId,
+          pSpendTraversalResource(mover.monsterResources, traversal.abilityId, traversal.resourceKind),
+        )
+      else cs1
+    {
+      creatures: updatedCreatures,
+      phase: if (traversal.remaining.length() == 0) BPActiveTurn else BPResolvingTraversal(traversal),
+    }
+  }
 
   // Frame condition for battle vars not changed by this action.
   // If you use explicit assignments instead of keepBattle, include ALL of these.
@@ -2160,6 +2315,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
+        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -2216,12 +2373,14 @@ module battle {
     } else {
       // Save failed — Evasion on DEX save fail: half damage
       val evDmgOnFail = if (isDex) pApplyEvasion(save.damageOnFail, false, tgt.hasEvasion, tgtIncap) else save.damageOnFail
+      val failedMargin = save.saveDC - (effectiveRoll + tgt.saveMiscBonus)
       // Check for Legendary Resistance
       val elig = eligibleForLR(cs, save.target)
       val failCtx = mkSaveFailedCtx(
         save.caster, save.target,
         evDmgOnFail, save.halfOnSuccess, save.damageType,
-        save.conditionOnFail, save.applyCondition
+        save.conditionOnFail, save.applyCondition,
+        failedMargin, save.conditionDurationOnFail, save.failureBandCondition
       )
       if (elig.size() > 0) {
         { creatures: cs, phase: BPAwaitingReaction(mkAwait(PISaveFailed(failCtx), TSaveFailed, elig)) }
@@ -2246,17 +2405,93 @@ module battle {
         { creatures: cs, phase: returnToPhase(returnTo) }
       }
     } else {
-      // Full fail: condition first, then damage (condition applied before damage so
-      // after-damage reactions see the updated state).
-      val cs1 = if (ctx.applyCondition) {
-        val t = cs.get(ctx.target)
-        normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
-      } else cs
-      if (ctx.damageOnFail > 0) {
-        applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
-          ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+      val hasDuration = ctx.applyCondition and ctx.conditionDurationOnFail.effectId != ""
+      val conditionalGrantedConditions =
+        if (
+          ctx.failureBandCondition.minimumMargin > 0
+          and ctx.failedMargin >= ctx.failureBandCondition.minimumMargin
+        ) Set({
+          condition: ctx.failureBandCondition.condition,
+          whileCondition: ctx.failureBandCondition.whileCondition,
+          endsEarlyOnDamage: ctx.failureBandCondition.endsEarlyOnDamage,
+          endsEarlyOnWakeActionWithinFeet: ctx.failureBandCondition.endsEarlyOnWakeActionWithinFeet,
+        })
+        else Set()
+      if (hasDuration) {
+        if (ctx.damageOnFail > 0) {
+          val damaged = applyDamageWithAfterReactions(cs, ctx.target, ctx.caster,
+            ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+          val currentTarget = damaged.creatures.get(ctx.target)
+          if (currentTarget.creature.dead) {
+            { creatures: damaged.creatures, phase: damaged.phase }
+          } else {
+            val nextEffects = pAddEffectWithConditionalConditions(
+              currentTarget.creature.activeEffects,
+              ctx.conditionDurationOnFail.effectId,
+              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.expiresAt,
+              ctx.caster,
+              Set(ctx.conditionOnFail),
+              conditionalGrantedConditions,
+              Set(),
+              Set(),
+              Set(),
+            )
+            val conditioned = conditionalGrantedConditions.fold(
+              pApplyCondition(
+                currentTarget.creature.with("activeEffects", nextEffects),
+                ctx.conditionOnFail,
+                Set(),
+              ),
+              (acc, conditional) => pApplyCondition(acc, conditional.condition, Set())
+            )
+            {
+              creatures: normalizeBattleGrapples(setCreature(damaged.creatures, ctx.target, conditioned)),
+              phase: damaged.phase,
+            }
+          }
+        } else {
+          val currentTarget = cs.get(ctx.target)
+          if (currentTarget.creature.dead) {
+            { creatures: cs, phase: returnToPhase(returnTo) }
+          } else {
+            val nextEffects = pAddEffectWithConditionalConditions(
+              currentTarget.creature.activeEffects,
+              ctx.conditionDurationOnFail.effectId,
+              ctx.conditionDurationOnFail.turnsRemaining,
+              ctx.conditionDurationOnFail.expiresAt,
+              ctx.caster,
+              Set(ctx.conditionOnFail),
+              conditionalGrantedConditions,
+              Set(),
+              Set(),
+              Set(),
+            )
+            val conditioned = conditionalGrantedConditions.fold(
+              pApplyCondition(
+                currentTarget.creature.with("activeEffects", nextEffects),
+                ctx.conditionOnFail,
+                Set(),
+              ),
+              (acc, conditional) => pApplyCondition(acc, conditional.condition, Set())
+            )
+            {
+              creatures: normalizeBattleGrapples(setCreature(cs, ctx.target, conditioned)),
+              phase: returnToPhase(returnTo),
+            }
+          }
+        }
       } else {
-        { creatures: cs1, phase: returnToPhase(returnTo) }
+        val cs1 = if (ctx.applyCondition) {
+          val t = cs.get(ctx.target)
+          normalizeBattleGrapples(setCreature(cs, ctx.target, pApplyCondition(t.creature, ctx.conditionOnFail, Set())))
+        } else cs
+        if (ctx.damageOnFail > 0) {
+          applyDamageWithAfterReactions(cs1, ctx.target, ctx.caster,
+            ctx.damageOnFail, ctx.damageType, Set(), false, returnTo, false)
+        } else {
+          { creatures: cs1, phase: returnToPhase(returnTo) }
+        }
       }
     }
   }
@@ -2525,10 +2760,11 @@ module battle {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
           | PISaveFailed(sf) =>
+            val returnTo = saveFailedReturnTo(ctx.interrupt)
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
               // All offered — apply effects (save damage can trigger after-damage reactions)
-              val result = applyFailEffects(bCreatures, sf, ADRActiveTurn)
+              val result = applyFailEffects(bCreatures, sf, returnTo)
               all {
                 bCreatures' = result.creatures,
                 bPhase' = result.phase,
@@ -2544,7 +2780,7 @@ module battle {
                   val cs1 = spendLR(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
                   // Apply as if saved (may still get half damage)
-                  val result = applyFailEffects(cs1, newSf, ADRActiveTurn)
+                  val result = applyFailEffects(cs1, newSf, returnTo)
                   all {
                     bCreatures' = result.creatures,
                     bPhase' = result.phase,
@@ -2560,11 +2796,10 @@ module battle {
             }
           | PISaveFailedAoE(combo) =>
             val sf = combo.sf
-            val aoe = combo.aoe
-            val aoeReturn = if (aoe.remaining.size() > 0) ADRResolvingAoE(aoe) else ADRActiveTurn
+            val returnTo = saveFailedReturnTo(ctx.interrupt)
             val remaining = ctx.eligible.exclude(ctx.offered)
             if (remaining.size() == 0) {
-              val result = applyFailEffects(bCreatures, sf, aoeReturn)
+              val result = applyFailEffects(bCreatures, sf, returnTo)
               all {
                 bCreatures' = result.creatures,
                 bPhase' = result.phase,
@@ -2578,7 +2813,40 @@ module battle {
                 | RLegendaryResistance => {
                   val cs1 = spendLR(bCreatures, reactorId)
                   val newSf = sf.with("saveSucceeded", true)
-                  val result = applyFailEffects(cs1, newSf, aoeReturn)
+                  val result = applyFailEffects(cs1, newSf, returnTo)
+                  all {
+                    bCreatures' = result.creatures,
+                    bPhase' = result.phase,
+                    keepBattle,
+                  }
+                }
+                | _ => all {
+                    bCreatures' = bCreatures,
+                    bPhase' = BPAwaitingReaction(ctx.with("offered", newOffered)),
+                    keepBattle,
+                  }
+              }
+            }
+          | PISaveFailedTraversal(combo) =>
+            val sf = combo.sf
+            val returnTo = saveFailedReturnTo(ctx.interrupt)
+            val remaining = ctx.eligible.exclude(ctx.offered)
+            if (remaining.size() == 0) {
+              val result = applyFailEffects(bCreatures, sf, returnTo)
+              all {
+                bCreatures' = result.creatures,
+                bPhase' = result.phase,
+                keepBattle,
+              }
+            } else {
+              nondet reactorId = remaining.oneOf()
+              nondet decision = Set(RPass, RLegendaryResistance).oneOf()
+              val newOffered = ctx.offered.union(Set(reactorId))
+              match decision {
+                | RLegendaryResistance => {
+                  val cs1 = spendLR(bCreatures, reactorId)
+                  val newSf = sf.with("saveSucceeded", true)
+                  val result = applyFailEffects(cs1, newSf, returnTo)
                   all {
                     bCreatures' = result.creatures,
                     bPhase' = result.phase,
@@ -2818,7 +3086,10 @@ module battle {
             val sfCtx = mkSaveFailedCtx(
               aoe.caster, targetId,
               evDmgOnFail, aoe.halfOnSuccess, aoe.damageType,
-              aoe.conditionOnFail, aoe.applyCondition
+              aoe.conditionOnFail, aoe.applyCondition,
+              aoe.saveDC - (effectiveRoll + tgt.saveMiscBonus),
+              NO_SAVE_FAILURE_CONDITION_DURATION,
+              NO_SAVE_FAILURE_BAND_CONDITION
             )
             val elig = eligibleForLR(bCreatures, targetId)
             if (elig.size() > 0) {
@@ -2956,6 +3227,103 @@ module battle {
           bHelpTargets' = newHelpTargets,
         }
         }
+        }
+      | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
+    }
+  }
+
+  /// Traversal continuation: resolve the next entered-creature save and apply
+  /// battle-owned damage/condition semantics. Geometry remains caller-owned.
+  action bResolveTraversalStep = {
+    match bPhase {
+      | BPResolvingTraversal(traversal) =>
+        if (traversal.remaining.length() == 0) {
+          all { bCreatures' = bCreatures, bPhase' = BPActiveTurn, keepBattle }
+        } else {
+          val entered = traversal.remaining[0]
+          val remaining = traversal.remaining.slice(1, traversal.remaining.length())
+          val updatedTraversal = traversal.with("remaining", remaining)
+          val targetId = entered.targetId
+          val tgt = bCreatures.get(targetId)
+          val tgtIncap = isIncapacitated(tgt.creature)
+          val isDex = traversal.save.saveAbility == Dex
+          val effectiveRoll = effectiveSaveRoll(
+            entered.saveRoll,
+            entered.saveRollB,
+            tgt.saveAdvantageContexts.contains(STKNone),
+          )
+          val saved = (effectiveRoll + tgt.saveMiscBonus) >= traversal.save.saveDC
+          val traversalReturn =
+            if (remaining.length() > 0) ADRResolvingTraversal(updatedTraversal) else ADRActiveTurn
+          if (saved) {
+            if (traversal.save.halfOnSuccess and traversal.save.damageOnFail > 0) {
+              val halfDmg = traversal.save.damageOnFail / 2
+              val evDmg =
+                if (isDex)
+                  pApplyEvasion(halfDmg, true, tgt.hasEvasion, tgtIncap)
+                else halfDmg
+              if (evDmg == 0) {
+                all { bCreatures' = bCreatures, bPhase' = returnToPhase(traversalReturn), keepBattle }
+              } else {
+                val result = applyDamageWithAfterReactions(
+                  bCreatures,
+                  targetId,
+                  traversal.mover,
+                  evDmg,
+                  traversal.save.damageType,
+                  Set(),
+                  false,
+                  traversalReturn,
+                  false,
+                )
+                all {
+                  bCreatures' = result.creatures,
+                  bPhase' = result.phase,
+                  keepBattle,
+                }
+              }
+            } else {
+              all { bCreatures' = bCreatures, bPhase' = returnToPhase(traversalReturn), keepBattle }
+            }
+          } else {
+            val evDmgOnFail =
+              if (isDex)
+                pApplyEvasion(traversal.save.damageOnFail, false, tgt.hasEvasion, tgtIncap)
+              else traversal.save.damageOnFail
+            val sfCtx = mkSaveFailedCtx(
+              traversal.mover,
+              targetId,
+              evDmgOnFail,
+              traversal.save.halfOnSuccess,
+              traversal.save.damageType,
+              traversal.save.conditionOnFail,
+              traversal.save.applyCondition,
+              traversal.save.saveDC - (effectiveRoll + tgt.saveMiscBonus),
+              traversal.save.conditionDurationOnFail,
+              traversal.save.failureBandCondition,
+            )
+            val elig = eligibleForLR(bCreatures, targetId)
+            if (elig.size() > 0) {
+              all {
+                bCreatures' = bCreatures,
+                bPhase' = BPAwaitingReaction(
+                  mkAwait(
+                    PISaveFailedTraversal({ sf: sfCtx, traversal: updatedTraversal }),
+                    TSaveFailed,
+                    elig,
+                  ),
+                ),
+                keepBattle,
+              }
+            } else {
+              val result = applyFailEffects(bCreatures, sfCtx, traversalReturn)
+              all {
+                bCreatures' = result.creatures,
+                bPhase' = result.phase,
+                keepBattle,
+              }
+            }
+          }
         }
       | _ => all { bCreatures' = bCreatures, bPhase' = bPhase, keepBattle }
     }
@@ -3213,6 +3581,8 @@ module battle {
             conditionOnFail: releaser.readiedSpellParams.conditionOnFail, applyCondition: releaser.readiedSpellParams.applyCondition,
             saveAbility: releaser.readiedSpellParams.saveAbility,
             saveTriggerKind: STKSpell,
+            conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+            failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
           }
           val spellCtx: SpellCastCtx = {
             caster: releaser.readiedSpellParams.caster,
@@ -3846,6 +4216,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
+        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -3984,20 +4356,21 @@ module battle {
           bDodge, bHide, bBonusHide, bSearch, bGrapple, bReleaseGrapple, bEscapeGrapple, bActionSurge, bEnterRage, bDeclareReckless, bReady, bEndTurn, bAddCreature, bRemoveCreature,
         }
       }
-    | BPAwaitingReaction(ctx) => match ctx.interrupt {
-        | PIAttackHit(_) => any { bResolveHitReaction, }
-        | PIAttackDamage(_) => any { bResolveDmgReaction, }
-        | PIAfterDamage(_) => any {
+      | BPAwaitingReaction(ctx) => match ctx.interrupt {
+          | PIAttackHit(_) => any { bResolveHitReaction, }
+          | PIAttackDamage(_) => any { bResolveDmgReaction, }
+          | PIAfterDamage(_) => any {
             bAfterDamageDecline, bAfterDamageSpellReaction, bAfterDamageRetaliation, bAfterDamageReactiveEffect,
           }
-        | PISpellCast(_) => any { bResolveCounterspell, }
-        | _ => any { bResolveSaveFailedReaction, }
-      }
-    | BPResolvingAoE(_) => any { bResolveAoETarget, }
-    | BPResolvingMovement(_) => any { bMovementOADecline, bMovementOAAttack }
-    | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bUseLegendaryAction }
-    | BPAwaitingLegendaryAttack(_) => any { bLegendaryPass, bUseLegendaryAction, bLegendaryAttack }
-    | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, bReadySpellRelease, }
+          | PISpellCast(_) => any { bResolveCounterspell, }
+          | _ => any { bResolveSaveFailedReaction, }
+        }
+      | BPResolvingAoE(_) => any { bResolveAoETarget, }
+      | BPResolvingMovement(_) => any { bMovementOADecline, bMovementOAAttack }
+      | BPResolvingTraversal(_) => any { bResolveTraversalStep, }
+      | BPAwaitingLegendaryAction(_) => any { bLegendaryPass, bUseLegendaryAction }
+      | BPAwaitingLegendaryAttack(_) => any { bLegendaryPass, bUseLegendaryAction, bLegendaryAttack }
+      | BPAwaitingReadiedAction(_) => any { bReadyPass, bReadyRelease, bReadySpellRelease, }
   }
 
   val allHpBounded = bCreatures.keys().forall(id =>

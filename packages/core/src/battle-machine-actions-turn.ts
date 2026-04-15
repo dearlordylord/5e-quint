@@ -12,6 +12,7 @@ import {
   freshCreature,
   isIncapacitated,
   startConcentration,
+  wakeEffectTarget,
 } from "#/battle-machine-creature.ts";
 import {
   activeId,
@@ -71,8 +72,15 @@ import {
 import {
   getMonsterStatBlockByStateId,
   statBlockLegendaryAction,
+  statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
-import { resourceCount, spellId as mkSpellId, type SpellId } from "#/types.ts";
+import { SIZE_ORDER } from "#/srd-constants.ts";
+import {
+  resourceCount,
+  difficultyClass,
+  spellId as mkSpellId,
+  type SpellId,
+} from "#/types.ts";
 
 // TODO style: combinators
 function readyEligible(
@@ -89,6 +97,16 @@ function readyEligible(
       result.add(id);
   }
   return result;
+}
+
+function squaresBetween(
+  a: BattleCreatureState,
+  b: BattleCreatureState,
+): number {
+  return Math.max(
+    Math.abs(a.battlePosition.row - b.battlePosition.row),
+    Math.abs(a.battlePosition.col - b.battlePosition.col),
+  );
 }
 
 function canonicalPreparedSpellIds(
@@ -742,6 +760,142 @@ export function battleUseDailyAbility({
       monsterId: e.monsterId,
       abilityId: e.abilityId,
     },
+  };
+}
+
+function sizeAtMost(
+  targetSize: BattleCreatureState["creatureSize"],
+  maxSize: BattleCreatureState["creatureSize"],
+): boolean {
+  return SIZE_ORDER.indexOf(targetSize) <= SIZE_ORDER.indexOf(maxSize);
+}
+
+export function battleMonsterSaveEffect({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_MONSTER_SAVE_EFFECT">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const monsterId = activeId(c);
+  const monster = c.creatures.get(monsterId);
+  const target = c.creatures.get(e.targetId);
+  const statBlock = getMonsterStatBlockByStateId(monster?.monsterStatBlockId);
+  const ability =
+    statBlock == null
+      ? null
+      : statBlockSaveEffectAction(statBlock, e.abilityId);
+  if (
+    monster == null ||
+    target == null ||
+    monster.dead ||
+    target.dead ||
+    isIncapacitated(monster) ||
+    monster.actionsRemaining <= 0 ||
+    ability == null ||
+    e.actorCanSeeTarget !== true ||
+    squaresBetween(monster, target) * 5 > ability.save.rangeFeet
+  ) {
+    return {};
+  }
+  const cs = setCreature(
+    c.creatures,
+    monsterId,
+    spendAction(monster, "utilize"),
+  );
+  const conditionOnFail =
+    "conditionOnFail" in ability.save
+      ? ability.save.conditionOnFail
+      : undefined;
+  const appliesCondition =
+    conditionOnFail != null &&
+    (conditionOnFail.targetSizeAtMost == null ||
+      sizeAtMost(target.creatureSize, conditionOnFail.targetSizeAtMost));
+  const timedConditionOnFail =
+    appliesCondition && conditionOnFail?.duration != null
+      ? conditionOnFail
+      : null;
+  const failureBand =
+    "failureBand" in ability.save ? ability.save.failureBand : undefined;
+  return resolveSave(
+    cs,
+    {
+      caster: monsterId,
+      target: e.targetId,
+      saveDC: difficultyClass(ability.save.dc),
+      saveRoll: e.saveRoll,
+      ...(e.saveRollB != null ? { saveRollB: e.saveRollB } : {}),
+      damageOnFail: ability.save.damageOnFail,
+      halfOnSuccess: false,
+      damageType: ability.save.damageType,
+      ...(appliesCondition
+        ? { conditionOnFail: conditionOnFail.condition }
+        : {}),
+      applyCondition: appliesCondition,
+      saveAbility: ability.save.ability,
+      saveTriggerKind: "none",
+      ...(timedConditionOnFail != null
+        ? {
+            conditionDurationOnFail: {
+              effectId: `monster:${monsterId}:${ability.id}`,
+              turnsRemaining: timedConditionOnFail.duration.rounds,
+              expiresAt: timedConditionOnFail.duration.expiresAt,
+              expiryOwnerId:
+                timedConditionOnFail.duration.expiryOwner === "target"
+                  ? e.targetId
+                  : monsterId,
+            },
+          }
+        : {}),
+      ...(timedConditionOnFail != null && failureBand != null
+        ? {
+            failureBandCondition: {
+              minimumMargin: failureBand.minimumMargin,
+              condition: failureBand.condition,
+              whileCondition: failureBand.whileCondition,
+              ...(failureBand.endsEarlyOnDamage
+                ? { endsEarlyOnDamage: true }
+                : {}),
+              ...(failureBand.endsEarlyOnWakeActionWithinFeet != null
+                ? {
+                    endsEarlyOnWakeActionWithinFeet:
+                      failureBand.endsEarlyOnWakeActionWithinFeet,
+                  }
+                : {}),
+            },
+          }
+        : {}),
+    },
+    ADR_ACTIVE_TURN,
+  );
+}
+
+export function battleWakeEffect({
+  context: c,
+  event: e,
+}: BattleActionArgs<"BATTLE_WAKE_EFFECT">): Partial<BattleContext> {
+  if (!c.turnStarted) return {};
+  const actorId = activeId(c);
+  const actor = c.creatures.get(actorId);
+  const target = c.creatures.get(e.targetId);
+  if (
+    actor == null ||
+    target == null ||
+    actor.dead ||
+    target.dead ||
+    isIncapacitated(actor) ||
+    actor.actionsRemaining <= 0 ||
+    actorId === e.targetId ||
+    squaresBetween(actor, target) > 1
+  ) {
+    return {};
+  }
+  const woken = wakeEffectTarget(target, 5);
+  if (woken === target) return {};
+  return {
+    creatures: setCreature(
+      setCreature(c.creatures, actorId, spendAction(actor, "utilize")),
+      e.targetId,
+      woken,
+    ),
   };
 }
 

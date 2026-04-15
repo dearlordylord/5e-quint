@@ -14,7 +14,9 @@ import {
 } from "#/monster-catalog-registry.ts";
 import {
   type MonsterAttack,
+  type MonsterSaveEffectAction,
   type MonsterSaveTriggerKind,
+  type MonsterTraversalMovementAction,
   type StatBlock,
 } from "#/monster-types.ts";
 import type { CharacterWeapon } from "#/character-equipment-weapon-data.ts";
@@ -116,6 +118,52 @@ export function statBlockAbilityName(statBlock: StatBlock, abilityId: string) {
     ...statBlock.reactions,
     ...statBlock.legendaryActions,
   ].find((ability) => ability.id === abilityId)?.name;
+}
+
+export function statBlockSaveEffectAction(
+  statBlock: StatBlock,
+  abilityId: string,
+): MonsterSaveEffectAction | null {
+  return (
+    statBlock.actions.find(
+      (ability): ability is MonsterSaveEffectAction =>
+        ability.kind === "saveEffectAction" && ability.id === abilityId,
+    ) ?? null
+  );
+}
+
+export function statBlockTraversalMovementAction(
+  statBlock: StatBlock,
+  abilityId: string,
+): MonsterTraversalMovementAction | null {
+  return (
+    statBlockTraversalMovementActionEntry(statBlock, abilityId)?.ability ?? null
+  );
+}
+
+export interface MonsterTraversalMovementActionEntry {
+  readonly ability: MonsterTraversalMovementAction;
+  readonly actionType: "action" | "bonusAction";
+}
+
+export function statBlockTraversalMovementActionEntry(
+  statBlock: StatBlock,
+  abilityId: string,
+): MonsterTraversalMovementActionEntry | null {
+  const actionAbility = statBlock.actions.find(
+    (ability): ability is MonsterTraversalMovementAction =>
+      ability.kind === "traversalMovementAction" && ability.id === abilityId,
+  );
+  if (actionAbility != null) {
+    return { ability: actionAbility, actionType: "action" };
+  }
+  const bonusActionAbility = statBlock.bonusActions.find(
+    (ability): ability is MonsterTraversalMovementAction =>
+      ability.kind === "traversalMovementAction" && ability.id === abilityId,
+  );
+  return bonusActionAbility == null
+    ? null
+    : { ability: bonusActionAbility, actionType: "bonusAction" };
 }
 
 const MONSTER_SPELL_DAILY_USE_PREFIX = "spell:";

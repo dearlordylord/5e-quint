@@ -1665,7 +1665,10 @@ function createBattleProjectionDriver() {
         const snap = actor.getSnapshot();
         for (const eff of snap.context.activeEffects) {
           if (eff.casterId === casterId) {
-            send(cid, { type: "REMOVE_EFFECT", spellId: eff.spellId });
+            send(cid, {
+              type: "REMOVE_EFFECT",
+              spellId: mkSpellId(eff.spellId),
+            });
           }
         }
       }
@@ -1886,7 +1889,7 @@ function createBattleProjectionDriver() {
           ? ctx.activeEffects
               .filter((e) => e.expiresAt === "end")
               .map((e) => ({
-                spellId: e.spellId,
+                spellId: mkSpellId(e.spellId),
                 saveSucceeded: eotSaveSucceeded,
                 conSaveSucceeded: eotConSave,
               }))
@@ -2259,7 +2262,10 @@ function createBattleProjectionDriver() {
               effect.parentCasterId === mkCreatureId(id),
           );
           for (const effect of effects) {
-            send(targetId, { type: "REMOVE_EFFECT", spellId: effect.spellId });
+            send(targetId, {
+              type: "REMOVE_EFFECT",
+              spellId: mkSpellId(effect.spellId),
+            });
           }
         }
 

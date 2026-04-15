@@ -191,6 +191,13 @@ interface NormalizedBattleCreature {
     casterId: string;
     parentSpellId: string;
     parentCasterId: string;
+    grantedConditions: ReadonlySet<string>;
+    conditionalGrantedConditions: ReadonlyArray<{
+      condition: string;
+      whileCondition: string;
+      endsEarlyOnDamage: boolean;
+      endsEarlyOnWakeActionWithinFeet: number;
+    }>;
     grantedResistances: ReadonlySet<string>;
     grantedVulnerabilities: ReadonlySet<string>;
     grantedImmunities: ReadonlySet<string>;
@@ -284,7 +291,20 @@ function quintCombatantToNormalized(
     stunned: s.stunned,
     unconscious: s.unconscious,
     incapacitatedSources: s.incapacitatedSources,
-    activeEffects: s.activeEffects,
+    activeEffects: s.activeEffects.map((ae) => ({
+      spellId: ae.spellId,
+      turnsRemaining: ae.turnsRemaining,
+      expiresAt: ae.expiresAt,
+      casterId: ae.casterId,
+      parentSpellId: ae.parentSpellId,
+      parentCasterId: ae.parentCasterId,
+      grantedConditions: ae.grantedConditions,
+      conditionalGrantedConditions: ae.conditionalGrantedConditions,
+      grantedResistances: ae.grantedResistances,
+      grantedVulnerabilities: ae.grantedVulnerabilities,
+      grantedImmunities: ae.grantedImmunities,
+      reactivePayload: ae.reactivePayload,
+    })),
     movementRemaining: Number(t.movementRemaining),
     effectiveSpeed: Number(t.effectiveSpeed),
     actionsRemaining: Number(t.actionsRemaining),
@@ -389,6 +409,19 @@ function xstateCreatureToNormalized(
         casterId: ae.casterId,
         parentSpellId: ae.parentSpellId ?? "",
         parentCasterId: ae.parentCasterId ?? "",
+        grantedConditions:
+          ae.grantedConditions == null
+            ? EMPTY_STRING_SET
+            : new Set(ae.grantedConditions),
+        conditionalGrantedConditions: (
+          ae.conditionalGrantedConditions ?? []
+        ).map((conditional) => ({
+          condition: conditional.condition,
+          whileCondition: conditional.whileCondition,
+          endsEarlyOnDamage: conditional.endsEarlyOnDamage === true,
+          endsEarlyOnWakeActionWithinFeet:
+            conditional.endsEarlyOnWakeActionWithinFeet ?? 0,
+        })),
         grantedResistances: ae.grantedResistances ?? EMPTY_STRING_SET,
         grantedVulnerabilities: ae.grantedVulnerabilities ?? EMPTY_STRING_SET,
         grantedImmunities: ae.grantedImmunities ?? EMPTY_STRING_SET,
@@ -1373,6 +1406,8 @@ function normalizeQuintPhase(raw: unknown): string {
       return "resolvingAoE";
     case "BPResolvingMovement":
       return "resolvingMovement";
+    case "BPResolvingTraversal":
+      return "resolvingTraversal";
     case "BPAwaitingLegendaryAction":
     case "BPAwaitingLegendaryAttack":
       return "awaitingLegendaryAction";

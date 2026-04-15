@@ -28,6 +28,7 @@ import {
   type MetamagicOption,
 } from "#/features/class-sorcerer.ts";
 import type {
+  BattlePosition,
   BattleContext,
   BattleCreatureState,
   BattleEvent,
@@ -61,6 +62,9 @@ import {
   monsterCatalogInitCreatureConfig,
   statBlockAttackBattleProfile,
   statBlockLegendaryAction,
+  statBlockSaveEffectAction,
+  statBlockTraversalMovementAction,
+  statBlockTraversalMovementActionEntry,
 } from "#/monster-catalog.ts";
 import {
   MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
@@ -155,6 +159,14 @@ function poolCost(resource: ResourceCostPool): PoolCost {
 
 function costs(...items: ReadonlyArray<ResourceCostItem>): ResourceCost {
   return items;
+}
+
+function actionQuotaCost(actionType: "action" | "bonusAction"): QuotaCost {
+  return quotaCost(actionType);
+}
+
+function actionTypeLabel(actionType: "action" | "bonusAction") {
+  return actionType === "action" ? "action" : "bonus action";
 }
 
 export type OutcomeDescription = {
@@ -469,6 +481,31 @@ export type BattleActionToken =
       readonly type: "BATTLE_CAST_AOE";
       readonly spellId: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
+      readonly abilityId: string;
+      readonly targetId: Hole<string>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MONSTER_TRAVERSAL";
+      readonly abilityId: string;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_WAKE_EFFECT";
+      readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -790,6 +827,25 @@ type SpecificBattleResolvedActionToken =
       readonly type: "BATTLE_CAST_AOE";
       readonly spellId: string;
       readonly slotLevel: SpellSlotLevelValue;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
+      readonly abilityId: string;
+      readonly targetId: string;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MONSTER_TRAVERSAL";
+      readonly abilityId: string;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_WAKE_EFFECT";
+      readonly targetId: string;
     }
   | {
       readonly scope: "battle";
@@ -1324,6 +1380,25 @@ const BattleCastAoeResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleMonsterSaveEffectResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_MONSTER_SAVE_EFFECT"),
+  abilityId: Schema.String,
+  targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleMonsterTraversalResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_MONSTER_TRAVERSAL"),
+  abilityId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleWakeEffectResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_WAKE_EFFECT"),
+  targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleReadyResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_READY"),
@@ -1422,6 +1497,9 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
   BattleCastAoeResolvedActionSchema,
+  BattleMonsterSaveEffectResolvedActionSchema,
+  BattleMonsterTraversalResolvedActionSchema,
+  BattleWakeEffectResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
   BattleReadyReleaseResolvedActionSchema,
@@ -2626,6 +2704,34 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_MONSTER_SAVE_EFFECT" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "monsterSaveEffect";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_MONSTER_TRAVERSAL" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "monsterTraversalMovement";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_WAKE_EFFECT" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_WAKE_EFFECT" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_READY" }
       >;
       readonly outcome: string;
@@ -2825,6 +2931,26 @@ export type BattleResolutionRuntimeInputs =
         readonly tgtAc: number;
         readonly crit: boolean;
         readonly knockOut: boolean;
+      };
+    }
+  | {
+      readonly runtime: "monsterSaveEffect";
+      readonly values: {
+        readonly saveRoll: number;
+        readonly saveRollB?: number;
+        readonly actorCanSeeTarget: boolean;
+      };
+    }
+  | {
+      readonly runtime: "monsterTraversalMovement";
+      readonly values: {
+        readonly destination: BattlePosition;
+        readonly movementSpent: number;
+        readonly enteredCreatures: ReadonlyArray<{
+          readonly targetId: string;
+          readonly saveRoll: number;
+          readonly saveRollB?: number;
+        }>;
       };
     }
   | {
@@ -4462,6 +4588,159 @@ export function getAvailableBattleActions(
           context,
         ),
       );
+      const activeStatBlock = getMonsterStatBlockByStateId(
+        activeCreature.monsterStatBlockId,
+      );
+      if (activeStatBlock != null) {
+        const selected = context.selectedMonsterCommand;
+        for (const ability of [
+          ...activeStatBlock.actions,
+          ...activeStatBlock.bonusActions,
+        ]) {
+          if (ability.kind !== "traversalMovementAction") continue;
+          const traversalEntry = statBlockTraversalMovementActionEntry(
+            activeStatBlock,
+            ability.id,
+          );
+          if (traversalEntry == null) continue;
+          const { actionType } = traversalEntry;
+          if (
+            (actionType === "action" && activeCreature.actionsRemaining <= 0) ||
+            (actionType === "bonusAction" && activeCreature.bonusActionUsed)
+          ) {
+            continue;
+          }
+          const requiresRecharge =
+            activeStatBlock.rechargeAbilities[ability.id] != null;
+          const requiresDaily =
+            activeStatBlock.dailyAbilities[ability.id] != null;
+          if (requiresRecharge) {
+            if (
+              selected?.type !== "USE_RECHARGE_ABILITY" ||
+              selected.monsterId !== activeCreatureId ||
+              selected.abilityId !== ability.id ||
+              !activeCreature.rechargeAvailable[ability.id]
+            ) {
+              continue;
+            }
+          } else if (requiresDaily) {
+            if (
+              selected?.type !== "USE_DAILY_ABILITY" ||
+              selected.monsterId !== activeCreatureId ||
+              selected.abilityId !== ability.id ||
+              (activeCreature.dailyUsesRemaining[ability.id] ?? 0) <= 0
+            ) {
+              continue;
+            }
+          }
+          tokens.push(
+            battleToken<
+              Extract<
+                BattleActionToken,
+                {
+                  readonly type: "BATTLE_MONSTER_TRAVERSAL";
+                }
+              >
+            >({
+              actorId: activeCreatureId,
+              type: "BATTLE_MONSTER_TRAVERSAL",
+              abilityId: ability.id,
+              cost: costs(actionQuotaCost(actionType)),
+              outcome: {
+                summary: `Spend your ${actionTypeLabel(actionType)} to move through creature spaces with explicit destination, movement, and entered-creature save facts`,
+              },
+            }),
+          );
+        }
+        for (const ability of activeStatBlock.actions) {
+          if (ability.kind !== "saveEffectAction") continue;
+          const targetOptions = [...context.creatures.entries()]
+            .filter(
+              ([targetId, target]) =>
+                targetId !== activeCreatureId &&
+                !target.dead &&
+                Math.max(
+                  Math.abs(
+                    activeCreature.battlePosition.row -
+                      target.battlePosition.row,
+                  ),
+                  Math.abs(
+                    activeCreature.battlePosition.col -
+                      target.battlePosition.col,
+                  ),
+                ) *
+                  5 <=
+                  ability.save.rangeFeet,
+            )
+            .map(([targetId]) => targetId)
+            .sort();
+          if (targetOptions.length === 0) continue;
+          tokens.push(
+            battleToken<
+              Extract<
+                BattleActionToken,
+                {
+                  readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
+                }
+              >
+            >({
+              actorId: activeCreatureId,
+              type: "BATTLE_MONSTER_SAVE_EFFECT",
+              abilityId: ability.id,
+              targetId: { options: targetOptions },
+              cost: costs(quotaCost("action")),
+              outcome: {
+                summary:
+                  "Force the chosen target to resolve the monster's single-target saving throw action using explicit save rolls and visibility facts",
+              },
+            }),
+          );
+        }
+      }
+      const wakeTargetOptions = [...context.creatures.entries()]
+        .filter(([targetId, target]) => {
+          if (
+            targetId === activeCreatureId ||
+            target.dead ||
+            target.hp === 0 ||
+            !target.unconscious ||
+            Math.max(
+              Math.abs(
+                activeCreature.battlePosition.row - target.battlePosition.row,
+              ),
+              Math.abs(
+                activeCreature.battlePosition.col - target.battlePosition.col,
+              ),
+            ) > 1
+          ) {
+            return false;
+          }
+          return target.activeEffects.some((effect) =>
+            (effect.conditionalGrantedConditions ?? []).some(
+              (conditional) =>
+                conditional.condition === "unconscious" &&
+                conditional.endsEarlyOnWakeActionWithinFeet != null,
+            ),
+          );
+        })
+        .map(([targetId]) => targetId)
+        .sort();
+      if (wakeTargetOptions.length > 0) {
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "BATTLE_WAKE_EFFECT" }>
+          >({
+            actorId: activeCreatureId,
+            type: "BATTLE_WAKE_EFFECT",
+            targetId: { options: wakeTargetOptions },
+            cost: costs(quotaCost("action")),
+            outcome: {
+              summary:
+                "Take an action to wake the chosen adjacent creature from a conditional unconscious effect while leaving the underlying condition in place",
+            },
+          }),
+        );
+      }
     }
     if (activeCreature.prone) {
       const standCost = Math.floor(activeCreature.effectiveSpeed / 2);
@@ -4592,6 +4871,27 @@ function availableBattleTokenForResolved(
         candidate.spellId === token.spellId &&
         candidate.slotLevel.options.includes(token.slotLevel)
       );
+    }
+    if (
+      candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
+      token.type === "BATTLE_MONSTER_SAVE_EFFECT"
+    ) {
+      return (
+        candidate.abilityId === token.abilityId &&
+        candidate.targetId.options.includes(token.targetId)
+      );
+    }
+    if (
+      candidate.type === "BATTLE_MONSTER_TRAVERSAL" &&
+      token.type === "BATTLE_MONSTER_TRAVERSAL"
+    ) {
+      return candidate.abilityId === token.abilityId;
+    }
+    if (
+      candidate.type === "BATTLE_WAKE_EFFECT" &&
+      token.type === "BATTLE_WAKE_EFFECT"
+    ) {
+      return candidate.targetId.options.includes(token.targetId);
     }
     if (
       candidate.type === "USE_REDIRECT_ATTACK" &&
@@ -4774,6 +5074,60 @@ export function resolveBattleAction(
         slotLvl: payload.slotLevel,
         spellName: token.spellId,
         ritual: false,
+      },
+    };
+  }
+  if (token.type === "BATTLE_MONSTER_SAVE_EFFECT") {
+    if (
+      !("abilityId" in availableToken) ||
+      availableToken.abilityId !== token.abilityId ||
+      !("targetId" in availableToken) ||
+      !availableToken.targetId.options.includes(token.targetId)
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} ${token.abilityId} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "monsterSaveEffect",
+    };
+  }
+  if (token.type === "BATTLE_MONSTER_TRAVERSAL") {
+    if (
+      !("abilityId" in availableToken) ||
+      availableToken.abilityId !== token.abilityId
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} ${token.abilityId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "monsterTraversalMovement",
+    };
+  }
+  if (token.type === "BATTLE_WAKE_EFFECT") {
+    if (
+      !("targetId" in availableToken) ||
+      !availableToken.targetId.options.includes(token.targetId)
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_WAKE_EFFECT",
+        targetId: CreatureId(token.targetId),
       },
     };
   }
@@ -5331,6 +5685,190 @@ export function finalizeBattleResolution(
         outcome: request.outcome,
       };
     }),
+    Match.when({ runtime: "monsterSaveEffect" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "monsterSaveEffect") {
+        return battleRuntimeMismatch(
+          "monsterSaveEffect",
+          runtimeInputs.runtime,
+        );
+      }
+      if (request.token.type !== "BATTLE_MONSTER_SAVE_EFFECT") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Monster save-effect runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const statBlock = getMonsterStatBlockByStateId(actor?.monsterStatBlockId);
+      const ability =
+        statBlock == null
+          ? null
+          : statBlockSaveEffectAction(statBlock, request.token.abilityId);
+      if (actor == null || ability == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+          },
+        };
+      }
+      const { saveRoll, saveRollB, actorCanSeeTarget } = runtimeInputs.values;
+      if (saveRoll < 1 || saveRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Monster save-effect primary roll must be between 1 and 20.",
+          },
+        };
+      }
+      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message:
+              "Monster save-effect secondary roll must be between 1 and 20.",
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_MONSTER_SAVE_EFFECT",
+          abilityId: request.token.abilityId,
+          targetId: CreatureId(request.token.targetId),
+          saveRoll,
+          ...(saveRollB != null ? { saveRollB } : {}),
+          actorCanSeeTarget,
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when(
+      { runtime: "monsterTraversalMovement" },
+      (): FinalizedBattleAction => {
+        if (runtimeInputs.runtime !== "monsterTraversalMovement") {
+          return battleRuntimeMismatch(
+            "monsterTraversalMovement",
+            runtimeInputs.runtime,
+          );
+        }
+        if (request.token.type !== "BATTLE_MONSTER_TRAVERSAL") {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_SUPPORTED",
+              message: `Monster traversal runtime cannot finalize ${request.token.type}.`,
+            },
+          };
+        }
+        const actor = context.creatures.get(CreatureId(request.token.actorId));
+        const statBlock = getMonsterStatBlockByStateId(
+          actor?.monsterStatBlockId,
+        );
+        const ability =
+          statBlock == null
+            ? null
+            : statBlockTraversalMovementAction(
+                statBlock,
+                request.token.abilityId,
+              );
+        if (actor == null || ability == null) {
+          return {
+            ok: false,
+            error: {
+              code: "ACTION_NOT_AVAILABLE",
+              message: `${request.token.type} is not currently available for ${request.token.actorId} in this battle state.`,
+            },
+          };
+        }
+        const { destination, movementSpent, enteredCreatures } =
+          runtimeInputs.values;
+        if (
+          !Number.isInteger(destination.row) ||
+          !Number.isInteger(destination.col)
+        ) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Monster traversal destination must use integer row and col coordinates.",
+            },
+          };
+        }
+        if (!Number.isInteger(movementSpent) || movementSpent < 0) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                "Monster traversal movement spent must be a non-negative integer.",
+            },
+          };
+        }
+        const seenTargets = new Set<string>();
+        for (const entered of enteredCreatures) {
+          if (seenTargets.has(entered.targetId)) {
+            return {
+              ok: false,
+              error: {
+                code: "INVALID_RUNTIME_INPUT",
+                message:
+                  "Monster traversal entered-creature list must target each creature at most once.",
+              },
+            };
+          }
+          seenTargets.add(entered.targetId);
+          if (entered.saveRoll < 1 || entered.saveRoll > 20) {
+            return {
+              ok: false,
+              error: {
+                code: "INVALID_RUNTIME_INPUT",
+                message:
+                  "Monster traversal primary save roll must be between 1 and 20.",
+              },
+            };
+          }
+          if (
+            entered.saveRollB != null &&
+            (entered.saveRollB < 1 || entered.saveRollB > 20)
+          ) {
+            return {
+              ok: false,
+              error: {
+                code: "INVALID_RUNTIME_INPUT",
+                message:
+                  "Monster traversal secondary save roll must be between 1 and 20.",
+              },
+            };
+          }
+        }
+        return {
+          ok: true,
+          event: {
+            type: "BATTLE_MONSTER_TRAVERSAL",
+            abilityId: request.token.abilityId,
+            destination,
+            movementSpent,
+            enteredCreatures: enteredCreatures.map((entered) => ({
+              targetId: CreatureId(entered.targetId),
+              saveRoll: entered.saveRoll,
+              ...(entered.saveRollB != null
+                ? { saveRollB: entered.saveRollB }
+                : {}),
+            })),
+          },
+          outcome: request.outcome,
+        };
+      },
+    ),
     Match.when({ runtime: "readySpellRelease" }, (): FinalizedBattleAction => {
       if (runtimeInputs.runtime !== "readySpellRelease") {
         return battleRuntimeMismatch(

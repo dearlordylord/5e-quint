@@ -67,13 +67,22 @@ export const GLADIATOR = {
         "Stock-weapon attacks whose SRD damage dice do not match the current shared weapon profile stay text-only until a later generic monster attack surface exists.",
     },
     {
-      kind: "text",
+      kind: "saveEffectAction",
       id: "shieldBash",
       name: "Shield Bash",
       text: "*Strength Saving Throw:* DC 15, one creature within 5 feet that the gladiator can see. *Failure:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Prone condition.",
-      blockerFamily: "saveEffectAction",
-      nonExecutableReason:
-        "Saving-throw weapon maneuvers with a Prone rider are not yet projected into the generic monster runtime surface.",
+      save: {
+        ability: "str",
+        dc: 15,
+        rangeFeet: 5,
+        target: "oneCreatureYouCanSee",
+        damageOnFail: 9,
+        damageType: "bludgeoning",
+        conditionOnFail: {
+          condition: "prone",
+          targetSizeAtMost: "medium",
+        },
+      },
     },
   ],
   bonusActions: [],

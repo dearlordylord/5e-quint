@@ -10,6 +10,7 @@ import type {
   AdvantageDamageDice,
   Condition,
   DamageType,
+  ExpiryPhase,
   ResourceCount,
   Size,
   SpellId,
@@ -242,6 +243,89 @@ export interface MonsterExecutableAbility extends MonsterAbilityBase {
   readonly mechanic: string;
 }
 
+export interface MonsterSaveEffectConditionOnFail {
+  readonly condition: Condition;
+  readonly targetSizeAtMost?: Size;
+  readonly duration?: undefined;
+}
+
+export interface MonsterSaveEffectTimedConditionOnFail extends Omit<
+  MonsterSaveEffectConditionOnFail,
+  "duration"
+> {
+  readonly duration: {
+    readonly rounds: number;
+    readonly expiresAt: ExpiryPhase;
+    readonly expiryOwner: "target" | "caster";
+  };
+}
+
+export interface MonsterSaveEffectFailureBand {
+  readonly minimumMargin: number;
+  readonly condition: Condition;
+  readonly whileCondition: Condition;
+  readonly endsEarlyOnDamage: boolean;
+  readonly endsEarlyOnWakeActionWithinFeet?: number;
+}
+
+export interface MonsterSaveEffectBaseSave {
+  readonly ability: Ability;
+  readonly dc: number;
+  readonly rangeFeet: number;
+  readonly target: "oneCreatureYouCanSee";
+  readonly damageOnFail: number;
+  readonly damageType: DamageType;
+}
+
+export type MonsterSaveEffectSave =
+  | MonsterSaveEffectBaseSave
+  | (MonsterSaveEffectBaseSave & {
+      readonly conditionOnFail: MonsterSaveEffectConditionOnFail;
+    })
+  | (MonsterSaveEffectBaseSave & {
+      readonly conditionOnFail: MonsterSaveEffectTimedConditionOnFail;
+      readonly failureBand?: MonsterSaveEffectFailureBand;
+    });
+
+export interface MonsterSaveEffectAction extends MonsterAbilityBase {
+  readonly kind: "saveEffectAction";
+  readonly save: MonsterSaveEffectSave;
+}
+
+export interface MonsterTraversalMovement {
+  readonly maxDistance: {
+    readonly kind: "speed";
+  };
+  readonly provocationKind: "doesNotProvokeOpportunityAttacks";
+  readonly passThroughCreatureSpacesUpToSize?: Size;
+}
+
+export interface MonsterTraversalEnteredCreatureSaveBase extends Omit<
+  MonsterSaveEffectBaseSave,
+  "rangeFeet" | "target"
+> {
+  readonly halfOnSuccess: boolean;
+}
+
+export type MonsterTraversalEnteredCreatureSave =
+  | MonsterTraversalEnteredCreatureSaveBase
+  | (MonsterTraversalEnteredCreatureSaveBase & {
+      readonly conditionOnFail: MonsterSaveEffectConditionOnFail;
+    })
+  | (MonsterTraversalEnteredCreatureSaveBase & {
+      readonly conditionOnFail: MonsterSaveEffectTimedConditionOnFail;
+      readonly failureBand?: MonsterSaveEffectFailureBand;
+    });
+
+export interface MonsterTraversalMovementAction extends MonsterAbilityBase {
+  readonly kind: "traversalMovementAction";
+  readonly movement: MonsterTraversalMovement;
+  readonly enteredCreatureEffect: {
+    readonly targeting: "eachEnteredCreatureOnce";
+    readonly save: MonsterTraversalEnteredCreatureSave;
+  };
+}
+
 export interface MonsterSaveAdvantageModifier {
   readonly kind: "advantage";
   readonly appliesTo: ReadonlySet<MonsterSaveTriggerKind>;
@@ -302,11 +386,14 @@ export type MonsterAction =
   | MonsterAttackAbility
   | MonsterExecutableAbility
   | MonsterMultiattackAbility
+  | MonsterSaveEffectAction
+  | MonsterTraversalMovementAction
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
 export type MonsterBonusAction =
   | MonsterBattleBonusActionAbility
   | MonsterExecutableAbility
+  | MonsterTraversalMovementAction
   | MonsterTextAbility
   | MonsterSpellcastingAbility;
 export type MonsterReaction =
