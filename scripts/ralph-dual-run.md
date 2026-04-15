@@ -8,12 +8,12 @@
 4. Asks Codex to choose the next runnable task from the refreshed plan instead of hard-coding earliest-runnable selection.
 5. For the chosen task, creates disposable worktree(s) from the current integration branch `HEAD`.
 6. Links the main workspace install into each task worktree so `pnpm` and package-local test commands resolve the same dependency graph as the main repo.
-7. By default, runs Claude in one worktree with `claude --dangerously-skip-permissions`.
+7. By default, runs Claude in one worktree with `claude --dangerously-skip-permissions --effort max`.
 8. By default, runs Codex in the other with `codex exec --dangerously-bypass-approvals-and-sandbox`.
 9. Each implementation is reviewed as soon as that implementer finishes, without waiting for the other implementer.
 10. A rejecting or `accept-with-fixes` review is handed back to the same implementer for another round in the same worktree before the decider phase.
 11. Runs a Codex decider from the main worktree to apply, verify, and either land the task or reject it while updating the plan for the next rerun.
-12. With `--codex-only`, only the Codex implementer pipeline runs; it still gets immediate review and the decider still acts as final gatekeeper.
+12. With `--codex-only` or `--claude-only`, only one implementer pipeline runs; it still gets immediate review and the decider still acts as final gatekeeper.
 13. Refreshes the plan snapshot again and repeats until the chooser says there is no meaningful runnable work left.
 
 Runtime logs, prompts, review reports, chooser outputs, and diffs are written under ignored `.ralph/runs/<run-id>/`.
@@ -175,6 +175,8 @@ scripts/ralph-dual-run.sh plans/some-plan.md \
 ```
 
 `--codex-only` keeps the normal chooser and decider flow, but only the Codex implementer pipeline runs for each task. No Claude worktree is launched in that mode.
+
+`--claude-only` is the symmetric mode: only the Claude implementer pipeline runs for each task, while the Codex decider remains the final gatekeeper. Ralph-launched Claude roles use `--effort max`.
 
 `--max-task-attempts` bounds how many full decider-level attempts the same task may consume in one Ralph run. The final allowed attempt is special: the decider must either land the task or make it non-runnable in the plan. If it still tries to leave the task runnable, the harness treats that as a decider/harness contract failure.
 
