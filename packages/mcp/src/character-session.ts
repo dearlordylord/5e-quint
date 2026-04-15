@@ -7,6 +7,7 @@ import {
   CharacterDraftSchema,
   CharacterLevelUpTransitionSchema,
   finalizeCharacterDraft,
+  previewCharacterSheetAdvancement,
   previewCharacterDraftUpdate,
   strictCharacterParseOptions,
   type CharacterDraft,
@@ -112,9 +113,15 @@ export const characterToolDefinitions = [
     inputSchema: emptyObjectInputSchema,
   },
   {
+    name: "preview_character_sheet_advancement",
+    description:
+      "Preview a stored finalized sheet advancement without mutating stored state, separating open required level-up choices from illegal issues before commit.",
+    inputSchema: advanceCharacterSheetInputSchema,
+  },
+  {
     name: "advance_character_sheet",
     description:
-      "Advance the stored finalized sheet by one core-owned CharacterLevelUpTransition.",
+      "Advance the stored finalized sheet by one core-owned CharacterLevelUpTransition after preview acceptance.",
     inputSchema: advanceCharacterSheetInputSchema,
   },
   {
@@ -186,25 +193,20 @@ function decodeDraftPatch(
 
 function decodeLevelUpTransition(
   args: unknown,
+  toolName: "preview_character_sheet_advancement" | "advance_character_sheet",
 ): CharacterLevelUpTransition | CharacterToolError {
-  const decodedArgs = readArgsRecord(args, "advance_character_sheet");
+  const decodedArgs = readArgsRecord(args, toolName);
   if (isCharacterToolError(decodedArgs)) return decodedArgs;
-  const topLevelError = rejectUnexpectedTopLevelFields(
-    decodedArgs,
-    "advance_character_sheet",
-    ["transition"],
-  );
+  const topLevelError = rejectUnexpectedTopLevelFields(decodedArgs, toolName, [
+    "transition",
+  ]);
   if (topLevelError != null) return topLevelError;
   const decoded = Schema.decodeUnknownEither(
     CharacterLevelUpTransitionSchema,
     strictCharacterParseOptions,
   )(decodedArgs.transition);
   if (decoded._tag === "Left") {
-    return invalidCharacterInputContent(
-      "advance_character_sheet",
-      "transition",
-      decoded.left,
-    );
+    return invalidCharacterInputContent(toolName, "transition", decoded.left);
   }
   return decoded.right;
 }
@@ -219,7 +221,11 @@ function decodeEmptyArgs(
 ): Record<string, never> | CharacterToolError {
   const decodedArgs = readArgsRecord(args, toolName);
   if (isCharacterToolError(decodedArgs)) return decodedArgs;
-  const topLevelError = rejectUnexpectedTopLevelFields(decodedArgs, toolName, []);
+  const topLevelError = rejectUnexpectedTopLevelFields(
+    decodedArgs,
+    toolName,
+    [],
+  );
   if (topLevelError != null) return topLevelError;
   return decodedArgs as Record<string, never>;
 }
@@ -406,11 +412,24 @@ export function createCharacterSession(): CharacterSession {
         });
       }
 
+      if (name === "preview_character_sheet_advancement") {
+        const sheet = requireStoredSheet(name);
+        if (isCharacterToolError(sheet)) return sheet;
+
+        const transition = decodeLevelUpTransition(args, name);
+        if (isCharacterToolError(transition)) return transition;
+
+        return jsonContent({
+          storedCharacter: encodeStoredCharacterState(storedCharacter),
+          preview: previewCharacterSheetAdvancement(sheet, transition),
+        });
+      }
+
       if (name === "advance_character_sheet") {
         const sheet = requireStoredSheet(name);
         if (isCharacterToolError(sheet)) return sheet;
 
-        const transition = decodeLevelUpTransition(args);
+        const transition = decodeLevelUpTransition(args, name);
         if (isCharacterToolError(transition)) return transition;
 
         const result = advanceCharacterSheet(sheet, transition);

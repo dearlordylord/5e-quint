@@ -1,10 +1,14 @@
 import { isDeepStrictEqual } from "node:util";
 
 import { cloneAdvancement } from "#/character-advancement.ts";
-import { finalizeCharacterDraft } from "#/character-draft-analysis.ts";
+import {
+  assessCharacterDraft,
+  type CharacterDraftAssessment,
+} from "#/character-draft-analysis.ts";
 import type {
   CharacterDraft,
   CharacterFinalizationResult,
+  CharacterFinalizationIssue,
   CharacterSheet,
 } from "#/character-domain-model.ts";
 import type { CharacterEquipmentChoices } from "#/character-equipment.ts";
@@ -21,6 +25,11 @@ export interface CharacterLevelUpTransition {
   readonly entry: CharacterAdvancementEntry;
   readonly choices?: Partial<CharacterBuildChoices>;
   readonly spellcasting?: CharacterSpellcastingChoices;
+}
+
+export interface CharacterSheetAdvancementPreview {
+  readonly candidateDraft: CharacterDraft;
+  readonly candidateAssessment: CharacterDraftAssessment;
 }
 
 function cloneEquipmentChoices(
@@ -114,26 +123,96 @@ export function characterDraftFromSheet(
   };
 }
 
+function contradictoryFinalizedSheetIssue(): CharacterFinalizationIssue {
+  return {
+    code: "contradictoryFinalizedSheet",
+    message:
+      "Finalized sheet facts must match the replayed result of their owned draft state before advancement.",
+  };
+}
+
+function candidateAssessmentWithBaseSheetIssue(
+  candidateAssessment: CharacterDraftAssessment,
+): Extract<CharacterDraftAssessment, { status: "invalid" }> {
+  const contradiction = contradictoryFinalizedSheetIssue();
+
+  if (candidateAssessment.status === "invalid") {
+    return {
+      status: "invalid",
+      openChoices: candidateAssessment.openChoices,
+      issues: [...candidateAssessment.issues, contradiction],
+    };
+  }
+
+  if (candidateAssessment.status === "incomplete") {
+    return {
+      status: "invalid",
+      openChoices: candidateAssessment.openChoices,
+      issues: [contradiction],
+    };
+  }
+
+  return {
+    status: "invalid",
+    openChoices: [],
+    issues: [contradiction],
+  };
+}
+
+export function previewCharacterSheetAdvancement(
+  sheet: CharacterSheet,
+  transition: CharacterLevelUpTransition,
+): CharacterSheetAdvancementPreview {
+  const currentDraft = characterDraftFromSheet(sheet);
+  const currentAssessment = assessCharacterDraft(currentDraft);
+  const candidateDraft = characterDraftFromSheet(sheet, transition);
+  const candidateAssessment = assessCharacterDraft(candidateDraft);
+
+  if (currentAssessment.status !== "complete") {
+    return {
+      candidateDraft,
+      candidateAssessment:
+        candidateAssessmentWithBaseSheetIssue(candidateAssessment),
+    };
+  }
+
+  if (!isDeepStrictEqual(currentAssessment.sheet, sheet)) {
+    return {
+      candidateDraft,
+      candidateAssessment:
+        candidateAssessmentWithBaseSheetIssue(candidateAssessment),
+    };
+  }
+
+  return {
+    candidateDraft,
+    candidateAssessment,
+  };
+}
+
 export function advanceCharacterSheet(
   sheet: CharacterSheet,
   transition: CharacterLevelUpTransition,
 ): CharacterFinalizationResult {
-  const legalityCheck = finalizeCharacterDraft(characterDraftFromSheet(sheet));
-  if (!legalityCheck.ok) return legalityCheck;
-  if (!isDeepStrictEqual(legalityCheck.sheet, sheet)) {
+  const preview = previewCharacterSheetAdvancement(sheet, transition);
+
+  if (preview.candidateAssessment.status === "complete") {
+    return { ok: true, sheet: preview.candidateAssessment.sheet };
+  }
+
+  if (preview.candidateAssessment.status === "incomplete") {
     return {
       ok: false,
-      status: "invalid",
-      openChoices: [],
-      issues: [
-        {
-          code: "contradictoryFinalizedSheet",
-          message:
-            "Finalized sheet facts must match the replayed result of their owned draft state before advancement.",
-        },
-      ] as const,
+      status: "incomplete",
+      openChoices: preview.candidateAssessment.openChoices,
+      issues: [],
     };
   }
 
-  return finalizeCharacterDraft(characterDraftFromSheet(sheet, transition));
+  return {
+    ok: false,
+    status: "invalid",
+    openChoices: preview.candidateAssessment.openChoices,
+    issues: preview.candidateAssessment.issues,
+  };
 }

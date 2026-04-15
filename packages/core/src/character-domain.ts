@@ -59,7 +59,9 @@ export {
 export {
   advanceCharacterSheet,
   characterDraftFromSheet,
+  previewCharacterSheetAdvancement,
   type CharacterLevelUpTransition,
+  type CharacterSheetAdvancementPreview,
 } from "#/character-sheet-advancement.ts";
 export {
   characterClassResources,

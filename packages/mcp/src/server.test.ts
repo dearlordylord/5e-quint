@@ -8,6 +8,7 @@ import {
   advanceCharacterSheet,
   applyCharacterDraftUpdate,
   finalizeCharacterDraft,
+  previewCharacterSheetAdvancement,
   previewCharacterDraftUpdate,
   singleClassAdvancement,
   type CharacterDraft,
@@ -181,9 +182,10 @@ function normalizeCharacterPreviewForTest(value: unknown): unknown {
 
   return {
     ...preview,
-    droppedFacts: [...(preview as { droppedFacts: ReadonlyArray<unknown> }).droppedFacts].sort(
-      (left, right) =>
-        JSON.stringify(left).localeCompare(JSON.stringify(right)),
+    droppedFacts: [
+      ...(preview as { droppedFacts: ReadonlyArray<unknown> }).droppedFacts,
+    ].sort((left, right) =>
+      JSON.stringify(left).localeCompare(JSON.stringify(right)),
     ),
   };
 }
@@ -808,6 +810,7 @@ describe("MCP server adapter", () => {
       "apply_character_draft_update",
       "assess_character_draft",
       "finalize_character_draft",
+      "preview_character_sheet_advancement",
       "advance_character_sheet",
       "project_character_sheet",
       "start_battle",
@@ -838,6 +841,7 @@ describe("MCP server adapter", () => {
 
   test("tool definition input schemas satisfy MCP object-schema shape", () => {
     expect(toolDefinitions.map((tool) => tool.inputSchema.type)).toEqual([
+      "object",
       "object",
       "object",
       "object",
@@ -967,7 +971,7 @@ describe("MCP server adapter", () => {
     });
   });
 
-  test("character MCP finalizes stored drafts and advances stored sheets through core-owned semantics", () => {
+  test("character MCP finalizes stored drafts and previews then advances stored sheets through core-owned semantics", () => {
     const router = createSessionRouter(createDemoHost());
     const draft = completeDraft();
     const finalized = finalizeCharacterDraft(draft);
@@ -996,11 +1000,29 @@ describe("MCP server adapter", () => {
     const transition = {
       entry: advancementEntry("fighter"),
     } as const;
+    const preview = previewCharacterSheetAdvancement(
+      finalized.sheet,
+      transition,
+    );
+    const previewResponse = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition,
+      },
+    );
     const advanced = advanceCharacterSheet(finalized.sheet, transition);
     const advancedResponse = router.handleToolCall("advance_character_sheet", {
       transition,
     });
 
+    expect("isError" in previewResponse).toBe(false);
+    expect(readPayload(previewResponse)).toEqual({
+      storedCharacter: {
+        kind: "sheet",
+        sheet: finalized.sheet,
+      },
+      preview,
+    });
     expect("isError" in advancedResponse).toBe(false);
     expect(readPayload(advancedResponse)).toEqual({
       storedCharacter: advanced.ok
@@ -1113,6 +1135,24 @@ describe("MCP server adapter", () => {
     });
 
     router.handleToolCall("finalize_character_draft", {});
+
+    const previewAdvanceError = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition: { entry: { className: ["fighter"] } },
+      },
+    );
+
+    expect(
+      "isError" in previewAdvanceError && previewAdvanceError.isError,
+    ).toBe(true);
+    expect(readPayload(previewAdvanceError)).toMatchObject({
+      error: "Invalid preview_character_sheet_advancement input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "transition",
+      },
+    });
 
     const advanceError = router.handleToolCall("advance_character_sheet", {
       transition: { entry: { className: ["fighter"] } },
@@ -1252,6 +1292,40 @@ describe("MCP server adapter", () => {
         field: "extra",
         message: "Unexpected field extra. Allowed fields: (none).",
       },
+    });
+
+    const previewAdvanceError = router.handleToolCall(
+      "preview_character_sheet_advancement",
+      {
+        transition: {
+          entry: {
+            className: "fighter",
+            feat: {
+              slot: "feat",
+              choice: { tag: "abilityScoreImprovement", abilities: ["str"] },
+            },
+          },
+        },
+        extra: 1,
+      },
+    );
+
+    expect(
+      "isError" in previewAdvanceError && previewAdvanceError.isError,
+    ).toBe(true);
+    expect(readPayload(previewAdvanceError)).toEqual({
+      error: "Invalid preview_character_sheet_advancement input",
+      details: {
+        code: "INVALID_CHARACTER_INPUT",
+        field: "extra",
+        message: "Unexpected field extra. Allowed fields: transition.",
+      },
+    });
+    expect(
+      readPayload(router.handleToolCall("get_character_state", {})),
+    ).toEqual({
+      kind: "sheet",
+      sheet: finalized.sheet,
     });
 
     const advanceError = router.handleToolCall("advance_character_sheet", {
