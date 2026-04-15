@@ -224,7 +224,9 @@ module character {
 
   pure def pSheetToDraft(sheet: CharacterSheet): CharacterDraft = {
     primaryClass: HasPrimaryClass(sheet.primaryClass),
-    classLevels: HasClassLevels(pClassLevelsFromAdvancement(sheet.advancement)),
+    // Ordered advancement is the owned source of truth. Draft reconstruction
+    // keeps classLevels empty so the draft does not restate a derived copy.
+    classLevels: NoClassLevels,
     advancement: HasAdvancement(sheet.advancement),
     background: HasBackground(sheet.background),
     abilityScoreGeneration: HasAbilityScoreGeneration(pDraftAbilityScoreGenerationFromSheet(sheet)),
@@ -286,7 +288,8 @@ module character {
     transition: CharacterLevelUpTransition,
   ): CharacterDraft = {
     primaryClass: HasPrimaryClass(sheet.primaryClass),
-    classLevels: HasClassLevels(pClassLevelsFromAdvancement(sheet.advancement.concat([transition.entry]))),
+    // Preview candidates likewise keep advancement as the only class-level owner.
+    classLevels: NoClassLevels,
     advancement: HasAdvancement(sheet.advancement.concat([transition.entry])),
     background: HasBackground(sheet.background),
     abilityScoreGeneration: HasAbilityScoreGeneration(pDraftAbilityScoreGenerationFromSheet(sheet)),

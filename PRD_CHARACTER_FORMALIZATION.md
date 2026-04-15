@@ -126,12 +126,12 @@ The remaining work should make that pipeline operationally explicit too:
 
 - **Target end state is "moved," not merely "moving."** In this repo, that means Quint is the semantic owner for character creation and advancement, while TypeScript is the adapter/runtime implementation and parity guardrail.
 - **Character MCP is downstream, stored server-side, and non-authoritative.** MCP should operate on stored draft/sheet records and thin core calls rather than caller-supplied alternate character schemas.
-- **Destructive draft edits require mandatory preview before commit.** The current `applyCharacterDraftUpdate()` behavior is a post-change sanitizer. The next slice must add a first-class preview-of-loss surface before mutation is accepted.
+- **Destructive draft edits now require domain-level preview before commit.** `previewCharacterDraftUpdate()` and `previewCharacterSheetAdvancement()` own candidate-draft preview, while commit remains a separate caller step.
 - **Rollback/checkpoints are deferred.** The current scope is preview-of-loss only. History/checkpoint semantics should be documented explicitly as follow-on work rather than implied or silently omitted.
 - **Subclass legality is advancement-owned.** Earlier versions validated subclass choices through a side-channel draft field. That ownership moved into ordered `advancement` entries, and replay is now the canonical legality path. Any remaining stub validator should be cleaned up to reflect that ownership line.
-- **Fighting Style ownership is still incomplete on the character side.** Both TypeScript and Quint currently project an empty set because the authored `CharacterSheet` surface does not yet own Fighting Style selections. This is an explicit ownership gap, not an accidental omission.
-- **Expertise ownership is also incomplete on the character side.** The projection surface already includes `expertiseSkills`, but both TypeScript and Quint currently thread the empty set because the character side does not yet own or derive those facts explicitly enough.
-- **Some public TypeScript result shapes are looser than the domain they represent.** In particular, assessment/finalization result types and advancement failure shapes should be strengthened so impossible combinations become unrepresentable at the result boundary even though drafts themselves remain editable and partial.
+- **Fighting Style and expertise ownership are character-owned inputs now.** Projection consumes authored sheet choices; runtime layers should not invent placeholder empty sets for these facts.
+- **Public TypeScript result shapes are converged on the stronger owned domain.** Assessment/finalization and advancement preview/commit results now separate open required choices from illegal issues at the result boundary.
+- **Authority checks must target the handoff operators, not only end results.** `pSheetToDraft`, `pDraftFromSheetTransition`, `pSheetLegality`, `pAdvanceLevel`, and `pCharacterCreatureProjection` are the formal ownership seams that parity must keep aligned with core TypeScript.
 
 ## Domain Model
 
@@ -267,27 +267,28 @@ Decision:
 
 ### Editability Boundary
 
-- Current TypeScript sanitization is post-change and destructive when later choices become invalid.
-- The next slice must add a domain-level preview operation that computes:
+- Domain-level preview operations compute:
   - the proposed next draft;
   - authored fields that would be dropped;
   - newly opened required choices;
   - newly introduced illegal issues.
 - Commit remains a separate step after preview acceptance.
 - History, rollback, and checkpoints remain intentionally deferred for now.
-- The same domain should eventually expose an advancement-assessment/preview surface so callers can see open level-up holes separately from illegal advancement issues instead of receiving only the finalization-style failure result.
+- The same owned preview-before-commit rule applies to draft edits and sheet advancement.
 
 ## Testing Decisions
 
 - A good test verifies externally visible domain behavior from the user's perspective and from the public character-domain perspective.
 - Formal parity should compare core character-domain behavior against the corresponding Quint outputs instead of re-encoding weaker interpretations in adapter code.
+- Formal parity should explicitly cover the authority seams that reconstruct or validate owned state: `pSheetToDraft`, `pDraftFromSheetTransition`, `pSheetLegality`, `pAdvanceLevel`, and `pCharacterCreatureProjection`.
 - Modules and surfaces that should definitely be tested include:
   - draft assessment and finalization;
   - advancement legality and replay;
   - character-creature projection;
-  - draft-edit preview behavior once added;
-  - MCP character operations once added.
-- Existing test style in the repo favors pure-function tests, scenario tests, and parity-style assertions. The remaining character work should follow the same pattern.
+  - draft-edit preview behavior;
+  - advancement preview candidate reconstruction;
+  - MCP character operations.
+- Existing test style in the repo favors pure-function tests, scenario tests, and parity-style assertions. Character convergence work should keep following that pattern.
 - Adapter tests should assert that app/MCP surfaces route through the owned character domain rather than duplicating legality or projection logic locally.
 
 ## Out of Scope
@@ -300,6 +301,6 @@ Decision:
 
 ## Further Notes
 
-- The repo already has the right ownership direction. The remaining work is convergence and explicitness, not invention of a new model.
+- The repo already has the right ownership direction. Character convergence work should preserve that explicit owner map instead of adding adapter-local rule helpers.
 - The `/character` page is useful as a thin exercise shell, but it is not itself the long-term product center or semantic owner.
 - Stored server-side MCP character state is a usability decision, not an ownership exception.

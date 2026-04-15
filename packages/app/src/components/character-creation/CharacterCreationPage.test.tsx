@@ -83,6 +83,10 @@ describe("CharacterCreationPage", () => {
 
     expect(screen.getByText("Draft is ready for review.")).toBeTruthy()
     expect(screen.getByText("Level Up (current: 2)")).toBeTruthy()
+    expect(window.localStorage.getItem("dnd.characterDraft.v1")).not.toContain("classLevels")
+    expect(JSON.parse(window.localStorage.getItem("dnd.characterDraft.v1") ?? "null")).toMatchObject({
+      advancement: [{ className: "fighter" }, { className: "fighter" }]
+    })
 
     fireEvent.click(screen.getByRole("button", { name: "+1 Fighter" }))
 

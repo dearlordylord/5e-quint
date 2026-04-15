@@ -1107,46 +1107,7 @@ describe("character semantics Quint parity", () => {
         wizardPreparedOnlyTransition,
       );
 
-      await runQuintParityModule(
-        `module characterDraftPreviewParity {
-  import creature.* from "../creature"
-  import characterCreation.* from "../character-creation"
-
-  pure val DRAFT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(draftPreview.candidateDraft)}
-
-  run parity_draft_preview_candidate_matches_ts = {
-    all {
-            ${renderAssessmentAssertions(
-              "DRAFT_PREVIEW_CANDIDATE",
-              draftPreview.candidateAssessment,
-            )}
-    }
-  }
-}
-`,
-        "character-draft-preview-parity",
-      );
-
-      await runQuintParityModule(
-        `module characterAdvancementPreviewParity {
-  import creature.* from "../creature"
-  import characterCreation.* from "../character-creation"
-
-  pure val ADVANCEMENT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(advancementPreview.candidateDraft)}
-
-  run parity_advancement_preview_candidate_matches_ts = {
-    all {
-            ${renderAssessmentAssertions(
-              "ADVANCEMENT_PREVIEW_CANDIDATE",
-              advancementPreview.candidateAssessment,
-            )}
-    }
-  }
-}
-`,
-        "character-advancement-preview-parity",
-      );
-
+      expect(multiclassPreview.candidateDraft.classLevels).toBeUndefined();
       expect(
         multiclassPreview.candidateDraft.choices?.multiclassSkills,
       ).toEqual({
@@ -1154,6 +1115,7 @@ describe("character semantics Quint parity", () => {
         ranger: ["survival"],
         rogue: ["stealth"],
       });
+      expect(wizardPreview.candidateDraft.classLevels).toBeUndefined();
       expect(wizardPreview.candidateDraft.spellcasting?.wizard).toEqual({
         cantrips: ["fire_bolt", "light", "mage_hand"],
         preparedSpells: [
@@ -1174,13 +1136,17 @@ describe("character semantics Quint parity", () => {
       });
 
       await runQuintParityModule(
-        `module characterPreviewMergeParity {
+        `module characterDraftPreviewParity {
   import creature.* from "../creature"
   import characterCreation.* from "../character-creation"
   import character.* from "../character"
 
+  pure val COMPLETE_FIGHTER_DRAFT: CharacterDraft = ${renderDraft(completeFighterDraft())}
   pure val COMPLETE_MULTICLASS_DRAFT: CharacterDraft = ${renderDraft(completeMulticlassDraft())}
   pure val COMPLETE_WIZARD_DRAFT: CharacterDraft = ${renderDraft(completeWizardDraft())}
+  pure val LEVEL_UP_FIGHTER_NO_PATCH: CharacterLevelUpTransition = ${renderTransition(
+    { entry: advancementEntry("fighter") },
+  )}
   pure val LEVEL_UP_ROGUE_PATCH: CharacterLevelUpTransition = ${renderTransition(
     {
       entry: advancementEntry("rogue"),
@@ -1192,46 +1158,120 @@ describe("character semantics Quint parity", () => {
     },
   )}
   pure val LEVEL_UP_WIZARD_PREPARED_ONLY: CharacterLevelUpTransition = ${renderTransition(wizardPreparedOnlyTransition)}
+  pure val DRAFT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(draftPreview.candidateDraft)}
+  pure val ADVANCEMENT_PREVIEW_CANDIDATE: CharacterDraft = ${renderDraft(advancementPreview.candidateDraft)}
 
-  run parity_advancement_preview_multiclass_merge_matches_ts = {
+  run parity_draft_preview_candidate_matches_ts = {
+    all {
+            ${renderAssessmentAssertions(
+              "DRAFT_PREVIEW_CANDIDATE",
+              draftPreview.candidateAssessment,
+            )}
+    }
+  }
+
+  run parity_advancement_preview_base_sheet_to_draft_matches_ts = {
+    match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
+      | Finalized(levelOneSheet) =>
+          match pAdvanceLevel(levelOneSheet, LEVEL_UP_FIGHTER_NO_PATCH) {
+            | Advanced(levelTwoSheet) =>
+                all {
+                  assert(pSheetToDraft(levelTwoSheet).classLevels == NoClassLevels),
+                  assert(
+                    pSheetToDraft(levelTwoSheet).advancement ==
+                      ${renderAdvancement(
+                        characterDraftFromSheet(fighterLevelTwo.sheet)
+                          .advancement,
+                      )},
+                  ),
+                }
+            | AdvanceBlocked(_) => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run parity_advancement_preview_candidate_matches_ts = {
+    all {
+            ${renderAssessmentAssertions(
+              "ADVANCEMENT_PREVIEW_CANDIDATE",
+              advancementPreview.candidateAssessment,
+            )}
+    }
+  }
+
+  run parity_advancement_preview_candidate_draft_matches_ts = {
+    match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
+      | Finalized(levelOneSheet) =>
+          match pAdvanceLevel(levelOneSheet, LEVEL_UP_FIGHTER_NO_PATCH) {
+            | Advanced(levelTwoSheet) =>
+                all {
+                  assert(
+                    pDraftFromSheetTransition(levelTwoSheet, LEVEL_UP_FIGHTER_NO_PATCH).classLevels ==
+                      NoClassLevels,
+                  ),
+                  assert(
+                    pDraftFromSheetTransition(levelTwoSheet, LEVEL_UP_FIGHTER_NO_PATCH).advancement ==
+                      ${renderAdvancement(advancementPreview.candidateDraft.advancement)},
+                  ),
+                }
+            | AdvanceBlocked(_) => assert(false)
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run parity_advancement_preview_multiclass_candidate_matches_ts = {
     match pFinalizeDraft(COMPLETE_MULTICLASS_DRAFT) {
       | Finalized(sheet) =>
           match pDraftFromSheetTransition(sheet, LEVEL_UP_ROGUE_PATCH).choices {
             | HasBuildChoices(choices) =>
-                assert(choices.multiclassSkills == ${renderMulticlassSkills({
-                  bard: ["history"],
-                  ranger: ["survival"],
-                  rogue: ["stealth"],
-                })})
+                all {
+                  assert(
+                    pDraftFromSheetTransition(sheet, LEVEL_UP_ROGUE_PATCH).classLevels ==
+                      NoClassLevels,
+                  ),
+                  assert(choices.multiclassSkills == ${renderMulticlassSkills({
+                    bard: ["history"],
+                    ranger: ["survival"],
+                    rogue: ["stealth"],
+                  })}),
+                }
             | _ => assert(false)
           }
       | Blocked(_) => assert(false)
     }
   }
 
-  run parity_advancement_preview_spellcasting_merge_matches_ts = {
+  run parity_advancement_preview_spellcasting_candidate_matches_ts = {
     match pFinalizeDraft(COMPLETE_WIZARD_DRAFT) {
       | Finalized(sheet) =>
           match pDraftFromSheetTransition(sheet, LEVEL_UP_WIZARD_PREPARED_ONLY).spellcasting {
             | HasSpellcastingChoices(spellcasting) =>
-                assert(spellcasting.wizard == ${renderSpellcastingEntry({
-                  cantrips: ["fire_bolt", "light", "mage_hand"],
-                  preparedSpells: [
-                    "burning_hands",
-                    "charm_person",
-                    "detect_magic",
-                    "magic_missile",
-                    "shield",
-                  ],
-                  spellbook: [
-                    "burning_hands",
-                    "charm_person",
-                    "detect_magic",
-                    "magic_missile",
-                    "identify",
-                    "sleep",
-                  ],
-                })})
+                all {
+                  assert(
+                    pDraftFromSheetTransition(sheet, LEVEL_UP_WIZARD_PREPARED_ONLY).classLevels ==
+                      NoClassLevels,
+                  ),
+                  assert(spellcasting.wizard == ${renderSpellcastingEntry({
+                    cantrips: ["fire_bolt", "light", "mage_hand"],
+                    preparedSpells: [
+                      "burning_hands",
+                      "charm_person",
+                      "detect_magic",
+                      "magic_missile",
+                      "shield",
+                    ],
+                    spellbook: [
+                      "burning_hands",
+                      "charm_person",
+                      "detect_magic",
+                      "magic_missile",
+                      "identify",
+                      "sleep",
+                    ],
+                  })}),
+                }
             | _ => assert(false)
           }
       | Blocked(_) => assert(false)
@@ -1239,7 +1279,7 @@ describe("character semantics Quint parity", () => {
   }
 }
 `,
-        "character-preview-merge-parity",
+        "character-preview-authority-parity",
       );
     },
   );
@@ -1304,6 +1344,19 @@ describe("character semantics Quint parity", () => {
   pure val LEVEL_UP_FIGHTER_NO_PATCH: CharacterLevelUpTransition = ${renderTransition(fighterLevelTwoTransition)}
   pure val LEVEL_UP_WIZARD_NO_PATCH: CharacterLevelUpTransition = ${renderTransition(wizardLevelTwoTransition)}
 
+  run parity_advancement_legal_sheet_legality_matches_ts = {
+    match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
+      | Finalized(sheet) =>
+          val legality = pSheetLegality(sheet)
+          all {
+            assert(legality.openChoices == Set()),
+            assert(legality.illegalIssues == Set()),
+            assert(pCanAdvance(sheet, LEVEL_UP_FIGHTER_NO_PATCH)),
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
   run parity_advancement_fighter_level_two_matches_ts = {
     match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
       | Finalized(sheet) =>
@@ -1330,6 +1383,23 @@ describe("character semantics Quint parity", () => {
                   assert(blocked.openChoices == ${renderIssueSet(wizardBlockedAssessment.openChoices.map((choice) => choice.code))}),
                   assert(blocked.illegalIssues == ${renderIssueSet(wizardBlockedAssessment.issues.map((issue) => issue.code))}),
                 }
+          }
+      | Blocked(_) => assert(false)
+    }
+  }
+
+  run parity_advancement_contradictory_sheet_legality_matches_ts = {
+    match pFinalizeDraft(COMPLETE_FIGHTER_DRAFT) {
+      | Finalized(sheet) =>
+          val contradictorySheet =
+            sheet.with("abilityScores", sheet.abilityScores.set(Str, 20))
+          val legality = pSheetLegality(contradictorySheet)
+          all {
+            assert(legality.openChoices == Set()),
+            assert(legality.illegalIssues == ${renderIssueSet(
+              contradictoryAdvance.issues.map((issue) => issue.code),
+            )}),
+            assert(not(pCanAdvance(contradictorySheet, LEVEL_UP_FIGHTER_NO_PATCH))),
           }
       | Blocked(_) => assert(false)
     }
