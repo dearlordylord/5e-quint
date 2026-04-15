@@ -309,6 +309,54 @@ refresh_plan_snapshot() {
   write_task_index
 }
 
+set_task_status_in_plan() {
+  local task_no="$1"
+  local task_id="$2"
+  local new_status="$3"
+  local target_file="$4"
+
+  node - "$target_file" "$task_no" "$task_id" "$new_status" <<'NODE'
+const fs = require("fs")
+const [path, taskNoRaw, taskId, newStatus] = process.argv.slice(2)
+const taskNo = Number(taskNoRaw)
+let text = fs.readFileSync(path, "utf8")
+
+text = text.replace(/<!-- ralph-task-index\n([\s\S]*?)\n-->/, (full, jsonBlock) => {
+  const index = JSON.parse(jsonBlock)
+  const task = index.tasks.find((entry) => entry.number === taskNo && entry.id === taskId)
+  if (!task) {
+    throw new Error(`task ${taskNo}/${taskId} missing from ralph-task-index`)
+  }
+  task.status = newStatus
+  return `<!-- ralph-task-index\n${JSON.stringify(index, null, 2)}\n-->`
+})
+
+const heading = new RegExp(`(### Task ${taskNo}[^\\n]*\\n\\nStatus: \\\`)([^\\\`]+)(\\\`)`)
+if (!heading.test(text)) {
+  throw new Error(`task heading/status missing for task ${taskNo}`)
+}
+text = text.replace(heading, `$1${newStatus}$3`)
+
+const lines = text.split("\n")
+for (let i = 0; i < lines.length; i += 1) {
+  const line = lines[i]
+  if (!line.startsWith("|")) continue
+  const cells = line.split("|")
+  if (cells.length < 5) continue
+  const order = cells[1]?.trim()
+  const titleCell = cells[2]?.trim()
+  if (order === String(taskNo) && titleCell.startsWith(`${taskId} -`)) {
+    cells[3] = ` ${newStatus} `
+    lines[i] = cells.join("|")
+    break
+  }
+}
+text = lines.join("\n")
+
+fs.writeFileSync(path, text)
+NODE
+}
+
 lookup_task_row() {
   local task_no="$1"
   awk -F $'\t' -v selected="$task_no" '
@@ -1337,6 +1385,27 @@ run_task_attempt() {
     note "task" "fatal-unknown-task-status task=$task_no attempt=$attempt_no status=$refreshed_task_status"
     append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-unknown-task-status" "-" "unknown refreshed plan status after decider"
     return 2
+  fi
+
+  if [[ "$decider_disposition" == "done" && "$authoritative_disposition" != "done" ]]; then
+    if set_task_status_in_plan "$task_no" "$task_id" "done" "$plan_file"; then
+      note "task" "warning-autorepaired-task-done-status task=$task_no attempt=$attempt_no previous_status=$refreshed_task_status"
+      refresh_plan_snapshot
+      refreshed_task_row="$(lookup_task_row "$task_no" || true)"
+      if [[ -z "$refreshed_task_row" ]]; then
+        printf 'task %s disappeared from refreshed plan after done-status autorepair\n' "$task_no" >"$last_error_file"
+        note "task" "fatal-missing-task-after-autorepair task=$task_no attempt=$attempt_no"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-missing-task-after-autorepair" "-" "task missing after done autorepair"
+        return 2
+      fi
+      IFS=$'\t' read -r _ref_task_no _ref_task_id refreshed_task_status _ref_task_start _ref_task_end _ref_task_title <<<"$refreshed_task_row"
+      if ! authoritative_disposition="$(disposition_from_task_status "$refreshed_task_status")"; then
+        printf 'task %s attempt %s ended with unknown refreshed plan status %s after autorepair\n' "$task_no" "$attempt_no" "$refreshed_task_status" >"$last_error_file"
+        note "task" "fatal-unknown-task-status task=$task_no attempt=$attempt_no status=$refreshed_task_status"
+        append_history "$iteration" "$task_no" "$task_id" "$attempt_no" "fatal-unknown-task-status" "-" "unknown refreshed plan status after done autorepair"
+        return 2
+      fi
+    fi
   fi
 
   if [[ -z "$decider_disposition" ]]; then
