@@ -1,0 +1,76 @@
+{
+  "description": "Channeling the chill of the grave, make a melee spell attack against a target within reach. On a hit, the target takes 1d10 Necrotic damage, and it can't regain Hit Points until the end of your next turn. Cantrip Upgrade: The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+  "id": "chill_touch",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "melee_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "axis": "character",
+            "base": {
+              "dice": 1,
+              "dieSize": 10
+            },
+            "kind": "threshold_tiers",
+            "tiers": [
+              {
+                "atLevel": 5,
+                "override": {
+                  "dice": 2
+                }
+              },
+              {
+                "atLevel": 11,
+                "override": {
+                  "dice": 3
+                }
+              },
+              {
+                "atLevel": 17,
+                "override": {
+                  "dice": 4
+                }
+              }
+            ]
+          },
+          "damageType": "necrotic",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "necromancy"
+  },
+  "name": "Chill Touch",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Chill Touch"
+  }
+}

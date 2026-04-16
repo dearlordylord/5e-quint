@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_bag_of_beans",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item family",
+      "justification": "types.ts defines no magic_item UnitRecord kind. The v4 taxonomy lists magic_item_root as a source atom, but there is no MagicItemRecord type, no magic_item mechanics family, and no tracer branch for kind='magic_item'. Every magic item hits this wall before any atom-level question can be asked.",
+      "evidence": "Kind: magic_item (unit header)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "charge resource (consumable inventory)",
+      "justification": "The bag contains 3d4 beans found randomly. Each use consumes one bean physically. This is neither use_count (no cap schedule, no reset cadence) nor spell_slot (no level axis). The v4 taxonomy lists 'charge' as a resource atom but it is absent from types.ts. Beans are individually consumable items that deplete permanently.",
+      "evidence": "This heavy cloth bag contains 3d4 dry beans when found. The bag... becomes a nonmagical item when it no longer contains any beans."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "random_table_dispatch (DM-agenda random table mechanic)",
+      "justification": "The plant-a-bean effect dispatches to a 1d100 table of 20 wildly different outcomes, most DM-determined: Treant alignment, GM's-choice monsters, ability score permanent increases, architectural creation, planar portals. No closed deterministic atom vocabulary can represent this; it is inherently DM agenda. Even if a magic_item family existed, this sub-mechanic would require dm_agenda classification.",
+      "evidence": "The GM can choose an effect from the following table or determine it randomly. [1d100 table with 20 entries including: treant with alignment per die roll, GM-chosen geyser substance, GM-chosen monsters from toad transformation, GM-determined pyramid treasure and undead, beanstalk leading where GM chooses]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two distinct activation modes: (1) dump beans — DC 15 Dex save, 5d4 Force in 10-ft sphere — this deterministic mode could encode as a save_gate activation if a magic_item family existed; (2) plant a bean — 1d100 random table, fully DM agenda. The primary blocker is the absence of any magic_item UnitRecord kind in types.ts. Secondary blockers: no charge resource variant for consumable inventory depletion, and the planted-bean effect is dm_agenda."
+}

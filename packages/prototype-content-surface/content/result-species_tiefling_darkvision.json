@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_tiefling_darkvision",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_trait / passive_innate family",
+      "justification": "The surface has no UnitRecord kind for species traits. UnitRecord is SpellRecord | ClassFeatureRecord | MasteryRecord — none of which can honestly represent a passive, always-on sensory property with no activation cost, no resource, and no trigger. The taxonomy already has species_trait_root and grant_sense, but neither a SpeciesTraitRecord type nor a mechanics family for passive innate properties exists.",
+      "evidence": "You have Darkvision with a range of 60 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "passive_grant mechanics family",
+      "justification": "Even if a SpeciesTraitRecord kind were added, no existing mechanics family fits a permanent, unconditional sense grant. activation (class feature) requires activationCost + resource + resetCadence. on_hit_trigger (mastery) requires a weapon hit. All spell families require casting time and level. A new 'passive_grant' family (no cost, no resource, no trigger, just a permanent effect applied at character creation) is needed.",
+      "evidence": "You have Darkvision with a range of 60 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Darkvision (Tiefling) is a purely passive, permanent sense grant — no activation, no resource, no trigger, no expiry. The v4 effect atom grant_sense exists and would cover the effect side, but two structural gaps block encoding: (1) no SpeciesTraitRecord kind in UnitRecord, and (2) no passive_grant (or equivalent) mechanics family. Both gaps are consistent with what earlier survey passes noted for other species darkvision traits."
+}

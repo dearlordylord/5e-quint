@@ -1,0 +1,52 @@
+{
+  "unit_slug": "hallow",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "CastingTime.hours",
+      "justification": "Hallow has a 24-hour casting time. Current CastingTime supports action, bonus_action, reaction, and minutes. No hours variant exists.",
+      "evidence": "\"time\": [{\"number\": 24, \"unit\": \"hour\"}]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration.permanent",
+      "justification": "Hallow's duration is permanent until dispelled. No existing Duration variant covers this — instantaneous, concentration, and timed all have finite lifespans or require active maintenance. Dispel is the only termination path.",
+      "evidence": "\"duration\": [{\"type\": \"permanent\", \"ends\": [\"dispel\"]}]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: area_entry_block",
+      "justification": "Hallowed Ward prevents creatures of a chosen type from willingly entering the area. This is mechanically distinct from roll_modifier and damage_on_hit — it is a continuous spatial barrier keyed to creature type. The v4 atom block_travel exists but has no surface OngoingOperation variant for area-entry-by-type-filter.",
+      "evidence": "Creatures of the chosen types can't willingly enter the area"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: condition_suppress_in_area",
+      "justification": "Hallowed Ward suppresses possession, Charmed, and Frightened conditions inflicted by the warded creature types on creatures inside the area. This is an ongoing passive condition-suppression effect scoped to an area — not representable as roll_modifier or damage_on_hit.",
+      "evidence": "any creature that is possessed by or that has the Charmed or Frightened condition from such creatures isn't possessed, Charmed, or Frightened by them while in the area"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: area_passive_rider (resistance, vulnerability, condition, block_teleport, environment)",
+      "justification": "The 10 Extra Effect options include granting resistance, vulnerability, applying or preventing conditions (Frightened), blocking teleportation/interplanar travel, creating darkness/daylight, silence, and language effects. None of these map to roll_modifier or damage_on_hit. They are area-scoped passive effects that activate while creatures are within the hallowed area.",
+      "evidence": "Resistance: creatures have Resistance to one damage type; Fear: creatures have the Frightened condition; Extradimensional Interference: creatures can't enter or exit using teleportation or interplanar travel; Darkness/Daylight/Silence"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingEffectMechanics.operations as ReadonlyArray<OngoingOperation>",
+      "justification": "Hallow applies two simultaneous ongoing effects: Hallowed Ward (always) plus the chosen Extra Effect. The current OngoingEffectMechanics has a single operation field. This needs to become an array — or a separate multi-operation family is needed.",
+      "evidence": "The affected area has the following effects: [Hallowed Ward — always active] + [one Extra Effect chosen from 10 at cast time]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: choice_at_cast (choose one of N options)",
+      "justification": "The Extra Effect is selected by the caster from 10 options at cast time. This is a choose procedure (v4 atom exists) applied at cast time, but there is no surface encoding for 'choose one of these operation variants at cast time and bind it permanently.'",
+      "evidence": "You bind an extra effect to the area from the list below: [Courage, Darkness, Daylight, Peaceful Rest, Extradimensional Interference, Fear, Resistance, Silence, Tongues, Vulnerability]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Hallow fits the ongoing_effect family conceptually — it is a persistent area effect that applies passive riders to creatures within range. However, encoding is blocked by at least four distinct surface gaps: (1) no hours CastingTime variant, (2) no permanent Duration variant, (3) no area-passive OngoingOperation variants (entry-block, condition-suppress, resistance, vulnerability, etc.), and (4) single-operation constraint on OngoingEffectMechanics prevents Hallowed Ward + Extra Effect coexistence. The choose-at-cast mechanic for the Extra Effect is an additional surface gap. All proposed widenings use existing v4 atoms (block_travel, apply_condition, remove_condition, grant_resistance, etc.) — no new v4 atoms are needed, only new surface variants to expose them."
+}

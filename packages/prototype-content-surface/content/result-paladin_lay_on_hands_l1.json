@@ -1,0 +1,34 @@
+{
+  "unit_slug": "paladin_lay_on_hands_l1",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "hp_pool resource",
+      "justification": "Lay On Hands uses a numeric HP pool (5 × paladin level) that is spent in variable amounts per use. UseCountResource models discrete uses with a fixed or tiered cap; it cannot represent a pool where each activation drains an arbitrary player-chosen number of HP.",
+      "evidence": "you can restore a total number of Hit Points equal to five times your Paladin level … draw power from the pool of healing to restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool"
+    },
+    {
+      "kind": "new_variant",
+      "name": "pool_bounded heal amount",
+      "justification": "The heal is a player-chosen integer bounded by pool remainder — not a dice roll. DiceAmount (fixed / threshold_tiers / linear_per_level) exclusively represents dice expressions. A new variant like { kind: 'pool_bounded' } or { kind: 'variable_up_to_resource' } is required.",
+      "evidence": "restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool"
+    },
+    {
+      "kind": "new_variant",
+      "name": "remove_condition in ClassFeatureEffect",
+      "justification": "remove_condition is a v4 atom (§9) but is not exposed in the ClassFeatureEffect union (currently GrantExtraActionEffect | HealHpEffect). The Poisoned-removal use requires it as an effect variant on a class feature.",
+      "evidence": "expend 5 Hit Points from the pool of healing power to remove the Poisoned condition from the creature"
+    },
+    {
+      "kind": "new_variant",
+      "name": "multi-path activation on ClassFeatureActivationMechanics",
+      "justification": "Lay On Hands can be activated in two distinct ways (heal HP OR remove condition) each consuming different amounts from the same pool. ClassFeatureActivationMechanics has a single 'effect' field and cannot express two divergent activation paths sharing one resource.",
+      "evidence": "As a Bonus Action … restore a number of Hit Points … You can also expend 5 Hit Points … to remove the Poisoned condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family is correct for this unit (bonus-action activated class feature with resource + long-rest reset). All gaps are surface-level type shapes — no new v4 atom is required. The deepest blocker is the resource model: UseCountResource cannot represent a variable-spend numeric HP pool. A new resource kind (hp_pool) and a corresponding non-dice heal amount variant are the minimum changes needed before a clean encoding is possible. The condition-removal secondary use and the dual-path structure are additional gaps that would surface once the resource type is widened."
+}

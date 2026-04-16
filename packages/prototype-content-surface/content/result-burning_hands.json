@@ -1,0 +1,22 @@
+{
+  "unit_slug": "burning_hands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "area.shape.cone",
+      "justification": "Burning Hands creates a 15-foot cone AoE. The current Attachment area shape only supports sphere (radiusFeet). A cone variant is needed — e.g., { kind: 'cone'; lengthFeet: number } — to represent this and all other cone-shaped area spells (Thunderwave-style, Dragon's Breath, Cone of Cold, etc.).",
+      "evidence": "Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaOrigin.on_self",
+      "justification": "The cone emanates from the caster's position (range: Self). Neither existing AreaOrigin variant (point_within_range, on_primary_target) captures self-origin area effects. A cone shape may encode this implicitly, but if AreaOrigin remains, an on_self variant is needed for Burning Hands, Thunderwave, and similar self-emanating areas.",
+      "evidence": "A thin sheet of flames shoots forth from you. [Range is Self; the caster is the cone's apex.] range.type = 'cone', indicating self-origin."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family and save_gate phase fit cleanly. Slot scaling is expressible as DiceAmount linear_per_level (axis=slot, base=3d6, perLevel={dice:1}, startingAtLevel=1). DamageType 'fire' exists. The only blockers are geometric: cone shape is absent from area Attachment, and self-origin is absent from AreaOrigin. The secondary flammable-objects effect is DM agenda (environmental narrative, not deterministic mechanical resolution) and is intentionally omitted. No new atoms are needed — this is purely a surface type gap."
+}

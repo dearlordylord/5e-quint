@@ -1,0 +1,28 @@
+{
+  "unit_slug": "transport_via_plants",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "portal_link",
+      "justification": "The spell creates a persistent two-anchor passage between a source plant and a destination plant. No existing family can express (a) two distinct anchor points and (b) a transport effect as the payload when the trigger fires. The anchored_trigger family is the closest analogue but is structurally limited to a single anchor and to signal-only payloads (audible/mental). A new 'portal_link' family is required that holds source and destination anchors, a movement trigger, and yields a transport effect.",
+      "evidence": "This spell creates a magical link between a Large or larger inanimate plant within range and another plant, at any distance, on the same plane of existence. For the duration, any creature can step into the target plant and exit from the destination plant by using 5 feet of movement."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchorTarget.plant",
+      "justification": "The source anchor is a specific Large-or-larger inanimate plant, not a door/window location or a cube-shaped area. A new AnchorTarget variant is needed for plant objects (and more generally, named object anchors).",
+      "evidence": "a Large or larger inanimate plant within range"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredSignal.transport",
+      "justification": "Even if anchored_trigger were extended with a destination field, the release payload is not a sound or mental alert — it physically moves a creature from the source anchor to the destination anchor. A transport signal variant would be needed (or the effect atom transport_exile must be reachable from the anchored-trigger release node).",
+      "evidence": "any creature can step into the target plant and exit from the destination plant by using 5 feet of movement"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The core mechanic — a persistent two-way portal between two object anchors — does not map to any existing SpellMechanics family. The spell is not 'ongoing_effect' (no roll modifier or damage-on-hit rider), not 'activation' (not one-shot), not 'triggered_reaction', and not honestly 'anchored_trigger' (single anchor, signal payload only). A new 'portal_link' family should have: source anchor, destination anchor, movement trigger cost (5 ft), duration (timed 10 min), and yield the v4 effect atom 'transport_exile' or a dedicated 'portal_transit' effect. The destination must be a separate anchor node because its constraint (same plane, previously seen or touched) is authoring-time metadata distinct from the source."
+}

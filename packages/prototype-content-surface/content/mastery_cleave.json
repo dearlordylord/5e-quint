@@ -1,0 +1,32 @@
+{
+  "description": "If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
+  "id": "mastery_cleave",
+  "kind": "mastery",
+  "mechanics": {
+    "effect": {
+      "attackKind": "melee_weapon_attack",
+      "kind": "grant_weapon_attack",
+      "onHit": {
+        "abilityModifier": "negative_only",
+        "kind": "weapon_damage"
+      },
+      "secondaryTarget": {
+        "constraint": "within_5ft_and_reach",
+        "kind": "adjacent_to_primary"
+      }
+    },
+    "family": "on_hit_trigger",
+    "optional": true,
+    "trigger": {
+      "kind": "weapon_hit_melee_only"
+    },
+    "usageLimit": {
+      "kind": "once_per_turn"
+    }
+  },
+  "name": "Cleave",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Cleave"
+  }
+}

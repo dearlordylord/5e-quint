@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_feather_token",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "No magic_item kind exists in UnitRecord. types.ts defines only SpellRecord, ClassFeatureRecord, and MasteryRecord. The v4 taxonomy lists magic_item_root as a source atom but there is no authored surface type with kind: \"magic_item\", no mechanics family, and no tracer branch for magic items.",
+      "evidence": "Feather Token carries kind: magic_item in the survey manifest. The UnitRecord union has no MagicItemRecord arm."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_variant_family",
+      "justification": "Feather Token is a family of 6 distinct single-use tokens (Anchor, Bird, Fan, Swan Boat, Tree, Whip), each with mechanically independent effects. No variant-family shape exists in the surface. The surface would need either six separate records or a variant-dispatch envelope with shared metadata and per-variant mechanics.",
+      "evidence": "Different types of feather tokens exist, each with a different single-use effect. The GM chooses the kind of token or determines it randomly by rolling on the Feather Tokens table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "single_use_charge_with_item_destruction",
+      "justification": "Each token is consumed on use and disappears permanently. The existing charge atom covers per-use depletion but there is no lifecycle shape for item-destruction-on-expend (the item ceases to exist, not merely becomes inert). A 'disappear on expend' expiry variant is needed in the surface.",
+      "evidence": "When the effect ends, the token disappears. (Anchor) / The token disappears and an enormous, multicolored bird takes its place. (Bird)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "attack_proxy_with_bonus_action_redirect",
+      "justification": "The Whip token creates a floating weapon proxy (create_attack_proxy atom exists in v4) that can be redirected up to 20 feet as a Bonus Action each turn to repeat its attack. The existing on_hit_trigger and mastery attack_proxy patterns do not cover a persistent, owner-controlled proxy with a per-turn redirect cost. A redirect mechanics shape is missing from the surface.",
+      "evidence": "As a Bonus Action, you can direct the whip to fly up to 20 feet and repeat the attack against a creature within 10 feet of the whip."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Encoding is blocked at the top-level kind: MagicItemRecord does not exist in UnitRecord. Even if a magic_item family were added, the Feather Token would require a variant-family envelope (six tokens) before any per-token mechanics could be authored. For reference: Whip is the most encodable variant (create_attack_proxy + action_quota + fixed damage 1d6+5 force, +9 attack); Tree and Anchor are partially expressible (create_object, block_travel); Bird requires create_companion with complex carry and dismiss logic; Fan and Swan Boat operate on vehicles, which are not in the creature/object model. None of the six tokens can be forced into a SpellRecord, ClassFeatureRecord, or MasteryRecord without producing a misleading trace."
+}

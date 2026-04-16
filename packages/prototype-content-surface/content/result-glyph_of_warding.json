@@ -1,0 +1,46 @@
+{
+  "unit_slug": "glyph_of_warding",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Duration.permanent",
+      "justification": "Glyph of Warding lasts until dispelled or triggered — no fixed time bound. The existing Duration variants (instantaneous, concentration, timed) cannot represent this. A new 'permanent' kind with an 'ends' array (dispel | trigger) is required.",
+      "evidence": "duration: [{ type: 'permanent', ends: ['dispel', 'trigger'] }]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredSignal.explosive_rune",
+      "justification": "The Explosive Rune release mode is a 20-ft radius sphere area save-gate delivering 5d8 typed damage (caster's choice of acid/cold/fire/lightning/thunder), half on success. No existing AnchoredSignal variant (audible, mental) can represent a damage effect.",
+      "evidence": "When triggered, the glyph erupts with magical energy in a 20-foot-radius Sphere centered on the glyph. Each creature in the area makes a Dexterity saving throw. A creature takes 5d8 Acid, Cold, Fire, Lightning, or Thunder damage (your choice when you create the glyph) on a failed save or half as much damage on a successful one."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredSignal.stored_spell",
+      "justification": "The Spell Glyph release mode stores a prepared spell of level 3 or lower at cast time and delivers it to the triggering creature on release. This is a stored_spell payload, not an audible or mental signal. The stored_spell attachment atom exists in the v4 taxonomy but is absent from AnchoredSignal.",
+      "evidence": "You can store a prepared spell of level 3 or lower in the glyph by casting it as part of creating the glyph. The spell must target a single creature or an area. When the glyph is triggered, the stored spell takes effect. If the spell has a target, it targets the creature that triggered the glyph."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredEvent.opening_object",
+      "justification": "GoW supports triggering when a closeable object containing the glyph is opened. The existing events (physical_contact, enters_area) do not cover this.",
+      "evidence": "For glyphs inscribed within an object, common triggers include opening that object or seeing the glyph."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredEvent.sees_glyph",
+      "justification": "GoW can also trigger when a creature sees the glyph — not covered by any existing AnchoredEvent variant.",
+      "evidence": "common triggers include ... seeing the glyph"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchorTarget.location.description broadening",
+      "justification": "The existing AnchorTarget.location.description is typed as the literal 'door_or_window' (from Alarm). GoW anchors to any surface (table, floor) or any closeable object (book, chest). This description field must be widened to a broader string literal union or made more permissive.",
+      "evidence": "You inscribe it either on a surface (such as a table or a section of floor) or within an object that can be closed (such as a book or chest)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The anchored_trigger family is the correct fit — types.ts explicitly anticipated GoW ('Future: Glyph of Warding'). All gaps are missing variants of existing surface types: Duration needs 'permanent', AnchoredSignal needs 'explosive_rune' and 'stored_spell', AnchoredEvent needs 'opening_object' and 'sees_glyph', and AnchorTarget.location.description must broaden beyond 'door_or_window'. The stored_spell signal is the most structurally novel: it requires encoding that an arbitrary spell payload is stored at cast time and re-targeted on release. The explosive_rune signal is straightforward once the signal type is widened to carry a save_gate+area_damage payload. No atoms beyond existing v4 inventory are required — the needed atoms (save_gate, damage, area, release, stored_spell) all exist in v4."
+}

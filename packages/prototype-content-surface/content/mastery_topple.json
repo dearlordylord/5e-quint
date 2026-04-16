@@ -1,0 +1,32 @@
+{
+  "description": "If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.",
+  "id": "mastery_topple",
+  "kind": "mastery",
+  "mechanics": {
+    "effect": {
+      "ability": "con",
+      "dc": {
+        "base": 8,
+        "kind": "weapon_attack_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "condition": "prone",
+        "kind": "apply_condition"
+      },
+      "onSuccess": {
+        "kind": "none"
+      }
+    },
+    "family": "on_hit_trigger",
+    "optional": true,
+    "trigger": {
+      "kind": "weapon_hit"
+    }
+  },
+  "name": "Topple",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Topple"
+  }
+}

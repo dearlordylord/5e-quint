@@ -1,0 +1,77 @@
+{
+  "description": "A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn. Cantrip Upgrade: The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+  "id": "ray_of_frost",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "axis": "character",
+            "base": {
+              "dice": 1,
+              "dieSize": 8
+            },
+            "kind": "threshold_tiers",
+            "tiers": [
+              {
+                "atLevel": 5,
+                "override": {
+                  "dice": 2
+                }
+              },
+              {
+                "atLevel": 11,
+                "override": {
+                  "dice": 3
+                }
+              },
+              {
+                "atLevel": 17,
+                "override": {
+                  "dice": 4
+                }
+              }
+            ]
+          },
+          "damageType": "cold",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Ray of Frost",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Ray of Frost"
+  }
+}

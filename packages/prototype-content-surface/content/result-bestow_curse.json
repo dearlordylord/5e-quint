@@ -1,0 +1,64 @@
+{
+  "unit_slug": "bestow_curse",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "cursed_effect family (save_gate → apply_curse + choose ongoing_rider)",
+      "justification": "No existing payload family handles the pattern: (1) initial touch delivery with a saving throw gate, (2) on failure apply a persistent curse state, (3) while cursed the target suffers a caster-chosen ongoing rider. Neither 'activation' (only resolves instant effects) nor 'ongoing_effect' (no initial save gate) can express this. A new family or a family composition mechanism is required.",
+      "evidence": "You touch a creature, which must succeed on a Wisdom saving throw or become cursed for the duration. Until the curse ends, the target suffers one of the following effects of your choice:"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "choose_effect — caster-choice of N ongoing riders at cast time",
+      "justification": "The four curse options are a caster choice made at cast time. The surface has no ChoiceOf<T> or select_one_of mechanism anywhere in any payload family. The v4 taxonomy has a 'choose' procedure atom but the surface type system has no corresponding structural type.",
+      "evidence": "the target suffers one of the following effects of your choice"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RollKind: ability_check",
+      "justification": "Curse option A applies disadvantage to ability checks made with the chosen ability. RollKind is currently 'attack_roll' | 'saving_throw' — there is no ability_check variant. Option A cannot be represented without this.",
+      "evidence": "The target has Disadvantage on ability checks and saving throws made with that ability."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RollModifier: ability-scoped (on saves/checks with one named ability)",
+      "justification": "Even with ability_check added to RollKind, the existing roll_modifier operation has no ability-filter axis. Option A applies disadvantage only to rolls using one specific ability (caster's choice at cast time). This is a new dimension on the modifier shape.",
+      "evidence": "Choose one ability. The target has Disadvantage on ability checks and saving throws made with that ability."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RollModifier: relational scoping (attacks targeting a specific creature)",
+      "justification": "Curse option B applies attack-roll disadvantage to attacks made by the target against the caster specifically. Current roll_modifier has no 'when targeting creature X' scoping — it applies uniformly on the attachment. This requires a relational filter on the modifier.",
+      "evidence": "The target has Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_atom",
+      "name": "repeat_save — per-turn saving throw (surface exposure)",
+      "justification": "Curse option C requires a saving throw at the start of each of the target's turns. The v4 taxonomy has 'repeat_save' but the surface type system has no corresponding atom or phase shape. The existing save_gate in ActivationPhase is a one-time phase; there is no per-turn repeat save structure in SpellMechanics.",
+      "evidence": "In combat, the target must succeed on a Wisdom saving throw at the start of each of its turns or be forced to take the Dodge action on that turn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "compel_action — force target to take a specific standard action",
+      "justification": "On failing the per-turn save (option C), the target is *forced* to take the Dodge action. This is an affirmative action compulsion, distinct from restrict_action_set (which removes options) — it actively mandates a specific action. No existing effect atom covers this.",
+      "evidence": "or be forced to take the Dodge action on that turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DamageOnHitOperation: on_damage_from_caster (attack roll OR spell)",
+      "justification": "Curse option D triggers extra necrotic damage when the caster deals *any* damage to the target — via attack roll or spell. The existing DamageOnHitOperation only fires on attack-roll hits (on_hit_window). A broader 'on any damage from caster' trigger is needed, covering spell damage.",
+      "evidence": "If you deal damage to the target with an attack roll or a spell, the target takes an extra 1d8 Necrotic damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: cursed (or a general apply_ongoing_effect result for save gates)",
+      "justification": "The save gate in Bestow Curse applies a curse state (the container for the ongoing riders), not a standard SRD condition. The Effect type on save gates only has 'damage' and 'none'. An 'apply_ongoing_effect' or 'apply_curse' result is needed to model the save gate's on-fail outcome.",
+      "evidence": "the target suffers one of the following effects of your choice"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Bestow Curse has a clearly identifiable structure — initial save gate delivering a persistent curse with a caster-chosen rider — but no existing family or composition path can represent it honestly. The primary block is structural: the surface has no family for 'save-gated application of a persistent curse state.' Each of the four curse options also individually surfaces gaps (ability_check roll kind, relational roll scoping, per-turn repeat save, action compulsion, on-spell-damage rider), but these are secondary to the missing top-level family. The higher-level duration scaling (concentration drops at level 5+, permanent at level 9) is a further gap not modeled by any existing Duration variant but is omitted here as a secondary concern."
+}

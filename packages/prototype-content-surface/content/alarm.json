@@ -1,0 +1,70 @@
+{
+  "description": "You set an alarm against intrusion. Choose a door, a window, or an area within range that is no larger than a 20-foot Cube. Until the spell ends, an alarm alerts you whenever a creature touches or enters the warded area. When you cast the spell, you can designate creatures that won't set off the alarm. You also choose whether the alarm is audible or mental: Audible Alarm — the alarm produces the sound of a handbell for 10 seconds within 60 feet of the warded area. Mental Alarm — you are alerted by a mental ping if you are within 1 mile of the warded area. This ping awakens you if you're asleep.",
+  "id": "alarm",
+  "kind": "spell",
+  "mechanics": {
+    "anchor": {
+      "kind": "area",
+      "shape": {
+        "kind": "cube",
+        "maxSideFeet": 20
+      }
+    },
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": true
+    },
+    "components": {
+      "m": "a bell and silver wire",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "events": [
+      {
+        "kind": "physical_contact"
+      },
+      {
+        "kind": "enters_area"
+      }
+    ],
+    "family": "anchored_trigger",
+    "filters": [
+      {
+        "chosenAtCast": true,
+        "kind": "creature_exemption_list"
+      }
+    ],
+    "level": 1,
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "abjuration",
+    "signals": [
+      {
+        "audibleRadiusFeet": 60,
+        "durationSeconds": 10,
+        "kind": "audible",
+        "sound": "handbell"
+      },
+      {
+        "awakensIfAsleep": true,
+        "kind": "mental",
+        "rangeFeet": 5280
+      }
+    ]
+  },
+  "name": "Alarm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Alarm"
+  }
+}

@@ -1,1 +1,22 @@
-{"unit_slug":"chain_lightning","outcome":"surface_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "chain_lightning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "chain_target_selection",
+      "justification": "Chain Lightning selects one primary target at full range (150 ft), then selects up to N secondary targets each constrained to within 30 ft of the primary. All targets (primary + secondaries) take the same save-gated effect simultaneously. The existing TargetSelection variants ('one' and 'choose_up_to') have no notion of primary/secondary tiers and no spatial constraint between targets. A new variant is needed — e.g. { mode: 'chain'; secondary: { count: SlotScaling<number>; withinFeetOfPrimary: number } } — to express this hub-and-spoke targeting structure.",
+      "evidence": "Three bolts then leap from that target to as many as three other targets of your choice, each of which must be within 30 feet of the first target."
+    },
+    {
+      "kind": "new_variant",
+      "name": "scale_chain_bolt_count",
+      "justification": "Higher-level casting adds one secondary bolt per slot level above 6. Once a chain_target_selection variant exists, this scaling maps cleanly to the existing SlotScaling<number> shape on the secondary count field. No new scaling atom is needed — scale_target_count covers it — but the chain variant must exist first to host the per-slot progression.",
+      "evidence": "One additional bolt leaps from the first target to another target for each spell slot level above 6."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Chain Lightning fits the activation/save_gate family and uses only existing v4 atoms (save_gate, damage, spell_slot, scale_target_count). The sole blocking gap is TargetSelection: no current variant can express 'one primary at full range plus up to N secondaries within 30 ft of that primary.' Encoding the spell without this variant would require either (a) losing the 30 ft proximity constraint entirely, or (b) splitting into two sequential save_gate phases which misrepresents simultaneous resolution. Neither is honest. No dhall/json authored."
+}

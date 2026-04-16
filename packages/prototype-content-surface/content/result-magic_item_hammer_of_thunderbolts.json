@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_hammer_of_thunderbolts",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item_root family",
+      "justification": "UnitRecord in types.ts has SpellRecord | ClassFeatureRecord | MasteryRecord only. No MagicItemRecord exists. The magic_item_root atom exists in the v4 taxonomy but there is no corresponding surface record shape, mechanics header, or payload family to author into.",
+      "evidence": "Weapon (Maul or Warhammer), Legendary (Requires Attunement)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: stunned",
+      "justification": "The thunderclap save gate inflicts the Stunned condition on failure. types.ts Condition = 'prone' only; 'stunned' is not representable.",
+      "evidence": "must succeed on a DC 17 Constitution saving throw or have the Stunned condition until the end of your next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: daily_at_dawn (dice recharge)",
+      "justification": "The weapon regains 1d4+1 expended charges daily at dawn. No existing RestResetCadence variant covers a time-of-day (dawn) recharge with a dice roll quantity; the current set covers only short/long rest semantics.",
+      "evidence": "The weapon regains 1d4 + 1 expended charges daily at dawn."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "attunement_condition / cross-item activation gate",
+      "justification": "Giant's Bane features only activate while attuned to this weapon AND wearing either Belt of Giant Strength or Gauntlets of Ogre Power (also attuned). No mechanism exists for cross-item attunement prerequisites gating feature activation.",
+      "evidence": "While you are attuned to the weapon and wearing either a Belt of Giant Strength or Gauntlets of Ogre Power to which you are also attuned"
+    },
+    {
+      "kind": "new_atom",
+      "name": "crit_window (roll-20 trigger on creature-type filter)",
+      "justification": "Giants' Bane fires when the wielder rolls exactly 20 on the d20 for an attack roll against a Giant. This is distinct from on_hit_window (any hit) and requires a roll-value gate plus a creature-type filter neither of which is modeled.",
+      "evidence": "When you roll a 20 on the d20 for an attack roll made with this weapon against a Giant, the creature must succeed on a DC 17 Constitution saving throw or die."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score (runtime item effect)",
+      "justification": "Might of Giants increases the Strength score granted by Belt of Giant Strength / Gauntlets of Ogre Power by 4, to a max of 30. This is a runtime ability-score modification that the v4 taxonomy explicitly marks as out-of-scope / deferred.",
+      "evidence": "The Strength score bestowed by your Belt of Giant Strength or Gauntlets of Ogre Power increases by 4, to a maximum of 30."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is the total absence of a MagicItemRecord kind in UnitRecord. Even with that added, at least five further widenings are required: stunned condition, dawn-recharge cadence, cross-item attunement gating, nat-20 crit_window atom, and ability-score modification. The thrown-weapon-returns mechanic (weapon flies back after hit or miss) is also unrepresented but is secondary to the above. Encoding was refused entirely — no .dhall or .json produced."
+}

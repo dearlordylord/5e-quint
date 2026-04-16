@@ -1,0 +1,34 @@
+{
+  "unit_slug": "charm_person",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Condition: \"charmed\"",
+      "justification": "The Charmed condition is the core on-fail effect of Charm Person. The current Condition type only allows \"prone\". Adding \"charmed\" (and likely other standard SRD conditions) is the minimum widening to express this spell's effect. The v4 apply_condition atom exists; only the closed enum value is missing.",
+      "evidence": "On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Conditional save advantage in ActivationPhase.save_gate",
+      "justification": "Charm Person grants the saving throw target Advantage if the caster or allies are currently fighting it. ActivationPhase.save_gate has no field for conditional roll modifiers on the save itself. This needs a new optional field (e.g. saveAdvantageIf) or a new variant of the save_gate phase.",
+      "evidence": "It does so with Advantage if you or your allies are fighting it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Event-driven early expiry: damaged_by_caster_or_allies",
+      "justification": "The charmed condition ends early when the caster or their allies deal damage to the target. The current Duration model (timed / concentration) only supports fixed-time expiry with no mechanism for mid-duration event-driven termination based on damage source. A new expiry variant or an additional breakCondition field on timed Duration is needed.",
+      "evidence": "the target has the Charmed condition until the spell ends or until you or your allies damage it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Creature type filter on TargetSelection",
+      "justification": "Charm Person targets only Humanoids. The current TargetSelection type (mode: \"one\" | \"choose_up_to\") has no creature type constraint. Adding an optional creatureType filter field on TargetSelection would cover Charm Person and similar creature-typed spells (Charm Monster, Hold Person, etc.).",
+      "evidence": "One Humanoid you can see within range makes a Wisdom saving throw."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Structural family is unambiguous: activation/save_gate. The spell would typecheck and trace correctly once the four surface widenings land. Higher-slot scaling (+1 target per slot above 1) is already encodable via SlotScaling on TargetSelection.choose_up_to. The 'Friendly to you' attitude and 'target knows it was Charmed' clauses are narrative/DM-agenda effects outside core mechanics scope per ARCHITECTURE.md and are correctly omitted."
+}

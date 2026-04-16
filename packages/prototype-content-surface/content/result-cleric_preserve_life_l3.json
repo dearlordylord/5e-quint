@@ -1,0 +1,40 @@
+{
+  "unit_slug": "cleric_preserve_life_l3",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost { kind: 'action' }",
+      "justification": "Preserve Life uses 'a Magic action', which costs the turn's Action. Current ClassFeatureActivationCost only has 'free' and 'bonus_action' variants; there is no 'action' (or 'magic') option.",
+      "evidence": "As a Magic action, you present your Holy Symbol and expend a use of your Channel Divinity…"
+    },
+    {
+      "kind": "new_variant",
+      "name": "HealHpEffect multi-target pool variant",
+      "justification": "Preserve Life generates a total HP pool (5 × cleric level) and distributes it across multiple chosen targets. The current HealHpEffect only supports target: 'self' | 'target_creature' (single target with a fixed/scaled per-target amount). A pool-allocation variant is needed: total_pool distributed among N chosen creatures.",
+      "evidence": "…evoke healing energy that can restore a number of Hit Points equal to five times your Cleric level. Choose Bloodied creatures within 30 feet of yourself…and divide those Hit Points among them."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount flat-scalar variant (or DiceExpr with dice:0 allowed)",
+      "justification": "The heal pool is '5 × cleric level' — a purely flat numeric value with no dice. DiceExpr requires non-optional dice and dieSize fields; encoding 0d1 + 5/level is semantically dishonest. A flat_per_level shape or explicit flat-only DiceExpr is needed.",
+      "evidence": "…restore a number of Hit Points equal to five times your Cleric level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "TargetFilter { kind: 'bloodied' } on target selection",
+      "justification": "Targets must be Bloodied (≤ half max HP). No TargetFilter or targeting predicate concept exists in the surface. This is a hard eligibility constraint, not a soft choice.",
+      "evidence": "Choose Bloodied creatures within 30 feet of yourself…"
+    },
+    {
+      "kind": "new_variant",
+      "name": "HealHpEffect.cap: 'half_max_hp'",
+      "justification": "The heal to any single creature is capped at 'no more than half its Hit Point maximum'. The current HealHpEffect has no cap field.",
+      "evidence": "This feature can restore a creature to no more than half its Hit Point maximum."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Five distinct surface gaps prevent honest encoding. The most immediately blocking is the missing 'action' (Magic action) activation cost variant — typecheck would fail without it. The heal effect itself requires a new family: a total-HP-pool distributed across filtered targets with a per-target cap, which is structurally different from the existing single-target heal_hp. No dhall, json, or trace written."
+}

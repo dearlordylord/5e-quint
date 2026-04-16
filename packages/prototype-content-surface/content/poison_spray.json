@@ -1,0 +1,77 @@
+{
+  "description": "You spray toxic mist at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d12 Poison damage. Cantrip Upgrade: The damage increases by 1d12 when you reach levels 5 (2d12), 11 (3d12), and 17 (4d12).",
+  "id": "poison_spray",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "axis": "character",
+            "base": {
+              "dice": 1,
+              "dieSize": 12
+            },
+            "kind": "threshold_tiers",
+            "tiers": [
+              {
+                "atLevel": 5,
+                "override": {
+                  "dice": 2
+                }
+              },
+              {
+                "atLevel": 11,
+                "override": {
+                  "dice": 3
+                }
+              },
+              {
+                "atLevel": 17,
+                "override": {
+                  "dice": 4
+                }
+              }
+            ]
+          },
+          "damageType": "poison",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Poison Spray",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-N-R#Poison Spray"
+  }
+}

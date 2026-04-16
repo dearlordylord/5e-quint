@@ -1,1 +1,16 @@
-{"unit_slug":"burning_hands","outcome":"surface_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "burning_hands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "half_damage_of_fail",
+      "justification": "Burning Hands deals half damage on a successful save. This is a relative modifier on the failed-save damage, not an independent dice expression. Halving odd die counts is not representable as a DiceAmount (3d6/2 = 1.5d6, 5d6/2 = 2.5d6), and any approximation is statistically wrong. A new EffectAtom variant — or an optional flag on save_gate — is needed to express 'half of the onFail damage, rounded down.'",
+      "evidence": "taking 3d6 Fire damage on a failed save or half as much damage on a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits activation/save_gate/area(cone) cleanly except for the half-damage-on-save pattern. Range is Self; area is a 15-ft cone originating from the caster (point_within_range with a self range node). Slot scaling is linear: +1d6 fire per slot above 1. The 'flammable objects ignite' secondary effect is DM-agenda environmental state and legitimately omitted. The sole blocker is onSuccess: the current EffectAtom has no way to express 'half of the failed-save damage roll' without lying about the dice."
+}

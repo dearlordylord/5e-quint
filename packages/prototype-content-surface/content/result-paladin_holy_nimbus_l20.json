@@ -1,0 +1,34 @@
+{
+  "unit_slug": "paladin_holy_nimbus_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationMechanics.effects (array)",
+      "justification": "Holy Nimbus grants three simultaneous independent effects (Holy Ward, Radiant Damage, Sunlight). The current ClassFeatureActivationMechanics has a single 'effect' field; it must become 'effects: ReadonlyArray<ClassFeatureEffect>' to encode this unit honestly.",
+      "evidence": "granting the benefits below for 10 minutes... Holy Ward. ... Radiant Damage. ... Sunlight."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: modify_roll_advantage (with creature-type source filter)",
+      "justification": "Holy Ward grants Advantage on saving throws but only when the forcing source is a Fiend or Undead. No existing ClassFeatureEffect variant exposes modify_roll_advantage at all, and none supports a creature-type source filter. The v4 atom 'modify_roll_advantage' exists but the class-feature surface never wires it.",
+      "evidence": "You have Advantage on any saving throw you are forced to make by a Fiend or an Undead."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "ClassFeatureEffect: area_damage_on_turn_start",
+      "justification": "Radiant Damage requires a new class feature effect shape: turn_start_window opens for each enemy in the aura area, which grants a damage effect. The v4 atoms 'turn_start_window', 'area', and 'damage' all exist, but ClassFeatureEffect has no variant that composes them into a 'persistent area that deals damage when an enemy starts their turn inside it' pattern.",
+      "evidence": "Whenever an enemy starts its turn in the aura, that creature takes Radiant damage equal to your Charisma modifier plus your Proficiency Bonus."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: long_rest_or_spell_slot_refund",
+      "justification": "The feature resets on Long Rest but can be restored early by expending a specific-level spell slot (level 5) with no action cost. This is mechanically distinct from all existing RestResetCadence variants and from the partial_short_full_long pattern. It introduces a resource-refund mechanism keyed to a spell slot level.",
+      "evidence": "Once you use this feature, you can't use it again until you finish a Long Rest. You can also restore your use of it by expending a level 5 spell slot (no action required)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Sunlight bullet (aura filled with Bright Light that is sunlight) is environmental and caller-owned per ARCHITECTURE.md; omitted from widening proposals. The Radiant Damage amount (CHA modifier + PB) is a flat stat-derived value, not a DiceAmount — the current DiceAmount union has no 'ability_modifier_plus_pb' kind, which is an additional surface_widening required if this effect is ever encoded. No dhall/json/trace produced because the unit cannot be encoded honestly."
+}

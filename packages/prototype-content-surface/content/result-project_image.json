@@ -1,0 +1,28 @@
+{
+  "unit_slug": "project_image",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation — create_remote_object",
+      "justification": "Project Image's primary ongoing effect is creating an illusory duplicate at a remote location that the caster can see and hear through and control via Magic action. The current OngoingOperation union (roll_modifier | damage_on_hit) has no variant for object/duplicate creation with embedded remote-sensing and remote-control sub-mechanics. The v4 atoms create_object, grant_sense, and telepathic_link exist but are not wired into any OngoingOperation shape.",
+      "evidence": "You create an illusory copy of yourself that lasts for the duration... You can see through the illusion's eyes and hear through its ears as if you were in its space. As a Magic action, you can move it up to 60 feet and make it gesture, speak, and behave in whatever way you choose."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Range.point — miles distance unit",
+      "justification": "Range.point currently uses 'readonly feet: number'. Project Image's range is 500 miles, a SRD-canonical unit. Encoding this as 2,640,000 feet is technically lossless but dishonest — the SRD text and intent use miles, not feet. The Range.point variant needs a general distance shape (e.g. { amount: number; unit: 'feet' | 'miles' }) to express this without lying.",
+      "evidence": "range: { type: 'point', distance: { type: 'miles', amount: 500 } }"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase — ability_check",
+      "justification": "The detection mechanic requires a creature to take the Study action and succeed on an Intelligence (Investigation) check against the caster's spell save DC. This is an ability_check resolution (v4 atom ability_check exists) but ActivationPhase only supports attack_roll and save_gate. An ability_check phase variant is needed to represent Study-action detection patterns.",
+      "evidence": "A creature that takes the Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the correct family — concentration, 1-day duration, attachment-scoped operation. All required v4 atoms (create_object, grant_sense, telepathic_link, ability_check) exist in the taxonomy; none are missing from v4. The gap is entirely at the surface type level: OngoingOperation needs a third variant, Range.point needs a distance-unit field, and ActivationPhase needs an ability_check variant. The damage-terminates-illusion mechanic maps to the existing self_break lifecycle atom but would need to be embedded in the new operation shape. No Dhall or JSON authored — cannot produce an honest trace without the missing surface variants."
+}

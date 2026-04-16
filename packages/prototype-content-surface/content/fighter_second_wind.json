@@ -1,0 +1,57 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "fighter",
+  "description": "You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level.",
+  "id": "fighter_second_wind",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "effect": {
+      "amount": {
+        "axis": "class",
+        "base": {
+          "dice": 1,
+          "dieSize": 10,
+          "flat": 1
+        },
+        "kind": "linear_per_level",
+        "perLevel": {
+          "flat": 1
+        },
+        "startingAtLevel": 1
+      },
+      "kind": "heal_hp",
+      "target": "self"
+    },
+    "family": "activation",
+    "resetCadence": {
+      "kind": "partial_short_full_long",
+      "shortRestRefill": 1
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 2,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 4,
+            "value": 3
+          },
+          {
+            "atLevel": 10,
+            "value": 4
+          }
+        ]
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Second Wind",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Second Wind"
+  }
+}

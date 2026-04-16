@@ -1,0 +1,28 @@
+{
+  "unit_slug": "meld_into_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "self_merge",
+      "justification": "Meld into Stone causes the caster to physically enter and merge with a stone object. This is a self-state-transformation that has no activation phase, no attack roll, no save gate, and no ongoing operation in the roll_modifier or damage_on_hit shapes. It produces a new caster state (merged) that restricts movement, restricts senses (Disadvantage on Perception checks to hear), and enables 'can cast spells on self while merged'. No existing SpellMechanics family can host this; it needs a new family or subgraph for persistent self-transformations.",
+      "evidence": "You step into a stone object or surface large enough to fully contain your body, merging yourself and your equipment with the stone for the duration."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "expulsion_on_destruction",
+      "justification": "The spell has a conditional expulsion mechanic: if the host object is partially destroyed (or reshaped so the caster no longer fits), the caster is expelled and takes 6d6 Force damage and gains the Prone condition. If the stone is fully destroyed or transmuted, the caster is expelled and takes 50 Force damage plus Prone. This is damage + condition applied to the caster based on an external environmental event (object destruction/reshaping), not a combat trigger (weapon hit, spell, attack roll). No existing v4 window or effect atom chain covers 'damage-to-self-when-containing-object-is-destroyed'.",
+      "evidence": "Minor physical damage to the stone doesn't harm you, but its partial destruction or a change in its shape (to the extent that you no longer fit within it) expels you and deals 6d6 Force damage to you. The stone's complete destruction (or transmutation into a different substance) expels you and deals 50 Force damage to you. If expelled, you move into an unoccupied space closest to where you first entered and have the Prone condition."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: modify_roll_advantage",
+      "justification": "While merged, the caster has Disadvantage on Wisdom (Perception) checks to hear sounds outside. Disadvantage on a specific skill check is a modify_roll_advantage effect, but OngoingOperation only has roll_modifier (numeric) and damage_on_hit. Even if a wider ongoing_effect family existed, it would need modify_roll_advantage as a valid OngoingOperation variant.",
+      "evidence": "any Wisdom (Perception) checks you make to hear sounds outside it are made with Disadvantage"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell's primary mechanic is self-merger into a stone object — a persistent self-transformation state. This shares no shape with any existing SpellMechanics family. ongoing_effect cannot host it (no valid OngoingOperation), activation cannot host it (no combat phases at cast time), triggered_reaction and anchored_trigger are structurally wrong. The expulsion-on-object-destruction mechanic is also novel: it is damage+condition applied to the caster when an external object state changes, a shape not captured by any v4 atom or window. The ritual flag (also castable as a Ritual) is representable via the existing CastingTime.minutes variant with ritual=true, so that is not itself a widening."
+}

@@ -1,1 +1,46 @@
-{"unit_slug":"bestow_curse","outcome":"structural_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "bestow_curse",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "cast_time_choice",
+      "justification": "The caster selects ONE of four mechanically distinct curse effects at cast time. The v4 taxonomy has 'choose' as a procedure atom but it is absent from types.ts. No existing ActivationPhase or EffectAtom variant can represent 'pick one of N alternative persistent effect packages at cast time' without lying about which effects are applied.",
+      "evidence": "Until the curse ends, the target suffers one of the following effects of your choice: [list of 4 options]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_scoped_roll_disadvantage",
+      "justification": "Option 1 applies disadvantage only to checks and saves made with a specific chosen ability. The current modify_roll_advantage carries a ReadonlyArray<RollKind> but no ability filter. A new variant or field (ability?: Ability) is needed to scope the roll modification to one ability's checks and saves.",
+      "evidence": "Choose one ability. The target has Disadvantage on ability checks and saving throws made with that ability."
+    },
+    {
+      "kind": "new_variant",
+      "name": "caster_relative_attack_scope",
+      "justification": "Option 2 imposes disadvantage only on attack rolls directed at the caster, not all attack rolls. The current modify_roll_advantage has no scope or target restriction. A 'against_caster' scope variant is needed.",
+      "evidence": "The target has Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "repeat_save_per_turn",
+      "justification": "Option 3 requires a saving throw at the start of each of the target's turns. The v4 taxonomy lists 'repeat_save' as a Resolution atom but it is absent from types.ts. This is a missing surface variant, not a new v4 atom.",
+      "evidence": "the target must succeed on a Wisdom saving throw at the start of each of its turns or be forced to take the Dodge action on that turn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "force_action",
+      "justification": "Option 3's repeat-save failure forces the target to take the Dodge action. This is distinct from apply_condition (no standard condition makes a creature take Dodge) and from restrict_action_set (which removes choices, not mandates one). No v4 atom covers 'compel the target to spend its action on a specific StandardActionKind'.",
+      "evidence": "or be forced to take the Dodge action on that turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "slot_conditional_duration",
+      "justification": "The spell's duration and concentration status both change based on slot level: concentration 1 min (L3), concentration 10 min (L4), non-concentration 8 hr (L5-6), non-concentration 24 hr (L7-8), non-concentration until dispelled (L9). The current Duration type has no slot-conditional shape; concentration status changes with slot level cannot be represented.",
+      "evidence": "If you cast this spell using a level 4 spell slot, you can maintain Concentration on it for up to 10 minutes. If you use a level 5+ spell slot, the spell doesn't require Concentration..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The dominant blocker is the absence of a cast-time choice subgraph. The v4 'choose' procedure atom exists in TAXONOMY_atoms_graph.md but is not surfaced in types.ts or tracer.ts. Without it, any encoding of Bestow Curse must silently drop three of the four curse options, producing a false trace. Option 4 (extra 1d8 necrotic) is closest to expressible via ongoing damage_on_hit but also needs a spell-damage trigger path, not just attack-hit. No Dhall or JSON authored."
+}

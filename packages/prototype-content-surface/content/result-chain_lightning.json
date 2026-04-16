@@ -1,0 +1,22 @@
+{
+  "unit_slug": "chain_lightning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "choose_up_to_from_area TargetSelection mode (or targeted_from_area Attachment kind)",
+      "justification": "The secondary bolts target up to 3 chosen creatures within 30 ft of the PRIMARY target, not within the spell's 150 ft cast range. No existing Attachment or TargetSelection shape expresses 'choose up to N targets constrained to proximity of another target.' The area attachment hits all creatures in the sphere (not chosen); the target choose_up_to has no spatial anchor relative to a prior phase's target. Both would produce an incorrect trace.",
+      "evidence": "Three bolts then leap from that target to as many as three other targets of your choice, each of which must be within 30 feet of the first target."
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_primary_target AreaOrigin already exists — needs composition with TargetSelection",
+      "justification": "The origin concept 'on_primary_target' is already in AreaOrigin (used by area attachment). The missing piece is combining a player-chosen count with a spatially anchored pool. A new TargetSelection mode like { mode: 'choose_up_to_from_area', count: SlotScaling<number>, area: ..., origin: AreaOrigin } would close the gap cleanly without new atoms.",
+      "evidence": "One additional bolt leaps from the first target to another target for each spell slot level above 6."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family with two sequential save_gate phases is exactly right. Phase 1 (primary target, mode: 'one', range 150 ft) fits cleanly with existing types. Phase 2 damage and save atoms exist in v4 (save_gate, damage, scale_die_count). The only missing piece is a surface attachment/selection variant that expresses 'player-chosen subset from within a spatially bounded pool anchored at the previous phase's target.' Higher-level scaling (count: base 3, +1/slot above 6) maps cleanly to SlotScaling<number> once the variant exists."
+}

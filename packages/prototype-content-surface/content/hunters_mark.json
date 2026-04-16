@@ -1,0 +1,59 @@
+{
+  "description": "You magically mark one creature you can see within range as your quarry. Until the spell ends, you deal an extra 1d6 Force damage to the target whenever you hit it with an attack roll. You also have Advantage on any Wisdom (Perception or Survival) check you make to find it. If the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action to move the mark to a new creature you can see within range.",
+  "id": "hunters_mark",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "mark",
+      "selection": {
+        "mode": "one"
+      },
+      "transfer": {
+        "cost": {
+          "kind": "bonus_action"
+        },
+        "onEvent": {
+          "kind": "target_drops_to_0_hp"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operation": {
+      "amount": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6
+        },
+        "kind": "fixed"
+      },
+      "damageType": "force",
+      "kind": "damage_on_hit"
+    },
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "divination"
+  },
+  "name": "Hunter's Mark",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-G-P#Hunter's Mark"
+  }
+}

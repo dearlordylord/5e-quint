@@ -1,0 +1,40 @@
+{
+  "unit_slug": "calm_emotions",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_condition_immunity",
+      "justification": "The spell grants immunity to the Charmed and Frightened conditions for the duration. No v4 atom covers this; grant_resistance is damage-type only; apply_condition and remove_condition do not express immunity.",
+      "evidence": "The creature has Immunity to the Charmed and Frightened conditions until the spell ends."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_condition",
+      "justification": "The spell suppresses (not removes) already-active Charmed and Frightened conditions for the duration — they return when the spell ends. The v4 suppress atom is a procedure atom, not an Effect atom; the surface has no way to express 'suppress condition X on this target for the spell's duration'.",
+      "evidence": "If the creature was already Charmed or Frightened, those conditions are suppressed for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: charmed | frightened",
+      "justification": "The Condition closed enum currently contains only 'prone'. Encoding condition immunity and suppression for this spell requires charmed and frightened to be present in the type.",
+      "evidence": "The creature has Immunity to the Charmed and Frightened conditions until the spell ends."
+    },
+    {
+      "kind": "new_variant",
+      "name": "creature_type_filter on area Attachment",
+      "justification": "The spell explicitly targets only Humanoids within the sphere. The area Attachment has no filter predicate for creature type, so the scope would incorrectly include all creatures.",
+      "evidence": "Each Humanoid in a 20-foot-radius Sphere centered on a point you choose within range..."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "per_target_caster_choice on save_gate",
+      "justification": "On a failed save the caster chooses, per creature, which of two distinct effects applies. The existing save_gate has a single onFail branch; no surface shape exists for caster-branches-per-target within the same save resolution.",
+      "evidence": "must succeed on a Charisma saving throw or be affected by one of the following effects (choose for each creature)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two distinct v4 atoms are missing (grant_condition_immunity, suppress_condition), forcing atom_widening. Additionally, the secondary effect — making a creature Indifferent toward chosen Hostile creatures, with the indifference reversing on damage — is NPC-attitude territory and best classified as dm_agenda. Even if the attitude effect is set aside, the immunity+suppression effect cannot be honestly encoded. The per-target caster choice and Humanoids-only filter are surface gaps that would also need addressing for a clean trace."
+}

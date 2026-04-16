@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_helm_of_telepathy",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item_root family",
+      "justification": "No magic_item kind exists in UnitRecord. The types.ts union is SpellRecord | ClassFeatureRecord | MasteryRecord — magic items are entirely absent. This is the primary blocker.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_while_attuned family",
+      "justification": "The helm grants always-on telepathy with no activation cost, no action, no resource. No existing mechanics family models a passive persistent effect gated only on attunement. ClassFeatureActivationMechanics requires an activationCost and resource; none of the spell families apply.",
+      "evidence": "While wearing this helm, you have telepathy with a range of 30 feet"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_charge_spell_access family",
+      "justification": "The helm allows casting specific named spells (Detect Thoughts, Suggestion) with per-spell per-dawn charges. This is a stored spell access pattern distinct from all existing families. The charge resource resets at dawn (not rest), and the DC is fixed rather than caster-derived.",
+      "evidence": "you can cast Detect Thoughts or Suggestion (save DC 13) from the helm. Once either spell is cast from the helm, that spell can't be cast again until the next dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.dawn",
+      "justification": "The per-spell charge resets at dawn, not on a short or long rest. No existing RestResetCadence variant covers dawn-keyed resets.",
+      "evidence": "that spell can't be cast again until the next dawn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DcSource.fixed",
+      "justification": "The save DC is a fixed numeric value (13), not derived from the caster's spell save DC or weapon attack formula. DcSource currently only has caster_spell_save_dc and weapon_attack_dc.",
+      "evidence": "Suggestion (save DC 13)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "attunement resource + attune procedure",
+      "justification": "The item requires attunement, which should be represented as an attunement_slot resource consumed by an attune procedure. The attunement_slot atom exists in v4 taxonomy but there is no corresponding surface mechanics family.",
+      "evidence": "Requires Attunement"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is the absence of magic_item as a UnitRecord kind — the tracer switch on unit.kind would throw 'unhandled unit kind: magic_item'. The telepathic_link atom exists in v4 §9 effects but is unreachable without a magic_item mechanics family. Three independent surface gaps (dawn reset, fixed DC, attunement) exist on top of the structural gap. All widenings are necessary, not speculative."
+}

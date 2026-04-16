@@ -1,0 +1,81 @@
+{
+  "description": "Negative energy ripples out in a 60-foot-radius Sphere from a point you choose within range. Each creature in that area makes a Constitution saving throw, taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot: The damage increases by 2d8 for each spell slot level above 6.",
+  "id": "circle_of_death",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "the powder of a crushed black pearl worth 500+ GP",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 60
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 8,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 2
+            },
+            "startingAtLevel": 6
+          },
+          "damageType": "necrotic",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 4,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 6
+          },
+          "damageType": "necrotic",
+          "kind": "damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 150,
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Circle of Death",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Circle of Death"
+  }
+}

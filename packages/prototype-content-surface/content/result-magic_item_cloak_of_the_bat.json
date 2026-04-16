@@ -1,0 +1,52 @@
+{
+  "unit_slug": "magic_item_cloak_of_the_bat",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item kind + MagicItemRecord + mechanics family",
+      "justification": "UnitRecord is SpellRecord | ClassFeatureRecord | MasteryRecord — no magic_item kind exists. The taxonomy lists magic_item_root and attunement_slot as v4 atoms but the surface has no corresponding record type, mechanics header, or family. This is the primary structural blocker.",
+      "evidence": "Wondrous Item, Rare (Requires Attunement)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: { kind: 'dawn' }",
+      "justification": "The Polymorph use recharges at dawn. Current RestResetCadence variants are short_or_long_rest, long_rest, short_rest, and partial_short_full_long — none cover a real-time calendar boundary like dawn.",
+      "evidence": "The cloak can't be used this way again until the next dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RollKind: 'ability_check' (or 'skill_check')",
+      "justification": "Advantage on Dexterity (Stealth) checks. RollKind is 'attack_roll' | 'saving_throw' only; ability/skill checks are absent.",
+      "evidence": "you have Advantage on Dexterity (Stealth) checks"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage without count/expiresOn — passive 'while attuned' shape",
+      "justification": "The Stealth advantage is a permanent passive (while wearing). The existing ModifyRollAdvantageRider has required count and expiresOn fields that have no meaning for a permanent item rider.",
+      "evidence": "While wearing this cloak, you have Advantage on Dexterity (Stealth) checks."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_fly_speed (or extend modify_speed with speed_kind discriminant)",
+      "justification": "The cloak grants a Fly Speed of 40 ft, distinct from a walk speed increase. The v4 effect atom modify_speed exists but the surface exposes no speed_kind field, and no fly-speed grant exists in any current surface type.",
+      "evidence": "you can grip the edges of the cloak and use it to gain a Fly Speed of 40 feet"
+    },
+    {
+      "kind": "new_atom",
+      "name": "environmental_condition_gate (dim_light / darkness)",
+      "justification": "Both the fly speed and the Polymorph use are gated on being in dim light or darkness. No atom or filter models environmental light-level conditions as an activation prerequisite.",
+      "evidence": "In an area of Dim Light or Darkness"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell activation from item (item-cast Polymorph)",
+      "justification": "The cloak lets the wearer cast Polymorph on themselves with item-specific constraints (target = self, form = Bat, score retention). The stored_spell attachment atom exists in v4 taxonomy but there is no surface mechanics family for an item activating a named spell with per-cast overrides.",
+      "evidence": "you can cast Polymorph on yourself, shape-shifting into a Bat. While in that form, you retain your Intelligence, Wisdom, and Charisma scores."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: UnitRecord has no magic_item kind. Even with that gap filled, six further widenings are required: dawn recharge cadence, ability-check RollKind, passive (non-expiring) roll-advantage shape, fly speed effect, environmental light-level gate, and a stored-spell-from-item mechanics subgraph. No honest encoding is possible with the current surface."
+}

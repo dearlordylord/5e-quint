@@ -1,0 +1,28 @@
+{
+  "unit_slug": "thunderwave",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.area.shape — cube",
+      "justification": "Thunderwave's area is a 15-foot Cube. The Attachment.area.shape discriminant only has 'sphere'. A 'cube' variant (with sideFeet: number) is needed to represent cube-shaped AoE spells like Thunderwave, Thunderclap, and similar.",
+      "evidence": "Each creature in a 15-foot Cube originating from you makes a Constitution saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaOrigin — caster_self",
+      "justification": "Thunderwave's cube originates from the caster, not from a chosen point within range nor from a primary target. AreaOrigin only has 'point_within_range' and 'on_primary_target'. Many cube/cone/line AoE spells (Thunderwave, Thunderclap, Burning Hands) originate from the caster — this origin kind is absent.",
+      "evidence": "a 15-foot Cube originating from you"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect — force_move (and compound on-fail)",
+      "justification": "On a failed save, Thunderwave applies BOTH 2d8 thunder damage AND pushes the target 10 feet. The spell Effect type is 'DamageEffect | NoneEffect' — it has no 'force_move' variant, and no compound/list variant to express two simultaneous effects. The v4 atom 'force_move' exists in the taxonomy but is not surfaced in the Effect type for spell phases.",
+      "evidence": "On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family is correct: activation spell with a single save_gate phase. The blocking issues are all surface-level shape gaps, not missing atoms or missing families. The slot scaling (+1d8/slot above L1) is expressible as linear_per_level with axis=slot on the damage DiceAmount. The on-success half-damage branch is expressible as a DamageEffect with the base expr. The cube area shape and caster-origin are the structural blockers; the compound on-fail (damage + push) requires either a force_move Effect variant or a CompoundEffect list variant."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "guards_and_wards",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_effect_ward",
+      "justification": "Guards and Wards simultaneously creates four categorically distinct persistent area effects (fog + disorientation, door locking + illusions, stair webs, one of five sub-spell riders). No existing family accepts an array of heterogeneous area effects. The closest family, ongoing_effect, allows only a single OngoingOperation (roll_modifier or damage_on_hit), which cannot represent any of the ward's sub-effects honestly.",
+      "evidence": "\"The spell creates the effects below within the warded area... Corridors... Doors... Stairs... Other Spell Effect: Place one of the following magical effects within the warded area\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "probability_gate",
+      "justification": "The corridor disorientation is a 50% chance check — not a save_gate (no ability score), not an attack_roll, not a deterministic effect. It requires a new resolution atom for probability-gated outcomes.",
+      "evidence": "\"at each intersection or branching passage offering a choice of direction, there is a 50% chance that a creature other than you believes it is going in the opposite direction from the one it chooses\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "apply_terrain_effect",
+      "justification": "The fog fills corridors as a terrain-level persistent obscurement effect. This is distinct from block_targeting (which is a creature-targeting restriction, not an area terrain state). A terrain effect atom is needed to represent area-wide environmental conditions like Heavily Obscured fog.",
+      "evidence": "\"Fog fills all the warded corridors, making them Heavily Obscured\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "choose_n_effect (for ClassFeatureEffect or new SpellEffect variant)",
+      "justification": "The 'Other Spell Effect' rider requires the caster to choose exactly one of five distinct sub-spell effects at cast time. No existing effect or attachment shape supports a 'choose one of N heterogeneous effects at cast time' pattern.",
+      "evidence": "\"Place one of the following magical effects within the warded area: Dancing Lights... Magic Mouth... Stinking Cloud... Gust of Wind... Suggestion\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastingTime kind: hours",
+      "justification": "The current CastingTime type supports 'minutes' (with ritual flag) but not hours. Guards and Wards has a 1-hour casting time, which is distinct from minutes-cast spells and would require a new variant or an extension of the 'minutes' kind to a more general 'long_cast' kind.",
+      "evidence": "\"time\": [{\"number\": 1, \"unit\": \"hour\"}]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Guards and Wards is a multi-effect area ward with no analog in the current spell families. The fundamental gap is structural: the spell creates a heterogeneous bundle of simultaneously active area effects, but every existing SpellMechanics family assumes a single-operation or single-phase model. Even if individual sub-effects (door locking via block_travel, webs via apply_condition) could be expressed with existing atoms, the outer container — a family that accepts ReadonlyArray<AreaEffect> — does not exist. No honest encoding is possible without a new family. Additionally, the probabilistic disorientation effect (50% chance, not a save) requires a new resolution atom not in v4. The casting time (1 hour) also requires a surface widening to CastingTime."
+}

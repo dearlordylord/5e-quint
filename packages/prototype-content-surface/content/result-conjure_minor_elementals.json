@@ -1,0 +1,28 @@
+{
+  "unit_slug": "conjure_minor_elementals",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AreaOrigin — on_self (emanation)",
+      "justification": "Conjure Minor Elementals creates a 15-foot Emanation centered on the caster that moves with them throughout the spell's duration. The existing AreaOrigin union has only 'point_within_range' and 'on_primary_target'. Neither captures a self-anchored area that travels with the caster. A new variant such as { kind: 'on_self' } is required to distinguish Emanations from point-origin spheres.",
+      "evidence": "You conjure spirits from the Elemental Planes that flit around you in a 15-foot Emanation for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DamageOnHitOperation.damageType — per-attack caster choice",
+      "justification": "The damage type is chosen by the caster on each individual attack, not fixed at cast time. DamageOnHitOperation.damageType is currently a single fixed DamageType. A new variant is needed — e.g. { kind: 'caster_choice'; options: DamageType[] } — to represent a closed set of types from which the caster picks at attack-resolution time.",
+      "evidence": "This damage is Acid, Cold, Fire, or Lightning (your choice when you make the attack)."
+    },
+    {
+      "kind": "new_atom",
+      "name": "apply_difficult_terrain",
+      "justification": "The spell applies the Difficult Terrain condition to the ground inside the Emanation for the spell's duration, but only against enemies. No v4 atom covers terrain modification: 'block_travel' semantically blocks entry (not halves movement cost), 'modify_speed' modifies a specific creature's speed stat rather than the terrain state, and 'apply_condition' is for creature conditions. Difficult Terrain is a distinct, deterministic game-state change to a spatial region that the engine needs to track and evaluate per-creature. A new effect atom — 'apply_difficult_terrain' or 'create_difficult_terrain' — is required.",
+      "evidence": "In addition, the ground in the Emanation is Difficult Terrain for your enemies."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three gaps block honest encoding. (1) Emanation requires a new AreaOrigin variant (surface_widening). (2) Per-attack damage-type choice requires a new DamageOnHitOperation shape (surface_widening). (3) Difficult Terrain requires a new v4 effect atom (atom_widening). Overall outcome is atom_widening because gap #3 names a concept absent from the v4 taxonomy entirely. All three must be addressed before a clean encoding is possible. The damage-on-hit rider (2d8 + slot scaling) and concentration/duration structure are otherwise expressible with existing vocabulary."
+}

@@ -1,0 +1,9 @@
+{
+  "unit_slug": "augury",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Augury's sole mechanical output is a DM-chosen omen from a closed four-value table (Weal / Woe / Weal and woe / Indifference). 'The DM chooses the omen' — no attack roll, saving throw, damage, condition, or deterministic game-state change occurs. The cumulative 25%-per-extra-cast reliability penalty (each cast beyond the first before a Long Rest risks yielding no answer) is also narrative: 'no answer' is a DM-decided informational non-outcome, not an engine-resolvable state transition. Spell-slot consumption and the ritual flag are incidental frame; the unit's entire purpose is DM-adjudicated informational output. Nothing here belongs in the deterministic core engine."
+}

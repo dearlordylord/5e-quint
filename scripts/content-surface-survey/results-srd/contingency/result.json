@@ -1,1 +1,40 @@
-{"unit_slug":"contingency","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "contingency",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AnchorTarget { kind: \"self\" }",
+      "justification": "Contingency's anchor is the caster themselves, not a location or area. AnchorTarget currently only has 'location' and 'area' variants.",
+      "evidence": "The contingent spell takes effect only on you"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredEvent { kind: \"player_described_condition\"; description: string }",
+      "justification": "Contingency's trigger is an arbitrary free-form condition described by the player at cast time. The current AnchoredEvent closed enum (physical_contact, enters_area) cannot represent open-ended trigger conditions. This is a genuine structural gap: the condition predicate is not a deterministic engine-evaluable formula but a natural-language description adjudicated at runtime.",
+      "evidence": "The contingent spell takes effect when a certain trigger occurs. You describe that trigger when you cast the two spells. For example, a Contingency cast with Water Breathing might stipulate that Water Breathing comes into effect when you are engulfed in water or a similar liquid."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredSignal { kind: \"stored_spell_release\" }",
+      "justification": "The signal emitted when the trigger fires is 'release the stored contingent spell on the caster'. AnchoredSignal only has 'audible' and 'mental'. The stored spell is the payload, not a notification signal.",
+      "evidence": "The contingent spell takes effect immediately after the trigger occurs for the first time, whether or not you want it to, and then Contingency ends."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reference — cast-time constrained spell capture",
+      "justification": "Contingency captures a second spell at cast time (constrained to: level ≤5, action casting time, self-targetable). This spell's full payload is held and released on trigger. No existing surface type represents a 'choose a spell at cast time, apply constraint filter, hold payload for deferred release' pattern.",
+      "evidence": "Choose a spell of level 5 or lower that you can cast, that has a casting time of an action, and that can target you. You cast that spell—called the contingent spell—as part of casting Contingency"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "dual_slot_cast — simultaneous dual spell-slot consumption",
+      "justification": "Casting Contingency expends two spell slots simultaneously: one L6 slot for Contingency and one L1–5 slot for the contingent spell. The current surface models a single spell_slot resource per cast. No multi-slot consumption pattern exists.",
+      "evidence": "expending spell slots for both"
+    }
+  ],
+  "confidence": "high",
+  "notes": "anchored_trigger is structurally the closest family (store-at-cast → release-on-event). However, Contingency cannot be honestly encoded in it for two fundamental reasons: (1) The trigger predicate is genuinely open-ended — any condition the player can articulate — not a closed spatial or physical event. Representing this as a closed-enum variant would require a free-text fallback, which breaks the closed-atom principle. (2) The payload held is a full spell, not a notification signal. The signal union (audible/mental) is inappropriate for spell release. The self-anchor, dual-slot cost, and stored-spell constraint filter are additional surface widenings that compound the structural gaps. This unit is best revisited once the taxonomy explicitly models a 'stored_spell' attachment, a constraint-filtered spell reference, and a mechanism for open or semi-open trigger predicates."
+}

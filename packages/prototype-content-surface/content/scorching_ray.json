@@ -1,0 +1,104 @@
+{
+  "description": "You hurl three fiery rays. You can hurl them at one target within range or at several. Make a ranged spell attack for each ray. On a hit, the target takes 2d6 Fire damage. Using a Higher-Level Spell Slot: You create one additional ray for each spell slot level above 2.",
+  "id": "scorching_ray",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      },
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      },
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Scorching Ray",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-Z#Scorching Ray"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "remove_curse",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase: auto_apply",
+      "justification": "Remove Curse targets a willing creature or object at Touch range and automatically removes all curses — no attack roll and no saving throw. The current ActivationPhase union only has 'attack_roll' and 'save_gate'. A third variant is needed for spells whose effect fires unconditionally on cast (touch-and-done pattern). Many restorative/utility spells share this shape: Lesser Restoration, Greater Restoration, Cure Wounds, etc.",
+      "evidence": "At your touch, all curses affecting one creature or object end."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect: remove_condition",
+      "justification": "The primary effect of Remove Curse is removing all curses from the target. The v4 taxonomy lists 'remove_condition' as an effect atom, but the TypeScript Effect union only contains DamageEffect and NoneEffect. An auto_apply phase (above) would need to reference this effect, and it cannot be expressed today. A RemoveConditionEffect variant — e.g. { kind: 'remove_condition'; condition: Condition | 'curse' | 'all' } — is needed.",
+      "evidence": "all curses affecting one creature or object end"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits the 'activation' family structurally (instantaneous, single cast, no concentration) and 'spell' kind. The two blocking gaps are both missing variants of existing surface types, not missing families or atoms, so surface_widening is the narrowest honest classification. The secondary attunement-break mechanic ('breaks its owner's Attunement to the object') is character-equipment state, not a combat-engine mechanic per ARCHITECTURE.md, and is omitted from core modeling. If a 'curse' condition representation is also needed (as a Condition enum member), that would be an additional surface_widening for the Condition type."
+}

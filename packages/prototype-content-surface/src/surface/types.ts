@@ -5,7 +5,7 @@
 
 // ---------- primitives ----------
 
-export type RollKind = "attack_roll" | "saving_throw";
+export type RollKind = "attack_roll" | "saving_throw" | "ability_check";
 
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
@@ -67,6 +67,46 @@ export type DurationValue = {
   readonly unit: "round" | "minute" | "hour" | "day";
   readonly amount: number;
 };
+
+// ---------- SRD 5.2.1 conditions (Rules-Glossary) ----------
+
+// All 15 RAW conditions from SRD 5.2.1 Rules Glossary.
+export const CONDITIONS = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "exhaustion",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const satisfies ReadonlyArray<string>;
+
+export type Condition = (typeof CONDITIONS)[number];
+
+// ---------- SRD 5.2.1 area shapes (Playing-the-Game) ----------
+
+export const AREA_SHAPES = [
+  "sphere",
+  "cone",
+  "cube",
+  "cylinder",
+  "emanation",
+  "line",
+] as const satisfies ReadonlyArray<string>;
+
+export type AreaShape = (typeof AREA_SHAPES)[number];
+
+// ---------- senses (SRD 5.2.1) ----------
+
+export type SenseKind = "darkvision" | "blindsight" | "tremorsense" | "truesight";
 
 // ---------- scaling (Option B: unified threshold + linear-per-level
 //                      with a LevelAxis parameter) ----------
@@ -146,6 +186,110 @@ export type DiceAmount =
       readonly startingAtLevel: number;
     };
 
+// ---------- unified effect atoms (v4 taxonomy) ----------
+//
+// Discriminated union covering the v4 effect atoms. Replaces the
+// fragmented Effect / ClassFeatureEffect / ReactionEffect /
+// SaveGateRiderResult unions. Widen incrementally as more content
+// lands; the rest of the 36 v4 atoms can be added later.
+
+export type EffectAtom =
+  // v4: damage
+  | {
+      readonly kind: "damage";
+      readonly damageType: DamageType;
+      readonly amount: DiceAmount;
+    }
+  // v4: heal — JSON discriminant is `heal_hp` for backward compat with
+  // existing content files.
+  | {
+      readonly kind: "heal_hp";
+      readonly amount: DiceAmount;
+      readonly target: "self" | "target_creature";
+    }
+  // v4: modify_ac
+  | {
+      readonly kind: "modify_ac";
+      readonly delta: number;
+    }
+  // v4: apply_condition
+  | {
+      readonly kind: "apply_condition";
+      readonly condition: Condition;
+    }
+  // v4: remove_condition
+  | {
+      readonly kind: "remove_condition";
+      readonly condition: Condition;
+    }
+  // v4: grant_resistance
+  | {
+      readonly kind: "grant_resistance";
+      readonly damageType: DamageType;
+    }
+  // v4: grant_extra_action
+  | {
+      readonly kind: "grant_extra_action";
+      readonly restriction: ActionRestriction;
+    }
+  // v4: modify_roll_numeric — Bless-style additive dice on roll kinds
+  | {
+      readonly kind: "modify_roll_numeric";
+      readonly on: ReadonlyArray<RollKind>;
+      readonly delta: DiceDelta;
+    }
+  // v4: modify_roll_advantage — advantage/disadvantage on roll kinds
+  | {
+      readonly kind: "modify_roll_advantage";
+      readonly mode: "advantage" | "disadvantage";
+      readonly on: ReadonlyArray<RollKind>;
+    }
+  // v4: modify_speed
+  | {
+      readonly kind: "modify_speed";
+      readonly delta: number;
+      readonly unit: "feet";
+    }
+  // v4: force_move — push, pull, or slide
+  | {
+      readonly kind: "force_move";
+      readonly direction: "push" | "pull" | "slide";
+      readonly distanceFeet: number;
+    }
+  // v4: block_targeting — Globe of Invulnerability, Sanctuary, etc.
+  | {
+      readonly kind: "block_targeting";
+      readonly scope: string;
+    }
+  // v4: block_travel — Wall of Force, Forcecage, etc.
+  | {
+      readonly kind: "block_travel";
+      readonly scope: string;
+    }
+  // v4: negate_named_effect — Counterspell, Shield vs. Magic Missile
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    }
+  // v4: grant_sense — darkvision, blindsight, etc.
+  | {
+      readonly kind: "grant_sense";
+      readonly sense: SenseKind;
+      readonly rangeFeet: number;
+    }
+  // v4: deny_opportunity_attack — Disengage, Mobile feat
+  | {
+      readonly kind: "deny_opportunity_attack";
+    }
+  // v4: grant_temp_hp — false life, Inspiring Leader, etc.
+  | {
+      readonly kind: "grant_temp_hp";
+      readonly amount: DiceAmount;
+    }
+  // Sentinel: explicit "no effect" for branches (e.g., save onSuccess)
+  | { readonly kind: "none" };
+
 // ---------- spell-card header ----------
 
 export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -209,6 +353,15 @@ export type AreaOrigin =
   | { readonly kind: "point_within_range" }
   | { readonly kind: "on_primary_target" };
 
+// Area shape descriptions. Each shape carries its own measurement.
+export type AreaShapeDescriptor =
+  | { readonly kind: "sphere"; readonly radiusFeet: number }
+  | { readonly kind: "cone"; readonly lengthFeet: number }
+  | { readonly kind: "cube"; readonly sideFeet: number }
+  | { readonly kind: "cylinder"; readonly radiusFeet: number; readonly heightFeet: number }
+  | { readonly kind: "emanation"; readonly radiusFeet: number }
+  | { readonly kind: "line"; readonly lengthFeet: number; readonly widthFeet: number };
+
 // Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
 // drops to 0 HP before the spell ends, the caster can take a Bonus
 // Action to move the mark to a new creature in range.
@@ -226,7 +379,7 @@ export type Attachment =
   | { readonly kind: "target"; readonly selection: TargetSelection }
   | {
       readonly kind: "area";
-      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly shape: AreaShapeDescriptor;
       readonly origin: AreaOrigin;
     }
   // v4 `mark` attachment — stateful binding on a creature that effects
@@ -245,18 +398,21 @@ export type DcSource =
   | { readonly kind: "caster_spell_save_dc" }
   | { readonly kind: "weapon_attack_dc"; readonly base: number };
 
-// ---------- spell operations / effects ----------
+// ---------- ongoing operations ----------
 
+// Ongoing operations now use EffectAtom directly. The `operation` field
+// is replaced by an array of persistent effect atoms that apply for the
+// spell's duration.
+
+// Legacy single-operation shapes kept as type aliases for backward
+// compatibility with existing JSON content (bless.json uses
+// `roll_modifier`, hunters_mark.json uses `damage_on_hit`).
 export type RollModifierOperation = {
   readonly kind: "roll_modifier";
   readonly on: ReadonlyArray<RollKind>;
   readonly delta: DiceDelta;
 };
 
-// Rider that fires when the caster hits a creature in the operation's
-// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
-// hit against the marked creature). Maps to `on_hit_window` + `damage`
-// atoms downstream.
 export type DamageOnHitOperation = {
   readonly kind: "damage_on_hit";
   readonly damageType: DamageType;
@@ -265,33 +421,37 @@ export type DamageOnHitOperation = {
 
 export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
 
-export type DamageEffect = {
-  readonly kind: "damage";
-  readonly damageType: DamageType;
-  readonly amount: DiceAmount;
-};
-
-export type NoneEffect = { readonly kind: "none" };
-
-export type Effect = DamageEffect | NoneEffect;
-
 // ---------- activation phases (spells) ----------
+
+export type ActionRestriction =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "exclude";
+      readonly actions: ReadonlyArray<StandardActionKind>;
+    };
 
 export type ActivationPhase =
   | {
       readonly kind: "attack_roll";
       readonly attachment: Attachment;
       readonly attackKind: AttackKind;
-      readonly onHit: Effect;
-      readonly onMiss: Effect;
+      readonly onHit: EffectAtom;
+      readonly onMiss: EffectAtom;
     }
   | {
       readonly kind: "save_gate";
       readonly attachment: Attachment;
       readonly ability: Ability;
       readonly dc: DcSource;
-      readonly onFail: Effect;
-      readonly onSuccess: Effect;
+      readonly onFail: EffectAtom;
+      readonly onSuccess: EffectAtom;
+    }
+  // Direct application — spells that just apply effects with no
+  // resolution gate (no attack roll, no saving throw).
+  | {
+      readonly kind: "direct";
+      readonly attachment: Attachment;
+      readonly effects: ReadonlyArray<EffectAtom>;
     };
 
 // ---------- spell payload families ----------
@@ -322,19 +482,11 @@ export type ActivationMechanics = SpellMechanicsHeader & {
 // from the research): reaction window opens, player decides, effects
 // commit (or don't — declining does not consume reaction per
 // UBIQUITOUS_LANGUAGE §Triggers line 31).
-export type ReactionEffect =
-  | { readonly kind: "modify_ac"; readonly delta: number }
-  | {
-      readonly kind: "negate_named_effect";
-      readonly spellId: string;
-      readonly scope: "damage_only" | "all_effects";
-    };
-
 export type TriggeredReactionMechanics = SpellMechanicsHeader & {
   readonly family: "triggered_reaction";
   readonly attachment: Attachment;
   readonly interruptsTrigger: boolean;
-  readonly effects: ReadonlyArray<ReactionEffect>;
+  readonly effects: ReadonlyArray<EffectAtom>;
 };
 
 // ---------- anchored-trigger family (hunt §4.2 widening) ----------
@@ -434,28 +586,6 @@ export type RestResetCadence =
       readonly shortRestRefill: number;
     };
 
-export type ActionRestriction =
-  | { readonly kind: "none" }
-  | {
-      readonly kind: "exclude";
-      readonly actions: ReadonlyArray<StandardActionKind>;
-    };
-
-export type GrantExtraActionEffect = {
-  readonly kind: "grant_extra_action";
-  readonly restriction: ActionRestriction;
-};
-
-// v4 atom `heal`. Amount can be any DiceAmount shape (fixed / threshold_tiers
-// / linear_per_level) — Second Wind uses linear_per_level with axis=class.
-export type HealHpEffect = {
-  readonly kind: "heal_hp";
-  readonly amount: DiceAmount;
-  readonly target: "self" | "target_creature";
-};
-
-export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
-
 // ---------- class-feature payload family ----------
 
 type ClassFeatureMechanicsHeader = {
@@ -466,16 +596,12 @@ type ClassFeatureMechanicsHeader = {
 
 export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
   readonly family: "activation";
-  readonly effect: ClassFeatureEffect;
+  readonly effect: EffectAtom;
 };
 
 export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
 
 // ---------- mastery (weapon mastery property) ----------
-
-// SRD 5.2.1 Conditions atlas-relevant to mastery riders. Only Prone is
-// currently used (Topple); widen as more mastery/feat content lands.
-export type Condition = "prone";
 
 // Mastery rider expiry — Sap: "before the start of your next turn" OR
 // when the target uses its next attack roll. Vex-style would be

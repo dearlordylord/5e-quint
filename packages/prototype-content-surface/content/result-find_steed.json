@@ -1,0 +1,28 @@
+{
+  "unit_slug": "find_steed",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "companion_summon",
+      "justification": "Find Steed creates a persistent companion creature (the Otherworldly Steed) using a stat block. No existing SpellMechanics family can express this: activation phases are limited to attack_roll/save_gate; ongoing_effect requires concentration/timed duration with roll_modifier or damage_on_hit operations; anchored_trigger creates a planted trigger, not a persistent actor; triggered_reaction is wrong activation shape entirely. This is the same structural gap already identified for Find Familiar. A companion_summon family (proposed in proposal-find_familiar.md) would cover both spells.",
+      "evidence": "You summon an otherworldly being that appears as a loyal steed in an unoccupied space of your choice within range. This creature uses the Otherworldly Steed stat block."
+    },
+    {
+      "kind": "new_variant",
+      "name": "MountedCompanionCapability",
+      "justification": "The steed's capabilities — sharing the caster's initiative count, functioning as a controlled mount while ridden, and acting independently when the caster is Incapacitated — are mount-specific behaviors that don't appear in Find Familiar's CompanionCapability proposals. The surface needs a variant for initiative sharing and mounted-combat binding that is distinct from the telepathic/delivery capabilities of a familiar.",
+      "evidence": "In combat, it shares your Initiative count, and it functions as a controlled mount while you ride it. If you have the Incapacitated condition, the steed takes its turn immediately after yours and acts independently, focusing on protecting you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "StatBlockLevelScaling",
+      "justification": "Upcasting Find Steed scales the companion's stat block level ('Use the spell slot's level for the spell's level in the stat block'). This is a new scaling pattern: no existing DiceAmount variant, ThresholdTiers, or LinearPerLevel shape can express 'slot level maps to creature stat block level'. The v4 taxonomy has no atom for this; it is a structural dependency on the companion stat block system which the surface does not yet model.",
+      "evidence": "Using a Higher-Level Spell Slot: Use the spell slot's level for the spell's level in the stat block."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Same structural widening class as Find Familiar (already documented in result-find_familiar.json). The companion_summon family proposed for Find Familiar would directly serve Find Steed with companionKind: 'steed'. Steed-specific additions needed: (1) mounted-combat capability variant (initiative sharing + controlled mount rules), (2) incapacitation-fallback autonomy lifecycle variant, (3) replace-on-recast lifecycle (v4 replace_on_recast atom exists; needs surface carrier). The stat-block-level upcasting pattern is novel — no existing scaling type handles 'slot level = creature stat block level'. Duration is recorded as 'instant' in the source (the conjuration act), but the steed persists indefinitely until 0 HP or caster death — the same 'until-condition' persistence model needed for Find Familiar."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "fighter_weapon_mastery_l1",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "Weapon Mastery is always-on — there is no activation moment, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family ('activation') mandates UseCountResource and RestResetCadence, both of which are structurally inapplicable to a passive persistent capability grant. Forcing the feature into 'activation' would require fabricating a use_count with no SRD basis.",
+      "evidence": "Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial weapons of your choice."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_mastery_access variant of ClassFeatureEffect",
+      "justification": "The effect is 'can use mastery properties of N chosen weapon types'. This is neither grant_extra_action nor heal_hp. The v4 atom grant_proficiency is the closest taxonomy atom, but it is absent from the ClassFeatureEffect union and wouldn't carry the 'chosen weapon category' parameter or the level-scaled count.",
+      "evidence": "Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial weapons of your choice. [...] you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Fighter Features table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "long_rest_reconfiguration surface shape",
+      "justification": "On each Long Rest the fighter may swap one of their chosen weapon types. This is a periodic reconfiguration of a selection set, not a resource refill. No existing RestResetCadence variant or surface shape captures 'change one element of a chosen set per long rest'.",
+      "evidence": "Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit is a class feature with kind=class_feature, so the top-level UnitRecord kind exists. The gap is entirely within ClassFeatureMechanics: the sole existing family ('activation') requires a use-count resource and a discrete activation moment, neither of which applies here. A new 'passive_grant' family is needed, parameterized by: (a) a scalable weapon-type count (threshold_tiers by class level), (b) a weapon category filter ('simple or martial'), and (c) a long-rest-reconfiguration shape. The level-scaling of the count (3 at L1, growing per the Weapon Mastery table) would use ThresholdTiers<number> with axis='class', which already exists in the surface type — so the scaling machinery itself is available, only the family wrapper and effect variant are missing."
+}

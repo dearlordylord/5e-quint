@@ -1,0 +1,46 @@
+{
+  "unit_slug": "dispel_evil_and_good",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "ongoing_with_sub_activations",
+      "justification": "Dispel Evil and Good is a concentration spell whose ongoing aura can be consumed by one of two optional Magic-action activations that terminate the parent spell. No current payload family supports an 'ongoing spell + optional on-demand termination actions' composite. This requires a new subgraph or a new family that composes ongoing_effect with one or more choosable activation phases.",
+      "evidence": "You can end the spell early by using either of the following special functions. [Break Enchantment] As a Magic action, you touch a creature... [Dismissal] As a Magic action, you target one creature..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.modify_roll_advantage",
+      "justification": "The passive aura grants Disadvantage to attackers. OngoingOperation currently has only roll_modifier (numeric delta) and damage_on_hit. Expressing advantage/disadvantage as a persistent operation requires a new variant, analogous to the existing ModifyRollAdvantageRider in mastery but attached to an ongoing_effect operation.",
+      "evidence": "Celestials, Elementals, Fey, Fiends, and Undead have Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment or Operation filter: creature_type_predicate",
+      "justification": "The disadvantage aura only applies to attackers of specific creature types (Celestials, Elementals, Fey, Fiends, Undead). No current Attachment or OngoingOperation surface type has a creature-type filter predicate. This is a closed enum filter that gates which creatures the operation applies to.",
+      "evidence": "Celestials, Elementals, Fey, Fiends, and Undead have Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.remove_condition (and remove_possession)",
+      "justification": "Break Enchantment removes the Charmed and Frightened conditions and ends possession. The remove_condition atom exists in the v4 taxonomy but is absent from the current Effect union (DamageEffect | NoneEffect). Adding it is needed to model any condition-removal spell action.",
+      "evidence": "The target is no longer possessed, Charmed, or Frightened by such creatures."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.transport_exile",
+      "justification": "Dismissal sends the target to its home plane on a failed Charisma save. The transport_exile atom exists in the v4 taxonomy but is absent from the current Effect union. This is the same atom needed for Banishment.",
+      "evidence": "The target must succeed on a Charisma saving throw or be sent back to its home plane if it isn't there already."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost or sub-activation cost: magic_action",
+      "justification": "Both special functions cost a Magic action to activate. The current ClassFeatureActivationCost (free | bonus_action) does not include 'magic_action'. Even if sub-activations were encoded as activation phases, there is no surface type that represents 'costs the Magic action'.",
+      "evidence": "As a Magic action, you touch a creature... / As a Magic action, you target one creature..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell is blocked at the structural level, not just the atom level. The composite shape — a concentration aura that can be voluntarily consumed by one of two distinct on-demand activations — has no analogue in any current payload family. Even if all five atom/variant gaps above were filled, the family composition itself would still need to be designed. The closest analogy is an 'ongoing_effect' with multiple choosable 'exit actions', but that subgraph does not exist in the current schema."
+}

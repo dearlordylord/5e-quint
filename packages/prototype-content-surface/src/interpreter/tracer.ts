@@ -14,7 +14,7 @@ import type {
   Duration,
   Range,
   Attachment,
-  Effect,
+  EffectAtom,
   OngoingOperation,
   DiceAmount,
   DiceExpr,
@@ -28,10 +28,8 @@ import type {
   UseCountResource,
   RestResetCadence,
   ActionRestriction,
-  ClassFeatureEffect,
   TriggeredReactionMechanics,
   ReactionTrigger,
-  ReactionEffect,
   MarkTransfer,
   MasteryMechanics,
   MasteryTrigger,
@@ -43,6 +41,8 @@ import type {
   AnchoredEvent,
   AnchoredFilter,
   AnchoredSignal,
+  AreaShapeDescriptor,
+  SaveGateRiderResult,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -88,6 +88,237 @@ export function traceUnit(unit: UnitRecord): Trace {
     default: {
       const _exhaustive: never = unit;
       throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Unified effect atom tracer
+// ============================================================
+
+// Single function that traces any EffectAtom variant. Returns the node
+// id, or null for the `none` sentinel.
+function traceEffectAtom(
+  e: EffectAtom,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string | null {
+  switch (e.kind) {
+    case "none":
+      return null;
+    case "damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "damage",
+        label: `damage: ${describeDiceAmount(e.amount)} ${e.damageType}`,
+      });
+      return id;
+    }
+    case "heal_hp": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "heal",
+        label: `heal\n${describeDiceAmount(e.amount)}\ntarget: ${e.target}`,
+      });
+      return id;
+    }
+    case "modify_ac": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ac",
+        label: `modify_ac\n+${e.delta}`,
+      });
+      return id;
+    }
+    case "apply_condition": {
+      const id = ids("cond");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "apply_condition",
+        label: `apply_condition\n${e.condition}`,
+      });
+      return id;
+    }
+    case "remove_condition": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "remove_condition",
+        label: `remove_condition\n${e.condition}`,
+      });
+      return id;
+    }
+    case "grant_resistance": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_resistance",
+        label: `grant_resistance\n${e.damageType}`,
+      });
+      return id;
+    }
+    case "grant_extra_action": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_extra_action",
+        label: "grant_extra_action\n(1 additional action)",
+      });
+      return id;
+    }
+    case "modify_roll_numeric": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_roll_numeric",
+        label: `modify_roll_numeric\n${describeDelta(e.delta)}\non ${e.on.join(", ")}`,
+      });
+      return id;
+    }
+    case "modify_roll_advantage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_roll_advantage",
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}`,
+      });
+      return id;
+    }
+    case "modify_speed": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_speed",
+        label: `modify_speed\n${e.delta >= 0 ? "+" : ""}${e.delta} ${e.unit}`,
+      });
+      return id;
+    }
+    case "force_move": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "force_move",
+        label: `force_move\n${e.direction} ${e.distanceFeet} ft`,
+      });
+      return id;
+    }
+    case "block_targeting": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_targeting",
+        label: `block_targeting\nscope: ${e.scope}`,
+      });
+      return id;
+    }
+    case "block_travel": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_travel",
+        label: `block_travel\nscope: ${e.scope}`,
+      });
+      return id;
+    }
+    case "negate_named_effect": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "negate_named_effect",
+        label: `negate_named_effect\n${e.spellId} (${e.scope})`,
+      });
+      return id;
+    }
+    case "grant_sense": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_sense",
+        label: `grant_sense\n${e.sense} ${e.rangeFeet} ft`,
+      });
+      return id;
+    }
+    case "deny_opportunity_attack": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "deny_opportunity_attack",
+        label: "deny_opportunity_attack",
+      });
+      return id;
+    }
+    case "grant_temp_hp": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_temp_hp",
+        label: `grant_temp_hp\n${describeDiceAmount(e.amount)}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled effect atom: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// Emit scaling nodes for effect atoms that carry a DiceAmount.
+function traceEffectAtomScaling(
+  e: EffectAtom,
+  effectId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (e.kind) {
+    case "damage":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
+    case "heal_hp":
+    case "grant_temp_hp":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
+    case "none":
+    case "modify_ac":
+    case "apply_condition":
+    case "remove_condition":
+    case "grant_resistance":
+    case "grant_extra_action":
+    case "modify_roll_numeric":
+    case "modify_roll_advantage":
+    case "modify_speed":
+    case "force_move":
+    case "block_targeting":
+    case "block_travel":
+    case "negate_named_effect":
+    case "grant_sense":
+    case "deny_opportunity_attack":
+      return;
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);
     }
   }
 }
@@ -584,9 +815,10 @@ function traceTriggeredReaction(
     edges.push({ from: commitId, to: intId, relation: "grants" });
   }
 
-  // Commit grants each reaction effect.
+  // Commit grants each reaction effect — now unified EffectAtom.
   for (const eff of m.effects) {
-    const effId = traceReactionEffect(eff, nodes, ids);
+    const effId = traceEffectAtom(eff, nodes, ids);
+    if (effId === null) continue;
     edges.push({ from: commitId, to: effId, relation: "grants" });
     edges.push({ from: effId, to: attId, relation: "attaches_to" });
   }
@@ -721,36 +953,6 @@ function describeAnchoredSignal(s: AnchoredSignal): string {
   }
 }
 
-function traceReactionEffect(
-  e: ReactionEffect,
-  nodes: TraceNode[],
-  ids: IdGen,
-): string {
-  const id = ids("eff");
-  switch (e.kind) {
-    case "modify_ac":
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_ac",
-        label: `modify_ac\n+${e.delta}`,
-      });
-      return id;
-    case "negate_named_effect":
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "negate_named_effect",
-        label: `negate_named_effect\n${e.spellId} (${e.scope})`,
-      });
-      return id;
-    default: {
-      const _: never = e;
-      throw new Error(`unhandled reaction effect: ${String(_)}`);
-    }
-  }
-}
-
 function traceActivation(
   m: ActivationMechanics,
   ctx: SpellCtx,
@@ -784,20 +986,19 @@ function tracePhase(
   edges: TraceEdge[],
   ids: IdGen,
 ): string {
-  const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
-  edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
-
-  traceTargetCountScaling(
-    phase.attachment,
-    attId,
-    ctx.slotId,
-    nodes,
-    edges,
-    ids,
-  );
-
   switch (phase.kind) {
     case "attack_roll": {
+      const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+      edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+      traceTargetCountScaling(
+        phase.attachment,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+
       const resId = ids("res");
       nodes.push({
         id: resId,
@@ -831,6 +1032,17 @@ function tracePhase(
       return resId;
     }
     case "save_gate": {
+      const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+      edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+      traceTargetCountScaling(
+        phase.attachment,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+
       const resId = ids("res");
       nodes.push({
         id: resId,
@@ -861,6 +1073,38 @@ function tracePhase(
       );
       return resId;
     }
+    case "direct": {
+      const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+      edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+      traceTargetCountScaling(
+        phase.attachment,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+
+      // Direct phases emit a procedure node rather than a resolution
+      // node — there is no D20 test to resolve.
+      const directId = ids("dir");
+      nodes.push({
+        id: directId,
+        category: "procedure",
+        atomKind: "direct_apply",
+        label: `direct_apply [phase ${phaseNumber}]`,
+      });
+      edges.push({ from: ctx.procId, to: directId, relation: "grants" });
+
+      for (const eff of phase.effects) {
+        const effId = traceEffectAtom(eff, nodes, ids);
+        if (effId === null) continue;
+        edges.push({ from: directId, to: effId, relation: "grants" });
+        edges.push({ from: effId, to: attId, relation: "attaches_to" });
+        traceEffectAtomScaling(eff, effId, ctx.slotId, nodes, edges, ids);
+      }
+      return directId;
+    }
     default: {
       const _exhaustive: never = phase;
       throw new Error(`unhandled phase: ${String(_exhaustive)}`);
@@ -869,7 +1113,7 @@ function tracePhase(
 }
 
 function traceSaveBranch(
-  e: Effect,
+  e: EffectAtom,
   fromResolutionId: string,
   attId: string,
   slotId: string | null,
@@ -877,15 +1121,15 @@ function traceSaveBranch(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  const eId = traceEffect(e, nodes, ids);
+  const eId = traceEffectAtom(e, nodes, ids);
   if (eId === null) return;
   edges.push({ from: fromResolutionId, to: eId, relation: "branches_on_save" });
   edges.push({ from: eId, to: attId, relation: "attaches_to" });
-  traceDamageScaling(e, eId, slotId, nodes, edges, ids);
+  traceEffectAtomScaling(e, eId, slotId, nodes, edges, ids);
 }
 
 function traceAttackWindow(
-  e: Effect,
+  e: EffectAtom,
   windowAtom: "on_hit_window" | "on_miss_window",
   attackRollId: string,
   attId: string,
@@ -894,7 +1138,7 @@ function traceAttackWindow(
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  const effectId = traceEffect(e, nodes, ids);
+  const effectId = traceEffectAtom(e, nodes, ids);
   if (effectId === null) return;
   const winId = ids("win");
   nodes.push({
@@ -906,7 +1150,7 @@ function traceAttackWindow(
   edges.push({ from: attackRollId, to: winId, relation: "opens_window" });
   edges.push({ from: winId, to: effectId, relation: "grants" });
   edges.push({ from: effectId, to: attId, relation: "attaches_to" });
-  traceDamageScaling(e, effectId, slotId, nodes, edges, ids);
+  traceEffectAtomScaling(e, effectId, slotId, nodes, edges, ids);
 }
 
 function traceAttachment(
@@ -948,7 +1192,7 @@ function traceAttachment(
         id,
         category: "attachment",
         atomKind: "area",
-        label: `area\n${a.shape.kind} r=${a.shape.radiusFeet} ft\n${originLabel}`,
+        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}`,
       });
       return id;
     }
@@ -971,6 +1215,27 @@ function traceAttachment(
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeAreaShape(s: AreaShapeDescriptor): string {
+  switch (s.kind) {
+    case "sphere":
+      return `sphere r=${s.radiusFeet} ft`;
+    case "cone":
+      return `cone ${s.lengthFeet} ft`;
+    case "cube":
+      return `cube ${s.sideFeet} ft side`;
+    case "cylinder":
+      return `cylinder r=${s.radiusFeet} ft h=${s.heightFeet} ft`;
+    case "emanation":
+      return `emanation r=${s.radiusFeet} ft`;
+    case "line":
+      return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
+    default: {
+      const _: never = s;
+      throw new Error(`unhandled area shape: ${String(_)}`);
     }
   }
 }
@@ -1003,39 +1268,6 @@ function traceTargetCountScaling(
   edges.push({ from: scId, to: attId, relation: "modifies" });
   if (slotId !== null)
     edges.push({ from: slotId, to: scId, relation: "modifies" });
-}
-
-function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
-  switch (e.kind) {
-    case "none":
-      return null;
-    case "damage": {
-      const id = ids("dmg");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "damage",
-        label: `damage: ${describeDiceAmount(e.amount)} ${e.damageType}`,
-      });
-      return id;
-    }
-    default: {
-      const _exhaustive: never = e;
-      throw new Error(`unhandled effect: ${String(_exhaustive)}`);
-    }
-  }
-}
-
-function traceDamageScaling(
-  e: Effect,
-  damageId: string,
-  slotId: string | null,
-  nodes: TraceNode[],
-  edges: TraceEdge[],
-  ids: IdGen,
-): void {
-  if (e.kind !== "damage") return;
-  traceDiceAmountScaling(e.amount, damageId, slotId, nodes, edges, ids);
 }
 
 // Emit a scaling atom node attached to an effect (damage OR heal) when
@@ -1204,7 +1436,7 @@ function traceClassFeatureActivation(
   edges.push({ from: procId, to: resId, relation: "consumes" });
   traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
 
-  // Effect.
+  // Effect — now a unified EffectAtom.
   traceClassFeatureEffect(m.effect, procId, nodes, edges, ids);
 
   return procId;
@@ -1335,42 +1567,35 @@ function traceResetCadence(
 }
 
 function traceClassFeatureEffect(
-  e: ClassFeatureEffect,
+  e: EffectAtom,
   procId: string,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
-  switch (e.kind) {
-    case "grant_extra_action": {
-      const effId = ids("eff");
-      nodes.push({
-        id: effId,
-        category: "effect",
-        atomKind: "grant_extra_action",
-        label: "grant_extra_action\n(1 additional action)",
-      });
-      edges.push({ from: procId, to: effId, relation: "grants" });
-      traceActionRestriction(e.restriction, effId, nodes, edges, ids);
-      return;
-    }
-    case "heal_hp": {
-      const effId = ids("eff");
-      nodes.push({
-        id: effId,
-        category: "effect",
-        atomKind: "heal",
-        label: `heal\n${describeDiceAmount(e.amount)}\ntarget: ${e.target}`,
-      });
-      edges.push({ from: procId, to: effId, relation: "grants" });
-      traceDiceAmountScaling(e.amount, effId, null, nodes, edges, ids);
-      return;
-    }
-    default: {
-      const _exhaustive: never = e;
-      throw new Error(`unhandled class-feature effect: ${String(_exhaustive)}`);
-    }
+  // Special handling for grant_extra_action to trace the action restriction.
+  if (e.kind === "grant_extra_action") {
+    const effId = traceEffectAtom(e, nodes, ids);
+    if (effId === null) return;
+    edges.push({ from: procId, to: effId, relation: "grants" });
+    traceActionRestriction(e.restriction, effId, nodes, edges, ids);
+    return;
   }
+
+  // Special handling for heal_hp to trace DiceAmount scaling.
+  if (e.kind === "heal_hp") {
+    const effId = traceEffectAtom(e, nodes, ids);
+    if (effId === null) return;
+    edges.push({ from: procId, to: effId, relation: "grants" });
+    traceDiceAmountScaling(e.amount, effId, null, nodes, edges, ids);
+    return;
+  }
+
+  // General case: trace the atom and link it.
+  const effId = traceEffectAtom(e, nodes, ids);
+  if (effId === null) return;
+  edges.push({ from: procId, to: effId, relation: "grants" });
+  traceEffectAtomScaling(e, effId, null, nodes, edges, ids);
 }
 
 function traceActionRestriction(
@@ -1614,9 +1839,7 @@ function describeDc(d: DcSource): string {
 }
 
 function traceSaveGateResult(
-  r:
-    | { readonly kind: "apply_condition"; readonly condition: "prone" }
-    | { readonly kind: "none" },
+  r: SaveGateRiderResult,
   saveId: string,
   targetId: string,
   branchLabel: string,

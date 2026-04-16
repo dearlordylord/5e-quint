@@ -1,0 +1,28 @@
+{
+  "unit_slug": "plant_growth",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "cast_time_branching",
+      "justification": "Plant Growth exposes a 'choose casting time → choose effect' structure: 1-Action cast produces Overgrowth (combat terrain), 8-hour cast produces Enrichment (agricultural). No existing SpellMechanics family can hold two casting times each routing to a different effect tree. A new subgraph or family variant is needed to express 'the caster selects among N (castingTime, effect) pairs at the time of casting'.",
+      "evidence": "The casting time you use determines whether the spell has the Overgrowth or the Enrichment effect below."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_terrain_cost",
+      "justification": "Overgrowth imposes a 4:1 movement-cost multiplier on all creatures moving through the affected area. This is mechanically distinct from modify_speed (which changes the speed stat) and from block_travel (which prevents movement entirely). It requires a new terrain-cost-multiplier effect atom.",
+      "evidence": "A creature moving through that area must spend 4 feet of movement for every 1 foot it moves."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_with_exclusion_zones",
+      "justification": "Overgrowth lets the caster exclude one or more sub-areas of arbitrary size and shape from the effect at cast time. The existing Attachment area shape has no exclusion mechanism.",
+      "evidence": "You can exclude one or more areas of any size within the spell's area from being affected."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Enrichment mode (8-hour cast, agricultural yield doubling for 365 days) is also out of core-mechanics scope per ARCHITECTURE.md — it is a world-state outcome with no deterministic combat resolution. Even if the structural_widening were resolved, Enrichment would still be dm_agenda/out-of-scope. The Overgrowth mode is the only combat-relevant half and requires both the cast_time_branching subgraph and the modify_terrain_cost atom to encode honestly."
+}

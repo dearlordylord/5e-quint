@@ -1,0 +1,40 @@
+{
+  "unit_slug": "monk_deflect_attacks_l3",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.reaction",
+      "justification": "The feature costs a Reaction to activate. ClassFeatureActivationCost currently only allows 'free' and 'bonus_action'. A reaction variant is needed, ideally carrying a ReactionTrigger (hit by attack with B/P/S damage).",
+      "evidence": "you can take a Reaction to reduce the attack's total damage against you"
+    },
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken",
+      "justification": "Phase 1 reduces incoming damage by a dice expression (1d10 + Dex modifier + Monk level). No existing ClassFeatureEffect covers numeric incoming-damage reduction. TAXONOMY v4 §12 explicitly lists this atom as deferred single-group pressure from 'class-feature reactions' — this unit is exactly that pressure.",
+      "evidence": "The reduction equals 1d10 plus your Dexterity modifier and Monk level."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "conditional_follow_up (damage_to_zero gate)",
+      "justification": "Phase 2 fires only when Phase 1 reduces damage to exactly 0. No existing class feature family supports a conditional secondary phase gated on the result of Phase 1. The pattern requires: threshold gate (damage=0) → optional Focus Point expenditure → distance-conditional target selection (melee: 5ft / ranged: 60ft no total cover) → save_gate → outbound damage. This is structurally new.",
+      "evidence": "If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack's force."
+    },
+    {
+      "kind": "new_variant",
+      "name": "resource: focus_point_expenditure",
+      "justification": "Phase 2 costs 1 Focus Point from the monk's shared Focus Point pool. The surface's UseCountResource models a per-feature use_count with rest resets. Focus Points are a shared class-level pool (Monk's Focus, L2) with a separate refill cadence. A new resource variant is needed to model expenditure from a named shared pool rather than a local counter.",
+      "evidence": "you can expend 1 Focus Point to redirect some of the attack's force"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DamageType.inherited_from_trigger",
+      "justification": "The redirected damage takes the same type as the triggering attack. DamageType is a closed enum of fixed values; there is no 'same as trigger' or runtime-inherited variant. Encoding this honestly requires either a new variant or a runtime-reference pattern.",
+      "evidence": "The damage is the same type dealt by the attack."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Phase 1 (reaction + damage reduction) is blocked by two surface gaps: missing 'reaction' activation cost and missing 'reduce_damage_taken' effect. Phase 2 (conditional redirect) forces structural_widening: it introduces a damage-threshold conditional gate, Focus Point pool expenditure, attack-kind-conditional range selection, and outbound save_gate damage — none of which exist in the class feature surface. Both phases are needed for an honest encoding; omitting Phase 2 would misrepresent the feature. The TAXONOMY v4 §12 explicitly names reduce_damage_taken as a known deferred atom from class-feature reaction pressure; this unit is that pressure."
+}

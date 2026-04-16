@@ -1,0 +1,28 @@
+{
+  "unit_slug": "charm_monster",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition variant on spell Effect",
+      "justification": "Charm Monster's onFail outcome is a condition (Charmed), not damage. The spell Effect type only allows DamageEffect | NoneEffect. The apply_condition atom exists in v4 but is not reachable from a spell save_gate phase. A new variant { kind: 'apply_condition'; condition: Condition } on Effect (mirroring the mastery SaveGateRiderResult shape) is required.",
+      "evidence": "On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_break variant (or field) on timed Duration",
+      "justification": "The charm breaks early if the caster or allies deal damage to the target. The timed Duration variant only carries a DurationValue (amount + unit). There is no way to express 'also breaks when event X occurs'. A break-event field or a new Duration variant is needed.",
+      "evidence": "until the spell ends or until you or your allies damage it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "contextual save advantage modifier on save_gate phase",
+      "justification": "The target rolls its saving throw with Advantage if it is currently being fought by the caster or allies. There is no surface slot on ActivationPhase save_gate (or on the spell header) to express a conditional advantage modifier on the target's roll at cast time.",
+      "evidence": "It does so with Advantage if you or your allies are fighting it."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is the missing apply_condition variant on spell Effect — this is the same atom used in mastery save_gate riders but not exposed on the spell side. The conditional duration break and contextual save-advantage modifier are secondary widenings that would also be required for a complete encoding. No .dhall or .json authored because the primary mechanic cannot be honestly represented."
+}

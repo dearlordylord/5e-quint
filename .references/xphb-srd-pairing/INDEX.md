@@ -47,14 +47,14 @@ Exceptions (narrow, explicitly authored):
 
 ## Current Next Step
 
-The research-side taxonomy track is **closed**:
+The research-side taxonomy track reached **v4** after seven validation streams:
 
-- `TAXONOMY_atoms_graph.md` is the final atom inventory;
+- `TAXONOMY_atoms_graph.md` is the current atom inventory;
 - `TAXONOMY_graph_representation.md` is the current graph model with all 18 reusable subgraphs;
 - `COMPATIBILITY_certification.md` cross-walks all historical validation artifacts to current atom names;
 - `RESEARCH_capstone.md` summarizes the `v0 → v4` arc, the seven validation streams, and handover inputs for a future schema-design phase.
 
-Schema design may resume whenever chosen. No further research-side widening is required against the SRD 5.2.1 public base. A PHB extension-corpus pass is the natural follow-up if product-side work needs confidence that the atom set carries private content too.
+The taxonomy evolves when new pressure cases land. The content-surface survey (`scripts/content-surface-survey/`) is running the full SRD 5.2.1 catalog through the authored surface and discovering both coverage gaps in the TS schema and genuine atom-level pressure not seen in the original seven validation streams.
 
 ## Core Pairing Research
 

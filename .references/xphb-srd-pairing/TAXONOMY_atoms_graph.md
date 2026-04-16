@@ -276,7 +276,20 @@ None is promoted in `v4`. All remain recorded in the residue section below.
 
 All three are expressible with existing atoms and composition; no further split is needed.
 
-## 12. Known Remaining Weak Spots
+## 12. Content Surface Survey Findings
+
+The content-surface survey (`scripts/content-surface-survey/`) ran 460 SRD 5.2.1 units through the authored surface in `packages/prototype-content-surface/`. Key findings:
+
+- The TS schema (`types.ts`) expressed ~8 of the 36 v4 effect atoms. The survey exposed the other 28 trying to get in — not as new atoms, but as v4 atoms missing from the schema.
+- ~26 items classified as "atom widening" were actually misclassified surface gaps (the v4 atom exists; the TS type didn't).
+- The TS schema fragmented effects into four context-specific unions (spell Effect, ClassFeatureEffect, SaveGateRiderResult, ReactionEffect). The survey proved these should be unified — the same v4 atoms appear across all contexts.
+- `OngoingOperation` (2 variants) is an artificial restriction. Any effect atom can be persistent or instantaneous; the distinction belongs to the delivery context, not the effect type.
+
+Genuinely new atom pressure (not in v4): `grant_temp_hp` (3 hits), `grant_condition_immunity` (2), `difficult_terrain` (2), `alter_appearance` (2), `stat_block_replacement` / `polymorph_creature` (2), `prevent_hp_floor`, `grant_die_token`, `block_max_hp_reduction`.
+
+The next iteration of the TS schema should reshape — not just widen — based on this evidence. See `scripts/content-surface-survey/REPORT_SRD.md` (when generated) for the full aggregation.
+
+## 13. Known Remaining Weak Spots
 
 Even `v4` may still be too weak on:
 

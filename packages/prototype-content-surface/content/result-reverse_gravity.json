@@ -1,0 +1,34 @@
+{
+  "unit_slug": "reverse_gravity",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "cylinder shape in Attachment area",
+      "justification": "Reverse Gravity targets a 50-foot-radius, 100-foot-high Cylinder. The existing Attachment area shape only supports 'sphere'. Cylinder is a distinct geometric primitive requiring both radius and height parameters.",
+      "evidence": "\"This spell reverses gravity in a 50-foot-radius, 100-foot high Cylinder centered on a point within range.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "force_movement kind in OngoingOperation",
+      "justification": "The spell's primary mechanic is gravitational reversal — all unanchored creatures in the area are forcibly moved upward. Neither 'roll_modifier' nor 'damage_on_hit' can express this. The v4 atom 'force_move' exists in the taxonomy but no surface-level OngoingOperation variant invokes it.",
+      "evidence": "\"All creatures and objects in that area that aren't anchored to the ground fall upward and reach the top of the Cylinder.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "resistance_save on area ongoing_effect",
+      "justification": "The Dex save is a 'save to avoid being pulled' — a creature-initiated resistance against an automatic area effect. This is structurally distinct from ActivationPhase save_gate (which branches damage on forced save). The surface has no 'optional resistance save' pattern on OngoingOperation or Attachment.",
+      "evidence": "\"A creature can make a Dexterity saving throw to grab a fixed object it can reach, thus avoiding the fall upward.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_end consequence in ongoing_effect mechanics",
+      "justification": "When the spell ends, affected creatures fall downward — a distinct consequence of the concentration breaking. The v4 atom 'fall_on_end' exists but the surface has no field on OngoingEffectMechanics (or any SpellMechanics) for on-end consequences beyond the duration lifecycle atoms.",
+      "evidence": "\"When the spell ends, affected objects and creatures fall downward.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell kind ('spell') and broad family concept ('ongoing_effect' with concentration + area) exist. Four surface-level variants are missing before this unit can be encoded honestly: (1) cylinder area shape, (2) force_movement OngoingOperation, (3) resistance save on area effects, (4) on-end fall consequence. The v4 taxonomy already contains 'force_move' and 'fall_on_end' atoms — the gap is entirely at the surface type level. No Dhall/JSON authored."
+}

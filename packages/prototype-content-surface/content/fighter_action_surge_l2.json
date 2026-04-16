@@ -1,0 +1,44 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "fighter",
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+  "id": "fighter_action_surge_l2",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "free"
+    },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": {
+        "actions": [
+          "magic"
+        ],
+        "kind": "exclude"
+      }
+    },
+    "family": "activation",
+    "resetCadence": {
+      "kind": "short_or_long_rest"
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 1,
+        "kind": "threshold_tiers",
+        "tiers": [
+          {
+            "atLevel": 17,
+            "value": 2
+          }
+        ]
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Action Surge",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  }
+}

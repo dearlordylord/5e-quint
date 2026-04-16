@@ -1,0 +1,28 @@
+{
+  "unit_slug": "blade_barrier",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment area shape: wall",
+      "justification": "Blade Barrier creates a wall (straight or ringed), not a sphere. The current Attachment area shape union only includes sphere. A wall variant with linear (length × height × thickness) and ring (diameter × height × thickness) sub-shapes is required.",
+      "evidence": "You make a straight wall up to 100 feet long, 20 feet high, and 5 feet thick, or a ringed wall up to 60 feet in diameter, 20 feet high, and 5 feet thick."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: save_gate_on_contact",
+      "justification": "The spell deals damage through a DEX save gate that fires when a creature is in the area, enters it, or ends its turn there. Neither existing OngoingOperation variant covers this: roll_modifier modifies dice on rolls, damage_on_hit fires when the caster scores an attack-roll hit. A new variant is needed for a repeating save gate triggered by creature contact with a persistent area.",
+      "evidence": "Any creature in the wall's space makes a Dexterity saving throw, taking 6d10 Force damage on a failed save or half as much damage on a successful one. A creature also makes that save if it enters the wall's space or ends its turn there."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation save_gate_on_contact: once_per_turn cap",
+      "justification": "The save fires at most once per turn per creature regardless of how many times the creature crosses or remains in the area. This is a frequency cap distinct from the per-hit usageLimit on mastery and needs to be expressible on the new operation variant.",
+      "evidence": "A creature makes that save only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the correct family (concentration, persistent area, repeated triggering). Both gaps are in the OngoingOperation and Attachment shape unions — no new families or source-root atoms are required. Secondary effects (Three-Quarters Cover, Difficult Terrain) are environmental and are not the blocking issue; they would require separate widening passes if modeled."
+}

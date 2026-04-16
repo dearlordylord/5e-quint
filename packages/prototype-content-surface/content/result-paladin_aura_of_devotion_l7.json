@@ -1,0 +1,34 @@
+{
+  "unit_slug": "paladin_aura_of_devotion_l7",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_aura (class feature family)",
+      "justification": "Aura of Devotion is permanently active with no activation cost, no use count, and no rest reset cadence. The only existing ClassFeatureMechanics family is 'activation', which unconditionally requires activationCost, resource (UseCountResource), and resetCadence. Forcing those fields would be a lie — the feature has no quota consumed, no finite use pool, and nothing to refill.",
+      "evidence": "You and your allies have Immunity to the Charmed condition while in your Aura of Protection."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_condition_immunity",
+      "justification": "The feature grants Immunity to a specific condition (Charmed). v4 effect atoms include grant_resistance (damage types) and remove_condition (removes an already-applied condition), but no atom covers granting immunity to a condition. Immunity is mechanically distinct from resistance and from condition removal — it prevents the condition from applying in the first place.",
+      "evidence": "You and your allies have Immunity to the Charmed condition while in your Aura of Protection. If a Charmed ally enters the aura, that condition has no effect on that ally while there."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect — condition_immunity variant",
+      "justification": "ClassFeatureEffect is a discriminated union of GrantExtraActionEffect | HealHpEffect only. No existing variant can represent 'grant immunity to a named condition'. Even if the passive_aura structural gap were filled, the effect payload would still require a new surface variant.",
+      "evidence": "You and your allies have Immunity to the Charmed condition"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment — aura (class feature spatial scope)",
+      "justification": "The immunity applies to all allies within the Aura of Protection (a 10 ft radius zone centered on the paladin). The class feature surface has no attachment concept — it is entirely absent from ClassFeatureMechanicsHeader. A spatial scope/aura attachment variant is needed to express 'allies within N feet of caster' for passive class features.",
+      "evidence": "while in your Aura of Protection"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Four-layer gap. Primary gap is structural: no passive/always-on class feature family exists. Secondary gaps: (1) surface — ClassFeatureEffect has no condition_immunity variant; (2) atom — v4 has no grant_condition_immunity atom; (3) attachment — class features have no spatial scope model at all. The aura's radius is inherited from Aura of Protection (L6 feature, 10 ft expanding to 30 ft at L18), so the aura_of_devotion encoding would need to reference or compose with the aura_of_protection spatial scope — a cross-feature dependency the current surface cannot express."
+}

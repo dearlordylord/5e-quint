@@ -1,1 +1,22 @@
-{"unit_slug":"blur","outcome":"surface_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "blur",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AdvantagePenaltyOperation (OngoingOperation variant)",
+      "justification": "Blur's core mechanic is a persistent advantage/disadvantage modifier that lasts for the concentration duration. The OngoingOperation union currently only has RollModifierOperation (dice addend, Bless-style) and DamageOnHitOperation. Neither fits. The EffectAtom already has modify_roll_advantage, but OngoingOperation does not include it as a valid operation kind. Adding a third variant — or allowing modify_roll_advantage EffectAtom directly as an OngoingOperation — would cover Blur and any similar ongoing advantage/disadvantage spells (Greater Invisibility, etc.).",
+      "evidence": "For the duration, any creature has Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "sense_immunity filter on OngoingOperation (or EffectAtom modifier)",
+      "justification": "The Blindsight/Truesight immunity clause requires a conditional filter on the effect: the disadvantage does not apply if the attacker perceives the caster with a named sense. No existing surface type carries a per-effect exception predicate keyed on sense kind. This is a secondary gap — the primary encoding already fails on the operation variant, but the filter would need to be added alongside it.",
+      "evidence": "An attacker is immune to this effect if it perceives you with Blindsight or Truesight."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Blur is cleanly an ongoing_effect spell (concentration, self attachment). The sole blocking gap is that OngoingOperation has no variant for modify_roll_advantage. The v4 atom exists; the EffectAtom exists; only the OngoingOperation union is missing the variant. A secondary gap is the Blindsight/Truesight immunity predicate, which has no surface analog. Could be addressed by allowing any EffectAtom as an ongoing operation (removing the artificial OngoingOperation restriction) and adding an optional filter field to modify_roll_advantage."
+}

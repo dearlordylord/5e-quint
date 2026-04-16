@@ -1,0 +1,28 @@
+{
+  "unit_slug": "suggestion",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition effect in spell Effect union",
+      "justification": "Suggestion's primary mechanical effect is applying the Charmed condition on a failed WIS save. The spell Effect union (DamageEffect | NoneEffect) has no apply_condition variant. The mastery layer has SaveGateRiderResult with apply_condition, but that type is not reused in the spell Effect union.",
+      "evidence": "The target must succeed on a Wisdom saving throw or have the Charmed condition for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "charmed (and other standard conditions) in the Condition type",
+      "justification": "The Condition type is currently a literal union containing only 'prone'. Suggestion requires 'charmed'. The type needs to be widened to include at minimum the standard SRD conditions relevant to save-gated spell effects.",
+      "evidence": "...or have the Charmed condition for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_from_caster_or_allies break condition on concentration Duration",
+      "justification": "Suggestion has a special early-termination trigger: the spell ends if the caster or their allies deal damage to the target. This is distinct from standard concentration rules (which end on the caster taking damage). The current Duration type has no field to express this. The v4 lifecycle atom 'break' exists, but the surface has no variant of Duration (or attached lifecycle shape) that can carry a 'breaks_on' condition.",
+      "evidence": "...until you or your allies deal damage to the target"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The behavioral aspect ('pursues the suggestion to the best of its ability') is DM-agenda and legitimately out of core. The purely deterministic mechanic is: WIS save gate → on fail apply Charmed → concentration up to 8h, with the additional early-termination trigger on damage from caster/allies. All three missing pieces are surface_widening (new variants of existing surface shapes or existing type unions). The v4 taxonomy already has 'apply_condition' as an effect atom and 'break' as a lifecycle atom — nothing new is needed at the taxonomy layer. No dhall/json/trace produced."
+}

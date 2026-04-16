@@ -1,0 +1,76 @@
+{
+  "description": "Lightning springs from you to a creature that you try to touch. Make a melee spell attack against the target. On a hit, the target takes 1d8 Lightning damage, and it can't make Opportunity Attacks until the start of its next turn. Cantrip Upgrade: The damage increases by 1d8 when you reach levels 5 (2d8), 11 (3d8), and 17 (4d8).",
+  "id": "shocking_grasp",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "melee_spell_attack",
+        "kind": "attack_roll",
+        "onHit": {
+          "amount": {
+            "axis": "character",
+            "base": {
+              "dice": 1,
+              "dieSize": 8
+            },
+            "kind": "threshold_tiers",
+            "tiers": [
+              {
+                "atLevel": 5,
+                "override": {
+                  "dice": 2
+                }
+              },
+              {
+                "atLevel": 11,
+                "override": {
+                  "dice": 3
+                }
+              },
+              {
+                "atLevel": 17,
+                "override": {
+                  "dice": 4
+                }
+              }
+            ]
+          },
+          "damageType": "lightning",
+          "kind": "damage"
+        },
+        "onMiss": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "evocation"
+  },
+  "name": "Shocking Grasp",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S#Shocking Grasp"
+  }
+}

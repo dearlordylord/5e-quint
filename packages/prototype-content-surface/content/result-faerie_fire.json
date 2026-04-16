@@ -1,0 +1,40 @@
+{
+  "unit_slug": "faerie_fire",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition variant in spell Effect",
+      "justification": "Faerie Fire's save gate on fail applies the 'outlined' state — a persistent marker that carries the advantage rider and invisible-negation for the concentration duration. The Effect union for spell activation phases only supports DamageEffect and NoneEffect. Mastery phases already have apply_condition in SaveGateRiderResult; the same variant is needed for spell activation phase effects.",
+      "evidence": "Each creature in the Cube is also outlined if it fails a Dexterity saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage_against as OngoingOperation (or spell Effect)",
+      "justification": "The core combat payload of Faerie Fire is that attack rolls made BY OTHERS against the outlined target have Advantage. No existing OngoingOperation variant captures this direction: roll_modifier applies a delta to the marked creature's own rolls; damage_on_hit fires when the caster hits the attachment. A new variant is needed for 'third-party attack rolls against this target gain advantage'.",
+      "evidence": "Attack rolls against an affected creature or object have Advantage if the attacker can see it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "block_condition_benefit effect variant",
+      "justification": "Faerie Fire suppresses the benefit of the Invisible condition for outlined targets. This is distinct from remove_condition (Invisible is not removed, just made ineffective) and from any current Effect, ReactionEffect, or ClassFeatureEffect variant. The v4 atom block_targeting is in the taxonomy but is not surfaced in types.ts.",
+      "evidence": "objects and affected creatures ... can't benefit from the Invisible condition."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition enum extension — 'outlined' (or equivalent marker)",
+      "justification": "The 'outlined' persistent marker applied by the save gate is the intermediate state that both the advantage rider and the invisible-negation attach to. Condition currently only contains 'prone'. Either 'outlined' must be added, or a more general mechanism for spell-applied persistent states is needed.",
+      "evidence": "Each creature in the Cube is also outlined if it fails a Dexterity saving throw. For the duration, objects and affected creatures..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Mixed-targeting area attachment: objects auto-affected, creatures must save",
+      "justification": "Faerie Fire affects all objects in the Cube automatically but requires each creature to fail a save. No existing Attachment or ActivationPhase shape models a split where non-creature targets skip the save gate.",
+      "evidence": "Objects in a 20-foot Cube within range are outlined... Each creature in the Cube is also outlined if it fails a Dexterity saving throw."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell kind (spell) and concentration pattern fit the existing framework. The activation family with a save_gate phase handles the initial creature filtering; extending Effect with apply_condition would let the outlined state be expressed. The deeper gap is encoding the *ongoing* effects of that state (advantage on attackers, invisible-negation) — neither OngoingOperation nor any spell Effect variant covers these. This 'save gate → apply persistent marker → downstream ongoing modifiers' pattern is a recurring one (Hold Person, Entangle, Hypnotic Pattern all share it) and the widening would benefit the whole class. Objects being auto-affected with no save is a secondary gap noted but not the blocking issue."
+}

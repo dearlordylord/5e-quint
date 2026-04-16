@@ -1,0 +1,22 @@
+{
+  "unit_slug": "barkskin",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation :: modify_ac_floor",
+      "justification": "Barkskin's core mechanic is a persistent AC floor on the target — AC = max(target.AC, 17). No existing OngoingOperation variant covers AC modification. The closest atom (modify_ac, used in ReactionEffect) (a) is not part of OngoingOperation, and (b) is semantically additive-delta only, not a floor. A new operation variant is needed that carries the floor value and the conditional 'only applies when target AC is lower' semantics.",
+      "evidence": "the target has an Armor Class of 17 if its AC is lower than that"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_ac :: floor variant",
+      "justification": "The existing modify_ac surface type (ReactionEffect) only encodes an additive delta (delta: number). Floor semantics — set AC to X when AC < X — are mechanically distinct: the shield spell adds unconditionally, Barkskin replaces conditionally. A new variant of modify_ac (or a separate modify_ac_floor kind) is needed to express this pattern without lying about the math.",
+      "evidence": "the target has an Armor Class of 17 if its AC is lower than that"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family fits the header cleanly (bonus action, touch, 1-hour timed, non-concentration, single target). The sole blocker is the operation layer. OngoingOperation has two variants (roll_modifier, damage_on_hit) and AC modification is entirely absent from it. Even threading modify_ac from ReactionEffect in would require a surface type change AND a semantic extension from delta to floor. No dhall/json authored — no honest encoding is possible with the current surface."
+}

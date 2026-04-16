@@ -1,0 +1,60 @@
+{
+  "description": "An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile.",
+  "id": "shield",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "reaction",
+      "trigger": {
+        "kind": "any_of",
+        "triggers": [
+          {
+            "kind": "hit_by_attack_roll"
+          },
+          {
+            "kind": "targeted_by_named_spell",
+            "spellId": "magic_missile"
+          }
+        ]
+      }
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "round"
+      }
+    },
+    "effects": [
+      {
+        "delta": 5,
+        "kind": "modify_ac"
+      },
+      {
+        "kind": "negate_named_effect",
+        "scope": "damage_only",
+        "spellId": "magic_missile"
+      }
+    ],
+    "family": "triggered_reaction",
+    "interruptsTrigger": true,
+    "level": 1,
+    "range": {
+      "kind": "self"
+    },
+    "school": "abjuration"
+  },
+  "name": "Shield",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-Z#Shield"
+  }
+}

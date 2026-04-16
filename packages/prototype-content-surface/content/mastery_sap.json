@@ -1,0 +1,28 @@
+{
+  "description": "If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.",
+  "id": "mastery_sap",
+  "kind": "mastery",
+  "mechanics": {
+    "effect": {
+      "count": 1,
+      "expiresOn": {
+        "kind": "target_uses_or_turn_start"
+      },
+      "kind": "modify_roll_advantage",
+      "mode": "disadvantage",
+      "on": [
+        "attack_roll"
+      ]
+    },
+    "family": "on_hit_trigger",
+    "optional": false,
+    "trigger": {
+      "kind": "weapon_hit"
+    }
+  },
+  "name": "Sap",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Sap"
+  }
+}

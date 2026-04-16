@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_necklace_of_adaptation",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item family",
+      "justification": "The UnitRecord union in types.ts contains only SpellRecord, ClassFeatureRecord, and MasteryRecord. There is no MagicItemRecord. The v4 taxonomy lists magic_item_root as a source atom, but no corresponding record kind, mechanics header, or payload family exists in the surface type system. No honest encoding is possible without this structural addition.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement) — magic items are a distinct D&D unit category with attunement, item slot, and always-on passive effects that do not fit any existing payload family."
+    },
+    {
+      "kind": "new_atom",
+      "name": "attunement_required / always_on passive mechanics family",
+      "justification": "Magic items with always-on passive effects (no activation, no use count, no spell slot) have no mechanics family in the current surface. The necklace grants two persistent effects simply by being worn while attuned — a category not representable as activation, ongoing_effect, triggered_reaction, anchored_trigger, or on_hit_trigger.",
+      "evidence": "While wearing this necklace, you can breathe normally in any environment, and you have Advantage on saving throws made to avoid or end the Poisoned condition."
+    },
+    {
+      "kind": "new_variant",
+      "name": "environmental_immunity effect atom (or equivalent)",
+      "justification": "Breathing normally in any environment is a passive world-state bypass (no suffocation in water, vacuum, toxic gas, etc.). It has no deterministic resolution gate — it is always true while attuned. No v4 atom covers this: grant_resistance applies to damage types, not environmental hazards; block_travel is about movement; grant_sense does not apply. A new effect atom or passive-bypass variant is needed.",
+      "evidence": "you can breathe normally in any environment"
+    },
+    {
+      "kind": "new_variant",
+      "name": "condition-filtered saving throw advantage",
+      "justification": "The Advantage rider is scoped to saving throws 'made to avoid or end the Poisoned condition.' The modify_roll_advantage atom exists but the surface has no filter grammar for condition-scoped saves. RollKind includes saving_throw, but the condition predicate (Poisoned) has no expression in the current ModifyRollAdvantageRider shape.",
+      "evidence": "you have Advantage on saving throws made to avoid or end the Poisoned condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: MagicItemRecord does not exist in UnitRecord. Secondary blockers are two surface/atom gaps even if the structural layer were added: (1) no passive environmental immunity atom, (2) no condition-scoped filter on saving throw advantage. The attunement mechanic also has no surface representation (attunement_slot resource atom exists in v4 taxonomy but has no corresponding surface type). All four gaps must be addressed before this unit can be encoded cleanly."
+}

@@ -1,0 +1,52 @@
+{
+  "unit_slug": "awaken",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "permanent_transformation",
+      "justification": "Awaken permanently alters a creature's fundamental nature (ability score, creature type, language, senses) with no combat resolution phase. No existing payload family covers spells whose entire effect is a one-shot, permanent mutation of a target creature. The activation family requires phases that resolve through attack_roll or save_gate; Awaken has neither.",
+      "evidence": "The target gains an Intelligence of 10 and the ability to speak one language you know. If the target is a natural plant, it becomes a Plant creature and gains the ability to move its limbs, roots, vines, creepers, and so forth, and it gains senses similar to a human's."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastingTime { kind: \"hours\"; amount: number; ritual: boolean }",
+      "justification": "Awaken requires 8 hours of casting time. The current CastingTime union only includes action, bonus_action, reaction, and minutes. Hours-scale casting is mechanically distinct (it implies a long rest–adjacent cost, not a per-encounter resource).",
+      "evidence": "\"time\": [{ \"number\": 8, \"unit\": \"hour\" }]"
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The spell sets the target's Intelligence score to 10. This atom is explicitly listed in v4 taxonomy §12 Known Remaining Weak Spots as deferred and out-of-scope for the current core mechanics graph. Awaken is the most direct pressure case that would force its promotion.",
+      "evidence": "The target gains an Intelligence of 10"
+    },
+    {
+      "kind": "new_atom",
+      "name": "alter_creature_type",
+      "justification": "A natural plant target is transformed into a Plant creature (gaining the creature type and associated capabilities). No atom in v4 covers creature-type mutation. The closest existing atom, alter_item_kind, applies only to items.",
+      "evidence": "If the target is a natural plant, it becomes a Plant creature"
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_language",
+      "justification": "The awakened target gains the ability to speak a specific language chosen by the caster. No atom in v4 covers language acquisition. grant_proficiency is a distinct concept (skill/weapon proficiency).",
+      "evidence": "the ability to speak one language you know"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: add \"charmed\"",
+      "justification": "The awakened target has the Charmed condition for 30 days. The Condition type currently only contains \"prone\". Charmed is a standard SRD condition with distinct mechanical effects.",
+      "evidence": "The awakened target has the Charmed condition for 30 days"
+    },
+    {
+      "kind": "new_variant",
+      "name": "compound conditional expiry (duration OR damage-trigger)",
+      "justification": "The Charmed condition expires after 30 days OR when the caster or allies deal damage to the target — a compound expiry with two independent termination conditions. Neither Duration nor RiderExpiry currently supports this shape. A new expiry variant of the form { kind: \"first_of\"; conditions: [...] } or similar is needed.",
+      "evidence": "for 30 days or until you or your allies deal damage to it"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: no existing payload family handles a spell whose entire effect is a permanent creature transformation with no combat resolution phase (no attack roll, no saving throw, no ongoing window). The activation family is the closest candidate but requires at least one ActivationPhase (attack_roll or save_gate), which Awaken lacks. Secondary blockers — modify_ability_score (deferred in v4), alter_creature_type (absent), grant_language (absent) — would each individually force atom_widening even if a suitable family existed. The companion attitude outcome ('the awakened creature chooses its attitude toward you') is legitimately dm_agenda and out-of-core per ARCHITECTURE.md."
+}

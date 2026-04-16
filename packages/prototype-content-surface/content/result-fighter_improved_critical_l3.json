@@ -1,0 +1,22 @@
+{
+  "unit_slug": "fighter_improved_critical_l3",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive family for ClassFeatureMechanics",
+      "justification": "Improved Critical is a permanent always-on modifier with no activation cost, no use-count resource, and no rest reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three. Forcing 'activation' with activationCost:free would still require fabricating a resource and resetCadence that don't exist in the SRD text.",
+      "evidence": "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_crit_range",
+      "justification": "No v4 atom represents lowering the critical hit threshold of an attack roll. 'modify_roll_numeric' adds a numeric delta to a roll result; 'modify_roll_substitute' replaces a roll value; neither models expanding the crit range from {20} to {19, 20}. The v4 taxonomy residue (section 12) explicitly flags 'crit_window distinct from on_hit_window' as deferred single-feat pressure, confirming the crit domain is underspecified in v4.",
+      "evidence": "can score a Critical Hit on a roll of 19 or 20 on the d20"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two widenings required: (1) a 'passive' family for ClassFeatureMechanics — this feature has no activation, resource, or reset; (2) a new atom 'modify_crit_range' to represent extending the critical hit window from 20-only to 19-20. The v4 taxonomy residue acknowledges crit-domain atoms are deferred. Cannot author dhall/json without creating false traces for activation cost, resource, and reset cadence that have no basis in the SRD text."
+}
