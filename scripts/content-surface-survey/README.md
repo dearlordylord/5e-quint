@@ -21,12 +21,14 @@ This directory runs a parallelized per-unit encoding survey across SRD 5.2.1 (an
 
 SRD units produce artifacts in the **main repo**:
 
+- `packages/prototype-content-surface/content/<slug>.dhall`
 - `packages/prototype-content-surface/content/<slug>.json` + trace
 - `scripts/content-surface-survey/results-srd/<slug>/` (verdict, result, proposal)
 - `scripts/content-surface-survey/survey-results-srd.jsonl` (committed)
 
 PHB-only units produce artifacts in the **research repo**:
 
+- `.references/xphb-srd-pairing/phb-survey/workspace/content/<slug>.dhall`
 - `.references/xphb-srd-pairing/phb-survey/workspace/content/<slug>.json` + trace
 - `.references/xphb-srd-pairing/phb-survey/results/<slug>/`
 - `.references/xphb-srd-pairing/phb-survey/survey-results-phb.jsonl`
@@ -71,7 +73,8 @@ MAX_PARALLEL=5 ./run-survey.sh --tier 2 --limit 10
 
 ## Gotchas
 
-- **Slug matches encoding filename.** The worker writes to `content/<slug>.json`. If you pre-populate an encoding for dry-run testing, the slug must match.
+- **Slug matches encoding filename.** The worker now treats `content/<slug>.dhall` as the authored artifact and `content/<slug>.json` as the runtime artifact consumed by validation/tracing. If you pre-populate an encoding for dry-run testing, the slug must match.
+- **Dhall compiler required.** The worker compiles `content/<slug>.dhall` to `content/<slug>.json` with `dhall-to-json` before validation and tracing.
 - **PHB workspace setup.** First PHB unit processed creates a copy of the prototype package under `.references/xphb-srd-pairing/phb-survey/workspace/`. That's intentional — no PHB tooling in main repo.
 - **Rate limit.** `.ralphrc` sets `MAX_CALLS_PER_HOUR=100`. 5 parallel workers with ~5 min average = 60 calls/hour — well within.
 - **Dataset locking.** Worker uses `flock` on `survey-results-*.jsonl.lock` for concurrent appends.

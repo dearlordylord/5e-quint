@@ -5,7 +5,7 @@
 #   3. Spawn a per-worker scratch prototype dir.
 #   4. Invoke the LLM backend (Claude or Codex) against the scratch.
 #   5. Run the harness validator against the scratch.
-#   6. Promote content/<slug>.{json,trace.md} back to the template dir.
+#   6. Promote content/<slug>.{dhall,json,trace.md} back to the template dir.
 #   7. Move result-<slug>.json / proposal-<slug>.md to the results dir.
 #   8. Append the verdict row to the provenance-correct dataset.
 #
@@ -30,6 +30,7 @@
 #   CODEX_TIMEOUT_SECONDS  — hard timeout (default: 600)
 #
 # Shared:
+#   DHALL_TO_JSON_CMD      — dhall-to-json command (default: "dhall-to-json")
 #   MOCK_ENCODING_SRC      — optional; if set, skip LLM and copy this file
 #                            into content/<slug>.json (for pipeline testing)
 
@@ -44,7 +45,9 @@ CLAUDE_TIMEOUT_SECONDS="${CLAUDE_TIMEOUT_SECONDS:-600}"
 CODEX_CMD="${CODEX_CMD:-codex}"
 CODEX_MODEL="${CODEX_MODEL:-}"
 CODEX_TIMEOUT_SECONDS="${CODEX_TIMEOUT_SECONDS:-600}"
+DHALL_TO_JSON_CMD="${DHALL_TO_JSON_CMD:-dhall-to-json}"
 FORCE="${FORCE:-0}"
+export PATH="$HOME/.local/bin:$PATH"
 
 ROW="${1:?usage: worker.sh '<queue row JSON>'}"
 
@@ -103,6 +106,14 @@ rsync -a \
   --exclude 'proposal.md' --exclude 'proposal-*.md' \
   "$TEMPLATE_DIR/" "$WORKSPACE/"
 ln -sfn "$TEMPLATE_DIR/node_modules" "$WORKSPACE/node_modules"
+# Start each rerun from a clean slate for the target slug. Otherwise a
+# previously promoted content/<slug>.json can survive in the scratch and
+# masquerade as a freshly-authored artifact when the model intentionally
+# stops before writing one.
+rm -f \
+  "$WORKSPACE/content/$slug.dhall" \
+  "$WORKSPACE/content/$slug.json" \
+  "$WORKSPACE/content/$slug.trace.md"
 
 # -------- extract unit text --------
 
@@ -256,6 +267,12 @@ harvest_proposal_from_template
 
 # -------- validate --------
 
+if [[ -f "$WORKSPACE/content/$slug.dhall" ]]; then
+  "$DHALL_TO_JSON_CMD" \
+    --file "$WORKSPACE/content/$slug.dhall" \
+    --output "$WORKSPACE/content/$slug.json"
+fi
+
 pnpm --filter @dnd/prototype-content-surface exec tsx \
   "$SCRIPTS_DIR/validate.ts" \
   --slug "$slug" \
@@ -266,6 +283,10 @@ pnpm --filter @dnd/prototype-content-surface exec tsx \
 # Only copy if the worker actually wrote a JSON file. This lets future
 # workers reference the new encoding from bless.json / acid_splash.json /
 # etc., and keeps the template directory as the accumulated SRD corpus.
+
+if [[ -f "$WORKSPACE/content/$slug.dhall" ]]; then
+  cp "$WORKSPACE/content/$slug.dhall" "$TEMPLATE_DIR/content/$slug.dhall"
+fi
 
 if [[ -f "$WORKSPACE/content/$slug.json" ]]; then
   cp "$WORKSPACE/content/$slug.json" "$TEMPLATE_DIR/content/$slug.json"

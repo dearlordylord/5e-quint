@@ -19,7 +19,8 @@ You are encoding ONE unit — spell, class feature, feat, species trait, mastery
 
 You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
 
-- `content/{{UNIT_SLUG}}.json` — the encoded unit.
+- `content/{{UNIT_SLUG}}.dhall` — the authored source of the unit.
+- `content/{{UNIT_SLUG}}.json` — the runtime artifact consumed by typecheck + tracer. The worker derives this from your `.dhall`; do not hand-maintain both.
 - `result-{{UNIT_SLUG}}.json` — your structured self-report (schema below).
 - `proposal-{{UNIT_SLUG}}.md` — prose describing widenings IF the unit doesn't fit.
 
@@ -58,7 +59,7 @@ Do NOT broad-search the repo or read unrelated plans/reports unless you are bloc
    - Do not create knowingly false traces such as “grant_extra_action” for a passive rider.
    - Write only `result-{{UNIT_SLUG}}.json` and `proposal-{{UNIT_SLUG}}.md`.
    - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
-4. If the answer is **yes**, author `content/{{UNIT_SLUG}}.json` as a valid `UnitRecord`. Match field names exactly.
+4. If the answer is **yes**, author `content/{{UNIT_SLUG}}.dhall` as the single source of truth.
 5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
 6. Run `pnpm exec tsx src/run.ts content/{{UNIT_SLUG}}.json --out content/{{UNIT_SLUG}}.trace.md`. Observe output.
 7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
@@ -101,10 +102,11 @@ Do NOT broad-search the repo or read unrelated plans/reports unless you are bloc
 
 - Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
 - Be honest about family fit. If the unit does not fit an existing `UnitRecord` kind or mechanics family, do not coerce it into a fake-but-valid JSON.
-- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/{{UNIT_SLUG}}.json`.
+- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/{{UNIT_SLUG}}.dhall` or `content/{{UNIT_SLUG}}.json`.
 - Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
 - Do NOT claim `clean` if typecheck or tracer failed.
-- Do NOT modify any file outside `content/{{UNIT_SLUG}}.json`, `result-{{UNIT_SLUG}}.json`, `proposal-{{UNIT_SLUG}}.md`.
+- Do NOT hand-edit `content/{{UNIT_SLUG}}.json`.
+- Do NOT modify any file outside `content/{{UNIT_SLUG}}.dhall`, `result-{{UNIT_SLUG}}.json`, `proposal-{{UNIT_SLUG}}.md`.
 - If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
 - Do not default upward to `atom_widening`. Use the narrowest honest classification:
   - `surface_widening` if a variant of an existing surface shape would solve it
@@ -118,13 +120,15 @@ Your final output must be valid for the path you chose:
 
 If the unit fits honestly:
 
-- `content/{{UNIT_SLUG}}.json` — typechecks against `UnitRecord`.
+- `content/{{UNIT_SLUG}}.dhall` — authored source.
+- `content/{{UNIT_SLUG}}.json` — generated from Dhall by the worker; typechecks against `UnitRecord`.
 - `content/{{UNIT_SLUG}}.trace.md` — the tracer's mermaid graph.
 - `result-{{UNIT_SLUG}}.json` — your self-classification.
 - `proposal-{{UNIT_SLUG}}.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
 
 If the unit does NOT fit honestly:
 
+- Do NOT write `content/{{UNIT_SLUG}}.dhall`.
 - Do NOT write `content/{{UNIT_SLUG}}.json`.
 - Do NOT write `content/{{UNIT_SLUG}}.trace.md`.
 - Write `result-{{UNIT_SLUG}}.json`.
