@@ -1,5 +1,6 @@
 // Render a Trace as a mermaid flowchart. Color-codes nodes by atom category.
 
+import type { UnitRecord } from "../surface/types.ts";
 import type { Trace, AtomCategory } from "./tracer.ts";
 
 const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
@@ -41,11 +42,16 @@ export function renderMermaid(trace: Trace): string {
   return lines.join("\n");
 }
 
-export function renderTraceDocument(trace: Trace): string {
+export function renderTraceDocument(trace: Trace, unit: UnitRecord): string {
   const out: string[] = [];
-  out.push(`# Dependency graph: ${trace.spellName}`);
+  out.push(`# Dependency graph: ${trace.unitName}`);
   out.push("");
-  out.push(`Spell id: \`${trace.spellId}\``);
+  out.push(`Unit id: \`${trace.unitId}\``);
+  const externalLink = get5etoolsUrl(unit);
+  if (externalLink !== null) {
+    out.push("");
+    out.push(`5e.tools: <${externalLink}>`);
+  }
   out.push("");
   out.push(renderMermaid(trace));
   out.push("");
@@ -67,4 +73,47 @@ export function renderTraceDocument(trace: Trace): string {
 
 function escapeLabel(s: string): string {
   return s.replaceAll("\n", "<br/>").replaceAll('"', "&quot;");
+}
+
+function get5etoolsUrl(unit: UnitRecord): string | null {
+  const source = get5etoolsSource(unit);
+  if (source === null) return null;
+
+  switch (unit.kind) {
+    case "spell":
+      return `https://5e.tools/spells.html#${encodeHashParts(unit.name, source)}`;
+    case "class_feature":
+      return `https://5e.tools/classfeatures.html#${
+        encodeHashParts(unit.name, capitalizeAscii(unit.className), source, unit.acquiredAtLevel, source)
+      }`;
+    case "mastery":
+      return null;
+    default: {
+      const _exhaustive: never = unit;
+      return _exhaustive;
+    }
+  }
+}
+
+function get5etoolsSource(unit: UnitRecord): string | null {
+  switch (unit.provenance.kind) {
+    case "srd-5.2.1":
+      return "XPHB";
+    default: {
+      const _exhaustive: never = unit.provenance.kind;
+      return _exhaustive;
+    }
+  }
+}
+
+function encodeHashParts(...parts: ReadonlyArray<string | number>): string {
+  return parts.map(encodeHashPart).join("_");
+}
+
+function encodeHashPart(part: string | number): string {
+  return encodeURIComponent(String(part).toLowerCase()).toLowerCase();
+}
+
+function capitalizeAscii(value: string): string {
+  return value.length === 0 ? value : value[0].toUpperCase() + value.slice(1);
 }
