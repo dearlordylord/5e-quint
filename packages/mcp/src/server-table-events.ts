@@ -3,6 +3,8 @@ import { Match, Schema } from "effect";
 import {
   BATTLE_TABLE_EVENT_TYPES,
   CREATURE_TABLE_EVENT_TYPES,
+  CREATURE_HAZARD_TABLE_EVENT_TYPES,
+  type CreatureHazardTableEventType,
   type RecordTableEventResult,
   TableEventCommandSchema,
   tableEventCommandSchemaForType,
@@ -150,7 +152,11 @@ function conditionSet(
 
 type CreatureDirectTableEventCommand = Exclude<
   Extract<TableEventCommand, { readonly scope: "creature" }>,
-  { readonly type: CreatureSemanticTriggerTableEventType }
+  {
+    readonly type:
+      | CreatureSemanticTriggerTableEventType
+      | CreatureHazardTableEventType;
+  }
 >;
 
 type CreatureSemanticTriggerCommand = Extract<
@@ -160,6 +166,18 @@ type CreatureSemanticTriggerCommand = Extract<
     readonly type: CreatureSemanticTriggerTableEventType;
   }
 >;
+
+type CreatureHazardCommand = Extract<
+  TableEventCommand,
+  {
+    readonly scope: "creature";
+    readonly type: CreatureHazardTableEventType;
+  }
+>;
+
+const CREATURE_HAZARD_TYPE_SET = new Set<string>(
+  CREATURE_HAZARD_TABLE_EVENT_TYPES,
+);
 
 function buildCreatureTableEvent(
   command: CreatureDirectTableEventCommand,
@@ -281,6 +299,40 @@ function recordCreatureDirectTableEvent(
   );
 }
 
+function hazardEvents(command: CreatureHazardCommand): ReadonlyArray<DndEvent> {
+  return Match.value(command).pipe(
+    Match.when({ type: "RECORD_HOLD_BREATH_EXPIRED" }, () => [
+      { type: "SUFFOCATE" } as const,
+    ]),
+    Match.when({ type: "RECORD_DAILY_FOOD_INTAKE" }, (c) => {
+      if (c.intake === "full" || c.intake === "atLeastHalf") return [];
+      if (c.intake === "lessThanHalf" && c.conSaveSucceeded === true) return [];
+      return [{ type: "APPLY_STARVATION" } as const];
+    }),
+    Match.when({ type: "RECORD_DAILY_WATER_INTAKE" }, (c) => {
+      if (c.intake === "full" || c.intake === "atLeastHalf") return [];
+      return [{ type: "APPLY_DEHYDRATION" } as const];
+    }),
+    Match.exhaustive,
+  );
+}
+
+function recordCreatureHazardTableEvent(
+  actor: DndActor,
+  command: CreatureHazardCommand,
+) {
+  const events = hazardEvents(command);
+  const warnings = tableEventWarnings(command);
+  for (const event of events) {
+    if (actor.getSnapshot().can(event)) actor.send(event);
+  }
+  return tableEventSuccess(
+    command,
+    warnings,
+    encodeDndContext(actor.getSnapshot().context),
+  );
+}
+
 function recordCreatureTableEvent(
   actor: DndActor,
   command: Extract<TableEventCommand, { readonly scope: "creature" }>,
@@ -292,7 +344,17 @@ function recordCreatureTableEvent(
     return recordCreatureSemanticTrigger(actor, command);
   }
 
-  return recordCreatureDirectTableEvent(actor, command);
+  if (CREATURE_HAZARD_TYPE_SET.has(command.type)) {
+    return recordCreatureHazardTableEvent(
+      actor,
+      command as CreatureHazardCommand,
+    );
+  }
+
+  return recordCreatureDirectTableEvent(
+    actor,
+    command as CreatureDirectTableEventCommand,
+  );
 }
 
 function buildBattleTableEvent(

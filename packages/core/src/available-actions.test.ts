@@ -2986,6 +2986,111 @@ describe("available actions contract", () => {
     });
   });
 
+  test("battle discovery exposes BATTLE_HELP_ATTACK only when a distinct (ally, target) pair exists", () => {
+    const twoCreatures = initBattleForAttackDiscovery();
+    expect(
+      getAvailableBattleActions(twoCreatures.getSnapshot().context).find(
+        (t) => t.type === "BATTLE_HELP_ATTACK",
+      ),
+    ).toBeUndefined();
+
+    const threeCreatures = makeBattleActor({
+      type: "BATTLE_INIT",
+      creatures: [
+        { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+        { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+        { id: CreatureId("C"), maxHp: 20, kind: "Monster", initiativeRoll: 10 },
+      ],
+    });
+    threeCreatures.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+    const helpAttack = getAvailableBattleActions(
+      threeCreatures.getSnapshot().context,
+    ).find((t) => t.type === "BATTLE_HELP_ATTACK");
+    expect(helpAttack).toEqual({
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_HELP_ATTACK",
+      allyId: { options: ["B", "C"] },
+      targetId: { options: ["B", "C"] },
+      helperWithin5ftOfTarget: { options: [true] },
+      cost: cost(quota("action")),
+      outcome: expect.any(Object),
+    });
+
+    const request = expectBattleRequest(
+      resolveBattleAction(threeCreatures.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_HELP_ATTACK",
+        allyId: "B",
+        targetId: "C",
+        helperWithin5ftOfTarget: true,
+      }),
+    );
+    expect(request.runtime).toBe("none");
+    const finalized = finalizeBattleResolution(
+      request,
+      { runtime: "none" },
+      threeCreatures.getSnapshot().context,
+    );
+    expect(finalized).toEqual({
+      ok: true,
+      event: {
+        type: "BATTLE_HELP_ATTACK",
+        allyId: CreatureId("B"),
+        targetId: CreatureId("C"),
+        helperWithin5ftOfTarget: true,
+      },
+      outcome: expect.any(String),
+    });
+  });
+
+  test("battle discovery exposes BATTLE_MOVE when movement remains and the creature is not prone", () => {
+    const actor = initBattleForAttackDiscovery();
+    const tokens = getAvailableBattleActions(actor.getSnapshot().context);
+    const move = tokens.find((t) => t.type === "BATTLE_MOVE");
+    expect(move).toEqual({
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_MOVE",
+      cost: cost(movement(5)),
+      outcome: {
+        summary:
+          "Spend 5 feet of movement to move one checkpoint, supplying the explicit provocation kind and threatening-reach creature set",
+      },
+    });
+  });
+
+  test("resolveBattleAction for BATTLE_MOVE requests battleMove runtime inputs", () => {
+    const actor = initBattleForAttackDiscovery();
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_MOVE",
+      }),
+    );
+    expect(request.runtime).toBe("battleMove");
+    const finalized = finalizeBattleResolution(
+      request,
+      {
+        runtime: "battleMove",
+        values: {
+          provocationKind: "doesNotProvokeOpportunityAttacks",
+          threatened: [],
+        },
+      },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toMatchObject({
+      ok: true,
+      event: {
+        type: "BATTLE_MOVE",
+        provocationKind: "doesNotProvokeOpportunityAttacks",
+      },
+    });
+  });
+
   test("battle discovery exposes BATTLE_ATTACK for armed and unarmed active creatures", () => {
     const actor = initBattleForAttackDiscovery();
 
@@ -4512,6 +4617,49 @@ describe("available actions contract", () => {
     ).toEqual({
       code: "INVALID_RUNTIME_INPUT",
       message: "Search Wisdom check total must be an integer.",
+    });
+  });
+
+  test("battle discovery exposes BATTLE_CAST_SAVE_SPELL for single-target save spells and resolves with battleSaveSpell runtime", () => {
+    const actor = initBattleForReadySpellDiscovery();
+    const tokens = getAvailableBattleActions(actor.getSnapshot().context);
+    const saveCast = tokens.find((t) => t.type === "BATTLE_CAST_SAVE_SPELL");
+    expect(saveCast).toEqual({
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_CAST_SAVE_SPELL",
+      spellId: "hold_person",
+      slotLevel: { options: [spellSlotLevel(2), spellSlotLevel(3)] },
+      targetId: { options: ["B"] },
+      cost: cost(quota("action"), pool("spellSlot")),
+      outcome: expect.any(Object),
+    });
+
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "A",
+        type: "BATTLE_CAST_SAVE_SPELL",
+        spellId: "hold_person",
+        slotLevel: spellSlotLevel(2),
+        targetId: "B",
+      }),
+    );
+    expect(request.runtime).toBe("battleSaveSpell");
+
+    const finalized = finalizeBattleResolution(
+      request,
+      { runtime: "battleSaveSpell", values: { saveRoll: 5 } },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toMatchObject({
+      ok: true,
+      event: {
+        type: "BATTLE_CAST_SAVE_SPELL",
+        targetId: CreatureId("B"),
+        saveRoll: 5,
+        spellName: "hold_person",
+      },
     });
   });
 

@@ -33,6 +33,7 @@ import type {
   BattleCreatureState,
   BattleEvent,
   InitCreatureConfig,
+  MovementProvocationKind,
 } from "#/battle-machine-types.ts";
 import {
   battleHasFreeHand,
@@ -87,6 +88,7 @@ import {
   UNARMED_STRIKE_PROFILE,
   WEAPON_PROPERTIES,
   type D20Roll,
+  type SpellId,
   type SpellName,
   type SpellSlotLevel as SpellSlotLevelValue,
 } from "#/types.ts";
@@ -487,6 +489,16 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_CAST_SAVE_SPELL";
+      readonly spellId: string;
+      readonly slotLevel: Hole<SpellSlotLevelValue>;
+      readonly targetId: Hole<string>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
       readonly abilityId: string;
       readonly targetId: Hole<string>;
@@ -506,6 +518,23 @@ export type BattleActionToken =
       readonly actorId: string;
       readonly type: "BATTLE_WAKE_EFFECT";
       readonly targetId: Hole<string>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_HELP_ATTACK";
+      readonly allyId: Hole<string>;
+      readonly targetId: Hole<string>;
+      readonly helperWithin5ftOfTarget: Hole<boolean>;
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MOVE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -831,6 +860,14 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      readonly type: "BATTLE_CAST_SAVE_SPELL";
+      readonly spellId: string;
+      readonly slotLevel: SpellSlotLevelValue;
+      readonly targetId: string;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
       readonly type: "BATTLE_MONSTER_SAVE_EFFECT";
       readonly abilityId: string;
       readonly targetId: string;
@@ -846,6 +883,19 @@ type SpecificBattleResolvedActionToken =
       readonly actorId: string;
       readonly type: "BATTLE_WAKE_EFFECT";
       readonly targetId: string;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_HELP_ATTACK";
+      readonly allyId: string;
+      readonly targetId: string;
+      readonly helperWithin5ftOfTarget: boolean;
+    }
+  | {
+      readonly scope: "battle";
+      readonly actorId: string;
+      readonly type: "BATTLE_MOVE";
     }
   | {
       readonly scope: "battle";
@@ -985,6 +1035,29 @@ export const CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES = [
 export type CreatureEnvironmentalTableEventType =
   (typeof CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES)[number];
 
+export const CREATURE_HAZARD_TABLE_EVENT_TYPES = [
+  "RECORD_HOLD_BREATH_EXPIRED",
+  "RECORD_DAILY_FOOD_INTAKE",
+  "RECORD_DAILY_WATER_INTAKE",
+] as const;
+export type CreatureHazardTableEventType =
+  (typeof CREATURE_HAZARD_TABLE_EVENT_TYPES)[number];
+
+export const DAILY_FOOD_INTAKE_KINDS = [
+  "full",
+  "atLeastHalf",
+  "lessThanHalf",
+  "none",
+] as const;
+export type DailyFoodIntakeKind = (typeof DAILY_FOOD_INTAKE_KINDS)[number];
+
+export const DAILY_WATER_INTAKE_KINDS = [
+  "full",
+  "atLeastHalf",
+  "lessThanHalf",
+] as const;
+export type DailyWaterIntakeKind = (typeof DAILY_WATER_INTAKE_KINDS)[number];
+
 export const CREATURE_CONCENTRATION_TABLE_EVENT_TYPES = [
   "BREAK_CONCENTRATION",
 ] as const satisfies ReadonlyArray<DndEvent["type"]>;
@@ -1002,6 +1075,7 @@ export const CREATURE_TABLE_EVENT_TYPES = [
   ...CREATURE_DAMAGE_RECOVERY_TABLE_EVENT_TYPES,
   ...CREATURE_CONDITION_EXHAUSTION_TABLE_EVENT_TYPES,
   ...CREATURE_ENVIRONMENTAL_TABLE_EVENT_TYPES,
+  ...CREATURE_HAZARD_TABLE_EVENT_TYPES,
   ...CREATURE_CONCENTRATION_TABLE_EVENT_TYPES,
   ...CREATURE_SEMANTIC_TRIGGER_TABLE_EVENT_TYPES,
 ] as const;
@@ -1380,6 +1454,14 @@ const BattleCastAoeResolvedActionSchema = Schema.Struct({
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
+const BattleCastSaveSpellResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_CAST_SAVE_SPELL"),
+  spellId: Schema.String,
+  slotLevel: SpellSlotLevel,
+  targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
 const BattleMonsterSaveEffectResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_MONSTER_SAVE_EFFECT"),
@@ -1397,6 +1479,19 @@ const BattleWakeEffectResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_WAKE_EFFECT"),
   targetId: Schema.String,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleHelpAttackResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_HELP_ATTACK"),
+  allyId: Schema.String,
+  targetId: Schema.String,
+  helperWithin5ftOfTarget: Schema.Boolean,
+}).pipe(Schema.attachPropertySignature("scope", "battle"));
+
+const BattleMoveResolvedActionSchema = Schema.Struct({
+  actorId: Schema.String,
+  type: Schema.Literal("BATTLE_MOVE"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleReadyResolvedActionSchema = Schema.Struct({
@@ -1497,9 +1592,12 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
   BattleCastAoeResolvedActionSchema,
+  BattleCastSaveSpellResolvedActionSchema,
   BattleMonsterSaveEffectResolvedActionSchema,
   BattleMonsterTraversalResolvedActionSchema,
   BattleWakeEffectResolvedActionSchema,
+  BattleHelpAttackResolvedActionSchema,
+  BattleMoveResolvedActionSchema,
   BattleReadyResolvedActionSchema,
   BattleReadyPassResolvedActionSchema,
   BattleReadyReleaseResolvedActionSchema,
@@ -1878,6 +1976,24 @@ const CreatureRecordFailedAbilityCheckTableEventSchema = Schema.Struct({
   scope: Schema.Literal("creature"),
   type: Schema.Literal("RECORD_FAILED_ABILITY_CHECK"),
 });
+const CreatureRecordHoldBreathExpiredTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("RECORD_HOLD_BREATH_EXPIRED"),
+  ...TableEventSemanticActionField,
+});
+const CreatureRecordDailyFoodIntakeTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("RECORD_DAILY_FOOD_INTAKE"),
+  intake: Schema.Literal(...DAILY_FOOD_INTAKE_KINDS),
+  conSaveSucceeded: Schema.optional(Schema.Boolean),
+  ...TableEventSemanticActionField,
+});
+const CreatureRecordDailyWaterIntakeTableEventSchema = Schema.Struct({
+  scope: Schema.Literal("creature"),
+  type: Schema.Literal("RECORD_DAILY_WATER_INTAKE"),
+  intake: Schema.Literal(...DAILY_WATER_INTAKE_KINDS),
+  ...TableEventSemanticActionField,
+});
 const BattleHealTableEventSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal(...BATTLE_HEAL_TABLE_EVENT_TYPES),
@@ -1901,6 +2017,9 @@ export const TableEventCommandSchema = Schema.Union(
   CreatureBreakConcentrationTableEventSchema,
   CreatureRecordFailedSavingThrowTableEventSchema,
   CreatureRecordFailedAbilityCheckTableEventSchema,
+  CreatureRecordHoldBreathExpiredTableEventSchema,
+  CreatureRecordDailyFoodIntakeTableEventSchema,
+  CreatureRecordDailyWaterIntakeTableEventSchema,
   BattleTableEventSchema,
 );
 const TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE = {
@@ -1917,6 +2036,9 @@ const TABLE_EVENT_COMMAND_SCHEMA_BY_TYPE = {
   BREAK_CONCENTRATION: CreatureBreakConcentrationTableEventSchema,
   RECORD_FAILED_SAVING_THROW: CreatureRecordFailedSavingThrowTableEventSchema,
   RECORD_FAILED_ABILITY_CHECK: CreatureRecordFailedAbilityCheckTableEventSchema,
+  RECORD_HOLD_BREATH_EXPIRED: CreatureRecordHoldBreathExpiredTableEventSchema,
+  RECORD_DAILY_FOOD_INTAKE: CreatureRecordDailyFoodIntakeTableEventSchema,
+  RECORD_DAILY_WATER_INTAKE: CreatureRecordDailyWaterIntakeTableEventSchema,
   BATTLE_HEAL: BattleHealTableEventSchema,
 } as const;
 export type TableEventCommand = Schema.Schema.Type<
@@ -2704,6 +2826,14 @@ export type BattleResolutionRequest =
   | {
       readonly token: Extract<
         BattleResolvedActionToken,
+        { readonly type: "BATTLE_CAST_SAVE_SPELL" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "battleSaveSpell";
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
         { readonly type: "BATTLE_MONSTER_SAVE_EFFECT" }
       >;
       readonly outcome: string;
@@ -2728,6 +2858,26 @@ export type BattleResolutionRequest =
         BattleEvent,
         { readonly type: "BATTLE_WAKE_EFFECT" }
       >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_HELP_ATTACK" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "none";
+      readonly event: Extract<
+        BattleEvent,
+        { readonly type: "BATTLE_HELP_ATTACK" }
+      >;
+    }
+  | {
+      readonly token: Extract<
+        BattleResolvedActionToken,
+        { readonly type: "BATTLE_MOVE" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "battleMove";
     }
   | {
       readonly token: Extract<
@@ -2921,6 +3071,20 @@ export type BattleResolutionRuntimeInputs =
       readonly runtime: "battleGrapple";
       readonly values: {
         readonly targetSaveFailed: boolean;
+      };
+    }
+  | {
+      readonly runtime: "battleMove";
+      readonly values: {
+        readonly provocationKind: MovementProvocationKind;
+        readonly threatened: ReadonlyArray<string>;
+      };
+    }
+  | {
+      readonly runtime: "battleSaveSpell";
+      readonly values: {
+        readonly saveRoll: number;
+        readonly saveRollB?: number;
       };
     }
   | {
@@ -3913,36 +4077,68 @@ function battleCounterspellSlotLevels(
   );
 }
 
-function battleActiveAoeSpellTokens(
-  actorId: string,
+function battleCastableSpellSlotOptions(
   actor: BattleCreatureState,
-): ReadonlyArray<BattleActionToken> {
-  if (
+  currentSpellId: SpellId,
+  payload: BattleReadyableSpellPayload | undefined,
+): ReadonlyArray<SpellSlotLevelValue> {
+  return currentReadyableSpellPayloads(actor, currentSpellId, payload)
+    .map((p) => p.slotLevel)
+    .sort((a, b) => a - b);
+}
+
+function isDailyMonsterSpell(
+  actor: BattleCreatureState,
+  currentSpellId: SpellId,
+): boolean {
+  return (
+    actor.dailyUsesRemaining[monsterSpellDailyUseId(currentSpellId)] != null
+  );
+}
+
+function battleCastableSpellCost(
+  actor: BattleCreatureState,
+  currentSpellId: SpellId,
+): ResourceCost {
+  return isDailyMonsterSpell(actor, currentSpellId)
+    ? costs(quotaCost("action"))
+    : costs(quotaCost("action"), poolCost("spellSlot"));
+}
+
+function battleCastableSpellSpend(
+  actor: BattleCreatureState,
+  currentSpellId: SpellId,
+): string {
+  return isDailyMonsterSpell(actor, currentSpellId)
+    ? "action and one daily use"
+    : "action and a spell slot";
+}
+
+function battleSpellCastBlocked(actor: BattleCreatureState): boolean {
+  return (
     actor.actionSurgeActionPending ||
     actor.ragingBlocksSpells ||
     actor.slotExpendedThisTurn ||
     actor.readyableSpellPayloads.size === 0
-  ) {
-    return [];
-  }
+  );
+}
+
+function battleActiveAoeSpellTokens(
+  actorId: string,
+  actor: BattleCreatureState,
+): ReadonlyArray<BattleActionToken> {
+  if (battleSpellCastBlocked(actor)) return [];
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_CAST_AOE" }>
   > = [];
-  for (const [
-    currentSpellId,
-    payload,
-  ] of actor.readyableSpellPayloads.entries()) {
+  for (const [currentSpellId, payload] of actor.readyableSpellPayloads) {
     if (!actor.preparedSpells.has(currentSpellId)) continue;
     if (getBattleReadyableSpellDelivery(currentSpellId) !== "aoe") continue;
-    const isDailyMonsterSpell =
-      actor.dailyUsesRemaining[monsterSpellDailyUseId(currentSpellId)] != null;
-    const slotOptions = currentReadyableSpellPayloads(
+    const slotOptions = battleCastableSpellSlotOptions(
       actor,
       currentSpellId,
       payload,
-    )
-      .map((currentPayload) => currentPayload.slotLevel)
-      .sort((a, b) => a - b);
+    );
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -3952,17 +4148,57 @@ function battleActiveAoeSpellTokens(
         type: "BATTLE_CAST_AOE",
         spellId: currentSpellId,
         slotLevel: { options: slotOptions },
-        cost: isDailyMonsterSpell
-          ? costs(quotaCost("action"))
-          : costs(quotaCost("action"), poolCost("spellSlot")),
+        cost: battleCastableSpellCost(actor, currentSpellId),
         outcome: {
-          summary: isDailyMonsterSpell
-            ? `Spend your action and one daily use to cast ${displaySpellName(
-                currentSpellId as SpellName,
-              )} through the battle-owned area save loop`
-            : `Spend your action and a spell slot to cast ${displaySpellName(
-                currentSpellId as SpellName,
-              )} through the battle-owned area save loop`,
+          summary: `Spend your ${battleCastableSpellSpend(actor, currentSpellId)} to cast ${displaySpellName(
+            currentSpellId as SpellName,
+          )} through the battle-owned area save loop`,
+        },
+      }),
+    );
+  }
+  return tokens.sort((a, b) =>
+    String(a.spellId).localeCompare(String(b.spellId)),
+  );
+}
+
+function battleActiveSaveSpellTokens(
+  actorId: string,
+  actor: BattleCreatureState,
+  context: BattleContext,
+): ReadonlyArray<BattleActionToken> {
+  if (battleSpellCastBlocked(actor)) return [];
+  const targetOptions = [...context.creatures.keys()]
+    .filter((creatureId) => creatureId !== actorId)
+    .sort();
+  if (targetOptions.length === 0) return [];
+  const tokens: Array<
+    Extract<BattleActionToken, { readonly type: "BATTLE_CAST_SAVE_SPELL" }>
+  > = [];
+  for (const [currentSpellId, payload] of actor.readyableSpellPayloads) {
+    if (!actor.preparedSpells.has(currentSpellId)) continue;
+    if (getBattleReadyableSpellDelivery(currentSpellId) !== "singleTarget")
+      continue;
+    const slotOptions = battleCastableSpellSlotOptions(
+      actor,
+      currentSpellId,
+      payload,
+    );
+    if (slotOptions.length === 0) continue;
+    tokens.push(
+      battleToken<
+        Extract<BattleActionToken, { readonly type: "BATTLE_CAST_SAVE_SPELL" }>
+      >({
+        actorId,
+        type: "BATTLE_CAST_SAVE_SPELL",
+        spellId: currentSpellId,
+        slotLevel: { options: slotOptions },
+        targetId: { options: targetOptions },
+        cost: battleCastableSpellCost(actor, currentSpellId),
+        outcome: {
+          summary: `Spend your ${battleCastableSpellSpend(actor, currentSpellId)} to cast ${displaySpellName(
+            currentSpellId as SpellName,
+          )} against the chosen target with an explicit save roll`,
         },
       }),
     );
@@ -3977,14 +4213,7 @@ function battleActiveReadyableSpellTokens(
   actor: BattleCreatureState,
   context: BattleContext,
 ): ReadonlyArray<BattleActionToken> {
-  if (
-    actor.actionSurgeActionPending ||
-    actor.ragingBlocksSpells ||
-    actor.slotExpendedThisTurn ||
-    actor.readyableSpellPayloads.size === 0
-  ) {
-    return [];
-  }
+  if (battleSpellCastBlocked(actor)) return [];
   const targetOptions = [...context.creatures.keys()]
     .filter((creatureId) => creatureId !== actorId)
     .sort();
@@ -3992,12 +4221,14 @@ function battleActiveReadyableSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_READY_SPELL" }>
   > = [];
-  for (const [spellName, payload] of actor.readyableSpellPayloads.entries()) {
+  for (const [spellName, payload] of actor.readyableSpellPayloads) {
     if (!actor.preparedSpells.has(spellName)) continue;
     if (getBattleReadyableSpellDelivery(spellName) === "aoe") continue;
-    const slotOptions = currentReadyableSpellPayloads(actor, spellName, payload)
-      .map((p) => p.slotLevel)
-      .sort((a, b) => a - b);
+    const slotOptions = battleCastableSpellSlotOptions(
+      actor,
+      spellName,
+      payload,
+    );
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4578,8 +4809,42 @@ export function getAvailableBattleActions(
           },
         }),
       );
+      const helpAllyOptions: Array<string> = [];
+      const helpTargetOptions: Array<string> = [];
+      for (const [id, creature] of context.creatures) {
+        if (id === activeCreatureId || creature.dead) continue;
+        helpTargetOptions.push(id);
+        if (!isIncapacitated(creature)) helpAllyOptions.push(id);
+      }
+      helpAllyOptions.sort();
+      helpTargetOptions.sort();
+      if (helpAllyOptions.length >= 1 && helpTargetOptions.length >= 2) {
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "BATTLE_HELP_ATTACK" }>
+          >({
+            actorId: activeCreatureId,
+            type: "BATTLE_HELP_ATTACK",
+            allyId: { options: helpAllyOptions },
+            targetId: { options: helpTargetOptions },
+            helperWithin5ftOfTarget: { options: [true] },
+            cost: costs(quotaCost("action")),
+            outcome: {
+              summary:
+                "Spend your action to Help an ally's next attack against the target within 5 feet of you",
+            },
+          }),
+        );
+      }
       tokens.push(
         ...battleActiveAoeSpellTokens(activeCreatureId, activeCreature),
+      );
+      tokens.push(
+        ...battleActiveSaveSpellTokens(
+          activeCreatureId,
+          activeCreature,
+          context,
+        ),
       );
       tokens.push(
         ...battleActiveReadyableSpellTokens(
@@ -4758,6 +5023,19 @@ export function getAvailableBattleActions(
         );
       }
     }
+    if (!activeCreature.prone && activeCreature.movementRemaining >= 5) {
+      tokens.push(
+        battleToken({
+          actorId: activeCreatureId,
+          type: "BATTLE_MOVE",
+          cost: costs(movementCost(5)),
+          outcome: {
+            summary:
+              "Spend 5 feet of movement to move one checkpoint, supplying the explicit provocation kind and threatening-reach creature set",
+          },
+        }),
+      );
+    }
     return tokens;
   }
 
@@ -4873,6 +5151,16 @@ function availableBattleTokenForResolved(
       );
     }
     if (
+      candidate.type === "BATTLE_CAST_SAVE_SPELL" &&
+      token.type === "BATTLE_CAST_SAVE_SPELL"
+    ) {
+      return (
+        candidate.spellId === token.spellId &&
+        candidate.slotLevel.options.includes(token.slotLevel) &&
+        candidate.targetId.options.includes(token.targetId)
+      );
+    }
+    if (
       candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
       token.type === "BATTLE_MONSTER_SAVE_EFFECT"
     ) {
@@ -4892,6 +5180,15 @@ function availableBattleTokenForResolved(
       token.type === "BATTLE_WAKE_EFFECT"
     ) {
       return candidate.targetId.options.includes(token.targetId);
+    }
+    if (
+      candidate.type === "BATTLE_HELP_ATTACK" &&
+      token.type === "BATTLE_HELP_ATTACK"
+    ) {
+      return (
+        candidate.allyId.options.includes(token.allyId) &&
+        candidate.targetId.options.includes(token.targetId)
+      );
     }
     if (
       candidate.type === "USE_REDIRECT_ATTACK" &&
@@ -5077,6 +5374,24 @@ export function resolveBattleAction(
       },
     };
   }
+  if (token.type === "BATTLE_CAST_SAVE_SPELL") {
+    if (
+      availableToken.type !== "BATTLE_CAST_SAVE_SPELL" ||
+      availableToken.spellId !== token.spellId ||
+      !availableToken.slotLevel.options.includes(token.slotLevel) ||
+      !availableToken.targetId.options.includes(token.targetId)
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} ${token.spellId} at slot level ${token.slotLevel} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "battleSaveSpell",
+    };
+  }
   if (token.type === "BATTLE_MONSTER_SAVE_EFFECT") {
     if (
       !("abilityId" in availableToken) ||
@@ -5129,6 +5444,37 @@ export function resolveBattleAction(
         type: "BATTLE_WAKE_EFFECT",
         targetId: CreatureId(token.targetId),
       },
+    };
+  }
+  if (token.type === "BATTLE_HELP_ATTACK") {
+    if (
+      availableToken.type !== "BATTLE_HELP_ATTACK" ||
+      !availableToken.allyId.options.includes(token.allyId) ||
+      !availableToken.targetId.options.includes(token.targetId) ||
+      token.allyId === token.targetId
+    ) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `BATTLE_HELP_ATTACK with allyId ${token.allyId} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+      };
+    }
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: {
+        type: "BATTLE_HELP_ATTACK",
+        allyId: CreatureId(token.allyId),
+        targetId: CreatureId(token.targetId),
+        helperWithin5ftOfTarget: token.helperWithin5ftOfTarget,
+      },
+    };
+  }
+  if (token.type === "BATTLE_MOVE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "battleMove",
     };
   }
 
@@ -5617,6 +5963,114 @@ export function finalizeBattleResolution(
           type: "BATTLE_GRAPPLE",
           targetId: CreatureId(request.token.targetId),
           targetSaveFailed: runtimeInputs.values.targetSaveFailed,
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "battleSaveSpell" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "battleSaveSpell") {
+        return battleRuntimeMismatch("battleSaveSpell", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_CAST_SAVE_SPELL") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Save-spell runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const { saveRoll, saveRollB } = runtimeInputs.values;
+      if (saveRoll < 1 || saveRoll > 20) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Battle save-spell primary save roll must be 1-20.",
+          },
+        };
+      }
+      if (saveRollB != null && (saveRollB < 1 || saveRollB > 20)) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: "Battle save-spell secondary save roll must be 1-20.",
+          },
+        };
+      }
+      const actor = context.creatures.get(CreatureId(request.token.actorId));
+      const payload =
+        actor == null
+          ? null
+          : currentReadyableSpellPayload(
+              actor,
+              request.token.spellId,
+              request.token.slotLevel,
+            );
+      if (payload == null) {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_AVAILABLE",
+            message: `${request.token.type} ${request.token.spellId} is not currently available for ${request.token.actorId} in this battle state.`,
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_CAST_SAVE_SPELL",
+          targetId: CreatureId(request.token.targetId),
+          saveDC: payload.release.saveDC,
+          saveRoll,
+          ...(saveRollB != null ? { saveRollB } : {}),
+          dmgOnFail: payload.release.damageOnFail,
+          halfOnSave: payload.release.halfOnSuccess,
+          dt: payload.release.damageType,
+          cond: payload.release.conditionOnFail,
+          applyCond: payload.release.applyCondition,
+          saveAbility: payload.release.saveAbility,
+          slotLvl: payload.slotLevel,
+          spellName: request.token.spellId,
+          ritual: false,
+        },
+        outcome: request.outcome,
+      };
+    }),
+    Match.when({ runtime: "battleMove" }, (): FinalizedBattleAction => {
+      if (runtimeInputs.runtime !== "battleMove") {
+        return battleRuntimeMismatch("battleMove", runtimeInputs.runtime);
+      }
+      if (request.token.type !== "BATTLE_MOVE") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Battle-move runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
+      const { provocationKind, threatened } = runtimeInputs.values;
+      const creatureIds = new Set(
+        [...context.creatures.keys()].map(String),
+      );
+      const unknownThreatener = threatened.find((id) => !creatureIds.has(id));
+      if (unknownThreatener != null) {
+        return {
+          ok: false,
+          error: {
+            code: "INVALID_RUNTIME_INPUT",
+            message: `Battle-move threatened creature ${unknownThreatener} is not a participant in this battle.`,
+          },
+        };
+      }
+      return {
+        ok: true,
+        event: {
+          type: "BATTLE_MOVE",
+          provocationKind,
+          threatened: new Set(threatened.map((id) => CreatureId(id))),
         },
         outcome: request.outcome,
       };

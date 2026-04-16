@@ -472,6 +472,26 @@ function initBattleHostWithAttackActor() {
   return createBattleHost(actor);
 }
 
+function initBattleHostWithHelpAttackActor() {
+  const actor = createActor(battleMachine);
+  actor.start();
+  actor.send({
+    type: "BATTLE_INIT",
+    creatures: [
+      { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 20 },
+      { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
+      {
+        id: CreatureId("C"),
+        maxHp: 20,
+        kind: "Monster",
+        initiativeRoll: 10,
+      },
+    ],
+  });
+  actor.send({ type: "BATTLE_START_TURN", ...ZERO_BATTLE_SOT });
+  return createBattleHost(actor);
+}
+
 function initBattleHostWithPublicOffHandAttackActor(params?: {
   readonly strMod?: number;
   readonly dexMod?: number;
@@ -2087,7 +2107,7 @@ describe("MCP server adapter", () => {
     expect(readPayload(undecidedGenericSpell)).toEqual({
       error: "Invalid record_table_event input",
       details:
-        'Invalid table event. Received type: "BATTLE_CAST_SAVE_SPELL". Valid types: TAKE_DAMAGE, HEAL, GRANT_TEMP_HP, STABILIZE, KNOCK_OUT, APPLY_CONDITION, REMOVE_CONDITION, ADD_EXHAUSTION, REDUCE_EXHAUSTION, APPLY_FALL, BREAK_CONCENTRATION, RECORD_FAILED_SAVING_THROW, RECORD_FAILED_ABILITY_CHECK, BATTLE_HEAL.',
+        'Invalid table event. Received type: "BATTLE_CAST_SAVE_SPELL". Valid types: TAKE_DAMAGE, HEAL, GRANT_TEMP_HP, STABILIZE, KNOCK_OUT, APPLY_CONDITION, REMOVE_CONDITION, ADD_EXHAUSTION, REDUCE_EXHAUSTION, APPLY_FALL, RECORD_HOLD_BREATH_EXPIRED, RECORD_DAILY_FOOD_INTAKE, RECORD_DAILY_WATER_INTAKE, BREAK_CONCENTRATION, RECORD_FAILED_SAVING_THROW, RECORD_FAILED_ABILITY_CHECK, BATTLE_HEAL.',
     });
   });
 
@@ -2702,6 +2722,69 @@ describe("MCP server adapter", () => {
       code: "external_table_fact",
       message:
         "BREAK_CONCENTRATION records a table fact rather than an ordinary suggested action.",
+    });
+  });
+
+  test("record_table_event accepts RECORD_DAILY_FOOD_INTAKE lessThanHalf without a CON save as 1 exhaustion", () => {
+    const host = createDemoHost();
+    const before = host.actor.getSnapshot().context.exhaustion;
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_DAILY_FOOD_INTAKE",
+        intake: "lessThanHalf",
+        conSaveSucceeded: false,
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(host.actor.getSnapshot().context.exhaustion).toBe(before + 1);
+  });
+
+  test("record_table_event accepts RECORD_DAILY_FOOD_INTAKE with successful CON save as no-op", () => {
+    const host = createDemoHost();
+    const before = host.actor.getSnapshot().context.exhaustion;
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_DAILY_FOOD_INTAKE",
+        intake: "lessThanHalf",
+        conSaveSucceeded: true,
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(host.actor.getSnapshot().context.exhaustion).toBe(before);
+  });
+
+  test("record_table_event accepts RECORD_DAILY_WATER_INTAKE lessThanHalf as 1 exhaustion", () => {
+    const host = createDemoHost();
+    const before = host.actor.getSnapshot().context.exhaustion;
+
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_DAILY_WATER_INTAKE",
+        intake: "lessThanHalf",
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(host.actor.getSnapshot().context.exhaustion).toBe(before + 1);
+  });
+
+  test("record_table_event accepts RECORD_HOLD_BREATH_EXPIRED and routes to suffocation progression", () => {
+    const host = createDemoHost();
+    const response = readPayload(
+      handleToolCall(host, "record_table_event", {
+        scope: "creature",
+        type: "RECORD_HOLD_BREATH_EXPIRED",
+      }),
+    );
+    expect(response.success).toBe(true);
+    expect(response.warnings).toContainEqual({
+      code: "external_table_fact",
+      message:
+        "RECORD_HOLD_BREATH_EXPIRED records a table fact rather than an ordinary suggested action.",
     });
   });
 
@@ -5064,6 +5147,93 @@ describe("MCP server adapter", () => {
     expect(after).toEqual(before);
   });
 
+  test("battle hosts surface and execute BATTLE_HELP_ATTACK through MCP", () => {
+    const host = initBattleHostWithHelpAttackActor();
+
+    const actions = readPayload(handleToolCall(host, "get_available_actions", {}))
+      .action as ReadonlyArray<{ type: string; actorId: string }>;
+    expect(
+      actions.find((t) => t.type === "BATTLE_HELP_ATTACK" && t.actorId === "A"),
+    ).toBeDefined();
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_HELP_ATTACK",
+      allyId: "B",
+      targetId: "C",
+      helperWithin5ftOfTarget: true,
+    });
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({ success: true }),
+    );
+    expect(host.actor.getSnapshot().context.helpTargets).toContainEqual({
+      helperId: CreatureId("A"),
+      allyId: CreatureId("B"),
+      targetEnemyId: CreatureId("C"),
+    });
+  });
+
+  test("battle hosts surface and execute BATTLE_MOVE with battleMove runtime inputs", () => {
+    const host = initBattleHostWithAttackActor();
+    const before = host.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("A"))!.movementRemaining;
+
+    const preview = handleToolCall(host, "preview_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_MOVE",
+    });
+    expect(readPayload(preview)).toMatchObject({
+      ok: true,
+      runtime: "battleMove",
+      runtimeSchema: {
+        runtime: "battleMove",
+        valueFields: expect.objectContaining({
+          provocationKind: expect.any(Object),
+          threatened: expect.any(Object),
+        }),
+      },
+    });
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_MOVE",
+      runtime: {
+        runtime: "battleMove",
+        values: {
+          provocationKind: "doesNotProvokeOpportunityAttacks",
+          threatened: [],
+        },
+      },
+    });
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({ success: true }),
+    );
+    const after = host.actor
+      .getSnapshot()
+      .context.creatures.get(CreatureId("A"))!.movementRemaining;
+    expect(after).toBe(before - 5);
+  });
+
+  test("BATTLE_MOVE rejects missing runtime with INVALID_RUNTIME_INPUT naming the expected fields", () => {
+    const host = initBattleHostWithAttackActor();
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_MOVE",
+    });
+    expect("isError" in response && response.isError).toBe(true);
+    const payload = readPayload(response);
+    expect(payload.details).toBe("INVALID_RUNTIME_INPUT");
+    expect(payload.error).toContain("provocationKind");
+    expect(payload.error).toContain("threatened");
+  });
+
   test("battle hosts surface and execute release grapple through MCP", () => {
     const host = initBattleHostWithGrapplingActor();
 
@@ -5737,6 +5907,55 @@ describe("MCP server adapter", () => {
         outcome:
           "Spend your reaction to release the readied spell against its chosen target",
       }),
+    );
+  });
+
+  test("battle hosts surface and execute BATTLE_CAST_SAVE_SPELL with battleSaveSpell runtime", () => {
+    const host = initBattleHostWithReadySpellActor();
+
+    const actions = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    ).action as ReadonlyArray<{ type: string; spellId?: string }>;
+    expect(
+      actions.find(
+        (t) => t.type === "BATTLE_CAST_SAVE_SPELL" && t.spellId === "hold_person",
+      ),
+    ).toBeDefined();
+
+    const preview = handleToolCall(host, "preview_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_CAST_SAVE_SPELL",
+      spellId: "hold_person",
+      slotLevel: 2,
+      targetId: "B",
+    });
+    expect(readPayload(preview)).toMatchObject({
+      ok: true,
+      runtime: "battleSaveSpell",
+      runtimeSchema: {
+        runtime: "battleSaveSpell",
+        valueFields: expect.objectContaining({
+          saveRoll: expect.any(Object),
+        }),
+      },
+    });
+
+    const response = handleToolCall(host, "execute_action", {
+      scope: "battle",
+      actorId: "A",
+      type: "BATTLE_CAST_SAVE_SPELL",
+      spellId: "hold_person",
+      slotLevel: 2,
+      targetId: "B",
+      runtime: {
+        runtime: "battleSaveSpell",
+        values: { saveRoll: 3 },
+      },
+    });
+    expect("isError" in response).toBe(false);
+    expect(readPayload(response)).toEqual(
+      expect.objectContaining({ success: true }),
     );
   });
 
@@ -6621,7 +6840,6 @@ describe("SessionRouter", () => {
     ).toMatchObject({
       bonusAction: [],
       reaction: [],
-      free: [],
     });
     expect(
       readPayload(router.handleToolCall("get_available_actions", {})).action,
@@ -6630,6 +6848,17 @@ describe("SessionRouter", () => {
         expect.objectContaining({
           scope: "battle",
           actorId: "A",
+        }),
+      ]),
+    );
+    expect(
+      readPayload(router.handleToolCall("get_available_actions", {})).free,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          scope: "battle",
+          actorId: "A",
+          type: "BATTLE_MOVE",
         }),
       ]),
     );

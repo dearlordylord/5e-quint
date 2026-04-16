@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 
 import type { BattleContext } from "@dnd/core/battle-machine-types.ts";
+import { MOVEMENT_PROVOCATION_KINDS } from "@dnd/core/battle-machine-events.ts";
 import type {
   BattleResolutionRuntimeInputs,
   BattleResolvedActionToken,
@@ -87,9 +88,51 @@ export const BATTLE_GRAPPLE_RUNTIME_SCHEMA = {
   },
 } as const;
 
+export const BATTLE_MOVE_RUNTIME_SCHEMA = {
+  runtime: "battleMove" as const,
+  valueFields: {
+    provocationKind: {
+      type: `enum<${MOVEMENT_PROVOCATION_KINDS.join("|")}>`,
+      source: "session-owned geometry",
+      description:
+        "Whether leaving this 5-foot checkpoint provokes opportunity attacks.",
+    },
+    threatened: {
+      type: "array<string>",
+      source: "session-owned geometry",
+      description:
+        "Creature IDs whose reach the mover is leaving on this 5-foot checkpoint.",
+    },
+  },
+} as const;
+
+export const BATTLE_SAVE_SPELL_RUNTIME_SCHEMA = {
+  runtime: "battleSaveSpell" as const,
+  valueFields: {
+    saveRoll: {
+      type: "integer",
+      min: 1,
+      max: 20,
+      source: "session-facing d20 save roll",
+      description: "Primary natural d20 save roll from the target.",
+    },
+    saveRollB: {
+      type: "integer",
+      min: 1,
+      max: 20,
+      optional: true,
+      source: "session-facing d20 save roll",
+      description:
+        "Secondary natural d20 save roll when the save has advantage or disadvantage.",
+    },
+  },
+} as const;
+
 export const RUNTIME_SCHEMAS_BY_TAG = {
   battleAttack: BATTLE_ATTACK_RUNTIME_SCHEMA,
   battleGrapple: BATTLE_GRAPPLE_RUNTIME_SCHEMA,
+  battleMove: BATTLE_MOVE_RUNTIME_SCHEMA,
+  battleSaveSpell: BATTLE_SAVE_SPELL_RUNTIME_SCHEMA,
 } as const;
 
 const BattleAttackRuntimeOverrideSchema = Schema.Struct({
@@ -119,9 +162,31 @@ const BattleGrappleRuntimeOverrideSchema = Schema.Struct({
   }),
 });
 
-function formatExpectedFields(
-  schema: typeof BATTLE_ATTACK_RUNTIME_SCHEMA | typeof BATTLE_GRAPPLE_RUNTIME_SCHEMA,
-): string {
+const BattleMoveRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("battleMove"),
+  values: Schema.Struct({
+    provocationKind: Schema.Literal(...MOVEMENT_PROVOCATION_KINDS),
+    threatened: Schema.Array(Schema.String),
+  }),
+});
+
+const BattleSaveSpellRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("battleSaveSpell"),
+  values: Schema.Struct({
+    saveRoll: Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+    saveRollB: Schema.optional(
+      Schema.Number.pipe(Schema.int(), Schema.between(1, 20)),
+    ),
+  }),
+});
+
+type RuntimeSchemaDescriptor =
+  | typeof BATTLE_ATTACK_RUNTIME_SCHEMA
+  | typeof BATTLE_GRAPPLE_RUNTIME_SCHEMA
+  | typeof BATTLE_MOVE_RUNTIME_SCHEMA
+  | typeof BATTLE_SAVE_SPELL_RUNTIME_SCHEMA;
+
+function formatExpectedFields(schema: RuntimeSchemaDescriptor): string {
   return Object.entries(schema.valueFields)
     .map(([name, spec]) => {
       const type = (spec as { type: string }).type;
@@ -159,8 +224,14 @@ function missingRuntimeInputsError(
           | "BATTLE_LEGENDARY_ATTACK";
       }
     | { readonly type: "BATTLE_GRAPPLE" }
+    | { readonly type: "BATTLE_MOVE" }
+    | { readonly type: "BATTLE_CAST_SAVE_SPELL" }
   >,
-  runtimeName: "battleAttack" | "battleGrapple",
+  runtimeName:
+    | "battleAttack"
+    | "battleGrapple"
+    | "battleMove"
+    | "battleSaveSpell",
 ) {
   const schema = RUNTIME_SCHEMAS_BY_TAG[runtimeName];
   return {
@@ -237,6 +308,18 @@ export function decodeBattleAttackRuntimeInputs(
   return decoded.right;
 }
 
+function decodeSimpleRuntime<S extends Schema.Schema.AnyNoContext>(
+  args: unknown,
+  schema: S,
+): Schema.Schema.Type<S> | null {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return null;
+  }
+  const runtime = Reflect.get(args, "runtime");
+  const decoded = Schema.decodeUnknownEither(schema)(runtime);
+  return decoded._tag === "Left" ? null : decoded.right;
+}
+
 export function decodeBattleGrappleRuntimeInputs(
   args: unknown,
   token: Extract<
@@ -246,24 +329,32 @@ export function decodeBattleGrappleRuntimeInputs(
 ):
   | BattleResolutionRuntimeInputs
   | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
-  if (typeof args !== "object" || args === null || Array.isArray(args)) {
-    return missingRuntimeInputsError(token, "battleGrapple");
-  }
+  const decoded = decodeSimpleRuntime(args, BattleGrappleRuntimeOverrideSchema);
+  return decoded ?? missingRuntimeInputsError(token, "battleGrapple");
+}
 
-  const runtime = Reflect.get(args, "runtime");
-  if (runtime === undefined) {
-    return missingRuntimeInputsError(token, "battleGrapple");
-  }
+export function decodeBattleSaveSpellRuntimeInputs(
+  args: unknown,
+  token: Extract<
+    BattleResolvedActionToken,
+    { readonly type: "BATTLE_CAST_SAVE_SPELL" }
+  >,
+):
+  | BattleResolutionRuntimeInputs
+  | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
+  const decoded = decodeSimpleRuntime(
+    args,
+    BattleSaveSpellRuntimeOverrideSchema,
+  );
+  return decoded ?? missingRuntimeInputsError(token, "battleSaveSpell");
+}
 
-  const decoded = Schema.decodeUnknownEither(
-    BattleGrappleRuntimeOverrideSchema,
-  )(runtime);
-  if (decoded._tag === "Left") {
-    return {
-      code: "INVALID_RUNTIME_INPUT",
-      message: `${token.type} requires runtime: { runtime: "battleGrapple", values: { targetSaveFailed } }.`,
-    };
-  }
-
-  return decoded.right;
+export function decodeBattleMoveRuntimeInputs(
+  args: unknown,
+  token: Extract<BattleResolvedActionToken, { readonly type: "BATTLE_MOVE" }>,
+):
+  | BattleResolutionRuntimeInputs
+  | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
+  const decoded = decodeSimpleRuntime(args, BattleMoveRuntimeOverrideSchema);
+  return decoded ?? missingRuntimeInputsError(token, "battleMove");
 }

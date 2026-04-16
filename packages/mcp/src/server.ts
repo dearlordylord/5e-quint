@@ -35,6 +35,8 @@ import {
 import {
   decodeBattleAttackRuntimeInputs,
   decodeBattleGrappleRuntimeInputs,
+  decodeBattleMoveRuntimeInputs,
+  decodeBattleSaveSpellRuntimeInputs,
   RUNTIME_SCHEMAS_BY_TAG,
 } from "./server-battle-attack-runtime.ts";
 import {
@@ -240,7 +242,13 @@ function executeBattleResolvedAction(
       ? decodeBattleAttackRuntimeInputs(args, before.context, resolution.token)
       : resolution.runtime === "battleGrapple"
         ? decodeBattleGrappleRuntimeInputs(args, resolution.token)
-        : Effect.runSync(buildBattleRuntimeInputs(resolution, before.context));
+        : resolution.runtime === "battleMove"
+          ? decodeBattleMoveRuntimeInputs(args, resolution.token)
+          : resolution.runtime === "battleSaveSpell"
+            ? decodeBattleSaveSpellRuntimeInputs(args, resolution.token)
+            : Effect.runSync(
+                buildBattleRuntimeInputs(resolution, before.context),
+              );
   if ("code" in runtimeInputs) {
     return errorContent(runtimeInputs.message, runtimeInputs.code);
   }
@@ -383,7 +391,12 @@ type BattlePreview = ReturnType<typeof previewBattleAction>;
 
 function annotateBattlePreviewWithRuntimeSchema(preview: BattlePreview) {
   if (!preview.ok) return preview;
-  if (preview.runtime !== "battleAttack" && preview.runtime !== "battleGrapple") {
+  if (
+    preview.runtime !== "battleAttack" &&
+    preview.runtime !== "battleGrapple" &&
+    preview.runtime !== "battleMove" &&
+    preview.runtime !== "battleSaveSpell"
+  ) {
     return preview;
   }
   return {

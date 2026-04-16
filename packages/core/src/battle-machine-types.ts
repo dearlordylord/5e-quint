@@ -400,6 +400,7 @@ export type {
   CSDecision,
   DmgReactionDecision,
   HitReactionDecision,
+  MovementProvocationKind,
   PendingInterrupt,
   SaveFailedDecision,
   TriggerType,
