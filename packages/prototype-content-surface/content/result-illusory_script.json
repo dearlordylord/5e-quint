@@ -1,9 +1,0 @@
-{
-  "unit_slug": "illusory_script",
-  "outcome": "dm_agenda",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [],
-  "confidence": "high",
-  "notes": "Illusory Script's entire mechanic is a timed, passive perceptual illusion on written text: designated viewers see the real content, all others see unintelligible or altered script, and Truesight bypasses the illusion. There are no attack rolls, saving throws, damage, conditions, or roll modifiers — no mechanical resolution the core engine ever needs to compute. The DM narrates what each observer perceives when reading the document. This maps squarely to ARCHITECTURE.md's out-of-core category: narrative/informational outcomes with no deterministic mechanical resolution in the combat engine. The spell is analogous to Alarm's notification signal (explicitly dm_agenda per TAXONOMY), except Illusory Script's entire effect IS that informational layer — there is no in-core trigger-mechanism subgraph worth encoding. The spell header is fully expressible in the existing surface (1-minute ritual cast via CastingTime.minutes+ritual=true, Touch range, timed 10-day duration), but no valid payload family or operation type exists for a passive viewer-dependent perceptual filter on an object."
-}
