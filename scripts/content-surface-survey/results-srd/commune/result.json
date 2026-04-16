@@ -1,0 +1,9 @@
+{
+  "unit_slug": "commune",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Commune's entire mechanic is asking a deity yes/no questions and receiving answers. The answers (yes/no/unclear/short phrase) are DM-adjudicated — no deterministic mechanical outcome exists. The 25% cumulative no-answer chance on repeat casts is mechanical but its result is also purely narrative (silence). There is no attack roll, save, condition, damage, concentration, or any engine-trackable effect. No honest encoding is possible under any existing or proposed family."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "geas",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ApplyConditionEffect in spell Effect",
+      "justification": "Geas applies the Charmed condition on a failed WIS save. Spell Effect is currently DamageEffect | NoneEffect — there is no apply_condition variant for spells. The mastery surface has apply_condition in SaveGateRiderResult, but that type is not reachable from spell ActivationPhase.",
+      "evidence": "the target must succeed on a Wisdom saving throw or have the Charmed condition for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Slot-threshold Duration",
+      "justification": "Geas duration jumps at slot thresholds: 30 days (L5), 365 days (L7–8), and 'lasts until ended by Remove Curse / Greater Restoration / Wish' (L9, effectively permanent). Duration only has instantaneous, concentration, and timed — no slot-threshold variant.",
+      "evidence": "If you use a level 7 or 8 spell slot, the duration is 365 days. If you use a level 9 spell slot, the spell lasts until it is ended by one of the spells mentioned above."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two surface widenings block honest encoding. First, spell Effect has no apply_condition variant — Geas inflicts the Charmed condition on a failed save, and there is no way to express that in ActivationPhase.onFail. Second, Duration has no slot-threshold variant, so the 30d/365d/permanent progression cannot be authored. Additionally, the core enforcement mechanic — '5d10 Psychic damage if it acts in a manner directly counter to your command' — is DM-adjudicated: the trigger 'acts directly counter to your command' requires DM judgment, not a deterministic game event. This ongoing conditional damage has no honest surface mapping even after the two widenings above, because its trigger is DM agenda. The spell is not dm_agenda outright — the initial save gate is deterministic — but the secondary damage behavior is. Both widenings are narrowly surface_widening (new variants of existing types); the dm_agenda component is a secondary rider, not the whole spell."
+}

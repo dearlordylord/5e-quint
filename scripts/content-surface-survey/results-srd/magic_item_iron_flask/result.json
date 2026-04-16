@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_iron_flask",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item kind + mechanics family",
+      "justification": "UnitRecord has no 'magic_item' variant. The TAXONOMY v4 defines magic_item_root as a source atom but types.ts has never been widened to include a MagicItemRecord kind or any corresponding mechanics family. Without this, no honest encoding is possible.",
+      "evidence": "Iron Flask — Wondrous Item, Legendary"
+    },
+    {
+      "kind": "new_variant",
+      "name": "planar_origin_filter on save_gate precondition",
+      "justification": "The trapping save only fires when 'the target is native to a plane of existence other than the one you're on'. This is a guard condition on the save gate that depends on the target's planar origin — a concept with no representation in DcSource, Attachment, or any existing surface type.",
+      "evidence": "If the flask is empty and the target is native to a plane of existence other than the one you're on, the target must succeed on a DC 17 Wisdom saving throw or be trapped in the flask."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_state (empty / occupied) as activation precondition",
+      "justification": "The trapping action can only be taken when 'the flask is empty'. This is a mutable item-level state (empty vs. contains a creature) that gates activation — no current surface type models persistent item state as an activation precondition.",
+      "evidence": "If the flask is empty and the target is native to a plane of existence other than the one you're on"
+    },
+    {
+      "kind": "new_variant",
+      "name": "per-target history modifier on save advantage",
+      "justification": "'If the target has been trapped by the flask before, it has Advantage on the save.' This is conditional advantage based on a per-target usage history — the save modifier depends on whether this specific target has been trapped by this specific item previously. No current type models this.",
+      "evidence": "If the target has been trapped by the flask before, it has Advantage on the save."
+    },
+    {
+      "kind": "new_atom",
+      "name": "extradimensional_imprisonment (duration: indefinite, until released)",
+      "justification": "The trapping effect is not a timed exile (transport_exile maps to banishment-style temporary removal). The creature 'remains in the flask until released' with no time limit and no repeated save opportunity — this is a permanent-until-explicit-release containment with special properties (no aging, no sustenance). The v4 transport_exile atom does not model indefinite imprisonment with an explicit release action.",
+      "evidence": "Once trapped, a creature remains in the flask until released. The flask can hold only one creature at a time."
+    },
+    {
+      "kind": "new_atom",
+      "name": "command_obedience (timed, post-release)",
+      "justification": "After releasing the creature, 'the creature then obeys your commands for 1 hour'. This is a timed obedience/domination effect with edge-case behavior (defends itself if no commands or harmful commands issued). The v4 command_companion atom is closest but is companion-scoped. This applies to any creature of any type for a fixed duration after release.",
+      "evidence": "The creature then obeys your commands for 1 hour, understanding those commands even if it doesn't know the language in which the commands are given."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no 'magic_item' kind exists in UnitRecord, making any honest encoding impossible regardless of mechanics details. The TAXONOMY v4 lists magic_item_root and has a separate source-root coverage row for magic items (24 items validated), confirming the taxonomy supports this unit type — but the surface schema has not been correspondingly widened. Secondary concerns are real and numerous: planar origin filter, item state guard, per-target history advantage, indefinite imprisonment effect, and post-release obedience. The final paragraph (Identify spell reveals contents, GM chooses initial contents) is DM-agenda and would stay out of core regardless."
+}

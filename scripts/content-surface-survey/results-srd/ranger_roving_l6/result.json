@@ -1,0 +1,34 @@
+{
+  "unit_slug": "ranger_roving_l6",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive family for ClassFeatureMechanics",
+      "justification": "Roving is always-on with no activation trigger, no use-count resource, and no rest-reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three of those fields. A 'passive' family is needed for features that simply modify character stats permanently (possibly conditionally).",
+      "evidence": "Your Speed increases by 10 feet while you aren't wearing Heavy armor. You also have a Climb Speed and a Swim Speed equal to your Speed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_speed variant of ClassFeatureEffect",
+      "justification": "The v4 atom 'modify_speed' exists in the taxonomy but is not surfaced as a ClassFeatureEffect variant. Roving needs to express: increase walking Speed by +10 ft. The current ClassFeatureEffect union only contains GrantExtraActionEffect and HealHpEffect.",
+      "evidence": "Your Speed increases by 10 feet"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_alternate_speed variant of ClassFeatureEffect (climb, swim)",
+      "justification": "Roving grants a Climb Speed and a Swim Speed each equal to the character's walking Speed. This is not a flat numeric increase but a derived assignment (value = base walking speed). No existing effect covers granting a new movement type whose value tracks another speed.",
+      "evidence": "You also have a Climb Speed and a Swim Speed equal to your Speed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "armor-type condition guard on passive effects",
+      "justification": "The Speed bonus is conditional: 'while you aren't wearing Heavy armor'. The surface has no conditional predicate type for passive effects. This guard is a closed armor-category filter, not a runtime roll or save.",
+      "evidence": "while you aren't wearing Heavy armor"
+    }
+  ],
+  "confidence": "high",
+  "notes": "All three mechanics (speed bonus, climb speed, swim speed) are blocked by the same root gap: no passive family exists for ClassFeatureMechanics. Even if the three effect variants were added, there would be nowhere to hang them without the passive family. The armor condition guard is a secondary gap. The v4 atom 'modify_speed' already exists in the taxonomy inventory; the blocker is purely on the surface/family side."
+}

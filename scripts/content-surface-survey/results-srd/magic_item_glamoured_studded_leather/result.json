@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_glamoured_studded_leather",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item kind",
+      "justification": "UnitRecord has no magic_item kind. SpellRecord, ClassFeatureRecord, and MasteryRecord all require domain-specific header fields (spell level/school, className/acquiredAtLevel, on_hit_trigger family) that are inapplicable to a magic item. A MagicItemRecord needs: id, name, provenance, description, item category (armor, weapon, wondrous, etc.), rarity, attunement requirement, and a MagicItemMechanics union.",
+      "evidence": "Armor (Studded Leather Armor), Rare — neither a spell, class feature, nor mastery; has rarity and item-type metadata that no existing record type carries."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_always_on family for MagicItemMechanics",
+      "justification": "The +1 AC bonus is always active while wearing — no activation cost, no resource consumed, no trigger. All current families (activation, ongoing_effect, triggered_reaction, anchored_trigger, on_hit_trigger) require an activation event or spell-slot cost. A passive_always_on family would model 'while worn/attuned, effect X is permanently active' and emit a modify_ac (or modify_roll_numeric) atom attached to self with no procedure node.",
+      "evidence": "While wearing this armor, you gain a +1 bonus to Armor Class."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "activated_property family for MagicItemMechanics",
+      "justification": "The glamour property is a Bonus Action activation that applies alter_item_kind effect. It needs: bonus_action_quota consumed, alter_item_kind effect (v4 atom exists), and a novel expiry model ('until you use this property again or doff the armor'). No existing family covers item-property activations with unlimited-use (no use_count) bonus-action costs.",
+      "evidence": "You can also take a Bonus Action to cause the armor to assume the appearance of a normal set of clothing or some other kind of armor."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_doffed expiry variant for lifecycle atoms",
+      "justification": "The glamour lasts 'until you use this property again or doff the armor.' Neither turn_start_window, turn_end_window, rest_window, nor expire covers an equip/doff event. An item_doffed lifecycle event (or equip_window atom) is needed to represent 'ends when the item is removed'.",
+      "evidence": "The illusory appearance lasts until you use this property again or doff the armor."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: UnitRecord has no magic_item kind, so no valid JSON can be produced without modifying types.ts. Secondary gaps exist within the hypothetical encoding: the passive +1 AC needs a passive_always_on family, and the glamour expiry needs an item_doffed lifecycle atom. The glamour's visual-change effect maps to the existing v4 alter_item_kind atom, but the surrounding family and expiry infrastructure is absent. No content files written."
+}

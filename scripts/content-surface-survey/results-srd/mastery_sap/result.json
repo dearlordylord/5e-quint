@@ -1,0 +1,22 @@
+{
+  "unit_slug": "mastery_sap",
+  "outcome": "clean",
+  "atoms_used": [
+    "attack_roll",
+    "mastery_root",
+    "modify_roll_advantage",
+    "on_hit_window",
+    "target",
+    "turn_start_window"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly. The types.ts RiderExpiry type explicitly names Sap in its comment ('Sap: before the start of your next turn OR when the target uses its next attack roll'), confirming target_uses_or_turn_start was designed for this unit. No usageLimit needed — Sap applies on every hit with no once-per-turn restriction."
+}

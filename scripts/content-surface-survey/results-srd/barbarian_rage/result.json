@@ -1,0 +1,70 @@
+{
+  "unit_slug": "barbarian_rage",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "class_feature_root",
+    "activate",
+    "bonus_action_quota",
+    "use_count",
+    "scale_numeric_bonus",
+    "rest_window"
+  ],
+  "relations_used": [
+    "roots",
+    "consumes",
+    "modifies",
+    "persists_until"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect.ongoing_state",
+      "justification": "Rage's effect is a persistent state with multiple simultaneous sub-effects, a max duration (10 min), early-termination conditions, and a turn-by-turn renewal mechanic. None of the existing ClassFeatureEffect variants (grant_extra_action, heal_hp) model this. This is the root atom_widening — the tracer throws 'unhandled class-feature effect' on the 'ongoing_state' kind.",
+      "evidence": "While active, your Rage follows the rules below. [...] The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition."
+    },
+    {
+      "kind": "new_atom",
+      "name": "damage_resistance",
+      "justification": "Rage grants resistance to three damage types (BPS) while active. No damage_resistance atom exists anywhere in ClassFeatureEffect. The closest analog in spells is Stoneskin's mechanics, but class features have no resistance effect type.",
+      "evidence": "Damage Resistance. You have Resistance to Bludgeoning, Piercing, and Slashing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "bonus_damage",
+      "justification": "Rage adds a flat bonus (+2/+3/+4 by class level) to damage rolls for Strength weapon attacks and Unarmed Strikes. No bonus_damage class-feature effect atom exists. This is a damage rider conditioned on the attack using Strength, scaling by class level via threshold_tiers.",
+      "evidence": "Rage Damage. When you make an attack using Strength — with either a weapon or an Unarmed Strike — and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian."
+    },
+    {
+      "kind": "new_atom",
+      "name": "advantage_on_ability",
+      "justification": "Rage grants Advantage on Strength ability checks AND Strength saving throws. No advantage_on_ability class-feature effect atom exists. The mastery surface has modify_roll_advantage but that is a on-hit rider, not an ongoing state effect on the activating creature.",
+      "evidence": "Strength Advantage. You have Advantage on Strength checks and Strength saving throws."
+    },
+    {
+      "kind": "new_atom",
+      "name": "disable_actions",
+      "justification": "Rage prohibits maintaining Concentration and casting spells. No disable_actions atom exists. This is a constraint on the Raging creature's available action types while the state is active.",
+      "evidence": "No Concentration or Spells. You can't maintain Concentration, and you can't cast spells."
+    },
+    {
+      "kind": "new_atom",
+      "name": "early_termination_condition",
+      "justification": "Rage ends early on two conditions: donning Heavy armor or gaining the Incapacitated condition. These are state-watch predicates on the activating creature. No early_termination_condition atom or lifecycle variant handles this pattern.",
+      "evidence": "it ends early if you don Heavy armor or have the Incapacitated condition"
+    },
+    {
+      "kind": "new_atom",
+      "name": "turn_renewal",
+      "justification": "Rage's duration lasts until end of next turn but can be extended each turn by one of: making an attack roll against an enemy, forcing an enemy to make a saving throw, or taking a Bonus Action. This renewal-on-action pattern is entirely absent from the current duration/lifecycle vocabulary (only instantaneous, concentration, timed persist/expire exist).",
+      "evidence": "If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following: Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a Bonus Action to extend your Rage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.unlimited",
+      "justification": "Level 17+ Barbarian has unlimited Rage uses per day. UseCountCap = { kind: 'fixed' } | ThresholdTiers<number> — neither can express 'unlimited'. A new { kind: 'unlimited' } variant is needed.",
+      "evidence": "Level 17 row of the Barbarian Features table shows 'Unlimited' in the Rages column."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Typecheck passed (JSON is not statically typed). Tracer threw 'unhandled class-feature effect: [object Object]' at traceClassFeatureEffect (tracer.ts:1371) because ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect does not include 'ongoing_state'. The atoms emitted before the throw (class_feature_root, activate, bonus_action_quota, use_count, scale_numeric_bonus, rest_window) confirm the resource/reset mechanics fit the existing surface. The effect subtree is entirely missing. The structural issue is deeper: the activation family was designed for instant one-shot effects; Rage requires a new class_feature_ongoing_effect family with duration, multi-effect payloads, early-termination conditions, and a turn-renewable lifecycle."
+}

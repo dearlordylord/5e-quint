@@ -1,0 +1,58 @@
+{
+  "unit_slug": "cleric_channel_divinity",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "choose_effect_dispatch",
+      "justification": "Channel Divinity is a use-count pool whose activation lets the player choose one of several registered sub-effects. No existing ClassFeatureMechanics family supports a 'choose one from list' dispatcher — the 'activation' family has a single effect field and no branching.",
+      "evidence": "Each time you use this class's Channel Divinity, choose which Channel Divinity effect from this class to create."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost: action",
+      "justification": "Both Divine Spark and Turn Undead cost a Magic action (one of the 12 standard action kinds). ClassFeatureActivationCost only models 'free' and 'bonus_action' — no 'action' variant exists.",
+      "evidence": "As a Magic action, you point your Holy Symbol at another creature... / As a Magic action, you present your Holy Symbol and censure Undead creatures."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: damage (with save_gate)",
+      "justification": "Divine Spark's damage branch requires a Constitution saving throw followed by full or half Necrotic/Radiant damage. ClassFeatureEffect has only GrantExtraActionEffect and HealHpEffect — no damage variant and no save_gate resolution.",
+      "evidence": "force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as much damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: player_choice branch (heal vs. damage)",
+      "justification": "Divine Spark offers a runtime player-choice between healing and damage at activation. This is not a save branch (caster decides, not a roll outcome). There is no 'player_choice' discriminant anywhere in the ClassFeature family.",
+      "evidence": "You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: apply_conditions (area, multi-condition)",
+      "justification": "Turn Undead applies Frightened + Incapacitated simultaneously to all chosen Undead that fail a Wisdom save within a 30 ft area. ClassFeatureEffect has no condition application, no area scoping, and the Condition type only includes 'prone'.",
+      "evidence": "Each Undead of your choice within 30 feet of you must make a Wisdom saving throw. If the creature fails its save, it has the Frightened and Incapacitated conditions for 1 minute."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: frightened, incapacitated",
+      "justification": "Turn Undead applies two conditions absent from the current Condition type, which only includes 'prone'.",
+      "evidence": "it has the Frightened and Incapacitated conditions for 1 minute"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureMechanics: area attachment / multi-target",
+      "justification": "Turn Undead targets all chosen Undead within 30 ft of the caster. ClassFeatureActivationMechanics has no attachment or target-scope field; it only carries a single ClassFeatureEffect with a fixed 'self' or 'target_creature' field.",
+      "evidence": "Each Undead of your choice within 30 feet of you must make a Wisdom saving throw."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "class_feature timed duration with complex break conditions",
+      "justification": "Turn Undead's effect lasts 1 minute and ends early on three distinct conditions (creature takes damage; caster has Incapacitated; caster dies). ClassFeatureMechanics has no duration or early-break model.",
+      "evidence": "This effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if you die."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Channel Divinity is a dispatch container: a single use-count pool that fans out to named sub-effects chosen at activation. This pattern has no representation in the current ClassFeatureMechanics family, which models a single fixed effect per activation. The partial_short_full_long reset cadence and ThresholdTiers<number> use-count cap are already present and would serve the pool header. The sub-effects (Divine Spark, Turn Undead) are tracked separately in the survey catalog (cleric_divine_spark). Even encoding a single sub-effect in isolation fails due to the missing 'action' activation cost and the missing damage/save_gate path in ClassFeatureEffect."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "rogue_stroke_of_luck_l20",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost: post_d20_test_failure",
+      "justification": "Stroke of Luck fires reactively after the rogue fails a D20 Test — not as a free action on a turn and not as a bonus action. The existing ClassFeatureActivationCost variants (free, bonus_action) cannot model an event-triggered reactive use.",
+      "evidence": "If you fail a D20 Test, you can turn the roll into a 20."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: substitute_d20_result (with value: 20)",
+      "justification": "The effect replaces the die result of a failed D20 Test with a fixed value (20). No existing ClassFeatureEffect variant covers roll substitution. The v4 atom modify_roll_substitute exists in the taxonomy but is not exposed in the class-feature effect surface.",
+      "evidence": "you can turn the roll into a 20"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family is structurally correct — use_count resource, short_or_long_rest reset cadence, and single-use pattern all fit cleanly. Only two surface variants are missing: a reactive-trigger kind for ClassFeatureActivationCost, and a roll-substitution kind for ClassFeatureEffect. The underlying v4 atom (modify_roll_substitute) already exists; the gap is purely in the class-feature surface layer, not in the atom inventory."
+}

@@ -1,0 +1,46 @@
+{
+  "unit_slug": "mislead",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_operation_ongoing_effect",
+      "justification": "Mislead emits two simultaneous ongoing effects with different expiry conditions: (1) invisible on self, expiring on attack/damage/spell; (2) illusory double persisting for the full concentration hour. The ongoing_effect family only supports a single operation field, making it structurally unable to represent this spell honestly.",
+      "evidence": "You gain the Invisible condition at the same time that an illusory double of you appears where you are standing. The double lasts for the duration, but the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition.invisible",
+      "justification": "The invisible condition is required by Mislead's primary mechanic. The current Condition union in types.ts only contains 'prone'.",
+      "evidence": "You gain the Invisible condition at the same time that an illusory double of you appears where you are standing."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.apply_condition",
+      "justification": "apply_condition exists as a v4 effect atom but is absent from OngoingOperation; Mislead needs to grant the invisible condition as an ongoing effect on the caster.",
+      "evidence": "You gain the Invisible condition..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_expiry_on_offensive_action",
+      "justification": "Invisibility ends when the caster makes an attack roll, deals damage, or casts a spell — none of the existing RiderExpiry or Duration/expire variants cover this pattern. This is a new expiry trigger bound to the caster performing an offensive action.",
+      "evidence": "the invisibility ends immediately after you make an attack roll, deal damage, or cast a spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.create_illusory_double",
+      "justification": "The illusory double is a persistent, controllable, intangible entity. The v4 atom create_companion covers persistent summoned entities, but it is not present in types.ts Effect or OngoingOperation. The double also carries a repeated sub-activation (Magic action to control it) not modeled in any existing operation shape.",
+      "evidence": "an illusory double of you appears where you are standing. The double lasts for the duration... As a Magic action, you can move the illusory double up to twice your Speed and make it gesture, speak, and behave in whatever way you choose."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.sensory_link",
+      "justification": "Caster sees and hears through the double's location. The v4 atoms telepathic_link and grant_sense are candidates, but neither appears in types.ts Effect or OngoingOperation.",
+      "evidence": "You can see through its eyes and hear through its ears as if you were located where it is."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary structural gap is that ongoing_effect cannot represent two concurrent operations with different expiry. Beyond that, multiple surface variants are missing (invisible condition, apply_condition as an ongoing operation, conditional expiry on offensive action, illusory double creation, sensory sharing). All required v4 atoms exist (apply_condition, create_companion, grant_sense/telepathic_link), so this is surface-level and structural widening, not atom invention."
+}

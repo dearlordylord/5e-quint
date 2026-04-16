@@ -1,0 +1,28 @@
+{
+  "unit_slug": "gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "condition_immunity",
+      "justification": "Gaseous Form grants immunity to the Prone condition. This is categorically distinct from remove_condition (which retroactively removes an active condition) — immunity prevents the condition from being applied at all. No v4 atom covers this. The v4 taxonomy lists apply_condition and remove_condition but has no immunity variant.",
+      "evidence": "it has Immunity to the Prone condition"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: effect_bundle (or array<OngoingOperation>)",
+      "justification": "The current OngoingOperation union only has roll_modifier and damage_on_hit. Gaseous Form applies a simultaneous bundle of persistent effects (resistance to B/P/S, advantage on STR/DEX/CON saves, hover, fly speed, action restrictions, condition immunity) as a single coherent transformation. No single existing OngoingOperation variant can carry this. Either a new 'effect_bundle' variant or widening the field to ReadonlyArray<OngoingOperation> (plus adding new operation kinds for resistance, advantage, speed, etc.) is required.",
+      "evidence": "The target has Resistance to Bludgeoning, Piercing, and Slashing damage; it has Immunity to the Prone condition; and it has Advantage on Strength, Dexterity, and Constitution saving throws. The target can't talk or manipulate objects ... can't attack or cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration: conditional_expiry (hp_drop or self_action)",
+      "justification": "The spell has two early-termination conditions that are neither concentration-break nor time expiry: (1) target drops to 0 HP, (2) target spends its Magic action to end it voluntarily. Neither maps to existing Duration variants. A new conditional_expiry shape (or extension of the Duration union) is needed to represent these.",
+      "evidence": "The spell ends on the target if it drops to 0 Hit Points or if it takes a Magic action to end the spell on itself."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Gaseous Form structurally fits the ongoing_effect spell family (concentration, touch range, attaches to a creature, persists until broken). The upcast scaling (+1 target per slot level above 3) is already expressible via SlotScaling on a choose_up_to attachment. However, the OngoingOperation type cannot express the multi-effect transformation bundle, and condition_immunity is absent from the v4 atom inventory. Physical traversal properties (pass through narrow openings, treats liquids as solid) are likely out of core mechanics scope per ARCHITECTURE.md and are not proposed here. The primary blockers are the missing condition_immunity atom and the inability to bundle multiple simultaneous persistent effects on a single ongoing_effect attachment."
+}

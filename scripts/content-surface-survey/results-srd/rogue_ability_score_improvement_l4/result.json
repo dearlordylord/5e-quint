@@ -1,0 +1,22 @@
+{
+  "unit_slug": "rogue_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "ASI is a permanent passive grant acquired at level-up. It has no activation cost, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which structurally requires activationCost + resource + resetCadence. Encoding ASI as an 'activation' with a vacuous resource would be a lie: the feature is permanently acquired, never expended, and never resets.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Rogue levels 8, 10, 12, and 16."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat_choice",
+      "justification": "No existing ClassFeatureEffect covers granting a feat or a choice among feats. The two existing effects are grant_extra_action and heal_hp, both runtime combat effects. A feat grant is a character-advancement effect: it fires once at level acquisition and permanently modifies the character state. TAXONOMY v4 explicitly defers modify_ability_score as out-of-scope for the core mechanics graph, consistent with this widening classification.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit kind (class_feature) and className (rogue) are correct. The structural gap is twofold: (1) missing ClassFeatureMechanics family for permanent passive level-up grants (no activation, no resource, no reset), and (2) missing ClassFeatureEffect for feat-grant choice. All 12 ASI class features across the SRD share this identical structural gap. The TAXONOMY v4 notes modify_ability_score as deferred and out-of-scope for the core mechanics graph — the feat-grant framing is broader but lands in the same deferred territory."
+}

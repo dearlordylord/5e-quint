@@ -1,0 +1,34 @@
+{
+  "unit_slug": "paladin_fighting_style_l2",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant (class feature family)",
+      "justification": "The feature grants a permanent benefit at level-up with no activation cost, no use_count resource, and no rest reset. The only existing class feature family is 'activation', which requires all three of those. A 'passive_grant' (or 'level_choice') family is needed for features that are permanently acquired rather than activated at runtime.",
+      "evidence": "You gain a Fighting Style feat of your choice (see 'Feats' for feats). Instead of choosing one of those feats, you can choose the option below."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The primary mechanic is granting a feat (one of the Fighting Style feats). No 'grant_feat' atom exists in v4 taxonomy or the surface types. This is distinct from 'grant_spell_access' — it grants an entire feat, not just spell access.",
+      "evidence": "You gain a Fighting Style feat of your choice (see 'Feats' for feats)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access in ClassFeatureEffect",
+      "justification": "The Blessed Warrior option grants access to two Cleric cantrips with a specified spellcasting ability (Charisma). The v4 taxonomy has a 'grant_spell_access' effect atom, but ClassFeatureEffect in types.ts only has GrantExtraActionEffect | HealHpEffect. This variant needs to be added to ClassFeatureEffect to encode Blessed Warrior.",
+      "evidence": "You learn two Cleric cantrips of your choice... The chosen cantrips count as Paladin spells for you, and Charisma is your spellcasting ability for them."
+    },
+    {
+      "kind": "new_variant",
+      "name": "choose_option mechanic (level-up menu)",
+      "justification": "The feature presents a menu: pick a Fighting Style feat OR pick Blessed Warrior. This is a 'choose one from set' pattern at level-up. No surface shape captures a top-level class feature that branches into mutually exclusive options at character-creation/level-up time.",
+      "evidence": "You gain a Fighting Style feat of your choice... Instead of choosing one of those feats, you can choose the option below."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit does not fit the 'activation' family at all — it has no runtime activation cost, no use_count, and no rest reset. It is a permanent passive benefit selected at level 2. The two sub-options (Fighting Style feat vs. Blessed Warrior) require both a 'grant_feat' atom (absent from v4 taxonomy) and a 'grant_spell_access' effect variant in ClassFeatureEffect (present in v4 taxonomy but absent from the surface). The cantrip-replacement mechanic ('Whenever you gain a Paladin level, you can replace one of these cantrips') is an additional level-up-time choice that also has no current surface shape."
+}

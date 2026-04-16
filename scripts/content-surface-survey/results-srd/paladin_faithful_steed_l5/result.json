@@ -1,0 +1,28 @@
+{
+  "unit_slug": "paladin_faithful_steed_l5",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_grant_class_feature",
+      "justification": "Faithful Steed grants two distinct effects at level-up time: a passive always-prepared grant and an active free-cast use-count resource. The current ClassFeatureMechanics only has a single `activation` family with one `effect` field. No existing family supports encoding two co-equal effects from a single class feature acquisition.",
+      "evidence": "You always have the Find Steed spell prepared. You can also cast the spell once without expending a spell slot, and you regain the ability to do so when you finish a Long Rest."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access (as ClassFeatureEffect variant)",
+      "justification": "The 'always prepared' mechanic adds a named spell to the paladin's always-prepared list. The v4 taxonomy has `grant_spell_access` as an effect atom but ClassFeatureEffect only has GrantExtraActionEffect | HealHpEffect. A new variant is needed to encode passive permanent spell preparation grants from class features.",
+      "evidence": "You always have the Find Steed spell prepared."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_free_spell_cast (as ClassFeatureEffect variant)",
+      "justification": "The free-cast mechanic allows casting a specific named spell once per long rest without expending a spell slot. This is mechanically distinct from grant_extra_action (which grants a generic action) and from heal_hp. A new ClassFeatureEffect variant is needed that carries: spellId, use_count resource, and resetCadence, with the key property that no spell slot is consumed.",
+      "evidence": "You can also cast the spell once without expending a spell slot, and you regain the ability to do so when you finish a Long Rest."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The feature is a composite of two mechanically distinct grants: (1) a passive always-on spell-preparation expansion that has no activation cost or use count, and (2) an active free-cast resource gated behind a use_count=1 / long-rest reset. The current ClassFeatureMechanics surface supports only the `activation` family with a single `effect` field. Encoding this unit honestly requires either a new family (e.g., `multi_grant`) whose `effects` is an array, or a structural change allowing the activation family to carry multiple effects. Additionally, both component effects are missing from the ClassFeatureEffect union. Note: the `grant_spell_access` v4 atom exists in the taxonomy but has no corresponding surface type variant in ClassFeatureEffect."
+}

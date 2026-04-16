@@ -1,0 +1,27 @@
+{
+  "unit_slug": "bless",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "modify_roll_numeric",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Bless fits the existing spell ongoing_effect family honestly as a concentration-gated positive roll modifier on up to three targets, with target count scaling by spell slot level."
+}

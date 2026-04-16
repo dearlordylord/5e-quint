@@ -1,0 +1,22 @@
+{
+  "unit_slug": "druid_archdruid_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_triggered_class_feature",
+      "justification": "Evergreen Wild Shape fires automatically on initiative roll with no player action — a conditional passive triggered by an engine event. ClassFeatureMechanics has only the 'activation' family (player-initiated). A triggered-passive family driven by initiative_window with a conditional resource refund is unrepresentable in the current surface.",
+      "evidence": "Whenever you roll Initiative and have no uses of Wild Shape left, you regain one expended use of it."
+    },
+    {
+      "kind": "new_atom",
+      "name": "convert_resource",
+      "justification": "Nature Magician converts N uses of Wild Shape into a spell slot of level 2N — a cross-resource conversion at a configurable exchange rate. ClassFeatureEffect has only grant_extra_action and heal_hp; no conversion or exchange effect exists in v4 atoms.",
+      "evidence": "Choose a number of your unexpended uses of Wild Shape and convert them into a single spell slot, with each use contributing 2 spell levels."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three sub-features. Longevity is pure narrative (biological aging rate) with no mechanical state — out-of-core per ARCHITECTURE.md. Evergreen Wild Shape is a passive initiative-triggered conditional resource refund; no ClassFeatureMechanics family supports passive/auto-trigger shapes — this is the dominant structural gap. Nature Magician could use the activation family for cost/reset/resource but its core effect (convert Wild Shape uses to a spell slot) requires a new cross-resource conversion effect absent from ClassFeatureEffect and v4 atoms. No honest encoding is possible without at least a new mechanics family and a new effect atom."
+}

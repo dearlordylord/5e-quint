@@ -1,0 +1,34 @@
+{
+  "unit_slug": "species_orc_adrenaline_rush",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "SpeciesTraitRecord + species_trait family",
+      "justification": "UnitRecord has no species_trait kind. The v4 taxonomy defines species_trait_root but types.ts provides no SpeciesTraitRecord shape. Orc Adrenaline Rush cannot be encoded without this structural addition.",
+      "evidence": "As an Orc, you have these special traits. ***Adrenaline Rush.***"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_temporary_hp effect (ClassFeatureEffect variant)",
+      "justification": "The feature grants Temporary Hit Points equal to Proficiency Bonus on activation. HealHpEffect restores actual HP; temporary HP is mechanically distinct (buffer layer, non-stacking). No GrantTemporaryHpEffect exists in ClassFeatureEffect.",
+      "evidence": "When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_temporary_hp",
+      "justification": "v4 taxonomy has no grant_temporary_hp atom. The heal atom covers HP restoration; temporary HP is a separate mechanical concept with different rules (non-stackable buffer, lost first before real HP). Needs a distinct atom.",
+      "evidence": "you gain a number of Temporary Hit Points equal to your Proficiency Bonus"
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap proficiency_bonus variant",
+      "justification": "Use count equals Proficiency Bonus (2-6 scaling with character level). Current UseCountCap supports fixed uses or threshold_tiers. While LevelAxis includes proficiency_bonus, expressing use count = PB cleanly needs either a dedicated cap variant or documented convention for PB-axis threshold tiers.",
+      "evidence": "You can use this trait a number of times equal to your Proficiency Bonus"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no species_trait kind in UnitRecord. Secondary blockers are grant_temporary_hp (new atom needed — v4 has no such atom) and PB-scaled use count cap. The bonus-action activation cost and short-or-long-rest reset cadence ARE expressible with existing surface types once the structural kind is added. The Dash-as-Bonus-Action effect maps loosely to grant_extra_action with restriction to dash only, but the semantics differ (it grants a specific standard action via bonus action, not an extra action on top of normal economy)."
+}

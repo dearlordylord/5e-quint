@@ -1,0 +1,40 @@
+{
+  "unit_slug": "cleric_divine_order_l1",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant",
+      "justification": "Divine Order grants permanent proficiencies / access at character creation — no activation cost, no use-count resource, no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three. A 'passive_grant' family (or equivalent) is needed for features that simply modify the character sheet permanently.",
+      "evidence": "Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "choose_one_package",
+      "justification": "The feature requires the player to pick one of two named option sets (Protector vs Thaumaturge) at character creation. No choose/branch mechanic exists in any ClassFeatureMechanics family. The v4 taxonomy includes a 'choose' procedure atom but it is not surfaced in the class-feature surface.",
+      "evidence": "You have dedicated yourself to one of the following sacred roles of your choice."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_proficiency effect in ClassFeatureEffect",
+      "justification": "The v4 atom 'grant_proficiency' exists in the taxonomy but is absent from the ClassFeatureEffect union. Protector's weapon + armor grants require it. Even if a passive_grant family were added, this effect variant would still need to be surfaced.",
+      "evidence": "you gain proficiency with Martial weapons and training with Heavy armor"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access effect in ClassFeatureEffect",
+      "justification": "The v4 atom 'grant_spell_access' exists in the taxonomy but is absent from ClassFeatureEffect. Thaumaturge's extra cantrip grant requires it.",
+      "evidence": "You know one extra cantrip from the Cleric spell list."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_check_modifier effect in ClassFeatureEffect",
+      "justification": "Thaumaturge grants a bonus to Intelligence (Arcana or Religion) checks equal to Wisdom modifier (min +1). This is a roll modifier on ability checks, not saving throws or attack rolls. The v4 atom 'modify_roll_numeric' exists but only covers attack_roll and saving_throw in the current surface (see RollModifierOperation.on: ReadonlyArray<RollKind>). A new RollKind 'ability_check' or a separate effect variant is needed, and ClassFeatureEffect does not carry any roll-modifier shape at all.",
+      "evidence": "your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Divine Order is a canonical 'character-creation choice' feature — a closed menu of two permanent option packages with no action cost or resource. The entire 'activation' family shape is wrong for it. Both packages also use effect types absent from ClassFeatureEffect (grant_proficiency, grant_spell_access, ability-check modifier). All five widenings are independent; the structural one (passive_grant + choose_one_package) is the blocker."
+}

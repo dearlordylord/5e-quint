@@ -1,0 +1,22 @@
+{
+  "unit_slug": "vicious_mockery",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ModifyRollAdvantageEffect",
+      "justification": "The on-fail branch of Vicious Mockery applies disadvantage to the target's next attack roll. The Effect union only contains DamageEffect and NoneEffect; there is no variant for a roll-advantage modifier. The v4 atom modify_roll_advantage exists but has no corresponding Effect shape in types.ts.",
+      "evidence": "have Disadvantage on the next attack roll it makes before the end of its next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "onFail_as_array_or_composite",
+      "justification": "The save_gate phase onFail field is typed as a single Effect. Vicious Mockery requires both damage AND a roll modifier on fail simultaneously. Encoding both requires either changing onFail/onSuccess to ReadonlyArray<Effect> or adding a composite Effect variant. Without this, only one of the two effects can be represented.",
+      "evidence": "take 1d6 Psychic damage and have Disadvantage on the next attack roll it makes before the end of its next turn"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation/save_gate family and cantrip threshold-tier scaling (axis=character, dice-count growth) are all representable with existing surface types. The only blockers are (1) missing Effect variant for modify_roll_advantage, and (2) the single-Effect slot on onFail/onSuccess in ActivationPhase save_gate. Both are surface-level changes with zero atom-taxonomy impact — all required v4 atoms (save_gate, damage, modify_roll_advantage, scale_die_count) already exist."
+}

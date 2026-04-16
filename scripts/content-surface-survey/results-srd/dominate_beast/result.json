@@ -1,0 +1,46 @@
+{
+  "unit_slug": "dominate_beast",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Condition: charmed",
+      "justification": "The activation phase's primary onFail effect is applying the Charmed condition. The Condition type currently only includes 'prone'. Charmed is a standard SRD condition required for Dominate Beast and the entire Dominate* spell family.",
+      "evidence": "One Beast you can see within range must succeed on a Wisdom saving throw or have the Charmed condition for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect: apply_condition",
+      "justification": "The activation phase's save_gate needs onFail to produce an apply_condition effect. The Effect union (DamageEffect | NoneEffect) has no condition-application variant. The v4 atom 'apply_condition' exists; the surface Effect type needs a matching variant so activation phases can produce it.",
+      "evidence": "must succeed on a Wisdom saving throw or have the Charmed condition for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration: slot_scaled_concentration",
+      "justification": "Higher-slot casting extends the concentration ceiling in discrete tiers rather than a fixed upTo value. The current Duration.concentration only holds a fixed DurationValue. A new variant (or a slot-threshold-tiers extension of concentration duration) is needed.",
+      "evidence": "Your Concentration can last longer with a spell slot of level 5 (up to 10 minutes), 6 (up to 1 hour), or 7+ (up to 8 hours)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: repeat_save (damage-triggered)",
+      "justification": "Whenever the Charmed target takes damage, it immediately repeats the Wisdom save; success ends the spell. The v4 atom 'repeat_save' covers this, but OngoingOperation (roll_modifier | damage_on_hit) has no variant to express a save repeated on a damage trigger.",
+      "evidence": "Whenever the target takes damage, it repeats the save, ending the spell on itself on a success."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase: save_advantage_condition",
+      "justification": "The initial save has a conditional advantage modifier: target gains Advantage on the save if the caster or allies are fighting it. There is no surface shape for 'save_advantage when combat-engaged with caster'. This may warrant a new variant on the ActivationPhase save_gate or a new field on save_gate.",
+      "evidence": "The target has Advantage on the save if you or your allies are fighting it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: telepathic_command_link",
+      "justification": "While the target is Charmed, the caster has a telepathic link and can issue free-action commands each turn. The v4 atom 'telepathic_link' exists; the v4 atom 'command_companion' covers command loops. But OngoingOperation has no variant for 'telepathic_link + no-action command each turn while Charmed'. Note: the execution of commands ('does its best to obey') is DM-agenda and need not be modeled, but the mechanical scaffold (link exists, command issuable, no action cost) is deterministic enough to warrant a surface shape.",
+      "evidence": "You have a telepathic link with the Charmed target while the two of you are on the same plane of existence. On your turn, you can use this link to issue commands to the target (no action required)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "All required v4 atoms exist (apply_condition, charmed, repeat_save, telepathic_link, concentrate, save_gate). No atom-level widening is needed. The gaps are exclusively in surface types: Effect union too narrow, Condition union too narrow, Duration has no slot-scaled concentration variant, OngoingOperation has no repeat_save or telepathic_command_link variants. The command-execution behavior ('does its best to obey') is DM agenda and correctly excluded from the core surface. The reaction-exchange mechanic (commanding a Reaction costs caster's Reaction) is a secondary mechanic that would require an additional surface shape but is not the primary blocker."
+}

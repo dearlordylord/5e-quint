@@ -1,0 +1,9 @@
+{
+  "unit_slug": "commune_with_nature",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Commune with Nature is a pure divination/information spell. Its entire mechanic is: cast in 1 minute (optionally as a Ritual), then choose 3 fact categories from a closed list, and the DM reveals those facts about the surrounding area. There is no attack roll, saving throw, condition, damage, buff, or deterministic mechanical effect — only DM-narrated information delivery. The 1-minute timed duration is bookkeeping for the ritual, not a combat lifecycle state. This places the spell squarely in the same DM-agenda class as Augury, Commune, Legend Lore, and Contact Other Plane. No spell family in the current surface can honestly encode an 'information revelation' effect; the closest candidate (activation) requires attack_roll or save_gate phases; ongoing_effect requires roll_modifier or damage_on_hit. But even if a new family were added, the output of the spell (the content of the revelation) is inherently DM-adjudicated narrative, not a deterministic mechanical state the engine can model."
+}

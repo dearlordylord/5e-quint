@@ -1,0 +1,34 @@
+{
+  "unit_slug": "web",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Condition: restrained",
+      "justification": "Web's core effect applies the Restrained condition. The Condition type currently only contains 'prone'. 'restrained' must be added to Condition before any save_gate rider for Web can be authored.",
+      "evidence": "it must succeed on a Dexterity saving throw or have the Restrained condition while in the webs or until it breaks free"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: area_save_gate",
+      "justification": "Web's operation is: each time a creature enters the area or starts its turn there, open a save gate → on failure apply a condition. Neither 'roll_modifier' nor 'damage_on_hit' can express this. A new OngoingOperation variant is needed — something like { kind: 'area_save_gate'; trigger: 'enter_or_turn_start'; ability: Ability; dc: DcSource; onFail: ...; onSuccess: ... }.",
+      "evidence": "The first time a creature enters the webs on a turn or starts its turn there, it must succeed on a Dexterity saving throw or have the Restrained condition"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaEventTrigger: enter_or_turn_start",
+      "justification": "The save gate on Web fires on two distinct events: (a) creature enters the area for the first time on a turn, (b) creature starts its turn in the area. This is a recurring trigger tied to creature movement/turn-cycling within the area, distinct from the one-shot 'enters_area' event used by anchored_trigger. A closed enum of area-event triggers is needed to express the 'first-entry-or-turn-start' pattern.",
+      "evidence": "The first time a creature enters the webs on a turn or starts its turn there"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaOperation: escape_check",
+      "justification": "A creature Restrained by the webs can take an Action to make a Strength (Athletics) check against the caster's spell save DC to break free. This is an ability-check escape from a condition — no current surface type models 'condition escape via ability check'. Needs a new operation or rider shape: { kind: 'escape_check'; ability: Ability; skill?: string; dc: DcSource; removes: Condition }.",
+      "evidence": "A creature Restrained by the webs can take an action to make a Strength (Athletics) check against your spell save DC. If it succeeds, it is no longer Restrained."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Web fits the 'ongoing_effect' family in structure (concentration area spell with persistent per-turn effects) but four distinct surface gaps block honest encoding: (1) Condition type missing 'restrained'; (2) OngoingOperation has no save-gate variant; (3) no area-entry/turn-start trigger window for ongoing area spells; (4) no escape-check mechanic. The flammability rider (webs burn for 2d4 fire damage) is a further gap but is lower priority — it could arguably be a secondary activation or dm_agenda note. The Difficult Terrain and Lightly Obscured terrain effects also have no atom representation but are environmental/positional state outside the core mechanics graph per ARCHITECTURE.md."
+}

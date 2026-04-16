@@ -1,0 +1,16 @@
+{
+  "unit_slug": "find_the_path",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.grant_sense",
+      "justification": "Find the Path grants the caster a persistent navigation faculty — distance/direction awareness to a named destination, plus oracle knowledge at path choice points — that lasts for the concentration duration. The spell fits the ongoing_effect family structurally (self attachment, concentration, 1 day), but OngoingOperation only supports roll_modifier and damage_on_hit. A new variant is needed to carry the v4 grant_sense atom through the ongoing_effect pipeline.",
+      "evidence": "For the duration, as long as you are on the same plane of existence as the destination, you know how far it is and in what direction it lies. Whenever you face a choice of paths along the way there, you know which path is the most direct."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All header fields type-check cleanly: CastingTime.kind='minutes' (amount=1, ritual=false) exists; Range.kind='self' exists; Duration.kind='concentration' with upTo={unit:'day',amount:1} exists; Components with material cost exists. The sole gap is OngoingOperation — it has no variant for granting a passive sense/awareness. The v4 atom grant_sense exists; what is missing is a surface OngoingOperation shape that can carry it. No dhall or JSON authored; no tracer run attempted."
+}

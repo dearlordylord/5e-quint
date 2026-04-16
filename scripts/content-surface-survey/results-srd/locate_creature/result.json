@@ -1,0 +1,9 @@
+{
+  "unit_slug": "locate_creature",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Locate Creature's entire mechanical output is directional awareness — 'you sense the direction to the creature's location.' There is no attack roll, saving throw, damage, condition, or any other combat state change. The detection radius (1,000 feet) and lead-blocking rule are deterministic, but their output is informational: the DM narrates a direction to the player. Per ARCHITECTURE.md, notification surfaces and caller-owned informational facts are out-of-core. Even if a new OngoingOperation kind 'detect_creature' were added as a surface_widening, the core engine would have nowhere to route the directional output — it is purely a display/notification concern. Classified dm_agenda alongside Detect Magic, Detect Thoughts, and Commune."
+}

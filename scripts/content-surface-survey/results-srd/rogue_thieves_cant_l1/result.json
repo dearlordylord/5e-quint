@@ -1,0 +1,9 @@
+{
+  "unit_slug": "rogue_thieves_cant_l1",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Thieves' Cant grants language proficiency: the character permanently knows Thieves' Cant plus one additional language chosen at character creation. Language knowledge has no deterministic mechanical resolution in the combat core — no dice rolls, saving throws, resource consumption, or activation events. Whether the feature is useful is entirely DM-adjudicated (does the interlocutor also know Thieves' Cant?). This is analogous to Alarm's notification mechanism being caller-owned per ARCHITECTURE.md. If the surface were ever widened to cover passive character-creation grants, it would require: (1) a new ClassFeatureMechanics family ('passive_grant' or similar — no activation, no resource, no reset cadence) and (2) a new ClassFeatureEffect variant for grant_proficiency targeting language proficiency. Even with those additions, the feature would produce no combat-relevant atom trace."
+}

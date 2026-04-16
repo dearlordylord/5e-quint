@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_dwarven_plate",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord / magic_item UnitRecord kind",
+      "justification": "types.ts UnitRecord is SpellRecord | ClassFeatureRecord | MasteryRecord — no MagicItemRecord exists. The taxonomy has magic_item_root but the surface has never been widened to include the kind.",
+      "evidence": "Armor (Half Plate Armor or Plate Armor), Very Rare — a magic item is the unit kind, and no UnitRecord variant can represent it without lying about kind/className/acquiredAtLevel."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_while_worn mechanics family",
+      "justification": "The +2 AC bonus is always-on with no activation cost, no use-count resource, and no rest reset. The existing ClassFeatureActivationMechanics family requires all three. A 'passive_while_worn' family (or equivalent 'passive' family) is needed for effects that are continuously active while the item is equipped.",
+      "evidence": "While wearing this armor, you gain a +2 bonus to Armor Class."
+    },
+    {
+      "kind": "new_atom",
+      "name": "reduce_forced_movement (effect)",
+      "justification": "The reaction effect reduces the distance of forced movement by up to 10 feet. No v4 atom covers this: force_move emits forced displacement, modify_speed changes speed, and modify_ac changes AC. Reducing forced movement distance is mechanically distinct from all of these and needs its own atom.",
+      "evidence": "if an effect moves you against your will along the ground, you can take a Reaction to reduce the distance you are moved by up to 10 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger: moved_against_will_along_ground",
+      "justification": "The reaction trigger is 'moved against your will along the ground' — a forced-movement trigger. The existing ReactionTrigger union covers hit_by_attack_roll, targeted_by_named_spell, and any_of, but has no variant for forced-movement events.",
+      "evidence": "if an effect moves you against your will along the ground, you can take a Reaction"
+    },
+    {
+      "kind": "new_variant",
+      "name": "attunement_slot resource in types.ts",
+      "justification": "Dwarven Plate is Very Rare and requires attunement. The v4 taxonomy lists attunement_slot as a resource atom, but it is absent from types.ts UseCountResource and the broader resource type vocabulary. The item's lifecycle must consume an attunement slot.",
+      "evidence": "Armor (Half Plate Armor or Plate Armor), Very Rare — attunement is implicit for Very Rare armor items per SRD."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no MagicItemRecord kind exists in UnitRecord. Even if added, two further gaps would remain: (1) no passive mechanics family for always-on worn effects, and (2) no reduce_forced_movement effect atom. The +2 AC component could compose from the existing modify_ac effect atom once a passive family exists. The reaction component needs both the new trigger variant and the new effect atom. Attunement slot is a resourcing gap shared across all attunement items."
+}

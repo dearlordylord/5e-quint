@@ -1,0 +1,16 @@
+{
+  "unit_slug": "cleric_cleric_subclass_l3",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "subclass_selection",
+      "justification": "The unit's sole mechanic is a permanent character-progression gate: at level 3, the player chooses a subclass. The existing ClassFeatureMechanics has only one family, 'activation', which requires activationCost + resource (use_count) + resetCadence + effect (GrantExtraActionEffect | HealHpEffect). 'Gain a subclass of your choice' fits none of these — it is neither an activated effect nor a heal/action-grant. A new family is needed to represent 'subclass selection at a given level.'",
+      "evidence": "You gain a Cleric subclass of your choice. The Life Domain subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Cleric levels. For the rest of your career, you gain each of your subclass's features that are of your Cleric level or lower."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The 'Cleric Subclass' entry is a progression milestone, not an activated feature. The same structural gap applies identically to the equivalent L3 subclass-selection entries for every other class (barbarian, bard, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard). A new ClassFeatureMechanics family such as 'subclass_selection' (with no activation cost, no use-count resource, no effect) would resolve all of these at once. The subclass features themselves (Disciple of Life, Preserve Life, etc.) are separate units already in the survey queue and encode their own mechanics."
+}

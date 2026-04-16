@@ -1,0 +1,22 @@
+{
+  "unit_slug": "bard_bonus_proficiencies_l3",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant (class feature family)",
+      "justification": "Bonus Proficiencies is a permanent passive grant conferred at level-up. It has no activation cost, no use-count resource, and no reset cadence. The only existing class-feature family ('activation') requires all three of those fields, making it structurally inapplicable. A new family is needed for features that are permanently acquired at a level boundary with no activation mechanic.",
+      "evidence": "You gain proficiency with three skills of your choice."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_proficiency in ClassFeatureEffect",
+      "justification": "Even if a passive_grant family were added, the ClassFeatureEffect union (GrantExtraActionEffect | HealHpEffect) does not include proficiency granting. The v4 atom 'grant_proficiency' exists in the taxonomy but has no corresponding surface type in ClassFeatureEffect.",
+      "evidence": "You gain proficiency with three skills of your choice."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit cannot be encoded at all — not even with a dishonest placeholder. ClassFeatureActivationMechanics mandates activationCost, resource (use_count), and resetCadence. None apply to a permanent level-up grant. This is a structural gap, not a missing variant of an existing shape. The v4 atom 'grant_proficiency' already exists; what is missing is (1) a surface ClassFeatureMechanics family for passive grants and (2) a ClassFeatureEffect variant for proficiency grants."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "prismatic_spray",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "random_dispatch_table",
+      "justification": "Prismatic Spray's core mechanic is a per-target 1d8 roll that selects one of 8 mutually exclusive effect outcomes. No existing payload family models 'randomly select one branch from a table'. The activation family uses ordered sequential phases; save_gate has fixed onFail/onSuccess branches. Neither expresses stochastic branch selection where the active branch is chosen by a die roll at resolution time.",
+      "evidence": "For each target, roll 1d8 to determine which color ray affects it, consulting the Prismatic Rays table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.area.shape.cone",
+      "justification": "Prismatic Spray fires a 60-foot cone. The current area attachment only supports shape: sphere. A cone shape variant is needed.",
+      "evidence": "Eight rays of light flash from you in a 60-foot Cone."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "repeat_save_condition_progression",
+      "justification": "Ray 6 (Indigo) imposes Restrained then tracks non-consecutive CON saves toward either 3 successes (condition ends) or 3 failures (Petrified). This is a condition_progression atom (present in v4 taxonomy) but there is no surface type that expresses 'repeat save with non-consecutive success/failure tracking toward a threshold outcome'. The activation save_gate only has binary onFail/onSuccess.",
+      "evidence": "The target has the Restrained condition and makes a Constitution saving throw at the end of each of its turns. If it successfully saves three times, the condition ends. If it fails three times, it has the Petrified condition... The successes and failures needn't be consecutive."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.transport_exile",
+      "justification": "Ray 7 (Violet) on a failed WIS save teleports the creature to another plane of existence. The v4 atom transport_exile exists but there is no surface Effect variant exposing it.",
+      "evidence": "On a failed save, the condition ends, and the creature teleports to another plane of existence (DM's choice)."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "table_reroll_meta_outcome",
+      "justification": "Ray 8 (Special) causes the target to be struck by two rays: roll twice, rerolling any 8. This is a recursive table invocation with a reroll filter — not expressible in any current shape even with widening of the above items.",
+      "evidence": "The target is struck by two rays. Roll twice, rerolling any 8."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Prismatic Spray cannot be honestly encoded in any existing family. The dominant blocker is the random dispatch table (1d8 → 8 distinct effects per target) which has no corresponding procedure family. Secondary blockers: (1) cone area shape is missing from Attachment; (2) Indigo ray requires repeat_save with non-consecutive 3-success/3-failure tracking; (3) Violet ray requires a transport_exile effect variant on the surface; (4) Ray 8 requires recursive table dispatch. Even if the cone shape and effect atoms were widened, the structural absence of a random_dispatch_table family means no honest trace is producible. No .dhall or .json content file was authored."
+}

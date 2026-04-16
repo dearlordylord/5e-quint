@@ -1,0 +1,22 @@
+{
+  "unit_slug": "barbarian_primal_champion_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature family",
+      "justification": "Primal Champion grants a permanent ability-score increase at level-up with no activation, no resource, no reset cadence, and no use count. The only existing ClassFeatureMechanics family is 'activation', which mandates activationCost + resource + resetCadence + effect. Forcing those fields onto this feature would fabricate mechanics the SRD text does not describe.",
+      "evidence": "Your Strength and Constitution scores increase by 4, to a maximum of 25."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The sole mechanical content of Primal Champion is a permanent +4 to STR and CON with a hard cap of 25. No existing ClassFeatureEffect covers this: grant_extra_action and heal_hp are both wrong. The v4 taxonomy lists 'modify_ability_score as a runtime effect' as a deferred residue item (section 12), explicitly flagged out-of-scope. This unit provides a direct pressure case for promoting it.",
+      "evidence": "Your Strength and Constitution scores increase by 4, to a maximum of 25."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primal Champion is a purely passive permanent ability-score boost granted at level 20. It requires no action, consumes no resource, and has no reset cadence. The ClassFeatureMechanics surface has only one family ('activation'), which cannot honestly represent a passive permanent feature. Additionally, the needed effect atom (modify_ability_score) is absent from both the surface types and the v4 atom inventory. No dhall or json authored — fabricating activation mechanics would produce a false trace."
+}

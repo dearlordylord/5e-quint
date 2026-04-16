@@ -1,0 +1,22 @@
+{
+  "unit_slug": "sorcerer_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "level_up_grant",
+      "justification": "ASI is a permanent character-progression grant delivered at level-up, not an activated feature. It has no activation cost, no use count, and no reset cadence. The current 'activation' family for ClassFeatureMechanics requires all three. A new family (e.g. 'level_up_grant' or 'passive_grant') is needed to represent mechanics that apply permanently when the character reaches a certain class level.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The feature grants a feat (or an ability score increase, which is itself modeled as a feat per SRD 5.2.1). Neither GrantExtraActionEffect nor HealHpEffect covers this. The v4 taxonomy defers 'modify_ability_score' as out-of-scope; 'grant_feat' is the appropriate effect atom for level-up-granted feats.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The TAXONOMY_atoms_graph.md v4 §12 explicitly lists 'modify_ability_score as a runtime effect' as deferred/out-of-scope for the core mechanics graph. ASI at level 4 is a character-advancement mechanic (permanent, delivered at level-up) rather than a combat-turn mechanic — but it is deterministic and mechanical, not dm_agenda. The gap is structural: no ClassFeatureMechanics family covers permanent passive grants, and no ClassFeatureEffect covers feat grants or ability score changes."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "wizard_sculpt_spells_l6",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect::exempt_from_spell",
+      "justification": "Sculpt Spells grants a chosen set of creatures automatic save success and no half-damage on that save. This is a spell-exemption effect not expressible as GrantExtraActionEffect or HealHpEffect — the entire ClassFeatureEffect union has no variant for modifying spell resolution outcomes for chosen targets.",
+      "evidence": "The chosen creatures automatically succeed on their saving throws against the spell, and they take no damage if they would normally take half damage on a successful save."
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountResource: passive/unlimited",
+      "justification": "ClassFeatureMechanicsHeader requires resource: UseCountResource with a cap that is either 'fixed' or 'threshold_tiers'. Sculpt Spells has no per-rest limit — it fires on every eligible evocation cast with no expendable pool. There is no 'unlimited' or 'passive' option in UseCountResource or UseCountCap.",
+      "evidence": "When you cast an Evocation spell that affects other creatures that you can see, you can choose a number of them... [no limit on uses stated; no rest reset clause present]"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_spell_cast_modifier family for ClassFeatureMechanics",
+      "justification": "Sculpt Spells is not independently activated — it fires as part of casting an evocation, with no separate activationCost, no separate resource pool, and no reset cadence. The activation family assumes a discrete activation event. A passive_spell_cast_modifier family (or similar) with a trigger predicate (e.g. 'cast evocation spell') and a per-cast count formula (1 + spell level) would be a cleaner fit than forcing activation.",
+      "evidence": "When you cast an Evocation spell that affects other creatures that you can see, you can choose a number of them equal to 1 plus the spell's level."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Sculpt Spells is a passive, unlimited-use modifier on evocation spell resolution. Two blocking surface gaps: (1) ClassFeatureEffect has no variant for spell-exemption/save-auto-success; (2) ClassFeatureMechanicsHeader requires UseCountResource with a cap, but Sculpt Spells has no per-rest limit. A third structural observation: the activation family models independent activations with their own cost/resource/cadence, while Sculpt Spells fires as part of casting — a passive_spell_cast_modifier family may be cleaner long-term. No dhall/json authored; no tracer run."
+}

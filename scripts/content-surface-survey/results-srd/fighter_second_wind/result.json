@@ -1,0 +1,23 @@
+{
+  "unit_slug": "fighter_second_wind",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "class_feature_root",
+    "heal",
+    "rest_window",
+    "scale_numeric_bonus",
+    "use_count"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly. All four mechanics fit without widening: bonus_action activation cost, threshold-tiered use_count (2@L1→3@L4→4@L10), partial_short_full_long reset cadence (refill 1 on Short Rest), and heal_hp with linear_per_level DiceAmount (1d10 + fighter level). The startingAtLevel=1 with base.flat=1 and perLevel.flat=1 correctly represents '1d10 plus your Fighter level' at all class levels."
+}

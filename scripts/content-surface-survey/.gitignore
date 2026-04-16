@@ -1,0 +1,17 @@
+# Runtime artifacts — committed selectively below.
+*.lock
+unit-queue.jsonl
+
+# Per-worker scratch prototype dirs (see worker.sh).
+workers/
+
+# Per-unit claude raw outputs — large, debug-only.
+results-srd/*/claude-out.json
+results-srd/*/prompt.md
+
+# Survey dataset and per-unit verdicts ARE committed (user decision:
+# SRD results are historical research record).
+!results-srd/*/verdict.json
+!results-srd/*/result.json
+!results-srd/*/proposal.md
+!survey-results-srd.jsonl

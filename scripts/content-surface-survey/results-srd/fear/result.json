@@ -1,0 +1,34 @@
+{
+  "unit_slug": "fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "cone shape in Attachment.area.shape",
+      "justification": "Fear targets a 30-foot Cone. The current area attachment only supports { kind: 'sphere'; radiusFeet: number }. A cone shape requires a different geometry (lengthFeet, not radiusFeet) and does not compose from the sphere variant.",
+      "evidence": "Each creature in a 30-foot Cone must succeed on a Wisdom saving throw"
+    },
+    {
+      "kind": "new_variant",
+      "name": "\"frightened\" in Condition type",
+      "justification": "Fear inflicts the Frightened condition. The Condition type currently only contains \"prone\". Frightened is mechanically distinct (can't approach source, must Dash away, disadvantage on ability checks and attack rolls) and must be named explicitly to produce honest apply_condition atoms.",
+      "evidence": "have the Frightened condition for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "repeat_save in surface types (per-target, gated on line-of-sight)",
+      "justification": "Fear has a per-target escape condition: if the creature ends its turn without line of sight to the caster, it makes a Wisdom save to end the spell on itself. The v4 taxonomy includes repeat_save (Resolution atoms) but the surface types have no mechanism to encode this — no ActivationPhase variant covers a per-target ongoing save that fires at turn-end under a LoS predicate.",
+      "evidence": "If the creature ends its turn in a space where it doesn't have line of sight to you, the creature makes a Wisdom saving throw. On a successful save, the spell ends on that creature."
+    },
+    {
+      "kind": "new_atom",
+      "name": "disarm / drop_held_items effect",
+      "justification": "On a failed save, the target immediately drops whatever it is holding. This is an immediate forced item-release effect distinct from apply_condition. No v4 atom covers it: force_move handles movement, apply_condition handles conditions, but dropping held items (equivalent to a forced disarm) is not in the v4 inventory.",
+      "evidence": "drop whatever it is holding"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell is clearly activation-family (save_gate phase over area). All four gaps are blocking: (1) cone shape prevents authoring the area attachment at all; (2) frightened is not in Condition; (3) the per-target LoS-gated repeat save has no surface representation; (4) the drop-held-items effect has no v4 atom. Widening (1) and (2) are pure surface_widening. Widening (3) is surface_widening (v4 atom exists, surface type missing). Widening (4) is atom_widening. Primary classification is surface_widening because that is the narrowest label covering the dominant gap cluster."
+}

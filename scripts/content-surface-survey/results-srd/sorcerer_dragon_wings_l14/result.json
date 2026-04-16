@@ -1,0 +1,22 @@
+{
+  "unit_slug": "sorcerer_dragon_wings_l14",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect.grant_speed",
+      "justification": "Dragon Wings grants a Fly Speed of 60 ft for the duration. ClassFeatureEffect only covers grant_extra_action and heal_hp. The v4 atom modify_speed exists in the taxonomy but is not wired into ClassFeatureEffect. A new variant is needed to carry speed-kind (fly/walk/swim/climb) and the feet value.",
+      "evidence": "For the duration, you have a Fly Speed of 60 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.long_rest_or_spend_resource",
+      "justification": "The feature resets on Long Rest by default, but the player may also restore the use mid-rest by spending 3 Sorcery Points (no action required). This is a two-path reset — Long Rest OR resource expenditure — not expressible by any existing RestResetCadence variant. A new variant carrying the resource kind and point cost is needed.",
+      "evidence": "Once you use this feature, you can't use it again until you finish a Long Rest unless you spend 3 Sorcery Points (no action required) to restore your use of it."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The payload family (class_feature / activation) and activation cost (bonus_action) fit cleanly. The duration (1 hour, dismissible) maps to a timed duration with a dismiss lifecycle atom — but ClassFeatureMechanics has no duration field at all, which is a third implicit gap (the current surface only models always-on effects or instant effects from class features). The two widenings above are the blocking ones; the duration gap is noted as additional surface pressure. No Dhall or JSON content files authored."
+}

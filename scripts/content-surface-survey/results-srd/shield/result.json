@@ -1,0 +1,42 @@
+{
+  "spell": "shield",
+  "outcome": "clean",
+  "atoms_used": [
+    "commit",
+    "expire",
+    "interrupt_resolution",
+    "modify_ac",
+    "negate_named_effect",
+    "persist",
+    "prepare",
+    "prompt",
+    "reaction_quota",
+    "reaction_window",
+    "respond",
+    "self",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "commits",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "prepares",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": [
+    "Shield fits triggered_reaction cleanly. All mechanics map to existing atoms without gap.",
+    "Trigger: any_of [hit_by_attack_roll, targeted_by_named_spell(magic_missile)] — both ReactionTrigger variants exist in types.ts.",
+    "Effects: modify_ac(delta=5) and negate_named_effect(magic_missile, damage_only) — both ReactionEffect variants exist in types.ts.",
+    "Duration: timed 1 round — Duration.timed exists in types.ts.",
+    "Attachment: self — used on both the reaction procedure and as target for both effects.",
+    "interruptsTrigger: true — emits interrupt_resolution atom correctly.",
+    "DHALL encoding note: triggers list and effects list use Optional fields to satisfy Dhall's homogeneous-list constraint. dhall-to-json silently omits None fields (no nulls in output), so the JSON is clean and matches the TypeScript types exactly."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_potion_of_giant_strength",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "No magic_item kind exists in UnitRecord (SpellRecord | ClassFeatureRecord | MasteryRecord). The taxonomy lists magic_item_root as a source atom but types.ts has no corresponding record type or mechanics family.",
+      "evidence": "Potion, Rarity Varies — the item kind is magic_item, which has no UnitRecord variant"
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The potion's core mechanic is setting the drinker's Strength score to a fixed value for a timed duration. No effect atom for setting/overriding an ability score exists in v4. The TAXONOMY explicitly defers this: 'modify_ability_score as a runtime effect versus as pre-runtime character state (currently treated as out-of-scope)'.",
+      "evidence": "When you drink this potion, your Strength score changes for 1 hour. The type of giant determines the score (21/23/25/27/29)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_no_effect_gate",
+      "justification": "The potion has a conditional no-effect clause: 'The potion has no effect on you if your Strength is equal to or greater than that score.' This is a pre-activation guard comparing current ability score to threshold — no existing surface type or atom models this check.",
+      "evidence": "The potion has no effect on you if your Strength is equal to or greater than that score."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no MagicItemRecord kind in UnitRecord. Secondary blocker is the missing modify_ability_score effect atom (explicitly deferred in taxonomy v4 as out-of-scope). A tertiary gap is the conditional no-effect guard on current ability score. All three gaps must be resolved before this unit can be honestly encoded."
+}

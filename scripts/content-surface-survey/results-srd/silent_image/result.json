@@ -1,0 +1,28 @@
+{
+  "unit_slug": "silent_image",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "create_object operation in OngoingOperation",
+      "justification": "Silent Image creates a persistent visual object at a location for the spell's duration. This is the spell's sole mechanical effect. OngoingOperation only supports roll_modifier and damage_on_hit — neither applies. A create_object variant of OngoingOperation is needed that carries: the object's shape/size (15-foot cube), that it is purely visual (no sound/smell/other senses), and optionally that the caster can reposition it via a Magic action during the duration.",
+      "evidence": "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 15-foot Cube. The image appears at a spot within range and lasts for the duration. The image is purely visual; it isn't accompanied by sound, smell, or other sensory effects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "magic_action reposition rider on ongoing_effect",
+      "justification": "The caster can spend their Magic action on any subsequent turn to move the image to any spot within range and alter its appearance. There is no current surface shape for 'caster can spend an action type during the duration to reposition an object'. This is a recurring optional action cost attached to the ongoing effect, not a one-time activation cost.",
+      "evidence": "As a Magic action, you can cause the image to move to any spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image."
+    },
+    {
+      "kind": "new_variant",
+      "name": "creature_investigation_check dispel gate",
+      "justification": "Any creature can take the Study action to make an Intelligence (Investigation) check against the caster's spell save DC. On success the creature discerns the illusion and can see through it. This is a creature-initiated ability check that partially bypasses the spell — not a save_gate (caster-initiated), not a condition. The closest existing atom is ability_check but the surface has no way to model a creature-side dispel check on an ongoing_effect.",
+      "evidence": "A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the creature can see through the image."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is structurally correct (concentration, area attachment, no attack roll or save required on cast). All three gaps are surface-level variants of existing types — create_object is already a v4 atom, ability_check is already a v4 resolution atom. The magic_action reposition rider is the most novel shape; it could potentially be modeled as a free on-going activation sub-feature but no such sub-feature slot exists in OngoingEffectMechanics."
+}

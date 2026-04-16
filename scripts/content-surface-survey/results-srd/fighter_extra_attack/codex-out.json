@@ -1,0 +1,4005 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d940b-4282-78d1-91c4-eccd60d9f097
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Extra Attack`
+- Slug: `fighter_extra_attack`
+- Kind: `class_feature`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+### Level 5: Extra Attack
+
+You can attack twice instead of once whenever you take the Attack action on your turn.
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/fighter_extra_attack.json` — the encoded unit.
+- `result-fighter_extra_attack.json` — your structured self-report (schema below).
+- `proposal-fighter_extra_attack.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+1. `src/surface/types.ts` — closed atom types. Your JSON must be a valid instance of `UnitRecord`.
+2. `src/interpreter/tracer.ts` — walks your JSON and emits a mermaid dependency graph. If the tracer throws `unhandled <atom>`, the surface lacks what your encoding needs.
+3. Existing reference encodings in `content/`: `bless.json` (ongoing effect, concentration), `acid_splash.json` (cantrip activation with AoE + save), `ice_knife.json` (multi-phase: attack then save), `action_surge.json` (class feature with use-count + rest reset).
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — authoritative v4 atom vocabulary.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — naming discipline for D&D terms.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `activation` (class feature) — different record shape; see `action_surge.json`.
+2. Author `content/fighter_extra_attack.json` as a valid `UnitRecord`. Match field names exactly.
+3. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+4. Run `pnpm exec tsx src/run.ts content/fighter_extra_attack.json`. Observe output.
+5. If the tracer throws `unhandled <atom>`, STOP — the surface doesn't support this unit. Record the missing atom in `proposal.md` and set `outcome: "atom_widening"` in your result.
+6. Write `result.json` with the schema below.
+
+## result-fighter_extra_attack.json schema
+
+```json
+{
+  "unit_slug": "fighter_extra_attack",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT modify any file outside `content/fighter_extra_attack.json`, `result-fighter_extra_attack.json`, `proposal-fighter_extra_attack.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Prefer `atom_widening` over `clean` when in doubt. False positives on widenings are cheap; false `clean` verdicts are expensive.
+
+## When done
+
+Your final output must be valid:
+
+- `content/fighter_extra_attack.json` — typechecks against `UnitRecord`.
+- `content/fighter_extra_attack.trace.md` — the tracer's mermaid graph (auto-generated if `pnpm exec tsx src/run.ts ... --out content/fighter_extra_attack.trace.md`).
+- `result-fighter_extra_attack.json` — your self-classification.
+- `proposal-fighter_extra_attack.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m encoding `Extra Attack` into the existing content surface, starting by reading the closed atom/types and a few reference encodings to see whether this fits an existing activation shape or forces a widening.
+2026-04-16T02:07:55.003911Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,260p' src/surface/types.ts"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+2026-04-16T02:07:55.130562Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,260p' src/interpreter/tracer.ts"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+2026-04-16T02:07:55.134737Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,220p' content/action_surge.json"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+2026-04-16T02:07:55.138536Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,220p' content/bless.json"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+2026-04-16T02:07:55.141789Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,220p' content/acid_splash.json"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+2026-04-16T02:07:55.144689Z ERROR codex_core::tools::router: error=exec_command failed for `/bin/bash -lc "sed -n '1,220p' content/ice_knife.json"`: CreateProcess { message: "Rejected(\"Failed to create unified exec process: No such file or directory (os error 2)\")" }
+codex
+The first read failed on path resolution, so I’m checking the actual workspace layout and then I’ll pull the surface files from the correct package directory.
+exec
+/bin/bash -lc pwd in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+exec
+/bin/bash -lc 'ls -la' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+ls: node_modules: No such file or directory
+total 20
+drwxr-xr-x 1 node node  384 Apr 15 19:07 .
+drwxr-xr-x 1 node node  192 Apr 15 19:07 ..
+-rw-r--r-- 1 node node  100 Apr 15 09:06 .gitignore
+drwxr-xr-x 1 node node   96 Apr 15 09:04 .turbo
+-rw-r--r-- 1 node node 2409 Apr 15 09:05 README.md
+drwxr-xr-x 1 node node 2240 Apr 15 18:21 content
+-rw-r--r-- 1 node node  344 Apr 15 09:03 eslint.config.mjs
+lrwxrwxrwx 1 node node   73 Apr 15 19:07 node_modules -> /workspace/typescript/dnd/packages/prototype-content-surface/node_modules
+-rw-r--r-- 1 node node  713 Apr 15 15:27 package.json
+drwxr-xr-x 1 node node   96 Apr 15 13:33 scripts
+drwxr-xr-x 1 node node  160 Apr 15 15:27 src
+-rw-r--r-- 1 node node  469 Apr 15 09:03 tsconfig.json
+
+exec
+/bin/bash -lc "rg --files . | sed -n '1,200p'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+./package.json
+./README.md
+./tsconfig.json
+./eslint.config.mjs
+./src/run.ts
+./content/aid.json
+./content/alarm.json
+./content/charm_monster.json
+./content/counterspell.json
+./content/monk_martial_arts.json
+./content/halfling_luck.json
+./content/barbarian_rage.json
+./content/acid_splash.dhall
+./content/beacon_of_hope.json
+./src/surface/types.ts
+./content/fighter_action_surge.json
+./content/shield.json
+./content/paladin_lay_on_hands.json
+./content/call_lightning.json
+./content/cleric_channel_divinity.json
+./content/animal_messenger.json
+./content/calm_emotions.json
+./content/befuddlement.json
+./content/mastery_topple.json
+./content/death_ward.json
+./content/ice_knife.dhall
+./content/fireball.json
+./content/cleric_divine_spark.json
+./content/ice_knife.json
+./content/animal_friendship.json
+./content/arcane_lock.json
+./content/polymorph.json
+./content/protection_from_energy.json
+./content/bard_bardic_inspiration.json
+./content/hunters_mark.json
+./content/action_surge.json
+./content/animal_shapes.json
+./content/augury.json
+./content/acid_splash.json
+./content/eldritch_blast.json
+./content/animate_objects.json
+./content/barkskin.json
+./content/blade_barrier.json
+./content/arcane_eye.json
+./content/action_surge.dhall
+./content/fire_bolt.json
+./content/fighter_second_wind.json
+./content/antimagic_field.json
+./content/burning_hands.json
+./content/aura_of_life.json
+./src/interpreter/mermaid.ts
+./src/interpreter/tracer.ts
+./content/chain_lightning.json
+./content/magic_missile.json
+./content/bless.dhall
+./content/mastery_sap.json
+./content/antilife_shell.json
+./content/blur.json
+./content/blindness_deafness.json
+./content/rogue_sneak_attack.json
+./content/fighter_extra_attack.json
+./content/blight.json
+./content/alter_self.json
+./content/monk_focus_points.json
+./content/bestow_curse.json
+./content/bless.json
+./content/blink.json
+./content/mastery_cleave.json
+./content/antipathy_sympathy.json
+./content/astral_projection.json
+./content/awaken.json
+./content/banishment.json
+./content/bane.json
+./content/shillelagh.json
+./content/animate_dead.json
+./content/fighter_indomitable.json
+./scripts/content-surface-survey/results-srd/fire_bolt/verdict.json
+./scripts/content-surface-survey/results-srd/monk_focus_points/verdict.json
+./scripts/content-surface-survey/results-srd/magic_missile/verdict.json
+./scripts/content-surface-survey/results-srd/bard_bardic_inspiration/verdict.json
+./scripts/content-surface-survey/results-srd/barbarian_rage/verdict.json
+./scripts/content-surface-survey/results-srd/fighter_extra_attack/verdict.json
+./scripts/content-surface-survey/results-srd/shillelagh/verdict.json
+./scripts/content-surface-survey/results-srd/cleric_divine_spark/verdict.json
+./scripts/content-surface-survey/results-srd/paladin_lay_on_hands/verdict.json
+./scripts/content-surface-survey/results-srd/fighter_second_wind/verdict.json
+./scripts/content-surface-survey/results-srd/polymorph/verdict.json
+./scripts/content-surface-survey/results-srd/death_ward/verdict.json
+./scripts/content-surface-survey/results-srd/cleric_channel_divinity/verdict.json
+./scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json
+./scripts/content-surface-survey/results-srd/fighter_action_surge/verdict.json
+./scripts/content-surface-survey/results-srd/fighter_indomitable/verdict.json
+./scripts/content-surface-survey/results-srd/mastery_topple/verdict.json
+./scripts/content-surface-survey/results-srd/counterspell/verdict.json
+./scripts/content-surface-survey/results-srd/protection_from_energy/verdict.json
+./scripts/content-surface-survey/results-srd/fireball/verdict.json
+./scripts/content-surface-survey/results-srd/halfling_luck/verdict.json
+./scripts/content-surface-survey/results-srd/monk_martial_arts/verdict.json
+./scripts/content-surface-survey/results-srd/mastery_sap/verdict.json
+./scripts/content-surface-survey/results-srd/hunters_mark/verdict.json
+./scripts/content-surface-survey/results-srd/shield/verdict.json
+./scripts/content-surface-survey/results-srd/eldritch_blast/verdict.json
+./scripts/content-surface-survey/results-srd/rogue_sneak_attack/verdict.json
+./scripts/content-surface-survey/results-srd/alarm/verdict.json
+
+exec
+/bin/bash -lc "sed -n '1,260p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+
+exec
+/bin/bash -lc "sed -n '1,320p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Tracer — interpreter over the authored unit ADT. Emits a dependency
+// graph of atoms + typed relations; does not call the combat runtime.
+
+import type {
+  UnitRecord,
+  SpellRecord,
+  ClassFeatureRecord,
+  MasteryRecord,
+  SpellMechanics,
+  OngoingEffectMechanics,
+  ActivationMechanics,
+  ActivationPhase,
+  CastingTime,
+  Duration,
+  Range,
+  Attachment,
+  Effect,
+  OngoingOperation,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  DiceDelta,
+  SlotScaling,
+  SpellLevel,
+  ClassFeatureMechanics,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationCost,
+  UseCountResource,
+  RestResetCadence,
+  ActionRestriction,
+  ClassFeatureEffect,
+  TriggeredReactionMechanics,
+  ReactionTrigger,
+  ReactionEffect,
+  MarkTransfer,
+  MasteryMechanics,
+  MasteryTrigger,
+  MasteryEffect,
+  RiderExpiry,
+  DcSource,
+  AnchoredTriggerMechanics,
+  AnchorTarget,
+  AnchoredEvent,
+  AnchoredFilter,
+  AnchoredSignal,
+} from "../surface/types.ts";
+
+export type AtomCategory =
+  | "source"
+  | "procedure"
+  | "window"
+  | "attachment"
+  | "resolution"
+  | "lifecycle"
+  | "resource"
+  | "scaling"
+  | "effect";
+
+export type TraceNode = {
+  readonly id: string;
+  readonly category: AtomCategory;
+  readonly atomKind: string;
+  readonly label: string;
+};
+
+export type TraceEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+};
+
+export type Trace = {
+  readonly unitId: string;
+  readonly unitName: string;
+  readonly nodes: ReadonlyArray<TraceNode>;
+  readonly edges: ReadonlyArray<TraceEdge>;
+  readonly atomKinds: ReadonlyArray<string>;
+};
+
+export function traceUnit(unit: UnitRecord): Trace {
+  switch (unit.kind) {
+    case "spell":
+      return traceSpellUnit(unit);
+    case "class_feature":
+      return traceClassFeatureUnit(unit);
+    case "mastery":
+      return traceMasteryUnit(unit);
+    default: {
+      const _exhaustive: never = unit;
+      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Spell tracer
+// ============================================================
+
+type SpellCtx = {
+  readonly procId: string;
+  readonly slotId: string | null;
+  readonly range: Range;
+};
+
+function traceSpellUnit(spell: SpellRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "spell_root",
+    label: `spell_root\n${spell.name}`,
+  });
+
+  const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: spell.id,
+    unitName: spell.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "reaction_quota",
+        label: "reaction_quota\n(Casting Time: Reaction)",
+      });
+      return id;
+    case "minutes":
+      // Long-cast spells (Alarm: 1 minute or Ritual). No 1-action-quota
+      // cost — the caster is locked into the cast for `amount` minutes.
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Casting Time: ${ct.amount} min${
+          ct.ritual ? " / Ritual" : ""
+        })`,
+      });
+      return id;
+    default: {
+      const _exhaustive: never = ct;
+      throw new Error(`unhandled casting time: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeReactionTrigger(t: ReactionTrigger): string {
+  switch (t.kind) {
+    case "hit_by_attack_roll":
+      return "hit by attack roll";
+    case "targeted_by_named_spell":
+      return `targeted by ${t.spellId}`;
+    case "any_of":
+      return t.triggers.map(describeReactionTrigger).join(" OR ");
+    default: {
+      const _: never = t;
+      throw new Error(`unhandled reaction trigger: ${String(_)}`);
+    }
+  }
+}
+
+function createSpellSlotNode(
+  level: SpellLevel,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("slot");
+  nodes.push({
+    id,
+    category: "resource",
+    atomKind: "spell_slot",
+    label: `spell_slot\n≥ level ${level}`,
+  });
+  return id;
+}
+
+function traceDuration(
+  d: Duration,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (d.kind) {
+    case "instantaneous":
+      return;
+    case "concentration": {
+      const lockId = ids("lock");
+      nodes.push({
+        id: lockId,
+        category: "resource",
+        atomKind: "concentration_lock",
+        label: "concentration_lock",
+      });
+      edges.push({ from: procId, to: lockId, relation: "consumes" });
+
+      const concId = ids("conc");
+      nodes.push({
+        id: concId,
+        category: "lifecycle",
+        atomKind: "concentrate",
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/action_surge.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_action_surge",
+  "name": "Action Surge",
+  "className": "fighter",
+  "acquiredAtLevel": 2,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  },
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 1,
+        "tiers": [
+          { "atLevel": 2, "value": 1 },
+          { "atLevel": 17, "value": 2 }
+        ]
+      }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "exclude", "actions": ["magic"] }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/fighter_action_surge.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_action_surge",
+  "name": "Action Surge",
+  "className": "fighter",
+  "acquiredAtLevel": 2,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  },
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. (Starting at level 17, you can use it twice before a rest but only once on a turn — not encoded in this record: UseCountCap only supports fixed.)",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": { "kind": "fixed", "uses": 1 }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "exclude", "actions": ["magic"] }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/bless.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "bless",
+  "name": "Bless",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bless"
+  },
+  "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.",
+  "mechanics": {
+    "family": "ongoing_effect",
+    "level": 1,
+    "school": "enchantment",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 30 },
+    "components": { "v": true, "s": true, "m": "a Holy Symbol worth 5+ GP" },
+    "duration": { "kind": "concentration", "upTo": { "unit": "minute", "amount": 1 } },
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "choose_up_to",
+        "count": { "kind": "linear", "base": 3, "perSlotAboveBase": 1, "baseLevel": 1 }
+      }
+    },
+    "operation": {
+      "kind": "roll_modifier",
+      "on": ["attack_roll", "saving_throw"],
+      "delta": { "dice": 1, "dieSize": 4, "sign": "+" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/monk_martial_arts.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "monk_martial_arts",
+  "name": "Martial Arts",
+  "className": "monk",
+  "acquiredAtLevel": 1,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Level 1: Martial Arts"
+  },
+  "description": "While unarmed or wielding only Monk weapons (Simple Melee or Light Martial Melee) and not wearing armor or wielding a Shield: (1) Bonus Unarmed Strike — make an Unarmed Strike as a Bonus Action; (2) Martial Arts Die — roll 1d6 (scales to 1d12 by monk level) in place of normal weapon damage; (3) Dexterous Attacks — use DEX instead of STR for attack/damage rolls and Grapple/Shove save DC.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "bonus_action" },
+    "resource": {
+      "kind": "use_count",
+      "cap": { "kind": "fixed", "uses": 1 }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "none" }
+    }
+  }
+}
+
+codex
+I’ve confirmed the worker copy is the package root. Next I’m checking whether `Extra Attack` already has a draft here and reading the class-feature surface types around activation effects, because this rule may need a second “attack within Attack action” shape rather than an extra action.
+exec
+/bin/bash -lc "sed -n '220,520p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+//
+// Pressure case: Alarm. Future: Glyph of Warding, Contingency. Spell
+// plants a trigger on an anchor; when a matching event occurs (gated
+// by closed filter predicates) the stored spell releases a signal
+// effect.
+
+// Where the trigger is planted. Matches v4 attachment atoms `location`
+// and `area`, kept distinct from Attachment since the choice is
+// mutually exclusive at cast time.
+export type AnchorTarget =
+  | { readonly kind: "location"; readonly description: "door_or_window" }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
+    };
+
+// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// more pressure cases land (step_on, approach_within, see_glyph,
+// named_event_signal).
+export type AnchoredEvent =
+  | { readonly kind: "physical_contact" }
+  | { readonly kind: "enters_area" };
+
+// Closed filter predicates. Alarm uses a creature exemption list
+// ("designate creatures that won't set off the alarm") that is chosen
+// at cast time.
+export type AnchoredFilter = {
+  readonly kind: "creature_exemption_list";
+  readonly chosenAtCast: true;
+};
+
+// Signal emitted on release. Audible and mental are the two Alarm
+// modes; caller is the consumer of the signal (ARCHITECTURE.md keeps
+// narrative notifications out of core, but the signal shape is still
+// closed so the trace has somewhere to point).
+export type AnchoredSignal =
+  | {
+      readonly kind: "audible";
+      readonly sound: string;
+      readonly durationSeconds: number;
+      readonly audibleRadiusFeet: number;
+    }
+  | {
+      readonly kind: "mental";
+      readonly rangeFeet: number;
+      readonly awakensIfAsleep: boolean;
+    };
+
+export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
+  readonly family: "anchored_trigger";
+  readonly anchor: AnchorTarget;
+  readonly events: ReadonlyArray<AnchoredEvent>;
+  readonly filters: ReadonlyArray<AnchoredFilter>;
+  readonly signals: ReadonlyArray<AnchoredSignal>;
+};
+
+export type SpellMechanics =
+  | OngoingEffectMechanics
+  | ActivationMechanics
+  | TriggeredReactionMechanics
+  | AnchoredTriggerMechanics;
+
+// ---------- class-feature atoms ----------
+
+// Activation cost for a class feature. Drives which (if any) quota
+// atom the tracer emits a `consumes` edge to.
+export type ClassFeatureActivationCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "bonus_action" };
+
+// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+// uses scale by class level e.g. Action Surge 1@L2 → 2@L17, Second Wind
+// 2@L1 → 3@L4 → 4@L10, Indomitable 1@L9 → 2@L13 → 3@L17).
+export type UseCountCap =
+  | { readonly kind: "fixed"; readonly uses: number }
+  | ThresholdTiers<number>;
+
+export type UseCountResource = {
+  readonly kind: "use_count";
+  readonly cap: UseCountCap;
+};
+
+// Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
+// refilling the pool.
+export type RestResetCadence =
+  | { readonly kind: "short_or_long_rest" }
+  | { readonly kind: "long_rest" }
+  | { readonly kind: "short_rest" }
+  // SRD "You regain one expended use when you finish a Short Rest, and
+  // you regain all expended uses when you finish a Long Rest." — Second
+  // Wind, Monk Focus partial-refill pattern.
+  | {
+      readonly kind: "partial_short_full_long";
+      readonly shortRestRefill: number;
+    };
+
+export type ActionRestriction =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "exclude";
+      readonly actions: ReadonlyArray<StandardActionKind>;
+    };
+
+export type GrantExtraActionEffect = {
+  readonly kind: "grant_extra_action";
+  readonly restriction: ActionRestriction;
+};
+
+// v4 atom `heal`. Amount can be any DiceAmount shape (fixed / threshold_tiers
+// / linear_per_level) — Second Wind uses linear_per_level with axis=class.
+export type HealHpEffect = {
+  readonly kind: "heal_hp";
+  readonly amount: DiceAmount;
+  readonly target: "self" | "target_creature";
+};
+
+export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+
+// ---------- class-feature payload family ----------
+
+type ClassFeatureMechanicsHeader = {
+  readonly activationCost: ClassFeatureActivationCost;
+  readonly resource: UseCountResource;
+  readonly resetCadence: RestResetCadence;
+};
+
+export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+  readonly family: "activation";
+  readonly effect: ClassFeatureEffect;
+};
+
+export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+
+// ---------- mastery (weapon mastery property) ----------
+
+// SRD 5.2.1 Conditions atlas-relevant to mastery riders. Only Prone is
+// currently used (Topple); widen as more mastery/feat content lands.
+export type Condition = "prone";
+
+// Mastery rider expiry — Sap: "before the start of your next turn" OR
+// when the target uses its next attack roll. Vex-style would be
+// "before the end of your next turn". Closed enum for now.
+export type RiderExpiry =
+  | { readonly kind: "target_uses_or_turn_start" }
+  | { readonly kind: "end_of_next_turn" };
+
+// Trigger for on-hit masteries. Cleave restricts to melee weapon
+// attacks; other masteries (Sap, Topple) accept any weapon hit.
+export type MasteryTrigger =
+  | { readonly kind: "weapon_hit" }
+  | { readonly kind: "weapon_hit_melee_only" };
+
+// Secondary-target selection for Cleave: the nested attack must target
+// a creature within 5 feet of the first and within the attacker's reach.
+export type SecondaryTargetSelection = {
+  readonly kind: "adjacent_to_primary";
+  readonly constraint: "within_5ft_and_reach";
+};
+
+// Nested attack-roll rider granted by Cleave. Ability modifier is only
+// applied to damage if it is negative (per SRD).
+export type GrantWeaponAttackRider = {
+  readonly kind: "grant_weapon_attack";
+  readonly attackKind: "melee_weapon_attack";
+  readonly secondaryTarget: SecondaryTargetSelection;
+  readonly onHit: {
+    readonly kind: "weapon_damage";
+    readonly abilityModifier: "negative_only";
+  };
+};
+
+// Sap — target's next attack roll has disadvantage. Generalized as
+// advantage/disadvantage rider with a count + expiry.
+export type ModifyRollAdvantageRider = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage" | "disadvantage";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly count: number;
+  readonly expiresOn: RiderExpiry;
+};
+
+exec
+/bin/bash -lc "sed -n '320,760p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+exec
+/bin/bash -lc "sed -n '1,220p' content/fighter_extra_attack.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+        atomKind: "concentrate",
+        label: "concentrate",
+      });
+      edges.push({ from: procId, to: concId, relation: "grants" });
+
+      const expId = ids("exp");
+      nodes.push({
+        id: expId,
+        category: "lifecycle",
+        atomKind: "expire",
+        label: `expire\n≤ ${describeDurationValue(d.upTo)}`,
+      });
+      edges.push({ from: concId, to: expId, relation: "persists_until" });
+      return;
+    }
+    case "timed": {
+      const persistId = ids("per");
+      nodes.push({
+        id: persistId,
+        category: "lifecycle",
+        atomKind: "persist",
+        label: "persist",
+      });
+      edges.push({ from: procId, to: persistId, relation: "grants" });
+
+      const expId = ids("exp");
+      nodes.push({
+        id: expId,
+        category: "lifecycle",
+        atomKind: "expire",
+        label: `expire\n${describeDurationValue(d.value)}`,
+      });
+      edges.push({ from: persistId, to: expId, relation: "persists_until" });
+      return;
+    }
+    default: {
+      const _exhaustive: never = d;
+      throw new Error(`unhandled duration: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceOngoingEffect(
+  m: OngoingEffectMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const attId = traceAttachment(m.attachment, ctx.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+
+  traceTargetCountScaling(m.attachment, attId, ctx.slotId, nodes, edges, ids);
+  traceMarkAttachmentEffects(
+    m.attachment,
+    ctx.procId,
+    attId,
+    nodes,
+    edges,
+    ids,
+  );
+
+  traceOngoingOperation(
+    m.operation,
+    ctx.procId,
+    attId,
+    ctx.slotId,
+    nodes,
+    edges,
+    ids,
+  );
+}
+
+// If the attachment is a v4 `mark`, emit the mark_target effect (and,
+// if configured, the transfer_mark effect with its transfers_to edge
+// back onto the mark attachment node).
+function traceMarkAttachmentEffects(
+  a: Attachment,
+  procId: string,
+  attId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  if (a.kind !== "mark") return;
+  const markId = ids("mk");
+  nodes.push({
+    id: markId,
+    category: "effect",
+    atomKind: "mark_target",
+    label: "mark_target",
+  });
+  edges.push({ from: procId, to: markId, relation: "grants" });
+  edges.push({ from: markId, to: attId, relation: "attaches_to" });
+
+  if (a.transfer !== undefined) {
+    const transferId = traceMarkTransfer(a.transfer, procId, nodes, edges, ids);
+    edges.push({ from: transferId, to: attId, relation: "transfers_to" });
+  }
+}
+
+function traceMarkTransfer(
+  t: MarkTransfer,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Bonus-action cost → bonus_action_quota resource consumed by the
+  // caster when invoking the transfer.
+  const quotaId = ids("q");
+  nodes.push({
+    id: quotaId,
+    category: "resource",
+    atomKind: "bonus_action_quota",
+    label: "bonus_action_quota\n(transfer mark)",
+  });
+  const transferId = ids("xfer");
+  nodes.push({
+    id: transferId,
+    category: "effect",
+    atomKind: "transfer_mark",
+    label: `transfer_mark\non: ${describeTransferEvent(t)}`,
+  });
+  edges.push({ from: procId, to: transferId, relation: "grants" });
+  edges.push({ from: transferId, to: quotaId, relation: "consumes" });
+  return transferId;
+}
+
+function describeTransferEvent(t: MarkTransfer): string {
+  switch (t.onEvent.kind) {
+    case "target_drops_to_0_hp":
+      return "target drops to 0 HP";
+    default: {
+      const _: never = t.onEvent.kind;
+      throw new Error(`unhandled transfer event: ${String(_)}`);
+    }
+  }
+}
+
+function traceOngoingOperation(
+  op: OngoingOperation,
+  procId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (op.kind) {
+    case "roll_modifier": {
+      const id = ids("op");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_roll_numeric",
+        label: `modify_roll_numeric\n${describeDelta(op.delta)}\non ${op.on.join(", ")}`,
+      });
+      edges.push({ from: procId, to: id, relation: "grants" });
+      edges.push({ from: id, to: attId, relation: "attaches_to" });
+      return;
+    }
+    case "damage_on_hit": {
+      // Opens an on_hit_window on any attack-roll the caster makes
+      // against a creature in the attachment's scope; the rider
+      // grants a damage effect.
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "on_hit_window",
+        label: "on_hit_window\n(caster hits attachment)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+
+      const dmgId = ids("dmg");
+      nodes.push({
+        id: dmgId,
+        category: "effect",
+        atomKind: "damage",
+        label: `damage: ${describeDiceAmount(op.amount)} ${op.damageType}`,
+      });
+      edges.push({ from: winId, to: dmgId, relation: "grants" });
+      edges.push({ from: dmgId, to: attId, relation: "attaches_to" });
+      traceDiceAmountScaling(op.amount, dmgId, slotId, nodes, edges, ids);
+      return;
+    }
+    default: {
+      const _: never = op;
+      throw new Error(`unhandled ongoing operation: ${String(_)}`);
+    }
+  }
+}
+
+function traceTriggeredReaction(
+  m: TriggeredReactionMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Subgraph A — Prepare / Prompt / Commit (TAXONOMY_graph_representation.md §5.A):
+  //   respond --opens_window--> reaction_window (labeled with trigger)
+  //   respond --prepares--> prepare --prompts--> prompt --commits--> commit
+  //   commit --grants--> interrupt_resolution (if interruptsTrigger)
+  //   commit --grants--> <each effect atom>
+
+  // Reaction window — labeled with the trigger grammar.
+  const winId = ids("win");
+  const triggerLabel =
+    m.castingTime.kind === "reaction"
+      ? describeReactionTrigger(m.castingTime.trigger)
+      : "—";
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: "reaction_window",
+    label: `reaction_window\ntrigger: ${triggerLabel}`,
+  });
+  edges.push({ from: ctx.procId, to: winId, relation: "opens_window" });
+
+  // Prepare / Prompt / Commit chain — the decision boundary. Per
+  // UBIQUITOUS_LANGUAGE §Triggers line 31: "Declining does not consume
+  // the reaction resource." The chain represents that optionality.
+  const prepId = ids("prep");
+  nodes.push({
+    id: prepId,
+    category: "procedure",
+    atomKind: "prepare",
+    label: "prepare",
+  });
+  edges.push({ from: ctx.procId, to: prepId, relation: "prepares" });
+
+  const promptId = ids("prompt");
+  nodes.push({
+    id: promptId,
+    category: "procedure",
+    atomKind: "prompt",
+    label: "prompt",
+  });
+  edges.push({ from: prepId, to: promptId, relation: "prompts" });
+
+  const commitId = ids("commit");
+  nodes.push({
+    id: commitId,
+    category: "procedure",
+    atomKind: "commit",
+    label: "commit",
+  });
+  edges.push({ from: promptId, to: commitId, relation: "commits" });
+
+  // Attachment — typically self for Shield.
+  const attId = traceAttachment(m.attachment, ctx.range, nodes, ids);
+  edges.push({ from: commitId, to: attId, relation: "attaches_to" });
+
+  // Interrupt the triggering resolution if the spell does so.
+  if (m.interruptsTrigger) {
+    const intId = ids("int");
+    nodes.push({
+      id: intId,
+      category: "resolution",
+      atomKind: "interrupt_resolution",
+      label: "interrupt_resolution",
+    });
+    edges.push({ from: commitId, to: intId, relation: "grants" });
+  }
+
+  // Commit grants each reaction effect.
+  for (const eff of m.effects) {
+    const effId = traceReactionEffect(eff, nodes, ids);
+    edges.push({ from: commitId, to: effId, relation: "grants" });
+    edges.push({ from: effId, to: attId, relation: "attaches_to" });
+  }
+}
+
+// v4 Subgraph hunt §4.2 — anchored_trigger payload family. Pressure
+// case: Alarm. Graph shape:
+//   spell_root → store → anchor (location/area) + trigger_condition
+//   trigger_condition → release (when matching event + filters fire)
+//   release → signal (audible/mental)
+//   duration: timed → persist → expire (wards the anchor until then)
+function traceAnchoredTrigger(
+  m: AnchoredTriggerMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Anchor node — the `location` or `area` the spell is planted on.
+  const anchorId = traceAnchorTarget(m.anchor, ctx.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: anchorId, relation: "attaches_to" });
+
+  // Filters and signals are structural grammar on the trigger, not
+  // standalone v4 atoms. Fold them into the release node's label so
+  // the graph remains legible without polluting the atom inventory
+  // with non-v4 names. ARCHITECTURE.md routes notification effects to
+  // the caller; signals are recorded here only as authoring intent.
+  const filterLines = m.filters.map(
+    (f) => `filter: ${describeAnchoredFilter(f)}`,
+  );
+  const signalLines = m.signals.map(
+    (s) => `signal (caller-owned): ${describeAnchoredSignal(s)}`,
+  );
+  const releaseExtras = [...filterLines, ...signalLines].join("\n");
+  const releaseLabel =
+    releaseExtras.length > 0 ? `release\n---\n${releaseExtras}` : "release";
+
+  // `release` procedure — fires later when a matching event occurs.
+  const releaseId = ids("rel");
+  nodes.push({
+    id: releaseId,
+    category: "procedure",
+    atomKind: "release",
+    label: releaseLabel,
+  });
+  edges.push({ from: ctx.procId, to: releaseId, relation: "stores" });
+  edges.push({ from: releaseId, to: anchorId, relation: "attaches_to" });
+
+  // Events — each event kind becomes a `post_action_window` node that
+  // the anchor `opens_window` on. We use post_action_window as the
+  // closest v4 window atom for "after a creature acts on the anchor".
+  for (const e of m.events) {
+    const eId = ids("evt");
+    nodes.push({
+      id: eId,
+      category: "window",
+      atomKind: "post_action_window",
+      label: `post_action_window\n${describeAnchoredEvent(e)}`,
+    });
+    edges.push({ from: anchorId, to: eId, relation: "opens_window" });
+    edges.push({ from: eId, to: releaseId, relation: "prompts" });
+  }
+}
+
+function traceAnchorTarget(
+  a: AnchorTarget,
+  range: Range,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("anc");
+  switch (a.kind) {
+    case "location":
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "location",
+        label: `location\n${a.description}\nrange ${describeRange(range)}`,
+      });
+      return id;
+    case "area":
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "area",
+        label: `area\n${a.shape.kind} ≤ ${a.shape.maxSideFeet} ft side\nrange ${describeRange(range)}`,
+      });
+      return id;
+    default: {
+      const _: never = a;
+      throw new Error(`unhandled anchor target: ${String(_)}`);
+    }
+  }
+}
+
+function describeAnchoredEvent(e: AnchoredEvent): string {
+  switch (e.kind) {
+    case "physical_contact":
+      return "physical contact (touch)";
+    case "enters_area":
+      return "creature enters area";
+    default: {
+      const _: never = e;
+      throw new Error(`unhandled anchored event: ${String(_)}`);
+    }
+  }
+}
+
+function describeAnchoredFilter(f: AnchoredFilter): string {
+  switch (f.kind) {
+    case "creature_exemption_list":
+      return "creature exemption list\n(chosen at cast)";
+    default: {
+      const _: never = f.kind;
+      throw new Error(`unhandled anchored filter: ${String(_)}`);
+    }
+  }
+}
+
+function describeAnchoredSignal(s: AnchoredSignal): string {
+  switch (s.kind) {
+    case "audible":
+      return `audible signal\n${s.sound} (${s.durationSeconds}s, r=${s.audibleRadiusFeet} ft)`;
+    case "mental":
+      return `mental signal\nrange ${s.rangeFeet} ft${
+        s.awakensIfAsleep ? "\nawakens if asleep" : ""
+      }`;
+    default: {
+      const _: never = s;
+      throw new Error(`unhandled anchored signal: ${String(_)}`);
+    }
+  }
+}
+
+function traceReactionEffect(
+  e: ReactionEffect,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("eff");
+  switch (e.kind) {
+    case "modify_ac":
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ac",
+        label: `modify_ac\n+${e.delta}`,
+      });
+      return id;
+    case "negate_named_effect":
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "negate_named_effect",
+        label: `negate_named_effect\n${e.spellId} (${e.scope})`,
+      });
+      return id;
+    default: {
+      const _: never = e;
+      throw new Error(`unhandled reaction effect: ${String(_)}`);
+    }
+  }
+}
+
+function traceActivation(
+  m: ActivationMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_extra_attack",
+  "name": "Extra Attack",
+  "className": "fighter",
+  "acquiredAtLevel": 5,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Extra Attack"
+  },
+  "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+  "mechanics": {
+    "family": "passive_modifier",
+    "effect": {
+      "kind": "modify_attack_count",
+      "attacksPerAttackAction": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 2,
+        "tiers": [
+          { "atLevel": 11, "value": 3 },
+          { "atLevel": 20, "value": 4 }
+        ]
+      }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' ../UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read ../UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+exec
+/bin/bash -lc 'rg -n "grant_extra_action|extra attack|additional attack|attack action|additional action|additional attack" src/surface/types.ts src/interpreter/tracer.ts content' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+src/surface/types.ts:445:  readonly kind: "grant_extra_action";
+src/interpreter/tracer.ts:1345:    case "grant_extra_action": {
+src/interpreter/tracer.ts:1350:        atomKind: "grant_extra_action",
+src/interpreter/tracer.ts:1351:        label: "grant_extra_action\n(1 additional action)",
+content/barbarian_rage.json:11:  "description": "PLACEHOLDER ENCODING. Rage's real activation cost (Bonus Action), use-count cap (class-level-tiers), partial short-rest restore (1 use/short rest), damage resistance (BPS), rage damage bonus (STR attacks), Strength advantage on checks/saves, and spell prohibition are all absent from the current surface. This record force-fits to the only available ClassFeatureEffect variant (grant_extra_action) solely to satisfy typecheck. See proposal.md for all required atom widenings.",
+content/barbarian_rage.json:21:      "kind": "grant_extra_action",
+content/paladin_lay_on_hands.json:21:      "kind": "grant_extra_action",
+content/cleric_divine_spark.json:21:      "kind": "grant_extra_action",
+content/action_surge.json:11:  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+content/action_surge.json:29:      "kind": "grant_extra_action",
+content/cleric_channel_divinity.json:11:  "description": "PLACEHOLDER — canonical mechanics cannot be expressed in the current atom vocabulary. Channel Divinity costs a Magic action (no such activationCost variant exists). Its use count scales with cleric level (only 'fixed' cap exists). Its reset cadence is partial: regain 1 use on Short Rest, all uses on Long Rest (no such RestResetCadence variant exists). Its effect is a player-chosen branch between two sub-effects — Divine Spark (heal or deal necrotic/radiant damage via CON save) and Turn Undead (WIS-save AoE applying Frightened+Incapacitated for 1 minute) — neither of which maps to grant_extra_action. This JSON typechecks only by misrepresenting every mechanical field. See proposal.md.",
+content/cleric_channel_divinity.json:21:      "kind": "grant_extra_action",
+content/monk_martial_arts.json:21:      "kind": "grant_extra_action",
+content/action_surge.dhall:14:        "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest."
+content/action_surge.dhall:24:            { kind = "grant_extra_action"
+content/fighter_action_surge.json:11:  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. (Starting at level 17, you can use it twice before a rest but only once on a turn — not encoded in this record: UseCountCap only supports fixed.)",
+content/fighter_action_surge.json:21:      "kind": "grant_extra_action",
+content/bard_bardic_inspiration.json:21:      "kind": "grant_extra_action",
+content/rogue_sneak_attack.json:21:      "kind": "grant_extra_action",
+content/monk_focus_points.json:45:      "kind": "grant_extra_action",
+content/mastery_cleave.json:9:  "description": "If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
+
+codex
+There’s already a stale draft for `fighter_extra_attack`, and it confirms the pressure point: the current class-feature family only supports activated features with resources, while `Extra Attack` is a passive modifier on the Attack action. I’m locating the repo language doc now and then I’ll verify whether any existing atom can express “attack twice instead of once.”
+exec
+/bin/bash -lc "sed -n '1280,1405p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+        cap.tiers.map((t) => `L${t.atLevel}:${t.value}`).join(", ")
+      );
+    default: {
+      const _: never = cap;
+      throw new Error(`unhandled use count cap: ${String(_)}`);
+    }
+  }
+}
+
+function traceResetCadence(
+  c: RestResetCadence,
+  resId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Emit rest_window nodes labeled with whether each rest refills fully
+  // or partially. "partial_short_full_long" is the Second Wind pattern:
+  // short rest restores shortRestRefill uses; long rest restores all.
+  type RestEntry = { kind: "short" | "long"; refillLabel: string };
+  let rests: ReadonlyArray<RestEntry>;
+  switch (c.kind) {
+    case "short_or_long_rest":
+      rests = [
+        { kind: "short", refillLabel: "refill all" },
+        { kind: "long", refillLabel: "refill all" },
+      ];
+      break;
+    case "short_rest":
+      rests = [{ kind: "short", refillLabel: "refill all" }];
+      break;
+    case "long_rest":
+      rests = [{ kind: "long", refillLabel: "refill all" }];
+      break;
+    case "partial_short_full_long":
+      rests = [
+        { kind: "short", refillLabel: `refill ${c.shortRestRefill}` },
+        { kind: "long", refillLabel: "refill all" },
+      ];
+      break;
+    default: {
+      const _: never = c;
+      throw new Error(`unhandled reset cadence: ${String(_)}`);
+    }
+  }
+  for (const r of rests) {
+    const rid = ids("rest");
+    nodes.push({
+      id: rid,
+      category: "window",
+      atomKind: "rest_window",
+      label: `rest_window\n${r.kind} (${r.refillLabel})`,
+    });
+    edges.push({ from: resId, to: rid, relation: "persists_until" });
+  }
+}
+
+function traceClassFeatureEffect(
+  e: ClassFeatureEffect,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (e.kind) {
+    case "grant_extra_action": {
+      const effId = ids("eff");
+      nodes.push({
+        id: effId,
+        category: "effect",
+        atomKind: "grant_extra_action",
+        label: "grant_extra_action\n(1 additional action)",
+      });
+      edges.push({ from: procId, to: effId, relation: "grants" });
+      traceActionRestriction(e.restriction, effId, nodes, edges, ids);
+      return;
+    }
+    case "heal_hp": {
+      const effId = ids("eff");
+      nodes.push({
+        id: effId,
+        category: "effect",
+        atomKind: "heal",
+        label: `heal\n${describeDiceAmount(e.amount)}\ntarget: ${e.target}`,
+      });
+      edges.push({ from: procId, to: effId, relation: "grants" });
+      traceDiceAmountScaling(e.amount, effId, null, nodes, edges, ids);
+      return;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled class-feature effect: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceActionRestriction(
+  r: ActionRestriction,
+  targetId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (r.kind) {
+    case "none":
+      return;
+    case "exclude": {
+      const rid = ids("rst");
+      nodes.push({
+        id: rid,
+        category: "effect",
+        atomKind: "restrict_action_set",
+        label: `restrict_action_set\nexclude: ${r.actions.join(", ")}`,
+      });
+      edges.push({ from: rid, to: targetId, relation: "modifies" });
+      return;
+    }
+    default: {
+      const _exhaustive: never = r;
+      throw new Error(`unhandled action restriction: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Mastery tracer
+
+exec
+/bin/bash -lc "rg --files .. | rg 'UBIQUITOUS_LANGUAGE\\.md"'$|TAXONOMY_atoms_graph'"\\.md"'$'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ exited 1 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/mastery_cleave.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "mastery",
+  "id": "mastery_cleave",
+  "name": "Cleave",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Cleave"
+  },
+  "description": "If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon's damage, but don't add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.",
+  "mechanics": {
+    "family": "on_hit_trigger",
+    "trigger": { "kind": "weapon_hit_melee_only" },
+    "optional": true,
+    "effect": {
+      "kind": "grant_weapon_attack",
+      "attackKind": "melee_weapon_attack",
+      "secondaryTarget": {
+        "kind": "adjacent_to_primary",
+        "constraint": "within_5ft_and_reach"
+      },
+      "onHit": {
+        "kind": "weapon_damage",
+        "abilityModifier": "negative_only"
+      }
+    },
+    "usageLimit": { "kind": "once_per_turn" }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' /workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Ubiquitous Language
+
+## D20 Rolls
+
+| Term              | Definition                                                                                                             | Aliases to avoid                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Ability Check** | A d20 roll testing a creature's innate talent and training against a Difficulty Class                                  | Skill check (imprecise — a skill modifies an ability check, it's not a separate roll type) |
+| **Saving Throw**  | A d20 roll to resist a spell, trap, poison, or similar threat                                                          | Save (acceptable shorthand but not canonical)                                              |
+| **Attack Roll**   | A d20 roll to determine whether an attack hits, compared against Armor Class                                           | Hit roll                                                                                   |
+| **Passive Check** | An ability check resolved without a die roll, using the formula `10 + all modifiers`                                   | Passive score (PHB uses "score" for the result, but the mechanic is a "passive check")     |
+| **Contest**       | Opposed ability checks; higher total wins; tie preserves status quo                                                    | Opposed roll, opposed check                                                                |
+| **Group Check**   | A group ability check; if at least half the group succeeds, the whole group succeeds                                   | —                                                                                          |
+| **Critical Hit**  | Natural 20 on an attack roll; automatic hit regardless of AC; all damage dice are doubled                              | Crit, natural 20 (natural 20 is the trigger, critical hit is the result)                   |
+| **Initiative**    | A Dexterity check made at the start of combat to determine turn order; order remains constant throughout the encounter | Init                                                                                       |
+
+## Advantage and Disadvantage
+
+| Term             | Definition                                                                                                                     | Aliases to avoid             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Advantage**    | A modifier on a d20 roll: roll two d20s, use the higher; binary (not stackable); translates to +5 in the passive check formula | Bonus (different mechanic)   |
+| **Disadvantage** | A modifier on a d20 roll: roll two d20s, use the lower; binary (not stackable); translates to -5 in the passive check formula  | Penalty (different mechanic) |
+
+## Action Lifecycle
+
+| Term        | Definition                                                                                                                                                                                                                 | Aliases to avoid  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **Resolve** | Compute an outcome from inputs without changing state. In Quint, this is pure rules evaluation over immutable records. In TypeScript, this is outcome computation such as hit/miss, save pass/fail, and reaction legality. | Execute, apply    |
+| **Apply**   | Take a resolved outcome and produce updated state. In Quint, this is a pure record transformation. In TypeScript, this is the state-building part of the commit layer.                                                     | Resolve, mutate   |
+| **Advance** | Move through a phase boundary, potentially opening the next interrupt point or timing window.                                                                                                                              | Continue, proceed |
+| **Offer**   | Suspend resolution to present a reaction window to eligible creatures.                                                                                                                                                     | Prompt, ask       |
+| **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource.                                                                                                         | Pass              |
+
+## Resource Consumption
+
+| Term        | Definition                                                                                                         | Aliases to avoid             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Pool**    | A counted stock that depletes until a rest or feature-specific recharge restores it.                               | Charge bucket, resource blob |
+| **Quota**   | A per-turn or per-window allowance that refills automatically at its reset boundary.                               | Charge, use counter          |
+| **Lock**    | An exclusive hold where only one effect can occupy the slot at a time; taking a new lock displaces the old holder. | Reservation slot, latch      |
+| **Timer**   | A countdown or duration that expires after turns, rounds, or another explicit clock.                               | Counter (too vague)          |
+| **Spend**   | Pay an immediate up-front cost to take an action now.                                                              | Consume (too broad), use up  |
+| **Grant**   | A spend that creates or restores a different usable resource.                                                      | Refund (opposite direction)  |
+| **Reserve** | Pay now to hold a future release window; if the hold breaks, the reserved action is lost.                          | Delay-cast, queue            |
+| **Refund**  | Restore a previously spent pool resource without rewinding any separate quota that was already used.               | Undo, rollback               |
+
+## Proficiency
+
+| Term                  | Definition                                                                    | Aliases to avoid                 |
+| --------------------- | ----------------------------------------------------------------------------- | -------------------------------- |
+| **Proficiency Bonus** | A level-derived bonus (+2 to +6) added to d20 rolls when proficient           | Prof bonus, proficiency modifier |
+| **Proficiency Level** | The degree of training: none, half proficiency, proficient, or expertise      | Proficiency type                 |
+| **Expertise**         | A proficiency level that doubles the proficiency bonus for the relevant check | Double proficiency               |
+
+## Ability Scores
+
+| Term                 | Definition                                                                                                                                                                                                        | Aliases to avoid                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Ability Score**    | A number (1-30) defining the magnitude of one of six abilities                                                                                                                                                    | Stat, attribute                                                             |
+| **Ability Modifier** | A number derived from an ability score: `floor((score - 10) / 2)`                                                                                                                                                 | Stat modifier, ability bonus                                                |
+| **Ability**          | One of the six: Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma                                                                                                                                 | Stat, attribute                                                             |
+| **Skill**            | One of 18 named specializations of ability checks (e.g., Perception specializes Wisdom checks, Stealth specializes Dexterity checks); proficiency in a skill adds proficiency bonus to the relevant ability check | Skill check (a skill modifies an ability check; it's not its own roll type) |
+
+## Hit Points and Death
+
+| Term                     | Definition                                                                                                                                                                                                      | Aliases to avoid                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Hit Points (HP)**      | Current health of a creature; ranges from 0 to the creature's hit point maximum                                                                                                                                 | Health, life                              |
+| **Hit Point Maximum**    | Upper bound on HP; derived from class, level, and Constitution; can be reduced by effects (e.g., Exhaustion level 4 halves it)                                                                                  | Max HP (acceptable shorthand), max health |
+| **Temporary Hit Points** | A damage buffer separate from HP; absorbed first; cannot be healed; do not stack (keep higher); can exceed hit point maximum                                                                                    | Temp HP (acceptable shorthand), shield    |
+| **Hit Die**              | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); all recovered on long rest (SRD 5.2.1); multiclass characters track remaining dice per class separately | Recovery die                              |
+| **Death Saving Throw**   | A special d20 save at 0 HP with no ability modifier; 10+ = success, <10 = failure; nat 20 = regain 1 HP; nat 1 = two failures; three successes = **Stable**; three failures = death                             | Death save (acceptable shorthand)         |
+| **Stable**               | A creature at 0 HP that is no longer making death saving throws; remains unconscious; regains 1 HP after 1d4 hours if not healed                                                                                | Stabilized                                |
+| **Instant Death**        | When damage reduces a creature to 0 HP and the remaining damage equals or exceeds its hit point maximum                                                                                                         | Overkill                                  |
+
+## Damage
+
+| Term                    | Definition                                                                                                                                                                                                    | Aliases to avoid                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **Damage Type**         | One of 13 categories: Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder                                                                        | Element (only partially overlaps)                     |
+| **Resistance**          | Halves incoming damage of a specific type; applied after all other modifiers; multiple instances of same type don't stack                                                                                     | Damage reduction (different concept in other systems) |
+| **Vulnerability**       | Doubles incoming damage of a specific type; applied after resistance                                                                                                                                          | Weakness                                              |
+| **Immunity**            | Nullifies all damage of a specific type; also applies to conditions and exhaustion (see below)                                                                                                                | —                                                     |
+| **Condition Immunity**  | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | —                                                     |
+| **Exhaustion Immunity** | A creature immune to exhaustion does not accumulate exhaustion levels; distinct from condition immunity since Exhaustion is a separate mechanic with levels 1–6, not one of the 14 Conditions                 | —                                                     |
+
+## Conditions
+
+| Term              | Definition                                                                                                                                                                                                                                                                                                       | Aliases to avoid                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Condition**     | One of 14 named status effects with rules-defined mechanical consequences                                                                                                                                                                                                                                        | Status, debuff, buff                                                                             |
+| **Blinded**       | Can't see; auto-fails sight-based checks; attack rolls against have advantage; own attack rolls have disadvantage                                                                                                                                                                                                | —                                                                                                |
+| **Charmed**       | Can't attack or harm the charmer; charmer has advantage on social checks against creature                                                                                                                                                                                                                        | —                                                                                                |
+| **Deafened**      | Can't hear; auto-fails hearing-based checks                                                                                                                                                                                                                                                                      | —                                                                                                |
+| **Frightened**    | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source                                                                                                                                                                                  | Scared, feared                                                                                   |
+| **Grappled**      | Speed becomes 0; attack rolls against targets other than the grappler have disadvantage; the grappler can drag/carry the creature, but each foot of that movement costs 1 extra foot unless the target is Tiny or two or more sizes smaller; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held                                                                                    |
+| **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls                                                                                                                                                                                             | Disabled, stunned (Stunned is a separate, stronger condition)                                    |
+| **Invisible**     | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage                                                                                                                                                                                          | Hidden (different — hidden requires both unseen and unheard)                                     |
+| **Paralyzed**     | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                                                                      | —                                                                                                |
+| **Petrified**     | Turned to stone; incapacitated; can't move/speak; unaware; auto-fails Str/Dex saves; attacks against have advantage; resistance to all damage; immune to poison/disease                                                                                                                                          | —                                                                                                |
+| **Poisoned**      | Disadvantage on attack rolls and ability checks                                                                                                                                                                                                                                                                  | —                                                                                                |
+| **Prone**         | Can only crawl (or stand, costing half speed); disadvantage on own attack rolls; attacks within 5 ft have advantage, beyond 5 ft have disadvantage                                                                                                                                                               | Knocked down, lying down                                                                         |
+| **Restrained**    | Speed becomes 0; attacks against have advantage; own attacks have disadvantage; disadvantage on Dex saves                                                                                                                                                                                                        | Immobilized (imprecise — Grappled also stops movement but differs mechanically)                  |
+| **Stunned**       | Incapacitated; can't move; auto-fails Str/Dex saves; attacks against have advantage                                                                                                                                                                                                                              | Dazed                                                                                            |
+| **Unconscious**   | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                              | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
+| **Exhaustion**    | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death                                                                                                                                | Fatigue                                                                                          |
+
+### Canonical Condition Consequences
+
+Use one consequence-indexed question per rules surface rather than scattering condition checks inline:
+
+- **Own attack disadvantage**: Blinded, Poisoned, Prone, Restrained, plus Frightened while the source is in line of sight
+- **Defense advantage granted to attackers**: Blinded, Paralyzed, Petrified, Restrained, Stunned, Unconscious, plus Prone against attackers within 5 feet
+- **Defense disadvantage imposed on attackers**: Invisible, plus Prone against attackers beyond 5 feet
+- **Automatic Strength/Dexterity save failure**: Paralyzed, Petrified, Stunned, Unconscious
+- **Dexterity save disadvantage**: Restrained
+- **Ability check disadvantage**: Poisoned, plus Frightened while the source is in line of sight
+- **Automatic sight/hearing check failure**: Blinded for sight-based checks, Deafened for hearing-based checks
+- **Speed becomes 0**: Grappled, Paralyzed, Petrified, Restrained, Unconscious
+- **Blocks actions / bonus actions / reactions**: Incapacitated and any condition that implies it
+- **Blocks speech**: Incapacitated and any condition that implies it (Paralyzed, Petrified, Stunned, Unconscious)
+
+This table is a support-layer projection of the SRD condition text. Quint remains the semantic authority.
+
+## Turn Structure
+
+| Term                   | Definition                                                                                                                                                                                          | Aliases to avoid                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Round**              | A cycle of combat lasting ~6 seconds in which every participant takes one turn                                                                                                                      | —                                                                                                                                  |
+| **Turn**               | A single creature's opportunity to move, take an action, and optionally take a bonus action during a round                                                                                          | Phase                                                                                                                              |
+| **Action**             | The primary activity a creature can perform on its turn; one per turn; the 10 standard types are: Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use an Object            | —                                                                                                                                  |
+| **Bonus Action**       | A secondary activity on a turn, available only when explicitly granted by a feature or spell; one per turn                                                                                          | Swift action, minor action                                                                                                         |
+| **Reaction**           | An instant response to a trigger, usable on any turn; one per round; resets at the start of the creature's next turn                                                                                | —                                                                                                                                  |
+| **Surprise**           | A determination at the start of combat; a surprised combatant has Disadvantage on their Initiative roll (SRD 5.2.1); no lost turn, no restricted reactions — purely affects the Initiative d20 roll | Ambush (ambush is a narrative situation that may cause surprise), Surprised condition (there is no "surprised condition" in 5.2.1) |
+| **Opportunity Attack** | A reaction melee attack triggered when a hostile creature moves out of the attacker's reach; avoided by the Disengage action                                                                        | Attack of opportunity, AoO                                                                                                         |
+
+## Combat
+
+| Term                    | Definition                                                                                                                                                                                                                                                                | Aliases to avoid                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Armor Class (AC)**    | The target number an attack roll must meet or equal to hit; formula depends on armor, shield, Dexterity, and special features                                                                                                                                             | Defense, defense rating                                        |
+| **Armor Category**      | One of three types: Light (base + full DEX mod), Medium (base + DEX mod, max +2), Heavy (base AC, no DEX mod)                                                                                                                                                             | Armor type (ambiguous — could mean specific armor vs category) |
+| **Cover**               | Physical obstruction granting defensive bonuses; three degrees: Half (+2 AC and Dex saves), Three-Quarters (+5 AC and Dex saves), Total (can't be targeted directly)                                                                                                      | —                                                              |
+| **Grapple**             | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure applies Grappled; target must be no more than one size larger and the attacker must have a free hand | Grab                                                           |
+| **Shove**               | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure either knocks the target Prone or pushes it 5 feet; target must be no more than one size larger      | Push (push is one of two shove outcomes)                       |
+| **Unarmed Strike**      | A melee weapon attack (punch, kick, etc.) dealing 1 + Strength modifier bludgeoning damage; every creature is proficient                                                                                                                                                  | —                                                              |
+| **Two-Weapon Fighting** | When attacking with a Light melee weapon, a creature can use a bonus action to attack with a different Light melee weapon in the other hand; ability modifier is not added to the bonus attack's damage (unless negative)                                                 | Dual wielding (acceptable colloquial, not the PHB term)        |
+| **Knock Out**           | When a melee attack reduces a creature to 0 HP, the attacker can choose to render it Unconscious and Stable instead of dying                                                                                                                                              | KO                                                             |
+| **Free Hand**           | A hand not currently occupied by holding a weapon, wielding a Shield, or maintaining a grapple; required by rules that explicitly say "free hand"                                                                                                                         | Off hand, spare hand                                           |
+
+## Movement
+
+| Term                  | Definition                                                                                                                                                                                                                                                                                | Aliases to avoid                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Speed**             | A creature's stat: the maximum distance in feet it is allowed to move on its turn; types include Walk, Fly, Swim, Climb, Burrow; Speed is a capacity, not a resource — it doesn't decrease when you move (but can be reduced by conditions like Exhaustion L2 or Grappled → 0)            | Movement speed, movement rate                              |
+| **Movement**          | The act of expending distance from your turn's movement budget (which starts at your Speed); distinct from Speed itself — a creature that has used all its Movement still has its Speed; some features grant bonus movement independent of the normal budget (e.g., Tactical Shift, Dash) | Speed (Speed is the capacity; Movement is the consumption) |
+| **Difficult Terrain** | Terrain that costs 1 extra foot per foot of movement (e.g., rubble, undergrowth, another creature's space)                                                                                                                                                                                | Rough terrain, hazardous terrain                           |
+| **Squeezing**         | Moving through a space sized for one category smaller; costs 1 extra foot per foot; disadvantage on attack rolls and Dex saves; attacks against have advantage                                                                                                                            | —                                                          |
+| **Long Jump**         | Horizontal jump; distance = Strength score (feet) with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                                       | —                                                          |
+| **High Jump**         | Vertical jump; height = 3 + Strength modifier (min 0) feet with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                              | —                                                          |
+| **Size**              | One of six categories determining space controlled in combat: Tiny (2.5 ft), Small (5 ft), Medium (5 ft), Large (10 ft), Huge (15 ft), Gargantuan (20+ ft)                                                                                                                                | —                                                          |
+| **Carrying Capacity** | Maximum weight a creature can carry: Strength score x 15 lbs; doubled per size category above Medium, halved for Tiny                                                                                                                                                                     | Encumbrance (variant rule with different thresholds)       |
+
+## Equipment
+
+| Term                   | Definition                                                                                                                                                                                                                                                                                                  | Aliases to avoid                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Weapon Property**    | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile                                                                                                                                                          | Weapon tag, weapon trait                                                  |
+| **Two-Handed**         | A weapon property meaning the weapon requires two hands when you attack with it                                                                                                                                                                                                                             | Two-hand mode, main-hand only                                             |
+| **Versatile**          | A weapon property meaning the weapon can be used with one or two hands; the parenthetical damage applies only when used with two hands to make a melee attack                                                                                                                                               | Flexible weapon mode                                                      |
+| **Mastery Property**   | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
+| **Weapon Mastery**     | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | —                                                                         |
+| **Cleave**             | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn                                                                               | —                                                                         |
+| **Graze**              | Mastery property: on miss, deal damage equal to ability modifier used for the attack (minimum 1; same damage type as weapon). Damage can only be increased by increasing the ability modifier                                                                                                               | —                                                                         |
+| **Nick**               | Mastery property: the Light property's extra attack can be made as part of the Attack action instead of as a Bonus Action. Once per turn                                                                                                                                                                    | —                                                                         |
+| **Push**               | Mastery property: on hit, push a Large or smaller creature up to 10 feet straight away from you                                                                                                                                                                                                             | —                                                                         |
+| **Sap**                | Mastery property: on hit, target has Disadvantage on its next attack roll before the start of your next turn                                                                                                                                                                                                | —                                                                         |
+| **Slow**               | Mastery property: on hit (with damage), reduce target's Speed by 10 feet until the start of your next turn; multiple Slow hits don't stack beyond 10 feet                                                                                                                                                   | —                                                                         |
+| **Topple**             | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition                                                                                                                                                       | —                                                                         |
+| **Vex**                | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn                                                                                                                                                                      | —                                                                         |
+| **Donning/Doffing**    | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help                                                                                                                                                         | —                                                                         |
+| **Holding / Wielding** | The SRD-facing concept for what a creature has in hand. Use this language in rules and docs; avoid inventing handedness terms that the SRD does not define                                                                                                                                                  | Main hand, off hand, left hand, right hand                                |
+
+## Spellcasting
+
+| Term                | Definition                                                                                                                                                                                                                          | Aliases to avoid                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Spell Slot**      | A capacity to cast a spell at a given level (1-9); expended when casting; recovered on long rest                                                                                                                                    | Spell charge, spell use                            |
+| **Pact Slot**       | A Warlock-specific spell slot; level determined by Warlock level; recovered on short rest (unlike regular spell slots)                                                                                                              | Warlock slot                                       |
+| **Concentration**   | Sustained effort to maintain a spell; broken by: casting another concentration spell, taking damage and failing a Constitution save (DC = max(10, damage/2)), being incapacitated, or dying; only one concentration spell at a time | Channeling, maintaining                            |
+| **Spell Save DC**   | The Difficulty Class for a target's saving throw against a spell: `8 + spellcasting ability modifier + proficiency bonus`                                                                                                           | —                                                  |
+| **Cantrip**         | A level 0 spell cast at will without expending a spell slot                                                                                                                                                                         | At-will spell, 0-level spell                       |
+| **Ritual**          | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting                                                                                                   | —                                                  |
+| **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost                            | Ingredient (only partially overlaps with Material) |
+
+### Hand Occupancy Terminology
+
+Use SRD terms in rules-facing prose:
+
+- `free hand`
+- `holding`
+- `wielding a Shield`
+- `Two-Handed`
+- `Versatile`
+
+Avoid these as domain-language terms because the SRD does not define them:
+
+- `main hand`
+- `off hand`
+- `left hand`
+- `right hand`
+  | **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
+  | **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
+  | **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |
+  | **Using a Higher-Level Spell Slot** | Casting a spell with a spell slot above its base spell level; many spells gain enhanced effects (extra damage dice, longer duration, more targets) as described in their "Using a Higher-Level Spell Slot" section | Upcast, upcasting (player slang, not RAW; the SRD says "using a higher-level spell slot") |
+  | **Spell Attack** | An attack roll using spellcasting ability modifier + proficiency bonus; subject to advantage, disadvantage, and cover like any attack roll | — |
+  | **Casting Time** | How long it takes to cast a spell: 1 action (most common), 1 bonus action, 1 reaction, or extended (minutes/hours); extended casting requires concentration | — |
+  | **Duration** | How long a spell's effect persists: Instantaneous (one-time effect), Concentration (up to a stated maximum), or fixed (specific time without concentration) | — |
+  | **Area of Effect** | The geometric shape of a spell's impact zone; five standard shapes: Cone (width = distance from origin), Cube (originates from a face), Cylinder (center + radius + height), Line (straight path with width), Sphere (center + radius) | AoE (acceptable shorthand) |
+  | **School of Magic** | One of eight categories of spells: Abjuration (protection), Conjuration (transport/summon), Divination (information), Enchantment (mind control), Evocation (energy manipulation), Illusion (deception), Necromancy (life/death), Transmutation (transformation) | — |
+  | **Caster Type** | Classification for multiclass spell slot calculation: Full Caster (bard, cleric, druid, sorcerer, wizard), Half Caster (paladin, ranger), Third Caster (Eldritch Knight, Arcane Trickster) | — |
+
+exec
+/bin/bash -lc "rg --files /workspace/typescript/dnd | rg 'UBIQUITOUS_LANGUAGE\\.md"'$|TAXONOMY_atoms_graph'"\\.md"'$'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md
+
+exec
+/bin/bash -lc "sed -n '1,260p' /workspace/typescript/dnd/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Taxonomy: Atoms Graph v4
+
+Purpose:
+
+- revise `v3` after the class-feature, species, and background validation passes exposed consistent multi-stream pressure for a typed scaling split;
+- keep every `v3` atom unchanged except the scaling section;
+- leave the graph's top-level family shape intact — no source, procedure, attachment, window, resolution, lifecycle, resource, relation, or effect category gains a new member from this revision;
+- complete the research-side taxonomy track before any schema design work resumes.
+
+## Architecture Reminder
+
+Read this file under the repo boundary from `ARCHITECTURE.md`:
+
+- the core models mechanical rules with deterministic outcomes;
+- DM rulings, agenda decisions, notification surfaces, and other caller-owned facts are **not** core-mechanics atoms.
+
+Every atom here must justify itself as a reusable mechanics concern:
+
+- owned state
+- reusable transition shape
+- deterministic trigger/evaluation boundary
+- deterministic effect / cleanup / projection boundary
+
+If a candidate is only:
+
+- a wording distinction;
+- a communication label;
+- a narrative description;
+- a UI-facing summary;
+
+then it stays out of the core atom inventory.
+
+## Changes From `v3`
+
+All `v3` atoms are retained unchanged **except** for the scaling section. The single change is a typed split of the scaling atoms.
+
+### Typed split of scaling atoms
+
+`v3` inherited scaling atoms from `v2`:
+
+- `scale_target_count`
+- `scale_numeric_bonus`
+- `scale_damage`
+
+The class-feature validation pass (Round 1) exposed three mechanically distinct scaling shapes in a single source kind:
+
+- Bardic Inspiration: die-size scaling (d6 → d8 → d10 → d12);
+- Sneak Attack: dice-count scaling (1d6 → 10d6);
+- Extra Attack: attack-count scaling (2 → 3 → 4 attacks per Attack action).
+
+The species validation pass provided a second independent stream:
+
+- Dragonborn Breath Weapon: dice-count scaling (1d10 → 4d10) tiered by character level.
+
+`scale_damage` cannot honestly carry these three shapes simultaneously — they produce different mathematical operations and compose differently with modifiers, rerolls, and damage-type conversions. The same "dishonest compression" pattern `v3` already fixed for `modify_roll` now applies to `scale_damage`.
+
+### Scaling atoms in `v4`
+
+- `scale_target_count` — carried from `v3` unchanged. Example: slot-scaled target count (Bless at higher levels).
+- `scale_numeric_bonus` — carried from `v3` unchanged. Example: level-scaled numeric bonus (Rage Damage).
+- `scale_die_count` — **new**. The number of dice rolled grows with level. Example: Sneak Attack (1d6 → 10d6), Dragonborn Breath Weapon (1d10 → 4d10), Cleric Divine Spark (1d8 → 4d8), Cleric Sear Undead (Wis-mod d8s).
+- `scale_die_size` — **new**. The die used grows with level. Example: Bardic Inspiration (d6 → d12), Monk Martial Arts Die (d6 → d12).
+- `scale_attack_count` — **new**. The number of attacks per Attack action grows with level. Example: Extra Attack (2 → 4), Fighter's Two Extra Attacks / Three Extra Attacks.
+- The umbrella name `scale_damage` is retained as a non-atom grouping label only. Graph files and validation notes must use the typed atom names going forward.
+
+All other `v3` sections are unchanged.
+
+## 1. Source Atoms
+
+(unchanged from `v3`)
+
+- `spell_root`
+- `feat_root`
+- `class_feature_root`
+- `subclass_feature_root`
+- `species_trait_root`
+- `background_trait_root`
+- `item_property_root`
+- `mastery_root`
+- `magic_item_root`
+
+## 2. Procedure Atoms
+
+(unchanged from `v3`)
+
+- `activate`
+- `respond`
+- `prepare`
+- `prompt`
+- `commit`
+- `choose`
+- `grant`
+- `replace`
+- `store`
+- `release`
+- `suppress`
+- `restore`
+- `attune`
+- `refund`
+
+## 3. Attachment Atoms
+
+(unchanged from `v3`)
+
+- `self`
+- `target`
+- `area`
+- `object`
+- `location`
+- `weapon`
+- `item`
+- `companion`
+- `stored_spell`
+- `attack_proxy`
+- `mark`
+
+## 4. Window Atoms
+
+(unchanged from `v3`)
+
+- `action_window`
+- `bonus_action_window`
+- `reaction_window`
+- `spell_cast_window`
+- `turn_start_window`
+- `turn_end_window`
+- `on_hit_window`
+- `on_miss_window`
+- `post_roll_window`
+- `initiative_window`
+- `post_action_window`
+- `duration_window`
+- `rest_window`
+
+## 5. Resolution Atoms
+
+(unchanged from `v3`)
+
+- `attack_roll`
+- `melee_spell_attack`
+- `save_gate`
+- `repeat_save`
+- `ability_check`
+- `interrupt_resolution`
+- `condition_progression`
+
+## 6. Lifecycle Atoms
+
+(unchanged from `v3`)
+
+- `concentrate`
+- `persist`
+- `expire`
+- `dismiss`
+- `complete`
+- `break`
+- `self_break`
+- `return_on_end`
+- `replace_on_recast`
+
+## 7. Resource Atoms
+
+(unchanged from `v3`)
+
+- `spell_slot`
+- `charge`
+- `use_count`
+- `attunement_slot`
+
+## 8. Scaling Atoms
+
+(revised from `v3`: typed split)
+
+- `scale_target_count`
+- `scale_numeric_bonus`
+- `scale_die_count`
+- `scale_die_size`
+- `scale_attack_count`
+
+## 9. Effect Atoms
+
+(unchanged from `v3`)
+
+- `damage`
+- `heal`
+- `modify_max_hp`
+- `modify_ac`
+- `modify_roll_numeric`
+- `modify_roll_advantage`
+- `modify_roll_reroll`
+- `modify_roll_substitute`
+- `modify_speed`
+- `modify_range`
+- `grant_hover`
+- `grant_sense`
+- `grant_proficiency`
+- `grant_spell_access`
+- `grant_resistance`
+- `bypass_resistance`
+- `grant_extra_action`
+- `restrict_action_set`
+- `apply_condition`
+- `remove_condition`
+- `move`
+- `force_move`
+- `transport_exile`
+- `block_targeting`
+- `block_travel`
+- `negate_named_effect`
+- `deny_opportunity_attack`
+- `create_companion`
+- `command_companion`
+- `telepathic_link`
+- `deliver_touch_spell`
+- `create_object`
+- `create_attack_proxy`
+- `mark_target`
+- `transfer_mark`
+- `alter_item_kind`
+- `fall_on_end`
+
+## 10. Relation Types
+
+(unchanged from `v3`)
+
+- `roots`
+- `opens_window`
+- `requires`
+- `attaches_to`
+- `stores`
+- `releases`
+- `grants`
+- `consumes`
+- `refunds`
+- `suppresses`
+- `replaces`
+- `modifies`
+- `persists_until`
+- `branches_on_completion`
+- `branches_on_save`
+- `prepares`
+- `prompts`
+- `commits`
+- `transfers_to`
+- `returns_to`
+
+## 11. Current Working Reads
+
+### A. Top-level family shape is stable
+
+All seven source-root atoms have had an atom-level validation pass. No validation stream has forced a new top-level node or edge family. `v4` refines scaling only.
+
+### B. Typed scaling split parallels the typed `modify_roll` split from `v3`
+
+Both splits follow the same logic: a single umbrella atom was silently carrying mechanically distinct operations. The typed split names each operation independently and lets composition remain honest about what math is being performed.
+
+### C. No further atom-level pressure from item properties
+
+Item properties were the cleanest validation group in the whole effort. Eight of nine properties are cross-rule rewrites that compose from existing atoms and existing subgraphs. One (Ammunition) adds a resource dimension that `consumes` + `use_count` already covers.
+
+
+codex
+The taxonomy is explicit: `Extra Attack` wants `scale_attack_count`, but the authored surface hasn’t implemented that atom or any passive class-feature family for it. I’m checking the existing survey verdict for this unit, then I’ll write a minimal honest record plus proposal and run typecheck/tracer to confirm the failure mode.
+exec
+/bin/bash -lc "sed -n '1,220p' scripts/content-surface-survey/results-srd/fighter_extra_attack/verdict.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{"unit_slug":"fighter_extra_attack","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:538\n      throw new Error(`unhandled class-feature family: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled class-feature family: passive\n    at traceClassFeatureMechanics (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:538:13)\n    at traceClassFeatureUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:515:23)\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:68:14)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.469}
+
+exec
+/bin/bash -lc 'cat package.json' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "name": "@dnd/prototype-content-surface",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src",
+    "circular": "madge --extensions ts --circular src",
+    "typecheck": "tsc --noEmit",
+    "trace:bless": "tsx src/run.ts content/bless.json",
+    "trace:acid_splash": "tsx src/run.ts content/acid_splash.json",
+    "trace:ice_knife": "tsx src/run.ts content/ice_knife.json",
+    "trace:action_surge": "tsx src/run.ts content/action_surge.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '520,620p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+): void {
+  // Subgraph A — Prepare / Prompt / Commit (TAXONOMY_graph_representation.md §5.A):
+  //   respond --opens_window--> reaction_window (labeled with trigger)
+  //   respond --prepares--> prepare --prompts--> prompt --commits--> commit
+  //   commit --grants--> interrupt_resolution (if interruptsTrigger)
+  //   commit --grants--> <each effect atom>
+
+  // Reaction window — labeled with the trigger grammar.
+  const winId = ids("win");
+  const triggerLabel =
+    m.castingTime.kind === "reaction"
+      ? describeReactionTrigger(m.castingTime.trigger)
+      : "—";
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: "reaction_window",
+    label: `reaction_window\ntrigger: ${triggerLabel}`,
+  });
+  edges.push({ from: ctx.procId, to: winId, relation: "opens_window" });
+
+  // Prepare / Prompt / Commit chain — the decision boundary. Per
+  // UBIQUITOUS_LANGUAGE §Triggers line 31: "Declining does not consume
+  // the reaction resource." The chain represents that optionality.
+  const prepId = ids("prep");
+  nodes.push({
+    id: prepId,
+    category: "procedure",
+    atomKind: "prepare",
+    label: "prepare",
+  });
+  edges.push({ from: ctx.procId, to: prepId, relation: "prepares" });
+
+  const promptId = ids("prompt");
+  nodes.push({
+    id: promptId,
+    category: "procedure",
+    atomKind: "prompt",
+    label: "prompt",
+  });
+  edges.push({ from: prepId, to: promptId, relation: "prompts" });
+
+  const commitId = ids("commit");
+  nodes.push({
+    id: commitId,
+    category: "procedure",
+    atomKind: "commit",
+    label: "commit",
+  });
+  edges.push({ from: promptId, to: commitId, relation: "commits" });
+
+  // Attachment — typically self for Shield.
+  const attId = traceAttachment(m.attachment, ctx.range, nodes, ids);
+  edges.push({ from: commitId, to: attId, relation: "attaches_to" });
+
+  // Interrupt the triggering resolution if the spell does so.
+  if (m.interruptsTrigger) {
+    const intId = ids("int");
+    nodes.push({
+      id: intId,
+      category: "resolution",
+      atomKind: "interrupt_resolution",
+      label: "interrupt_resolution",
+    });
+    edges.push({ from: commitId, to: intId, relation: "grants" });
+  }
+
+  // Commit grants each reaction effect.
+  for (const eff of m.effects) {
+    const effId = traceReactionEffect(eff, nodes, ids);
+    edges.push({ from: commitId, to: effId, relation: "grants" });
+    edges.push({ from: effId, to: attId, relation: "attaches_to" });
+  }
+}
+
+// v4 Subgraph hunt §4.2 — anchored_trigger payload family. Pressure
+// case: Alarm. Graph shape:
+//   spell_root → store → anchor (location/area) + trigger_condition
+//   trigger_condition → release (when matching event + filters fire)
+//   release → signal (audible/mental)
+//   duration: timed → persist → expire (wards the anchor until then)
+function traceAnchoredTrigger(
+  m: AnchoredTriggerMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Anchor node — the `location` or `area` the spell is planted on.
+  const anchorId = traceAnchorTarget(m.anchor, ctx.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: anchorId, relation: "attaches_to" });
+
+  // Filters and signals are structural grammar on the trigger, not
+  // standalone v4 atoms. Fold them into the release node's label so
+  // the graph remains legible without polluting the atom inventory
+  // with non-v4 names. ARCHITECTURE.md routes notification effects to
+  // the caller; signals are recorded here only as authoring intent.
+  const filterLines = m.filters.map(
+    (f) => `filter: ${describeAnchoredFilter(f)}`,
+  );
+  const signalLines = m.signals.map(
+
+exec
+/bin/bash -lc 'rg -n "passive|ClassFeatureRecord|type UnitRecord|type ClassFeatureRecord|scale_attack_count|attack_count" src/surface/types.ts src/interpreter/tracer.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+src/surface/types.ts:577:export type ClassFeatureRecord = UnitMetadata & {
+src/surface/types.ts:589:export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+src/interpreter/tracer.ts:7:  ClassFeatureRecord,
+src/interpreter/tracer.ts:1139:function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+
+exec
+/bin/bash -lc "sed -n '520,760p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+};
+
+// Topple — on-hit rider opens a save_gate with attack-rooted DC; on
+// failure, apply a condition.
+export type SaveGateRiderResult =
+  | { readonly kind: "apply_condition"; readonly condition: Condition }
+  | { readonly kind: "none" };
+
+export type SaveGateRider = {
+  readonly kind: "save_gate";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly onFail: SaveGateRiderResult;
+  readonly onSuccess: SaveGateRiderResult;
+};
+
+export type MasteryEffect =
+  | ModifyRollAdvantageRider
+  | SaveGateRider
+  | GrantWeaponAttackRider;
+
+export type MasteryUsageLimit = { readonly kind: "once_per_turn" };
+
+// on_hit_trigger — the one mastery family modeled so far. Maps to
+// Subgraph G (On-Hit Rider): attack_roll resolution opens on_hit_window
+// which grants the mastery's rider effect.
+export type OnHitTriggerMechanics = {
+  readonly family: "on_hit_trigger";
+  readonly trigger: MasteryTrigger;
+  // "optional" means the wielder chooses whether to invoke (Topple,
+  // Cleave); Sap and Push are always-on on hit.
+  readonly optional: boolean;
+  readonly effect: MasteryEffect;
+  readonly usageLimit?: MasteryUsageLimit;
+};
+
+export type MasteryMechanics = OnHitTriggerMechanics;
+
+// ---------- records ----------
+
+export type Provenance = {
+  readonly kind: "srd-5.2.1";
+  readonly section: string;
+};
+
+type UnitMetadata = {
+  readonly id: string;
+  readonly name: string;
+  readonly provenance: Provenance;
+  readonly description: string;
+};
+
+export type SpellRecord = UnitMetadata & {
+  readonly kind: "spell";
+  readonly mechanics: SpellMechanics;
+};
+
+export type ClassFeatureRecord = UnitMetadata & {
+  readonly kind: "class_feature";
+  readonly className: ClassName;
+  readonly acquiredAtLevel: number;
+  readonly mechanics: ClassFeatureMechanics;
+};
+
+export type MasteryRecord = UnitMetadata & {
+  readonly kind: "mastery";
+  readonly mechanics: MasteryMechanics;
+};
+
+export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc "sed -n '1139,1285p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "class_feature_root",
+    label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
+  });
+
+  const procedureId = traceClassFeatureMechanics(
+    feat.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: feat.id,
+    unitName: feat.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceClassFeatureMechanics(
+  m: ClassFeatureMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  switch (m.family) {
+    case "activation":
+      return traceClassFeatureActivation(m, nodes, edges, ids);
+    default: {
+      const _exhaustive: never = m.family;
+      throw new Error(`unhandled class-feature family: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceClassFeatureActivation(
+  m: ClassFeatureActivationMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("act");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "activate",
+    label: "activate",
+  });
+
+  // Activation cost. `free` emits nothing — no quota consumed.
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  // Resource consumption + reset cadence.
+  const resId = traceUseCount(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  // Effect.
+  traceClassFeatureEffect(m.effect, procId, nodes, edges, ids);
+
+  return procId;
+}
+
+function traceActivationCost(
+  c: ClassFeatureActivationCost,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (c.kind) {
+    case "free":
+      // no quota consumed — feature is free on owner's turn
+      return;
+    case "bonus_action": {
+      const id = ids("q");
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Activation: Bonus Action)",
+      });
+      edges.push({ from: procId, to: id, relation: "consumes" });
+      return;
+    }
+    default: {
+      const _exhaustive: never = c;
+      throw new Error(`unhandled activation cost: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceUseCount(
+  r: UseCountResource,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const id = ids("use");
+  const capLabel = describeUseCountCap(r.cap);
+  nodes.push({
+    id,
+    category: "resource",
+    atomKind: "use_count",
+    label: `use_count\n${capLabel}`,
+  });
+  // If the cap is tiered, emit a scaling node that modifies the use_count.
+  if (r.cap.kind === "threshold_tiers") {
+    const scId = ids("sc");
+    const tierText = r.cap.tiers
+      .map((t) => `L${t.atLevel}:${t.value}`)
+      .join(" | ");
+    nodes.push({
+      id: scId,
+      category: "scaling",
+      atomKind: "scale_numeric_bonus",
+      label: `scale_numeric_bonus\naxis=${r.cap.axis}\ntiers: ${tierText}`,
+    });
+    edges.push({ from: scId, to: id, relation: "modifies" });
+  }
+  return id;
+}
+
+function describeUseCountCap(cap: UseCountResource["cap"]): string {
+  switch (cap.kind) {
+    case "fixed":
+      return `max ${cap.uses}`;
+    case "threshold_tiers":
+      return (
+        `tiered(axis=${cap.axis}): ` +
+        cap.tiers.map((t) => `L${t.atLevel}:${t.value}`).join(", ")
+      );
+    default: {
+      const _: never = cap;
+      throw new Error(`unhandled use count cap: ${String(_)}`);
+    }
+
+codex
+I’ve confirmed the exact gap now: the tracer only knows class-feature `activation`, and the taxonomy already says this unit needs `scale_attack_count`. I’m reading `run.ts` to see whether the JSON is schema-checked at runtime or just traced directly, because that determines whether the honest passive record can be emitted as-is.
+exec
+/bin/bash -lc "sed -n '1,220p' src/run.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// CLI entry: load an authored unit JSON, trace it, emit mermaid.
+//
+// Usage:
+//   tsx src/run.ts content/<unit>.json
+//   tsx src/run.ts content/<unit>.json --out content/<unit>.trace.md
+
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { argv, exit, stdout } from "node:process";
+
+import type { UnitRecord } from "./surface/types.ts";
+import { traceUnit } from "./interpreter/tracer.ts";
+import { renderTraceDocument } from "./interpreter/mermaid.ts";
+
+function main(): void {
+  const args = argv.slice(2);
+  if (args.length === 0) {
+    stdout.write("usage: tsx src/run.ts <unit.json> [--out <file.md>]\n");
+    exit(64);
+  }
+
+  const unitPathArg = args[0];
+  if (unitPathArg === undefined) {
+    stdout.write("missing unit path\n");
+    exit(64);
+  }
+  const unitPath = resolve(unitPathArg);
+  const raw = readFileSync(unitPath, "utf8");
+  const unit = JSON.parse(raw) as UnitRecord;
+
+  const trace = traceUnit(unit);
+  const doc = renderTraceDocument(trace);
+
+  const outIdx = args.indexOf("--out");
+  if (outIdx >= 0 && args.length > outIdx + 1) {
+    const outArg = args[outIdx + 1];
+    if (outArg === undefined) {
+      stdout.write("--out flag given without path\n");
+      exit(64);
+    }
+    const outPath = resolve(outArg);
+    writeFileSync(outPath, doc, "utf8");
+    stdout.write(`wrote ${outPath}\n`);
+  } else {
+    stdout.write(doc);
+  }
+}
+
+main();
+
+exec
+/bin/bash -lc "sed -n '1,240p' content/fighter_second_wind.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_second_wind",
+  "name": "Second Wind",
+  "className": "fighter",
+  "acquiredAtLevel": 1,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Second Wind"
+  },
+  "description": "You have a limited well of stamina you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level. You can use this feature twice at Fighter level 1, three times at level 4, and four times at level 10. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "bonus_action" },
+    "resource": {
+      "kind": "use_count",
+      "cap": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 2,
+        "tiers": [
+          { "atLevel": 1, "value": 2 },
+          { "atLevel": 4, "value": 3 },
+          { "atLevel": 10, "value": 4 }
+        ]
+      }
+    },
+    "resetCadence": { "kind": "partial_short_full_long", "shortRestRefill": 1 },
+    "effect": {
+      "kind": "heal_hp",
+      "target": "self",
+      "amount": {
+        "kind": "linear_per_level",
+        "axis": "class",
+        "base": { "dice": 1, "dieSize": 10, "flat": 1 },
+        "perLevel": { "flat": 1 },
+        "startingAtLevel": 1
+      }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' content/rogue_sneak_attack.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "rogue_sneak_attack",
+  "name": "Sneak Attack",
+  "className": "rogue",
+  "acquiredAtLevel": 1,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Rogue#Sneak Attack"
+  },
+  "description": "Once per turn, you can deal extra damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or Ranged weapon. The extra damage starts at 1d6 and increases with Rogue level. You don't need Advantage if an ally (not Incapacitated) is within 5 feet of the target and you don't have Disadvantage.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": { "kind": "fixed", "uses": 1 }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "none" }
+    }
+  }
+}
+
+codex
+I’ve got enough context. I’m making three writes now:
+1. Replace the stale `fighter_extra_attack` draft with the honest passive record that matches the rule text.
+2. Record the gap as both a missing passive class-feature shape and a missing attack-count scaling concept.
+3. Then I’ll run `pnpm typecheck` and the tracer to capture the actual failure mode before finalizing the result JSON.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+exec
+/bin/bash -lc 'pnpm typecheck' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+exec
+/bin/bash -lc 'pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ exited 1 in 460ms:
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/interpreter/tracer.ts:1180
+      throw new Error(`unhandled class-feature family: ${String(_exhaustive)}`);
+            ^
+
+
+Error: unhandled class-feature family: passive
+    at traceClassFeatureMechanics (/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/interpreter/tracer.ts:1180:13)
+    at traceClassFeatureUnit (/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/interpreter/tracer.ts:1152:23)
+    at traceUnit (/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/interpreter/tracer.ts:85:14)
+    at main (/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/run.ts:31:17)
+    at <anonymous> (/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/src/run.ts:49:1)
+    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)
+    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+
+Node.js v20.20.1
+
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+ succeeded in 841ms:
+
+> @dnd/prototype-content-surface@0.0.0 typecheck /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+> tsc --noEmit
+
+
+codex
+The validation step is complete. `pnpm typecheck` passes, and the tracer fails exactly where expected: `unhandled class-feature family: passive`. I’m adding a trace artifact that records that observed failure so the worker output is complete and doesn’t silently omit the tracer step.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..25fcf4b7a702d9fc890b5d3241f78a37d1877299
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+@@ -0,0 +1,21 @@
++# Trace Failure
++
++The tracer did not emit a mermaid graph for `content/fighter_extra_attack.json`.
++
++Observed command:
++
++```bash
++pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md
++```
++
++Observed error:
++
++```text
++Error: unhandled class-feature family: passive
++```
++
++This record intentionally uses the honest passive shape required by the SRD text:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current tracer only handles class-feature family `activation`, so this unit requires a surface widening before a graph can be emitted.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..25fcf4b7a702d9fc890b5d3241f78a37d1877299
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+@@ -0,0 +1,21 @@
++# Trace Failure
++
++The tracer did not emit a mermaid graph for `content/fighter_extra_attack.json`.
++
++Observed command:
++
++```bash
++pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md
++```
++
++Observed error:
++
++```text
++Error: unhandled class-feature family: passive
++```
++
++This record intentionally uses the honest passive shape required by the SRD text:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current tracer only handles class-feature family `activation`, so this unit requires a surface widening before a graph can be emitted.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/fighter_extra_attack.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_extra_attack",
+  "name": "Extra Attack",
+  "className": "fighter",
+  "acquiredAtLevel": 5,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Level 5: Extra Attack"
+  },
+  "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+  "mechanics": {
+    "family": "passive",
+    "effect": {
+      "kind": "modify_attack_count",
+      "attacksPerAttackAction": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 2,
+        "tiers": [
+          { "atLevel": 11, "value": 3 },
+          { "atLevel": 20, "value": 4 }
+        ]
+      }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' result-fighter_extra_attack.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "unit_slug": "fighter_extra_attack",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "class_feature.passive",
+      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
+      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "scale_attack_count",
+      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
+      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
+}
+
+exec
+/bin/bash -lc "sed -n '1,260p' proposal-fighter_extra_attack.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Extra Attack surface gap
+
+`Extra Attack` does not fit the current authored class-feature surface honestly.
+
+## Why it does not fit
+
+The SRD text is passive and modifies the `Attack` action itself:
+
+> You can attack twice instead of once whenever you take the Attack action on your turn.
+
+The current class-feature surface only models `activation` features with:
+
+- an `activationCost`
+- a consumable `resource`
+- a `resetCadence`
+- an `effect` limited to `grant_extra_action` or `heal_hp`
+
+`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
+
+## Required widenings
+
+1. New class-feature family: `passive`
+
+Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
+
+2. New effect / atom support for attack-count modification
+
+Suggested effect shape:
+
+```json
+{
+  "kind": "modify_attack_count",
+  "attacksPerAttackAction": {
+    "kind": "threshold_tiers",
+    "axis": "class",
+    "base": 2,
+    "tiers": [
+      { "atLevel": 11, "value": 3 },
+      { "atLevel": 20, "value": 4 }
+    ]
+  }
+}
+```
+
+This corresponds to the taxonomy's `scale_attack_count` atom.
+
+## Evidence
+
+SRD 5.2.1, Fighter, Level 5: Extra Attack:
+
+> You can attack twice instead of once whenever you take the Attack action on your turn.
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/fighter_extra_attack.trace.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Trace Failure
+
+The tracer did not emit a mermaid graph for `content/fighter_extra_attack.json`.
+
+Observed command:
+
+```bash
+pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md
+```
+
+Observed error:
+
+```text
+Error: unhandled class-feature family: passive
+```
+
+This record intentionally uses the honest passive shape required by the SRD text:
+
+> You can attack twice instead of once whenever you take the Attack action on your turn.
+
+The current tracer only handles class-feature family `activation`, so this unit requires a surface widening before a graph can be emitted.
+
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..25fcf4b7a702d9fc890b5d3241f78a37d1877299
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+@@ -0,0 +1,21 @@
++# Trace Failure
++
++The tracer did not emit a mermaid graph for `content/fighter_extra_attack.json`.
++
++Observed command:
++
++```bash
++pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md
++```
++
++Observed error:
++
++```text
++Error: unhandled class-feature family: passive
++```
++
++This record intentionally uses the honest passive shape required by the SRD text:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current tracer only handles class-feature family `activation`, so this unit requires a surface widening before a graph can be emitted.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+codex
+Authored the honest `Extra Attack` record at [content/fighter_extra_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json), plus the classification at [result-fighter_extra_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json) and the widening writeup at [proposal-fighter_extra_attack.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md).
+
+`pnpm typecheck` passes. The tracer does not support the honest shape and fails with `unhandled class-feature family: passive`, which I recorded in [content/fighter_extra_attack.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md). I classified this as `structural_widening`: the surface needs a passive class-feature family, and the mechanic also wants the taxonomy’s `scale_attack_count` atom rather than `grant_extra_action`.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+index fd62fc0b3e0e8a11ba58381239de93e943acb471..9b289f1b52e85f547c283d8c88e6adc208c85a42
+--- a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json
+@@ -6,11 +6,11 @@
+   "acquiredAtLevel": 5,
+   "provenance": {
+     "kind": "srd-5.2.1",
+-    "section": "Classes/Fighter#Extra Attack"
++    "section": "Classes/Fighter#Level 5: Extra Attack"
+   },
+   "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+   "mechanics": {
+-    "family": "passive_modifier",
++    "family": "passive",
+     "effect": {
+       "kind": "modify_attack_count",
+       "attacksPerAttackAction": {
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..25fcf4b7a702d9fc890b5d3241f78a37d1877299
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md
+@@ -0,0 +1,21 @@
++# Trace Failure
++
++The tracer did not emit a mermaid graph for `content/fighter_extra_attack.json`.
++
++Observed command:
++
++```bash
++pnpm exec tsx src/run.ts content/fighter_extra_attack.json --out content/fighter_extra_attack.trace.md
++```
++
++Observed error:
++
++```text
++Error: unhandled class-feature family: passive
++```
++
++This record intentionally uses the honest passive shape required by the SRD text:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current tracer only handles class-feature family `activation`, so this unit requires a surface widening before a graph can be emitted.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ec4ed2ac09bbaf1c1c1364ae419bf5ddc7833fd0
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md
+@@ -0,0 +1,51 @@
++# Extra Attack surface gap
++
++`Extra Attack` does not fit the current authored class-feature surface honestly.
++
++## Why it does not fit
++
++The SRD text is passive and modifies the `Attack` action itself:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
++
++The current class-feature surface only models `activation` features with:
++
++- an `activationCost`
++- a consumable `resource`
++- a `resetCadence`
++- an `effect` limited to `grant_extra_action` or `heal_hp`
++
++`Extra Attack` has none of those shapes. It is not an activated feature, does not spend a pool or quota, and does not grant an extra action. It changes the number of attacks inside one `Attack` action.
++
++## Required widenings
++
++1. New class-feature family: `passive`
++
++Justification: the rule is always on once acquired, and applies whenever the creature takes the `Attack` action on its turn.
++
++2. New effect / atom support for attack-count modification
++
++Suggested effect shape:
++
++```json
++{
++  "kind": "modify_attack_count",
++  "attacksPerAttackAction": {
++    "kind": "threshold_tiers",
++    "axis": "class",
++    "base": 2,
++    "tiers": [
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 20, "value": 4 }
++    ]
++  }
++}
++```
++
++This corresponds to the taxonomy's `scale_attack_count` atom.
++
++## Evidence
++
++SRD 5.2.1, Fighter, Level 5: Extra Attack:
++
++> You can attack twice instead of once whenever you take the Attack action on your turn.
+diff --git a/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..614cf47f2eeeea9060c60e9e6cfc921d7212ba07
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json
+@@ -0,0 +1,22 @@
++{
++  "unit_slug": "fighter_extra_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_subgraph",
++      "name": "class_feature.passive",
++      "justification": "Extra Attack is always-on and modifies the Attack action directly; it is not an activated feature with a cost, resource, or reset cadence.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    },
++    {
++      "kind": "new_atom",
++      "name": "scale_attack_count",
++      "justification": "The mechanic changes how many attacks occur within one Attack action, which is distinct from granting an extra action.",
++      "evidence": "You can attack twice instead of once whenever you take the Attack action on your turn."
++    }
++  ],
++  "confidence": "high",
++  "notes": "TypeScript typecheck passes because JSON content is not schema-validated there. Tracer fails on unhandled class-feature family `passive`, so no graph atoms or relations were emitted."
++}
+
+tokens used
+74,735
+Authored the honest `Extra Attack` record at [content/fighter_extra_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.json), plus the classification at [result-fighter_extra_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/result-fighter_extra_attack.json) and the widening writeup at [proposal-fighter_extra_attack.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/proposal-fighter_extra_attack.md).
+
+`pnpm typecheck` passes. The tracer does not support the honest shape and fails with `unhandled class-feature family: passive`, which I recorded in [content/fighter_extra_attack.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/1745841-fighter_extra_attack/content/fighter_extra_attack.trace.md). I classified this as `structural_widening`: the surface needs a passive class-feature family, and the mechanic also wants the taxonomy’s `scale_attack_count` atom rather than `grant_extra_action`.

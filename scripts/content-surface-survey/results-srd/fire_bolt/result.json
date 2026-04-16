@@ -1,0 +1,32 @@
+{
+  "unit_slug": "fire_bolt",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "on_hit_window",
+    "scale_die_count",
+    "spell_root",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "ignite_object",
+      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
+      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
+}

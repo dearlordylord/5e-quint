@@ -1,0 +1,28 @@
+{
+  "unit_slug": "feat_boon_of_truesight",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "FeatRecord / feat mechanics family",
+      "justification": "UnitRecord has no 'feat' variant. No FeatRecord type exists in types.ts, and no feat mechanics family is defined. Feats are a distinct source-root atom (feat_root) in v4 taxonomy but have no surface encoding path.",
+      "evidence": "Epic Boon Feat (Prerequisite: Level 19+)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_sense surface type",
+      "justification": "Truesight is a special sense granted permanently by this feat. The v4 atom 'grant_sense' exists in the taxonomy but there is no corresponding surface type in types.ts to carry its parameters (sense kind, range in feet, permanent vs. timed).",
+      "evidence": "Truesight. You have Truesight with a range of 60 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_score_increase surface type",
+      "justification": "The feat grants +1 to a chosen ability score (max 30). The v4 taxonomy explicitly marks 'modify_ability_score as a runtime effect versus as pre-runtime character state' as out-of-scope. A feat record family would need to either include this as a surface type or document it as a deferred mechanic.",
+      "evidence": "Ability Score Increase. Increase one ability score of your choice by 1, to a maximum of 30."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Hard structural block: UnitRecord does not include a 'feat' kind. The tracer's top-level switch handles 'spell' | 'class_feature' | 'mastery' only — any feat JSON would throw at the first exhaustive check. Both of this feat's mechanics (grant_sense for Truesight, modify_ability_score for ASI) also lack surface types, making even a hypothetical partial encoding impossible without lying. The Ability Score Increase rider is common to all Epic Boon feats and would need a shared surface shape once feat support lands."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "detect_thoughts",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_mode_ongoing",
+      "justification": "Detect Thoughts activates one of two effects on cast and allows re-selection each subsequent turn via Magic action. The current ongoing_effect family has a single operation field; there is no mechanism for player-choice between N operations per activation.",
+      "evidence": "You activate one of the effects below. Until the spell ends, you can activate either effect as a Magic action on your later turns."
+    },
+    {
+      "kind": "new_atom",
+      "name": "sense_presence",
+      "justification": "The Sense Thoughts mode grants awareness of nearby thinking creatures — a detection/informational effect. No existing v4 effect atom covers presence-sensing. The current Effect union is DamageEffect | NoneEffect; grant_sense in v4 covers sensory modes (darkvision, etc.) not active proximity detection of creature mental states.",
+      "evidence": "You sense the presence of thoughts within 30 feet of yourself that belong to creatures that know languages or are telepathic."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_information",
+      "justification": "The Read Thoughts mode's save-gate fail branch grants informational content (surface thoughts, then on probe: reasoning/emotions). No v4 effect atom covers information disclosure as a mechanical outcome. The save gate exists but its onFail result must be expressible as a typed Effect — currently only damage or none.",
+      "evidence": "You learn what is most on the target's mind right now. [...] you discern the target's reasoning, emotions, and something that looms large in its mind."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_check_counter (target-initiated)",
+      "justification": "The target can spend their action to make an Intelligence (Arcana) check against the caster's spell save DC to end the spell. This is a target-initiated ability_check resolution that terminates the caster's ongoing concentration effect — no existing resolution atom or relation covers this contested-check termination pattern.",
+      "evidence": "the target can take an action on its turn to make an Intelligence (Arcana) check against your spell save DC, ending the spell on a success."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary structural gap is the two-mode player-choice ongoing family: ongoing_effect supports one operation; Detect Thoughts requires N selectable operations per turn. Secondary gaps are: (1) information/detection as a typed Effect atom — v4 has no grant_information or sense_presence; (2) the probe-deeper nested save gate is compositionally novel but would fit if grant_information existed; (3) the target counter-check is a new resolution pattern (target ability check vs. caster DC terminating an ongoing effect). The material-blocking rule (stone/metal/lead) is DM-adjudicated spatial filtering — legitimately out-of-core."
+}

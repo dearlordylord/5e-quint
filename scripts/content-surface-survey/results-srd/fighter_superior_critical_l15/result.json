@@ -1,0 +1,22 @@
+{
+  "unit_slug": "fighter_superior_critical_l15",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive (ClassFeatureMechanics family)",
+      "justification": "Superior Critical is a permanent always-on modifier with no activation cost, no use-count resource, and no reset cadence. The existing ClassFeatureMechanics only has the 'activation' family, which requires all three. A new 'passive' family is needed for features that silently modify combat resolution without being activated.",
+      "evidence": "Your attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18–20 on the d20."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_crit_threshold",
+      "justification": "The mechanic widens the d20 range that counts as a Critical Hit from 20 to 18–20. No existing v4 effect atom covers this. TAXONOMY_atoms_graph.md §12 notes 'crit_window distinct from on_hit_window' as a deferred residue atom (single-feat pressure from Boon of Irresistible Offense). Superior Critical and Improved Critical (L3) now add two more pressure streams for this atom.",
+      "evidence": "can now score a Critical Hit on a roll of 18–20 on the d20"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Superior Critical is purely passive — it permanently modifies the attack roll critical threshold with no activation, resource, or reset. ClassFeatureMechanics has no passive family. Even if a passive family were added, the effect (modifying the crit range) has no v4 atom. Improved Critical (fighter L3) encodes the same shape at 19–20; both features exert pressure for the same two widenings."
+}

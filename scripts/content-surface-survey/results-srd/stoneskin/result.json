@@ -1,0 +1,16 @@
+{
+  "unit_slug": "stoneskin",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "GrantResistanceOperation",
+      "justification": "Stoneskin grants Resistance to three damage types (Bludgeoning, Piercing, Slashing) as an ongoing concentration effect. OngoingOperation currently only has roll_modifier and damage_on_hit variants. A grant_resistance variant is needed. The v4 atom grant_resistance already exists (Section 9 Effect Atoms), so no new atom is required — only a new surface variant of OngoingOperation.",
+      "evidence": "Until the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family fit is clean: ongoing_effect, target (one, touch), concentration up to 1 hour. All header fields encode without issue. The consumed material component (diamond dust) is representable as a string in components.m. The sole gap is OngoingOperation lacking a grant_resistance variant. No new atom is needed; the widening is purely at the surface type level."
+}

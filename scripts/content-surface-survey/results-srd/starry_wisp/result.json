@@ -1,0 +1,38 @@
+{
+  "unit_slug": "starry_wisp",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "on_hit_window",
+    "scale_die_count",
+    "spell_root",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "On hit, the target emits Dim Light in a 10-foot radius until the end of the caster's next turn. No v4 atom covers a timed light-emission effect applied to a creature as an on-hit consequence. The closest candidates (grant_sense, apply_condition) do not capture light emission from a target creature.",
+      "evidence": "until the end of your next turn, it emits Dim Light in a 10-foot radius"
+    },
+    {
+      "kind": "new_atom",
+      "name": "deny_condition_benefit",
+      "justification": "On hit, the target can't benefit from the Invisible condition until the end of the caster's next turn. This is not removing the condition (remove_condition) nor applying a new one (apply_condition). It suppresses the mechanical benefit of an existing condition without stripping it. No v4 atom represents this operation.",
+      "evidence": "can't benefit from the Invisible condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Partial encoding: attack_roll + radiant damage + cantrip scaling all fit cleanly (same shape as Chill Touch). The two on-hit riders (Dim Light emission, Invisible-benefit denial) are omitted because both require new effect atoms not present in v4. The encoded trace is honest about what it covers. See proposal-starry_wisp.md for widening detail."
+}

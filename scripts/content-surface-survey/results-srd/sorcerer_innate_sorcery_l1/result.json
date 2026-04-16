@@ -1,0 +1,28 @@
+{
+  "unit_slug": "sorcerer_innate_sorcery_l1",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_spell_dc",
+      "justification": "Innate Sorcery raises the caster's spell save DC by 1. The spell save DC is a static numeric threshold (8 + PB + spellcasting modifier), not a roll. modify_roll_numeric applies to dice rolls, not to static DC values. modify_ac is the structural parallel for a static defense threshold; there is no offensive equivalent in v4. A new atom is required.",
+      "evidence": "The spell save DC of your Sorcerer spells increases by 1."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect — modify_roll_advantage variant",
+      "justification": "The v4 atom modify_roll_advantage exists and is used in the mastery tracer (Sap). However ClassFeatureEffect only admits GrantExtraActionEffect | HealHpEffect. A new variant is needed to express advantage on spell attack rolls. Note this also exposes a class-scope filter requirement (Sorcerer spell attacks only, not all attack rolls).",
+      "evidence": "You have Advantage on the attack rolls of Sorcerer spells you cast."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationMechanics — duration field",
+      "justification": "Innate Sorcery grants its benefits for 1 minute after activation. ClassFeatureActivationMechanics has no duration field; all encoded class features so far are instant or permanent. The lifecycle atoms persist and expire exist in v4 but are not wired into the class feature schema or tracer.",
+      "evidence": "you can unleash that magic for 1 minute, during which you gain the following benefits"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Kind (class_feature) and family (activation) exist. activationCost=bonus_action, resource=use_count(fixed:2), resetCadence=long_rest all encode cleanly. Three gaps block encoding: (1) no v4 atom for modifying the spell save DC — the dominant atom_widening gap; (2) ClassFeatureEffect lacks a modify_roll_advantage variant; (3) ClassFeatureActivationMechanics lacks a duration field for the 1-minute window. No Dhall or JSON authored."
+}

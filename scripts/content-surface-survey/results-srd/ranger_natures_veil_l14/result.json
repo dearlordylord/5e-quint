@@ -1,0 +1,28 @@
+{
+  "unit_slug": "ranger_natures_veil_l14",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.ability_modifier",
+      "justification": "Nature's Veil use count is Wisdom modifier (minimum 1). Existing UseCountCap only supports fixed integer or threshold_tiers keyed on class level. An ability-score-derived cap is a distinct shape with no existing representation.",
+      "evidence": "You can use this feature a number of times equal to your Wisdom modifier (minimum of once)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect.apply_condition",
+      "justification": "Nature's Veil grants the Invisible condition to self until end of next turn. ClassFeatureEffect only covers grant_extra_action and heal_hp. An apply_condition variant (target=self, condition, duration) is required. The v4 atom apply_condition exists; only the surface ClassFeatureEffect union is missing it.",
+      "evidence": "you can give yourself the Invisible condition until the end of your next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition.invisible",
+      "justification": "Condition is currently a single-value union ('prone'). The Invisible condition is a standard SRD condition needed here and will recur across many stealth/illusion features.",
+      "evidence": "you can give yourself the Invisible condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family (activation, class_feature), activation cost (bonus_action), and reset cadence (long_rest) all fit cleanly. Three surface variants are missing: (1) ability-modifier-derived UseCountCap, (2) apply_condition in ClassFeatureEffect, (3) 'invisible' in Condition. No atom_widening — apply_condition and use_count are both v4 atoms; only the surface encoding shapes are absent. The timed expiry shape (until end of next turn) would also need representation in a ClassFeatureEffect.apply_condition variant, which is a fourth surface gap but minor given turn_end_window already exists in v4."
+}

@@ -1,0 +1,9 @@
+{
+  "unit_slug": "divination",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The entire mechanical payload of Divination is DM adjudication: the caster asks a question about a specific goal, event, or activity within 7 days, and the DM offers a truthful reply. No deterministic mechanical resolution exists — no attack roll, saving throw, damage, heal, condition, or creature-state change. The secondary mechanic (cumulative 25% failure chance on repeated castings before a Long Rest) is a probabilistic gate before the DM response, but the content of the answer remains caller-owned narrative. Both mechanics are DM-agenda and outside core per ARCHITECTURE.md."
+}

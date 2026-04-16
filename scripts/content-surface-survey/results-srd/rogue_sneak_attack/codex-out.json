@@ -1,0 +1,1757 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d945f-f272-78b2-a2d4-7af26e9be8d1
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Sneak Attack`
+- Slug: `rogue_sneak_attack`
+- Kind: `class_feature`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+### Level 1: Sneak Attack
+
+You know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage's type is the same as the weapon's type.
+
+You don't need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage on the attack roll.
+
+The extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/rogue_sneak_attack.dhall` — the authored source of the unit.
+- `content/rogue_sneak_attack.json` — the runtime artifact consumed by typecheck + tracer. For now this repo does NOT provide a standardized Dhall compiler in the worker environment, so if the unit fits honestly you must write the matching JSON yourself as well.
+- `result-rogue_sneak_attack.json` — your structured self-report (schema below).
+- `proposal-rogue_sneak_attack.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+Read only what you need:
+
+1. `src/surface/types.ts` — always read this first. The current closed types are the ground truth for what JSON shapes are allowed.
+2. `src/interpreter/tracer.ts` — read only the branch(es) relevant to the family you think the unit belongs to, plus `traceUnit` if you need to check supported top-level `kind`s.
+3. Existing reference encodings in `content/` — read only the closest precedent(s). Suggested starting points:
+   - `bless.json` (ongoing effect, concentration)
+   - `acid_splash.json` (cantrip activation with AoE + save)
+   - `ice_knife.json` (multi-phase: attack then save)
+   - `action_surge.json` (class feature with use-count + rest reset)
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — read only if you need to distinguish surface widening from atom widening.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — read only if terminology is ambiguous.
+
+Do NOT broad-search the repo or read unrelated plans/reports unless you are blocked on a specific question.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `triggered_reaction` (spell) — reaction-shaped spell.
+   - `anchored_trigger` (spell) — planted/armed effect released by later events.
+   - `activation` (class feature) — activated class feature; see `action_surge.json`.
+   - `on_hit_trigger` (mastery) — weapon-hit rider.
+2. Decide whether an existing top-level `UnitRecord` kind and mechanics family can encode the unit HONESTLY.
+3. If the answer is **no**, STOP BEFORE AUTHORING A PLACEHOLDER JSON.
+   - Do not force the unit into the “closest” valid record shape.
+   - Do not create knowingly false traces such as “grant_extra_action” for a passive rider.
+   - Write only `result-rogue_sneak_attack.json` and `proposal-rogue_sneak_attack.md`.
+   - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
+4. If the answer is **yes**, author `content/rogue_sneak_attack.dhall` first, then author the mechanically equivalent `content/rogue_sneak_attack.json` as a valid `UnitRecord`. Match field names exactly.
+5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+6. Run `pnpm exec tsx src/run.ts content/rogue_sneak_attack.json --out content/rogue_sneak_attack.trace.md`. Observe output.
+7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
+   - missing top-level kind / family = `structural_widening`
+   - missing variant of existing surface type = `surface_widening`
+   - missing v4 atom / relation = `atom_widening`
+8. Write `result-rogue_sneak_attack.json` with the schema below.
+
+## result-rogue_sneak_attack.json schema
+
+```json
+{
+  "unit_slug": "rogue_sneak_attack",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Be honest about family fit. If the unit does not fit an existing `UnitRecord` kind or mechanics family, do not coerce it into a fake-but-valid JSON.
+- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/rogue_sneak_attack.dhall` or `content/rogue_sneak_attack.json`.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT modify any file outside `content/rogue_sneak_attack.dhall`, `content/rogue_sneak_attack.json`, `result-rogue_sneak_attack.json`, `proposal-rogue_sneak_attack.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Do not default upward to `atom_widening`. Use the narrowest honest classification:
+  - `surface_widening` if a variant of an existing surface shape would solve it
+  - `atom_widening` only if the missing concept is not in v4 taxonomy
+  - `structural_widening` if no honest family/kind exists
+- When the unit mostly fits but has a secondary omitted rider, mention the omission explicitly in `notes`/`proposal.md` rather than pretending the whole unit is clean.
+
+## When done
+
+Your final output must be valid for the path you chose:
+
+If the unit fits honestly:
+
+- `content/rogue_sneak_attack.dhall` — authored source.
+- `content/rogue_sneak_attack.json` — typechecks against `UnitRecord`.
+- `content/rogue_sneak_attack.trace.md` — the tracer's mermaid graph.
+- `result-rogue_sneak_attack.json` — your self-classification.
+- `proposal-rogue_sneak_attack.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+If the unit does NOT fit honestly:
+
+- Do NOT write `content/rogue_sneak_attack.dhall`.
+- Do NOT write `content/rogue_sneak_attack.json`.
+- Do NOT write `content/rogue_sneak_attack.trace.md`.
+- Write `result-rogue_sneak_attack.json`.
+- Write `proposal-rogue_sneak_attack.md`.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m checking the closed surface types and the nearest existing encodings first, then I’ll decide whether `Sneak Attack` fits honestly or forces a widening.
+exec
+/bin/bash -lc "sed -n '1,260p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+
+exec
+/bin/bash -lc "sed -n '1,260p' content/action_surge.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+{
+  "kind": "class_feature",
+  "id": "fighter_action_surge",
+  "name": "Action Surge",
+  "className": "fighter",
+  "acquiredAtLevel": 2,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  },
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 1,
+        "tiers": [
+          { "atLevel": 2, "value": 1 },
+          { "atLevel": 17, "value": 2 }
+        ]
+      }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "exclude", "actions": ["magic"] }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,260p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+// Tracer — interpreter over the authored unit ADT. Emits a dependency
+// graph of atoms + typed relations; does not call the combat runtime.
+
+import type {
+  UnitRecord,
+  SpellRecord,
+  ClassFeatureRecord,
+  MasteryRecord,
+  SpellMechanics,
+  OngoingEffectMechanics,
+  ActivationMechanics,
+  ActivationPhase,
+  CastingTime,
+  Duration,
+  Range,
+  Attachment,
+  Effect,
+  OngoingOperation,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  DiceDelta,
+  SlotScaling,
+  SpellLevel,
+  ClassFeatureMechanics,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationCost,
+  UseCountResource,
+  RestResetCadence,
+  ActionRestriction,
+  ClassFeatureEffect,
+  TriggeredReactionMechanics,
+  ReactionTrigger,
+  ReactionEffect,
+  MarkTransfer,
+  MasteryMechanics,
+  MasteryTrigger,
+  MasteryEffect,
+  RiderExpiry,
+  DcSource,
+  AnchoredTriggerMechanics,
+  AnchorTarget,
+  AnchoredEvent,
+  AnchoredFilter,
+  AnchoredSignal,
+} from "../surface/types.ts";
+
+export type AtomCategory =
+  | "source"
+  | "procedure"
+  | "window"
+  | "attachment"
+  | "resolution"
+  | "lifecycle"
+  | "resource"
+  | "scaling"
+  | "effect";
+
+export type TraceNode = {
+  readonly id: string;
+  readonly category: AtomCategory;
+  readonly atomKind: string;
+  readonly label: string;
+};
+
+export type TraceEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+};
+
+export type Trace = {
+  readonly unitId: string;
+  readonly unitName: string;
+  readonly nodes: ReadonlyArray<TraceNode>;
+  readonly edges: ReadonlyArray<TraceEdge>;
+  readonly atomKinds: ReadonlyArray<string>;
+};
+
+export function traceUnit(unit: UnitRecord): Trace {
+  switch (unit.kind) {
+    case "spell":
+      return traceSpellUnit(unit);
+    case "class_feature":
+      return traceClassFeatureUnit(unit);
+    case "mastery":
+      return traceMasteryUnit(unit);
+    default: {
+      const _exhaustive: never = unit;
+      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Spell tracer
+// ============================================================
+
+type SpellCtx = {
+  readonly procId: string;
+  readonly slotId: string | null;
+  readonly range: Range;
+};
+
+function traceSpellUnit(spell: SpellRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "spell_root",
+    label: `spell_root\n${spell.name}`,
+  });
+
+  const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: spell.id,
+    unitName: spell.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "reaction_quota",
+        label: "reaction_quota\n(Casting Time: Reaction)",
+      });
+      return id;
+    case "minutes":
+      // Long-cast spells (Alarm: 1 minute or Ritual). No 1-action-quota
+      // cost — the caster is locked into the cast for `amount` minutes.
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Casting Time: ${ct.amount} min${
+          ct.ritual ? " / Ritual" : ""
+        })`,
+      });
+      return id;
+    default: {
+      const _exhaustive: never = ct;
+
+codex
+The first pass suggests `class_feature` only supports an activated family. I’m checking the exact class-feature surface and whether the tracer has any passive/on-hit family before I author anything.
+exec
+/bin/bash -lc "sed -n '260,520p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+//
+// Pressure case: Alarm. Future: Glyph of Warding, Contingency. Spell
+// plants a trigger on an anchor; when a matching event occurs (gated
+// by closed filter predicates) the stored spell releases a signal
+// effect.
+
+// Where the trigger is planted. Matches v4 attachment atoms `location`
+// and `area`, kept distinct from Attachment since the choice is
+// mutually exclusive at cast time.
+export type AnchorTarget =
+  | { readonly kind: "location"; readonly description: "door_or_window" }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
+    };
+
+// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// more pressure cases land (step_on, approach_within, see_glyph,
+// named_event_signal).
+export type AnchoredEvent =
+  | { readonly kind: "physical_contact" }
+  | { readonly kind: "enters_area" };
+
+// Closed filter predicates. Alarm uses a creature exemption list
+// ("designate creatures that won't set off the alarm") that is chosen
+// at cast time.
+export type AnchoredFilter = {
+  readonly kind: "creature_exemption_list";
+  readonly chosenAtCast: true;
+};
+
+// Signal emitted on release. Audible and mental are the two Alarm
+// modes; caller is the consumer of the signal (ARCHITECTURE.md keeps
+// narrative notifications out of core, but the signal shape is still
+// closed so the trace has somewhere to point).
+export type AnchoredSignal =
+  | {
+      readonly kind: "audible";
+      readonly sound: string;
+      readonly durationSeconds: number;
+      readonly audibleRadiusFeet: number;
+    }
+  | {
+      readonly kind: "mental";
+      readonly rangeFeet: number;
+      readonly awakensIfAsleep: boolean;
+    };
+
+export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
+  readonly family: "anchored_trigger";
+  readonly anchor: AnchorTarget;
+  readonly events: ReadonlyArray<AnchoredEvent>;
+  readonly filters: ReadonlyArray<AnchoredFilter>;
+  readonly signals: ReadonlyArray<AnchoredSignal>;
+};
+
+export type SpellMechanics =
+  | OngoingEffectMechanics
+  | ActivationMechanics
+  | TriggeredReactionMechanics
+  | AnchoredTriggerMechanics;
+
+// ---------- class-feature atoms ----------
+
+// Activation cost for a class feature. Drives which (if any) quota
+// atom the tracer emits a `consumes` edge to.
+export type ClassFeatureActivationCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "bonus_action" };
+
+// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+// uses scale by class level e.g. Action Surge 1@L2 → 2@L17, Second Wind
+// 2@L1 → 3@L4 → 4@L10, Indomitable 1@L9 → 2@L13 → 3@L17).
+export type UseCountCap =
+  | { readonly kind: "fixed"; readonly uses: number }
+  | ThresholdTiers<number>;
+
+export type UseCountResource = {
+  readonly kind: "use_count";
+  readonly cap: UseCountCap;
+};
+
+// Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
+// refilling the pool.
+export type RestResetCadence =
+  | { readonly kind: "short_or_long_rest" }
+  | { readonly kind: "long_rest" }
+  | { readonly kind: "short_rest" }
+  // SRD "You regain one expended use when you finish a Short Rest, and
+  // you regain all expended uses when you finish a Long Rest." — Second
+  // Wind, Monk Focus partial-refill pattern.
+  | {
+      readonly kind: "partial_short_full_long";
+      readonly shortRestRefill: number;
+    };
+
+export type ActionRestriction =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "exclude";
+      readonly actions: ReadonlyArray<StandardActionKind>;
+    };
+
+export type GrantExtraActionEffect = {
+  readonly kind: "grant_extra_action";
+  readonly restriction: ActionRestriction;
+};
+
+// v4 atom `heal`. Amount can be any DiceAmount shape (fixed / threshold_tiers
+// / linear_per_level) — Second Wind uses linear_per_level with axis=class.
+export type HealHpEffect = {
+  readonly kind: "heal_hp";
+  readonly amount: DiceAmount;
+  readonly target: "self" | "target_creature";
+};
+
+export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+
+// ---------- class-feature payload family ----------
+
+type ClassFeatureMechanicsHeader = {
+  readonly activationCost: ClassFeatureActivationCost;
+  readonly resource: UseCountResource;
+  readonly resetCadence: RestResetCadence;
+};
+
+export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+  readonly family: "activation";
+  readonly effect: ClassFeatureEffect;
+};
+
+export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+
+// ---------- mastery (weapon mastery property) ----------
+
+// SRD 5.2.1 Conditions atlas-relevant to mastery riders. Only Prone is
+// currently used (Topple); widen as more mastery/feat content lands.
+export type Condition = "prone";
+
+// Mastery rider expiry — Sap: "before the start of your next turn" OR
+// when the target uses its next attack roll. Vex-style would be
+// "before the end of your next turn". Closed enum for now.
+export type RiderExpiry =
+  | { readonly kind: "target_uses_or_turn_start" }
+  | { readonly kind: "end_of_next_turn" };
+
+// Trigger for on-hit masteries. Cleave restricts to melee weapon
+// attacks; other masteries (Sap, Topple) accept any weapon hit.
+export type MasteryTrigger =
+  | { readonly kind: "weapon_hit" }
+  | { readonly kind: "weapon_hit_melee_only" };
+
+// Secondary-target selection for Cleave: the nested attack must target
+// a creature within 5 feet of the first and within the attacker's reach.
+export type SecondaryTargetSelection = {
+  readonly kind: "adjacent_to_primary";
+  readonly constraint: "within_5ft_and_reach";
+};
+
+// Nested attack-roll rider granted by Cleave. Ability modifier is only
+// applied to damage if it is negative (per SRD).
+export type GrantWeaponAttackRider = {
+  readonly kind: "grant_weapon_attack";
+  readonly attackKind: "melee_weapon_attack";
+  readonly secondaryTarget: SecondaryTargetSelection;
+  readonly onHit: {
+    readonly kind: "weapon_damage";
+    readonly abilityModifier: "negative_only";
+  };
+};
+
+// Sap — target's next attack roll has disadvantage. Generalized as
+// advantage/disadvantage rider with a count + expiry.
+export type ModifyRollAdvantageRider = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage" | "disadvantage";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly count: number;
+  readonly expiresOn: RiderExpiry;
+};
+
+exec
+/bin/bash -lc "rg -n \"type ClassFeature|family: \\\"activation\\\"|ClassFeatureRecord|MasteryRecord|on_hit_trigger|ClassFeatureMechanics|ClassFeatureEffect|ActivationCost|use_count|grant_extra_action\" src/surface/types.ts src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+src/interpreter/tracer.ts:7:  ClassFeatureRecord,
+src/interpreter/tracer.ts:8:  MasteryRecord,
+src/interpreter/tracer.ts:25:  ClassFeatureMechanics,
+src/interpreter/tracer.ts:27:  ClassFeatureActivationCost,
+src/interpreter/tracer.ts:31:  ClassFeatureEffect,
+src/interpreter/tracer.ts:1139:function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+src/interpreter/tracer.ts:1152:  const procedureId = traceClassFeatureMechanics(
+src/interpreter/tracer.ts:1169:function traceClassFeatureMechanics(
+src/interpreter/tracer.ts:1170:  m: ClassFeatureMechanics,
+src/interpreter/tracer.ts:1200:  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+src/interpreter/tracer.ts:1208:  traceClassFeatureEffect(m.effect, procId, nodes, edges, ids);
+src/interpreter/tracer.ts:1213:function traceActivationCost(
+src/interpreter/tracer.ts:1214:  c: ClassFeatureActivationCost,
+src/interpreter/tracer.ts:1253:    atomKind: "use_count",
+src/interpreter/tracer.ts:1254:    label: `use_count\n${capLabel}`,
+src/interpreter/tracer.ts:1256:  // If the cap is tiered, emit a scaling node that modifies the use_count.
+src/interpreter/tracer.ts:1337:function traceClassFeatureEffect(
+src/interpreter/tracer.ts:1338:  e: ClassFeatureEffect,
+src/interpreter/tracer.ts:1345:    case "grant_extra_action": {
+src/interpreter/tracer.ts:1350:        atomKind: "grant_extra_action",
+src/interpreter/tracer.ts:1351:        label: "grant_extra_action\n(1 additional action)",
+src/interpreter/tracer.ts:1408:function traceMasteryUnit(mastery: MasteryRecord): Trace {
+src/interpreter/tracer.ts:1480:      atomKind: "use_count",
+src/interpreter/tracer.ts:1481:      label: "use_count\nonce per turn",
+src/surface/types.ts:315:  readonly family: "activation";
+src/surface/types.ts:407:export type ClassFeatureActivationCost =
+src/surface/types.ts:411:// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+src/surface/types.ts:419:  readonly kind: "use_count";
+src/surface/types.ts:445:  readonly kind: "grant_extra_action";
+src/surface/types.ts:457:export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+src/surface/types.ts:461:type ClassFeatureMechanicsHeader = {
+src/surface/types.ts:462:  readonly activationCost: ClassFeatureActivationCost;
+src/surface/types.ts:467:export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+src/surface/types.ts:468:  readonly family: "activation";
+src/surface/types.ts:469:  readonly effect: ClassFeatureEffect;
+src/surface/types.ts:472:export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+src/surface/types.ts:543:// on_hit_trigger — the one mastery family modeled so far. Maps to
+src/surface/types.ts:547:  readonly family: "on_hit_trigger";
+src/surface/types.ts:577:export type ClassFeatureRecord = UnitMetadata & {
+src/surface/types.ts:581:  readonly mechanics: ClassFeatureMechanics;
+src/surface/types.ts:584:export type MasteryRecord = UnitMetadata & {
+src/surface/types.ts:589:export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc "sed -n '520,860p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+};
+
+// Topple — on-hit rider opens a save_gate with attack-rooted DC; on
+// failure, apply a condition.
+export type SaveGateRiderResult =
+  | { readonly kind: "apply_condition"; readonly condition: Condition }
+  | { readonly kind: "none" };
+
+export type SaveGateRider = {
+  readonly kind: "save_gate";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly onFail: SaveGateRiderResult;
+  readonly onSuccess: SaveGateRiderResult;
+};
+
+export type MasteryEffect =
+  | ModifyRollAdvantageRider
+  | SaveGateRider
+  | GrantWeaponAttackRider;
+
+export type MasteryUsageLimit = { readonly kind: "once_per_turn" };
+
+// on_hit_trigger — the one mastery family modeled so far. Maps to
+// Subgraph G (On-Hit Rider): attack_roll resolution opens on_hit_window
+// which grants the mastery's rider effect.
+export type OnHitTriggerMechanics = {
+  readonly family: "on_hit_trigger";
+  readonly trigger: MasteryTrigger;
+  // "optional" means the wielder chooses whether to invoke (Topple,
+  // Cleave); Sap and Push are always-on on hit.
+  readonly optional: boolean;
+  readonly effect: MasteryEffect;
+  readonly usageLimit?: MasteryUsageLimit;
+};
+
+export type MasteryMechanics = OnHitTriggerMechanics;
+
+// ---------- records ----------
+
+export type Provenance = {
+  readonly kind: "srd-5.2.1";
+  readonly section: string;
+};
+
+type UnitMetadata = {
+  readonly id: string;
+  readonly name: string;
+  readonly provenance: Provenance;
+  readonly description: string;
+};
+
+export type SpellRecord = UnitMetadata & {
+  readonly kind: "spell";
+  readonly mechanics: SpellMechanics;
+};
+
+export type ClassFeatureRecord = UnitMetadata & {
+  readonly kind: "class_feature";
+  readonly className: ClassName;
+  readonly acquiredAtLevel: number;
+  readonly mechanics: ClassFeatureMechanics;
+};
+
+export type MasteryRecord = UnitMetadata & {
+  readonly kind: "mastery";
+  readonly mechanics: MasteryMechanics;
+};
+
+export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+codex
+`Sneak Attack` is shaping up as a passive class feature with an on-hit rider, not an activation. I’m reading the mastery tracer branch now to see whether the missing piece is just a class-feature family or also missing atoms for the hit conditions and extra damage typing.
+exec
+/bin/bash -lc "sed -n '1408,1545p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+function traceMasteryUnit(mastery: MasteryRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "mastery_root",
+    label: `mastery_root\n${mastery.name}`,
+  });
+
+  const resolutionId = traceMasteryMechanics(
+    mastery.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  edges.push({ from: rootId, to: resolutionId, relation: "roots" });
+
+  return {
+    unitId: mastery.id,
+    unitName: mastery.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceMasteryMechanics(
+  m: MasteryMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Subgraph G — On-Hit Rider. mastery_root roots an attack_roll
+  // resolution; that resolution opens an on_hit_window which grants the
+  // rider effect; the effect attaches to the primary target.
+  const resId = ids("res");
+  nodes.push({
+    id: resId,
+    category: "resolution",
+    atomKind: "attack_roll",
+    label: `attack_roll\n${describeMasteryTrigger(m.trigger)}`,
+  });
+
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: "on_hit_window",
+    label: m.optional ? "on_hit_window\n(wielder choice)" : "on_hit_window",
+  });
+  edges.push({ from: resId, to: winId, relation: "opens_window" });
+
+  const targetId = ids("att");
+  nodes.push({
+    id: targetId,
+    category: "attachment",
+    atomKind: "target",
+    label: "target\n(primary)",
+  });
+  edges.push({ from: resId, to: targetId, relation: "attaches_to" });
+
+  traceMasteryEffect(m.effect, winId, targetId, nodes, edges, ids);
+
+  if (m.usageLimit?.kind === "once_per_turn") {
+    const fenceId = ids("fence");
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+    edges.push({ from: winId, to: fenceId, relation: "consumes" });
+    const turnId = ids("turn");
+    nodes.push({
+      id: turnId,
+      category: "window",
+      atomKind: "turn_start_window",
+      label: "turn_start_window\n(wielder)",
+    });
+    edges.push({ from: fenceId, to: turnId, relation: "persists_until" });
+  }
+
+  return resId;
+}
+
+function describeMasteryTrigger(t: MasteryTrigger): string {
+  switch (t.kind) {
+    case "weapon_hit":
+      return "(any weapon hit)";
+    case "weapon_hit_melee_only":
+      return "(melee weapon hit only)";
+    default: {
+      const _: never = t;
+      throw new Error(`unhandled mastery trigger: ${String(_)}`);
+    }
+  }
+}
+
+function traceMasteryEffect(
+  e: MasteryEffect,
+  winId: string,
+  targetId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (e.kind) {
+    case "modify_roll_advantage": {
+      const effId = ids("eff");
+      nodes.push({
+        id: effId,
+        category: "effect",
+        atomKind: "modify_roll_advantage",
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")} ×${e.count}`,
+      });
+      edges.push({ from: winId, to: effId, relation: "grants" });
+      edges.push({ from: effId, to: targetId, relation: "attaches_to" });
+      traceRiderExpiry(e.expiresOn, effId, nodes, edges, ids);
+      return;
+    }
+    case "save_gate": {
+      const effId = ids("sg");
+      nodes.push({
+        id: effId,
+        category: "resolution",
+        atomKind: "save_gate",
+        label: `save_gate\n${e.ability.toUpperCase()} save\nDC: ${describeDc(e.dc)}`,
+      });
+      edges.push({ from: winId, to: effId, relation: "grants" });
+      edges.push({ from: effId, to: targetId, relation: "attaches_to" });
+      traceSaveGateResult(
+        e.onFail,
+        effId,
+        targetId,
+
+exec
+/bin/bash -lc "sed -n '1,240p' UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ exited 2 in 0ms:
+sed: can't read UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+exec
+/bin/bash -lc "ls content | rg 'topple|sap|cleave|vex|push|mastery|second_wind'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+fighter_second_wind.json
+mastery_cleave.json
+mastery_sap.json
+mastery_topple.json
+
+codex
+The repo-root terminology file isn’t in this worker copy, so I’m proceeding from the closed types and existing encodings. That’s enough to classify the fit honestly here.
+exec
+/bin/bash -lc "sed -n '1,220p' content/mastery_sap.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+{
+  "kind": "mastery",
+  "id": "mastery_sap",
+  "name": "Sap",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Sap"
+  },
+  "description": "If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.",
+  "mechanics": {
+    "family": "on_hit_trigger",
+    "trigger": { "kind": "weapon_hit" },
+    "optional": false,
+    "effect": {
+      "kind": "modify_roll_advantage",
+      "mode": "disadvantage",
+      "on": ["attack_roll"],
+      "count": 1,
+      "expiresOn": { "kind": "target_uses_or_turn_start" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/mastery_topple.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+{
+  "kind": "mastery",
+  "id": "mastery_topple",
+  "name": "Topple",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Topple"
+  },
+  "description": "If you hit a creature with this weapon, you can force the creature to make a Constitution saving throw (DC 8 plus the ability modifier used to make the attack roll and your Proficiency Bonus). On a failed save, the creature has the Prone condition.",
+  "mechanics": {
+    "family": "on_hit_trigger",
+    "trigger": { "kind": "weapon_hit" },
+    "optional": true,
+    "effect": {
+      "kind": "save_gate",
+      "ability": "con",
+      "dc": { "kind": "weapon_attack_dc", "base": 8 },
+      "onFail": { "kind": "apply_condition", "condition": "prone" },
+      "onSuccess": { "kind": "none" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "pwd && rg -n \"TAXONOMY_atoms_graph|damage_same_as|weapon_damage|finesse|advantage|disadvantage|ally within 5 feet|incapaci\" . -g '"'!node_modules'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+./src/surface/types.ts:4:// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+./src/surface/types.ts:507:    readonly kind: "weapon_damage";
+./src/surface/types.ts:512:// Sap — target's next attack roll has disadvantage. Generalized as
+./src/surface/types.ts:513:// advantage/disadvantage rider with a count + expiry.
+./src/surface/types.ts:515:  readonly kind: "modify_roll_advantage";
+./src/surface/types.ts:516:  readonly mode: "advantage" | "disadvantage";
+./src/interpreter/tracer.ts:1519:    case "modify_roll_advantage": {
+./src/interpreter/tracer.ts:1524:        atomKind: "modify_roll_advantage",
+./src/interpreter/tracer.ts:1525:        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")} ×${e.count}`,
+./content/barbarian_rage.json:11:  "description": "PLACEHOLDER ENCODING. Rage's real activation cost (Bonus Action), use-count cap (class-level-tiers), partial short-rest restore (1 use/short rest), damage resistance (BPS), rage damage bonus (STR attacks), Strength advantage on checks/saves, and spell prohibition are all absent from the current surface. This record force-fits to the only available ClassFeatureEffect variant (grant_extra_action) solely to satisfy typecheck. See proposal.md for all required atom widenings.",
+./content/mastery_cleave.json:22:        "kind": "weapon_damage",
+./content/blur.json:9:  "description": "Your body becomes blurred. For the duration, any creature has Disadvantage on attack rolls against you. An attacker is immune to this effect if it perceives you with Blindsight or Truesight.",
+./content/mastery_sap.json:9:  "description": "If you hit a creature with this weapon, that creature has Disadvantage on its next attack roll before the start of your next turn.",
+./content/mastery_sap.json:15:      "kind": "modify_roll_advantage",
+./content/mastery_sap.json:16:      "mode": "disadvantage",
+
+codex
+I have enough context to stop short of authoring JSON. `Sneak Attack` does not fit the current `class_feature` surface honestly: it is a passive, once-per-turn on-hit damage rider with conditional eligibility, while class features only admit activated effects and masteries only admit `mastery` roots. I’m writing the widening proposal and structured result now.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ebcf9fb88682c34830129915ad83f17406f267e
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+@@ -0,0 +1,40 @@
++`Sneak Attack` does not fit the current surface honestly.
++
++Why it fails:
++
++- `class_feature` records only support `mechanics.family = "activation"`.
++- `Sneak Attack` is not an activated feature. Its core mechanic is a passive rider that applies on a qualifying hit.
++- The closest existing family, `on_hit_trigger`, exists only under `mastery`, so forcing `Sneak Attack` into that shape would misstate both the top-level source kind and the available effect grammar.
++
++Required widening:
++
++1. Structural widening: add a passive/on-hit family for `class_feature`.
++   - Suggested shape: a class-feature mechanics variant analogous to mastery `on_hit_trigger`, rooted under `class_feature`.
++   - This is forced by: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll..."
++
++2. Surface widening: add qualifying predicates for Sneak Attack eligibility.
++   - Needs a way to express:
++   - attack uses a Finesse weapon or a Ranged weapon
++   - either Advantage on the attack roll, or an ally within 5 feet of the target that is not Incapacitated
++   - you do not have Disadvantage on the attack roll
++   - This is forced by:
++   - "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon"
++   - "You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage..."
++
++3. Surface widening: add an on-hit damage rider whose damage type is inherited from the weapon hit, not fixed in authored content.
++   - Existing spell `damage` and ongoing `damage_on_hit` require a concrete `DamageType`.
++   - Sneak Attack requires "same as the weapon's type", which is a derived runtime projection.
++   - This is forced by: "The extra damage's type is the same as the weapon's type."
++
++4. Surface widening: allow class-level dice scaling on the rider amount.
++   - The underlying `DiceAmount` type already supports class scaling, but there is no class-feature on-hit damage rider surface that can carry it.
++   - This is forced by: "The extra damage increases as you gain Rogue levels..."
++
++Narrowest honest classification:
++
++- `structural_widening`
++
++Reason:
++
++- The first blocker is missing family fit for `class_feature`.
++- Additional surface widenings are also needed once that family exists.
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1bca76aadb5155ee26d9be2db6ffcf3b7a18dc4
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "rogue_sneak_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger",
++      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
++      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger.qualifying_predicates",
++      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
++      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
++    },
++    {
++      "kind": "new_variant",
++      "name": "damage_type_from_weapon_hit",
++      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
++      "evidence": "The extra damage's type is the same as the weapon's type."
++    }
++  ],
++  "confidence": "high",
++  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ebcf9fb88682c34830129915ad83f17406f267e
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+@@ -0,0 +1,40 @@
++`Sneak Attack` does not fit the current surface honestly.
++
++Why it fails:
++
++- `class_feature` records only support `mechanics.family = "activation"`.
++- `Sneak Attack` is not an activated feature. Its core mechanic is a passive rider that applies on a qualifying hit.
++- The closest existing family, `on_hit_trigger`, exists only under `mastery`, so forcing `Sneak Attack` into that shape would misstate both the top-level source kind and the available effect grammar.
++
++Required widening:
++
++1. Structural widening: add a passive/on-hit family for `class_feature`.
++   - Suggested shape: a class-feature mechanics variant analogous to mastery `on_hit_trigger`, rooted under `class_feature`.
++   - This is forced by: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll..."
++
++2. Surface widening: add qualifying predicates for Sneak Attack eligibility.
++   - Needs a way to express:
++   - attack uses a Finesse weapon or a Ranged weapon
++   - either Advantage on the attack roll, or an ally within 5 feet of the target that is not Incapacitated
++   - you do not have Disadvantage on the attack roll
++   - This is forced by:
++   - "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon"
++   - "You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage..."
++
++3. Surface widening: add an on-hit damage rider whose damage type is inherited from the weapon hit, not fixed in authored content.
++   - Existing spell `damage` and ongoing `damage_on_hit` require a concrete `DamageType`.
++   - Sneak Attack requires "same as the weapon's type", which is a derived runtime projection.
++   - This is forced by: "The extra damage's type is the same as the weapon's type."
++
++4. Surface widening: allow class-level dice scaling on the rider amount.
++   - The underlying `DiceAmount` type already supports class scaling, but there is no class-feature on-hit damage rider surface that can carry it.
++   - This is forced by: "The extra damage increases as you gain Rogue levels..."
++
++Narrowest honest classification:
++
++- `structural_widening`
++
++Reason:
++
++- The first blocker is missing family fit for `class_feature`.
++- Additional surface widenings are also needed once that family exists.
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1bca76aadb5155ee26d9be2db6ffcf3b7a18dc4
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "rogue_sneak_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger",
++      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
++      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger.qualifying_predicates",
++      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
++      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
++    },
++    {
++      "kind": "new_variant",
++      "name": "damage_type_from_weapon_hit",
++      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
++      "evidence": "The extra damage's type is the same as the weapon's type."
++    }
++  ],
++  "confidence": "high",
++  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
++}
+
+codex
+I’ve written the non-fit outputs only. I’m doing a quick validation pass on the result JSON and proposal contents, but I’m not generating authored unit files because that would require a dishonest encoding.
+exec
+/bin/bash -lc 'cat result-rogue_sneak_attack.json' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+{
+  "unit_slug": "rogue_sneak_attack",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "class_feature.on_hit_trigger",
+      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
+      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
+    },
+    {
+      "kind": "new_variant",
+      "name": "class_feature.on_hit_trigger.qualifying_predicates",
+      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
+      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_type_from_weapon_hit",
+      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
+      "evidence": "The extra damage's type is the same as the weapon's type."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' proposal-rogue_sneak_attack.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack
+ succeeded in 0ms:
+`Sneak Attack` does not fit the current surface honestly.
+
+Why it fails:
+
+- `class_feature` records only support `mechanics.family = "activation"`.
+- `Sneak Attack` is not an activated feature. Its core mechanic is a passive rider that applies on a qualifying hit.
+- The closest existing family, `on_hit_trigger`, exists only under `mastery`, so forcing `Sneak Attack` into that shape would misstate both the top-level source kind and the available effect grammar.
+
+Required widening:
+
+1. Structural widening: add a passive/on-hit family for `class_feature`.
+   - Suggested shape: a class-feature mechanics variant analogous to mastery `on_hit_trigger`, rooted under `class_feature`.
+   - This is forced by: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll..."
+
+2. Surface widening: add qualifying predicates for Sneak Attack eligibility.
+   - Needs a way to express:
+   - attack uses a Finesse weapon or a Ranged weapon
+   - either Advantage on the attack roll, or an ally within 5 feet of the target that is not Incapacitated
+   - you do not have Disadvantage on the attack roll
+   - This is forced by:
+   - "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon"
+   - "You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage..."
+
+3. Surface widening: add an on-hit damage rider whose damage type is inherited from the weapon hit, not fixed in authored content.
+   - Existing spell `damage` and ongoing `damage_on_hit` require a concrete `DamageType`.
+   - Sneak Attack requires "same as the weapon's type", which is a derived runtime projection.
+   - This is forced by: "The extra damage's type is the same as the weapon's type."
+
+4. Surface widening: allow class-level dice scaling on the rider amount.
+   - The underlying `DiceAmount` type already supports class scaling, but there is no class-feature on-hit damage rider surface that can carry it.
+   - This is forced by: "The extra damage increases as you gain Rogue levels..."
+
+Narrowest honest classification:
+
+- `structural_widening`
+
+Reason:
+
+- The first blocker is missing family fit for `class_feature`.
+- Additional surface widenings are also needed once that family exists.
+
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ebcf9fb88682c34830129915ad83f17406f267e
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+@@ -0,0 +1,40 @@
++`Sneak Attack` does not fit the current surface honestly.
++
++Why it fails:
++
++- `class_feature` records only support `mechanics.family = "activation"`.
++- `Sneak Attack` is not an activated feature. Its core mechanic is a passive rider that applies on a qualifying hit.
++- The closest existing family, `on_hit_trigger`, exists only under `mastery`, so forcing `Sneak Attack` into that shape would misstate both the top-level source kind and the available effect grammar.
++
++Required widening:
++
++1. Structural widening: add a passive/on-hit family for `class_feature`.
++   - Suggested shape: a class-feature mechanics variant analogous to mastery `on_hit_trigger`, rooted under `class_feature`.
++   - This is forced by: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll..."
++
++2. Surface widening: add qualifying predicates for Sneak Attack eligibility.
++   - Needs a way to express:
++   - attack uses a Finesse weapon or a Ranged weapon
++   - either Advantage on the attack roll, or an ally within 5 feet of the target that is not Incapacitated
++   - you do not have Disadvantage on the attack roll
++   - This is forced by:
++   - "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon"
++   - "You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage..."
++
++3. Surface widening: add an on-hit damage rider whose damage type is inherited from the weapon hit, not fixed in authored content.
++   - Existing spell `damage` and ongoing `damage_on_hit` require a concrete `DamageType`.
++   - Sneak Attack requires "same as the weapon's type", which is a derived runtime projection.
++   - This is forced by: "The extra damage's type is the same as the weapon's type."
++
++4. Surface widening: allow class-level dice scaling on the rider amount.
++   - The underlying `DiceAmount` type already supports class scaling, but there is no class-feature on-hit damage rider surface that can carry it.
++   - This is forced by: "The extra damage increases as you gain Rogue levels..."
++
++Narrowest honest classification:
++
++- `structural_widening`
++
++Reason:
++
++- The first blocker is missing family fit for `class_feature`.
++- Additional surface widenings are also needed once that family exists.
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1bca76aadb5155ee26d9be2db6ffcf3b7a18dc4
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "rogue_sneak_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger",
++      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
++      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger.qualifying_predicates",
++      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
++      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
++    },
++    {
++      "kind": "new_variant",
++      "name": "damage_type_from_weapon_hit",
++      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
++      "evidence": "The extra damage's type is the same as the weapon's type."
++    }
++  ],
++  "confidence": "high",
++  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
++}
+
+codex
+`Sneak Attack` does not fit the current surface honestly, so I did not author `content/rogue_sneak_attack.dhall`, `content/rogue_sneak_attack.json`, or a trace. I classified it as `structural_widening` because `class_feature` only supports `mechanics.family = "activation"`, while Sneak Attack is a passive once-per-turn on-hit rider.
+
+I wrote [result-rogue_sneak_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json) and [proposal-rogue_sneak_attack.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md). The proposal calls out the required gaps: a `class_feature.on_hit_trigger` family, eligibility predicates for the advantage/ally/no-disadvantage gate plus finesse-or-ranged weapon use, and a way to express damage type inherited from the weapon hit. I did not run `pnpm typecheck` or the tracer, because doing so would require a knowingly false placeholder encoding.
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ebcf9fb88682c34830129915ad83f17406f267e
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md
+@@ -0,0 +1,40 @@
++`Sneak Attack` does not fit the current surface honestly.
++
++Why it fails:
++
++- `class_feature` records only support `mechanics.family = "activation"`.
++- `Sneak Attack` is not an activated feature. Its core mechanic is a passive rider that applies on a qualifying hit.
++- The closest existing family, `on_hit_trigger`, exists only under `mastery`, so forcing `Sneak Attack` into that shape would misstate both the top-level source kind and the available effect grammar.
++
++Required widening:
++
++1. Structural widening: add a passive/on-hit family for `class_feature`.
++   - Suggested shape: a class-feature mechanics variant analogous to mastery `on_hit_trigger`, rooted under `class_feature`.
++   - This is forced by: "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll..."
++
++2. Surface widening: add qualifying predicates for Sneak Attack eligibility.
++   - Needs a way to express:
++   - attack uses a Finesse weapon or a Ranged weapon
++   - either Advantage on the attack roll, or an ally within 5 feet of the target that is not Incapacitated
++   - you do not have Disadvantage on the attack roll
++   - This is forced by:
++   - "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon"
++   - "You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage..."
++
++3. Surface widening: add an on-hit damage rider whose damage type is inherited from the weapon hit, not fixed in authored content.
++   - Existing spell `damage` and ongoing `damage_on_hit` require a concrete `DamageType`.
++   - Sneak Attack requires "same as the weapon's type", which is a derived runtime projection.
++   - This is forced by: "The extra damage's type is the same as the weapon's type."
++
++4. Surface widening: allow class-level dice scaling on the rider amount.
++   - The underlying `DiceAmount` type already supports class scaling, but there is no class-feature on-hit damage rider surface that can carry it.
++   - This is forced by: "The extra damage increases as you gain Rogue levels..."
++
++Narrowest honest classification:
++
++- `structural_widening`
++
++Reason:
++
++- The first blocker is missing family fit for `class_feature`.
++- Additional surface widenings are also needed once that family exists.
+diff --git a/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..e1bca76aadb5155ee26d9be2db6ffcf3b7a18dc4
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "rogue_sneak_attack",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger",
++      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
++      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.on_hit_trigger.qualifying_predicates",
++      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
++      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
++    },
++    {
++      "kind": "new_variant",
++      "name": "damage_type_from_weapon_hit",
++      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
++      "evidence": "The extra damage's type is the same as the weapon's type."
++    }
++  ],
++  "confidence": "high",
++  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
++}
+
+tokens used
+53,180
+`Sneak Attack` does not fit the current surface honestly, so I did not author `content/rogue_sneak_attack.dhall`, `content/rogue_sneak_attack.json`, or a trace. I classified it as `structural_widening` because `class_feature` only supports `mechanics.family = "activation"`, while Sneak Attack is a passive once-per-turn on-hit rider.
+
+I wrote [result-rogue_sneak_attack.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/result-rogue_sneak_attack.json) and [proposal-rogue_sneak_attack.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751797-rogue_sneak_attack/proposal-rogue_sneak_attack.md). The proposal calls out the required gaps: a `class_feature.on_hit_trigger` family, eligibility predicates for the advantage/ally/no-disadvantage gate plus finesse-or-ranged weapon use, and a way to express damage type inherited from the weapon hit. I did not run `pnpm typecheck` or the tracer, because doing so would require a knowingly false placeholder encoding.

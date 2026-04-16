@@ -1,0 +1,22 @@
+{
+  "unit_slug": "cure_wounds",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.unconditional",
+      "justification": "Cure Wounds delivers its effect directly on the touched target with no attack roll and no saving throw. The activation family is the right shape (instant, single-phase, action cost, slot-scaled) but every existing ActivationPhase variant requires a resolution gate (attack_roll or save_gate). An unconditional delivery phase is needed for spells that bypass resolution entirely.",
+      "evidence": "\"A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.heal_hp",
+      "justification": "HealHpEffect already exists in ClassFeatureEffect (Second Wind) but is absent from the spell Effect union used by ActivationPhase branches. Cure Wounds's heal is mechanically identical in shape to Second Wind's heal — DiceAmount with linear_per_level slot scaling — so the same type can be reused or promoted to the shared Effect union.",
+      "evidence": "\"A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier. [...] The healing increases by 2d8 for each spell slot level above 1.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits the activation family structurally (instant cast, action cost, level-1 spell slot consumed, touch target, slot scaling). Two surface-level type gaps block honest encoding: (1) no unconditional ActivationPhase variant, (2) heal_hp absent from spell Effect. Both gaps are narrow variants of existing shapes — heal_hp already exists for class features, and unconditional delivery is a degenerate phase with no resolution node. No new v4 atoms are needed: the intended trace would use spell_root, activate, action_quota, spell_slot, target, heal, and scale_die_count with axis=slot."
+}

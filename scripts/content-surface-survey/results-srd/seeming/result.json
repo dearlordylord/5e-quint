@@ -1,0 +1,34 @@
+{
+  "unit_slug": "seeming",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "alter_appearance",
+      "justification": "Seeming's core delivered effect is changing the apparent physical appearance of creatures (bodies and equipment) for 8 hours. No v4 effect atom covers this: it is not apply_condition (not an SRD-defined condition), not damage, not heal, not modify_ac, not modify_roll_*. It is a persistent visual illusion state on a creature.",
+      "evidence": "You give an illusory appearance to each creature of your choice that you can see within range. [...] The spell can change the appearance of the targets' bodies and equipment. You can make each creature seem 1 foot shorter or taller and appear heavier or lighter."
+    },
+    {
+      "kind": "new_variant",
+      "name": "target selection: choose_any_in_range (unbounded)",
+      "justification": "Seeming targets 'each creature of your choice' with no numeric upper bound other than sight/range. The current choose_up_to mode requires a SlotScaling<number> count. A target selection mode with no fixed cap — all willing targets within sight and range — is not representable.",
+      "evidence": "You give an illusory appearance to each creature of your choice that you can see within range."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate with willing bypass (consent filter)",
+      "justification": "The Cha save applies only to unwilling targets; willing targets are affected automatically without a save. The existing save_gate ActivationPhase applies uniformly to all targets in the attachment. A consent-filter variant is needed: skip the save for willing targets, apply it only for unwilling ones.",
+      "evidence": "An unwilling target can make a Charisma saving throw, and if it succeeds, it is unaffected by this spell."
+    },
+    {
+      "kind": "new_atom",
+      "name": "scrutiny_check_window",
+      "justification": "Any third-party creature can take the Study action and make an Investigation check (vs spell save DC) to detect that a target is disguised. This is a post-cast, observer-initiated scrutiny trigger — not a saving throw by the affected creature, not a reaction, not a standard post_action_window. No v4 window or resolution atom covers a 'third party takes specific action to pierce ongoing illusion' pattern.",
+      "evidence": "A creature that takes the Study action to examine a target can make an Intelligence (Investigation) check against your spell save DC. If it succeeds, it becomes aware that the target is disguised."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is the missing effect atom: the core payload of Seeming is persistent illusory appearance change on creature bodies, which has no representation in types.ts or v4 taxonomy. The spell cannot be honestly encoded into any existing family without inventing a false effect. Three secondary gaps (unbounded multi-target selection, willing-bypass save gate, scrutiny check window) compound the widening. No Dhall or JSON authored."
+}

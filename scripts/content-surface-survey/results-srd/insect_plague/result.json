@@ -1,0 +1,16 @@
+{
+  "unit_slug": "insect_plague",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AreaSaveGateOperation",
+      "justification": "Insect Plague's persistent damage is delivered via a save gate that fires when a creature enters the area for the first time on a turn or ends its turn there. OngoingOperation only has roll_modifier and damage_on_hit variants; neither encodes a save gate triggered by area interaction. A new SaveGateOnAreaInteractionOperation variant is needed with: ability, dc, onFail effect, onSuccess effect, and a trigger kind (enters_or_ends_turn). All required v4 atoms (save_gate, area, damage, persist/expire) already exist.",
+      "evidence": "A creature also makes this save when it enters the spell's area for the first time on a turn or ends its turn there. A creature makes this save only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Honest structural fit is ongoing_effect: concentration duration, area attachment (sphere 20-ft radius, point_within_range origin), slot-scaled damage (+1d10 per slot above 5). All v4 atoms needed are present. Only OngoingOperation lacks a save_gate variant. Secondary gap: the 'initial burst' (save fires for all creatures in the area when the swarm first appears) is the same save gate but triggered at cast time rather than on entry/end-of-turn; this could be folded into the same operation with an 'also_on_appear' flag, or expressed as an activation phase followed by an ongoing_effect — but the combined-family composition has no surface support either. Terrain/visibility effects (Lightly Obscured, Difficult Terrain) are caller-owned environmental state per ARCHITECTURE.md and are excluded from the core mechanics encoding."
+}

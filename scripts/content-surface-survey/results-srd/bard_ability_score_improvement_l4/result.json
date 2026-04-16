@@ -1,0 +1,22 @@
+{
+  "unit_slug": "bard_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "level_grant family for ClassFeatureMechanics",
+      "justification": "ASI is not an activated ability. It has no activation cost, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three. A new family (e.g. 'level_grant' or 'passive_grant') is needed to represent capabilities conferred automatically and permanently at a specific class level.",
+      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify. You gain this feature again at Bard levels 8, 12, and 16."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat_choice",
+      "justification": "The mechanic grants a feat from the open feat catalog (specifically the ASI feat, or any qualifying feat). No existing ClassFeatureEffect covers an open-ended feat menu. The closest v4 atoms (grant_proficiency, grant_spell_access) are more specific and do not express a player-chosen feat grant.",
+      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "ASI is a pure character-progression grant with no activation, no resource pool, and no rest-based reset. The 'activation' family of ClassFeatureMechanics assumes a player-invokable feature with cost + resource + cadence — none of which apply here. This structural gap is shared by every class's L4 ASI entry (barbarian, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard). The v4 taxonomy notes 'modify_ability_score as a runtime effect — out-of-scope'; this unit is one level removed from that: the feat is granted at level-up, and the ASI feat (if chosen) subsequently modifies an ability score during character creation/advancement, not during play. Both the missing family and the missing effect atom are genuine gaps."
+}

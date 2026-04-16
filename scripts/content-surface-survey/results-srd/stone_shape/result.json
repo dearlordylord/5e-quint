@@ -1,0 +1,22 @@
+{
+  "unit_slug": "stone_shape",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "alter_object_shape",
+      "justification": "Stone Shape permanently reshapes a stone object into an arbitrary form. The existing Effect union (DamageEffect | NoneEffect) has no variant for object-alteration. The v4 atom inventory includes alter_item_kind and create_object, but neither is exposed as an Effect variant in types.ts. A new Effect variant is needed to represent: 'permanently transform an object of a given material/size constraint into a caster-specified shape, instantaneously.'",
+      "evidence": "You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape you like."
+    },
+    {
+      "kind": "new_variant",
+      "name": "object_attachment",
+      "justification": "Stone Shape targets a stone object, not a creature. The current Attachment variants (self, target, area, mark) are all creature- or point-oriented. An object-targeted attachment variant is needed to represent 'a stone object you touch'.",
+      "evidence": "You touch a stone object of Medium size or smaller..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family (instantaneous, single-phase, action cost) is the right structural fit. The gap is entirely in the Effect union and in the Attachment vocabulary — there is no way to honestly represent 'target a specific object and permanently alter its shape' without new surface variants. The ActivationPhase union (attack_roll | save_gate) is also insufficient since Stone Shape has no resolution gate — the effect is unconditional on a successful touch. This would require either a new ActivationPhase variant (unconditional_effect) or a rethink of how instantaneous non-gated spells are modeled."
+}

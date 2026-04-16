@@ -1,0 +1,2069 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d945e-9a9f-7662-99c4-f78d6ec852f8
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Focus Points`
+- Slug: `monk_focus_points`
+- Kind: `class_feature`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+### Level 2: Monk's Focus
+
+Your focus and martial training allow you to harness a well of extraordinary energy within yourself. This energy is represented by Focus Points. Your Monk level determines the number of points you have, as shown in the Focus Points column of the Monk Features table.
+
+You can expend these points to enhance or fuel certain Monk features. You start knowing three such features: Flurry of Blows, Patient Defense, and Step of the Wind, each of which is detailed below.
+
+When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest, at the end of which you regain all your expended points.
+
+Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus.
+
+**Flurry of Blows.** You can expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action.
+
+**Patient Defense.** You can take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action.
+
+**Step of the Wind.** You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/monk_focus_points.dhall` — the authored source of the unit.
+- `content/monk_focus_points.json` — the runtime artifact consumed by typecheck + tracer. For now this repo does NOT provide a standardized Dhall compiler in the worker environment, so if the unit fits honestly you must write the matching JSON yourself as well.
+- `result-monk_focus_points.json` — your structured self-report (schema below).
+- `proposal-monk_focus_points.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+Read only what you need:
+
+1. `src/surface/types.ts` — always read this first. The current closed types are the ground truth for what JSON shapes are allowed.
+2. `src/interpreter/tracer.ts` — read only the branch(es) relevant to the family you think the unit belongs to, plus `traceUnit` if you need to check supported top-level `kind`s.
+3. Existing reference encodings in `content/` — read only the closest precedent(s). Suggested starting points:
+   - `bless.json` (ongoing effect, concentration)
+   - `acid_splash.json` (cantrip activation with AoE + save)
+   - `ice_knife.json` (multi-phase: attack then save)
+   - `action_surge.json` (class feature with use-count + rest reset)
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — read only if you need to distinguish surface widening from atom widening.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — read only if terminology is ambiguous.
+
+Do NOT broad-search the repo or read unrelated plans/reports unless you are blocked on a specific question.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `triggered_reaction` (spell) — reaction-shaped spell.
+   - `anchored_trigger` (spell) — planted/armed effect released by later events.
+   - `activation` (class feature) — activated class feature; see `action_surge.json`.
+   - `on_hit_trigger` (mastery) — weapon-hit rider.
+2. Decide whether an existing top-level `UnitRecord` kind and mechanics family can encode the unit HONESTLY.
+3. If the answer is **no**, STOP BEFORE AUTHORING A PLACEHOLDER JSON.
+   - Do not force the unit into the “closest” valid record shape.
+   - Do not create knowingly false traces such as “grant_extra_action” for a passive rider.
+   - Write only `result-monk_focus_points.json` and `proposal-monk_focus_points.md`.
+   - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
+4. If the answer is **yes**, author `content/monk_focus_points.dhall` first, then author the mechanically equivalent `content/monk_focus_points.json` as a valid `UnitRecord`. Match field names exactly.
+5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+6. Run `pnpm exec tsx src/run.ts content/monk_focus_points.json --out content/monk_focus_points.trace.md`. Observe output.
+7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
+   - missing top-level kind / family = `structural_widening`
+   - missing variant of existing surface type = `surface_widening`
+   - missing v4 atom / relation = `atom_widening`
+8. Write `result-monk_focus_points.json` with the schema below.
+
+## result-monk_focus_points.json schema
+
+```json
+{
+  "unit_slug": "monk_focus_points",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Be honest about family fit. If the unit does not fit an existing `UnitRecord` kind or mechanics family, do not coerce it into a fake-but-valid JSON.
+- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/monk_focus_points.dhall` or `content/monk_focus_points.json`.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT modify any file outside `content/monk_focus_points.dhall`, `content/monk_focus_points.json`, `result-monk_focus_points.json`, `proposal-monk_focus_points.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Do not default upward to `atom_widening`. Use the narrowest honest classification:
+  - `surface_widening` if a variant of an existing surface shape would solve it
+  - `atom_widening` only if the missing concept is not in v4 taxonomy
+  - `structural_widening` if no honest family/kind exists
+- When the unit mostly fits but has a secondary omitted rider, mention the omission explicitly in `notes`/`proposal.md` rather than pretending the whole unit is clean.
+
+## When done
+
+Your final output must be valid for the path you chose:
+
+If the unit fits honestly:
+
+- `content/monk_focus_points.dhall` — authored source.
+- `content/monk_focus_points.json` — typechecks against `UnitRecord`.
+- `content/monk_focus_points.trace.md` — the tracer's mermaid graph.
+- `result-monk_focus_points.json` — your self-classification.
+- `proposal-monk_focus_points.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+If the unit does NOT fit honestly:
+
+- Do NOT write `content/monk_focus_points.dhall`.
+- Do NOT write `content/monk_focus_points.json`.
+- Do NOT write `content/monk_focus_points.trace.md`.
+- Write `result-monk_focus_points.json`.
+- Write `proposal-monk_focus_points.md`.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m checking the surface types and the closest existing encodings first so I can decide whether `Focus Points` fits honestly or requires a widening.
+exec
+/bin/bash -lc "sed -n '1,260p' content/action_surge.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+exec
+/bin/bash -lc "sed -n '1,260p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+
+ succeeded in 0ms:
+{
+  "kind": "class_feature",
+  "id": "fighter_action_surge",
+  "name": "Action Surge",
+  "className": "fighter",
+  "acquiredAtLevel": 2,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  },
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 1,
+        "tiers": [
+          { "atLevel": 2, "value": 1 },
+          { "atLevel": 17, "value": 2 }
+        ]
+      }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "exclude", "actions": ["magic"] }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,260p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+// Tracer — interpreter over the authored unit ADT. Emits a dependency
+// graph of atoms + typed relations; does not call the combat runtime.
+
+import type {
+  UnitRecord,
+  SpellRecord,
+  ClassFeatureRecord,
+  MasteryRecord,
+  SpellMechanics,
+  OngoingEffectMechanics,
+  ActivationMechanics,
+  ActivationPhase,
+  CastingTime,
+  Duration,
+  Range,
+  Attachment,
+  Effect,
+  OngoingOperation,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  DiceDelta,
+  SlotScaling,
+  SpellLevel,
+  ClassFeatureMechanics,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationCost,
+  UseCountResource,
+  RestResetCadence,
+  ActionRestriction,
+  ClassFeatureEffect,
+  TriggeredReactionMechanics,
+  ReactionTrigger,
+  ReactionEffect,
+  MarkTransfer,
+  MasteryMechanics,
+  MasteryTrigger,
+  MasteryEffect,
+  RiderExpiry,
+  DcSource,
+  AnchoredTriggerMechanics,
+  AnchorTarget,
+  AnchoredEvent,
+  AnchoredFilter,
+  AnchoredSignal,
+} from "../surface/types.ts";
+
+export type AtomCategory =
+  | "source"
+  | "procedure"
+  | "window"
+  | "attachment"
+  | "resolution"
+  | "lifecycle"
+  | "resource"
+  | "scaling"
+  | "effect";
+
+export type TraceNode = {
+  readonly id: string;
+  readonly category: AtomCategory;
+  readonly atomKind: string;
+  readonly label: string;
+};
+
+export type TraceEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+};
+
+export type Trace = {
+  readonly unitId: string;
+  readonly unitName: string;
+  readonly nodes: ReadonlyArray<TraceNode>;
+  readonly edges: ReadonlyArray<TraceEdge>;
+  readonly atomKinds: ReadonlyArray<string>;
+};
+
+export function traceUnit(unit: UnitRecord): Trace {
+  switch (unit.kind) {
+    case "spell":
+      return traceSpellUnit(unit);
+    case "class_feature":
+      return traceClassFeatureUnit(unit);
+    case "mastery":
+      return traceMasteryUnit(unit);
+    default: {
+      const _exhaustive: never = unit;
+      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Spell tracer
+// ============================================================
+
+type SpellCtx = {
+  readonly procId: string;
+  readonly slotId: string | null;
+  readonly range: Range;
+};
+
+function traceSpellUnit(spell: SpellRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "spell_root",
+    label: `spell_root\n${spell.name}`,
+  });
+
+  const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: spell.id,
+    unitName: spell.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "reaction_quota",
+        label: "reaction_quota\n(Casting Time: Reaction)",
+      });
+      return id;
+    case "minutes":
+      // Long-cast spells (Alarm: 1 minute or Ritual). No 1-action-quota
+      // cost — the caster is locked into the cast for `amount` minutes.
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Casting Time: ${ct.amount} min${
+          ct.ritual ? " / Ritual" : ""
+        })`,
+      });
+      return id;
+    default: {
+      const _exhaustive: never = ct;
+
+codex
+I have the top-level kinds and tracer entry points. Next I’m pulling the class-feature activation shapes and the nearest precedent for resource + rest-reset modeling.
+exec
+/bin/bash -lc 'rg -n "ClassFeature|ActivationMechanics|use_count|short_or_long_rest|grant_extra_action|ActivationCost|ActionRestriction" src/surface/types.ts src/interpreter/tracer.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+src/surface/types.ts:314:export type ActivationMechanics = SpellMechanicsHeader & {
+src/surface/types.ts:399:  | ActivationMechanics
+src/surface/types.ts:407:export type ClassFeatureActivationCost =
+src/surface/types.ts:411:// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+src/surface/types.ts:419:  readonly kind: "use_count";
+src/surface/types.ts:426:  | { readonly kind: "short_or_long_rest" }
+src/surface/types.ts:437:export type ActionRestriction =
+src/surface/types.ts:445:  readonly kind: "grant_extra_action";
+src/surface/types.ts:446:  readonly restriction: ActionRestriction;
+src/surface/types.ts:457:export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+src/surface/types.ts:461:type ClassFeatureMechanicsHeader = {
+src/surface/types.ts:462:  readonly activationCost: ClassFeatureActivationCost;
+src/surface/types.ts:467:export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+src/surface/types.ts:469:  readonly effect: ClassFeatureEffect;
+src/surface/types.ts:472:export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+src/surface/types.ts:577:export type ClassFeatureRecord = UnitMetadata & {
+src/surface/types.ts:581:  readonly mechanics: ClassFeatureMechanics;
+src/surface/types.ts:589:export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+src/interpreter/tracer.ts:7:  ClassFeatureRecord,
+src/interpreter/tracer.ts:11:  ActivationMechanics,
+src/interpreter/tracer.ts:25:  ClassFeatureMechanics,
+src/interpreter/tracer.ts:26:  ClassFeatureActivationMechanics,
+src/interpreter/tracer.ts:27:  ClassFeatureActivationCost,
+src/interpreter/tracer.ts:30:  ActionRestriction,
+src/interpreter/tracer.ts:31:  ClassFeatureEffect,
+src/interpreter/tracer.ts:85:      return traceClassFeatureUnit(unit);
+src/interpreter/tracer.ts:755:  m: ActivationMechanics,
+src/interpreter/tracer.ts:1139:function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+src/interpreter/tracer.ts:1152:  const procedureId = traceClassFeatureMechanics(
+src/interpreter/tracer.ts:1169:function traceClassFeatureMechanics(
+src/interpreter/tracer.ts:1170:  m: ClassFeatureMechanics,
+src/interpreter/tracer.ts:1177:      return traceClassFeatureActivation(m, nodes, edges, ids);
+src/interpreter/tracer.ts:1185:function traceClassFeatureActivation(
+src/interpreter/tracer.ts:1186:  m: ClassFeatureActivationMechanics,
+src/interpreter/tracer.ts:1200:  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+src/interpreter/tracer.ts:1208:  traceClassFeatureEffect(m.effect, procId, nodes, edges, ids);
+src/interpreter/tracer.ts:1213:function traceActivationCost(
+src/interpreter/tracer.ts:1214:  c: ClassFeatureActivationCost,
+src/interpreter/tracer.ts:1253:    atomKind: "use_count",
+src/interpreter/tracer.ts:1254:    label: `use_count\n${capLabel}`,
+src/interpreter/tracer.ts:1256:  // If the cap is tiered, emit a scaling node that modifies the use_count.
+src/interpreter/tracer.ts:1302:    case "short_or_long_rest":
+src/interpreter/tracer.ts:1337:function traceClassFeatureEffect(
+src/interpreter/tracer.ts:1338:  e: ClassFeatureEffect,
+src/interpreter/tracer.ts:1345:    case "grant_extra_action": {
+src/interpreter/tracer.ts:1350:        atomKind: "grant_extra_action",
+src/interpreter/tracer.ts:1351:        label: "grant_extra_action\n(1 additional action)",
+src/interpreter/tracer.ts:1354:      traceActionRestriction(e.restriction, effId, nodes, edges, ids);
+src/interpreter/tracer.ts:1376:function traceActionRestriction(
+src/interpreter/tracer.ts:1377:  r: ActionRestriction,
+src/interpreter/tracer.ts:1480:      atomKind: "use_count",
+src/interpreter/tracer.ts:1481:      label: "use_count\nonce per turn",
+
+exec
+/bin/bash -lc "sed -n '260,520p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+//
+// Pressure case: Alarm. Future: Glyph of Warding, Contingency. Spell
+// plants a trigger on an anchor; when a matching event occurs (gated
+// by closed filter predicates) the stored spell releases a signal
+// effect.
+
+// Where the trigger is planted. Matches v4 attachment atoms `location`
+// and `area`, kept distinct from Attachment since the choice is
+// mutually exclusive at cast time.
+export type AnchorTarget =
+  | { readonly kind: "location"; readonly description: "door_or_window" }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
+    };
+
+// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// more pressure cases land (step_on, approach_within, see_glyph,
+// named_event_signal).
+export type AnchoredEvent =
+  | { readonly kind: "physical_contact" }
+  | { readonly kind: "enters_area" };
+
+// Closed filter predicates. Alarm uses a creature exemption list
+// ("designate creatures that won't set off the alarm") that is chosen
+// at cast time.
+export type AnchoredFilter = {
+  readonly kind: "creature_exemption_list";
+  readonly chosenAtCast: true;
+};
+
+// Signal emitted on release. Audible and mental are the two Alarm
+// modes; caller is the consumer of the signal (ARCHITECTURE.md keeps
+// narrative notifications out of core, but the signal shape is still
+// closed so the trace has somewhere to point).
+export type AnchoredSignal =
+  | {
+      readonly kind: "audible";
+      readonly sound: string;
+      readonly durationSeconds: number;
+      readonly audibleRadiusFeet: number;
+    }
+  | {
+      readonly kind: "mental";
+      readonly rangeFeet: number;
+      readonly awakensIfAsleep: boolean;
+    };
+
+export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
+  readonly family: "anchored_trigger";
+  readonly anchor: AnchorTarget;
+  readonly events: ReadonlyArray<AnchoredEvent>;
+  readonly filters: ReadonlyArray<AnchoredFilter>;
+  readonly signals: ReadonlyArray<AnchoredSignal>;
+};
+
+export type SpellMechanics =
+  | OngoingEffectMechanics
+  | ActivationMechanics
+  | TriggeredReactionMechanics
+  | AnchoredTriggerMechanics;
+
+// ---------- class-feature atoms ----------
+
+// Activation cost for a class feature. Drives which (if any) quota
+// atom the tracer emits a `consumes` edge to.
+export type ClassFeatureActivationCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "bonus_action" };
+
+// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+// uses scale by class level e.g. Action Surge 1@L2 → 2@L17, Second Wind
+// 2@L1 → 3@L4 → 4@L10, Indomitable 1@L9 → 2@L13 → 3@L17).
+export type UseCountCap =
+  | { readonly kind: "fixed"; readonly uses: number }
+  | ThresholdTiers<number>;
+
+export type UseCountResource = {
+  readonly kind: "use_count";
+  readonly cap: UseCountCap;
+};
+
+// Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
+// refilling the pool.
+export type RestResetCadence =
+  | { readonly kind: "short_or_long_rest" }
+  | { readonly kind: "long_rest" }
+  | { readonly kind: "short_rest" }
+  // SRD "You regain one expended use when you finish a Short Rest, and
+  // you regain all expended uses when you finish a Long Rest." — Second
+  // Wind, Monk Focus partial-refill pattern.
+  | {
+      readonly kind: "partial_short_full_long";
+      readonly shortRestRefill: number;
+    };
+
+export type ActionRestriction =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "exclude";
+      readonly actions: ReadonlyArray<StandardActionKind>;
+    };
+
+export type GrantExtraActionEffect = {
+  readonly kind: "grant_extra_action";
+  readonly restriction: ActionRestriction;
+};
+
+// v4 atom `heal`. Amount can be any DiceAmount shape (fixed / threshold_tiers
+// / linear_per_level) — Second Wind uses linear_per_level with axis=class.
+export type HealHpEffect = {
+  readonly kind: "heal_hp";
+  readonly amount: DiceAmount;
+  readonly target: "self" | "target_creature";
+};
+
+export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+
+// ---------- class-feature payload family ----------
+
+type ClassFeatureMechanicsHeader = {
+  readonly activationCost: ClassFeatureActivationCost;
+  readonly resource: UseCountResource;
+  readonly resetCadence: RestResetCadence;
+};
+
+export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+  readonly family: "activation";
+  readonly effect: ClassFeatureEffect;
+};
+
+export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+
+// ---------- mastery (weapon mastery property) ----------
+
+// SRD 5.2.1 Conditions atlas-relevant to mastery riders. Only Prone is
+// currently used (Topple); widen as more mastery/feat content lands.
+export type Condition = "prone";
+
+// Mastery rider expiry — Sap: "before the start of your next turn" OR
+// when the target uses its next attack roll. Vex-style would be
+// "before the end of your next turn". Closed enum for now.
+export type RiderExpiry =
+  | { readonly kind: "target_uses_or_turn_start" }
+  | { readonly kind: "end_of_next_turn" };
+
+// Trigger for on-hit masteries. Cleave restricts to melee weapon
+// attacks; other masteries (Sap, Topple) accept any weapon hit.
+export type MasteryTrigger =
+  | { readonly kind: "weapon_hit" }
+  | { readonly kind: "weapon_hit_melee_only" };
+
+// Secondary-target selection for Cleave: the nested attack must target
+// a creature within 5 feet of the first and within the attacker's reach.
+export type SecondaryTargetSelection = {
+  readonly kind: "adjacent_to_primary";
+  readonly constraint: "within_5ft_and_reach";
+};
+
+// Nested attack-roll rider granted by Cleave. Ability modifier is only
+// applied to damage if it is negative (per SRD).
+export type GrantWeaponAttackRider = {
+  readonly kind: "grant_weapon_attack";
+  readonly attackKind: "melee_weapon_attack";
+  readonly secondaryTarget: SecondaryTargetSelection;
+  readonly onHit: {
+    readonly kind: "weapon_damage";
+    readonly abilityModifier: "negative_only";
+  };
+};
+
+// Sap — target's next attack roll has disadvantage. Generalized as
+// advantage/disadvantage rider with a count + expiry.
+export type ModifyRollAdvantageRider = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage" | "disadvantage";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly count: number;
+  readonly expiresOn: RiderExpiry;
+};
+
+exec
+/bin/bash -lc "sed -n '520,860p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+};
+
+// Topple — on-hit rider opens a save_gate with attack-rooted DC; on
+// failure, apply a condition.
+export type SaveGateRiderResult =
+  | { readonly kind: "apply_condition"; readonly condition: Condition }
+  | { readonly kind: "none" };
+
+export type SaveGateRider = {
+  readonly kind: "save_gate";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly onFail: SaveGateRiderResult;
+  readonly onSuccess: SaveGateRiderResult;
+};
+
+export type MasteryEffect =
+  | ModifyRollAdvantageRider
+  | SaveGateRider
+  | GrantWeaponAttackRider;
+
+export type MasteryUsageLimit = { readonly kind: "once_per_turn" };
+
+// on_hit_trigger — the one mastery family modeled so far. Maps to
+// Subgraph G (On-Hit Rider): attack_roll resolution opens on_hit_window
+// which grants the mastery's rider effect.
+export type OnHitTriggerMechanics = {
+  readonly family: "on_hit_trigger";
+  readonly trigger: MasteryTrigger;
+  // "optional" means the wielder chooses whether to invoke (Topple,
+  // Cleave); Sap and Push are always-on on hit.
+  readonly optional: boolean;
+  readonly effect: MasteryEffect;
+  readonly usageLimit?: MasteryUsageLimit;
+};
+
+export type MasteryMechanics = OnHitTriggerMechanics;
+
+// ---------- records ----------
+
+export type Provenance = {
+  readonly kind: "srd-5.2.1";
+  readonly section: string;
+};
+
+type UnitMetadata = {
+  readonly id: string;
+  readonly name: string;
+  readonly provenance: Provenance;
+  readonly description: string;
+};
+
+export type SpellRecord = UnitMetadata & {
+  readonly kind: "spell";
+  readonly mechanics: SpellMechanics;
+};
+
+export type ClassFeatureRecord = UnitMetadata & {
+  readonly kind: "class_feature";
+  readonly className: ClassName;
+  readonly acquiredAtLevel: number;
+  readonly mechanics: ClassFeatureMechanics;
+};
+
+export type MasteryRecord = UnitMetadata & {
+  readonly kind: "mastery";
+  readonly mechanics: MasteryMechanics;
+};
+
+export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc "sed -n '860,1180p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+        ids,
+      );
+      return resId;
+    }
+    default: {
+      const _exhaustive: never = phase;
+      throw new Error(`unhandled phase: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceSaveBranch(
+  e: Effect,
+  fromResolutionId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const eId = traceEffect(e, nodes, ids);
+  if (eId === null) return;
+  edges.push({ from: fromResolutionId, to: eId, relation: "branches_on_save" });
+  edges.push({ from: eId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, eId, slotId, nodes, edges, ids);
+}
+
+function traceAttackWindow(
+  e: Effect,
+  windowAtom: "on_hit_window" | "on_miss_window",
+  attackRollId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const effectId = traceEffect(e, nodes, ids);
+  if (effectId === null) return;
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: windowAtom,
+    label: windowAtom,
+  });
+  edges.push({ from: attackRollId, to: winId, relation: "opens_window" });
+  edges.push({ from: winId, to: effectId, relation: "grants" });
+  edges.push({ from: effectId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, effectId, slotId, nodes, edges, ids);
+}
+
+function traceAttachment(
+  a: Attachment,
+  range: Range,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("att");
+  switch (a.kind) {
+    case "self": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "self",
+        label: `self\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "target": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "target",
+        label: `target\n${selectionLabel}\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "area": {
+      const originLabel =
+        a.origin.kind === "point_within_range"
+          ? `origin: point within ${describeRange(range)}`
+          : "origin: primary target";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "area",
+        label: `area\n${a.shape.kind} r=${a.shape.radiusFeet} ft\n${originLabel}`,
+      });
+      return id;
+    }
+    case "mark": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      const transferLabel = a.transfer
+        ? `\ntransfer on ${describeTransferEvent(a.transfer)} (${a.transfer.cost.kind})`
+        : "";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "mark",
+        label: `mark\n${selectionLabel}\nrange ${describeRange(range)}${transferLabel}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = a;
+      throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceTargetCountScaling(
+  a: Attachment,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // target + mark are the two attachments that can carry a target count.
+  const selection =
+    a.kind === "target" || a.kind === "mark" ? a.selection : null;
+  if (
+    selection === null ||
+    selection.mode !== "choose_up_to" ||
+    selection.count.kind !== "linear"
+  ) {
+    return;
+  }
+  const scId = ids("sc");
+  nodes.push({
+    id: scId,
+    category: "scaling",
+    atomKind: "scale_target_count",
+    label: `scale_target_count\n+${selection.count.perSlotAboveBase}/slot above ${selection.count.baseLevel}`,
+  });
+  edges.push({ from: scId, to: attId, relation: "modifies" });
+  if (slotId !== null)
+    edges.push({ from: slotId, to: scId, relation: "modifies" });
+}
+
+function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
+  switch (e.kind) {
+    case "none":
+      return null;
+    case "damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "damage",
+        label: `damage: ${describeDiceAmount(e.amount)} ${e.damageType}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled effect: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceDamageScaling(
+  e: Effect,
+  damageId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  if (e.kind !== "damage") return;
+  traceDiceAmountScaling(e.amount, damageId, slotId, nodes, edges, ids);
+}
+
+// Emit a scaling atom node attached to an effect (damage OR heal) when
+// the DiceAmount is scaled. Works uniformly across damage and heal.
+function traceDiceAmountScaling(
+  amt: DiceAmount,
+  effectId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (amt.kind) {
+    case "fixed":
+      return;
+    case "threshold_tiers": {
+      const scId = ids("sc");
+      const tierText = amt.tiers
+        .map(
+          (t) => `L${t.atLevel}:${describeTierOverride(t.override, amt.base)}`,
+        )
+        .join(" | ");
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\ntiers: ${tierText}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      // For slot-axis scaling, thread the spell_slot node into the chain.
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    case "linear_per_level": {
+      const scId = ids("sc");
+      const deltaText = describeDelta_(amt.perLevel, amt.base);
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\n+${deltaText} per level above ${amt.startingAtLevel}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    default: {
+      const _exhaustive: never = amt;
+      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// Pick the v4 scaling atom kind based on what this scaling actually
+// changes. Die size changes → scale_die_size. Die count changes →
+// scale_die_count. Only flat changes → scale_numeric_bonus.
+function scalingAtomFor(amt: DiceAmount): string {
+  if (amt.kind === "fixed") return "scale_numeric_bonus";
+  if (amt.kind === "threshold_tiers") {
+    const changesDieSize = amt.tiers.some(
+      (t) => t.override.dieSize !== undefined,
+    );
+    const changesDice = amt.tiers.some((t) => t.override.dice !== undefined);
+    if (changesDieSize) return "scale_die_size";
+    if (changesDice) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  if (amt.kind === "linear_per_level") {
+    if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
+    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  return "scale_numeric_bonus";
+}
+
+function describeTierOverride(d: DiceExprDelta, base: DiceExpr): string {
+  const dice = d.dice ?? base.dice;
+  const dieSize = d.dieSize ?? base.dieSize;
+  const flat = d.flat ?? base.flat;
+  return `${dice}d${dieSize}${flat !== undefined && flat !== 0 ? `+${flat}` : ""}`;
+}
+
+function describeDelta_(d: DiceExprDelta, base: DiceExpr): string {
+  const parts: string[] = [];
+  if (d.dice !== undefined)
+    parts.push(`${d.dice}d${d.dieSize ?? base.dieSize}`);
+  if (d.dieSize !== undefined && d.dice === undefined)
+    parts.push(`die size ${d.dieSize}`);
+  if (d.flat !== undefined) parts.push(`${d.flat} flat`);
+  return parts.join(" + ");
+}
+
+// ============================================================
+// Class-feature tracer
+// ============================================================
+
+function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "class_feature_root",
+    label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
+  });
+
+  const procedureId = traceClassFeatureMechanics(
+    feat.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: feat.id,
+    unitName: feat.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceClassFeatureMechanics(
+  m: ClassFeatureMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  switch (m.family) {
+    case "activation":
+      return traceClassFeatureActivation(m, nodes, edges, ids);
+    default: {
+      const _exhaustive: never = m.family;
+      throw new Error(`unhandled class-feature family: ${String(_exhaustive)}`);
+
+codex
+I have enough shape information now. I’m checking the class-feature tracer branch that would need to express `Focus Points`, because the hard question is whether it can model selectable bonus-action options rather than a single fixed effect.
+exec
+/bin/bash -lc "sed -n '1180,1395p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+      throw new Error(`unhandled class-feature family: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceClassFeatureActivation(
+  m: ClassFeatureActivationMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("act");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "activate",
+    label: "activate",
+  });
+
+  // Activation cost. `free` emits nothing — no quota consumed.
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  // Resource consumption + reset cadence.
+  const resId = traceUseCount(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  // Effect.
+  traceClassFeatureEffect(m.effect, procId, nodes, edges, ids);
+
+  return procId;
+}
+
+function traceActivationCost(
+  c: ClassFeatureActivationCost,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (c.kind) {
+    case "free":
+      // no quota consumed — feature is free on owner's turn
+      return;
+    case "bonus_action": {
+      const id = ids("q");
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Activation: Bonus Action)",
+      });
+      edges.push({ from: procId, to: id, relation: "consumes" });
+      return;
+    }
+    default: {
+      const _exhaustive: never = c;
+      throw new Error(`unhandled activation cost: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceUseCount(
+  r: UseCountResource,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const id = ids("use");
+  const capLabel = describeUseCountCap(r.cap);
+  nodes.push({
+    id,
+    category: "resource",
+    atomKind: "use_count",
+    label: `use_count\n${capLabel}`,
+  });
+  // If the cap is tiered, emit a scaling node that modifies the use_count.
+  if (r.cap.kind === "threshold_tiers") {
+    const scId = ids("sc");
+    const tierText = r.cap.tiers
+      .map((t) => `L${t.atLevel}:${t.value}`)
+      .join(" | ");
+    nodes.push({
+      id: scId,
+      category: "scaling",
+      atomKind: "scale_numeric_bonus",
+      label: `scale_numeric_bonus\naxis=${r.cap.axis}\ntiers: ${tierText}`,
+    });
+    edges.push({ from: scId, to: id, relation: "modifies" });
+  }
+  return id;
+}
+
+function describeUseCountCap(cap: UseCountResource["cap"]): string {
+  switch (cap.kind) {
+    case "fixed":
+      return `max ${cap.uses}`;
+    case "threshold_tiers":
+      return (
+        `tiered(axis=${cap.axis}): ` +
+        cap.tiers.map((t) => `L${t.atLevel}:${t.value}`).join(", ")
+      );
+    default: {
+      const _: never = cap;
+      throw new Error(`unhandled use count cap: ${String(_)}`);
+    }
+  }
+}
+
+function traceResetCadence(
+  c: RestResetCadence,
+  resId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Emit rest_window nodes labeled with whether each rest refills fully
+  // or partially. "partial_short_full_long" is the Second Wind pattern:
+  // short rest restores shortRestRefill uses; long rest restores all.
+  type RestEntry = { kind: "short" | "long"; refillLabel: string };
+  let rests: ReadonlyArray<RestEntry>;
+  switch (c.kind) {
+    case "short_or_long_rest":
+      rests = [
+        { kind: "short", refillLabel: "refill all" },
+        { kind: "long", refillLabel: "refill all" },
+      ];
+      break;
+    case "short_rest":
+      rests = [{ kind: "short", refillLabel: "refill all" }];
+      break;
+    case "long_rest":
+      rests = [{ kind: "long", refillLabel: "refill all" }];
+      break;
+    case "partial_short_full_long":
+      rests = [
+        { kind: "short", refillLabel: `refill ${c.shortRestRefill}` },
+        { kind: "long", refillLabel: "refill all" },
+      ];
+      break;
+    default: {
+      const _: never = c;
+      throw new Error(`unhandled reset cadence: ${String(_)}`);
+    }
+  }
+  for (const r of rests) {
+    const rid = ids("rest");
+    nodes.push({
+      id: rid,
+      category: "window",
+      atomKind: "rest_window",
+      label: `rest_window\n${r.kind} (${r.refillLabel})`,
+    });
+    edges.push({ from: resId, to: rid, relation: "persists_until" });
+  }
+}
+
+function traceClassFeatureEffect(
+  e: ClassFeatureEffect,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (e.kind) {
+    case "grant_extra_action": {
+      const effId = ids("eff");
+      nodes.push({
+        id: effId,
+        category: "effect",
+        atomKind: "grant_extra_action",
+        label: "grant_extra_action\n(1 additional action)",
+      });
+      edges.push({ from: procId, to: effId, relation: "grants" });
+      traceActionRestriction(e.restriction, effId, nodes, edges, ids);
+      return;
+    }
+    case "heal_hp": {
+      const effId = ids("eff");
+      nodes.push({
+        id: effId,
+        category: "effect",
+        atomKind: "heal",
+        label: `heal\n${describeDiceAmount(e.amount)}\ntarget: ${e.target}`,
+      });
+      edges.push({ from: procId, to: effId, relation: "grants" });
+      traceDiceAmountScaling(e.amount, effId, null, nodes, edges, ids);
+      return;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled class-feature effect: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceActionRestriction(
+  r: ActionRestriction,
+  targetId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (r.kind) {
+    case "none":
+      return;
+    case "exclude": {
+      const rid = ids("rst");
+      nodes.push({
+        id: rid,
+        category: "effect",
+        atomKind: "restrict_action_set",
+        label: `restrict_action_set\nexclude: ${r.actions.join(", ")}`,
+      });
+      edges.push({ from: rid, to: targetId, relation: "modifies" });
+      return;
+
+exec
+/bin/bash -lc "sed -n '1,240p' UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ exited 2 in 0ms:
+sed: can't read UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+exec
+/bin/bash -lc "sed -n '1,220p' .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ exited 2 in 0ms:
+sed: can't read .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md: No such file or directory
+
+codex
+The blocker is structural, not a missing field. `Focus Points` is a passive resource pool plus a bundle of three subordinate options, and the only class-feature family here is a single activated effect with one resource and one effect node. I’m writing the non-fit report rather than forcing a false JSON.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c50b7d881242375976b1faaa23c82afbcb029120
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+@@ -0,0 +1,33 @@
++`Focus Points` does not fit the current authored surface honestly.
++
++Why it fails:
++
++- The top-level unit is not itself a single activation. The level-2 feature establishes a reusable resource pool whose cap scales by Monk level, defines a save DC formula for later Monk features, and grants access to three subordinate techniques.
++- The existing `class_feature` surface only models one `activation` with one `activationCost`, one `resource`, one `resetCadence`, and one `effect`.
++- The available `ClassFeatureEffect` variants are only `grant_extra_action` and `heal_hp`, which do not cover:
++  - making two Unarmed Strikes as a Bonus Action,
++  - taking standard actions as a Bonus Action,
++  - combining two standard actions into one Bonus Action,
++  - doubling jump distance for the turn,
++  - or declaring a save DC formula for later dependent features.
++
++This forces a structural widening rather than a placeholder encoding.
++
++Suggested widening:
++
++- Add a non-activation class-feature family for a persistent class resource / option bundle.
++- That family would need to model:
++  - a level-scaled resource pool,
++  - rest reset behavior,
++  - granted subordinate activations,
++  - and shared derived metadata such as a feature save DC formula.
++
++Evidence from source:
++
++- "This energy is represented by Focus Points. Your Monk level determines the number of points you have"
++- "You can expend these points to enhance or fuel certain Monk features. You start knowing three such features"
++- "When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest"
++- "The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++- "Flurry of Blows... expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
++- "Patient Defense... take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action."
++- "Step of the Wind... take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn."
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0bf935a51784111dcb16516283b452451bb39857
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "monk_focus_points",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.mechanics.family = persistent_resource_bundle",
++      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
++      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
++    },
++    {
++      "kind": "new_subgraph",
++      "name": "granted_subfeature_activations",
++      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
++      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.shared_save_dc_formula",
++      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
++      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c50b7d881242375976b1faaa23c82afbcb029120
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+@@ -0,0 +1,33 @@
++`Focus Points` does not fit the current authored surface honestly.
++
++Why it fails:
++
++- The top-level unit is not itself a single activation. The level-2 feature establishes a reusable resource pool whose cap scales by Monk level, defines a save DC formula for later Monk features, and grants access to three subordinate techniques.
++- The existing `class_feature` surface only models one `activation` with one `activationCost`, one `resource`, one `resetCadence`, and one `effect`.
++- The available `ClassFeatureEffect` variants are only `grant_extra_action` and `heal_hp`, which do not cover:
++  - making two Unarmed Strikes as a Bonus Action,
++  - taking standard actions as a Bonus Action,
++  - combining two standard actions into one Bonus Action,
++  - doubling jump distance for the turn,
++  - or declaring a save DC formula for later dependent features.
++
++This forces a structural widening rather than a placeholder encoding.
++
++Suggested widening:
++
++- Add a non-activation class-feature family for a persistent class resource / option bundle.
++- That family would need to model:
++  - a level-scaled resource pool,
++  - rest reset behavior,
++  - granted subordinate activations,
++  - and shared derived metadata such as a feature save DC formula.
++
++Evidence from source:
++
++- "This energy is represented by Focus Points. Your Monk level determines the number of points you have"
++- "You can expend these points to enhance or fuel certain Monk features. You start knowing three such features"
++- "When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest"
++- "The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++- "Flurry of Blows... expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
++- "Patient Defense... take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action."
++- "Step of the Wind... take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn."
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0bf935a51784111dcb16516283b452451bb39857
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "monk_focus_points",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.mechanics.family = persistent_resource_bundle",
++      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
++      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
++    },
++    {
++      "kind": "new_subgraph",
++      "name": "granted_subfeature_activations",
++      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
++      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.shared_save_dc_formula",
++      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
++      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
++}
+
+codex
+I’ve written the structural-widening report. I’m doing a quick readback to ensure the output files are the only ones produced and the classification is internally consistent.
+exec
+/bin/bash -lc "sed -n '1,220p' result-monk_focus_points.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+{
+  "unit_slug": "monk_focus_points",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "class_feature.mechanics.family = persistent_resource_bundle",
+      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
+      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "granted_subfeature_activations",
+      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
+      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
+    },
+    {
+      "kind": "new_variant",
+      "name": "class_feature.shared_save_dc_formula",
+      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
+      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' proposal-monk_focus_points.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ succeeded in 0ms:
+`Focus Points` does not fit the current authored surface honestly.
+
+Why it fails:
+
+- The top-level unit is not itself a single activation. The level-2 feature establishes a reusable resource pool whose cap scales by Monk level, defines a save DC formula for later Monk features, and grants access to three subordinate techniques.
+- The existing `class_feature` surface only models one `activation` with one `activationCost`, one `resource`, one `resetCadence`, and one `effect`.
+- The available `ClassFeatureEffect` variants are only `grant_extra_action` and `heal_hp`, which do not cover:
+  - making two Unarmed Strikes as a Bonus Action,
+  - taking standard actions as a Bonus Action,
+  - combining two standard actions into one Bonus Action,
+  - doubling jump distance for the turn,
+  - or declaring a save DC formula for later dependent features.
+
+This forces a structural widening rather than a placeholder encoding.
+
+Suggested widening:
+
+- Add a non-activation class-feature family for a persistent class resource / option bundle.
+- That family would need to model:
+  - a level-scaled resource pool,
+  - rest reset behavior,
+  - granted subordinate activations,
+  - and shared derived metadata such as a feature save DC formula.
+
+Evidence from source:
+
+- "This energy is represented by Focus Points. Your Monk level determines the number of points you have"
+- "You can expend these points to enhance or fuel certain Monk features. You start knowing three such features"
+- "When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest"
+- "The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
+- "Flurry of Blows... expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
+- "Patient Defense... take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action."
+- "Step of the Wind... take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn."
+
+exec
+/bin/bash -lc "rg --files content | rg 'monk_focus_points|focus_points'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points
+ exited 1 in 0ms:
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c50b7d881242375976b1faaa23c82afbcb029120
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+@@ -0,0 +1,33 @@
++`Focus Points` does not fit the current authored surface honestly.
++
++Why it fails:
++
++- The top-level unit is not itself a single activation. The level-2 feature establishes a reusable resource pool whose cap scales by Monk level, defines a save DC formula for later Monk features, and grants access to three subordinate techniques.
++- The existing `class_feature` surface only models one `activation` with one `activationCost`, one `resource`, one `resetCadence`, and one `effect`.
++- The available `ClassFeatureEffect` variants are only `grant_extra_action` and `heal_hp`, which do not cover:
++  - making two Unarmed Strikes as a Bonus Action,
++  - taking standard actions as a Bonus Action,
++  - combining two standard actions into one Bonus Action,
++  - doubling jump distance for the turn,
++  - or declaring a save DC formula for later dependent features.
++
++This forces a structural widening rather than a placeholder encoding.
++
++Suggested widening:
++
++- Add a non-activation class-feature family for a persistent class resource / option bundle.
++- That family would need to model:
++  - a level-scaled resource pool,
++  - rest reset behavior,
++  - granted subordinate activations,
++  - and shared derived metadata such as a feature save DC formula.
++
++Evidence from source:
++
++- "This energy is represented by Focus Points. Your Monk level determines the number of points you have"
++- "You can expend these points to enhance or fuel certain Monk features. You start knowing three such features"
++- "When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest"
++- "The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++- "Flurry of Blows... expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
++- "Patient Defense... take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action."
++- "Step of the Wind... take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn."
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0bf935a51784111dcb16516283b452451bb39857
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "monk_focus_points",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.mechanics.family = persistent_resource_bundle",
++      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
++      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
++    },
++    {
++      "kind": "new_subgraph",
++      "name": "granted_subfeature_activations",
++      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
++      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.shared_save_dc_formula",
++      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
++      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
++}
+
+codex
+Wrote [result-monk_focus_points.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json) and [proposal-monk_focus_points.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md).
+
+Classification is `structural_widening`. `Focus Points` is not one honest `class_feature.activation`; it is a passive resource bundle that grants multiple subordinate activations and a shared save DC formula. Per the task guardrails, I did not author `content/monk_focus_points.dhall`, `content/monk_focus_points.json`, or a trace, and I did not run `pnpm typecheck` or the tracer because the unit does not fit the current surface family.
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c50b7d881242375976b1faaa23c82afbcb029120
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md
+@@ -0,0 +1,33 @@
++`Focus Points` does not fit the current authored surface honestly.
++
++Why it fails:
++
++- The top-level unit is not itself a single activation. The level-2 feature establishes a reusable resource pool whose cap scales by Monk level, defines a save DC formula for later Monk features, and grants access to three subordinate techniques.
++- The existing `class_feature` surface only models one `activation` with one `activationCost`, one `resource`, one `resetCadence`, and one `effect`.
++- The available `ClassFeatureEffect` variants are only `grant_extra_action` and `heal_hp`, which do not cover:
++  - making two Unarmed Strikes as a Bonus Action,
++  - taking standard actions as a Bonus Action,
++  - combining two standard actions into one Bonus Action,
++  - doubling jump distance for the turn,
++  - or declaring a save DC formula for later dependent features.
++
++This forces a structural widening rather than a placeholder encoding.
++
++Suggested widening:
++
++- Add a non-activation class-feature family for a persistent class resource / option bundle.
++- That family would need to model:
++  - a level-scaled resource pool,
++  - rest reset behavior,
++  - granted subordinate activations,
++  - and shared derived metadata such as a feature save DC formula.
++
++Evidence from source:
++
++- "This energy is represented by Focus Points. Your Monk level determines the number of points you have"
++- "You can expend these points to enhance or fuel certain Monk features. You start knowing three such features"
++- "When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest"
++- "The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++- "Flurry of Blows... expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
++- "Patient Defense... take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action."
++- "Step of the Wind... take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn."
+diff --git a/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..0bf935a51784111dcb16516283b452451bb39857
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json
+@@ -0,0 +1,28 @@
++{
++  "unit_slug": "monk_focus_points",
++  "outcome": "structural_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "class_feature.mechanics.family = persistent_resource_bundle",
++      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
++      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
++    },
++    {
++      "kind": "new_subgraph",
++      "name": "granted_subfeature_activations",
++      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
++      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
++    },
++    {
++      "kind": "new_variant",
++      "name": "class_feature.shared_save_dc_formula",
++      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
++      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
++}
+
+tokens used
+23,491
+Wrote [result-monk_focus_points.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/result-monk_focus_points.json) and [proposal-monk_focus_points.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2733251-monk_focus_points/proposal-monk_focus_points.md).
+
+Classification is `structural_widening`. `Focus Points` is not one honest `class_feature.activation`; it is a passive resource bundle that grants multiple subordinate activations and a shared save DC formula. Per the task guardrails, I did not author `content/monk_focus_points.dhall`, `content/monk_focus_points.json`, or a trace, and I did not run `pnpm typecheck` or the tracer because the unit does not fit the current surface family.

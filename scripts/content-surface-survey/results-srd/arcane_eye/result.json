@@ -1,0 +1,28 @@
+{
+  "unit_slug": "arcane_eye",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "conjure_sensor (new spell family)",
+      "justification": "Arcane Eye creates a persistent, movable conjured sensor object that continuously delivers sensory information to the caster. No existing spell family covers this pattern: ongoing_effect is for roll-modifying or damage-on-hit effects on creature attachments; activation requires attack/save phases; triggered_reaction and anchored_trigger have wrong trigger/release structures. A new family (or substantially extended operation vocabulary) is needed to represent the create-object + grant-sense + command-object lifecycle.",
+      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction."
+    },
+    {
+      "kind": "new_variant",
+      "name": "create_sensor_object — new OngoingOperation kind backed by v4 create_object + grant_sense",
+      "justification": "OngoingOperation supports only roll_modifier and damage_on_hit. Neither represents 'conjure a persistent sensor object at a location that relays sensory information to the caster'. A new operation kind is needed; v4 already names create_object and grant_sense as atoms, but types.ts exposes neither in any Effect or OngoingOperation variant.",
+      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "command_object — recurring Bonus Action cost to move the conjured object",
+      "justification": "The caster spends a Bonus Action on each turn to move the eye up to 30 ft. No existing spell mechanics structure captures a recurring action-cost substructure for commanding a conjured object. Class features have activationCost but spell families have no such recurring-command representation.",
+      "evidence": "As a Bonus Action, you can move the eye up to 30 feet in any direction."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The shared content pool in worker 1119861-eldritch_blast already contains an arcane_eye.json that force-fits this spell into ongoing_effect using a vacuous roll_modifier (on: [], dice: 0). That is a known-dishonest placeholder and this worker declines to reproduce it. The unit requires a new structural pattern for conjured-sensor spells."
+}

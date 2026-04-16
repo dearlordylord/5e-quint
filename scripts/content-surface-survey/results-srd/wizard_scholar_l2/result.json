@@ -1,0 +1,28 @@
+{
+  "unit_slug": "wizard_scholar_l2",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "Scholar is a permanent passive benefit granted at acquisition time. It has no activation cost, no use-count resource, and no rest-reset cadence. The existing 'activation' family requires all three and represents an on-demand action. Forcing Scholar into 'activation' with a free cost and fictitious use-count would produce a dishonest trace. A 'passive_grant' family (or equivalent) is needed to represent features that fire once and persist indefinitely.",
+      "evidence": "You have Expertise in the chosen skill."
+    },
+    {
+      "kind": "new_variant",
+      "name": "GrantExpertiseEffect (variant of ClassFeatureEffect)",
+      "justification": "The effect is Expertise: double proficiency bonus on ability checks with the chosen skill. The v4 atom inventory contains 'grant_proficiency', but ClassFeatureEffect has no variant for it. A GrantExpertiseEffect (or GrantProficiencyEffect with an expertise flag) is required to express this effect in the surface type.",
+      "evidence": "You have Expertise in the chosen skill."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ChoiceAtAcquisition for skill selection",
+      "justification": "Scholar requires the player to choose one skill from a closed list at feature-acquisition time (Arcana, History, Investigation, Medicine, Nature, or Religion). The surface has no mechanism to express 'choose one from list at acquisition' for passive class features. This is a choice that precedes runtime and is locked in permanently. The closest prior art is Alarm's creature_exemption_list (chosenAtCast: true), but there is no analogous grammar for class feature acquisition-time choices.",
+      "evidence": "Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three distinct widenings are required, all blocking honest encoding. The primary blocker is structural: ClassFeatureMechanics has no passive/permanent-grant family. The secondary is a missing ClassFeatureEffect variant (grant_expertise maps to v4 'grant_proficiency' atom, which already exists in the taxonomy but is not wired into the surface). The tertiary is the acquisition-time skill choice, which has no surface grammar. None of the existing ClassFeatureEffect variants (grant_extra_action, heal_hp) are even adjacent to the mechanic here."
+}

@@ -1,0 +1,24 @@
+{
+  "unit_slug": "acid_splash",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Straightforward activation spell with a single save_gate phase. Area attachment (sphere r=5, point_within_range origin) and threshold_tiers damage scaling (character axis, 1d6→2d6→3d6→4d6) both fit existing surface shapes. Tracer correctly emits scale_die_count since only the dice count changes. No missing atoms or variants."
+}

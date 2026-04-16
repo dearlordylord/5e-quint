@@ -1,0 +1,40 @@
+{
+  "unit_slug": "monk_disciplined_survivor_l14",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature",
+      "justification": "The first bullet of Disciplined Survivor is a permanent passive grant (proficiency in all saving throws). It has no activation cost, no use count, and no reset cadence. The existing ClassFeatureMechanics only has `activation` family, which mandates activationCost + resource + resetCadence. A passive always-on feature cannot be represented in the activation family without lying about those fields.",
+      "evidence": "Your physical and mental discipline grant you proficiency in all saving throws."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_proficiency (ClassFeatureEffect variant)",
+      "justification": "The passive saving throw proficiency grant requires a `grant_proficiency` effect. ClassFeatureEffect is currently limited to `grant_extra_action | heal_hp`. The v4 taxonomy includes `grant_proficiency` as an effect atom (§9), but it is not in the surface type's ClassFeatureEffect union.",
+      "evidence": "Your physical and mental discipline grant you proficiency in all saving throws."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "triggered_optional_class_feature",
+      "justification": "The reroll mechanic is a trigger-gated optional ability: it fires on a specific event (failed saving throw = post_roll_window on failure), the player chooses whether to invoke it (optional), and it consumes a Focus Point. This is not a player-initiated `activation` — the trigger window opens externally, not from a player decision to use the feature. No existing ClassFeatureMechanics family covers this shape. The closest analog in the spell surface is `triggered_reaction`, but there is no class-feature equivalent.",
+      "evidence": "whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll."
+    },
+    {
+      "kind": "new_variant",
+      "name": "focus_point (ClassFeatureActivationCost variant)",
+      "justification": "The reroll costs 1 Focus Point — a monk-specific resource distinct from action economy (not `free`, not `bonus_action`). ClassFeatureActivationCost has no cost variant for expending a class-specific point resource. This is the same pattern as Stunning Strike, Patient Defense, etc. A `focus_point` (or generic `class_point`) cost variant is needed.",
+      "evidence": "you can expend 1 Focus Point to reroll it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_reroll (ClassFeatureEffect variant)",
+      "justification": "The reroll effect is `modify_roll_reroll` from v4 taxonomy §9, but this atom is not represented in ClassFeatureEffect (only `grant_extra_action | heal_hp`). The effect forces a reroll of a specific roll already made, with the constraint `must use new roll`.",
+      "evidence": "you can expend 1 Focus Point to reroll it, and you must use the new roll."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Both core mechanics are unrepresentable: (1) the passive proficiency grant has no passive class feature family and no grant_proficiency effect variant; (2) the triggered save reroll has no triggered class feature family, no Focus Point cost type, and no modify_roll_reroll effect variant. The closest existing features are Fighter Indomitable (save reroll, long-rest reset, no trigger gate) and the spell triggered_reaction family — but Indomitable uses the activation family at player initiative, and the spell triggered_reaction is not available to class features. All five proposed widenings are necessary; none is redundant."
+}

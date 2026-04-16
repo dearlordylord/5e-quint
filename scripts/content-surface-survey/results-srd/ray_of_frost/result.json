@@ -1,0 +1,38 @@
+{
+  "unit_slug": "ray_of_frost",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "on_hit_window",
+    "scale_die_count",
+    "spell_root",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ModifySpeedEffect",
+      "justification": "The on-hit speed reduction (-10 ft until start of next turn) requires a new variant in the Effect union. The v4 atom modify_speed exists, but Effect = DamageEffect | NoneEffect — no surface type for modify_speed in an Effect position.",
+      "evidence": "On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "onHit multi-effect support",
+      "justification": "Ray of Frost delivers both damage AND speed reduction on the same hit. The current onHit: Effect field accepts a single effect. Encoding both requires either onHit: ReadonlyArray<Effect> or a CompositeEffect variant.",
+      "evidence": "On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family and attack_roll phase fit cleanly. Damage (1d8 cold, threshold_tiers axis=character) typechecks and traces without error. The speed reduction rider is the only gap: modify_speed is in v4 but not in the Effect union, and onHit currently accepts one Effect. Trace covers the damage portion honestly; speed reduction is explicitly omitted. Same pattern as Chill Touch (omitted block_healing rider), but the needed atom here (modify_speed) already exists in v4 — only the surface type is missing."
+}

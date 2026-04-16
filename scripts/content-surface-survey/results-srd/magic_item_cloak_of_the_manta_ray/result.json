@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_cloak_of_the_manta_ray",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + passive_while_attuned family",
+      "justification": "No magic_item kind exists in UnitRecord. UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. The cloak requires a top-level MagicItemRecord type and a mechanics family for always-on passive effects granted while the item is worn and attuned.",
+      "evidence": "While wearing this cloak, you can breathe underwater, and you have a Swim Speed of 60 feet."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_underwater_breathing",
+      "justification": "Underwater breathing is not a sense (grant_sense covers darkvision, blindsight, etc.) and is not covered by any existing v4 effect atom. It is a distinct physiological capability — the ability to breathe water as air.",
+      "evidence": "you can breathe underwater"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_speed (grant swim speed variant)",
+      "justification": "modify_speed exists in the v4 taxonomy atom inventory but is not surfaced in types.ts Effect types. Even if surfaced, it would need a variant that grants a new speed type (swim) at a fixed value, not just modifies an existing speed.",
+      "evidence": "you have a Swim Speed of 60 feet"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: UnitRecord has no magic_item kind. The v4 taxonomy lists magic_item_root as a source atom and attune/attunement_slot as procedure/resource atoms, but none of these are surfaced in types.ts or the tracer. The secondary mechanics gaps (underwater breathing atom, modify_speed surface exposure, passive-while-worn family) are also real but moot until the top-level kind exists."
+}

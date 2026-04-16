@@ -1,0 +1,28 @@
+{
+  "unit_slug": "weird",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition in spell Effect type",
+      "justification": "The initial save gate applies Frightened on a failed save. The current spell Effect type is DamageEffect | NoneEffect. The mastery surface already has apply_condition as a SaveGateRiderResult variant, but spells have no equivalent. Encoding the condition application honestly requires widening the spell Effect discriminated union.",
+      "evidence": "On a failed save, a target takes 10d10 Psychic damage and has the Frightened condition for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "frightened in Condition type",
+      "justification": "The Condition type currently only includes 'prone'. Weird's primary ongoing rider is gated on the Frightened condition, which must be representable in the closed Condition union before any condition-applying or condition-checking surface type can reference it.",
+      "evidence": "a target...has the Frightened condition for the duration. A Frightened target makes a Wisdom saving throw at the end of each of its turns."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "per-turn repeat save gated on applied condition",
+      "justification": "Frightened targets make a WIS save at the end of each of their turns for the spell's duration: failing deals 5d10 psychic, succeeding ends the spell on that target. This is a repeat_save (v4 resolution atom) fired by a turn_end_window, gated on the condition the spell itself applied, and terminates per-target on success. No existing spell family (activation, ongoing_effect, triggered_reaction, anchored_trigger) can express this shape. 'activation' phases are sequential and one-shot; 'ongoing_effect' operations are limited to roll_modifier and damage_on_hit. A new family or cross-family composition is required.",
+      "evidence": "A Frightened target makes a Wisdom saving throw at the end of each of its turns. On a failed save, it takes 5d10 Psychic damage. On a successful save, the spell ends on that target."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Weird has two structurally distinct phases: (1) an initial area save gate that simultaneously deals damage and applies the Frightened condition; (2) an ongoing per-target, per-turn repeat save that fires only on condition-holders and terminates the spell's grip on each target individually on success. The v4 taxonomy includes repeat_save as a resolution atom and turn_end_window as a window atom, but no spell family exposes them. The combination — condition application in the initial activation phase, then per-turn condition-gated repeat saves in the ongoing phase — requires a new family or a structural extension that crosses the activation/ongoing boundary. Classify as structural_widening (dominant): the shape has no honest family mapping, not merely a missing variant of an existing one."
+}

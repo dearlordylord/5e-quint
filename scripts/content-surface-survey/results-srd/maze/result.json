@@ -1,0 +1,22 @@
+{
+  "unit_slug": "maze",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "BanishmentOperation (OngoingOperation kind: \"transport_exile\")",
+      "justification": "Maze's core effect is sending the target to a demiplane for the duration of concentration. The v4 atom 'transport_exile' covers this concept, but OngoingOperation in types.ts only has 'roll_modifier' and 'damage_on_hit'. A new variant is needed to express 'the attachment target is transported to a named extradimensional space for the duration, removed from the battlefield until the effect ends or the target escapes.'",
+      "evidence": "\"You banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes the maze.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EscapeCondition on OngoingEffectMechanics (or new OngoingOperation kind: \"escape_condition\")",
+      "justification": "Maze gives the banished creature an active escape mechanism: on its turns, it may take the Study action to attempt a DC 20 Intelligence (Investigation) check; success ends the spell. This is a 'target-initiated ability check to break an ongoing effect' pattern — distinct from save_gate (caster-side, cast-time) and from repeat_save (repeated saves, not ability checks, and not target-action-gated). Neither the ongoing_effect family nor any existing operation variant exposes this. A new optional field on OngoingEffectMechanics (or a new OngoingOperation kind) is needed to represent an escape condition: { action: StandardActionKind, check: AbilityCheckSpec, dc: DcSource, onSuccess: 'end_effect' }.",
+      "evidence": "\"The target can take a Study action to try to escape. When it does so, it makes a DC 20 Intelligence (Investigation) check. If it succeeds, it escapes, and the spell ends.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family classification is 'ongoing_effect' — concentration, single target, persistent banishment state. The two gaps are: (1) OngoingOperation has no variant for transport_exile; (2) there is no surface-level way to express a target-initiated escape check that ends the effect. Both are new variants/fields on existing surface types; v4 atoms transport_exile, ability_check, and repeat_save all exist and would be emitted by a correct trace. No structural widening is required — the ongoing_effect family is the right family. The return-to-original-space-on-end is a standard 'return_on_end' lifecycle atom and would trace cleanly once the main gap is filled."
+}

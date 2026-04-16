@@ -1,0 +1,34 @@
+{
+  "unit_slug": "compulsion",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Condition: charmed",
+      "justification": "The initial save gate applies the Charmed condition on failure. The Condition type currently only contains 'prone'. 'charmed' must be added.",
+      "evidence": "Each creature of your choice that you can see within range must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect: apply_condition (for spells)",
+      "justification": "The spell's save_gate result must apply a condition (Charmed). The Effect union for spells is DamageEffect | NoneEffect only — no apply_condition variant exists. The mastery-layer SaveGateRiderResult has apply_condition but it is not reachable from the spell Effect type.",
+      "evidence": "must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: bonus_action_command (force_move + repeat_save)",
+      "justification": "The ongoing mechanic requires: (a) caster spends a Bonus Action each turn to activate the command, (b) each Charmed target is force-moved in a designated direction, (c) after moving the target repeats the save to break the spell. This is a caster-activated per-turn operation — not a passive roll modifier or damage-on-hit rider. No OngoingOperation variant covers it.",
+      "evidence": "For the duration, you can take a Bonus Action to designate a direction that is horizontal to you. Each Charmed target must use as much of its movement as possible to move in that direction on its next turn... After moving in this way, a target repeats the save, ending the spell on itself on a success."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Per-turn repeat save (break condition)",
+      "justification": "After executing the forced movement, each target independently repeats the saving throw to end the spell on itself. The surface has no mechanism for a per-turn repeat save that can individually break concentration on a per-target basis. The repeat_save atom exists in v4 taxonomy but no surface type exposes it.",
+      "evidence": "After moving in this way, a target repeats the save, ending the spell on itself on a success."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits the spell kind and concentration/ongoing family concept, but four surface gaps prevent honest encoding. The most structurally novel gap is the 'caster-activated Bonus Action command each turn' pattern — existing OngoingOperation variants are passive (triggered by external events like hits). The per-target repeat-save-to-break mechanic is also absent from the surface. No dhall/json/trace produced."
+}

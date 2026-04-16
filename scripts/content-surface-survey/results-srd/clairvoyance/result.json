@@ -1,0 +1,28 @@
+{
+  "unit_slug": "clairvoyance",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment { kind: \"location\" }",
+      "justification": "Clairvoyance places its sensor at a specific remote location (up to 1 mile) chosen at cast time. No existing Attachment kind covers this: 'self' is the caster, 'target' is a creature/object, 'area' is a shaped region, 'mark' is a tracked target. The v4 taxonomy already has 'location' as an attachment atom — it is currently expressed only in AnchorTarget. It needs to be added to the Attachment union as a first-class variant so ongoing_effect spells can also use it.",
+      "evidence": "You create an Invisible sensor within range in a location familiar to you (a place you have visited or seen before) or in an obvious location that is unfamiliar to you (such as behind a door, around a corner, or in a grove of trees)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation { kind: \"remote_sense\" }",
+      "justification": "Clairvoyance's ongoing operation is routing the caster's perception (sight or hearing) through the sensor as if the caster were present in its space. This is not roll_modifier or damage_on_hit. The v4 taxonomy has 'grant_sense' as an effect atom. This operation variant would reference that atom but applied directionally through the location attachment — 'use chosen sense via sensor' rather than 'grant a new sense type to the caster'. It needs its own OngoingOperation variant.",
+      "evidence": "When you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation active-control / mode-switch rider",
+      "justification": "The spell allows the caster to spend a Bonus Action to switch the active sense (seeing ↔ hearing) while concentrating. No existing OngoingOperation variant models active player-choice that costs a resource mid-concentration. This is a secondary gap: the remote_sense widening above is required first; mode-switching is an additional rider whose surface shape would need to be specified.",
+      "evidence": "As a Bonus Action, you can switch between seeing and hearing."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Clairvoyance is a pure remote-sensing spell. The correct payload family is ongoing_effect (persistent state during concentration), but two surface shapes are missing. First, Attachment needs a 'location' kind so the sensor can be placed at a chosen remote point (distinct from AnchorTarget which is only in the anchored_trigger family). Second, OngoingOperation needs a 'remote_sense' variant so the effect of 'perceive through the sensor' can be expressed. All v4 atoms that would be used already exist (location, grant_sense, concentrate, bonus_action_quota). No new atoms are needed — only new surface variants. The bonus-action mode-switch is a third, secondary gap. The range (1 mile) can be encoded as { kind: 'point', feet: 5280 } without surface changes."
+}

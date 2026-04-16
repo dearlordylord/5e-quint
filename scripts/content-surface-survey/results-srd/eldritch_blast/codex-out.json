@@ -1,0 +1,2827 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d9430-32b3-7511-9837-05787ca9172f
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Eldritch Blast`
+- Slug: `eldritch_blast`
+- Kind: `spell`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+{
+  "name": "Eldritch Blast",
+  "source": "XPHB",
+  "page": 267,
+  "srd52": true,
+  "basicRules2024": true,
+  "level": 0,
+  "school": "V",
+  "time": [
+    {
+      "number": 1,
+      "unit": "action"
+    }
+  ],
+  "range": {
+    "type": "point",
+    "distance": {
+      "type": "feet",
+      "amount": 120
+    }
+  },
+  "components": {
+    "v": true,
+    "s": true
+  },
+  "duration": [
+    {
+      "type": "instant"
+    }
+  ],
+  "entries": [
+    "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes {@damage 1d10} Force damage."
+  ],
+  "entriesHigherLevel": [
+    {
+      "type": "entries",
+      "name": "Cantrip Upgrade",
+      "entries": [
+        "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
+      ]
+    }
+  ],
+  "damageInflict": [
+    "force"
+  ],
+  "spellAttack": [
+    "R"
+  ],
+  "miscTags": [
+    "SCL"
+  ],
+  "areaTags": [
+    "MT",
+    "ST"
+  ]
+}
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/eldritch_blast.json` — the encoded unit.
+- `result-eldritch_blast.json` — your structured self-report (schema below).
+- `proposal-eldritch_blast.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+1. `src/surface/types.ts` — closed atom types. Your JSON must be a valid instance of `UnitRecord`.
+2. `src/interpreter/tracer.ts` — walks your JSON and emits a mermaid dependency graph. If the tracer throws `unhandled <atom>`, the surface lacks what your encoding needs.
+3. Existing reference encodings in `content/`: `bless.json` (ongoing effect, concentration), `acid_splash.json` (cantrip activation with AoE + save), `ice_knife.json` (multi-phase: attack then save), `action_surge.json` (class feature with use-count + rest reset).
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — authoritative v4 atom vocabulary.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — naming discipline for D&D terms.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `activation` (class feature) — different record shape; see `action_surge.json`.
+2. Author `content/eldritch_blast.json` as a valid `UnitRecord`. Match field names exactly.
+3. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+4. Run `pnpm exec tsx src/run.ts content/eldritch_blast.json`. Observe output.
+5. If the tracer throws `unhandled <atom>`, STOP — the surface doesn't support this unit. Record the missing atom in `proposal.md` and set `outcome: "atom_widening"` in your result.
+6. Write `result.json` with the schema below.
+
+## result-eldritch_blast.json schema
+
+```json
+{
+  "unit_slug": "eldritch_blast",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT modify any file outside `content/eldritch_blast.json`, `result-eldritch_blast.json`, `proposal-eldritch_blast.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Prefer `atom_widening` over `clean` when in doubt. False positives on widenings are cheap; false `clean` verdicts are expensive.
+
+## When done
+
+Your final output must be valid:
+
+- `content/eldritch_blast.json` — typechecks against `UnitRecord`.
+- `content/eldritch_blast.trace.md` — the tracer's mermaid graph (auto-generated if `pnpm exec tsx src/run.ts ... --out content/eldritch_blast.trace.md`).
+- `result-eldritch_blast.json` — your self-classification.
+- `proposal-eldritch_blast.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m reading the surface types, tracer, and nearby examples first so the encoding matches the existing atom vocabulary before I write any files.
+exec
+/bin/bash -lc "sed -n '1,260p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+exec
+/bin/bash -lc "sed -n '1,240p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Tracer — interpreter over the authored unit ADT. Emits a dependency
+// graph of atoms + typed relations; does not call the combat runtime.
+
+import type {
+  UnitRecord,
+  SpellRecord,
+  ClassFeatureRecord,
+  MasteryRecord,
+  SpellMechanics,
+  OngoingEffectMechanics,
+  ActivationMechanics,
+  ActivationPhase,
+  CastingTime,
+  Duration,
+  Range,
+  Attachment,
+  Effect,
+  OngoingOperation,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  DiceDelta,
+  SlotScaling,
+  SpellLevel,
+  ClassFeatureMechanics,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationCost,
+  UseCountResource,
+  RestResetCadence,
+  ActionRestriction,
+  ClassFeatureEffect,
+  TriggeredReactionMechanics,
+  ReactionTrigger,
+  ReactionEffect,
+  MarkTransfer,
+  MasteryMechanics,
+  MasteryTrigger,
+  MasteryEffect,
+  RiderExpiry,
+  DcSource,
+  AnchoredTriggerMechanics,
+  AnchorTarget,
+  AnchoredEvent,
+  AnchoredFilter,
+  AnchoredSignal,
+} from "../surface/types.ts";
+
+export type AtomCategory =
+  | "source"
+  | "procedure"
+  | "window"
+  | "attachment"
+  | "resolution"
+  | "lifecycle"
+  | "resource"
+  | "scaling"
+  | "effect";
+
+export type TraceNode = {
+  readonly id: string;
+  readonly category: AtomCategory;
+  readonly atomKind: string;
+  readonly label: string;
+};
+
+export type TraceEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+};
+
+export type Trace = {
+  readonly unitId: string;
+  readonly unitName: string;
+  readonly nodes: ReadonlyArray<TraceNode>;
+  readonly edges: ReadonlyArray<TraceEdge>;
+  readonly atomKinds: ReadonlyArray<string>;
+};
+
+export function traceUnit(unit: UnitRecord): Trace {
+  switch (unit.kind) {
+    case "spell":
+      return traceSpellUnit(unit);
+    case "class_feature":
+      return traceClassFeatureUnit(unit);
+    case "mastery":
+      return traceMasteryUnit(unit);
+    default: {
+      const _exhaustive: never = unit;
+      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Spell tracer
+// ============================================================
+
+type SpellCtx = {
+  readonly procId: string;
+  readonly slotId: string | null;
+  readonly range: Range;
+};
+
+function traceSpellUnit(spell: SpellRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "spell_root",
+    label: `spell_root\n${spell.name}`,
+  });
+
+  const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: spell.id,
+    unitName: spell.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "reaction_quota",
+        label: "reaction_quota\n(Casting Time: Reaction)",
+      });
+      return id;
+    case "minutes":
+      // Long-cast spells (Alarm: 1 minute or Ritual). No 1-action-quota
+      // cost — the caster is locked into the cast for `amount` minutes.
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Casting Time: ${ct.amount} min${
+          ct.ritual ? " / Ritual" : ""
+        })`,
+      });
+      return id;
+    default: {
+      const _exhaustive: never = ct;
+
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+exec
+/bin/bash -lc "sed -n '1,260p' content/bless.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "bless",
+  "name": "Bless",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bless"
+  },
+  "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.",
+  "mechanics": {
+    "family": "ongoing_effect",
+    "level": 1,
+    "school": "enchantment",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 30 },
+    "components": { "v": true, "s": true, "m": "a Holy Symbol worth 5+ GP" },
+    "duration": { "kind": "concentration", "upTo": { "unit": "minute", "amount": 1 } },
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "choose_up_to",
+        "count": { "kind": "linear", "base": 3, "perSlotAboveBase": 1, "baseLevel": 1 }
+      }
+    },
+    "operation": {
+      "kind": "roll_modifier",
+      "on": ["attack_roll", "saving_throw"],
+      "delta": { "dice": 1, "dieSize": 4, "sign": "+" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' content/acid_splash.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "acid_splash",
+  "name": "Acid Splash",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Acid Splash"
+  },
+  "description": "You create an acidic bubble at a point within range, where it explodes in a 5-foot-radius Sphere. Each creature in that Sphere must succeed on a Dexterity saving throw or take 1d6 Acid damage. Cantrip Upgrade: damage increases by 1d6 at levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+  "mechanics": {
+    "family": "activation",
+    "level": 0,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 60 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "save_gate",
+        "attachment": {
+          "kind": "area",
+          "shape": { "kind": "sphere", "radiusFeet": 5 },
+          "origin": { "kind": "point_within_range" }
+        },
+        "ability": "dex",
+        "dc": { "kind": "caster_spell_save_dc" },
+        "onFail": {
+          "kind": "damage",
+          "damageType": "acid",
+          "amount": {
+            "kind": "threshold_tiers",
+            "axis": "character",
+            "base": { "dice": 1, "dieSize": 6 },
+            "tiers": [
+              { "atLevel": 5, "override": { "dice": 2 } },
+              { "atLevel": 11, "override": { "dice": 3 } },
+              { "atLevel": 17, "override": { "dice": 4 } }
+            ]
+          }
+        },
+        "onSuccess": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,260p' content/ice_knife.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "ice_knife",
+  "name": "Ice Knife",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Ice Knife"
+  },
+  "description": "You create a shard of ice and fling it at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Piercing damage. Hit or miss, the shard then explodes. The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage. Higher slot: Cold damage +1d6 per slot level above 1.",
+  "mechanics": {
+    "family": "activation",
+    "level": 1,
+    "school": "conjuration",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 60 },
+    "components": { "v": false, "s": true, "m": "a drop of water or a piece of ice" },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": { "kind": "target", "selection": { "mode": "one" } },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "piercing",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } }
+        },
+        "onMiss": { "kind": "none" }
+      },
+      {
+        "kind": "save_gate",
+        "attachment": {
+          "kind": "area",
+          "shape": { "kind": "sphere", "radiusFeet": 5 },
+          "origin": { "kind": "on_primary_target" }
+        },
+        "ability": "dex",
+        "dc": { "kind": "caster_spell_save_dc" },
+        "onFail": {
+          "kind": "damage",
+          "damageType": "cold",
+          "amount": {
+            "kind": "linear_per_level",
+            "axis": "slot",
+            "base": { "dice": 2, "dieSize": 6 },
+            "perLevel": { "dice": 1 },
+            "startingAtLevel": 1
+          }
+        },
+        "onSuccess": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,260p' content/action_surge.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "class_feature",
+  "id": "fighter_action_surge",
+  "name": "Action Surge",
+  "className": "fighter",
+  "acquiredAtLevel": 2,
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter#Action Surge"
+  },
+  "description": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",
+  "mechanics": {
+    "family": "activation",
+    "activationCost": { "kind": "free" },
+    "resource": {
+      "kind": "use_count",
+      "cap": {
+        "kind": "threshold_tiers",
+        "axis": "class",
+        "base": 1,
+        "tiers": [
+          { "atLevel": 2, "value": 1 },
+          { "atLevel": 17, "value": 2 }
+        ]
+      }
+    },
+    "resetCadence": { "kind": "short_or_long_rest" },
+    "effect": {
+      "kind": "grant_extra_action",
+      "restriction": { "kind": "exclude", "actions": ["magic"] }
+    }
+  }
+}
+
+codex
+The surface examples are enough to place Eldritch Blast near `activation`, but I still need the exact phase/effect grammar and the tracer’s handled atoms before encoding the scaling.
+exec
+/bin/bash -lc 'rg -n "type ActivationMechanics|type ActivationPhase|type Effect|type SpellRecord|type UnitRecord|type SpellMechanics" src/surface/types.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+276:export type Effect = DamageEffect | NoneEffect;
+280:export type ActivationPhase =
+299:type SpellMechanicsHeader = {
+314:export type ActivationMechanics = SpellMechanicsHeader & {
+397:export type SpellMechanics =
+572:export type SpellRecord = UnitMetadata & {
+589:export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc 'rg -n "function traceActivation|function tracePhase|function traceEffect|unhandled .*atom|attack_roll|save_gate|multi" src/interpreter/tracer.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+268:    case "hit_by_attack_roll":
+754:function traceActivation(
+779:function tracePhase(
+800:    case "attack_roll": {
+805:        atomKind: "attack_roll",
+806:        label: `attack_roll [phase ${phaseNumber}]\n${phase.attackKind.replaceAll("_", " ")}`,
+833:    case "save_gate": {
+838:        atomKind: "save_gate",
+839:        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: caster spell save DC`,
+1008:function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
+1213:function traceActivationCost(
+1444:  // Subgraph G — On-Hit Rider. mastery_root roots an attack_roll
+1451:    atomKind: "attack_roll",
+1452:    label: `attack_roll\n${describeMasteryTrigger(m.trigger)}`,
+1532:    case "save_gate": {
+1537:        atomKind: "save_gate",
+1538:        label: `save_gate\n${e.ability.toUpperCase()} save\nDC: ${describeDc(e.dc)}`,
+1563:      // Cleave — nested attack_roll against a secondary target.
+1575:        atomKind: "attack_roll",
+1576:        label: `attack_roll\n(nested, ${e.attackKind.replaceAll("_", " ")})`,
+
+exec
+/bin/bash -lc "sed -n '1,220p' UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+exec
+/bin/bash -lc "sed -n '1,240p' .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md: No such file or directory
+
+codex
+The worker copy doesn’t have those docs at the current path, so I’m locating the repo root copies and then I’ll inspect the relevant sections only.
+exec
+/bin/bash -lc "sed -n '260,420p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+//
+// Pressure case: Alarm. Future: Glyph of Warding, Contingency. Spell
+// plants a trigger on an anchor; when a matching event occurs (gated
+// by closed filter predicates) the stored spell releases a signal
+// effect.
+
+// Where the trigger is planted. Matches v4 attachment atoms `location`
+// and `area`, kept distinct from Attachment since the choice is
+// mutually exclusive at cast time.
+export type AnchorTarget =
+  | { readonly kind: "location"; readonly description: "door_or_window" }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
+    };
+
+// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// more pressure cases land (step_on, approach_within, see_glyph,
+// named_event_signal).
+export type AnchoredEvent =
+  | { readonly kind: "physical_contact" }
+  | { readonly kind: "enters_area" };
+
+// Closed filter predicates. Alarm uses a creature exemption list
+// ("designate creatures that won't set off the alarm") that is chosen
+// at cast time.
+export type AnchoredFilter = {
+  readonly kind: "creature_exemption_list";
+  readonly chosenAtCast: true;
+};
+
+// Signal emitted on release. Audible and mental are the two Alarm
+// modes; caller is the consumer of the signal (ARCHITECTURE.md keeps
+// narrative notifications out of core, but the signal shape is still
+// closed so the trace has somewhere to point).
+export type AnchoredSignal =
+  | {
+      readonly kind: "audible";
+      readonly sound: string;
+      readonly durationSeconds: number;
+      readonly audibleRadiusFeet: number;
+    }
+  | {
+      readonly kind: "mental";
+      readonly rangeFeet: number;
+      readonly awakensIfAsleep: boolean;
+    };
+
+export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
+  readonly family: "anchored_trigger";
+  readonly anchor: AnchorTarget;
+  readonly events: ReadonlyArray<AnchoredEvent>;
+  readonly filters: ReadonlyArray<AnchoredFilter>;
+  readonly signals: ReadonlyArray<AnchoredSignal>;
+};
+
+export type SpellMechanics =
+  | OngoingEffectMechanics
+  | ActivationMechanics
+  | TriggeredReactionMechanics
+  | AnchoredTriggerMechanics;
+
+// ---------- class-feature atoms ----------
+
+// Activation cost for a class feature. Drives which (if any) quota
+// atom the tracer emits a `consumes` edge to.
+export type ClassFeatureActivationCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "bonus_action" };
+
+// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+// uses scale by class level e.g. Action Surge 1@L2 → 2@L17, Second Wind
+// 2@L1 → 3@L4 → 4@L10, Indomitable 1@L9 → 2@L13 → 3@L17).
+export type UseCountCap =
+  | { readonly kind: "fixed"; readonly uses: number }
+  | ThresholdTiers<number>;
+
+export type UseCountResource = {
+  readonly kind: "use_count";
+  readonly cap: UseCountCap;
+
+exec
+/bin/bash -lc "pwd && rg --files .. | rg 'UBIQUITOUS_LANGUAGE\\.md|TAXONOMY_atoms_graph\\.md"'$'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ exited 1 in 0ms:
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+exec
+/bin/bash -lc "sed -n '754,1075p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+function traceActivation(
+  m: ActivationMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Thread phase resolutions with `branches_on_completion` edges so the
+  // graph shows "phase 1 completes, phase 2 follows" explicitly. SRD
+  // sequencing ("Hit or miss, the shard then explodes") becomes a real
+  // edge instead of implicit array order.
+  let previousResolutionId: string | null = null;
+  m.phases.forEach((phase, idx) => {
+    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: thisResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = thisResolutionId;
+  });
+}
+
+function tracePhase(
+  phase: ActivationPhase,
+  phaseNumber: number,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+
+  traceTargetCountScaling(
+    phase.attachment,
+    attId,
+    ctx.slotId,
+    nodes,
+    edges,
+    ids,
+  );
+
+  switch (phase.kind) {
+    case "attack_roll": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "attack_roll",
+        label: `attack_roll [phase ${phaseNumber}]\n${phase.attackKind.replaceAll("_", " ")}`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      traceAttackWindow(
+        phase.onHit,
+        "on_hit_window",
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      traceAttackWindow(
+        phase.onMiss,
+        "on_miss_window",
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      return resId;
+    }
+    case "save_gate": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "save_gate",
+        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: caster spell save DC`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      traceSaveBranch(
+        phase.onFail,
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      traceSaveBranch(
+        phase.onSuccess,
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      return resId;
+    }
+    default: {
+      const _exhaustive: never = phase;
+      throw new Error(`unhandled phase: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceSaveBranch(
+  e: Effect,
+  fromResolutionId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const eId = traceEffect(e, nodes, ids);
+  if (eId === null) return;
+  edges.push({ from: fromResolutionId, to: eId, relation: "branches_on_save" });
+  edges.push({ from: eId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, eId, slotId, nodes, edges, ids);
+}
+
+function traceAttackWindow(
+  e: Effect,
+  windowAtom: "on_hit_window" | "on_miss_window",
+  attackRollId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const effectId = traceEffect(e, nodes, ids);
+  if (effectId === null) return;
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: windowAtom,
+    label: windowAtom,
+  });
+  edges.push({ from: attackRollId, to: winId, relation: "opens_window" });
+  edges.push({ from: winId, to: effectId, relation: "grants" });
+  edges.push({ from: effectId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, effectId, slotId, nodes, edges, ids);
+}
+
+function traceAttachment(
+  a: Attachment,
+  range: Range,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("att");
+  switch (a.kind) {
+    case "self": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "self",
+        label: `self\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "target": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "target",
+        label: `target\n${selectionLabel}\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "area": {
+      const originLabel =
+        a.origin.kind === "point_within_range"
+          ? `origin: point within ${describeRange(range)}`
+          : "origin: primary target";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "area",
+        label: `area\n${a.shape.kind} r=${a.shape.radiusFeet} ft\n${originLabel}`,
+      });
+      return id;
+    }
+    case "mark": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      const transferLabel = a.transfer
+        ? `\ntransfer on ${describeTransferEvent(a.transfer)} (${a.transfer.cost.kind})`
+        : "";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "mark",
+        label: `mark\n${selectionLabel}\nrange ${describeRange(range)}${transferLabel}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = a;
+      throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceTargetCountScaling(
+  a: Attachment,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // target + mark are the two attachments that can carry a target count.
+  const selection =
+    a.kind === "target" || a.kind === "mark" ? a.selection : null;
+  if (
+    selection === null ||
+    selection.mode !== "choose_up_to" ||
+    selection.count.kind !== "linear"
+  ) {
+    return;
+  }
+  const scId = ids("sc");
+  nodes.push({
+    id: scId,
+    category: "scaling",
+    atomKind: "scale_target_count",
+    label: `scale_target_count\n+${selection.count.perSlotAboveBase}/slot above ${selection.count.baseLevel}`,
+  });
+  edges.push({ from: scId, to: attId, relation: "modifies" });
+  if (slotId !== null)
+    edges.push({ from: slotId, to: scId, relation: "modifies" });
+}
+
+function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
+  switch (e.kind) {
+    case "none":
+      return null;
+    case "damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "damage",
+        label: `damage: ${describeDiceAmount(e.amount)} ${e.damageType}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled effect: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceDamageScaling(
+  e: Effect,
+  damageId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  if (e.kind !== "damage") return;
+  traceDiceAmountScaling(e.amount, damageId, slotId, nodes, edges, ids);
+}
+
+// Emit a scaling atom node attached to an effect (damage OR heal) when
+// the DiceAmount is scaled. Works uniformly across damage and heal.
+function traceDiceAmountScaling(
+  amt: DiceAmount,
+  effectId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (amt.kind) {
+    case "fixed":
+      return;
+    case "threshold_tiers": {
+      const scId = ids("sc");
+      const tierText = amt.tiers
+        .map(
+          (t) => `L${t.atLevel}:${describeTierOverride(t.override, amt.base)}`,
+        )
+        .join(" | ");
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\ntiers: ${tierText}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      // For slot-axis scaling, thread the spell_slot node into the chain.
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    case "linear_per_level": {
+      const scId = ids("sc");
+
+exec
+/bin/bash -lc "sed -n '1075,1165p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+      const scId = ids("sc");
+      const deltaText = describeDelta_(amt.perLevel, amt.base);
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\n+${deltaText} per level above ${amt.startingAtLevel}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    default: {
+      const _exhaustive: never = amt;
+      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// Pick the v4 scaling atom kind based on what this scaling actually
+// changes. Die size changes → scale_die_size. Die count changes →
+// scale_die_count. Only flat changes → scale_numeric_bonus.
+function scalingAtomFor(amt: DiceAmount): string {
+  if (amt.kind === "fixed") return "scale_numeric_bonus";
+  if (amt.kind === "threshold_tiers") {
+    const changesDieSize = amt.tiers.some(
+      (t) => t.override.dieSize !== undefined,
+    );
+    const changesDice = amt.tiers.some((t) => t.override.dice !== undefined);
+    if (changesDieSize) return "scale_die_size";
+    if (changesDice) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  if (amt.kind === "linear_per_level") {
+    if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
+    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  return "scale_numeric_bonus";
+}
+
+function describeTierOverride(d: DiceExprDelta, base: DiceExpr): string {
+  const dice = d.dice ?? base.dice;
+  const dieSize = d.dieSize ?? base.dieSize;
+  const flat = d.flat ?? base.flat;
+  return `${dice}d${dieSize}${flat !== undefined && flat !== 0 ? `+${flat}` : ""}`;
+}
+
+function describeDelta_(d: DiceExprDelta, base: DiceExpr): string {
+  const parts: string[] = [];
+  if (d.dice !== undefined)
+    parts.push(`${d.dice}d${d.dieSize ?? base.dieSize}`);
+  if (d.dieSize !== undefined && d.dice === undefined)
+    parts.push(`die size ${d.dieSize}`);
+  if (d.flat !== undefined) parts.push(`${d.flat} flat`);
+  return parts.join(" + ");
+}
+
+// ============================================================
+// Class-feature tracer
+// ============================================================
+
+function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "class_feature_root",
+    label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
+  });
+
+  const procedureId = traceClassFeatureMechanics(
+    feat.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: feat.id,
+    unitName: feat.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+
+exec
+/bin/bash -lc 'find .. -name UBIQUITOUS_LANGUAGE.md -o -name TAXONOMY_atoms_graph.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+codex
+I have the spell grammar now. The main open question is whether multi-beam scaling can be represented as repeated attack phases or whether that forces a widening, so I’m checking the repo vocabulary docs from the repo root before deciding.
+exec
+/bin/bash -lc "rg -n \"beam|multiple beams|separate attack|repeat attack|multi-target|scale_target_count|scale_die_count\" /workspace/typescript/dnd/packages/prototype-content-surface /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast -g '"'!node_modules'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:1000:    atomKind: "scale_target_count",
+/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:1001:    label: `scale_target_count\n+${selection.count.perSlotAboveBase}/slot above ${selection.count.baseLevel}`,
+/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:1098:// scale_die_count. Only flat changes → scale_numeric_bonus.
+/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:1107:    if (changesDice) return "scale_die_count";
+/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:1112:    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+/workspace/typescript/dnd/packages/prototype-content-surface/scripts/content-surface-survey/results-srd/fire_bolt/verdict.json:1:{"unit_slug":"fire_bolt","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","attack_roll","damage","on_hit_window","scale_die_count","spell_root","target"],"harness_relations":["attaches_to","consumes","grants","modifies","opens_window","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.313}
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/scripts/content-surface-survey/results-srd/fire_bolt/verdict.json:1:{"unit_slug":"fire_bolt","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","attack_roll","damage","on_hit_window","scale_die_count","spell_root","target"],"harness_relations":["attaches_to","consumes","grants","modifies","opens_window","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.313}
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/src/interpreter/tracer.ts:1000:    atomKind: "scale_target_count",
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/src/interpreter/tracer.ts:1001:    label: `scale_target_count\n+${selection.count.perSlotAboveBase}/slot above ${selection.count.baseLevel}`,
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/src/interpreter/tracer.ts:1098:// scale_die_count. Only flat changes → scale_numeric_bonus.
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/src/interpreter/tracer.ts:1107:    if (changesDice) return "scale_die_count";
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/src/interpreter/tracer.ts:1112:    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+/workspace/typescript/dnd/packages/prototype-content-surface/scripts/content-surface-survey/results-srd/fireball/verdict.json:1:{"unit_slug":"fireball","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","area","damage","save_gate","scale_die_count","spell_root","spell_slot"],"harness_relations":["attaches_to","branches_on_save","consumes","grants","modifies","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.302}
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/scripts/content-surface-survey/results-srd/fireball/verdict.json:1:{"unit_slug":"fireball","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","area","damage","save_gate","scale_die_count","spell_root","spell_slot"],"harness_relations":["attaches_to","branches_on_save","consumes","grants","modifies","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.302}
+/workspace/typescript/dnd/packages/prototype-content-surface/scripts/content-surface-survey/results-srd/magic_missile/verdict.json:1:{"unit_slug":"magic_missile","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","attack_roll","damage","on_hit_window","scale_target_count","spell_root","spell_slot","target"],"harness_relations":["attaches_to","consumes","grants","modifies","opens_window","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.33}
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/scripts/content-surface-survey/results-srd/magic_missile/verdict.json:1:{"unit_slug":"magic_missile","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","attack_roll","damage","on_hit_window","scale_target_count","spell_root","spell_slot","target"],"harness_relations":["attaches_to","consumes","grants","modifies","opens_window","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.33}
+/workspace/typescript/dnd/packages/prototype-content-surface/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+
+exec
+/bin/bash -lc 'find /workspace/typescript/dnd -name UBIQUITOUS_LANGUAGE.md -o -name TAXONOMY_atoms_graph.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 8235ms:
+/workspace/typescript/dnd/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md
+/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md
+
+codex
+There’s already a repo-local `eldritch_blast.json` and `magic_missile` is the closest precedent for “multiple projectiles can split across targets,” so I’m reading those before I write the worker’s output.
+exec
+/bin/bash -lc "sed -n '1,240p' content/magic_missile.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "magic_missile",
+  "name": "Magic Missile",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-R#Magic Missile"
+  },
+  "description": "You create three glowing darts of magical force. Each dart strikes a creature of your choice that you can see within range. A dart deals 1d4+1 Force damage. The darts all strike simultaneously, and you can direct them to hit one creature or several. Higher slot: one more dart per slot level above 1. NOTE: encoded with attack_roll proxy — actual mechanic is auto-hit (no roll). See proposal.md.",
+  "mechanics": {
+    "family": "activation",
+    "level": 1,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 120 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "choose_up_to",
+            "count": {
+              "kind": "linear",
+              "base": 3,
+              "perSlotAboveBase": 1,
+              "baseLevel": 1
+            }
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "force",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 4, "flat": 1 } }
+        },
+        "onMiss": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' content/eldritch_blast.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "eldritch_blast",
+  "name": "Eldritch Blast",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Eldritch Blast"
+  },
+  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+  "mechanics": {
+    "family": "activation",
+    "level": 0,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 120 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": { "kind": "target", "selection": { "mode": "one" } },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "force",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } }
+        },
+        "onMiss": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,240p' /workspace/typescript/dnd/packages/prototype-content-surface/content/eldritch_blast.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "eldritch_blast",
+  "name": "Eldritch Blast",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Eldritch Blast"
+  },
+  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+  "mechanics": {
+    "family": "activation",
+    "level": 0,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 120 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": { "kind": "target", "selection": { "mode": "one" } },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "force",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } }
+        },
+        "onMiss": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "rg --files content | rg 'magic_missile\\.json"'$|fire_bolt'"\\.json"'$'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+content/magic_missile.json
+content/fire_bolt.json
+
+exec
+/bin/bash -lc "sed -n '1,220p' /workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Ubiquitous Language
+
+## D20 Rolls
+
+| Term              | Definition                                                                                                             | Aliases to avoid                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **Ability Check** | A d20 roll testing a creature's innate talent and training against a Difficulty Class                                  | Skill check (imprecise — a skill modifies an ability check, it's not a separate roll type) |
+| **Saving Throw**  | A d20 roll to resist a spell, trap, poison, or similar threat                                                          | Save (acceptable shorthand but not canonical)                                              |
+| **Attack Roll**   | A d20 roll to determine whether an attack hits, compared against Armor Class                                           | Hit roll                                                                                   |
+| **Passive Check** | An ability check resolved without a die roll, using the formula `10 + all modifiers`                                   | Passive score (PHB uses "score" for the result, but the mechanic is a "passive check")     |
+| **Contest**       | Opposed ability checks; higher total wins; tie preserves status quo                                                    | Opposed roll, opposed check                                                                |
+| **Group Check**   | A group ability check; if at least half the group succeeds, the whole group succeeds                                   | —                                                                                          |
+| **Critical Hit**  | Natural 20 on an attack roll; automatic hit regardless of AC; all damage dice are doubled                              | Crit, natural 20 (natural 20 is the trigger, critical hit is the result)                   |
+| **Initiative**    | A Dexterity check made at the start of combat to determine turn order; order remains constant throughout the encounter | Init                                                                                       |
+
+## Advantage and Disadvantage
+
+| Term             | Definition                                                                                                                     | Aliases to avoid             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Advantage**    | A modifier on a d20 roll: roll two d20s, use the higher; binary (not stackable); translates to +5 in the passive check formula | Bonus (different mechanic)   |
+| **Disadvantage** | A modifier on a d20 roll: roll two d20s, use the lower; binary (not stackable); translates to -5 in the passive check formula  | Penalty (different mechanic) |
+
+## Action Lifecycle
+
+| Term        | Definition                                                                                                                                                                                                                 | Aliases to avoid  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **Resolve** | Compute an outcome from inputs without changing state. In Quint, this is pure rules evaluation over immutable records. In TypeScript, this is outcome computation such as hit/miss, save pass/fail, and reaction legality. | Execute, apply    |
+| **Apply**   | Take a resolved outcome and produce updated state. In Quint, this is a pure record transformation. In TypeScript, this is the state-building part of the commit layer.                                                     | Resolve, mutate   |
+| **Advance** | Move through a phase boundary, potentially opening the next interrupt point or timing window.                                                                                                                              | Continue, proceed |
+| **Offer**   | Suspend resolution to present a reaction window to eligible creatures.                                                                                                                                                     | Prompt, ask       |
+| **Decline** | A creature in a reaction window explicitly chooses not to react. Declining does not consume the reaction resource.                                                                                                         | Pass              |
+
+## Resource Consumption
+
+| Term        | Definition                                                                                                         | Aliases to avoid             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| **Pool**    | A counted stock that depletes until a rest or feature-specific recharge restores it.                               | Charge bucket, resource blob |
+| **Quota**   | A per-turn or per-window allowance that refills automatically at its reset boundary.                               | Charge, use counter          |
+| **Lock**    | An exclusive hold where only one effect can occupy the slot at a time; taking a new lock displaces the old holder. | Reservation slot, latch      |
+| **Timer**   | A countdown or duration that expires after turns, rounds, or another explicit clock.                               | Counter (too vague)          |
+| **Spend**   | Pay an immediate up-front cost to take an action now.                                                              | Consume (too broad), use up  |
+| **Grant**   | A spend that creates or restores a different usable resource.                                                      | Refund (opposite direction)  |
+| **Reserve** | Pay now to hold a future release window; if the hold breaks, the reserved action is lost.                          | Delay-cast, queue            |
+| **Refund**  | Restore a previously spent pool resource without rewinding any separate quota that was already used.               | Undo, rollback               |
+
+## Proficiency
+
+| Term                  | Definition                                                                    | Aliases to avoid                 |
+| --------------------- | ----------------------------------------------------------------------------- | -------------------------------- |
+| **Proficiency Bonus** | A level-derived bonus (+2 to +6) added to d20 rolls when proficient           | Prof bonus, proficiency modifier |
+| **Proficiency Level** | The degree of training: none, half proficiency, proficient, or expertise      | Proficiency type                 |
+| **Expertise**         | A proficiency level that doubles the proficiency bonus for the relevant check | Double proficiency               |
+
+## Ability Scores
+
+| Term                 | Definition                                                                                                                                                                                                        | Aliases to avoid                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Ability Score**    | A number (1-30) defining the magnitude of one of six abilities                                                                                                                                                    | Stat, attribute                                                             |
+| **Ability Modifier** | A number derived from an ability score: `floor((score - 10) / 2)`                                                                                                                                                 | Stat modifier, ability bonus                                                |
+| **Ability**          | One of the six: Strength, Dexterity, Constitution, Intelligence, Wisdom, Charisma                                                                                                                                 | Stat, attribute                                                             |
+| **Skill**            | One of 18 named specializations of ability checks (e.g., Perception specializes Wisdom checks, Stealth specializes Dexterity checks); proficiency in a skill adds proficiency bonus to the relevant ability check | Skill check (a skill modifies an ability check; it's not its own roll type) |
+
+## Hit Points and Death
+
+| Term                     | Definition                                                                                                                                                                                                      | Aliases to avoid                          |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
+| **Hit Points (HP)**      | Current health of a creature; ranges from 0 to the creature's hit point maximum                                                                                                                                 | Health, life                              |
+| **Hit Point Maximum**    | Upper bound on HP; derived from class, level, and Constitution; can be reduced by effects (e.g., Exhaustion level 4 halves it)                                                                                  | Max HP (acceptable shorthand), max health |
+| **Temporary Hit Points** | A damage buffer separate from HP; absorbed first; cannot be healed; do not stack (keep higher); can exceed hit point maximum                                                                                    | Temp HP (acceptable shorthand), shield    |
+| **Hit Die**              | A class-based die (d6-d12), one per level; spent during short rest to recover HP (roll + CON modifier); all recovered on long rest (SRD 5.2.1); multiclass characters track remaining dice per class separately | Recovery die                              |
+| **Death Saving Throw**   | A special d20 save at 0 HP with no ability modifier; 10+ = success, <10 = failure; nat 20 = regain 1 HP; nat 1 = two failures; three successes = **Stable**; three failures = death                             | Death save (acceptable shorthand)         |
+| **Stable**               | A creature at 0 HP that is no longer making death saving throws; remains unconscious; regains 1 HP after 1d4 hours if not healed                                                                                | Stabilized                                |
+| **Instant Death**        | When damage reduces a creature to 0 HP and the remaining damage equals or exceeds its hit point maximum                                                                                                         | Overkill                                  |
+
+## Damage
+
+| Term                    | Definition                                                                                                                                                                                                    | Aliases to avoid                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| **Damage Type**         | One of 13 categories: Acid, Bludgeoning, Cold, Fire, Force, Lightning, Necrotic, Piercing, Poison, Psychic, Radiant, Slashing, Thunder                                                                        | Element (only partially overlaps)                     |
+| **Resistance**          | Halves incoming damage of a specific type; applied after all other modifiers; multiple instances of same type don't stack                                                                                     | Damage reduction (different concept in other systems) |
+| **Vulnerability**       | Doubles incoming damage of a specific type; applied after resistance                                                                                                                                          | Weakness                                              |
+| **Immunity**            | Nullifies all damage of a specific type; also applies to conditions and exhaustion (see below)                                                                                                                | —                                                     |
+| **Condition Immunity**  | A creature immune to a condition is unaffected by it — the condition does not apply and neither do its implied side effects (e.g., Paralyzed immunity also prevents the Incapacitated that Paralyzed implies) | —                                                     |
+| **Exhaustion Immunity** | A creature immune to exhaustion does not accumulate exhaustion levels; distinct from condition immunity since Exhaustion is a separate mechanic with levels 1–6, not one of the 14 Conditions                 | —                                                     |
+
+## Conditions
+
+| Term              | Definition                                                                                                                                                                                                                                                                                                       | Aliases to avoid                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Condition**     | One of 14 named status effects with rules-defined mechanical consequences                                                                                                                                                                                                                                        | Status, debuff, buff                                                                             |
+| **Blinded**       | Can't see; auto-fails sight-based checks; attack rolls against have advantage; own attack rolls have disadvantage                                                                                                                                                                                                | —                                                                                                |
+| **Charmed**       | Can't attack or harm the charmer; charmer has advantage on social checks against creature                                                                                                                                                                                                                        | —                                                                                                |
+| **Deafened**      | Can't hear; auto-fails hearing-based checks                                                                                                                                                                                                                                                                      | —                                                                                                |
+| **Frightened**    | Disadvantage on ability checks and attack rolls while source of fear is in line of sight; can't willingly move closer to source                                                                                                                                                                                  | Scared, feared                                                                                   |
+| **Grappled**      | Speed becomes 0; attack rolls against targets other than the grappler have disadvantage; the grappler can drag/carry the creature, but each foot of that movement costs 1 extra foot unless the target is Tiny or two or more sizes smaller; ends if grappler is incapacitated or creature is moved out of reach | Grabbed, held                                                                                    |
+| **Incapacitated** | Can't take actions, bonus actions, or reactions; concentration broken; can't speak; disadvantage on initiative rolls                                                                                                                                                                                             | Disabled, stunned (Stunned is a separate, stronger condition)                                    |
+| **Invisible**     | Can't be seen without magic; heavily obscured for hiding; attacks against have disadvantage; own attacks have advantage                                                                                                                                                                                          | Hidden (different — hidden requires both unseen and unheard)                                     |
+| **Paralyzed**     | Incapacitated; can't move or speak; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                                                                      | —                                                                                                |
+| **Petrified**     | Turned to stone; incapacitated; can't move/speak; unaware; auto-fails Str/Dex saves; attacks against have advantage; resistance to all damage; immune to poison/disease                                                                                                                                          | —                                                                                                |
+| **Poisoned**      | Disadvantage on attack rolls and ability checks                                                                                                                                                                                                                                                                  | —                                                                                                |
+| **Prone**         | Can only crawl (or stand, costing half speed); disadvantage on own attack rolls; attacks within 5 ft have advantage, beyond 5 ft have disadvantage                                                                                                                                                               | Knocked down, lying down                                                                         |
+| **Restrained**    | Speed becomes 0; attacks against have advantage; own attacks have disadvantage; disadvantage on Dex saves                                                                                                                                                                                                        | Immobilized (imprecise — Grappled also stops movement but differs mechanically)                  |
+| **Stunned**       | Incapacitated; can't move; auto-fails Str/Dex saves; attacks against have advantage                                                                                                                                                                                                                              | Dazed                                                                                            |
+| **Unconscious**   | Incapacitated; can't move/speak; unaware; drops held items and falls prone; auto-fails Str/Dex saves; attacks against have advantage; hits within 5 ft are critical                                                                                                                                              | Knocked out (KO is a specific mechanic — melee attacker's choice to render unconscious + stable) |
+| **Exhaustion**    | A special condition measured in six cumulative levels: 1 = disadvantage on checks; 2 = speed halved; 3 = disadvantage on attacks/saves; 4 = HP max halved; 5 = speed 0; 6 = death                                                                                                                                | Fatigue                                                                                          |
+
+### Canonical Condition Consequences
+
+Use one consequence-indexed question per rules surface rather than scattering condition checks inline:
+
+- **Own attack disadvantage**: Blinded, Poisoned, Prone, Restrained, plus Frightened while the source is in line of sight
+- **Defense advantage granted to attackers**: Blinded, Paralyzed, Petrified, Restrained, Stunned, Unconscious, plus Prone against attackers within 5 feet
+- **Defense disadvantage imposed on attackers**: Invisible, plus Prone against attackers beyond 5 feet
+- **Automatic Strength/Dexterity save failure**: Paralyzed, Petrified, Stunned, Unconscious
+- **Dexterity save disadvantage**: Restrained
+- **Ability check disadvantage**: Poisoned, plus Frightened while the source is in line of sight
+- **Automatic sight/hearing check failure**: Blinded for sight-based checks, Deafened for hearing-based checks
+- **Speed becomes 0**: Grappled, Paralyzed, Petrified, Restrained, Unconscious
+- **Blocks actions / bonus actions / reactions**: Incapacitated and any condition that implies it
+- **Blocks speech**: Incapacitated and any condition that implies it (Paralyzed, Petrified, Stunned, Unconscious)
+
+This table is a support-layer projection of the SRD condition text. Quint remains the semantic authority.
+
+## Turn Structure
+
+| Term                   | Definition                                                                                                                                                                                          | Aliases to avoid                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Round**              | A cycle of combat lasting ~6 seconds in which every participant takes one turn                                                                                                                      | —                                                                                                                                  |
+| **Turn**               | A single creature's opportunity to move, take an action, and optionally take a bonus action during a round                                                                                          | Phase                                                                                                                              |
+| **Action**             | The primary activity a creature can perform on its turn; one per turn; the 10 standard types are: Attack, Cast a Spell, Dash, Disengage, Dodge, Help, Hide, Ready, Search, Use an Object            | —                                                                                                                                  |
+| **Bonus Action**       | A secondary activity on a turn, available only when explicitly granted by a feature or spell; one per turn                                                                                          | Swift action, minor action                                                                                                         |
+| **Reaction**           | An instant response to a trigger, usable on any turn; one per round; resets at the start of the creature's next turn                                                                                | —                                                                                                                                  |
+| **Surprise**           | A determination at the start of combat; a surprised combatant has Disadvantage on their Initiative roll (SRD 5.2.1); no lost turn, no restricted reactions — purely affects the Initiative d20 roll | Ambush (ambush is a narrative situation that may cause surprise), Surprised condition (there is no "surprised condition" in 5.2.1) |
+| **Opportunity Attack** | A reaction melee attack triggered when a hostile creature moves out of the attacker's reach; avoided by the Disengage action                                                                        | Attack of opportunity, AoO                                                                                                         |
+
+## Combat
+
+| Term                    | Definition                                                                                                                                                                                                                                                                | Aliases to avoid                                               |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Armor Class (AC)**    | The target number an attack roll must meet or equal to hit; formula depends on armor, shield, Dexterity, and special features                                                                                                                                             | Defense, defense rating                                        |
+| **Armor Category**      | One of three types: Light (base + full DEX mod), Medium (base + DEX mod, max +2), Heavy (base AC, no DEX mod)                                                                                                                                                             | Armor type (ambiguous — could mean specific armor vs category) |
+| **Cover**               | Physical obstruction granting defensive bonuses; three degrees: Half (+2 AC and Dex saves), Three-Quarters (+5 AC and Dex saves), Total (can't be targeted directly)                                                                                                      | —                                                              |
+| **Grapple**             | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure applies Grappled; target must be no more than one size larger and the attacker must have a free hand | Grab                                                           |
+| **Shove**               | An Unarmed Strike option that replaces one attack; target chooses a Strength or Dexterity saving throw against DC 8 + Strength modifier + Proficiency Bonus; failure either knocks the target Prone or pushes it 5 feet; target must be no more than one size larger      | Push (push is one of two shove outcomes)                       |
+| **Unarmed Strike**      | A melee weapon attack (punch, kick, etc.) dealing 1 + Strength modifier bludgeoning damage; every creature is proficient                                                                                                                                                  | —                                                              |
+| **Two-Weapon Fighting** | When attacking with a Light melee weapon, a creature can use a bonus action to attack with a different Light melee weapon in the other hand; ability modifier is not added to the bonus attack's damage (unless negative)                                                 | Dual wielding (acceptable colloquial, not the PHB term)        |
+| **Knock Out**           | When a melee attack reduces a creature to 0 HP, the attacker can choose to render it Unconscious and Stable instead of dying                                                                                                                                              | KO                                                             |
+| **Free Hand**           | A hand not currently occupied by holding a weapon, wielding a Shield, or maintaining a grapple; required by rules that explicitly say "free hand"                                                                                                                         | Off hand, spare hand                                           |
+
+## Movement
+
+| Term                  | Definition                                                                                                                                                                                                                                                                                | Aliases to avoid                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Speed**             | A creature's stat: the maximum distance in feet it is allowed to move on its turn; types include Walk, Fly, Swim, Climb, Burrow; Speed is a capacity, not a resource — it doesn't decrease when you move (but can be reduced by conditions like Exhaustion L2 or Grappled → 0)            | Movement speed, movement rate                              |
+| **Movement**          | The act of expending distance from your turn's movement budget (which starts at your Speed); distinct from Speed itself — a creature that has used all its Movement still has its Speed; some features grant bonus movement independent of the normal budget (e.g., Tactical Shift, Dash) | Speed (Speed is the capacity; Movement is the consumption) |
+| **Difficult Terrain** | Terrain that costs 1 extra foot per foot of movement (e.g., rubble, undergrowth, another creature's space)                                                                                                                                                                                | Rough terrain, hazardous terrain                           |
+| **Squeezing**         | Moving through a space sized for one category smaller; costs 1 extra foot per foot; disadvantage on attack rolls and Dex saves; attacks against have advantage                                                                                                                            | —                                                          |
+| **Long Jump**         | Horizontal jump; distance = Strength score (feet) with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                                       | —                                                          |
+| **High Jump**         | Vertical jump; height = 3 + Strength modifier (min 0) feet with 10+ ft running start, half that standing; each foot costs 1 foot of movement                                                                                                                                              | —                                                          |
+| **Size**              | One of six categories determining space controlled in combat: Tiny (2.5 ft), Small (5 ft), Medium (5 ft), Large (10 ft), Huge (15 ft), Gargantuan (20+ ft)                                                                                                                                | —                                                          |
+| **Carrying Capacity** | Maximum weight a creature can carry: Strength score x 15 lbs; doubled per size category above Medium, halved for Tiny                                                                                                                                                                     | Encumbrance (variant rule with different thresholds)       |
+
+## Equipment
+
+| Term                   | Definition                                                                                                                                                                                                                                                                                                  | Aliases to avoid                                                          |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| **Weapon Property**    | One of 10 traits on a weapon defining special mechanics: Ammunition, Finesse, Heavy, Light, Loading, Reach, Special, Thrown, Two-Handed, Versatile                                                                                                                                                          | Weapon tag, weapon trait                                                  |
+| **Two-Handed**         | A weapon property meaning the weapon requires two hands when you attack with it                                                                                                                                                                                                                             | Two-hand mode, main-hand only                                             |
+| **Versatile**          | A weapon property meaning the weapon can be used with one or two hands; the parenthetical damage applies only when used with two hands to make a melee attack                                                                                                                                               | Flexible weapon mode                                                      |
+| **Mastery Property**   | A weapon-specific combat technique (one of 8: Cleave, Graze, Nick, Push, Sap, Slow, Topple, Vex) usable only by a character with a feature that unlocks it; each weapon has exactly one mastery property. Distinct from Weapon Properties — mastery is an additional layer, not one of the 10 weapon traits | Weapon mastery (ambiguous — could mean the class feature or the property) |
+| **Weapon Mastery**     | A class feature (Fighter L1, Barbarian L1, Paladin L1, Ranger L1, Rogue L1) that lets a character use mastery properties on a limited number of weapons they are proficient with. Number of mastered weapons varies by class and level; changeable on Long Rest. Barbarian restricted to melee weapons only | —                                                                         |
+| **Cleave**             | Mastery property: on melee hit, make a melee attack against a second creature within 5 feet of the first and within your reach; second creature takes weapon damage without ability modifier (unless negative). Once per turn                                                                               | —                                                                         |
+| **Graze**              | Mastery property: on miss, deal damage equal to ability modifier used for the attack (minimum 1; same damage type as weapon). Damage can only be increased by increasing the ability modifier                                                                                                               | —                                                                         |
+| **Nick**               | Mastery property: the Light property's extra attack can be made as part of the Attack action instead of as a Bonus Action. Once per turn                                                                                                                                                                    | —                                                                         |
+| **Push**               | Mastery property: on hit, push a Large or smaller creature up to 10 feet straight away from you                                                                                                                                                                                                             | —                                                                         |
+| **Sap**                | Mastery property: on hit, target has Disadvantage on its next attack roll before the start of your next turn                                                                                                                                                                                                | —                                                                         |
+| **Slow**               | Mastery property: on hit (with damage), reduce target's Speed by 10 feet until the start of your next turn; multiple Slow hits don't stack beyond 10 feet                                                                                                                                                   | —                                                                         |
+| **Topple**             | Mastery property: on hit, force a Constitution saving throw (DC 8 + ability modifier + proficiency bonus); on failure, target has the Prone condition                                                                                                                                                       | —                                                                         |
+| **Vex**                | Mastery property: on hit (with damage), gain Advantage on your next attack roll against that creature before the end of your next turn                                                                                                                                                                      | —                                                                         |
+| **Donning/Doffing**    | Putting on or removing armor; time varies: Light (1 min / 1 min), Medium (5 min / 1 min), Heavy (10 min / 5 min); doffing Heavy is halved with help                                                                                                                                                         | —                                                                         |
+| **Holding / Wielding** | The SRD-facing concept for what a creature has in hand. Use this language in rules and docs; avoid inventing handedness terms that the SRD does not define                                                                                                                                                  | Main hand, off hand, left hand, right hand                                |
+
+## Spellcasting
+
+| Term                | Definition                                                                                                                                                                                                                          | Aliases to avoid                                   |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **Spell Slot**      | A capacity to cast a spell at a given level (1-9); expended when casting; recovered on long rest                                                                                                                                    | Spell charge, spell use                            |
+| **Pact Slot**       | A Warlock-specific spell slot; level determined by Warlock level; recovered on short rest (unlike regular spell slots)                                                                                                              | Warlock slot                                       |
+| **Concentration**   | Sustained effort to maintain a spell; broken by: casting another concentration spell, taking damage and failing a Constitution save (DC = max(10, damage/2)), being incapacitated, or dying; only one concentration spell at a time | Channeling, maintaining                            |
+| **Spell Save DC**   | The Difficulty Class for a target's saving throw against a spell: `8 + spellcasting ability modifier + proficiency bonus`                                                                                                           | —                                                  |
+| **Cantrip**         | A level 0 spell cast at will without expending a spell slot                                                                                                                                                                         | At-will spell, 0-level spell                       |
+| **Ritual**          | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting                                                                                                   | —                                                  |
+| **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost                            | Ingredient (only partially overlaps with Material) |
+
+### Hand Occupancy Terminology
+
+Use SRD terms in rules-facing prose:
+
+- `free hand`
+- `holding`
+- `wielding a Shield`
+- `Two-Handed`
+- `Versatile`
+
+Avoid these as domain-language terms because the SRD does not define them:
+
+- `main hand`
+- `off hand`
+- `left hand`
+- `right hand`
+  | **Spell Level** | A measure of a spell's power, ranging from 0 (cantrip) to 9; distinct from character level — a 5th-level character can cast 3rd-level spells | Character level (different concept; spell level 5 ≠ character level 5) |
+  | **Base Spell Level** | The minimum spell slot level required to cast a spell; e.g., Fireball's base spell level is 3 | Spell level (ambiguous — could mean the level it's being cast at) |
+  | **Cast Level** | The spell slot level actually used to cast a spell; equals the base spell level or higher when using a higher-level spell slot | Upcast level |
+  | **Using a Higher-Level Spell Slot** | Casting a spell with a spell slot above its base spell level; many spells gain enhanced effects (extra damage dice, longer duration, more targets) as described in their "Using a Higher-Level Spell Slot" section | Upcast, upcasting (player slang, not RAW; the SRD says "using a higher-level spell slot") |
+  | **Spell Attack** | An attack roll using spellcasting ability modifier + proficiency bonus; subject to advantage, disadvantage, and cover like any attack roll | — |
+  | **Casting Time** | How long it takes to cast a spell: 1 action (most common), 1 bonus action, 1 reaction, or extended (minutes/hours); extended casting requires concentration | — |
+  | **Duration** | How long a spell's effect persists: Instantaneous (one-time effect), Concentration (up to a stated maximum), or fixed (specific time without concentration) | — |
+  | **Area of Effect** | The geometric shape of a spell's impact zone; five standard shapes: Cone (width = distance from origin), Cube (originates from a face), Cylinder (center + radius + height), Line (straight path with width), Sphere (center + radius) | AoE (acceptable shorthand) |
+  | **School of Magic** | One of eight categories of spells: Abjuration (protection), Conjuration (transport/summon), Divination (information), Enchantment (mind control), Evocation (energy manipulation), Illusion (deception), Necromancy (life/death), Transmutation (transformation) | — |
+  | **Caster Type** | Classification for multiclass spell slot calculation: Full Caster (bard, cleric, druid, sorcerer, wizard), Half Caster (paladin, ranger), Third Caster (Eldritch Knight, Arcane Trickster) | — |
+
+exec
+/bin/bash -lc "sed -n '1,260p' /workspace/typescript/dnd/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Taxonomy: Atoms Graph v4
+
+Purpose:
+
+- revise `v3` after the class-feature, species, and background validation passes exposed consistent multi-stream pressure for a typed scaling split;
+- keep every `v3` atom unchanged except the scaling section;
+- leave the graph's top-level family shape intact — no source, procedure, attachment, window, resolution, lifecycle, resource, relation, or effect category gains a new member from this revision;
+- complete the research-side taxonomy track before any schema design work resumes.
+
+## Architecture Reminder
+
+Read this file under the repo boundary from `ARCHITECTURE.md`:
+
+- the core models mechanical rules with deterministic outcomes;
+- DM rulings, agenda decisions, notification surfaces, and other caller-owned facts are **not** core-mechanics atoms.
+
+Every atom here must justify itself as a reusable mechanics concern:
+
+- owned state
+- reusable transition shape
+- deterministic trigger/evaluation boundary
+- deterministic effect / cleanup / projection boundary
+
+If a candidate is only:
+
+- a wording distinction;
+- a communication label;
+- a narrative description;
+- a UI-facing summary;
+
+then it stays out of the core atom inventory.
+
+## Changes From `v3`
+
+All `v3` atoms are retained unchanged **except** for the scaling section. The single change is a typed split of the scaling atoms.
+
+### Typed split of scaling atoms
+
+`v3` inherited scaling atoms from `v2`:
+
+- `scale_target_count`
+- `scale_numeric_bonus`
+- `scale_damage`
+
+The class-feature validation pass (Round 1) exposed three mechanically distinct scaling shapes in a single source kind:
+
+- Bardic Inspiration: die-size scaling (d6 → d8 → d10 → d12);
+- Sneak Attack: dice-count scaling (1d6 → 10d6);
+- Extra Attack: attack-count scaling (2 → 3 → 4 attacks per Attack action).
+
+The species validation pass provided a second independent stream:
+
+- Dragonborn Breath Weapon: dice-count scaling (1d10 → 4d10) tiered by character level.
+
+`scale_damage` cannot honestly carry these three shapes simultaneously — they produce different mathematical operations and compose differently with modifiers, rerolls, and damage-type conversions. The same "dishonest compression" pattern `v3` already fixed for `modify_roll` now applies to `scale_damage`.
+
+### Scaling atoms in `v4`
+
+- `scale_target_count` — carried from `v3` unchanged. Example: slot-scaled target count (Bless at higher levels).
+- `scale_numeric_bonus` — carried from `v3` unchanged. Example: level-scaled numeric bonus (Rage Damage).
+- `scale_die_count` — **new**. The number of dice rolled grows with level. Example: Sneak Attack (1d6 → 10d6), Dragonborn Breath Weapon (1d10 → 4d10), Cleric Divine Spark (1d8 → 4d8), Cleric Sear Undead (Wis-mod d8s).
+- `scale_die_size` — **new**. The die used grows with level. Example: Bardic Inspiration (d6 → d12), Monk Martial Arts Die (d6 → d12).
+- `scale_attack_count` — **new**. The number of attacks per Attack action grows with level. Example: Extra Attack (2 → 4), Fighter's Two Extra Attacks / Three Extra Attacks.
+- The umbrella name `scale_damage` is retained as a non-atom grouping label only. Graph files and validation notes must use the typed atom names going forward.
+
+All other `v3` sections are unchanged.
+
+## 1. Source Atoms
+
+(unchanged from `v3`)
+
+- `spell_root`
+- `feat_root`
+- `class_feature_root`
+- `subclass_feature_root`
+- `species_trait_root`
+- `background_trait_root`
+- `item_property_root`
+- `mastery_root`
+- `magic_item_root`
+
+## 2. Procedure Atoms
+
+(unchanged from `v3`)
+
+- `activate`
+- `respond`
+- `prepare`
+- `prompt`
+- `commit`
+- `choose`
+- `grant`
+- `replace`
+- `store`
+- `release`
+- `suppress`
+- `restore`
+- `attune`
+- `refund`
+
+## 3. Attachment Atoms
+
+(unchanged from `v3`)
+
+- `self`
+- `target`
+- `area`
+- `object`
+- `location`
+- `weapon`
+- `item`
+- `companion`
+- `stored_spell`
+- `attack_proxy`
+- `mark`
+
+## 4. Window Atoms
+
+(unchanged from `v3`)
+
+- `action_window`
+- `bonus_action_window`
+- `reaction_window`
+- `spell_cast_window`
+- `turn_start_window`
+- `turn_end_window`
+- `on_hit_window`
+- `on_miss_window`
+- `post_roll_window`
+- `initiative_window`
+- `post_action_window`
+- `duration_window`
+- `rest_window`
+
+## 5. Resolution Atoms
+
+(unchanged from `v3`)
+
+- `attack_roll`
+- `melee_spell_attack`
+- `save_gate`
+- `repeat_save`
+- `ability_check`
+- `interrupt_resolution`
+- `condition_progression`
+
+## 6. Lifecycle Atoms
+
+(unchanged from `v3`)
+
+- `concentrate`
+- `persist`
+- `expire`
+- `dismiss`
+- `complete`
+- `break`
+- `self_break`
+- `return_on_end`
+- `replace_on_recast`
+
+## 7. Resource Atoms
+
+(unchanged from `v3`)
+
+- `spell_slot`
+- `charge`
+- `use_count`
+- `attunement_slot`
+
+## 8. Scaling Atoms
+
+(revised from `v3`: typed split)
+
+- `scale_target_count`
+- `scale_numeric_bonus`
+- `scale_die_count`
+- `scale_die_size`
+- `scale_attack_count`
+
+## 9. Effect Atoms
+
+(unchanged from `v3`)
+
+- `damage`
+- `heal`
+- `modify_max_hp`
+- `modify_ac`
+- `modify_roll_numeric`
+- `modify_roll_advantage`
+- `modify_roll_reroll`
+- `modify_roll_substitute`
+- `modify_speed`
+- `modify_range`
+- `grant_hover`
+- `grant_sense`
+- `grant_proficiency`
+- `grant_spell_access`
+- `grant_resistance`
+- `bypass_resistance`
+- `grant_extra_action`
+- `restrict_action_set`
+- `apply_condition`
+- `remove_condition`
+- `move`
+- `force_move`
+- `transport_exile`
+- `block_targeting`
+- `block_travel`
+- `negate_named_effect`
+- `deny_opportunity_attack`
+- `create_companion`
+- `command_companion`
+- `telepathic_link`
+- `deliver_touch_spell`
+- `create_object`
+- `create_attack_proxy`
+- `mark_target`
+- `transfer_mark`
+- `alter_item_kind`
+- `fall_on_end`
+
+## 10. Relation Types
+
+(unchanged from `v3`)
+
+- `roots`
+- `opens_window`
+- `requires`
+- `attaches_to`
+- `stores`
+- `releases`
+- `grants`
+- `consumes`
+- `refunds`
+- `suppresses`
+- `replaces`
+- `modifies`
+- `persists_until`
+- `branches_on_completion`
+- `branches_on_save`
+- `prepares`
+- `prompts`
+- `commits`
+- `transfers_to`
+- `returns_to`
+
+## 11. Current Working Reads
+
+### A. Top-level family shape is stable
+
+All seven source-root atoms have had an atom-level validation pass. No validation stream has forced a new top-level node or edge family. `v4` refines scaling only.
+
+### B. Typed scaling split parallels the typed `modify_roll` split from `v3`
+
+Both splits follow the same logic: a single umbrella atom was silently carrying mechanically distinct operations. The typed split names each operation independently and lets composition remain honest about what math is being performed.
+
+### C. No further atom-level pressure from item properties
+
+Item properties were the cleanest validation group in the whole effort. Eight of nine properties are cross-rule rewrites that compose from existing atoms and existing subgraphs. One (Ammunition) adds a resource dimension that `consumes` + `use_count` already covers.
+
+
+codex
+The gap is now clear: the taxonomy already has `scale_attack_count`, but the authored surface only exposes damage and target-count scaling. I’m going to keep the JSON valid with the closest current encoding, then classify it as a widening and document the missing attack-count schedule.
+exec
+/bin/bash -lc "sed -n '1,220p' src/run.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// CLI entry: load an authored unit JSON, trace it, emit mermaid.
+//
+// Usage:
+//   tsx src/run.ts content/<unit>.json
+//   tsx src/run.ts content/<unit>.json --out content/<unit>.trace.md
+
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { argv, exit, stdout } from "node:process";
+
+import type { UnitRecord } from "./surface/types.ts";
+import { traceUnit } from "./interpreter/tracer.ts";
+import { renderTraceDocument } from "./interpreter/mermaid.ts";
+
+function main(): void {
+  const args = argv.slice(2);
+  if (args.length === 0) {
+    stdout.write("usage: tsx src/run.ts <unit.json> [--out <file.md>]\n");
+    exit(64);
+  }
+
+  const unitPathArg = args[0];
+  if (unitPathArg === undefined) {
+    stdout.write("missing unit path\n");
+    exit(64);
+  }
+  const unitPath = resolve(unitPathArg);
+  const raw = readFileSync(unitPath, "utf8");
+  const unit = JSON.parse(raw) as UnitRecord;
+
+  const trace = traceUnit(unit);
+  const doc = renderTraceDocument(trace, unit);
+
+  const outIdx = args.indexOf("--out");
+  if (outIdx >= 0 && args.length > outIdx + 1) {
+    const outArg = args[outIdx + 1];
+    if (outArg === undefined) {
+      stdout.write("--out flag given without path\n");
+      exit(64);
+    }
+    const outPath = resolve(outArg);
+    writeFileSync(outPath, doc, "utf8");
+    stdout.write(`wrote ${outPath}\n`);
+  } else {
+    stdout.write(doc);
+  }
+}
+
+main();
+
+exec
+/bin/bash -lc "sed -n '1,200p' scripts/content-surface-survey/results-srd/fire_bolt/verdict.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{"unit_slug":"fire_bolt","verdict":"clean","typecheck_exit":0,"tracer_exit":0,"harness_atoms":["action_quota","activate","attack_roll","damage","on_hit_window","scale_die_count","spell_root","target"],"harness_relations":["attaches_to","consumes","grants","modifies","opens_window","roots"],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"","wall_seconds":1.313}
+
+codex
+I’m updating only the worker-owned outputs now: keeping the authored JSON type-valid, and writing the widening report and proposal around the missing beam-count schedule.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb0e66add8c0fd528331537ed7abc2861d128588
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+@@ -0,0 +1,55 @@
++# Eldritch Blast widening
++
++`Eldritch Blast` does not force a new atom in taxonomy v4. It forces authored-surface access to the existing `scale_attack_count` concept.
++
++## Why the current surface is insufficient
++
++The closed spell `activation` shape supports:
++
++- a fixed list of `phases`
++- damage scaling via `DiceAmount`
++- target-count scaling for `choose_up_to` only via slot-based `linear`
++
++That is enough for `Fire Bolt` and enough to approximate `Magic Missile`, but not enough for `Eldritch Blast`.
++
++`Eldritch Blast` upgrades by increasing the number of beams, and each beam is its own attack roll:
++
++> "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++
++This is not:
++
++- damage scaling: each beam still deals `1d10` Force damage
++- target-count scaling alone: the rule is about repeated attacks, not just how many creatures may be chosen
++
++## Proposed surface widening
++
++Add a way for an `attack_roll` activation phase to scale its repetition count by level, using the existing taxonomy atom `scale_attack_count`.
++
++One possible shape:
++
++```json
++{
++  "kind": "attack_roll",
++  "attachment": { "kind": "target", "selection": { "mode": "one" } },
++  "attackKind": "ranged_spell_attack",
++  "repeat": {
++    "kind": "threshold_tiers",
++    "axis": "character",
++    "base": 1,
++    "tiers": [
++      { "atLevel": 5, "value": 2 },
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 17, "value": 4 }
++    ]
++  },
++  "retargetPerRepeat": true,
++  "onHit": { "kind": "damage", "damageType": "force", "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } } },
++  "onMiss": { "kind": "none" }
++}
++```
++
++## Why this is the right widening
++
++- It stays within the existing `activation` family.
++- It uses an existing v4 atom family member: `scale_attack_count`.
++- It preserves the SRD distinction that each beam is separately targeted and separately resolved.
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d26e260657629e8cbce9d35fe7aee24964ab7538
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+@@ -0,0 +1,30 @@
++{
++  "unit_slug": "eldritch_blast",
++  "outcome": "surface_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "scale_attack_count on activation attack phases",
++      "justification": "Eldritch Blast's cantrip upgrade scales the number of separate attack rolls, not damage dice or target count. The current surface can encode one attack roll with fixed damage, but it cannot express a character-level schedule that repeats that attack independently per beam.",
++      "evidence": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded with a single-beam attack_roll as the closest valid current surface shape. This under-models the cantrip upgrade, so the result is a surface widening rather than clean."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb0e66add8c0fd528331537ed7abc2861d128588
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+@@ -0,0 +1,55 @@
++# Eldritch Blast widening
++
++`Eldritch Blast` does not force a new atom in taxonomy v4. It forces authored-surface access to the existing `scale_attack_count` concept.
++
++## Why the current surface is insufficient
++
++The closed spell `activation` shape supports:
++
++- a fixed list of `phases`
++- damage scaling via `DiceAmount`
++- target-count scaling for `choose_up_to` only via slot-based `linear`
++
++That is enough for `Fire Bolt` and enough to approximate `Magic Missile`, but not enough for `Eldritch Blast`.
++
++`Eldritch Blast` upgrades by increasing the number of beams, and each beam is its own attack roll:
++
++> "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++
++This is not:
++
++- damage scaling: each beam still deals `1d10` Force damage
++- target-count scaling alone: the rule is about repeated attacks, not just how many creatures may be chosen
++
++## Proposed surface widening
++
++Add a way for an `attack_roll` activation phase to scale its repetition count by level, using the existing taxonomy atom `scale_attack_count`.
++
++One possible shape:
++
++```json
++{
++  "kind": "attack_roll",
++  "attachment": { "kind": "target", "selection": { "mode": "one" } },
++  "attackKind": "ranged_spell_attack",
++  "repeat": {
++    "kind": "threshold_tiers",
++    "axis": "character",
++    "base": 1,
++    "tiers": [
++      { "atLevel": 5, "value": 2 },
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 17, "value": 4 }
++    ]
++  },
++  "retargetPerRepeat": true,
++  "onHit": { "kind": "damage", "damageType": "force", "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } } },
++  "onMiss": { "kind": "none" }
++}
++```
++
++## Why this is the right widening
++
++- It stays within the existing `activation` family.
++- It uses an existing v4 atom family member: `scale_attack_count`.
++- It preserves the SRD distinction that each beam is separately targeted and separately resolved.
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d26e260657629e8cbce9d35fe7aee24964ab7538
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+@@ -0,0 +1,30 @@
++{
++  "unit_slug": "eldritch_blast",
++  "outcome": "surface_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "scale_attack_count on activation attack phases",
++      "justification": "Eldritch Blast's cantrip upgrade scales the number of separate attack rolls, not damage dice or target count. The current surface can encode one attack roll with fixed damage, but it cannot express a character-level schedule that repeats that attack independently per beam.",
++      "evidence": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded with a single-beam attack_roll as the closest valid current surface shape. This under-models the cantrip upgrade, so the result is a surface widening rather than clean."
++}
+
+codex
+The report files are in place. Next I’m validating the authored JSON as-is with `pnpm typecheck`, then generating the trace so the result reflects actual tracer output rather than a guess.
+exec
+/bin/bash -lc 'pnpm typecheck' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+exec
+/bin/bash -lc 'pnpm exec tsx src/run.ts content/eldritch_blast.json --out content/eldritch_blast.trace.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 854ms:
+wrote /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.trace.md
+
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb0e66add8c0fd528331537ed7abc2861d128588
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+@@ -0,0 +1,55 @@
++# Eldritch Blast widening
++
++`Eldritch Blast` does not force a new atom in taxonomy v4. It forces authored-surface access to the existing `scale_attack_count` concept.
++
++## Why the current surface is insufficient
++
++The closed spell `activation` shape supports:
++
++- a fixed list of `phases`
++- damage scaling via `DiceAmount`
++- target-count scaling for `choose_up_to` only via slot-based `linear`
++
++That is enough for `Fire Bolt` and enough to approximate `Magic Missile`, but not enough for `Eldritch Blast`.
++
++`Eldritch Blast` upgrades by increasing the number of beams, and each beam is its own attack roll:
++
++> "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++
++This is not:
++
++- damage scaling: each beam still deals `1d10` Force damage
++- target-count scaling alone: the rule is about repeated attacks, not just how many creatures may be chosen
++
++## Proposed surface widening
++
++Add a way for an `attack_roll` activation phase to scale its repetition count by level, using the existing taxonomy atom `scale_attack_count`.
++
++One possible shape:
++
++```json
++{
++  "kind": "attack_roll",
++  "attachment": { "kind": "target", "selection": { "mode": "one" } },
++  "attackKind": "ranged_spell_attack",
++  "repeat": {
++    "kind": "threshold_tiers",
++    "axis": "character",
++    "base": 1,
++    "tiers": [
++      { "atLevel": 5, "value": 2 },
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 17, "value": 4 }
++    ]
++  },
++  "retargetPerRepeat": true,
++  "onHit": { "kind": "damage", "damageType": "force", "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } } },
++  "onMiss": { "kind": "none" }
++}
++```
++
++## Why this is the right widening
++
++- It stays within the existing `activation` family.
++- It uses an existing v4 atom family member: `scale_attack_count`.
++- It preserves the SRD distinction that each beam is separately targeted and separately resolved.
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d26e260657629e8cbce9d35fe7aee24964ab7538
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+@@ -0,0 +1,30 @@
++{
++  "unit_slug": "eldritch_blast",
++  "outcome": "surface_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "scale_attack_count on activation attack phases",
++      "justification": "Eldritch Blast's cantrip upgrade scales the number of separate attack rolls, not damage dice or target count. The current surface can encode one attack roll with fixed damage, but it cannot express a character-level schedule that repeats that attack independently per beam.",
++      "evidence": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded with a single-beam attack_roll as the closest valid current surface shape. This under-models the cantrip upgrade, so the result is a surface widening rather than clean."
++}
+
+ succeeded in 1511ms:
+
+> @dnd/prototype-content-surface@0.0.0 typecheck /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+> tsc --noEmit
+
+
+codex
+The tracer completed cleanly and wrote the trace. I’m polling the typecheck now, then I’ll verify the exact atoms and relations from the generated trace match the result file.
+exec
+/bin/bash -lc "sed -n '1,220p' content/eldritch_blast.trace.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Dependency graph: Eldritch Blast
+
+Unit id: `eldritch_blast`
+
+5e.tools: <https://5e.tools/spells.html#eldritch%20blast_xphb>
+
+```mermaid
+flowchart TD
+  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
+  classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
+  classDef window fill:#9467bd,color:#fff,stroke:#4a2b66
+  classDef attachment fill:#ffcc00,color:#000,stroke:#8a6d00
+  classDef resolution fill:#ff7f0e,color:#fff,stroke:#8a4308
+  classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
+  classDef resource fill:#e377c2,color:#000,stroke:#8a457a
+  classDef scaling fill:#17becf,color:#000,stroke:#0a5f6a
+  classDef effect fill:#d62728,color:#fff,stroke:#6a1414
+  root1["spell_root<br/>Eldritch Blast"]:::source
+  act2["activate"]:::procedure
+  q3["action_quota<br/>(Casting Time: Action)"]:::resource
+  att4["target<br/>one<br/>range 120 ft"]:::attachment
+  res5["attack_roll [phase 1]<br/>ranged spell attack"]:::resolution
+  dmg6["damage: 1d10 force"]:::effect
+  win7["on_hit_window"]:::window
+  act2 -- consumes --> q3
+  act2 -- attaches_to --> att4
+  act2 -- grants --> res5
+  res5 -- attaches_to --> att4
+  res5 -- opens_window --> win7
+  win7 -- grants --> dmg6
+  dmg6 -- attaches_to --> att4
+  root1 -- roots --> act2
+```
+
+## Atoms referenced
+
+- `action_quota`
+- `activate`
+- `attack_roll`
+- `damage`
+- `on_hit_window`
+- `spell_root`
+- `target`
+
+## Relations referenced
+
+- `attaches_to`
+- `consumes`
+- `grants`
+- `opens_window`
+- `roots`
+
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb0e66add8c0fd528331537ed7abc2861d128588
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+@@ -0,0 +1,55 @@
++# Eldritch Blast widening
++
++`Eldritch Blast` does not force a new atom in taxonomy v4. It forces authored-surface access to the existing `scale_attack_count` concept.
++
++## Why the current surface is insufficient
++
++The closed spell `activation` shape supports:
++
++- a fixed list of `phases`
++- damage scaling via `DiceAmount`
++- target-count scaling for `choose_up_to` only via slot-based `linear`
++
++That is enough for `Fire Bolt` and enough to approximate `Magic Missile`, but not enough for `Eldritch Blast`.
++
++`Eldritch Blast` upgrades by increasing the number of beams, and each beam is its own attack roll:
++
++> "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++
++This is not:
++
++- damage scaling: each beam still deals `1d10` Force damage
++- target-count scaling alone: the rule is about repeated attacks, not just how many creatures may be chosen
++
++## Proposed surface widening
++
++Add a way for an `attack_roll` activation phase to scale its repetition count by level, using the existing taxonomy atom `scale_attack_count`.
++
++One possible shape:
++
++```json
++{
++  "kind": "attack_roll",
++  "attachment": { "kind": "target", "selection": { "mode": "one" } },
++  "attackKind": "ranged_spell_attack",
++  "repeat": {
++    "kind": "threshold_tiers",
++    "axis": "character",
++    "base": 1,
++    "tiers": [
++      { "atLevel": 5, "value": 2 },
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 17, "value": 4 }
++    ]
++  },
++  "retargetPerRepeat": true,
++  "onHit": { "kind": "damage", "damageType": "force", "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } } },
++  "onMiss": { "kind": "none" }
++}
++```
++
++## Why this is the right widening
++
++- It stays within the existing `activation` family.
++- It uses an existing v4 atom family member: `scale_attack_count`.
++- It preserves the SRD distinction that each beam is separately targeted and separately resolved.
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d26e260657629e8cbce9d35fe7aee24964ab7538
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+@@ -0,0 +1,30 @@
++{
++  "unit_slug": "eldritch_blast",
++  "outcome": "surface_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "scale_attack_count on activation attack phases",
++      "justification": "Eldritch Blast's cantrip upgrade scales the number of separate attack rolls, not damage dice or target count. The current surface can encode one attack roll with fixed damage, but it cannot express a character-level schedule that repeats that attack independently per beam.",
++      "evidence": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded with a single-beam attack_roll as the closest valid current surface shape. This under-models the cantrip upgrade, so the result is a surface widening rather than clean."
++}
+
+codex
+Completed in the worker copy.
+
+Files:
+- [content/eldritch_blast.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.json)
+- [content/eldritch_blast.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.trace.md)
+- [result-eldritch_blast.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json)
+- [proposal-eldritch_blast.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md)
+
+Verdict is `surface_widening`, not `clean`. The current surface can encode a single ranged spell attack for Eldritch Blast, but it cannot encode the cantrip’s character-level beam-count scaling with separate attack rolls per beam. That pressure is a surface gap around `scale_attack_count`, not a new atom.
+
+Validation passed:
+- `pnpm typecheck`
+- `pnpm exec tsx src/run.ts content/eldritch_blast.json --out content/eldritch_blast.trace.md`
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..fb0e66add8c0fd528331537ed7abc2861d128588
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md
+@@ -0,0 +1,55 @@
++# Eldritch Blast widening
++
++`Eldritch Blast` does not force a new atom in taxonomy v4. It forces authored-surface access to the existing `scale_attack_count` concept.
++
++## Why the current surface is insufficient
++
++The closed spell `activation` shape supports:
++
++- a fixed list of `phases`
++- damage scaling via `DiceAmount`
++- target-count scaling for `choose_up_to` only via slot-based `linear`
++
++That is enough for `Fire Bolt` and enough to approximate `Magic Missile`, but not enough for `Eldritch Blast`.
++
++`Eldritch Blast` upgrades by increasing the number of beams, and each beam is its own attack roll:
++
++> "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++
++This is not:
++
++- damage scaling: each beam still deals `1d10` Force damage
++- target-count scaling alone: the rule is about repeated attacks, not just how many creatures may be chosen
++
++## Proposed surface widening
++
++Add a way for an `attack_roll` activation phase to scale its repetition count by level, using the existing taxonomy atom `scale_attack_count`.
++
++One possible shape:
++
++```json
++{
++  "kind": "attack_roll",
++  "attachment": { "kind": "target", "selection": { "mode": "one" } },
++  "attackKind": "ranged_spell_attack",
++  "repeat": {
++    "kind": "threshold_tiers",
++    "axis": "character",
++    "base": 1,
++    "tiers": [
++      { "atLevel": 5, "value": 2 },
++      { "atLevel": 11, "value": 3 },
++      { "atLevel": 17, "value": 4 }
++    ]
++  },
++  "retargetPerRepeat": true,
++  "onHit": { "kind": "damage", "damageType": "force", "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } } },
++  "onMiss": { "kind": "none" }
++}
++```
++
++## Why this is the right widening
++
++- It stays within the existing `activation` family.
++- It uses an existing v4 atom family member: `scale_attack_count`.
++- It preserves the SRD distinction that each beam is separately targeted and separately resolved.
+diff --git a/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..d26e260657629e8cbce9d35fe7aee24964ab7538
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json
+@@ -0,0 +1,30 @@
++{
++  "unit_slug": "eldritch_blast",
++  "outcome": "surface_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_variant",
++      "name": "scale_attack_count on activation attack phases",
++      "justification": "Eldritch Blast's cantrip upgrade scales the number of separate attack rolls, not damage dice or target count. The current surface can encode one attack roll with fixed damage, but it cannot express a character-level schedule that repeats that attack independently per beam.",
++      "evidence": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded with a single-beam attack_roll as the closest valid current surface shape. This under-models the cantrip upgrade, so the result is a surface widening rather than clean."
++}
+
+tokens used
+67,595
+Completed in the worker copy.
+
+Files:
+- [content/eldritch_blast.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.json)
+- [content/eldritch_blast.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/content/eldritch_blast.trace.md)
+- [result-eldritch_blast.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/result-eldritch_blast.json)
+- [proposal-eldritch_blast.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2229682-eldritch_blast/proposal-eldritch_blast.md)
+
+Verdict is `surface_widening`, not `clean`. The current surface can encode a single ranged spell attack for Eldritch Blast, but it cannot encode the cantrip’s character-level beam-count scaling with separate attack rolls per beam. That pressure is a surface gap around `scale_attack_count`, not a new atom.
+
+Validation passed:
+- `pnpm typecheck`
+- `pnpm exec tsx src/run.ts content/eldritch_blast.json --out content/eldritch_blast.trace.md`

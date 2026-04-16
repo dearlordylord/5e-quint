@@ -1,0 +1,22 @@
+{
+  "unit_slug": "mastery_topple",
+  "outcome": "clean",
+  "atoms_used": [
+    "apply_condition",
+    "attack_roll",
+    "mastery_root",
+    "on_hit_window",
+    "save_gate",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "grants",
+    "opens_window",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Topple fits OnHitTriggerMechanics with SaveGateRider exactly. weapon_attack_dc(base=8) covers DC 8 + ability mod + PB; apply_condition(prone) covers the fail branch; onSuccess=none. The wielder-choice optional flag is supported. No once-per-turn limit appears in the SRD text. All atoms and relations are in the v4 inventory."
+}

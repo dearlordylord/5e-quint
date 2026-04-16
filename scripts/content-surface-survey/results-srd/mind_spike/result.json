@@ -1,0 +1,28 @@
+{
+  "unit_slug": "mind_spike",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Effect.grant_sense",
+      "justification": "The failed-save branch grants the caster persistent location awareness of the target (same plane of existence) for the concentration duration. No existing Effect variant covers a sense/tracking outcome. The v4 atom 'grant_sense' exists in the taxonomy but has no corresponding Effect variant in types.ts.",
+      "evidence": "On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane of existence."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.block_targeting",
+      "justification": "The failed-save branch suppresses the target's ability to become Hidden from the caster and strips Invisible-condition benefits against the caster. The v4 atom 'block_targeting' exists in the taxonomy but has no corresponding Effect variant in types.ts.",
+      "evidence": "While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.save_gate — onFail as ReadonlyArray<Effect>",
+      "justification": "The failed-save branch must simultaneously deliver damage, a sense grant, and a block_targeting suppression. The current onFail: Effect field carries exactly one effect. Mind Spike forces composition of three distinct effects on the same branch, which requires either an array field or a composite Effect variant.",
+      "evidence": "The target makes a Wisdom saving throw, taking 3d8 Psychic damage on a failed save ... On a failed save, you also always know the target's location ... the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation + save_gate skeleton is the correct structural fit. The spell is a level-2 slot-scaled (activation: +1d8/slot above 2) Divination concentration spell. What is missing is entirely at the Effect-variant level: two new variants (grant_sense, block_targeting) and the ability to compose multiple effects per save branch. The concentration duration is tied to the ongoing sense/block state (not to damage), which aligns with attaching those two new Effect variants to a persist/expire lifecycle chain on the failed-save path. No new family or cross-family composition is required — only Effect widening and multi-effect branching."
+}

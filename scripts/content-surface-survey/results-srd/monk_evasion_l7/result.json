@@ -1,0 +1,28 @@
+{
+  "unit_slug": "monk_evasion_l7",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature family",
+      "justification": "Evasion is a permanent, always-on modifier with no activation cost, no use-count resource, and no reset cadence. The only ClassFeatureMechanics family is 'activation', which requires all three. Encoding Evasion as 'activation' with kind=free cost + fixed 0 uses would falsify the feature's structure — it fires automatically on every matching incoming save_gate, not on player choice.",
+      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: modify_save_outcome",
+      "justification": "Evasion replaces the standard save_gate outcome branches (success=half, fail=full) with (success=0, fail=half) for a specific class of incoming effects (Dex half-damage saves targeting the feature owner). No existing ClassFeatureEffect variant — grant_extra_action or heal_hp — covers this shape. The v4 atom 'modify_roll_substitute' addresses die roll replacement, not outcome-branch remapping on an external save_gate.",
+      "evidence": "you instead take no damage if you succeed on the saving throw and only half damage if you fail"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Feature suppression condition gate (Incapacitated)",
+      "justification": "The feature explicitly does not apply when the Incapacitated condition is present. This is a passive suppression predicate with no surface representation in the current ClassFeatureMechanics schema. The v4 atom 'suppress' exists but there is no surface type for attaching a condition-predicated suppression gate to a passive class feature.",
+      "evidence": "You don't benefit from this feature if you have the Incapacitated condition."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary gap is the missing 'passive' class feature family. ClassFeatureMechanics only has 'activation', which models player-triggered features with use-count resources. Evasion is always-on state that intercepts incoming save_gates — the correct family shape is closer to a persistent passive modifier. A secondary gap is the save-outcome-override effect shape: no ClassFeatureEffect variant or v4 atom precisely models 'when a matching incoming save_gate fires against this creature, upgrade its outcome branches'. The Incapacitated suppression gate is a tertiary gap common to many passive features."
+}

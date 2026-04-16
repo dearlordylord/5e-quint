@@ -1,0 +1,16 @@
+{
+  "unit_slug": "longstrider",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ModifySpeedOperation",
+      "justification": "Longstrider's sole combat-relevant mechanic is a numeric speed increase (+10 ft) that persists on the target for the duration. The existing OngoingOperation union (roll_modifier | damage_on_hit) has no variant for this. The v4 atom modify_speed exists in the taxonomy but is unreachable from the surface. A new OngoingOperation variant { kind: 'modify_speed'; deltaFeet: number } would cover Longstrider cleanly and generalise to any spell or feature that buffs or debuffs movement speed (Slow, Haste speed component, Barbarian Fast Movement, etc.).",
+      "evidence": "The target's Speed increases by 10 feet until the spell ends."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The overall ongoing_effect family fits Longstrider exactly. Attachment (touch target, choose_up_to with linear slot scaling), duration (timed 1 hour), and higher-level scaling (one additional creature per slot above 1) are all already expressible. The only blocking gap is the absence of a modify_speed OngoingOperation variant. No other widening is needed."
+}

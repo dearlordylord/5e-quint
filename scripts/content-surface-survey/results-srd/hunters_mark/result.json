@@ -1,0 +1,49 @@
+{
+  "unit_slug": "hunters_mark",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "mark",
+    "mark_target",
+    "on_hit_window",
+    "spell_root",
+    "spell_slot",
+    "transfer_mark"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots",
+    "transfers_to"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "advantage_on_check (OngoingOperation variant)",
+      "justification": "Hunter's Mark grants Advantage on Wisdom (Perception or Survival) checks to find the marked creature. No OngoingOperation variant exists for skill-check advantage; only roll_modifier (numeric delta) and damage_on_hit are modeled.",
+      "evidence": "You also have Advantage on any Wisdom (Perception or Survival) check you make to find it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "operations array in OngoingEffectMechanics",
+      "justification": "Hunter's Mark has two simultaneous ongoing effects: damage_on_hit and advantage_on_check. The current surface has a singular operation field (OngoingOperation), not ReadonlyArray<OngoingOperation>. Without an array, both effects cannot be expressed together honestly.",
+      "evidence": "...deal an extra 1d6 Force damage... You also have Advantage on any Wisdom check..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "slot-scaling Duration for concentration upcast",
+      "justification": "Hunter's Mark changes its concentration ceiling based on slot level: base 1 hour (slots 1-2), up to 8 hours (slots 3-4), up to 24 hours (slot 5+). The Duration type has no slot-scaling variant; concentration is always a fixed DurationValue.",
+      "evidence": "Your Concentration can last longer with a spell slot of level 3-4 (up to 8 hours) or 5+ (up to 24 hours)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary mechanic (damage_on_hit on mark attachment) and mark transfer both encode cleanly — the surface already has mark + MarkTransfer + DamageOnHitOperation in v4. The tracer emits a coherent graph with no unhandled branches. The surface_widening classification is driven by the secondary rider (advantage on WIS checks) and upcast duration scaling, both of which require new variants of existing surface types rather than new families. The encoded JSON is an honest partial representation: it captures the combat-relevant core but omits the exploration-relevant Advantage rider."
+}

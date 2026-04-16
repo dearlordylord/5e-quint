@@ -1,0 +1,52 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_root + MagicItemRecord kind",
+      "justification": "UnitRecord has no magic_item kind. SpellRecord | ClassFeatureRecord | MasteryRecord are the only options. magic_item_root already exists in the v4 atom inventory but there is no corresponding surface type family.",
+      "evidence": "Wondrous Item, Rare — brazier is a magic item, not a spell, class feature, or mastery."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: dawn",
+      "justification": "The brazier recharges at dawn, not on a short or long rest. No dawn cadence exists in RestResetCadence.",
+      "evidence": "The brazier can't be used this way again until the next dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost: magic_action",
+      "justification": "The activation cost is a Magic action. ClassFeatureActivationCost only supports free and bonus_action.",
+      "evidence": "you can take a Magic action to summon a Fire Elemental"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "create_companion + command_companion subgraph for magic items",
+      "justification": "The core mechanic is summoning a creature (Fire Elemental) that obeys the user. create_companion and command_companion are v4 atoms but nothing in the surface types encodes a summoning effect family for magic items.",
+      "evidence": "summon a Fire Elemental ... obeys your commands"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Companion duration: timed with dismiss option",
+      "justification": "The elemental persists 1 hour, dies, or is dismissed as a Bonus Action. Dismissal-as-bonus-action is a new duration termination shape not present on any existing Duration variant.",
+      "evidence": "The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Proximity constraint on activation",
+      "justification": "Activation requires the user to be within 5 feet of the brazier. No proximity-to-item constraint exists in any activation cost or precondition shape.",
+      "evidence": "While you are within 5 feet of this brazier, you can take a Magic action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Initiative placement for summoned companion",
+      "justification": "The companion takes its turn immediately after the user on their Initiative count. No initiative-placement shape exists for summoned creatures.",
+      "evidence": "takes its turn immediately after you on your Initiative count"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is the complete absence of a magic_item UnitRecord kind. magic_item_root is in the v4 taxonomy but the surface has no corresponding type family. All secondary gaps (dawn reset, magic-action cost, create_companion subgraph, initiative placement, proximity constraint) are real but moot until the kind is added."
+}

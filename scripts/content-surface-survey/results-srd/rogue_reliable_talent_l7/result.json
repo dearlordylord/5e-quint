@@ -1,0 +1,22 @@
+{
+  "unit_slug": "rogue_reliable_talent_l7",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature",
+      "justification": "Reliable Talent is always-on with no activation decision, no use_count, and no reset cadence. The sole existing ClassFeatureMechanics family ('activation') mandates all three. A 'passive' family is needed for always-on class features that fire automatically under a trigger condition.",
+      "evidence": "Whenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_floor",
+      "justification": "The effect replaces any d20 roll of 9 or lower with 10 — a conditional floor substitution. v4 has modify_roll_substitute, which could in principle cover this, but the exact shape (floor threshold + proficiency-gated trigger) may require an explicit variant rather than stretching modify_roll_substitute's semantics.",
+      "evidence": "you can treat a d20 roll of 9 or lower as a 10"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Reliable Talent is a pure always-on passive. Forcing it into 'activation' would require fabricating an activationCost, a use_count cap, and a resetCadence that have no counterpart in the SRD text — a misleading trace. The primary structural gap is the missing 'passive' family for ClassFeatureMechanics. The effect (d20 floor on proficient ability checks) is a secondary surface gap; v4's modify_roll_substitute is the closest existing atom but the proficiency-gated floor condition may warrant its own variant."
+}

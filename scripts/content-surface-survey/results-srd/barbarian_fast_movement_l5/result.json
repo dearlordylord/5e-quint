@@ -1,0 +1,28 @@
+{
+  "unit_slug": "barbarian_fast_movement_l5",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_modifier",
+      "justification": "Fast Movement is always-on with no activation cost, no use count, and no reset cadence. The only class-feature family is 'activation', which requires all three of those fields. A 'passive' family (or always_on family) is needed to encode features that are permanently active without any resource gate.",
+      "evidence": "Your speed increases by 10 feet while you aren't wearing Heavy armor."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_speed effect in ClassFeatureEffect",
+      "justification": "modify_speed exists as a v4 atom but is absent from the ClassFeatureEffect union (which only has GrantExtraActionEffect | HealHpEffect). A passive family would still need a modify_speed variant in ClassFeatureEffect to express the +10 ft speed bonus.",
+      "evidence": "Your speed increases by 10 feet while you aren't wearing Heavy armor."
+    },
+    {
+      "kind": "new_variant",
+      "name": "armor_condition predicate (conditional modifier)",
+      "justification": "The bonus is conditional on not wearing Heavy armor. The surface has no mechanism to express a runtime predicate ('while condition X holds') on a passive effect. A conditional gate on passive modifiers — at minimum a closed enum of armor-category predicates — is needed.",
+      "evidence": "while you aren't wearing Heavy armor"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three distinct gaps, but the root blocker is structural: no 'passive' class-feature family exists. The other two gaps (modify_speed in ClassFeatureEffect, armor predicate) are required even after that family lands. No dhall/json/trace authored — encoding would require lying about all three fields of ClassFeatureMechanicsHeader."
+}

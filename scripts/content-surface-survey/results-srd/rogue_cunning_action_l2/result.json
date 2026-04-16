@@ -1,0 +1,28 @@
+{
+  "unit_slug": "rogue_cunning_action_l2",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "bonus_action_unlock",
+      "justification": "Cunning Action is a passive, unlimited-use unlock that lets the rogue spend their Bonus Action to perform Dash, Disengage, or Hide. The current ClassFeatureMechanicsHeader mandates resource: UseCountResource and resetCadence: RestResetCadence, neither of which apply. No existing ClassFeatureMechanics family models this pattern without a use-count pool.",
+      "evidence": "On your turn, you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide."
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.unlimited",
+      "justification": "UseCountCap currently only allows 'fixed' or 'threshold_tiers', both of which imply an exhaustible pool. Cunning Action has no pool — it is available every turn. A new variant (e.g., { kind: 'unlimited' }) is required to represent truly unlimited class features without lying about the use count.",
+      "evidence": "No per-rest limit appears in the source text; the only constraint is having a Bonus Action available on the turn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_bonus_action_option",
+      "justification": "The effect of Cunning Action is to allow specific standard actions (Dash, Disengage, Hide) to be taken as a Bonus Action. The existing grant_extra_action atom means 'one additional action beyond your normal action', which is what Action Surge provides. Cunning Action is action-substitution (Bonus Action → one of three specific standard actions), not action-addition. A new effect atom is needed.",
+      "evidence": "you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two structural blockers prevent honest encoding. (1) ClassFeatureMechanicsHeader forces a resource/resetCadence shape that does not apply — Cunning Action has no use-count pool and no rest reset. (2) grant_extra_action is the wrong atom: it models Action Surge (free activation, extra action added), not Cunning Action (Bonus Action cost, standard action substituted). Using grant_extra_action here would produce a trace that says the rogue gets a free extra action, which is false. The unit needs either a new family or at minimum a new UseCountCap variant plus a new effect atom."
+}

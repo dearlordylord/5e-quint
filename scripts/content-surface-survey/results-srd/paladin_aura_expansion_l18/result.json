@@ -1,0 +1,22 @@
+{
+  "unit_slug": "paladin_aura_expansion_l18",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature",
+      "justification": "Aura Expansion is permanently active from the moment it is acquired — no trigger, no cost, no use-count pool, no reset cadence. ClassFeatureMechanics only has the 'activation' family, which requires all three. A new 'passive' family is needed for always-on class features that modify character state without an activation gate.",
+      "evidence": "Your Aura of Protection is now a 30-foot Emanation."
+    },
+    {
+      "kind": "new_atom",
+      "name": "expand_emanation_radius",
+      "justification": "The mechanic is a radius upgrade on a named existing class feature. No v4 effect atom covers this. modify_range applies to spell/attack targeting range, not the spatial footprint of a persistent aura that is continuously evaluated each turn.",
+      "evidence": "Your Aura of Protection is now a 30-foot Emanation."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Aura Expansion cannot be honestly forced into the 'activation' family — it has no activationCost, no use_count, and no resetCadence. The only correct encoding requires (a) a new 'passive' family for ClassFeatureMechanics, and (b) an effect atom or cross-feature reference mechanism that expresses 'expand the emanation radius of Aura of Protection from 10 ft to 30 ft'. No dhall or JSON authored."
+}

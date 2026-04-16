@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gauntlets_of_ogre_power",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item family",
+      "justification": "No `magic_item` kind exists in UnitRecord (types.ts). The taxonomy lists `magic_item_root` as a source atom and `attune`/`attunement_slot` as valid vocabulary, but no MagicItemRecord type or mechanics family has been authored in the surface schema. Every magic item requires this structural layer before any item-specific mechanic can be encoded.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The gauntlet's core mechanic sets the wearer's Strength to 19 while attuned. This is a conditional ability score floor/override — distinct from `modify_roll_numeric` (which adjusts a die roll in flight) and not expressible via any existing effect atom. The taxonomy (§12) explicitly defers this atom as out-of-scope for the core mechanics graph; this item is direct pressure to promote it.",
+      "evidence": "Your Strength is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AttunementResource (conditional gate: no effect if stat already meets threshold)",
+      "justification": "The item's effect is gated by a comparison against the wearer's unmodified ability score at attunement time. This is not a simple use_count or spell_slot consumption pattern — it is a conditional suppression rule ('no effect if Strength is 19 or higher without them'). The surface needs a way to express ability-score-conditional suppression, distinct from the existing guard/filter vocabulary.",
+      "evidence": "They have no effect on you if your Strength is 19 or higher without them."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Straightforward structural miss: magic_item is in the taxonomy source-root inventory but was never promoted to a TypeScript surface type. The core mechanic (set STR = 19) maps to modify_ability_score, which the taxonomy §12 explicitly marks deferred. This item is the canonical pressure case for promoting both the magic_item family and the modify_ability_score atom."
+}

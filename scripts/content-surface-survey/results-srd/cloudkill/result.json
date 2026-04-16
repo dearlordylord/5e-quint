@@ -1,0 +1,28 @@
+{
+  "unit_slug": "cloudkill",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "save_gate_on_presence (new OngoingOperation variant)",
+      "justification": "Cloudkill deals damage via a Constitution save whenever a creature is present in the area — on initial placement, when the sphere moves into a creature's space, when a creature enters the sphere, and when a creature ends its turn there. No existing OngoingOperation variant covers this: roll_modifier adds dice to existing rolls, and damage_on_hit requires the caster to hit a creature with an attack roll. A new OngoingOperation variant is needed for area-presence-triggered save gates that deal full or half damage.",
+      "evidence": "Each creature in the Sphere makes a Constitution saving throw, taking 5d8 Poison damage on a failed save or half as much damage on a successful one. A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there."
+    },
+    {
+      "kind": "new_variant",
+      "name": "moving_area (new Attachment property or variant)",
+      "justification": "The sphere relocates 10 feet away from the caster at the start of each of the caster's turns. The current area attachment has a fixed origin (point_within_range or on_primary_target) with no movement property. Area movement is a first-class mechanic here — it drives which creatures are hit by the presence trigger each round.",
+      "evidence": "The Sphere moves 10 feet away from you at the start of each of your turns."
+    },
+    {
+      "kind": "new_variant",
+      "name": "once_per_turn_save_guard (per-creature trigger frequency cap)",
+      "justification": "The save is capped at once per turn per creature. The surface has no mechanism to express a per-creature-per-turn frequency cap on an ongoing operation's save trigger. The mastery usageLimit is a per-activation wielder cap, not a per-creature guard on a spell's ongoing trigger.",
+      "evidence": "A creature makes this save only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The outer structure fits ongoing_effect (concentration area spell, level 5, slot-scaled damage, no material components). The sole blocker is OngoingOperation — no save-gate-on-presence variant exists. Area movement is a secondary surface gap. The Heavily Obscured environmental effect is dm_agenda (caller-owned notification per ARCHITECTURE.md) and is not proposed as a core atom. The +1d8/slot upcast scaling is representable with linear_per_level (axis=slot, perLevel={dice:1, dieSize:8}) once the operation variant exists."
+}

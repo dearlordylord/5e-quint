@@ -1,0 +1,22 @@
+{
+  "unit_slug": "forcecage",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "block_travel_operation",
+      "justification": "Forcecage's primary ongoing mechanic is that nonmagical egress from the area is completely blocked. The v4 atom `block_travel` exists, but `OngoingOperation` has no variant to surface it. A new variant is needed: `{ kind: 'block_travel'; scope: 'nonmagical' | 'all' }` (or similar) so the `ongoing_effect` family can express area-anchored travel prohibition.",
+      "evidence": "A creature inside the cage can't leave it by nonmagical means."
+    },
+    {
+      "kind": "new_variant",
+      "name": "triggered_save_on_creature_action_operation",
+      "justification": "When a creature inside the cage attempts teleportation or interplanar travel, a CHA save fires. On fail: the creature cannot escape and the triggering spell/effect is wasted. This is a creature-action-triggered save gate nested inside an ongoing area effect — the caster does not initiate it. `OngoingOperation` has no variant for this pattern. The atoms `save_gate` and `repeat_save` exist in v4 but there is no surface shape for 'creature attempts magical-egress action → save gate → blocks action on fail'. A new variant is needed: e.g., `{ kind: 'save_gate_on_creature_escape_attempt'; escapeKinds: ['teleportation', 'interplanar']; ability: Ability; dc: DcSource; onFail: 'block_and_waste_spell'; onSuccess: 'allow_escape' }`.",
+      "evidence": "If the creature tries to use teleportation or interplanar travel to leave, it must first make a Charisma saving throw. On a successful save, the creature can use that magic to exit the cage. On a failed save, the creature doesn't exit the cage and wastes the spell or effect."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Forcecage fits the `ongoing_effect` family structurally (concentration, area attachment, cube shape). The header fields (level=7, school=evocation, castingTime=action, range=100ft point, duration=concentration 1 hour, components=VSM-consumed) all map cleanly. The gap is entirely in `OngoingOperation`: two new variants are needed. Secondary omission noted: the 'extends into Ethereal Plane' clause (blocks ethereal travel) is a special case of `block_travel` with scope including the Ethereal Plane — expressible with the same new variant if the scope enum includes 'ethereal'. The 'immune to Dispel Magic' clause is a meta-property with no current surface representation; it is out-of-scope for this survey."
+}

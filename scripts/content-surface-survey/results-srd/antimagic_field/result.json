@@ -1,0 +1,34 @@
+{
+  "unit_slug": "antimagic_field",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation::suppress_magic",
+      "justification": "OngoingOperation is currently RollModifierOperation | DamageOnHitOperation. Antimagic Field's core mechanic — suppressing all spell casting, Magic actions, and magic item properties within an area — has no existing variant. The v4 'suppress' procedure atom covers this concept, but there is no OngoingOperation surface variant that routes to it.",
+      "evidence": "No one can cast spells, take Magic actions, or create other magical effects inside the aura, and those things can't target or otherwise affect anything inside it. Magical properties of magic items don't work inside the aura or on anything inside it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaOrigin::self_centered",
+      "justification": "AreaOrigin supports 'point_within_range' and 'on_primary_target'. Antimagic Field creates a 10-foot Emanation centered on the caster that moves with the caster. Neither existing variant can express this — 'point_within_range' implies a stationary point chosen at cast time, not a caster-anchored moving area.",
+      "evidence": "An aura of antimagic surrounds you in a 10-foot Emanation."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation::suppress_ongoing_spells",
+      "justification": "The spell explicitly suppresses pre-existing ongoing effects (pause their function but not their duration) with a named exception: Artifact and deity spells are not suppressed. This is a distinct operation from blocking new spell casting — it requires a suppression predicate with a carve-out. No current OngoingOperation variant supports this.",
+      "evidence": "Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation::block_transit",
+      "justification": "The spell blocks teleportation and planar travel into/out of the aura, and closes portals temporarily. The v4 'block_travel' effect atom covers transit blocking, but there is no OngoingOperation variant that attaches block_travel to an ongoing area effect.",
+      "evidence": "No one can teleport into or out of it or use planar travel there. Portals close temporarily while in the aura."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the right structural fit (concentration, area, persistent operation). Two definitive blockers prevent honest encoding: (1) AreaOrigin lacks self_centered for caster-anchored emanations; (2) OngoingOperation has no suppress_magic variant. A third structural tension: OngoingEffectMechanics carries a single 'operation' field, but Antimagic Field requires at least three simultaneous operations (suppress new casting, suppress ongoing spells, block transit). If 'operation' stays singular, a compound suppress_magic_aura operation covering all sub-effects is needed. The Artifact/deity exception for ongoing spell suppression is a named carve-out with no current surface expression — it would require either a predicate field on the suppress variant or a separate surface encoding."
+}

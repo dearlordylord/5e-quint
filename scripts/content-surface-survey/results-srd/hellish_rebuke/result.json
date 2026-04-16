@@ -1,0 +1,28 @@
+{
+  "unit_slug": "hellish_rebuke",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.take_damage_from_visible_creature",
+      "justification": "Hellish Rebuke triggers on taking any damage (attack, spell, other source) from a creature the caster can see within range. The existing `hit_by_attack_roll` variant is too narrow — it misses e.g. Fireball damage or trap-sourced damage. A new variant is needed: `{ kind: 'take_damage_from_visible_creature'; rangeFeet: number }`.",
+      "evidence": "which you take in response to taking damage from a creature that you can see within 60 feet of yourself"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.trigger_source",
+      "justification": "The target of Hellish Rebuke is implicitly constrained to the creature that fired the reaction trigger — it is not a free-choice target. No existing Attachment kind (`self`, `target`, `area`, `mark`) expresses this binding. A new variant `{ kind: 'trigger_source' }` is needed to distinguish 'the creature that caused this reaction' from an arbitrary single-target selection.",
+      "evidence": "The creature that damaged you is momentarily surrounded by green flames."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.half_of_fail_damage (or save_gate flag halfDamageOnSuccess)",
+      "justification": "The `save_gate` `onSuccess: Effect` only supports a fixed DiceExpr or `none`. 'Half as much damage on a successful one' means halving the rolled fail-damage amount, not rolling a separate dice expression. This pattern (save-for-half) is common across many SRD spells. A new Effect variant `{ kind: 'half_of_fail_damage' }` — or a boolean flag `halfDamageOnSuccess` on the save_gate shape — is needed to encode this honestly.",
+      "evidence": "taking 2d10 Fire damage on a failed save or half as much damage on a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "All three gaps are surface-level shape variants; v4 taxonomy atoms (save_gate, damage, reaction_quota, reaction_window, target) exist and are sufficient once the surface variants are added. No new atom is needed. The spell's slot scaling (+1d10 per slot above 1) is representable with linear_per_level DiceAmount (axis=slot, perLevel={dice:1,dieSize:10}, startingAtLevel:1) once the save_gate damage shape can express half-on-success. No .dhall/.json was authored: using hit_by_attack_roll as a stand-in trigger would be dishonest (wrong semantics), and leaving onSuccess as none would silently drop a core SRD rule."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "goodberry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "consumable_object_pool",
+      "justification": "Goodberry creates N distinct objects (berries) that any holder can activate using their own Bonus Action. No existing family models 'N consumable items created at cast time, each activatable by any holder at the holder's cost, each triggering an effect on the consumer.' The caster-pays-quota assumption baked into all existing families is violated: the berry consumer pays their own Bonus Action, not the caster.",
+      "evidence": "A creature can take a Bonus Action to eat one berry. Eating a berry restores 1 Hit Point."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.kind: consumable_pool",
+      "justification": "The existing attachment kinds (self, target, area, mark) attach to creatures or locations at cast time. Goodberry's berries are physical objects placed in the caster's hand and distributed later — attachment is to the holder of an item, not a targeted creature or location. An 'item' or 'consumable_pool' attachment is needed.",
+      "evidence": "Ten berries appear in your hand and are infused with magic for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.kind: heal_on_consume",
+      "justification": "OngoingOperation is RollModifierOperation | DamageOnHitOperation. Neither carries a heal. Goodberry's per-berry effect is heal_hp (1 HP to consumer). A third variant is needed to express 'heal the consumer on activation of a consumable.'",
+      "evidence": "Eating a berry restores 1 Hit Point."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost / quota model for consumer-side cost",
+      "justification": "Current quota nodes always represent the caster consuming their own action economy. Goodberry's activation cost is the *consumer's* Bonus Action — a different creature's quota. The surface has no way to express 'holder (not caster) expends their own Bonus Action.'",
+      "evidence": "A creature can take a Bonus Action to eat one berry."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Goodberry is the canonical 'distribute consumable objects with per-use effects' pattern. No existing SpellMechanics family can encode it honestly: ongoing_effect cannot carry heal_hp in its operation, activation is for instantaneous one-shot effects, anchored_trigger is location-bound, and all families assume the caster pays any activation quota. The nourishment effect ('provides enough nourishment to sustain a creature for one day') is a DM-agenda exploration/survival mechanic and would be excluded from core even if the HP-heal subgraph were modeled. Closest analogue in the taxonomy backlog: Tasha's Bubbling Cauldron (also creates a consumable elixir with attached effects)."
+}

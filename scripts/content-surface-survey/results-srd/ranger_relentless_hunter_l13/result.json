@@ -1,0 +1,22 @@
+{
+  "unit_slug": "ranger_relentless_hunter_l13",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature_family",
+      "justification": "Relentless Hunter is always-on with no activation, no use-count resource, and no reset cadence. The only ClassFeatureMechanics family is 'activation', which requires activationCost, resource (use_count), and resetCadence — none of which exist here. A 'passive' family is needed for permanently-active class features.",
+      "evidence": "Taking damage can't break your Concentration on Hunter's Mark."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_concentration_break",
+      "justification": "The feature suppresses the concentration saving throw that fires when the bearer takes damage while concentrating on Hunter's Mark. No v4 effect atom covers 'prevent damage from triggering the concentration check for a named spell'. The existing atoms suppress (procedure), concentrate (lifecycle), and negate_named_effect (effect) do not express this semantic.",
+      "evidence": "Taking damage can't break your Concentration on Hunter's Mark."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Pure passive feature: no activation, no resource, no reset cadence. The activation family cannot represent it without lying about structure (fabricating a use_count and resetCadence that don't exist in the rule). Even with a new passive family, a new effect atom is needed for 'suppress concentration-break trigger scoped to named spell'. Structural gap is the blocking issue; atom gap is secondary."
+}

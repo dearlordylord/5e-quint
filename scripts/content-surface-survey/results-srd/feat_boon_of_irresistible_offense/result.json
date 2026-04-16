@@ -1,0 +1,34 @@
+{
+  "unit_slug": "feat_boon_of_irresistible_offense",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "feat_record",
+      "justification": "No UnitRecord kind for 'feat' exists. The surface defines only spell, class_feature, and mastery records. A feat is a distinct kind with prerequisites, multiple independent benefit buckets, and no single mechanics family mapping to existing families.",
+      "evidence": "Epic Boon Feat (Prerequisite: Level 19+) — grants Ability Score Increase, Overcome Defenses, and Overwhelming Strike as distinct, structurally independent benefits."
+    },
+    {
+      "kind": "new_atom",
+      "name": "crit_window",
+      "justification": "Overwhelming Strike triggers specifically on a natural 20, not on any hit. The v4 taxonomy explicitly records crit_window as a deferred single-feat pressure case for this exact feat. on_hit_window cannot distinguish a critical hit from an ordinary hit.",
+      "evidence": "When you roll a 20 on the d20 for an attack roll, you can deal extra damage to the target equal to the ability score increased by this feat."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount: ability_score_value",
+      "justification": "Overwhelming Strike's damage equals the character's current STR or DEX score (the one boosted by the feat) — a flat integer derived from a runtime stat. No existing DiceAmount variant (fixed, threshold_tiers, linear_per_level) can express a value that references a character ability score.",
+      "evidence": "you can deal extra damage to the target equal to the ability score increased by this feat"
+    },
+    {
+      "kind": "new_variant",
+      "name": "passive_benefit (bypass_resistance, always-on)",
+      "justification": "Overcome Defenses is an always-on passive — no activation, no trigger, no quota consumed. The bypass_resistance v4 atom exists, but the current surface has no passive benefit carrier. All existing ClassFeatureEffect variants are activated effects, not passive always-on modifiers.",
+      "evidence": "The Bludgeoning, Piercing, and Slashing damage you deal always ignores Resistance."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no 'feat' kind in UnitRecord. Feats have multi-bucket benefit structures (ability score increase + passive modification + conditional on-hit rider) that are not reducible to any existing mechanics family. Secondary blockers: crit_window (deferred in TAXONOMY v4 §12, explicitly cited for this feat), ability-score-as-flat-damage DiceAmount variant, and passive benefit carrier for always-on effects. The Ability Score Increase sub-benefit (modify_ability_score) is also out of scope per TAXONOMY v4 §12."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "druid_wild_companion_l2",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.action",
+      "justification": "Wild Companion requires a Magic action to activate. ClassFeatureActivationCost only has 'free' and 'bonus_action'; there is no 'action' or 'magic_action' variant.",
+      "evidence": "As a Magic action, you can expend a spell slot or a use of Wild Shape to cast the Find Familiar spell..."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "disjunctive_resource",
+      "justification": "The feature consumes either a spell slot OR a use of Wild Shape — two distinct resource pools belonging to different features. UseCountResource models a single pool with a fixed cap; it cannot express an either/or choice across pools, nor can it reference another feature's use_count (Wild Shape).",
+      "evidence": "you can expend a spell slot or a use of Wild Shape to cast the Find Familiar spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect.invoke_spell",
+      "justification": "The effect is casting a specific named spell (Find Familiar) with parameter overrides: no material component, familiar creature type forced to Fey, and duration capped at Long Rest. ClassFeatureEffect only has GrantExtraActionEffect and HealHpEffect; there is no invoke_spell or cast_spell_with_overrides variant.",
+      "evidence": "to cast the Find Familiar spell without Material components. When you cast the spell in this way, the familiar is Fey and disappears when you finish a Long Rest."
+    },
+    {
+      "kind": "new_variant",
+      "name": "spell_invocation_override.creature_type",
+      "justification": "The familiar is forced to be the Fey creature type rather than the type normally allowed by Find Familiar. There is no surface atom or variant for overriding a spell's summoned creature type at invocation time.",
+      "evidence": "the familiar is Fey"
+    },
+    {
+      "kind": "new_variant",
+      "name": "spell_invocation_override.duration_cap",
+      "justification": "The familiar disappears at Long Rest rather than persisting indefinitely (Find Familiar's normal duration). There is no surface shape for capping or overriding a spell's duration when invoked via a class feature.",
+      "evidence": "disappears when you finish a Long Rest"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three independent blockers prevent honest encoding: (1) no 'action'/'magic_action' activation cost variant; (2) no disjunctive resource shape for 'spell slot OR Wild Shape use' — these are different pools on different features; (3) no invoke_spell effect family in ClassFeatureEffect, and even if that were added, the familiar-type and duration overrides would require further sub-variants. The structural_widening verdict is driven primarily by the disjunctive resource, which cannot be expressed as a variant of UseCountResource."
+}

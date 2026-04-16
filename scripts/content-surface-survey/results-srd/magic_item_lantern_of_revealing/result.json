@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_lantern_of_revealing",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_record",
+      "justification": "UnitRecord has no magic_item kind. MagicItemRecord is absent from the type system entirely — SpellRecord, ClassFeatureRecord, and MasteryRecord are the only options, none of which accept item-specific metadata (rarity, attunement, item type).",
+      "evidence": "Lantern of Revealing is a 'Wondrous Item, Uncommon' — a magic item, not a spell, class feature, or mastery."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_aura_family",
+      "justification": "The lantern's core mechanic is a persistent spatial effect (light emission + invisibility reveal) that is always-on while the item is lit. No existing mechanics family covers passive item properties — all families require an activation event (activate, respond, store, on_hit_trigger). A passive_aura or item_property family is needed for always-on conditional effects.",
+      "evidence": "While lit, this hooded lantern burns for 6 hours on 1 pint of oil, shedding Bright Light in a 30-foot radius and Dim Light for an additional 30 feet."
+    },
+    {
+      "kind": "new_atom",
+      "name": "reveal_invisible",
+      "justification": "Making invisible creatures and objects perceptible within the lantern's Bright Light is mechanically distinct from grant_sense (which grants a sense capability to a creature) and from any existing effect atom. The effect suppresses the concealment benefit of invisibility for all observers, not for a specific creature gaining a sense.",
+      "evidence": "Invisible creatures and objects are visible as long as they are in the lantern's Bright Light."
+    },
+    {
+      "kind": "new_variant",
+      "name": "utilize_action_cost",
+      "justification": "The hood-lowering uses a Utilize action. ClassFeatureActivationCost only has 'free' and 'bonus_action'; StandardActionKind includes 'utilize' but no activation cost variant maps to it. A magic item mechanics layer would need utilize_action as an activation cost option.",
+      "evidence": "You can take a Utilize action to lower the hood, reducing the lantern's light to Dim Light in a 5-foot radius."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The blocking gap is at the record level — UnitRecord has no magic_item kind, so no encoding path exists regardless of mechanics fit. Even after adding MagicItemRecord, a passive_aura or item_property mechanics family would be needed (no existing family handles always-on conditional area effects), and reveal_invisible would need to be added as a new effect atom. The hood-lowering Utilize action is a tertiary gap dependent on the two above being resolved first."
+}

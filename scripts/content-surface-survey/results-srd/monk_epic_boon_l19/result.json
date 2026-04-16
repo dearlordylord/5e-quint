@@ -1,0 +1,22 @@
+{
+  "unit_slug": "monk_epic_boon_l19",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "permanent_grant",
+      "justification": "The only existing ClassFeatureMechanics family is 'activation', whose header mandates activationCost, resource (use_count), and resetCadence. Epic Boon is a one-time permanent acquisition at level-up — not an activatable feature with a use pool. There is no honest way to represent 'you gain a feat permanently when you reach level 19' inside the activation family without fabricating fake use_count and resetCadence values.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The v4 effect atom inventory has grant_proficiency and grant_spell_access but no 'grant_feat'. A permanent-grant family would need a corresponding effect atom to record what is granted at level-up.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Epic Boon is structurally identical to every Ability Score Improvement feature (barbarian L4, bard L4, etc.) — all are 'choose a feat or ASI at level-up'. The surface currently has no family for this very common class-progression pattern. A new family such as 'permanent_grant' with a choice-at-level-up mechanic would also cover all ASI/feat entries across all 12 classes. The recommended feat (Boon of Irresistible Offense) has its own mechanics that would be encoded separately as a feat record — out of scope here."
+}

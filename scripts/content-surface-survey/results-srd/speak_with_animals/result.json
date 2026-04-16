@@ -1,0 +1,34 @@
+{
+  "unit_slug": "speak_with_animals",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_creature_communication",
+      "justification": "Speak with Animals grants the caster the ability to comprehend and verbally communicate with a specific creature type (Beasts) for the duration. This is not a sensory extension (grant_sense), not a directed mental link (telepathic_link), and not a proficiency grant. It is a distinct effect: enabling cross-species linguistic comprehension and verbal communication for a bounded duration. No v4 atom covers this.",
+      "evidence": "For the duration, you can comprehend and verbally communicate with Beasts"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation::grant_capability",
+      "justification": "The ongoing_effect family's OngoingOperation is currently closed to roll_modifier and damage_on_hit. Speak with Animals requires an operation variant that grants a capability (communication, interaction) for the duration. Without this variant, the ongoing_effect family cannot represent spells whose persistent effect is granting an ability rather than modifying a roll or adding damage.",
+      "evidence": "For the duration, you can comprehend and verbally communicate with Beasts, and you can use any of the Influence action's skill options with them."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_action_option_access",
+      "justification": "The spell also grants access to the Influence action's skill options against a restricted creature type (Beasts). This is a distinct effect from communication: it expands which action sub-options are available when targeting a creature of a given type. No v4 atom models 'grant access to action skill options for a creature type subset'.",
+      "evidence": "you can use any of the Influence action's skill options with them"
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastingTime::action_or_ritual",
+      "justification": "Speak with Animals is castable as a standard 1 Action OR as a Ritual (11 minutes). The current CastingTime type forces a single choice: either { kind: 'action' } or { kind: 'minutes', amount: 11, ritual: true }. A spell that has both a standard casting time and a ritual variant cannot be represented accurately in a single CastingTime field. This is a secondary gap compared to the operation atom gap, but it is a real surface limitation for all ritual-capable spells with a sub-minute standard casting time.",
+      "evidence": "\"time\": [{\"number\": 1, \"unit\": \"action\"}], \"meta\": {\"ritual\": true}"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker: ongoing_effect.operation cannot express 'grant communication/comprehension capability'. The two candidate effects (beast comprehension, Influence-option access) both require new v4 atoms and a new OngoingOperation surface variant. Secondary blocker: Ritual flag on an Action-cast spell cannot be represented with a single CastingTime field. No Dhall or JSON authored — the unit does not fit honestly."
+}

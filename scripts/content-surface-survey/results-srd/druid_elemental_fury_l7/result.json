@@ -1,0 +1,46 @@
+{
+  "unit_slug": "druid_elemental_fury_l7",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "choose_one_of_subfeatures",
+      "justification": "The feature grants ONE of two sub-features selected at the time the druid reaches level 7. There is no wrapper shape in ClassFeatureMechanics for 'choose one of N sub-features at acquisition.' The current surface only models a single mechanics payload per record.",
+      "evidence": "You gain one of the following options of your choice."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature_family",
+      "justification": "Potent Spellcasting is a permanently-active modifier with no activation cost, no resource, and no rest reset. The only ClassFeatureMechanics family is 'activation', which requires activationCost, resource, and resetCadence — none of which apply here. A 'passive' family is needed for always-on class feature modifiers.",
+      "evidence": "Add your Wisdom modifier to the damage you deal with any Druid cantrip."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_score_damage_bonus effect",
+      "justification": "Potent Spellcasting adds the Wisdom modifier (an ability-score-derived value, not a fixed dice amount) to cantrip damage. ClassFeatureEffect supports only GrantExtraActionEffect and HealHpEffect. A new effect type is needed: a numeric damage bonus whose value is an ability modifier, scoped to a specific action class (cantrips).",
+      "evidence": "Add your Wisdom modifier to the damage you deal with any Druid cantrip."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "on_hit_trigger family for class features",
+      "justification": "Primal Strike is an on-hit damage rider once per turn, triggered by a weapon or Wild Shape Beast-form attack. This shape exists in the mastery vocabulary (OnHitTriggerMechanics) but not in ClassFeatureMechanics. No honest mapping exists without promoting a class feature to a mastery record, which misrepresents provenance.",
+      "evidence": "Once on each of your turns when you hit a creature with an attack roll using a weapon or a Beast form's attack in Wild Shape, you can cause the target to take an extra 1d8 Cold, Fire, Lightning, or Thunder damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "choose_one_of DamageType at activation time",
+      "justification": "Primal Strike's 1d8 elemental damage type is chosen by the player at the moment of the hit, from the set {cold, fire, lightning, thunder}. DamageEffect.damageType is a single fixed DamageType with no 'choose_one_of' variant. A new surface shape is needed to express a runtime player choice among a closed set of damage types.",
+      "evidence": "you can cause the target to take an extra 1d8 Cold, Fire, Lightning, or Thunder damage (choose when you hit)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "MasteryTrigger variant: weapon_or_wild_shape_beast_attack",
+      "justification": "Primal Strike fires on 'a weapon or a Beast form's attack in Wild Shape.' The existing MasteryTrigger variants only cover weapon_hit and weapon_hit_melee_only. Wild Shape Beast-form natural attacks are not weapon attacks and require a new trigger category.",
+      "evidence": "when you hit a creature with an attack roll using a weapon or a Beast form's attack in Wild Shape"
+    }
+  ],
+  "confidence": "high",
+  "notes": "This feature is a 'choose one of two' class feature (Potent Spellcasting OR Primal Strike). Both options require new mechanics families: Potent Spellcasting needs a 'passive' class feature family with an ability-score-derived damage modifier effect; Primal Strike needs an 'on_hit_trigger' class feature family (analogous to mastery on_hit_trigger but scoped to a class feature) plus a runtime damage-type choice variant. The outer choose-one-of wrapper is itself structurally absent from ClassFeatureMechanics. No honest encoding is possible without these additions. No dhall/json/trace files produced."
+}

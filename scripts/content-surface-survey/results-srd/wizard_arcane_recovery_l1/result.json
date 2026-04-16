@@ -1,0 +1,22 @@
+{
+  "unit_slug": "wizard_arcane_recovery_l1",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost { kind: 'short_rest' }",
+      "justification": "Arcane Recovery is activated at the end of a Short Rest, not as a turn-action or bonus action. The current ClassFeatureActivationCost only supports 'free' (free on owner's turn) and 'bonus_action'. A rest-triggered activation variant is needed to represent features whose window of use is tied to finishing a rest, not consuming turn-economy quota.",
+      "evidence": "When you finish a Short Rest, you can choose expended spell slots to recover."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect { kind: 'recover_spell_slots', maxTotalLevel: LinearPerLevel<number>, maxSlotLevel: number }",
+      "justification": "The effect is recovering expended spell slots subject to two simultaneous constraints: a combined-level cap that scales with class level (ceil(wizardLevel/2)), and a per-slot level cap (max slot level 5). No existing ClassFeatureEffect variant (grant_extra_action, heal_hp) covers spell slot recovery. The v4 taxonomy 'refund' procedure atom anticipates the concept but is not surfaced as a ClassFeatureEffect variant.",
+      "evidence": "The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ClassFeatureActivationMechanics family exists and resetCadence 'long_rest' fits cleanly (once used, resets only on Long Rest). Both gaps are pure surface-type variants: a new activation-cost kind for rest-triggered features, and a new effect kind for constrained slot recovery. The scaling (ceil(wizardLevel/2)) fits LinearPerLevel<number> with axis='class'. No new v4 atom is required — 'refund' + 'choose' + 'use_count' + 'rest_window' compose the graph — but neither ClassFeatureActivationCost nor ClassFeatureEffect currently expose a path to those atoms for this mechanic."
+}

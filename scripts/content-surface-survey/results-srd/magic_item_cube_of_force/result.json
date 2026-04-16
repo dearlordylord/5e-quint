@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_cube_of_force",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "UnitRecord has no 'magic_item' kind. SpellRecord | ClassFeatureRecord | MasteryRecord exhausts the union. A MagicItemRecord would need rarity, attunement flag, and a mechanics payload family distinct from spell/class-feature/mastery.",
+      "evidence": "Wondrous Item, Rare (Requires Attunement)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "charge_pool_dispatcher family",
+      "justification": "The item's core mechanic is a renewable charge pool (starts 10, regains 1d6 daily at dawn) where pressing one of six faces spends N charges and casts a specific spell at a fixed DC. No existing family (ongoing_effect, activation, triggered_reaction, anchored_trigger, class-feature activation, on_hit_trigger) models a multi-option charge-gated spell dispatch with per-option charge cost.",
+      "evidence": "You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17), as shown in the Cube of Force Faces table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "charge resource with dice-based daily recharge",
+      "justification": "UseCountResource only models use_count with rest-based or fixed reset. The Cube of Force uses a shared charge pool (10 charges max) that regains 1d6 charges daily at dawn — a dice-roll partial recharge on a time cadence not expressible by RestResetCadence. The v4 taxonomy has 'charge' as a resource atom but the surface types.ts has no corresponding type.",
+      "evidence": "The cube starts with 10 charges, and it regains 1d6 expended charges daily at dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DcSource: fixed numeric DC",
+      "justification": "DcSource supports caster_spell_save_dc and weapon_attack_dc only. The Cube of Force specifies a fixed save DC of 17 that does not derive from the user's stats — requires a new { kind: 'fixed'; value: number } variant.",
+      "evidence": "thereby cast the spell associated with it (save DC 17)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: daily_at_dawn_dice",
+      "justification": "RestResetCadence covers short_rest, long_rest, short_or_long_rest, and partial_short_full_long. A daily recharge that yields a random dice amount (1d6) at a fixed real-time cadence (dawn) is not a rest event and cannot be expressed with the current union.",
+      "evidence": "it regains 1d6 expended charges daily at dawn"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: UnitRecord has no magic_item kind. Even if that were added, three further surface/atom widenings are required: a charge-pool resource type with dice-based daily recharge, a fixed-value DcSource variant, and a multi-option charge-gated dispatch family. The v4 taxonomy lists 'charge' and 'magic_item_root' as atoms, confirming the taxonomy anticipated magic items but the surface types.ts has not yet been widened to include them."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_pipes_of_the_sewers",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — no magic_item kind exists. The v4 taxonomy lists magic_item_root as a source atom but types.ts has no MagicItemRecord type and no corresponding mechanics family. All magic items are blocked at this level before any mechanic-specific analysis.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence — daily_at_dawn variant",
+      "justification": "The pipes regain 1d3 charges daily at dawn — a calendar-time recharge, not tied to short or long rests. The current RestResetCadence union covers only rest-based cadences (short_or_long_rest, long_rest, short_rest, partial_short_full_long). A time-based cadence is a new variant.",
+      "evidence": "The pipes have 3 charges and regain 1d3 expended charges daily at dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Activation cost — magic_action_plus_bonus_action compound cost",
+      "justification": "Using the pipes requires two sequential action costs: first play as a Magic action, then spend a Bonus Action to expend charges. No surface type for compound activation costs exists; ClassFeatureActivationCost only covers free or bonus_action.",
+      "evidence": "If you play the pipes as a Magic action, you can take a Bonus Action to expend 1 to 3 charges"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "companion_summoning_per_charge_family",
+      "justification": "The item summons one Swarm of Rats per charge expended (up to 3 at once), conditioned on enough rats existing within half a mile (GM-adjudicated). The v4 atom create_companion exists but no surface mechanics family covers per-charge companion summoning with a GM-availability gate for magic items.",
+      "evidence": "calling forth one Swarm of Rats with each expended charge if enough rats are within half a mile of you to be called in this fashion (as determined by the GM)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "proximity_triggered_save_gate_for_companion_control",
+      "justification": "When an uncontrolled swarm enters 30 ft while the pipes are being played, it makes DC 15 Wis save. On fail it becomes Friendly (controlled, obeys commands). On success it is immune for 24 hours. Control persists only while player takes Magic action each round and swarm stays within 30 ft. This is a proximity-triggered, ongoing-condition save gate that produces companion attitude/control state — no surface family exists for this shape.",
+      "evidence": "Whenever a Swarm of Rats that isn't under another creature's control comes within 30 feet of you while you are playing the pipes, the swarm makes a DC 15 Wisdom saving throw. On a failed save, the swarm is swayed by the pipes' music and becomes Friendly to you and your allies for as long as you continue to play the pipes each round as a Magic action."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is that no magic_item kind exists in UnitRecord — this alone forces structural_widening without examining any mechanics. Secondary gaps: (1) daily-at-dawn charge recharge needs a new RestResetCadence variant; (2) compound Magic action + Bonus Action activation cost has no surface type; (3) per-charge companion summoning with GM-gated availability has no family; (4) proximity-triggered save gate producing companion control state has no family. The passive rat-attitude effect (rats are Indifferent while pipes are on person) is arguably dm_agenda (NPC attitude is caller-owned per ARCHITECTURE.md), but the active mechanics independently require structural widening regardless."
+}

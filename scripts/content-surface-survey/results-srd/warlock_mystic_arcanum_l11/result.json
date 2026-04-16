@@ -1,0 +1,16 @@
+{
+  "unit_slug": "warlock_mystic_arcanum_l11",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "GrantSpellAccessEffect (ClassFeatureEffect)",
+      "justification": "Mystic Arcanum grants a chosen spell that can be cast without expending a spell slot, using a dedicated use_count resource that resets on Long Rest. No ClassFeatureEffect variant currently models 'grant access to a chosen spell with a slot-free use count'. The v4 atom grant_spell_access exists in the taxonomy (§9 Effect Atoms) but is absent from the ClassFeatureEffect union in types.ts.",
+      "evidence": "You can cast your arcanum spell once without expending a spell slot, and you must finish a Long Rest before you can cast it in this way again."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family and use_count/rest_window resource pattern fit cleanly. The sole gap is ClassFeatureEffect: no variant models grant_spell_access with a slot-free casting constraint. The v4 taxonomy already names grant_spell_access as an effect atom. Also notable: the multi-level growth (L13/15/17 each add another arcanum at a higher spell level) means the full feature would need either a threshold_tiers UseCountCap across levels or multiple records; the L11 slice is one arcanum, one use, one long rest reset — which is encodable once the ClassFeatureEffect variant exists."
+}

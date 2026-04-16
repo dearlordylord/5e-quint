@@ -1,0 +1,34 @@
+{
+  "unit_slug": "banishment",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Effect.transport_exile",
+      "justification": "Banishment's save_gate onFail must transport the target to a harmless demiplane. The current Effect union only has 'damage' and 'none'; transport_exile is not representable as a spell phase outcome.",
+      "evidence": "be transported to a harmless demiplane for the duration"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.apply_condition",
+      "justification": "Banishment inflicts the Incapacitated condition on the banished target for the duration. The current Effect union has no apply_condition variant; it only supports damage and none.",
+      "evidence": "While there, the target has the Incapacitated condition"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition.incapacitated",
+      "justification": "Condition currently only lists 'prone' (from mastery context). Banishment requires 'incapacitated' as a spell-phase Effect outcome, necessitating the Condition union be widened.",
+      "evidence": "the target has the Incapacitated condition"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "creature_type_conditional_expiry",
+      "justification": "If the target belongs to one of five creature types (Aberration, Celestial, Elemental, Fey, Fiend) AND the spell runs its full 1-minute concentration duration, the creature is permanently exiled to a plane associated with its type rather than returning. This requires (a) a creature-type predicate on the banished target, (b) a conditional outcome at spell expiry that branches on whether the full duration was served, and (c) permanent transport_exile with a DM-selected planar destination. No existing lifecycle or effect atom combination covers this shape.",
+      "evidence": "If the target is an Aberration, a Celestial, an Elemental, a Fey, or a Fiend, the target doesn't return if the spell lasts for 1 minute. The target is instead transported to a random location on a plane (DM's choice) associated with its creature type."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core family is activation/save_gate — that shape exists and fits. The blocker is that ActivationPhase.save_gate uses Effect for onFail/onSuccess, and Effect only covers damage and none. Banishment needs transport_exile + apply_condition there. Condition also needs 'incapacitated'. The creature-type conditional permanent-exile is a secondary subgraph gap (the DM-chosen destination plane makes it partially dm_agenda at the terminal edge, but the creature-type branch itself is a deterministic structural gap). The upcast scaling (+1 target/slot above 4) would encode cleanly via choose_up_to + SlotScaling once the Effect blockers are resolved."
+}

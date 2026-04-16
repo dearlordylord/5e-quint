@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_cloak_of_protection",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "UnitRecord in types.ts has no 'magic_item' kind. The magic_item_root atom exists in v4 taxonomy but no MagicItemRecord type, no MagicItemMechanics family, and no tracer branch exist in the surface.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement) — You gain a +1 bonus to Armor Class and saving throws while you wear this cloak."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_modifier_mechanics_family",
+      "justification": "The item's +1 AC and +1 to saving throws are always-on passive bonuses while worn. No mechanics family covers this shape: ongoing_effect and activation are spell/class-feature families; triggered_reaction requires a trigger; mastery requires a weapon hit. A 'passive_modifier' family is needed for items that apply stat modifiers unconditionally while attuned.",
+      "evidence": "You gain a +1 bonus to Armor Class and saving throws while you wear this cloak."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "attunement_mechanics",
+      "justification": "The item requires attunement. The v4 atoms 'attune' (procedure) and 'attunement_slot' (resource) exist in the taxonomy but are absent from types.ts and the tracer.",
+      "evidence": "Requires Attunement"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The magic_item kind is completely absent from UnitRecord. Even setting that aside, the Cloak of Protection needs (1) a passive always-on modifier mechanics family — not activation, not reaction, not ongoing spell — and (2) attunement modeling. The atoms modify_ac and modify_roll_numeric exist in v4 and types.ts but only as spell-effect variants (ReactionEffect and OngoingOperation), not as item-level passive riders. All three gaps are structural: missing record kind, missing mechanics family, missing attunement surface."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "barbarian_reckless_attack_l2",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect::modify_roll_advantage",
+      "justification": "Reckless Attack grants Advantage on the barbarian's own Strength-based attack rolls. The v4 atom modify_roll_advantage exists and is used in MasteryEffect, but ClassFeatureEffect only allows grant_extra_action and heal_hp. A new variant for class-feature-initiated roll-advantage effects is needed.",
+      "evidence": "Doing so gives you Advantage on attack rolls using Strength until the start of your next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect::grant_advantage_on_attacks_against_self (detrimental self-rider)",
+      "justification": "The symmetric penalty of Reckless Attack gives incoming attackers Advantage against the barbarian. No existing ClassFeatureEffect variant models 'attack rolls targeting self gain advantage'. This is a distinct effect polarity (self-as-defender) not covered by modify_roll_advantage (self-as-attacker) or any other current effect type.",
+      "evidence": "but attack rolls against you have Advantage during that time"
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap::unlimited",
+      "justification": "Reckless Attack has no use-count limit — it may be triggered every turn with no rest reset. ClassFeatureActivationMechanics requires a UseCountResource whose cap must be either fixed or threshold_tiers; there is no 'unlimited' or 'no resource' variant.",
+      "evidence": "When you make your first attack roll on your turn, you can decide to attack recklessly. [No frequency restriction stated in the text.]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationMechanics::duration (turn-scoped expiry)",
+      "justification": "Reckless Attack creates effects that persist 'until the start of your next turn' — a timed lifecycle unlike the one-shot instantaneous effects of Action Surge or Second Wind. ClassFeatureActivationMechanics has no duration or expiry field; adding one (or a new turn-scoped expiry variant) is needed to model temporary-state class features.",
+      "evidence": "gives you Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against you have Advantage during that time"
+    }
+  ],
+  "confidence": "high",
+  "notes": "All required v4 atoms exist (modify_roll_advantage, attack_roll, turn_start_window); the gaps are entirely in ClassFeatureEffect variants, UseCountCap, and the absence of a duration/expiry field in ClassFeatureActivationMechanics. The activation timing ('decide when making first attack roll' vs 'free action on turn') is a secondary modeling concern. No dhall/json/trace produced — unit does not fit current surface honestly."
+}

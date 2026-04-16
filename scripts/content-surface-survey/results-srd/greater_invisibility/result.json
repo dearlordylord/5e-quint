@@ -1,0 +1,22 @@
+{
+  "unit_slug": "greater_invisibility",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ApplyConditionOperation",
+      "justification": "OngoingOperation only has roll_modifier and damage_on_hit. Greater Invisibility's core mechanic is applying a named condition to a creature for the spell's duration — neither existing variant captures this. The apply_condition v4 atom already exists but has no OngoingOperation surface path.",
+      "evidence": "A creature you touch has the Invisible condition until the spell ends."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: \"invisible\"",
+      "justification": "The Condition type currently contains only \"prone\". The Invisible condition is a distinct SRD condition (Rules Glossary) required to represent this spell's effect and is mechanically significant (attackers have Advantage vs. the target, the target has Advantage on its attack rolls).",
+      "evidence": "\"conditionInflict\": [\"invisible\"]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the right structural fit: Touch range, one-target attachment, concentration-1-minute duration, single condition applied for duration, no save/no attack roll. Two surface widenings are needed: (1) add a new OngoingOperation variant { kind: \"apply_condition\"; condition: Condition } so the ongoing_effect tracer path can emit the apply_condition v4 atom, and (2) widen Condition to include \"invisible\". No new v4 atoms or families are required. Dhall/JSON/trace not authored because the types do not yet support this shape."
+}

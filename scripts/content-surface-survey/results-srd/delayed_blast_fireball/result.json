@@ -1,0 +1,34 @@
+{
+  "unit_slug": "delayed_blast_fireball",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AnchoredSignal — damage_area",
+      "justification": "The bead's explosion produces a Dex save against fire damage in a 20-ft sphere. AnchoredSignal only supports audible/mental notification signals. The tracer's traceAnchoredTrigger folds signal content into a label string rather than wiring it to actual save_gate + damage atoms. A new signal kind carrying a save-gated area-damage payload is needed — or the anchored_trigger release must be restructured to connect to existing save_gate + damage atoms.",
+      "evidence": "each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw. A creature takes Fire damage equal to the total accumulated damage on a failed save or half as much damage on a successful one."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount — accumulating_per_event",
+      "justification": "The spell's damage starts at 12d6 and grows by 1d6 each time the caster's turn ends without the spell ending. This is runtime state accumulation driven by a recurring in-combat event, not level-based scaling. None of the five LevelAxis values (character/class/slot/subclass/proficiency_bonus) capture 'turns elapsed while concentrating'. A new DiceAmount kind is needed — e.g., accumulating_per_event — with fields: base DiceExpr, perEvent DiceExprDelta, triggerEvent identifier.",
+      "evidence": "The spell's base damage is 12d6, and the damage increases by 1d6 whenever your turn ends and the spell hasn't ended."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "anchored_trigger — touch/reposition composite event",
+      "justification": "A creature physically touching the bead triggers a save gate (not a simple AnchoredEvent). The two branches are mechanically distinct: (fail) immediately terminate concentration and detonate, (success) the creature may throw the bead up to 40 ft, repositioning the anchor, and a secondary detonation trigger fires if the thrown bead enters a creature's space or collides with a solid object. This compound sequence (physical_contact → save_gate → detonate_or_reposition → secondary_trigger) has no surface representation. The existing AnchoredEvent kinds (physical_contact, enters_area) model simple triggers, not save-gated branches with anchor repositioning.",
+      "evidence": "If a creature touches the glowing bead before the spell ends, that creature makes a Dexterity saving throw. On a failed save, the spell ends, causing the bead to explode. On a successful save, the creature can throw the bead up to 40 feet. If the thrown bead enters a creature's space or collides with a solid object, the spell ends, and the bead explodes."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AnchoredEvent — spell_expires / concentration_ends",
+      "justification": "The primary detonation trigger is 'when the spell ends' — either concentration breaks or the 1-minute duration elapses. This maps to the lifecycle atom expire, but is not modeled as an AnchoredEvent kind. The existing kinds (physical_contact, enters_area) cover creature interactions, not the spell's own lifecycle end as a trigger. A new AnchoredEvent kind like spell_expires or concentration_ends is needed to represent the normal detonation path.",
+      "evidence": "When the spell ends, the bead explodes."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The closest family is anchored_trigger (Alarm precedent: spell arms a bead at a location, fires when triggered). However four structural gaps block honest encoding: (1) AnchoredSignal has no damage-producing kind — the tracer folds signals into labels rather than connecting them to save_gate + damage atoms; (2) damage accumulation (12d6 + 1d6/turn elapsed) requires a new DiceAmount semantic with a turn-based event axis; (3) the touch/throw/reposition mechanic requires a compound save-gated event subgraph with anchor repositioning; (4) 'spell ends' as a detonation trigger is not an existing AnchoredEvent kind. Secondary effect (flammable uncarried objects ignite) is also unrepresentable but is arguably environmental/DM-owned and out-of-core. No Dhall, JSON, or trace produced."
+}

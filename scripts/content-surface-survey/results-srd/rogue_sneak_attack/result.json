@@ -1,0 +1,28 @@
+{
+  "unit_slug": "rogue_sneak_attack",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "class_feature.on_hit_trigger",
+      "justification": "Sneak Attack is a passive class feature whose core mechanic is an on-hit rider, but class_feature only supports the activation family.",
+      "evidence": "Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll"
+    },
+    {
+      "kind": "new_variant",
+      "name": "class_feature.on_hit_trigger.qualifying_predicates",
+      "justification": "The surface needs to express Sneak Attack's eligibility gates: finesse or ranged weapon, advantage OR nearby non-incapacitated ally, and no disadvantage.",
+      "evidence": "if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. You don't need Advantage ... if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_type_from_weapon_hit",
+      "justification": "Existing damage surfaces require a fixed damage type, but Sneak Attack inherits the damage type from the qualifying weapon hit.",
+      "evidence": "The extra damage's type is the same as the weapon's type."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content JSON or trace was authored because the current surface cannot represent Sneak Attack honestly without introducing a class-feature on-hit family and related qualifiers."
+}

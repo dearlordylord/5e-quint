@@ -1,0 +1,28 @@
+{
+  "unit_slug": "alter_self",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation — grant_passive_effect",
+      "justification": "Aquatic Adaptation grants water breathing (grant_sense) and a swim speed equal to the caster's speed (modify_speed) as a persistent self-effect for the duration. Neither maps to roll_modifier nor damage_on_hit.",
+      "evidence": "You sprout gills and grow webs between your fingers. You can breathe underwater and gain a Swim Speed equal to your Speed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation — modify_natural_weapon",
+      "justification": "Natural Weapons replaces the caster's unarmed strike damage die and type, and substitutes the spellcasting ability modifier for Strength on attack and damage rolls. The v4 atom alter_item_kind covers item-kind changes, but it is not an OngoingOperation variant and natural weapons are not equippable items.",
+      "evidence": "You grow claws (Slashing), fangs (Piercing), horns (Piercing), or hooves (Bludgeoning). When you use your Unarmed Strike to deal damage with that new growth, it deals 1d6 damage of the type in parentheses instead of dealing the normal damage for your Unarmed Strike, and you use your spellcasting ability modifier for the attack and damage rolls rather than using Strength."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "ongoing_effect with choice-set and in-duration swap",
+      "justification": "Alter Self offers N mutually exclusive operation options selected at cast time, swappable mid-duration via a Magic action. OngoingEffectMechanics.operation is a single OngoingOperation, not a choice set. The in-duration swap via Magic action (consuming no slot, just an action) has no surface shape.",
+      "evidence": "Choose one of the following options. Its effects last for the duration, during which you can take a Magic action to replace the option you chose with a different one."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family is honestly ongoing_effect (concentration, self, 1 hour, action). All three options are surface_widening: (1) Aquatic Adaptation needs grant_sense + modify_speed as OngoingOperation variants; (2) Natural Weapons needs a natural-weapon modification variant (closest v4 atom is alter_item_kind but it is not in OngoingOperation); (3) Change Appearance is cosmetic state change — the shape itself (appearance, voice, coloration within size/basic-shape constraints) has no atom; consequences (fooling observers) are DM-adjudicated and stay out of core. The choice-set/swap structure is the broadest gap: it requires either a new OngoingEffectMechanics field or a new spell family variant."
+}

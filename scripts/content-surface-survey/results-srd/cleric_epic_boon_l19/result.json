@@ -1,0 +1,22 @@
+{
+  "unit_slug": "cleric_epic_boon_l19",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "Epic Boon is a permanent level-up reward with no activation, no resource pool, and no reset cadence. The sole existing ClassFeatureMechanics family ('activation') requires all three of activationCost + resource + resetCadence. None apply here. A new family is needed for features that permanently grant something at level acquisition — no expenditure, no refill.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The sole effect of Epic Boon is acquiring a feat permanently. No ClassFeatureEffect variant covers this: grant_extra_action is a per-turn combat action grant; heal_hp is HP restoration. The v4 atom inventory has grant_proficiency and grant_spell_access but no grant_feat.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Fate is recommended."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Epic Boon (cleric L19) is structurally identical to the Epic Boon feature on every other class at level 19 (barbarian, bard, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard). All are 'gain a feat' level-up rewards. The two gaps identified here apply to the whole Epic Boon family, not just the cleric variant. Encoding this unit as an 'activation' with a dummy use_count resource would be dishonest — the feat is not expended and refilled, it is permanently acquired."
+}

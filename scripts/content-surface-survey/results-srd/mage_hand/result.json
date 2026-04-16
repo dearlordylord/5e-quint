@@ -1,0 +1,34 @@
+{
+  "unit_slug": "mage_hand",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "object_proxy spell mechanics family",
+      "justification": "Mage Hand creates a persistent, controllable object proxy. No existing SpellMechanics family models this pattern. The four existing families all require passive operations (roll_modifier, damage_on_hit), instantaneous phases (attack_roll, save_gate), a reaction trigger, or a planted anchored event — none captures 'create object + issue commands to it via action on subsequent turns'.",
+      "evidence": "A spectral, floating hand appears at a point you choose within range. The hand lasts for the duration. ... As a Magic action on your later turns, you can control the hand thus again."
+    },
+    {
+      "kind": "new_atom",
+      "name": "interact_object",
+      "justification": "The hand's capability set is a deterministic, SRD-enumerated list of environment-object interactions. No v4 effect atom covers non-combat object interaction. The create_object v4 atom covers creating the hand but not what it can do. The SRD explicitly enumerates what is and is not allowed (can't attack, can't activate magic items, can't carry > 10 lbs), making this a closed mechanical rule rather than DM adjudication.",
+      "evidence": "When you cast the spell, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. ... The hand can't attack, activate magic items, or carry more than 10 pounds."
+    },
+    {
+      "kind": "new_variant",
+      "name": "recurring_action_cost on persistent object (per-turn command)",
+      "justification": "Controlling the hand on subsequent turns costs a Magic action each time. This is a recurring action-quota cost on a created object — not modeled in any existing surface type. ClassFeatureActivationCost is class-feature-specific; spell surface has no shape for 'caster spends an action on later turns to issue commands to a created object'.",
+      "evidence": "As a Magic action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "proximity_tether self-break condition",
+      "justification": "The hand vanishes if it is ever more than 30 feet from the caster. This is a distance-based self-break on a created object. The v4 lifecycle atom self_break exists but the surface has no type for it, and no existing Duration or lifecycle variant encodes a proximity tether as a break condition.",
+      "evidence": "The hand vanishes if it is ever more than 30 feet away from you or if you cast this spell again."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All four existing SpellMechanics families fail: ongoing_effect needs roll_modifier or damage_on_hit; activation needs attack_roll or save_gate phases; triggered_reaction needs a reaction CastingTime; anchored_trigger models a planted trap, not an actively commanded proxy. The v4 atom inventory already has the building blocks (create_object, object attachment, activate procedure, action_quota resource, self_break lifecycle, replace_on_recast lifecycle, persist/expire lifecycle) — the missing piece is a surface-level family that composes them into the 'create controllable object proxy' pattern."
+}

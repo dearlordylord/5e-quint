@@ -1,0 +1,34 @@
+{
+  "unit_slug": "animal_shapes",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "polymorph_creature",
+      "justification": "The core effect of Animal Shapes replaces each target's stat block with a chosen Beast's while preserving select original properties. No v4 effect atom expresses stat-block replacement. The closest atom, alter_item_kind, applies to items not creatures.",
+      "evidence": "A target's game statistics are replaced by the chosen Beast's statistics, but the target retains its creature type; Hit Points; Hit Point Dice; alignment; ability to communicate; and Intelligence, Wisdom, and Charisma scores."
+    },
+    {
+      "kind": "new_variant",
+      "name": "TargetSelection.any_willing",
+      "justification": "Animal Shapes targets 'any number of willing creatures' with no upper bound and no slot scaling. The current TargetSelection only supports 'one' or 'choose_up_to: SlotScaling<number>'. An unbounded willing-creature selection requires a new variant.",
+      "evidence": "Choose any number of willing creatures that you can see within range."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.equals_target_stat",
+      "justification": "The Temporary Hit Points granted equal the HP of the first beast form chosen — a stat on a player/DM-selected creature, not a computable dice expression or level-scaled formula. No existing DiceAmount variant can represent 'HP of the chosen creature form'.",
+      "evidence": "The target gains a number of Temporary Hit Points equal to the Hit Points of the first form into which it shape-shifts."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastingTime or OngoingCost — magic_action recurrence",
+      "justification": "The caster may spend a Magic action on later turns to re-transform targets. This is a recurring maintenance cost after the initial cast, structurally distinct from casting time. Neither CastingTime nor ClassFeatureActivationCost covers 'magic action on subsequent turns'.",
+      "evidence": "On later turns, you can take a Magic action to transform the targets again."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Animal Shapes is fundamentally a mass-polymorph spell. Its core mechanic — replacing a creature's stat block while preserving select properties — has no corresponding effect atom in v4. The additional gaps (unbounded target selection, beast-derived temp HP, Magic action re-trigger) are secondary surface widenings but the primary blocker is the missing polymorph_creature atom. The spell could plausibly fit under ongoing_effect with a new operation kind once the atom exists. Note: the target-initiated dismiss (Bonus Action) maps to the existing v4 lifecycle atom 'dismiss' but that atom is not currently surfaced in any mechanics type — a minor secondary gap. Duration is timed 24 hours, not concentration."
+}

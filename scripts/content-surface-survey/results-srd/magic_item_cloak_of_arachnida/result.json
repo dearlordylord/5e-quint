@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item UnitRecord kind",
+      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. There is no MagicItemRecord variant and no magic_item family in types.ts. The v4 taxonomy has magic_item_root but the TS surface has never been widened to expose it. No honest encoding is possible without adding this kind.",
+      "evidence": "Wondrous Item, Very Rare (Requires Attunement) — the unit is fundamentally a magic item, not a spell, class feature, or mastery."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_bundle family (multi-effect always-on attunement)",
+      "justification": "The cloak grants four simultaneous passive benefits while worn and attuned. No existing spell/class-feature/mastery family models a bundle of heterogeneous always-on passive effects. The closest spell families (ongoing_effect, triggered_reaction) are single-operation and require a casting procedure; there is no 'attunement_passive' or 'passive_bundle' mechanics family.",
+      "evidence": "While wearing it, you gain the following benefits. [four sub-bullets follow, each a distinct always-on effect]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: dawn",
+      "justification": "The Web property resets at the next dawn, not at a short or long rest. The current RestResetCadence union has short_or_long_rest, long_rest, short_rest, partial_short_full_long — none of which map to dawn.",
+      "evidence": "Once used, this property can't be used again until the next dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "charge resource in types.ts",
+      "justification": "The Web casting property uses a per-dawn charge. The v4 taxonomy has a 'charge' resource atom, but types.ts only exposes use_count and spell_slot. A charge with dawn reset is mechanically distinct from use_count with rest reset.",
+      "evidence": "Once used, this property can't be used again until the next dawn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_climb_speed (or modify_speed variant with speed-kind discriminant)",
+      "justification": "Spider Climb grants a Climb Speed equal to the wearer's Speed. The v4 taxonomy has modify_speed but types.ts has no ClassFeatureEffect or magic-item effect variant for granting a typed movement speed. A 'climb' speed kind needs to be distinguished from fly/swim/hover.",
+      "evidence": "You have a Climb Speed equal to your Speed and can move up, down, and across vertical surfaces and along ceilings, while leaving your hands free."
+    },
+    {
+      "kind": "new_atom",
+      "name": "web_immunity / traverse_difficult_terrain_as_normal (movement filter immunity)",
+      "justification": "Spider Walk grants immunity to being restrained by webs and allows moving through web difficult terrain freely. No v4 atom covers 'immunity to a specific terrain/restraint type'. block_travel (v4) models blocking movement but not its negation. This is a new narrow effect atom.",
+      "evidence": "You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: magic_item is not a UnitRecord kind in types.ts. Even if that were added, five secondary widenings would be needed: (1) passive_bundle mechanics family, (2) dawn reset cadence, (3) charge resource, (4) climb-speed effect variant, (5) web-immunity movement atom. The Web spell-casting property (DC 13, doubled area, once/dawn) is the only sub-mechanic that partially overlaps an existing family (anchored_trigger or activation), but even that would require the dawn charge resource. The doubled-area modifier on the Web spell has no surface encoding either. All four cloak properties together demand a purpose-built magic_item encoding layer."
+}

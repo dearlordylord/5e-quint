@@ -1,0 +1,22 @@
+{
+  "unit_slug": "dancing_lights",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "create_object_operation",
+      "justification": "Dancing Lights' core effect is creating persistent floating magical objects. OngoingOperation only allows roll_modifier and damage_on_hit; there is no variant for object creation. The v4 atom create_object exists but is not reachable from any OngoingOperation variant.",
+      "evidence": "You create up to four torch-size lights within range, making them appear as torches, lanterns, or glowing orbs that hover for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "reposition_objects_operation",
+      "justification": "The spell grants a recurring optional Bonus Action each turn to move the created lights up to 60 feet, subject to range and adjacency constraints. No current OngoingOperation variant expresses a recurring per-turn optional cost that repositions created objects.",
+      "evidence": "As a Bonus Action, you can move the lights up to 60 feet to a space within range. A light must be within 20 feet of another light created by this spell, and a light vanishes if it exceeds the spell's range."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Dancing Lights fits the ongoing_effect family structurally (concentration, point range, action casting time, cantrip level 0) but fails at OngoingOperation: neither roll_modifier nor damage_on_hit describes creating hovering lights. The v4 atom create_object exists but there is no corresponding OngoingOperation variant. The bonus-action reposition mechanic is also not expressible; it is a recurring optional per-turn cost for moving created objects — distinct from mark transfer (event-triggered) and from anything currently in OngoingOperation. No dhall/json/trace authored because no honest encoding is possible without these variants."
+}

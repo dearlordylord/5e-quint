@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_manual_of_gainful_exercise",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord / magic_item kind",
+      "justification": "UnitRecord has no magic_item variant. The taxonomy has magic_item_root as a source atom and the unit kind is tagged magic_item, but types.ts only defines SpellRecord | ClassFeatureRecord | MasteryRecord. No family (attunement, single-use consumption, passive property, etc.) exists for magic items at all.",
+      "evidence": "Manual of Gainful Exercise is a Wondrous Item — neither a spell, class feature, nor mastery."
+    },
+    {
+      "kind": "new_variant",
+      "name": "downtime_ritual activation cost",
+      "justification": "The item's activation requires 48 hours of study/practice over 6 days or fewer — a downtime-duration cost. ClassFeatureActivationCost only covers 'free' and 'bonus_action'; CastingTime.minutes covers long casts but is spell-scoped. No variant covers multi-day downtime rituals.",
+      "evidence": "If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines…"
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score (permanent)",
+      "justification": "The core effect is a permanent +2 to the Strength ability score (capped at 30). No effect atom covers permanent ability-score modification. TAXONOMY v4 §12 explicitly lists 'modify_ability_score as a runtime effect' as out-of-scope / not promoted. This unit forces the question of whether permanent stat increases from magic items should be modeled.",
+      "evidence": "your Strength increases by 2, to a maximum of 30"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_depletion with timed_recharge lifecycle",
+      "justification": "After use, the item loses its magic entirely and regains it only after 100 years. This is a one-use depletion + century-scale recharge — distinct from charge-based resources (which refill on rest) and from spell slot consumption. No lifecycle atom or resource variant covers this pattern.",
+      "evidence": "The manual then loses its magic but regains it in a century."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The blocking gap is structural: UnitRecord has no magic_item kind and no MagicItemMechanics family. Even if the kind existed, the core effect (permanent ability score increase) is explicitly listed in TAXONOMY v4 §12 as out-of-scope for the core mechanics graph. The activation cost (multi-day downtime ritual) and depletion/recharge lifecycle also lack surface representation. No honest encoding is possible without first landing MagicItemRecord in types.ts."
+}

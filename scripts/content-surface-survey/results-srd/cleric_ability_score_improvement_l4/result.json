@@ -1,0 +1,22 @@
+{
+  "unit_slug": "cleric_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_advancement",
+      "justification": "ASI is not an activation — it has no activationCost, no use_count resource, and no reset cadence. It is permanently granted at a specific class level. The current ClassFeatureMechanics surface only has an 'activation' family, which requires all three of those fields. A new family is needed for features that are simply granted at level-up with no runtime activation step.",
+      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The effect of ASI is granting a feat choice (specifically Ability Score Improvement or any qualifying feat). No existing ClassFeatureEffect variant covers this. The available effects are GrantExtraActionEffect and HealHpEffect. A new effect atom is needed to represent feat grants at level-up.",
+      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two distinct gaps prevent honest encoding. First, the ClassFeatureMechanics surface has only an 'activation' family, but ASI is a passive/automatic grant — it is awarded once at a specific character level, not triggered by the player at runtime. Second, even if a passive family existed, the ClassFeatureEffect union has no variant for 'grant feat' or 'modify ability score'. The v4 TAXONOMY also explicitly defers 'modify_ability_score as a runtime effect' as out-of-scope, confirming this is a known gap. This pattern recurs at every class's L4/L8/L12/L16/L19 ASI slots — it will need a single widening that covers all classes."
+}

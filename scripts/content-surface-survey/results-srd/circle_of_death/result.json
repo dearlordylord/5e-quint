@@ -1,0 +1,32 @@
+{
+  "unit_slug": "circle_of_death",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Effect.half_damage",
+      "justification": "Circle of Death (and all save-for-half-damage spells) deal exactly half the fail damage on a successful save. The current Effect type has no variant to express this derived relationship. The success branch must be encoded as an independent DiceAmount (4d8 + 1d8/slot), which is numerically correct but loses the invariant that success = fail / 2. A half_damage variant on Effect (or a halfDamageOnSuccess boolean on save_gate) would capture this without duplicating the scaling chain.",
+      "evidence": "taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Spell encodes cleanly and typechecks. The trace is numerically accurate (8d8 fail / 4d8 success with correct slot scaling). The surface_widening is narrow: only the 'half of fail' relationship is inexpressible, not the values themselves. The workaround (two independent DiceAmounts) produces a correct graph but duplicates the scale_die_count node. The branches_on_save relation is used for both fail and success paths with no label distinction — this is an existing limitation of the surface, not new pressure from this unit."
+}

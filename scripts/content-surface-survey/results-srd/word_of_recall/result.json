@@ -1,0 +1,34 @@
+{
+  "unit_slug": "word_of_recall",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "designation_recall",
+      "justification": "Word of Recall has two mechanically distinct cast modes under one spell card: a designation cast (plant persistent sanctuary marker on caster) and a recall cast (teleport group to that marker). No existing payload family models this dual-mode structure. The anchored_trigger family is the closest structurally but is designed for location-based environmental triggers, not a caster-level re-cast trigger from any distance.",
+      "evidence": "You and up to five willing creatures within 5 feet of you instantly teleport to a previously designated sanctuary. You must designate a location, such as a temple, as a sanctuary by casting this spell there."
+    },
+    {
+      "kind": "new_variant",
+      "name": "transport (Effect variant)",
+      "justification": "The recall cast's core effect is instantaneous teleportation to a named/designated location. The surface Effect type only has damage and none. The v4 atom transport_exile exists but covers banishment/demiplane exile, not voluntary teleport to a designated sacred location. A new transport effect variant is needed — distinct from transport_exile in that it is willing, non-harmful, and destination-bound to a previously stored anchor.",
+      "evidence": "instantly teleport to a previously designated sanctuary"
+    },
+    {
+      "kind": "new_variant",
+      "name": "self_and_nearby (Attachment variant)",
+      "justification": "The recall cast's attachment is caster + up to 5 willing creatures within 5 feet. This is not self (caster only), target (other creatures, not including caster by default), area (indiscriminate AoE), or mark (stateful binding). A new attachment variant is needed for group-including-caster-within-radius with a willing filter.",
+      "evidence": "You and up to five willing creatures within 5 feet of you"
+    },
+    {
+      "kind": "new_variant",
+      "name": "caster_sanctuary_anchor (persistent caster-level state)",
+      "justification": "The designation cast stores a location permanently on the caster's character state — it has no duration, no target, no trigger. This is not a spell effect on a creature, not an anchored location trigger, not a timed persist. It is a new kind of cast-time registration: 'record where I am now.' No existing procedure, attachment, or lifecycle atom covers this.",
+      "evidence": "You must designate a location, such as a temple, as a sanctuary by casting this spell there."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The fundamental blocker is structural: Word of Recall is one spell with two categorically different cast behaviors (designation vs. recall). Even if transport were added to the Effect type and the group attachment were added, the designation cast has no honest encoding in any existing family. The spell requires either a new dual-mode family or a 'store_caster_anchor' procedure family separate from anchored_trigger (which is location-based, not caster-state-based)."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "aura_of_life",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "block_max_hp_reduction",
+      "justification": "Aura of Life prevents HP maximums from being reduced. This is semantically distinct from modify_max_hp (which applies a numeric change). A protection-against-reduction is a suppression of a specific class of modify_max_hp effects with negative delta. No v4 atom covers this; suppress is a procedure atom, not an effect atom.",
+      "evidence": "your Hit Point maximums can't be reduced"
+    },
+    {
+      "kind": "new_variant",
+      "name": "GrantResistanceOperation (OngoingOperation variant)",
+      "justification": "grant_resistance is a v4 effect atom but it is not a variant of OngoingOperation. Aura of Life grants Necrotic resistance to all creatures in the aura while concentration holds. The ongoing_effect family needs a resistance-granting operation kind.",
+      "evidence": "you and your allies have Resistance to Necrotic damage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ConditionalTurnStartHealOperation (OngoingOperation variant)",
+      "justification": "Aura of Life restores 1 HP to any ally at 0 HP who starts their turn in the aura. This is a turn_start_window-triggered heal gated by a condition (creature has 0 HP). Neither roll_modifier nor damage_on_hit covers this; heal is in v4 but wiring it as an OngoingOperation with a turn-start conditional is not expressible in the surface.",
+      "evidence": "If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point."
+    },
+    {
+      "kind": "new_variant",
+      "name": "operations: ReadonlyArray<OngoingOperation> on OngoingEffectMechanics",
+      "justification": "OngoingEffectMechanics currently has a singular operation field. Aura of Life has three distinct ongoing operations (grant_resistance, block_max_hp_reduction, conditional_turn_start_heal). The family needs to support multiple simultaneous operations.",
+      "evidence": "Resistance to Necrotic damage AND HP maximums can't be reduced AND conditional 1-HP regain — all three active while concentration holds"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit's kind (spell) and family (ongoing_effect) exist. The blocking factors are: (1) OngoingOperation only has roll_modifier and damage_on_hit — none of Aura of Life's three effects match; (2) block_max_hp_reduction is absent from v4 taxonomy entirely; (3) the multi-operation structure cannot be represented with the current singular operation field. Do not encode — the spell would require fabricated atoms or a false trace."
+}

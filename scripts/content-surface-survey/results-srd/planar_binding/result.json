@@ -1,0 +1,28 @@
+{
+  "unit_slug": "planar_binding",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bind_creature",
+      "justification": "The on-fail effect of Planar Binding is persistent compelled service: the target must follow the caster's commands for the duration. No existing Effect type or v4 atom covers behavioral command-binding of an independent creature. The Effect union only has DamageEffect | NoneEffect. The v4 atom command_companion covers commanding a companion you created; bind_creature covers compelling an independent creature to serve.",
+      "evidence": "A bound creature must follow your commands to the best of its ability. You might command the creature to accompany you on an adventure, to guard a location, or to deliver a message."
+    },
+    {
+      "kind": "new_variant",
+      "name": "slot_scaled_duration",
+      "justification": "The Duration field is a fixed header value with no slot-scaling variant. Planar Binding's duration scales non-linearly with slot level (L5: 24 hr, L6: 10 days, L7: 30 days, L8: 180 days, L9: 366 days). A ThresholdTiers<DurationValue> variant on Duration (or a new DurationAmount type analogous to DiceAmount) is needed to express this.",
+      "evidence": "The duration increases with a spell slot of level 6 (10 days), 7 (30 days), 8 (180 days), and 9 (366 days)."
+    },
+    {
+      "kind": "new_atom",
+      "name": "extend_spell_duration",
+      "justification": "If the bound creature was summoned by another active spell, Planar Binding extends that spell's duration to match its own. No existing atom or relation in v4 models inter-spell duration manipulation (one spell modifying another spell's lifecycle node).",
+      "evidence": "If the creature was summoned or created by another spell, that spell's duration is extended to match the duration of this spell."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell's save_gate structure is representable (activation family, CHA save, caster_spell_save_dc) but the Effect on failure cannot be honestly encoded — Effect = DamageEffect | NoneEffect, and 'bound to serve' is neither. The family is not the problem; the missing Effect atom is. Duration slot-scaling and the cross-spell duration extension are secondary blockers. The narrowest classification is atom_widening (bind_creature is not in the v4 taxonomy); the duration variant gap is a concurrent surface_widening but does not change the primary classification."
+}

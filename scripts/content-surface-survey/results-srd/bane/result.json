@@ -1,0 +1,16 @@
+{
+  "unit_slug": "bane",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "save_gated_ongoing_effect",
+      "justification": "Bane applies a persistent roll_modifier (-1d4) only to targets who FAIL an initial CHA saving throw. The ongoing_effect family applies its operation to all attachment targets unconditionally. The activation family supports save_gate phases but its Effect type (DamageEffect | NoneEffect) has no variant for 'apply an ongoing roll modifier for spell duration'. Neither family can express the combination of cast-time save filtering + persistent operation.",
+      "evidence": "Whenever a target that fails this save makes an attack roll or a saving throw before the spell ends, the target must subtract 1d4 from the attack roll or save."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Bane is the negative mirror of Bless. Both have identical structure (concentration, choose_up_to targets scaled by slot, roll_modifier ±1d4) except Bane gates its ongoing effect behind a CHA save on cast. The sign field in DiceDelta already supports '-', so the subtraction is representable. The only gap is the save-gate filter on who receives the ongoing operation. The narrowest fix is either (a) a new Effect variant in ActivationPhase.save_gate.onFail that encodes 'apply persistent roll modifier', or (b) a new optional saveGateOnCast field on OngoingEffectMechanics. Both are surface_widening — no new v4 atom is required; all atoms (roll_modifier, save_gate, target, etc.) already exist."
+}

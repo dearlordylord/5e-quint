@@ -1,0 +1,22 @@
+{
+  "unit_slug": "cleric_disciple_of_life_l3",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_trigger family for ClassFeatureMechanics",
+      "justification": "Disciple of Life is always-on: it fires automatically whenever the cleric casts a healing spell with a spell slot. It has no activation cost, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three. A new family — 'passive_trigger' or 'passive_modifier' — is needed for class features that are unconditionally active and fire on an external triggering condition rather than a player-initiated activation.",
+      "evidence": "When a spell you cast with a spell slot restores Hit Points to a creature, that creature regains additional Hit Points on the turn you cast the spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "augment_spell_heal effect type",
+      "justification": "The feature adds a flat HP bonus (2 + slot_level) to healing done by any spell the cleric casts with a spell slot. This is not modeled by HealHpEffect (which makes the feature itself the source of healing, like Second Wind or Divine Spark) or by any other ClassFeatureEffect variant. A new variant — 'augment_spell_heal' — is needed to express 'add X HP to the healing of a spell you cast with a slot'. The scaling shape (2 + slot_level) is already representable as LinearPerLevel<number> with axis='slot', base=2, perLevel=1, startingAtLevel=1.",
+      "evidence": "The additional Hit Points equal 2 plus the spell slot's level."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The slot-level scaling formula (2 + slot_level) is expressible with existing LinearPerLevel<number> infrastructure. The two structural gaps are (1) no passive/always-on family for class features and (2) no effect variant for 'augment the healing output of a spell I cast'. Neither gap can be papered over with existing surface shapes without producing a false trace."
+}

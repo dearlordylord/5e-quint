@@ -1,0 +1,22 @@
+{
+  "unit_slug": "fighter_studied_attacks_l13",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "on_miss_trigger (class feature family)",
+      "justification": "Studied Attacks fires automatically whenever the fighter misses an attack roll — no player-initiated activation, no use-count resource, no rest reset cadence. The only existing class feature family is 'activation', which requires activationCost + resource + resetCadence. None of those fields exist for this feature. A new passive-trigger family (analogous to mastery's on_hit_trigger) is required.",
+      "evidence": "If you make an attack roll against a creature and miss, you have Advantage on your next attack roll against that creature before the end of your next turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage in ClassFeatureEffect",
+      "justification": "The feature grants Advantage on attack rolls. modify_roll_advantage exists in v4 taxonomy and is already present in MasteryEffect, but ClassFeatureEffect only contains GrantExtraActionEffect | HealHpEffect. Threading this effect type into class features is needed for Studied Attacks (and similar class features).",
+      "evidence": "you have Advantage on your next attack roll against that creature before the end of your next turn"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Studied Attacks is a passive, unlimited on-miss rider: fires automatically on every missed attack roll, consumes no resource, has no activation cost. The activation family cannot represent this without fabricating resource/resetCadence fields that do not exist in the rule. Both gaps are present; the family gap is the structural one. The on_miss_window atom already exists in v4 — the missing piece is a class feature family that can root to it rather than to an explicit activation."
+}

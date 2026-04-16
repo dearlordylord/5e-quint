@@ -1,0 +1,9 @@
+{
+  "unit_slug": "find_traps",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Find Traps is entirely informational. Its effect is 'you sense any trap within range that is within line of sight' and 'the general nature of the danger posed by a trap you sense.' No attack roll, no saving throw, no damage, no condition, no stat modification. The spell produces no deterministic mechanical outcome — all results are DM-adjudicated world-state facts (what counts as a trap, what the general danger is). Per ARCHITECTURE.md, such caller-owned facts are out of scope for the core mechanics model. No valid activation phase exists: ActivationMechanics requires attack_roll or save_gate phases, and forcing an empty phases array would produce a dishonest trace."
+}

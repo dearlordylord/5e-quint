@@ -1,0 +1,16 @@
+{
+  "unit_slug": "druid_druid_subclass_l3",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "subclass_choice",
+      "justification": "A subclass selection feature is a permanent character-progression gate made at level-up. It has no activation cost, no use count, no reset cadence, and no discrete runtime effect. The only existing ClassFeatureMechanics family is 'activation', which requires all four of those fields. Encoding this feature as an 'activation' would require fabricating fields that do not correspond to any real mechanic.",
+      "evidence": "You gain a Druid subclass of your choice. The Circle of the Land subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Druid levels. For the rest of your career, you gain each of your subclass's features that are of your Druid level or lower."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Identical structural gap as barbarian_barbarian_subclass_l3, bard_bard_subclass_l3, cleric_cleric_subclass_l3, etc. All 'XClass Subclass (L3)' features are the same shape: a level-up choice that gates a subclass. A new ClassFeatureMechanics family is needed — e.g., 'subclass_choice' — with fields for the class name and available subclass list (or just a marker that a choice was made). No dhall/json/trace produced."
+}

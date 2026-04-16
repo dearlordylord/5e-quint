@@ -1,0 +1,16 @@
+{
+  "unit_slug": "aid",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ModifyMaxHpOperation",
+      "justification": "Aid raises each target's HP maximum (and simultaneously grants current HP equal to the raise). This is the v4 atom `modify_max_hp` (§9 effect atoms) applied as an ongoing operation. The existing OngoingOperation union only contains RollModifierOperation and DamageOnHitOperation; neither can represent a ceiling-raise. heal_hp is strictly wrong — it restores lost HP up to the current ceiling; Aid raises the ceiling itself.",
+      "evidence": "Each target's Hit Point maximum and current Hit Points increase by 5 for the duration. Using a Higher-Level Spell Slot: Each target's Hit Points increase by 5 for each spell slot level above 2."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family, target attachment (choose_up_to with slot scaling), and timed 8-hour duration all fit without widening. The sole blocker is the missing ModifyMaxHpOperation variant. The upcast scaling (+5 flat per slot above 2) maps cleanly to linear_per_level with axis=slot once an amount type for flat HP increments is available — DiceExpr with dice:0/dieSize:0/flat:5 would technically work but is aesthetically awkward; a flat-integer amount alias may be worth adding alongside the new operation."
+}

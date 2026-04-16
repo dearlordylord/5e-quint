@@ -1,0 +1,16 @@
+{
+  "unit_slug": "true_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_sense_operation",
+      "justification": "True Seeing grants Truesight as an ongoing effect for 1 hour. The ongoing_effect family and grant_sense v4 atom both exist, but OngoingOperation in types.ts has no variant for granting a sense. A new operation kind carrying sense type and range is needed.",
+      "evidence": "For the duration, the willing creature you touch has Truesight with a range of 120 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits ongoing_effect cleanly: Action cast, Touch range, timed 1-hour duration, target:one selection. The sole gap is OngoingOperation lacking a grant_sense variant. The v4 atom grant_sense exists in the taxonomy (§9 Effect Atoms). Narrowly surface_widening: add { kind: 'grant_sense'; sense: SenseName; rangeFeet: number } to OngoingOperation. No Dhall or JSON authored — forced encoding via roll_modifier or damage_on_hit would be false."
+}

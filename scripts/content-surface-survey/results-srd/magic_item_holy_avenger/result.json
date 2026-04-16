@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_holy_avenger",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item mechanics family",
+      "justification": "UnitRecord has no magic_item variant. types.ts defines only SpellRecord, ClassFeatureRecord, and MasteryRecord. Magic items require a distinct record kind (attunement, rarity, equip-slot) and a mechanics family that can express passive persistent effects, weapon modifiers, and charged/use-count abilities — none of which map cleanly to the three existing families.",
+      "evidence": "Weapon (Any Simple or Martial), Legendary (Requires Attunement by a Paladin)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "creature_type_filter on DamageOnHitOperation",
+      "justification": "The extra 2d10 Radiant damage fires only against Fiends and Undead. DamageOnHitOperation has no targetFilter field. A closed enum of creature types (fiend, undead, dragon, …) would be needed as a filter predicate on the damage rider.",
+      "evidence": "When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "emanation attachment with friendly-creature scope",
+      "justification": "The aura is a self-centered emanation (not a point-origin sphere). It applies to the wielder and all 'Friendly' creatures inside it. Existing Attachment has `area` with shape `sphere` and `origin: point_within_range | on_primary_target` — neither models a self-centered aura. The scope filter ('Friendly to you') is also absent from the current attachment vocabulary.",
+      "evidence": "it creates a 10-foot Emanation originating from you. You and all creatures Friendly to you in the Emanation have Advantage on saving throws against spells and other magical effects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "class_level_threshold scaling on area radius",
+      "justification": "The emanation radius jumps from 10 ft to 30 ft when the wielder has 17+ Paladin levels. No existing DiceAmount or scaling variant addresses threshold-tiered growth of an attachment's radius based on a named class level. A ThresholdTiers<number> on a radius field would be needed, keyed by a specific class (paladin) and level (17).",
+      "evidence": "If you have 17 or more levels in the Paladin class, the size of the Emanation increases to 30 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_roll as a RollKind",
+      "justification": "RollKind = 'attack_roll' | 'saving_throw'. The +3 bonus applies to damage rolls, which are neither. Expressing weapon bonus modifiers (attack + damage) requires adding 'damage_roll' to RollKind or introducing a dedicated weapon_modifier surface type.",
+      "evidence": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: UnitRecord has no magic_item member and types.ts defines no MagicItemRecord or corresponding mechanics family. The four secondary widenings would still be needed even after the structural gap is filled. No Dhall, JSON content, or trace were authored."
+}

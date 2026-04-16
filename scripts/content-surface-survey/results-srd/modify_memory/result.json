@@ -1,0 +1,40 @@
+{
+  "unit_slug": "modify_memory",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ApplyConditionEffect (spell Effect variant)",
+      "justification": "The save_gate's onFail result needs to apply conditions (Charmed, Incapacitated). The current spell Effect union is DamageEffect | NoneEffect — apply_condition exists as a v4 atom and as a MasteryEffect result, but has no path into spell activation phase effects.",
+      "evidence": "On a failed save, the target has the Charmed condition for the duration. While Charmed in this way, the target also has the Incapacitated condition."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: charmed, incapacitated",
+      "justification": "The Condition type in types.ts currently only contains 'prone'. Charmed and Incapacitated are SRD conditions required by this spell's save outcome and appear in multiple other spells (Charm Person, Hold Person, etc.). The type must be widened.",
+      "evidence": "the target has the Charmed condition for the duration... the target also has the Incapacitated condition"
+    },
+    {
+      "kind": "new_atom",
+      "name": "alter_memory",
+      "justification": "The core effect of this spell — permanently eliminating, restoring, changing, or creating a creature's memory of an event — has no counterpart in the v4 atom inventory. It is not damage, healing, condition, AC mod, roll mod, movement, or any listed effect atom. It is a persistent narrative mutation of a creature's remembered past, distinct from any existing atom.",
+      "evidence": "You can permanently eliminate all memory of the event, allow the target to recall the event with perfect clarity, change its memory of the event's details, or create a memory of some other event."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ConditionalSaveAdvantage (save_gate pre-modifier)",
+      "justification": "The spell grants the target Advantage on its saving throw if the caster is currently fighting it. No existing save_gate surface shape models a conditional advantage modifier based on combat state. This differs from a plain advantage grant — the condition is dynamic (depends on whether combat is ongoing at cast time).",
+      "evidence": "If you are fighting the creature, it has Advantage on the save."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Narrative scope scaling (slot-based time-window)",
+      "justification": "The upcast effect extends the time range of memories the caster can affect (7 days at L6, 30 days at L7, 365 days at L8, any time at L9). This is threshold-tier slot scaling, but the scaled value is a narrative scope parameter, not a dice expression or numeric bonus. No current DiceAmount or scaling shape models 'slot determines accessible memory window'.",
+      "evidence": "You can alter the target's memories of an event that took place up to 7 days ago (level 6 spell slot), 30 days ago (level 7 spell slot), 365 days ago (level 8 spell slot), or any time in the creature's past (level 9 spell slot)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell is encodable as a save_gate activation spell up to the point of effects. Three orthogonal gaps block honest encoding: (1) apply_condition is not a spell Effect variant; (2) 'alter_memory' has no v4 atom; (3) the conditional save advantage ('if fighting') has no surface shape. The upcast adds a fourth gap (narrative scope scaling). The DM-adjudication text ('doesn't necessarily affect how a creature behaves', 'The DM might deem... too nonsensical') is real dm_agenda around the memory content, but the mechanical frame (save gate, condition application) is deterministic and belongs in core. Classification is atom_widening because alter_memory requires a genuinely new v4 atom."
+}

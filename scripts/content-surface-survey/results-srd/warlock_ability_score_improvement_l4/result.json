@@ -1,0 +1,22 @@
+{
+  "unit_slug": "warlock_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "level_up_grant family for ClassFeatureMechanics",
+      "justification": "Ability Score Improvement is a permanent character-progression benefit granted once at level-up. It has no activation cost, no use-count resource, and no reset cadence — none of the structural fields required by the only existing ClassFeatureFamily (\"activation\") apply. A new family is needed to encode features that are permanent passive grants made at the moment of leveling up.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat effect atom",
+      "justification": "The effect of the feature is to grant the player a feat (specifically the Ability Score Improvement feat or another qualifying feat). No existing ClassFeatureEffect covers feat grants. The v4 taxonomy notes modify_ability_score is currently out-of-scope, and grant_proficiency covers a different concept.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "This is the standard level-4 ASI feature shared across all classes. The structural gap is class-feature-family level: ClassFeatureMechanics only supports 'activation', which models activatable in-play abilities with resources and reset cadences. ASI is a one-time level-up benefit — a completely different shape. The v4 taxonomy explicitly calls modify_ability_score out-of-scope as a runtime effect. All other ASI-at-level-N features across the full class roster (barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard) will face the same structural gap."
+}

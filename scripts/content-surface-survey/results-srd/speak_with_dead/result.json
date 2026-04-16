@@ -1,0 +1,9 @@
+{
+  "unit_slug": "speak_with_dead",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Speak with Dead has no mechanically deterministic effects. The spell grants a 10-minute timed window during which the caster may ask a corpse up to 5 questions. The content of the answers, whether the corpse cooperates, and whether it tells the truth are all DM-adjudicated outcomes. There are eligibility preconditions (corpse must have a mouth; deceased was not Undead when it died; not targeted by this spell within the past 10 days) but these are NPC/world-state checks with no runtime mechanical atom. No attack rolls, save gates, damage, healing, conditions, or stat modifiers are produced. The spell is purely a narrative information-access spell; its core mechanic is caller-owned (DM-facing) by definition."
+}

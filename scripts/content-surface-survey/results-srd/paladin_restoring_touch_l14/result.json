@@ -1,0 +1,34 @@
+{
+  "unit_slug": "paladin_restoring_touch_l14",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "feature_augmentation",
+      "justification": "Restoring Touch is not a standalone activated feature. It fires as a rider when Lay On Hands is used, granting an optional remove_condition effect within that activation. No existing class-feature family models 'this feature augments another named feature's activation.'",
+      "evidence": "When you use Lay On Hands on a creature, you can also remove one or more of the following conditions from the creature"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost: cost_from_feature_pool (or similar trigger model)",
+      "justification": "The cost is variable: 5 HP drawn from the Lay On Hands healing pool per condition removed. This is neither 'free' nor 'bonus_action'. It is a per-application expenditure from a sibling feature's resource — a cost shape the surface cannot represent.",
+      "evidence": "You must expend 5 Hit Points from the healing pool of Lay On Hands for each of these conditions you remove"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: remove_condition",
+      "justification": "The v4 atom 'remove_condition' exists in the taxonomy but ClassFeatureEffect in types.ts only supports grant_extra_action and heal_hp. Restoring Touch's sole effect is removing one or more conditions — not healing and not granting an extra action.",
+      "evidence": "you can also remove one or more of the following conditions from the creature: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: blinded | charmed | deafened | frightened | paralyzed | stunned",
+      "justification": "The surface Condition type currently contains only 'prone' (introduced for Topple mastery). Restoring Touch requires six additional conditions. These are all standard SRD 5.2.1 conditions and will be needed by future units regardless.",
+      "evidence": "Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Restoring Touch has a compound structural gap. The primary gap is the missing 'feature_augmentation' family: this feature has no independent activation — it is a rider on Lay On Hands. Forcing it into the 'activation' family would require lying about (a) activation cost (the LoH-pool draw cannot be represented as free or bonus_action), (b) the resource model (no use_count; the limit is the LoH pool size), and (c) the effect (remove_condition is absent from ClassFeatureEffect). All four widenings are co-required; none is sufficient alone."
+}

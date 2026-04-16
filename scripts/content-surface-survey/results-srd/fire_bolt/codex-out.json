@@ -1,0 +1,2904 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d945f-f2a1-7053-a0dc-46620dbd906f
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Fire Bolt`
+- Slug: `fire_bolt`
+- Kind: `spell`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+{
+  "name": "Fire Bolt",
+  "alias": [
+    "Firebolt"
+  ],
+  "source": "XPHB",
+  "page": 274,
+  "srd52": true,
+  "basicRules2024": true,
+  "referenceSources": [
+    "UtHftLH"
+  ],
+  "level": 0,
+  "school": "V",
+  "time": [
+    {
+      "number": 1,
+      "unit": "action"
+    }
+  ],
+  "range": {
+    "type": "point",
+    "distance": {
+      "type": "feet",
+      "amount": 120
+    }
+  },
+  "components": {
+    "v": true,
+    "s": true
+  },
+  "duration": [
+    {
+      "type": "instant"
+    }
+  ],
+  "entries": [
+    "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes {@damage 1d10} Fire damage. A flammable object hit by this spell starts {@hazard burning|XPHB} if it isn't being worn or carried."
+  ],
+  "entriesHigherLevel": [
+    {
+      "type": "entries",
+      "name": "Cantrip Upgrade",
+      "entries": [
+        "The damage increases by {@damage 1d10} when you reach levels 5 ({@damage 2d10}), 11 ({@damage 3d10}), and 17 ({@damage 4d10})."
+      ]
+    }
+  ],
+  "scalingLevelDice": {
+    "label": "Fire damage",
+    "scaling": {
+      "1": "1d10",
+      "5": "2d10",
+      "11": "3d10",
+      "17": "4d10"
+    }
+  },
+  "damageInflict": [
+    "fire"
+  ],
+  "spellAttack": [
+    "R"
+  ],
+  "miscTags": [
+    "OBJ",
+    "SCL"
+  ],
+  "areaTags": [
+    "ST"
+  ]
+}
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/fire_bolt.dhall` — the authored source of the unit.
+- `content/fire_bolt.json` — the runtime artifact consumed by typecheck + tracer. For now this repo does NOT provide a standardized Dhall compiler in the worker environment, so if the unit fits honestly you must write the matching JSON yourself as well.
+- `result-fire_bolt.json` — your structured self-report (schema below).
+- `proposal-fire_bolt.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+Read only what you need:
+
+1. `src/surface/types.ts` — always read this first. The current closed types are the ground truth for what JSON shapes are allowed.
+2. `src/interpreter/tracer.ts` — read only the branch(es) relevant to the family you think the unit belongs to, plus `traceUnit` if you need to check supported top-level `kind`s.
+3. Existing reference encodings in `content/` — read only the closest precedent(s). Suggested starting points:
+   - `bless.json` (ongoing effect, concentration)
+   - `acid_splash.json` (cantrip activation with AoE + save)
+   - `ice_knife.json` (multi-phase: attack then save)
+   - `action_surge.json` (class feature with use-count + rest reset)
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — read only if you need to distinguish surface widening from atom widening.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — read only if terminology is ambiguous.
+
+Do NOT broad-search the repo or read unrelated plans/reports unless you are blocked on a specific question.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `triggered_reaction` (spell) — reaction-shaped spell.
+   - `anchored_trigger` (spell) — planted/armed effect released by later events.
+   - `activation` (class feature) — activated class feature; see `action_surge.json`.
+   - `on_hit_trigger` (mastery) — weapon-hit rider.
+2. Decide whether an existing top-level `UnitRecord` kind and mechanics family can encode the unit HONESTLY.
+3. If the answer is **no**, STOP BEFORE AUTHORING A PLACEHOLDER JSON.
+   - Do not force the unit into the “closest” valid record shape.
+   - Do not create knowingly false traces such as “grant_extra_action” for a passive rider.
+   - Write only `result-fire_bolt.json` and `proposal-fire_bolt.md`.
+   - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
+4. If the answer is **yes**, author `content/fire_bolt.dhall` first, then author the mechanically equivalent `content/fire_bolt.json` as a valid `UnitRecord`. Match field names exactly.
+5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+6. Run `pnpm exec tsx src/run.ts content/fire_bolt.json --out content/fire_bolt.trace.md`. Observe output.
+7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
+   - missing top-level kind / family = `structural_widening`
+   - missing variant of existing surface type = `surface_widening`
+   - missing v4 atom / relation = `atom_widening`
+8. Write `result-fire_bolt.json` with the schema below.
+
+## result-fire_bolt.json schema
+
+```json
+{
+  "unit_slug": "fire_bolt",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Be honest about family fit. If the unit does not fit an existing `UnitRecord` kind or mechanics family, do not coerce it into a fake-but-valid JSON.
+- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/fire_bolt.dhall` or `content/fire_bolt.json`.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT modify any file outside `content/fire_bolt.dhall`, `content/fire_bolt.json`, `result-fire_bolt.json`, `proposal-fire_bolt.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Do not default upward to `atom_widening`. Use the narrowest honest classification:
+  - `surface_widening` if a variant of an existing surface shape would solve it
+  - `atom_widening` only if the missing concept is not in v4 taxonomy
+  - `structural_widening` if no honest family/kind exists
+- When the unit mostly fits but has a secondary omitted rider, mention the omission explicitly in `notes`/`proposal.md` rather than pretending the whole unit is clean.
+
+## When done
+
+Your final output must be valid for the path you chose:
+
+If the unit fits honestly:
+
+- `content/fire_bolt.dhall` — authored source.
+- `content/fire_bolt.json` — typechecks against `UnitRecord`.
+- `content/fire_bolt.trace.md` — the tracer's mermaid graph.
+- `result-fire_bolt.json` — your self-classification.
+- `proposal-fire_bolt.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+If the unit does NOT fit honestly:
+
+- Do NOT write `content/fire_bolt.dhall`.
+- Do NOT write `content/fire_bolt.json`.
+- Do NOT write `content/fire_bolt.trace.md`.
+- Write `result-fire_bolt.json`.
+- Write `proposal-fire_bolt.md`.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m checking the closed surface types and the closest spell precedents first, then I’ll decide whether `Fire Bolt` fits honestly as an activation or needs a widening.
+exec
+/bin/bash -lc "sed -n '1,260p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+exec
+/bin/bash -lc "sed -n '1,260p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Tracer — interpreter over the authored unit ADT. Emits a dependency
+// graph of atoms + typed relations; does not call the combat runtime.
+
+import type {
+  UnitRecord,
+  SpellRecord,
+  ClassFeatureRecord,
+  MasteryRecord,
+  SpellMechanics,
+  OngoingEffectMechanics,
+  ActivationMechanics,
+  ActivationPhase,
+  CastingTime,
+  Duration,
+  Range,
+  Attachment,
+  Effect,
+  OngoingOperation,
+  DiceAmount,
+  DiceExpr,
+  DiceExprDelta,
+  DiceDelta,
+  SlotScaling,
+  SpellLevel,
+  ClassFeatureMechanics,
+  ClassFeatureActivationMechanics,
+  ClassFeatureActivationCost,
+  UseCountResource,
+  RestResetCadence,
+  ActionRestriction,
+  ClassFeatureEffect,
+  TriggeredReactionMechanics,
+  ReactionTrigger,
+  ReactionEffect,
+  MarkTransfer,
+  MasteryMechanics,
+  MasteryTrigger,
+  MasteryEffect,
+  RiderExpiry,
+  DcSource,
+  AnchoredTriggerMechanics,
+  AnchorTarget,
+  AnchoredEvent,
+  AnchoredFilter,
+  AnchoredSignal,
+} from "../surface/types.ts";
+
+export type AtomCategory =
+  | "source"
+  | "procedure"
+  | "window"
+  | "attachment"
+  | "resolution"
+  | "lifecycle"
+  | "resource"
+  | "scaling"
+  | "effect";
+
+export type TraceNode = {
+  readonly id: string;
+  readonly category: AtomCategory;
+  readonly atomKind: string;
+  readonly label: string;
+};
+
+export type TraceEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly relation: string;
+};
+
+export type Trace = {
+  readonly unitId: string;
+  readonly unitName: string;
+  readonly nodes: ReadonlyArray<TraceNode>;
+  readonly edges: ReadonlyArray<TraceEdge>;
+  readonly atomKinds: ReadonlyArray<string>;
+};
+
+export function traceUnit(unit: UnitRecord): Trace {
+  switch (unit.kind) {
+    case "spell":
+      return traceSpellUnit(unit);
+    case "class_feature":
+      return traceClassFeatureUnit(unit);
+    case "mastery":
+      return traceMasteryUnit(unit);
+    default: {
+      const _exhaustive: never = unit;
+      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// ============================================================
+// Spell tracer
+// ============================================================
+
+type SpellCtx = {
+  readonly procId: string;
+  readonly slotId: string | null;
+  readonly range: Range;
+};
+
+function traceSpellUnit(spell: SpellRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "spell_root",
+    label: `spell_root\n${spell.name}`,
+  });
+
+  const procedureId = traceSpellMechanics(spell.mechanics, nodes, edges, ids);
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: spell.id,
+    unitName: spell.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "reaction_quota",
+        label: "reaction_quota\n(Casting Time: Reaction)",
+      });
+      return id;
+    case "minutes":
+      // Long-cast spells (Alarm: 1 minute or Ritual). No 1-action-quota
+      // cost — the caster is locked into the cast for `amount` minutes.
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Casting Time: ${ct.amount} min${
+          ct.ritual ? " / Ritual" : ""
+        })`,
+      });
+      return id;
+    default: {
+      const _exhaustive: never = ct;
+
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/acid_splash.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "acid_splash",
+  "name": "Acid Splash",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Acid Splash"
+  },
+  "description": "You create an acidic bubble at a point within range, where it explodes in a 5-foot-radius Sphere. Each creature in that Sphere must succeed on a Dexterity saving throw or take 1d6 Acid damage. Cantrip Upgrade: damage increases by 1d6 at levels 5 (2d6), 11 (3d6), and 17 (4d6).",
+  "mechanics": {
+    "family": "activation",
+    "level": 0,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 60 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "save_gate",
+        "attachment": {
+          "kind": "area",
+          "shape": { "kind": "sphere", "radiusFeet": 5 },
+          "origin": { "kind": "point_within_range" }
+        },
+        "ability": "dex",
+        "dc": { "kind": "caster_spell_save_dc" },
+        "onFail": {
+          "kind": "damage",
+          "damageType": "acid",
+          "amount": {
+            "kind": "threshold_tiers",
+            "axis": "character",
+            "base": { "dice": 1, "dieSize": 6 },
+            "tiers": [
+              { "atLevel": 5, "override": { "dice": 2 } },
+              { "atLevel": 11, "override": { "dice": 3 } },
+              { "atLevel": 17, "override": { "dice": 4 } }
+            ]
+          }
+        },
+        "onSuccess": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/ice_knife.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "ice_knife",
+  "name": "Ice Knife",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Ice Knife"
+  },
+  "description": "You create a shard of ice and fling it at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Piercing damage. Hit or miss, the shard then explodes. The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage. Higher slot: Cold damage +1d6 per slot level above 1.",
+  "mechanics": {
+    "family": "activation",
+    "level": 1,
+    "school": "conjuration",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 60 },
+    "components": { "v": false, "s": true, "m": "a drop of water or a piece of ice" },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": { "kind": "target", "selection": { "mode": "one" } },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "piercing",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } }
+        },
+        "onMiss": { "kind": "none" }
+      },
+      {
+        "kind": "save_gate",
+        "attachment": {
+          "kind": "area",
+          "shape": { "kind": "sphere", "radiusFeet": 5 },
+          "origin": { "kind": "on_primary_target" }
+        },
+        "ability": "dex",
+        "dc": { "kind": "caster_spell_save_dc" },
+        "onFail": {
+          "kind": "damage",
+          "damageType": "cold",
+          "amount": {
+            "kind": "linear_per_level",
+            "axis": "slot",
+            "base": { "dice": 2, "dieSize": 6 },
+            "perLevel": { "dice": 1 },
+            "startingAtLevel": 1
+          }
+        },
+        "onSuccess": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+codex
+The surface has `activation` spells and an `attack_roll` phase, so I’m checking whether it can represent both the direct fire damage and the object-ignition rider without lying about targets or effects.
+exec
+/bin/bash -lc "rg -n \"type ActivationPhase|type Effect|type ActivationMechanics|type SpellRecord|type UnitRecord|type Provenance|kind: \\\"attack_roll\\\"|kind: \\\"damage\\\"|kind: \\\"none\\\"|kind: \\\"condition\\\"|kind: \\\"temporary_hit_points\\\"|kind: \\\"healing\\\"|kind: \\\"grant_\" src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+269:  readonly kind: "damage";
+274:export type NoneEffect = { readonly kind: "none" };
+276:export type Effect = DamageEffect | NoneEffect;
+280:export type ActivationPhase =
+282:      readonly kind: "attack_roll";
+314:export type ActivationMechanics = SpellMechanicsHeader & {
+438:  | { readonly kind: "none" }
+445:  readonly kind: "grant_extra_action";
+503:  readonly kind: "grant_weapon_attack";
+526:  | { readonly kind: "none" };
+560:export type Provenance = {
+572:export type SpellRecord = UnitMetadata & {
+589:export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc 'rg -n "attack_roll|save_gate|effect.kind|unhandled .*attack|unhandled .*effect|traceActivation|traceEffect|traceActivationPhase" src/interpreter/tracer.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+166:      traceActivation(m, ctx, nodes, edges, ids);
+268:    case "hit_by_attack_roll":
+749:      throw new Error(`unhandled reaction effect: ${String(_)}`);
+754:function traceActivation(
+800:    case "attack_roll": {
+805:        atomKind: "attack_roll",
+806:        label: `attack_roll [phase ${phaseNumber}]\n${phase.attackKind.replaceAll("_", " ")}`,
+833:    case "save_gate": {
+838:        atomKind: "save_gate",
+839:        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: caster spell save DC`,
+880:  const eId = traceEffect(e, nodes, ids);
+897:  const effectId = traceEffect(e, nodes, ids);
+1008:function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
+1024:      throw new Error(`unhandled effect: ${String(_exhaustive)}`);
+1200:  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+1213:function traceActivationCost(
+1371:      throw new Error(`unhandled class-feature effect: ${String(_exhaustive)}`);
+1444:  // Subgraph G — On-Hit Rider. mastery_root roots an attack_roll
+1451:    atomKind: "attack_roll",
+1452:    label: `attack_roll\n${describeMasteryTrigger(m.trigger)}`,
+1532:    case "save_gate": {
+1537:        atomKind: "save_gate",
+1538:        label: `save_gate\n${e.ability.toUpperCase()} save\nDC: ${describeDc(e.dc)}`,
+1563:      // Cleave — nested attack_roll against a secondary target.
+1575:        atomKind: "attack_roll",
+1576:        label: `attack_roll\n(nested, ${e.attackKind.replaceAll("_", " ")})`,
+1598:      throw new Error(`unhandled mastery effect: ${String(_)}`);
+
+exec
+/bin/bash -lc "sed -n '1,220p' UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+exec
+/bin/bash -lc "sed -n '754,1035p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+function traceActivation(
+  m: ActivationMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // Thread phase resolutions with `branches_on_completion` edges so the
+  // graph shows "phase 1 completes, phase 2 follows" explicitly. SRD
+  // sequencing ("Hit or miss, the shard then explodes") becomes a real
+  // edge instead of implicit array order.
+  let previousResolutionId: string | null = null;
+  m.phases.forEach((phase, idx) => {
+    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: thisResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = thisResolutionId;
+  });
+}
+
+function tracePhase(
+  phase: ActivationPhase,
+  phaseNumber: number,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+  edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+
+  traceTargetCountScaling(
+    phase.attachment,
+    attId,
+    ctx.slotId,
+    nodes,
+    edges,
+    ids,
+  );
+
+  switch (phase.kind) {
+    case "attack_roll": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "attack_roll",
+        label: `attack_roll [phase ${phaseNumber}]\n${phase.attackKind.replaceAll("_", " ")}`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      traceAttackWindow(
+        phase.onHit,
+        "on_hit_window",
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      traceAttackWindow(
+        phase.onMiss,
+        "on_miss_window",
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      return resId;
+    }
+    case "save_gate": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "save_gate",
+        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: caster spell save DC`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      traceSaveBranch(
+        phase.onFail,
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      traceSaveBranch(
+        phase.onSuccess,
+        resId,
+        attId,
+        ctx.slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      return resId;
+    }
+    default: {
+      const _exhaustive: never = phase;
+      throw new Error(`unhandled phase: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceSaveBranch(
+  e: Effect,
+  fromResolutionId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const eId = traceEffect(e, nodes, ids);
+  if (eId === null) return;
+  edges.push({ from: fromResolutionId, to: eId, relation: "branches_on_save" });
+  edges.push({ from: eId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, eId, slotId, nodes, edges, ids);
+}
+
+function traceAttackWindow(
+  e: Effect,
+  windowAtom: "on_hit_window" | "on_miss_window",
+  attackRollId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const effectId = traceEffect(e, nodes, ids);
+  if (effectId === null) return;
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: windowAtom,
+    label: windowAtom,
+  });
+  edges.push({ from: attackRollId, to: winId, relation: "opens_window" });
+  edges.push({ from: winId, to: effectId, relation: "grants" });
+  edges.push({ from: effectId, to: attId, relation: "attaches_to" });
+  traceDamageScaling(e, effectId, slotId, nodes, edges, ids);
+}
+
+function traceAttachment(
+  a: Attachment,
+  range: Range,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("att");
+  switch (a.kind) {
+    case "self": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "self",
+        label: `self\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "target": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "target",
+        label: `target\n${selectionLabel}\nrange ${describeRange(range)}`,
+      });
+      return id;
+    }
+    case "area": {
+      const originLabel =
+        a.origin.kind === "point_within_range"
+          ? `origin: point within ${describeRange(range)}`
+          : "origin: primary target";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "area",
+        label: `area\n${a.shape.kind} r=${a.shape.radiusFeet} ft\n${originLabel}`,
+      });
+      return id;
+    }
+    case "mark": {
+      const selectionLabel =
+        a.selection.mode === "one"
+          ? "one"
+          : `choose_up_to: ${describeScaling(a.selection.count)}`;
+      const transferLabel = a.transfer
+        ? `\ntransfer on ${describeTransferEvent(a.transfer)} (${a.transfer.cost.kind})`
+        : "";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "mark",
+        label: `mark\n${selectionLabel}\nrange ${describeRange(range)}${transferLabel}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = a;
+      throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceTargetCountScaling(
+  a: Attachment,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  // target + mark are the two attachments that can carry a target count.
+  const selection =
+    a.kind === "target" || a.kind === "mark" ? a.selection : null;
+  if (
+    selection === null ||
+    selection.mode !== "choose_up_to" ||
+    selection.count.kind !== "linear"
+  ) {
+    return;
+  }
+  const scId = ids("sc");
+  nodes.push({
+    id: scId,
+    category: "scaling",
+    atomKind: "scale_target_count",
+    label: `scale_target_count\n+${selection.count.perSlotAboveBase}/slot above ${selection.count.baseLevel}`,
+  });
+  edges.push({ from: scId, to: attId, relation: "modifies" });
+  if (slotId !== null)
+    edges.push({ from: slotId, to: scId, relation: "modifies" });
+}
+
+function traceEffect(e: Effect, nodes: TraceNode[], ids: IdGen): string | null {
+  switch (e.kind) {
+    case "none":
+      return null;
+    case "damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "damage",
+        label: `damage: ${describeDiceAmount(e.amount)} ${e.damageType}`,
+      });
+      return id;
+    }
+    default: {
+      const _exhaustive: never = e;
+      throw new Error(`unhandled effect: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceDamageScaling(
+  e: Effect,
+  damageId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+
+exec
+/bin/bash -lc "sed -n '240,340p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// ---------- resolution DC ----------
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+
+exec
+/bin/bash -lc "pwd; ls ..; ls ../..; find .. -maxdepth 2 -name 'UBIQUITOUS_LANGUAGE.md'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+1119861-eldritch_blast
+1119885-shillelagh
+1119915-magic_missile
+2735462-fire_bolt
+2751797-rogue_sneak_attack
+2751850-fire_bolt
+README.md
+REPORT_SRD.md
+aggregate.ts
+atom-whitelist.ts
+extract-unit-text.ts
+full-run-v2.log
+full-run.log
+prompt-template.md
+provenance-check.sh
+results-srd
+run-survey.sh
+survey-results-srd.jsonl
+survey-results-srd.jsonl.contaminated
+survey-results-srd.jsonl.lock
+survey-results-srd.jsonl.pre-widening-1234
+tier0-retry.log
+tier0-run.log
+tier1-run.log
+unit-catalog.ts
+unit-queue.jsonl
+validate.ts
+worker.sh
+workers
+
+codex
+The decisive gap is likely the object-ignition rider, but I want the closest precedent for a simple ranged spell attack cantrip before I classify it.
+exec
+/bin/bash -lc "sed -n '1,220p' ../1119861-eldritch_blast/content/eldritch_blast.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "eldritch_blast",
+  "name": "Eldritch Blast",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Eldritch Blast"
+  },
+  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+  "mechanics": {
+    "family": "activation",
+    "level": 0,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 120 },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "attack_roll",
+        "attachment": { "kind": "target", "selection": { "mode": "one" } },
+        "attackKind": "ranged_spell_attack",
+        "onHit": {
+          "kind": "damage",
+          "damageType": "force",
+          "amount": { "kind": "fixed", "expr": { "dice": 1, "dieSize": 10 } }
+        },
+        "onMiss": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md: No such file or directory
+
+exec
+/bin/bash -lc "find ../../.. -name 'UBIQUITOUS_LANGUAGE.md'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+codex
+`Fire Bolt` itself fits `activation` with an `attack_roll` phase, but the “flammable object starts burning” rider has nowhere to live in the current `Effect` union. I’m checking whether that is just a missing surface variant or also a missing atom in the taxonomy.
+exec
+/bin/bash -lc "rg -n \"burn|burning|hazard|object|flammable|ignite\" src content atom-whitelist.ts .. -g '"'!**/node_modules/**'"'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+rg: atom-whitelist.ts: No such file or directory (os error 2)
+content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+content/animate_objects.json:3:  "id": "animate_objects",
+content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+content/burning_hands.json:3:  "id": "burning_hands",
+content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../2735462-fire_bolt/proposal-fire_bolt.md:11:> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
+../2735462-fire_bolt/proposal-fire_bolt.md:16:- `Attachment` can point at a generic `target`, but there is no way to constrain a branch to objects, much less flammable objects that are not worn or carried.
+../2735462-fire_bolt/proposal-fire_bolt.md:17:- The tracer has no atom for igniting an object or applying a burning hazard/state.
+../2735462-fire_bolt/proposal-fire_bolt.md:19:This is best classified as `atom_widening`, not `structural_widening`, because the unit's main family already exists and traces correctly. The widening pressure is a missing ignition/burning concept inside an existing activation phase.
+../2735462-fire_bolt/proposal-fire_bolt.md:23:- new surface `Effect` variant for object ignition, such as `ignite_object`
+../2735462-fire_bolt/proposal-fire_bolt.md:25:- optional target filter fields if the prototype wants to preserve the SRD restriction that only flammable objects not being worn or carried can be ignited
+../2735462-fire_bolt/proposal-fire_bolt.md:30:- target class: object only
+../2735462-fire_bolt/proposal-fire_bolt.md:31:- predicate: flammable and not worn/carried
+../2735462-fire_bolt/proposal-fire_bolt.md:32:- outcome: object begins burning
+../2735462-fire_bolt/result-fire_bolt.json:25:      "name": "ignite_object",
+../2735462-fire_bolt/result-fire_bolt.json:26:      "justification": "The spell has an on-hit secondary rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
+../2735462-fire_bolt/result-fire_bolt.json:27:      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
+../2735462-fire_bolt/result-fire_bolt.json:31:  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the surface/tracer lacks an ignition or burning effect."
+../2751850-fire_bolt/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../2751850-fire_bolt/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../2751850-fire_bolt/content/burning_hands.json:3:  "id": "burning_hands",
+../2751850-fire_bolt/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../2751850-fire_bolt/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../2751850-fire_bolt/content/animate_objects.json:3:  "id": "animate_objects",
+../2751850-fire_bolt/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../2735462-fire_bolt/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../2735462-fire_bolt/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../2751797-rogue_sneak_attack/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../2751850-fire_bolt/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../2735462-fire_bolt/content/fire_bolt.dhall:4:-- The secondary rider ("flammable object ... starts burning") does not.
+../2735462-fire_bolt/content/fire_bolt.dhall:14:        "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
+../2735462-fire_bolt/content/animate_objects.json:3:  "id": "animate_objects",
+../2735462-fire_bolt/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../2751797-rogue_sneak_attack/content/burning_hands.json:3:  "id": "burning_hands",
+../2751797-rogue_sneak_attack/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../2751797-rogue_sneak_attack/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../2751850-fire_bolt/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../2751797-rogue_sneak_attack/content/fire_bolt.json:9:  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+../2751850-fire_bolt/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../2751850-fire_bolt/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../2751797-rogue_sneak_attack/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../2751797-rogue_sneak_attack/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../2751797-rogue_sneak_attack/content/animate_objects.json:3:  "id": "animate_objects",
+../2751797-rogue_sneak_attack/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../2751797-rogue_sneak_attack/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../2735462-fire_bolt/content/burning_hands.json:3:  "id": "burning_hands",
+../2735462-fire_bolt/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../2735462-fire_bolt/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../2735462-fire_bolt/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../2735462-fire_bolt/content/fire_bolt.json:9:  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+../2751797-rogue_sneak_attack/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../1119861-eldritch_blast/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../1119915-magic_missile/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../1119885-shillelagh/scripts/content-surface-survey/results-srd/halfling_luck/verdict.json:1:{"unit_slug":"halfling_luck","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.325}
+../1119915-magic_missile/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../1119915-magic_missile/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../1119861-eldritch_blast/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../1119885-shillelagh/scripts/content-surface-survey/results-srd/mastery_topple/verdict.json:1:{"unit_slug":"mastery_topple","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.444}
+../2735462-fire_bolt/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../2735462-fire_bolt/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../1119915-magic_missile/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../2751797-rogue_sneak_attack/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../1119885-shillelagh/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../1119861-eldritch_blast/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../1119861-eldritch_blast/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../1119885-shillelagh/scripts/content-surface-survey/results-srd/mastery_sap/verdict.json:1:{"unit_slug":"mastery_sap","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.314}
+../1119885-shillelagh/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../1119885-shillelagh/content/animate_objects.json:3:  "id": "animate_objects",
+../1119885-shillelagh/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../1119915-magic_missile/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../1119915-magic_missile/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../1119915-magic_missile/content/burning_hands.json:3:  "id": "burning_hands",
+../1119915-magic_missile/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../1119915-magic_missile/content/animate_objects.json:3:  "id": "animate_objects",
+../1119915-magic_missile/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../2735462-fire_bolt/scripts/content-surface-survey/results-srd/mastery_cleave/verdict.json:1:{"unit_slug":"mastery_cleave","verdict":"atom_widening","typecheck_exit":0,"tracer_exit":1,"harness_atoms":[],"harness_relations":[],"unknown_atoms":[],"unknown_relations":[],"claude_self_verdict":null,"claude_proposed_widenings":[],"claude_confidence":null,"discrepancies":[],"typecheck_stderr":"","tracer_stderr":"/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71\n      throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);\n            ^\n\n\nError: unhandled unit kind: [object Object]\n    at traceUnit (/workspace/typescript/dnd/packages/prototype-content-surface/src/interpreter/tracer.ts:71:13)\n    at main (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:31:17)\n    at <anonymous> (/workspace/typescript/dnd/packages/prototype-content-surface/src/run.ts:49:1)\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)\n\nNode.js v20.20.1\n","wall_seconds":1.345}
+../1119915-magic_missile/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../1119861-eldritch_blast/content/eldritch_blast.json:9:  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade: creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+../1119885-shillelagh/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../1119861-eldritch_blast/content/animate_objects.json:3:  "id": "animate_objects",
+../1119861-eldritch_blast/content/animate_objects.json:9:  "description": "Objects animate at your command. Choose a number of nonmagical objects within range that aren't being worn or carried, aren't fixed to a surface, and aren't Gargantuan. The maximum number equals your spellcasting ability modifier (Medium or smaller = 1, Large = 2, Huge = 3). Each target becomes an Animated Object Construct under your control until the spell ends or it drops to 0 HP. Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell within 500 feet.",
+../1119915-magic_missile/content/fire_bolt.json:9:  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+../1119861-eldritch_blast/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../1119861-eldritch_blast/content/arcane_lock.json:9:  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+../1119885-shillelagh/content/fire_bolt.json:9:  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+../1119885-shillelagh/content/burning_hands.json:3:  "id": "burning_hands",
+../1119885-shillelagh/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+../1119885-shillelagh/content/antipathy_sympathy.json:9:  "description": "Imbue a target creature or object (Huge or smaller) within range. Choose antipathy or sympathy, and specify a creature kind. Creatures of the specified kind that come within 120 feet of the target make a Wisdom saving throw. Antipathy (fail): Frightened, must flee by safest route. Sympathy (fail): Charmed, must approach by safest route; can't willingly move away if within 5 feet. Recovery: if the affected creature ends its turn more than 120 feet from the target, it repeats the save; success ends the effect and grants 1-minute immunity.",
+../1119861-eldritch_blast/content/fire_bolt.json:9:  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+../1119861-eldritch_blast/content/burning_hands.json:3:  "id": "burning_hands",
+../1119861-eldritch_blast/content/burning_hands.json:9:  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+
+exec
+/bin/bash -lc "sed -n '1,240p' atom-whitelist.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read atom-whitelist.ts: No such file or directory
+
+exec
+/bin/bash -lc "find /workspace/typescript/dnd -path '*TAXONOMY_atoms_graph.md' -o -path '*UBIQUITOUS_LANGUAGE.md'" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 6751ms:
+/workspace/typescript/dnd/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md
+/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md
+
+codex
+I’ve confirmed the family fit: one-phase `activation` with `attack_roll`, plus an omitted ignition rider that forces a widening. I’m checking whether these slugged files already exist in this worktree before I overwrite anything.
+exec
+/bin/bash -lc 'git status --short -- content/fire_bolt.dhall content/fire_bolt.json content/fire_bolt.trace.md result-fire_bolt.json proposal-fire_bolt.md && ls content/fire_bolt.* 2>/dev/null || true' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+exec
+/bin/bash -lc "sed -n '540,620p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+export type MasteryUsageLimit = { readonly kind: "once_per_turn" };
+
+// on_hit_trigger — the one mastery family modeled so far. Maps to
+// Subgraph G (On-Hit Rider): attack_roll resolution opens on_hit_window
+// which grants the mastery's rider effect.
+export type OnHitTriggerMechanics = {
+  readonly family: "on_hit_trigger";
+  readonly trigger: MasteryTrigger;
+  // "optional" means the wielder chooses whether to invoke (Topple,
+  // Cleave); Sap and Push are always-on on hit.
+  readonly optional: boolean;
+  readonly effect: MasteryEffect;
+  readonly usageLimit?: MasteryUsageLimit;
+};
+
+export type MasteryMechanics = OnHitTriggerMechanics;
+
+// ---------- records ----------
+
+export type Provenance = {
+  readonly kind: "srd-5.2.1";
+  readonly section: string;
+};
+
+type UnitMetadata = {
+  readonly id: string;
+  readonly name: string;
+  readonly provenance: Provenance;
+  readonly description: string;
+};
+
+export type SpellRecord = UnitMetadata & {
+  readonly kind: "spell";
+  readonly mechanics: SpellMechanics;
+};
+
+export type ClassFeatureRecord = UnitMetadata & {
+  readonly kind: "class_feature";
+  readonly className: ClassName;
+  readonly acquiredAtLevel: number;
+  readonly mechanics: ClassFeatureMechanics;
+};
+
+export type MasteryRecord = UnitMetadata & {
+  readonly kind: "mastery";
+  readonly mechanics: MasteryMechanics;
+};
+
+export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/bless.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "bless",
+  "name": "Bless",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bless"
+  },
+  "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.",
+  "mechanics": {
+    "family": "ongoing_effect",
+    "level": 1,
+    "school": "enchantment",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 30 },
+    "components": { "v": true, "s": true, "m": "a Holy Symbol worth 5+ GP" },
+    "duration": { "kind": "concentration", "upTo": { "unit": "minute", "amount": 1 } },
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "choose_up_to",
+        "count": { "kind": "linear", "base": 3, "perSlotAboveBase": 1, "baseLevel": 1 }
+      }
+    },
+    "operation": {
+      "kind": "roll_modifier",
+      "on": ["attack_roll", "saving_throw"],
+      "delta": { "dice": 1, "dieSize": 4, "sign": "+" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/burning_hands.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "burning_hands",
+  "name": "Burning Hands",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Burning Hands"
+  },
+  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the Cone that aren't being worn or carried start burning. Higher slot: damage increases by 1d6 for each spell slot level above 1.",
+  "mechanics": {
+    "family": "activation",
+    "level": 1,
+    "school": "evocation",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "self" },
+    "components": { "v": true, "s": true, "m": false },
+    "duration": { "kind": "instantaneous" },
+    "phases": [
+      {
+        "kind": "save_gate",
+        "attachment": {
+          "kind": "area",
+          "shape": { "kind": "cone", "lengthFeet": 15 },
+          "origin": { "kind": "point_within_range" }
+        },
+        "ability": "dex",
+        "dc": { "kind": "caster_spell_save_dc" },
+        "onFail": {
+          "kind": "damage",
+          "damageType": "fire",
+          "amount": {
+            "kind": "linear_per_level",
+            "axis": "slot",
+            "base": { "dice": 3, "dieSize": 6 },
+            "perLevel": { "dice": 1 },
+            "startingAtLevel": 2
+          }
+        },
+        "onSuccess": { "kind": "none" }
+      }
+    ]
+  }
+}
+
+codex
+I’m writing the authored Dhall and matching JSON now. The JSON will encode the ranged spell attack and cantrip scaling exactly, and the proposal/result will call out the missing ignition rider as an `atom_widening`.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc6a16aba38637338b813b1029283d86f2cf884c
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,16 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc6a16aba38637338b813b1029283d86f2cf884c
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,16 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+exec
+/bin/bash -lc 'pnpm typecheck' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+exec
+/bin/bash -lc 'pnpm exec tsx src/run.ts content/fire_bolt.json --out content/fire_bolt.trace.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 721ms:
+wrote /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.trace.md
+
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc6a16aba38637338b813b1029283d86f2cf884c
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,16 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+ succeeded in 1229ms:
+
+> @dnd/prototype-content-surface@0.0.0 typecheck /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+> tsc --noEmit
+
+
+codex
+The JSON traced cleanly. I’m pulling the actual atoms and relations out of the generated trace now, then I’ll update the self-report so it reflects the tracer output rather than the authored intent.
+exec
+/bin/bash -lc "sed -n '1,220p' content/fire_bolt.trace.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Dependency graph: Fire Bolt
+
+Unit id: `fire_bolt`
+
+5e.tools: <https://5e.tools/spells.html#fire%20bolt_xphb>
+
+```mermaid
+flowchart TD
+  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
+  classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
+  classDef window fill:#9467bd,color:#fff,stroke:#4a2b66
+  classDef attachment fill:#ffcc00,color:#000,stroke:#8a6d00
+  classDef resolution fill:#ff7f0e,color:#fff,stroke:#8a4308
+  classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
+  classDef resource fill:#e377c2,color:#000,stroke:#8a457a
+  classDef scaling fill:#17becf,color:#000,stroke:#0a5f6a
+  classDef effect fill:#d62728,color:#fff,stroke:#6a1414
+  root1["spell_root<br/>Fire Bolt"]:::source
+  act2["activate"]:::procedure
+  q3["action_quota<br/>(Casting Time: Action)"]:::resource
+  att4["target<br/>one<br/>range 120 ft"]:::attachment
+  res5["attack_roll [phase 1]<br/>ranged spell attack"]:::resolution
+  dmg6["damage: 1d10 (tiered by character level) fire"]:::effect
+  win7["on_hit_window"]:::window
+  sc8["scale_die_count<br/>axis=character<br/>tiers: L5:2d10 | L11:3d10 | L17:4d10"]:::scaling
+  act2 -- consumes --> q3
+  act2 -- attaches_to --> att4
+  act2 -- grants --> res5
+  res5 -- attaches_to --> att4
+  res5 -- opens_window --> win7
+  win7 -- grants --> dmg6
+  dmg6 -- attaches_to --> att4
+  sc8 -- modifies --> dmg6
+  root1 -- roots --> act2
+```
+
+## Atoms referenced
+
+- `action_quota`
+- `activate`
+- `attack_roll`
+- `damage`
+- `on_hit_window`
+- `scale_die_count`
+- `spell_root`
+- `target`
+
+## Relations referenced
+
+- `attaches_to`
+- `consumes`
+- `grants`
+- `modifies`
+- `opens_window`
+- `roots`
+
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc6a16aba38637338b813b1029283d86f2cf884c
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,16 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [],
++  "relations_used": [],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+codex
+I have the final trace shape. I’m updating `result-fire_bolt.json` with the tracer’s actual atom and relation sets so the report matches the generated graph.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9962e421a76a1bcc54c253cd6cccd19935a62985
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,32 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "scale_die_count",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9962e421a76a1bcc54c253cd6cccd19935a62985
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,32 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "scale_die_count",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+codex
+Encoded `Fire Bolt` as a `spell` `activation` with one `attack_roll` phase in [content/fire_bolt.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json) and the matching authored source in [content/fire_bolt.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall). The main line fits honestly: action cast, 120-foot point range, ranged spell attack, tier-scaled fire damage.
+
+I classified it as `atom_widening`, not `clean`, because the SRD rider “flammable object hit ... starts burning” has no honest representation in the current surface/tracer. That gap is documented in [proposal-fire_bolt.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md), and the final self-report is in [result-fire_bolt.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json).
+
+Verification: `pnpm typecheck` passed, and `pnpm exec tsx src/run.ts content/fire_bolt.json --out content/fire_bolt.trace.md` succeeded, producing [content/fire_bolt.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.trace.md).
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..d4978f6ad1be306d49a322e997aec7b4f88613cf
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall
+@@ -0,0 +1,49 @@
++-- Fire Bolt fits the existing spell activation family for its main line:
++-- one ranged spell attack that deals tier-scaled fire damage.
++-- The secondary rider ("flammable object hit ... starts burning") has no
++-- honest representation in the current closed effect vocabulary.
++
++let fireBolt =
++      { kind = "spell"
++      , id = "fire_bolt"
++      , name = "Fire Bolt"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-E-L#Fire Bolt"
++          }
++      , description =
++          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
++      , mechanics =
++          { family = "activation"
++          , level = 0
++          , school = "evocation"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 120 }
++          , components = { v = True, s = True, m = None Text }
++          , duration = { kind = "instantaneous" }
++          , phases =
++              [ { kind = "attack_roll"
++                , attachment =
++                    { kind = "target", selection = { mode = "one" } }
++                , attackKind = "ranged_spell_attack"
++                , onHit =
++                    { kind = "damage"
++                    , damageType = "fire"
++                    , amount =
++                        { kind = "threshold_tiers"
++                        , axis = "character"
++                        , base = { dice = 1, dieSize = 10 }
++                        , tiers =
++                            [ { atLevel = 5, override = { dice = 2 } }
++                            , { atLevel = 11, override = { dice = 3 } }
++                            , { atLevel = 17, override = { dice = 4 } }
++                            ]
++                        }
++                    }
++                , onMiss = { kind = "none" }
++                }
++              ]
++          }
++      }
++
++in  fireBolt
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9d13a670842a80986cee8b04fa5c7349419f23e6
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json
+@@ -0,0 +1,41 @@
++{
++  "kind": "spell",
++  "id": "fire_bolt",
++  "name": "Fire Bolt",
++  "provenance": {
++    "kind": "srd-5.2.1",
++    "section": "Spells/Descriptions-E-L#Fire Bolt"
++  },
++  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10).",
++  "mechanics": {
++    "family": "activation",
++    "level": 0,
++    "school": "evocation",
++    "castingTime": { "kind": "action" },
++    "range": { "kind": "point", "feet": 120 },
++    "components": { "v": true, "s": true, "m": false },
++    "duration": { "kind": "instantaneous" },
++    "phases": [
++      {
++        "kind": "attack_roll",
++        "attachment": { "kind": "target", "selection": { "mode": "one" } },
++        "attackKind": "ranged_spell_attack",
++        "onHit": {
++          "kind": "damage",
++          "damageType": "fire",
++          "amount": {
++            "kind": "threshold_tiers",
++            "axis": "character",
++            "base": { "dice": 1, "dieSize": 10 },
++            "tiers": [
++              { "atLevel": 5, "override": { "dice": 2 } },
++              { "atLevel": 11, "override": { "dice": 3 } },
++              { "atLevel": 17, "override": { "dice": 4 } }
++            ]
++          }
++        },
++        "onMiss": { "kind": "none" }
++      }
++    ]
++  }
++}
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c5f99ab517d806a04834c112f6947c21f3d2bde
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md
+@@ -0,0 +1,26 @@
++# Fire Bolt widening
++
++`Fire Bolt` fits the existing `spell` + `activation` family for its core procedure:
++
++- cast with an `action`
++- choose one target within `120` feet
++- make a `ranged_spell_attack`
++- on hit, deal tier-scaled `fire` damage
++
++The unit does not fit completely because the authored surface cannot represent the secondary rider:
++
++> "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++
++Current gaps:
++
++- `Effect` only permits `damage` or `none`, so there is no way to encode ignition as an on-hit outcome.
++- `Attachment` can target a generic `target`, but there is no way to narrow the rider to objects, or specifically to flammable objects that are not worn or carried.
++- The tracer vocabulary has no ignition or burning atom to emit.
++
++This is best classified as `atom_widening`. The top-level family already exists and the primary damage line traces honestly; the missing concept is an ignition/burning effect inside that existing family.
++
++Smallest honest widening:
++
++- new atom: `ignite_object`
++- new surface `Effect` variant carrying object ignition
++- optional target-side filter fields if the prototype needs to preserve the SRD restriction that only flammable objects not being worn or carried can ignite
+diff --git a/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..9962e421a76a1bcc54c253cd6cccd19935a62985
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json
+@@ -0,0 +1,32 @@
++{
++  "unit_slug": "fire_bolt",
++  "outcome": "atom_widening",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "attack_roll",
++    "damage",
++    "on_hit_window",
++    "scale_die_count",
++    "spell_root",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "opens_window",
++    "roots"
++  ],
++  "proposed_widenings": [
++    {
++      "kind": "new_atom",
++      "name": "ignite_object",
++      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
++      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
++    }
++  ],
++  "confidence": "high",
++  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
++}
+
+tokens used
+55,921
+Encoded `Fire Bolt` as a `spell` `activation` with one `attack_roll` phase in [content/fire_bolt.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.json) and the matching authored source in [content/fire_bolt.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.dhall). The main line fits honestly: action cast, 120-foot point range, ranged spell attack, tier-scaled fire damage.
+
+I classified it as `atom_widening`, not `clean`, because the SRD rider “flammable object hit ... starts burning” has no honest representation in the current surface/tracer. That gap is documented in [proposal-fire_bolt.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/proposal-fire_bolt.md), and the final self-report is in [result-fire_bolt.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/result-fire_bolt.json).
+
+Verification: `pnpm typecheck` passed, and `pnpm exec tsx src/run.ts content/fire_bolt.json --out content/fire_bolt.trace.md` succeeded, producing [content/fire_bolt.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2751850-fire_bolt/content/fire_bolt.trace.md).

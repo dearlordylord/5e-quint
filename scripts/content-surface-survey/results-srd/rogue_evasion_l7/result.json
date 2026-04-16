@@ -1,0 +1,28 @@
+{
+  "unit_slug": "rogue_evasion_l7",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive family for ClassFeatureMechanics",
+      "justification": "Evasion fires automatically on a trigger (DEX save for half-damage) with no activation cost, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which structurally requires all three. A 'passive' or 'triggered_passive' family is needed for always-on class features.",
+      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail."
+    },
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken",
+      "justification": "Evasion negates damage entirely on a successful DEX save (0x instead of 1/2x). This is mechanically distinct from grant_resistance (which halves damage). The v4 taxonomy §12 records this atom as a known residue under 'reduce_damage_taken distinct from grant_resistance — single-group pressure from class-feature reactions'. Evasion is exactly that pressure case.",
+      "evidence": "you instead take no damage if you succeed on the saving throw and only half damage if you fail"
+    },
+    {
+      "kind": "new_variant",
+      "name": "condition_use_block on ClassFeatureActivationCost or feature-level guard",
+      "justification": "The incapacitated-blocks-feature constraint ('You can't use this feature if you have the Incapacitated condition') has no representation in the current surface. This is a secondary gap — it would need a condition-gating field on the feature record.",
+      "evidence": "You can't use this feature if you have the Incapacitated condition."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Evasion is a passive class feature: it triggers automatically when the rogue is subjected to a DEX-save half-damage effect. It has no activation cost, no use count, and no reset cadence. The current surface has only ClassFeatureActivationMechanics, which structurally requires all three and whose effect union (grant_extra_action | heal_hp) does not include any damage-outcome modifier. Two distinct gaps: (1) missing passive/triggered_passive family for ClassFeatureMechanics; (2) missing reduce_damage_taken atom — already in v4 taxonomy residue. A third minor gap is the Incapacitated condition block, which is a use-guard not representable in the current surface."
+}

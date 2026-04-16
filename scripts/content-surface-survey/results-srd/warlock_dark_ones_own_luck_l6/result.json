@@ -1,0 +1,34 @@
+{
+  "unit_slug": "warlock_dark_ones_own_luck_l6",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RollKind: \"ability_check\"",
+      "justification": "The feature explicitly applies to ability checks in addition to saving throws. RollKind = \"attack_roll\" | \"saving_throw\" — ability_check is absent. Without it, the effect cannot be correctly scoped.",
+      "evidence": "When you make an ability check or a saving throw, you can use this feature to add 1d10 to your roll."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect: modify_roll_numeric",
+      "justification": "ClassFeatureEffect only has GrantExtraActionEffect and HealHpEffect. Adding a fixed die amount to an ability check or saving throw is a modify_roll_numeric effect. This concept already exists in the spell surface (OngoingOperation.roll_modifier / RollModifierOperation) but has not been lifted into ClassFeatureEffect.",
+      "evidence": "you can use this feature to add 1d10 to your roll"
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap: ability_modifier_derived",
+      "justification": "UseCountCap only supports 'fixed' (static integer) and ThresholdTiers<number> (class-level-keyed). The cap here is the character's Charisma modifier with a floor, which is an ability-score-derived value that changes as the stat changes. Neither existing variant can represent this. A new variant is needed, e.g. { kind: \"ability_modifier_derived\"; ability: Ability; minimum: number }.",
+      "evidence": "You can use this feature a number of times equal to your Charisma modifier (minimum of once)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost: triggered_on_roll (or post_roll reactive cost)",
+      "justification": "ClassFeatureActivationCost has only 'free' and 'bonus_action'. This feature's activation is reactive — it triggers on a specific roll event (ability check or saving throw), fires after the roll is revealed, and resolves before the roll's effects. This timing constraint is not captured by 'free' (which implies an at-will action on the character's turn) and there is no roll-triggered variant. The closest spell-surface analog is triggered_reaction with CastingTime.reaction, but that family does not exist for ClassFeatureMechanics.",
+      "evidence": "When you make an ability check or a saving throw, you can use this feature to add 1d10 to your roll. You can do so after seeing the roll but before any of the roll's effects occur."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Four surface widenings required; all are new variants of existing surface types rather than new families or atoms. The unit is structurally a class_feature with the activation family, but the effect variant (modify_roll_numeric), the use-count-cap variant (ability_modifier_derived), the roll-kind variant (ability_check), and the activation-cost variant (post-roll reactive trigger) are all absent from the current surface. The once-per-roll usage limit is also unmodeled (analogous to MasteryUsageLimit.once_per_turn but at roll granularity). No Dhall/JSON/trace produced."
+}

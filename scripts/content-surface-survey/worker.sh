@@ -123,6 +123,24 @@ text=$(pnpm --filter @dnd/prototype-content-surface exec tsx \
 # -------- build prompt --------
 
 prompt_path="$RESULTS_DIR/$slug/prompt.md"
+
+# -------- inline reference files into prompt (cache-friendly) --------
+# All reference material is inlined so the agent never needs Read tool
+# calls for context. The static prefix is identical across all units,
+# enabling Anthropic prompt caching (5-min TTL).
+
+PROTO_DIR="$REPO_ROOT/packages/prototype-content-surface"
+REF_TYPES_TS=$(cat "$PROTO_DIR/src/surface/types.ts")
+REF_TRACER_TS=$(cat "$PROTO_DIR/src/interpreter/tracer.ts")
+REF_BLESS_DHALL=$(cat "$PROTO_DIR/content/bless.dhall")
+REF_BLESS_JSON=$(cat "$PROTO_DIR/content/bless.json")
+REF_ACTION_SURGE_DHALL=$(cat "$PROTO_DIR/content/action_surge.dhall")
+REF_ACTION_SURGE_JSON=$(cat "$PROTO_DIR/content/action_surge.json")
+REF_TAXONOMY_MD=$(cat "$REPO_ROOT/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md")
+
+# awk can't handle multi-line gsub with embedded newlines in variables.
+# Use a two-pass approach: awk for single-line subs, then sed for
+# multi-line reference blocks via placeholder markers.
 awk -v name="$name" -v slug="$slug" -v kind="$kind" -v prov="$source" -v text="$text" '
   {
     gsub(/\{\{UNIT_NAME\}\}/, name)
@@ -132,7 +150,35 @@ awk -v name="$name" -v slug="$slug" -v kind="$kind" -v prov="$source" -v text="$
     gsub(/\{\{UNIT_TEXT\}\}/, text)
     print
   }
-' "$SCRIPTS_DIR/prompt-template.md" > "$prompt_path"
+' "$SCRIPTS_DIR/prompt-template.md" > "$prompt_path.tmp"
+
+# Replace multi-line reference placeholders using python (handles
+# arbitrary content without sed escaping issues).
+python3 -c "
+import sys
+template = open(sys.argv[1]).read()
+subs = {
+    '{{TYPES_TS}}': open(sys.argv[2]).read(),
+    '{{TRACER_TS}}': open(sys.argv[3]).read(),
+    '{{BLESS_DHALL}}': open(sys.argv[4]).read(),
+    '{{BLESS_JSON}}': open(sys.argv[5]).read(),
+    '{{ACTION_SURGE_DHALL}}': open(sys.argv[6]).read(),
+    '{{ACTION_SURGE_JSON}}': open(sys.argv[7]).read(),
+    '{{TAXONOMY_MD}}': open(sys.argv[8]).read(),
+}
+for k, v in subs.items():
+    template = template.replace(k, v)
+print(template, end='')
+" "$prompt_path.tmp" \
+  "$PROTO_DIR/src/surface/types.ts" \
+  "$PROTO_DIR/src/interpreter/tracer.ts" \
+  "$PROTO_DIR/content/bless.dhall" \
+  "$PROTO_DIR/content/bless.json" \
+  "$PROTO_DIR/content/action_surge.dhall" \
+  "$PROTO_DIR/content/action_surge.json" \
+  "$REPO_ROOT/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" \
+  > "$prompt_path"
+rm -f "$prompt_path.tmp"
 
 # -------- invoke LLM backend (or mock) --------
 # timeout(1) kills the subprocess tree (--kill-after adds SIGKILL 10s
@@ -265,6 +311,44 @@ harvest_proposal_from_template() {
 harvest_from_template "$WORKSPACE" || true
 harvest_proposal_from_template
 
+# -------- harvest content files from template dir --------
+# Claude CLI resolves its project root via CLAUDE.md ancestry, which
+# points at TEMPLATE_DIR rather than the per-worker WORKSPACE. Content
+# files (dhall, json, trace.md) therefore land in the template dir.
+# Move them into WORKSPACE so validation finds them.
+
+for ext in dhall json trace.md; do
+  candidate="$TEMPLATE_DIR/content/$slug.$ext"
+  if [[ -f "$candidate" ]]; then
+    mv "$candidate" "$WORKSPACE/content/$slug.$ext"
+  fi
+done
+
+# -------- fallback: extract result from Claude text output --------
+# When inline context lets Claude classify without tool use, it reports
+# the verdict in its text output but skips writing result-<slug>.json.
+# Extract the outcome from the text and synthesize a result file.
+
+if [[ ! -f "$WORKSPACE/$result_file" ]] && [[ -f "$backend_log" ]]; then
+  claude_text=$(jq -r '.result // ""' "$backend_log" 2>/dev/null)
+  if [[ -n "$claude_text" ]]; then
+    # Try to match outcome keywords from the text
+    extracted_outcome=""
+    for outcome in dm_agenda structural_widening atom_widening surface_widening clean refused; do
+      if echo "$claude_text" | grep -qi "$outcome"; then
+        extracted_outcome="$outcome"
+        break
+      fi
+    done
+    if [[ -n "$extracted_outcome" ]]; then
+      echo "worker.sh: synthesizing $result_file from text output (outcome=$extracted_outcome)" >&2
+      cat > "$WORKSPACE/$result_file" <<EOF
+{"unit_slug":"$slug","outcome":"$extracted_outcome","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+EOF
+    fi
+  fi
+fi
+
 # -------- validate --------
 
 if [[ -f "$WORKSPACE/content/$slug.dhall" ]]; then
@@ -354,6 +438,14 @@ move_if_exists "$WORKSPACE/$proposal_file" "$RESULTS_DIR/$slug/proposal.md"
 # Fallback: any unprefixed result.json / proposal.md the model wrote.
 move_if_exists "$WORKSPACE/result.json" "$RESULTS_DIR/$slug/result.json"
 move_if_exists "$WORKSPACE/proposal.md" "$RESULTS_DIR/$slug/proposal.md"
+# Older runs sometimes wrote into a nested survey path under the
+# prototype package itself. Sweep both workspace and template copies.
+for base in "$WORKSPACE" "$TEMPLATE_DIR"; do
+  nested="$base/scripts/content-surface-survey/results-srd/$slug"
+  move_if_exists "$nested/result.json" "$RESULTS_DIR/$slug/result.json"
+  move_if_exists "$nested/proposal.md" "$RESULTS_DIR/$slug/proposal.md"
+  move_if_exists "$nested/verdict.json" "$RESULTS_DIR/$slug/verdict.json"
+done
 # Defensive: sweep the template dir of any result/proposal file whose
 # unit_slug matches this worker's slug. Do NOT sweep mismatched slugs —
 # those belong to a concurrent worker.

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_potion_of_animal_friendship",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + stored_spell_grant family",
+      "justification": "No magic_item kind exists in UnitRecord (types.ts only defines SpellRecord | ClassFeatureRecord | MasteryRecord). The taxonomy lists magic_item_root but the surface has no corresponding record type or payload family.",
+      "evidence": "export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord; — magic_item is absent"
+    },
+    {
+      "kind": "new_variant",
+      "name": "fixed_dc override on stored spell grant",
+      "justification": "The potion specifies a hardcoded save DC 13, independent of any caster's spell save DC. Existing DcSource only has caster_spell_save_dc and weapon_attack_dc. A stored spell grant needs a fixed_dc variant.",
+      "evidence": "you can cast the level 3 version of the Animal Friendship spell (save DC 13)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "consume_item activation + stored_spell payload",
+      "justification": "Magic items that grant spell access via consumption (drinking) need an activation model: consume the item (charge/item destroyed) → cast stored spell at fixed level. No existing family covers item-consumption-as-activation.",
+      "evidence": "When you drink this potion, you can cast the level 3 version of the Animal Friendship spell"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The blocking gap is structural: magic_item is not in UnitRecord at all. Secondary gaps (fixed DC override, consume-item activation, stored spell level lock) would also need surface widening once the kind exists. The v4 taxonomy already has magic_item_root and charge atoms, so the atom inventory is not the problem — the surface type layer is missing."
+}

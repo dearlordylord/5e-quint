@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item family",
+      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — there is no MagicItemRecord. The v4 taxonomy includes magic_item_root as a source atom with validation passes logged, but the surface types.ts has no corresponding record kind or mechanics family. No JSON can typecheck as a magic_item.",
+      "evidence": "Weapon (Javelin), Uncommon — magic items are a distinct SRD category that shares no family with spells, class features, or masteries."
+    },
+    {
+      "kind": "new_atom",
+      "name": "alter_damage_type",
+      "justification": "The always-available passive property lets the wielder substitute Lightning for Piercing damage on any hit. No existing effect atom covers damage-type substitution. This is mechanically distinct from grant_resistance (reduces incoming damage) and damage (deals damage). It modifies the outgoing damage type on a weapon hit.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment area shape: line",
+      "justification": "The Lightning Bolt property creates a 5-foot-wide Line between the caster and the target. The current Attachment area shape union only contains sphere. A line shape (defined by two endpoints — self and target, with a width) is structurally distinct from a sphere (single origin + radius).",
+      "evidence": "This bolt forms a 5-foot-wide Line between you and the target."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence: dawn",
+      "justification": "The Lightning Bolt property resets at the next dawn, which is neither a short rest, long rest, nor the partial_short_full_long pattern. Dawn-cadence resets appear across many magic items and require a distinct cadence variant.",
+      "evidence": "This property can't be used again until the next dawn."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "forgo_attack_roll alternative activation",
+      "justification": "The Lightning Bolt property explicitly lets the player skip making a ranged attack roll and instead fire a save-gated AoE. The surface has no mechanism for 'in place of the normal attack roll resolution, substitute an AoE save_gate.' This is a different shape from a normal activation phase — it replaces, not supplements, the attack roll.",
+      "evidence": "you can forgo making a ranged attack roll and instead turn the weapon into a bolt of lightning."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The blocking issue is structural: magic_item is not in UnitRecord. Even if it were added, the unit has at least four additional surface/atom gaps: no alter_damage_type effect, no line area shape, no dawn reset cadence, and no forgo-attack-roll alternative-activation subgraph. The damage-type substitution passive (property 1) and the Lightning Bolt activation (property 2) are mechanically independent and would require separate encodings within a future magic_item family — likely two properties on a single item record."
+}

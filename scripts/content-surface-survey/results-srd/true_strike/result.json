@@ -1,0 +1,34 @@
+{
+  "unit_slug": "true_strike",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "AttackKind: melee_weapon_attack / ranged_weapon_attack",
+      "justification": "True Strike makes a weapon attack (using the weapon's properties, reach, and damage dice), not a spell attack. The current AttackKind only covers ranged_spell_attack and melee_spell_attack, which do not interact with weapon properties. A spell-initiated weapon attack is mechanically distinct.",
+      "evidence": "you make one attack with the weapon used in the spell's casting"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount: weapon_damage kind",
+      "justification": "The base damage for True Strike is the weapon's own dice, which vary by weapon type (1d6, 1d8, 1d10, etc.). There is no DiceAmount variant that defers to the equipped/used weapon's damage expression. A fixed DiceExpr cannot honestly represent weapon-variable damage.",
+      "evidence": "you make one attack with the weapon used in the spell's casting. The attack uses your spellcasting ability for the attack and damage rolls"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DamageEffect: player_choice damage type (or weapon_normal sentinel)",
+      "justification": "The spell's damage type is a player-chosen binary: Radiant OR the weapon's normal damage type. Neither a player-choice union nor a 'weapon_normal' sentinel exists in the current DamageEffect / DamageType surface.",
+      "evidence": "If the attack deals damage, it can be Radiant damage or the weapon's normal damage type (your choice)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase attack_roll: spellcasting_ability_override property",
+      "justification": "The attack and damage rolls for this spell use the caster's spellcasting ability modifier instead of STR/DEX. This ability substitution applies only to this specific attack and has no representation on the current attack_roll phase shape.",
+      "evidence": "The attack uses your spellcasting ability for the attack and damage rolls instead of using Strength or Dexterity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The cantrip scaling (+1d6 Radiant at character levels 5/11/17) IS representable as a threshold_tiers DiceAmount with axis=character — that part fits cleanly. All four blocking gaps are new variants of existing surface types (AttackKind, DiceAmount, DamageEffect, ActivationPhase shape), not missing families or new atoms. The v4 atom inventory (attack_roll, damage, on_hit_window) is sufficient once the surface shapes are widened. No dhall/json/trace authored because honest encoding is blocked."
+}

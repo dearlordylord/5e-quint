@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_weapon",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "weapon attachment variant",
+      "justification": "Magic Weapon attaches to a nonmagical weapon (an object), not a creature. The surface Attachment type only has self/target/area/mark. V4 taxonomy already lists `weapon` as an attachment atom; the surface needs to expose it.",
+      "evidence": "You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_roll in RollKind",
+      "justification": "The spell grants a bonus to damage rolls in addition to attack rolls. RollKind = 'attack_roll' | 'saving_throw' has no 'damage_roll' variant, so the operation cannot express the damage-roll half of the bonus.",
+      "evidence": "...that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls."
+    },
+    {
+      "kind": "new_variant",
+      "name": "flat numeric delta in RollModifierOperation",
+      "justification": "DiceDelta requires dice + dieSize (e.g. 1d4), designed for Bless-style bonuses. Magic Weapon grants a flat integer bonus (+1/+2/+3). There is no flat-numeric variant in the roll modifier operation; a FlatDelta or union with number is needed.",
+      "evidence": "...a +1 bonus to attack rolls and damage rolls. The bonus increases to +2... The bonus increases to +3..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "scalable delta on RollModifierOperation",
+      "justification": "The +1/+2/+3 bonus scales by slot tier (L2=+1, L3-5=+2, L6+=+3). RollModifierOperation.delta is a fixed DiceDelta with no scaling path. DiceAmount supports threshold_tiers scaling but only on damage effects; the roll-modifier operation needs an analogous ScalableBonus type.",
+      "evidence": "Using a Higher-Level Spell Slot: The bonus increases to +2 with a level 3-5 spell slot. The bonus increases to +3 with a level 6+ spell slot."
+    },
+    {
+      "kind": "new_variant",
+      "name": "replace_on_recast in Duration or lifecycle",
+      "justification": "The spell ends early when the caster casts it again. V4 has a replace_on_recast lifecycle atom but the surface Duration type only exposes instantaneous/concentration/timed — no early-termination-on-recast condition.",
+      "evidence": "The spell ends early if you cast it again."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All five gaps are surface-level variants of existing type shapes; no new v4 atoms are required. The primary blocker is the missing weapon attachment variant — without it, the spell cannot be attached to its target object at all. The flat-numeric delta and damage_roll RollKind gaps are secondary but equally required for honest encoding. The replace_on_recast lifecycle is a secondary omission that can be noted in proposal but does not alone block the encoding."
+}

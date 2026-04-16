@@ -1,0 +1,46 @@
+{
+  "unit_slug": "wind_walk",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "transform_form family",
+      "justification": "Wind Walk transforms targets into a different physical form (gaseous cloud) with a persistent state bundle (new movement mode, damage resistance, condition immunity, action restrictions) and a reversible toggle (cloud ↔ normal via Magic action + 1-minute transition). No existing SpellMechanics family can represent a creature-form transformation. A new 'transform_form' family is needed with: (a) a bundle of form-state effects, (b) a revert mechanic with transition condition, and (c) a re-enter mechanic.",
+      "evidence": "You and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. [...] The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation."
+    },
+    {
+      "kind": "new_variant",
+      "name": "stunned in Condition type",
+      "justification": "Condition is currently restricted to 'prone'. Wind Walk inflicts Stunned during the revert-to-normal transition, requiring 'stunned' to be added to the Condition union.",
+      "evidence": "Reverting takes 1 minute, during which the target has the Stunned condition."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_immunity (condition or damage type)",
+      "justification": "Wind Walk grants immunity to the Prone condition in cloud form. The v4 atom inventory has 'grant_resistance' but no 'grant_immunity'. Immunity is a mechanically distinct concept (immune = no effect, resistant = half damage) and cannot be honestly expressed as resistance.",
+      "evidence": "it has Immunity to the Prone condition"
+    },
+    {
+      "kind": "new_variant",
+      "name": "allow_only variant for ActionRestriction",
+      "justification": "The current ActionRestriction type supports 'exclude' (denylist). Cloud form restricts targets to only Dash and Magic — an allowlist. A new variant { kind: 'allow_only', actions: ReadonlyArray<StandardActionKind> } is needed.",
+      "evidence": "The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_speed / grant_fly_speed as SpellEffect variant",
+      "justification": "Wind Walk grants a Fly Speed of 300 feet with hover. The v4 atoms 'modify_speed' and 'grant_hover' exist in the taxonomy but are not available as variants of Effect or any ongoing spell operation type. They would need to be added to the effect vocabulary for spells.",
+      "evidence": "a target has a Fly Speed of 300 feet and can hover"
+    },
+    {
+      "kind": "new_variant",
+      "name": "self_plus_choose_up_to attachment mode",
+      "justification": "Wind Walk targets the caster plus up to 10 willing others. No current Attachment kind combines self-inclusion with a choose_up_to selection. The closest is { kind: 'target', selection: { mode: 'choose_up_to', count: ... } } which excludes the caster, or { kind: 'self' } which excludes others.",
+      "evidence": "You and up to ten willing creatures of your choice within range assume gaseous forms"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: Wind Walk requires a form-transformation family that does not exist in the surface. The existing families (ongoing_effect, activation, triggered_reaction, anchored_trigger) cannot express a reversible creature-form change with a bundled state (fly speed, immunity, resistance, action constraints) and a 1-minute transition cost guarded by a condition (Stunned). Secondary gaps include: missing 'stunned' in Condition, missing grant_immunity atom, missing allowlist ActionRestriction variant, and missing fly-speed/hover spell effects. The safe-descent fallback clause (60 ft/round descent for 1 minute if airborne on spell end) is also not expressible and may classify as dm_agenda or require a new 'on_end_condition' shape. No dhall, json, or trace files produced."
+}

@@ -1,0 +1,52 @@
+{
+  "unit_slug": "species_goliath_giant_ancestry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_trait UnitRecord kind + species_trait_root source atom",
+      "justification": "UnitRecord has no species_trait variant. The v4 taxonomy lists species_trait_root as a source atom, but types.ts only exposes spell, class_feature, and mastery. No honest encoding is possible until this kind is added.",
+      "evidence": "Giant Ancestry is a species trait. The type union `SpellRecord | ClassFeatureRecord | MasteryRecord` has no branch for species_trait."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "open_choice (choose-one-of-N at character creation)",
+      "justification": "Giant Ancestry presents six mutually exclusive sub-options from which the player picks one permanently. No surface family models this choose-one-of-N selection at character creation. The v4 `choose` procedure atom exists but there is no authored shape for it.",
+      "evidence": "Choose one of the following benefits—a supernatural boon from your ancestry"
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.proficiency_bonus",
+      "justification": "The feature's use count equals the character's Proficiency Bonus, which scales with character level on a fixed schedule. The current UseCountCap variants (fixed, threshold_tiers) cannot express PB-scaling directly.",
+      "evidence": "you can use the chosen benefit a number of times equal to your Proficiency Bonus"
+    },
+    {
+      "kind": "new_atom",
+      "name": "teleport (self-movement to unoccupied seen space)",
+      "justification": "Cloud's Jaunt teleports the user up to 30 feet to an unoccupied space they can see. This is a movement effect distinct from force_move, move, or transport_exile. No current effect atom covers voluntary self-teleportation.",
+      "evidence": "As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_speed (temporary speed reduction on target)",
+      "justification": "Frost's Chill reduces the target's Speed by 10 feet until the start of the attacker's next turn. modify_speed exists in the v4 taxonomy but is not surfaced in any current effect type in types.ts.",
+      "evidence": "reduce its Speed by 10 feet until the start of your next turn"
+    },
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken (damage mitigation via reaction roll)",
+      "justification": "Stone's Endurance lets the user roll 1d12 + CON modifier and subtract that total from incoming damage. This is reduce_damage_taken, a known residue atom in v4 taxonomy (§12 Known Remaining Weak Spots) that was explicitly not promoted. Single-group pressure here.",
+      "evidence": "When you take damage, you can take a Reaction to roll 1d12. Add your Constitution modifier to the number rolled and reduce the damage by that total."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "damage_taken_reaction (retaliatory reaction that deals damage to the attacker)",
+      "justification": "Storm's Thunder fires when the user takes damage from a creature within 60 feet, dealing 1d8 Thunder back to that creature as a Reaction. This is a retaliatory damage reaction not modeled by any existing window/resolution/effect chain in the surface.",
+      "evidence": "When you take damage from a creature within 60 feet of you, you can take a Reaction to deal 1d8 Thunder damage to that creature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker: UnitRecord has no species_trait kind. Even if added, the unit would require: (1) an open-choice family shape for the six options, (2) a PB-scaled UseCountCap variant, and (3) multiple missing atoms/subgraphs for the individual options. All six sub-options have at least one missing surface element. This is a broad structural gap, not a narrow variant miss."
+}

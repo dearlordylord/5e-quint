@@ -1,0 +1,28 @@
+{
+  "unit_slug": "ray_of_sickness",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ApplyConditionEffect",
+      "justification": "Ray of Sickness on a hit applies the Poisoned condition in addition to damage. The Effect union (DamageEffect | NoneEffect) has no apply_condition variant. The v4 atom apply_condition exists but is not reachable through ActivationPhase.onHit. Either Effect needs an apply_condition variant, or onHit needs to accept a sequence of effects.",
+      "evidence": "On a hit, the target takes 2d8 Poison damage and has the Poisoned condition until the end of your next turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: poisoned",
+      "justification": "The Condition type currently only contains 'prone'. Ray of Sickness applies 'poisoned', which is a standard SRD condition. Condition needs to be widened to include 'poisoned'.",
+      "evidence": "the target ... has the Poisoned condition until the end of your next turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RiderExpiry: end_of_attacker_next_turn",
+      "justification": "The poison condition lasts 'until the end of your next turn' — specifically the caster/attacker's next turn, not the target's. The existing RiderExpiry variants are 'target_uses_or_turn_start' and 'end_of_next_turn'. A variant scoped to the caster's turn end is needed. (end_of_next_turn may be close enough if the axis is implicitly the attacker, but the current label says 'attacker's next turn' which does match — this may be a labeling issue rather than a structural one.)",
+      "evidence": "has the Poisoned condition until the end of your next turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family and attack_roll phase fit cleanly. The damage scaling (2d8 base, +1d8/slot, axis=slot) encodes straightforwardly as linear_per_level. The sole blocker is the on-hit condition application: Effect = DamageEffect | NoneEffect cannot carry apply_condition. Since apply_condition is a v4 atom, this is a surface widening, not an atom widening. The simplest fix is adding an ApplyConditionEffect variant to Effect (with a condition field and an optional expiry), and widening Condition to include 'poisoned'. Alternatively, onHit could become ReadonlyArray<Effect> to allow both damage and condition in sequence."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_helm_of_comprehending_languages",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + passive_while_worn mechanics family",
+      "justification": "The unit's kind is 'magic_item', which does not exist in the UnitRecord union (SpellRecord | ClassFeatureRecord | MasteryRecord). No MagicItemRecord type or associated mechanics family is defined in types.ts. The tracer's traceUnit switch has no 'magic_item' case and would throw 'unhandled unit kind: magic_item'. A MagicItemRecord must be added to UnitRecord, along with at least one magic-item mechanics family (e.g. passive_while_worn or spell_access_grant) to express items that grant spell access while equipped.",
+      "evidence": "While wearing this helm, you can cast Comprehend Languages from it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "attunement flag on MagicItemRecord (optional, not required here)",
+      "justification": "Magic items in the SRD may or may not require attunement. This item does not (no 'Requires Attunement' tag), but a MagicItemRecord type must be able to represent both states without making attunement the default assumption. An optional 'requiresAttunement: boolean' field (or a separate 'attune' procedure branch) is needed at the record level.",
+      "evidence": "Wondrous Item, Uncommon (no 'Requires Attunement' listed)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The structural gap is unambiguous: 'magic_item' is absent from UnitRecord entirely. The underlying mechanics are expressible with existing v4 atoms — magic_item_root (source), item (attachment), grant_spell_access (effect), persist/expire (lifecycle for while-worn duration). No new atoms are needed for this specific item; only the container record type and a mechanics family are missing. The spell grant here is unlimited (no charges, no attunement), so the mechanics family would need to express a passive always-on grant conditioned on the item being worn."
+}

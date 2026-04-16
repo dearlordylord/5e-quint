@@ -1,0 +1,22 @@
+{
+  "unit_slug": "rogue_slippery_mind_l15",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "ClassFeaturePassiveMechanics",
+      "justification": "Slippery Mind grants proficiency in Wisdom and Charisma saving throws permanently upon reaching level 15. It is never activated, consumes no resource, and has no reset cadence. The only existing class feature family is 'activation', which requires activationCost / resource / resetCadence / effect — none of which apply honestly to a permanently-granted passive trait. A new family (e.g. 'passive') is needed, with its own mechanics header that omits activation bookkeeping.",
+      "evidence": "You gain proficiency in Wisdom and Charisma saving throws."
+    },
+    {
+      "kind": "new_variant",
+      "name": "GrantProficiencyEffect",
+      "justification": "The grant_proficiency atom exists in v4 taxonomy (§9 Effect Atoms) but is absent from ClassFeatureEffect, which only has GrantExtraActionEffect | HealHpEffect. Slippery Mind's mechanic is purely a proficiency grant on two saving throws (Wisdom, Charisma). A new ClassFeatureEffect variant is needed to carry this — e.g. { kind: 'grant_proficiency', proficiencyKind: 'saving_throw', abilities: ReadonlyArray<Ability> }.",
+      "evidence": "You gain proficiency in Wisdom and Charisma saving throws."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Slippery Mind is an entirely passive, permanent feature: it grants saving throw proficiency at level 15 with no invocation, no per-rest reset, and no use-count. Encoding it as 'activation' with activationCost=free would produce a false trace — it would imply something the player can trigger, when in fact the proficiency is simply present. The structural gap is the missing 'passive' class-feature family. The atom gap is the missing grant_proficiency variant in ClassFeatureEffect. Both are needed before this unit can be encoded honestly."
+}

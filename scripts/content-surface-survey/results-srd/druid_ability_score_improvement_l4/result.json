@@ -1,0 +1,22 @@
+{
+  "unit_slug": "druid_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "permanent_progression",
+      "justification": "ASI and feat-grant features are applied once at level-up, permanently modifying the character. They have no activation cost, no use-count resource, no reset cadence, and no transient effect — the entire 'activation' family shape is wrong. A new family is needed for permanent character advancement mechanics.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The core mechanic is granting a feat choice (either the ASI feat or another qualifying feat). No existing ClassFeatureEffect covers this. 'grant_proficiency' is unrelated. The v4 effect atom inventory has no atom for feat grants or permanent ability score advancement.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The existing ClassFeatureActivationMechanics family is structurally incompatible: it models in-game activated features with use pools and reset cadences. ASI is a one-time permanent advancement with no activation cost, no resource, and no reset. The TAXONOMY §12 explicitly marks 'modify_ability_score as a runtime effect' as out-of-scope, confirming the gap. All other class ASI features at L4 (barbarian, bard, cleric, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard) share the same structural widening."
+}

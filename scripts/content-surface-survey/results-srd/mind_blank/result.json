@@ -1,0 +1,34 @@
+{
+  "unit_slug": "mind_blank",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_immunity",
+      "justification": "Mind Blank grants Immunity to Psychic damage. v4 has 'grant_resistance' but not 'grant_immunity'. These are mechanically distinct: resistance = half damage, immunity = no damage. Stretching grant_resistance to cover immunity would be dishonest.",
+      "evidence": "one willing creature you touch has Immunity to Psychic damage"
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_condition_immunity",
+      "justification": "Mind Blank grants ongoing immunity to the Charmed condition for the spell duration. v4 has 'apply_condition' and 'remove_condition' but no atom for granting immunity to a condition for a duration. This is a persistent protective state, not removal of an active condition.",
+      "evidence": "one willing creature you touch has ... immunity to the Charmed condition"
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_divination",
+      "justification": "Mind Blank blocks a cluster of magical information-access effects: sensing emotions/alignment, reading thoughts, magically detecting location, gathering information via spell, remote observation. The existing 'block_targeting' atom covers attack/effect targeting exclusion, not information gathering. These are distinct mechanical concerns requiring a new atom.",
+      "evidence": "The target is also unaffected by anything that would sense its emotions or alignment, read its thoughts, or magically detect its location, and no spell—not even Wish—can gather information about the target, observe it remotely, or control its mind."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation::grant_protection",
+      "justification": "The OngoingOperation union currently has only roll_modifier and damage_on_hit. Mind Blank requires operations that grant damage immunity and condition immunity to the attached target. A new OngoingOperation variant (or a protection-grant family) is needed to carry these effects through the tracer.",
+      "evidence": "Damage immunity and condition immunity are both persistent, attachment-scoped protections — the natural shape for ongoing_effect operations."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is correct — 24-hour timed (non-concentration) duration, touch range, single-target attachment, no resolution gate. The blocker is the OngoingOperation type and v4 atom inventory: all three of Mind Blank's core effects (damage immunity, condition immunity, anti-divination block) are absent. 'grant_resistance' cannot honestly represent immunity. 'block_targeting' does not cover magical sensing/information access. No encoding attempt was made."
+}

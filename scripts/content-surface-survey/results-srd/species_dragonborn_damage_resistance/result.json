@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_dragonborn_damage_resistance",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "SpeciesTraitRecord + passive_grant family",
+      "justification": "UnitRecord only has spell | class_feature | mastery. There is no species_trait kind. Damage Resistance is a passive, permanent trait with no activation cost, no resource, and no rest reset — none of the existing mechanics families (activation, ongoing_effect, on_hit_trigger, etc.) can encode it honestly.",
+      "evidence": "You have Resistance to the damage type determined by your Draconic Ancestry trait."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_resistance with damage_type parameterized by character-creation choice",
+      "justification": "The resistance type is not fixed at encoding time — it is determined by the Draconic Ancestry trait choice at character creation. The surface has no mechanism to express 'damage type chosen at character creation' as a parameter on grant_resistance.",
+      "evidence": "Your choice affects your Breath Weapon and Damage Resistance traits... You have Resistance to the damage type determined by your Draconic Ancestry trait."
+    }
+  ],
+  "confidence": "high",
+  "notes": "grant_resistance exists as a v4 effect atom (taxonomy §9) so the atom itself is not missing. The gap is structural: (1) no SpeciesTraitRecord kind in UnitRecord; (2) no passive_grant or analogous mechanics family; (3) no surface-level way to express a damage type that is a character-creation parameter rather than a fixed value. All three gaps must be closed together before this unit can be encoded honestly."
+}

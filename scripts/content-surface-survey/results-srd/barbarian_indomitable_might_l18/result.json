@@ -1,0 +1,22 @@
+{
+  "unit_slug": "barbarian_indomitable_might_l18",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_class_feature family",
+      "justification": "Indomitable Might is permanently active with no activation cost, no use count, and no rest reset. The only current ClassFeatureMechanics family is 'activation', which structurally requires activationCost + UseCountResource + resetCadence. A new 'passive' (or 'always_on') family is needed for class features that are unconditionally active for the creature's lifetime without any resource gate.",
+      "evidence": "If your total for a Strength check or Strength saving throw is less than your Strength score, you can use that score in place of the total."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_score_floor effect on roll totals",
+      "justification": "The mechanic replaces the roll total with the creature's Strength score when the total falls below that score — a conditional minimum/floor keyed to an ability score value. No existing ClassFeatureEffect variant (grant_extra_action, heal_hp) can represent this. The v4 atom modify_roll_substitute exists in the taxonomy but is not surfaced in ClassFeatureEffect, and even if it were, the substitute source ('own ability score') is a new variant of that atom's value grammar.",
+      "evidence": "you can use that score in place of the total"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two distinct gaps block encoding. First, the structural gap: ClassFeatureMechanics has only an 'activation' family; Indomitable Might is passive and permanent, fitting no activation model. Second, the effect gap: the mechanic is a floor — max(roll_total, STR_score) — which requires a new effect variant (ability_score_floor, or a conditional variant of modify_roll_substitute) that does not exist in ClassFeatureEffect. Both gaps must be addressed before this unit can be encoded honestly."
+}

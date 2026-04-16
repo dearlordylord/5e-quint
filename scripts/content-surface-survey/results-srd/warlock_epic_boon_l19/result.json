@@ -1,0 +1,22 @@
+{
+  "unit_slug": "warlock_epic_boon_l19",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "permanent_feat_grant family",
+      "justification": "Epic Boon grants a feat permanently at level-up. The only existing ClassFeatureMechanics family is 'activation', which requires activationCost + resource + resetCadence — all inapplicable to a permanent one-time character acquisition. No family exists for level-up progression grants.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_feat (ClassFeatureEffect variant)",
+      "justification": "ClassFeatureEffect has no variant for feat acquisition. Existing variants are grant_extra_action and heal_hp, both of which are runtime effects of an activated feature. A feat grant is a permanent character ability acquisition during character progression, not a runtime activated effect.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Fate is recommended."
+    }
+  ],
+  "confidence": "high",
+  "notes": "This is a cross-class structural gap — every class has a Level 19 Epic Boon feature with this identical shape (barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard). The 'activation' family is fundamentally the wrong shape: it models repeatable activations with resource consumption and reset cadence. A feat grant at level-up is a one-time permanent acquisition during character progression — a categorically different concept. No ClassFeatureMechanics family currently covers permanent passive grants. No dhall or json authored; no trace produced."
+}

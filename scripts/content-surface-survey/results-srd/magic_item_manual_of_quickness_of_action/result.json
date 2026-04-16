@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_manual_of_quickness_of_action",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + magic_item UnitRecord kind",
+      "justification": "UnitRecord has no magic_item variant. The taxonomy atom graph lists magic_item_root as a source atom, but types.ts only defines SpellRecord | ClassFeatureRecord | MasteryRecord. A new top-level kind with its own mechanics family is required before any magic item can be encoded.",
+      "evidence": "Wondrous Item, Very Rare — the item kind is magic_item, which has no corresponding record type in UnitRecord."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score (permanent)",
+      "justification": "The item permanently raises Dexterity by 2. The taxonomy defers modify_ability_score as 'out-of-scope for the core mechanics graph' (§12). A permanent ability score increase is the entire mechanic of this item; without it no honest trace is possible.",
+      "evidence": "your Dexterity increases by 2, to a maximum of 30"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ResetCadence: century_recharge (consumable magic item)",
+      "justification": "The item is single-use and recharges after 100 years. This is mechanically distinct from short_rest / long_rest / partial_short_full_long cadences. Magic items in this family follow a 'loses magic, regains in N years' lifecycle not representable by any existing RestResetCadence variant.",
+      "evidence": "The manual then loses its magic but regains it in a century."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: magic_item is not in UnitRecord. Secondary blocker is the permanent ability score increase effect, which the taxonomy explicitly defers as out-of-scope. The century-recharge lifecycle is a third gap. All three would need to be resolved before this item can be encoded honestly."
+}

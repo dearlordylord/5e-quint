@@ -1,0 +1,16 @@
+{
+  "unit_slug": "lightning_bolt",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "area.shape.line",
+      "justification": "Lightning Bolt creates a 100-foot-long, 5-foot-wide Line area of effect. The area attachment's shape field is closed to { kind: 'sphere'; radiusFeet: number }. A line variant is needed: { kind: 'line'; lengthFeet: number; widthFeet: number }. Without this, the attachment cannot be encoded honestly.",
+      "evidence": "A stroke of lightning forming a 100-foot-long, 5-foot-wide Line blasts out from you in a direction you choose."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family, save_gate phase, damage effect with lightning type, and linear_per_level slot-axis scaling all fit. Half-damage on success is encodable as an independent damage effect (4d6 lightning, +1d6/slot above 3) following the circle_of_death precedent. The sole blocker is the missing line area shape. Range is 'self' (the line originates from the caster); AreaOrigin point_within_range is serviceable since the caster is the origin point."
+}

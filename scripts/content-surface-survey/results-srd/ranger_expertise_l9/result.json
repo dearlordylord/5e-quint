@@ -1,0 +1,22 @@
+{
+  "unit_slug": "ranger_expertise_l9",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive family for ClassFeatureMechanics",
+      "justification": "Expertise is a permanent, one-time proficiency upgrade with no activation cost, no use-count resource, and no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three of those fields. Forcing this into 'activation' would produce a dishonest trace (no quota consumed, no resource pool, no rest window).",
+      "evidence": "Choose two of your skill proficiencies with which you lack Expertise. You gain Expertise in those skills."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_proficiency variant of ClassFeatureEffect",
+      "justification": "The v4 atom 'grant_proficiency' exists in the taxonomy but is absent from the ClassFeatureEffect union (which only has grant_extra_action and heal_hp). Expertise specifically grants double-proficiency (Expertise) on chosen skills, which maps to grant_proficiency with a subtype or modifier indicating expertise-level.",
+      "evidence": "You gain Expertise in those skills. [Expertise = proficiency bonus doubled on those skill checks]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Expertise is structurally analogous to Rogue L1 Expertise and Bard L2 Expertise — all are permanent passive proficiency upgrades acquired at character progression milestones. A new 'passive' (or 'permanent_grant') family is needed for ClassFeatureMechanics to handle features that neither activate nor consume resources. The secondary gap (grant_proficiency not in ClassFeatureEffect) would need to be addressed alongside the new family. Both are needed together before a clean encoding is possible."
+}

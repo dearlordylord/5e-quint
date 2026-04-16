@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_dragonborn_draconic_flight",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "SpeciesTraitRecord + SpeciesTraitMechanics",
+      "justification": "UnitRecord has no 'species_trait' kind. The taxonomy defines species_trait_root as a source atom, but types.ts never defines SpeciesTraitRecord or a corresponding mechanics family. No honest encoding is possible without this record kind.",
+      "evidence": "Draconic Flight is a species trait of Dragonborn, not a class feature, spell, or mastery. 'When you reach character level 5, you can channel draconic magic to give yourself temporary flight.'"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_fly_speed effect in SpeciesTraitEffect (or ClassFeatureEffect)",
+      "justification": "The effect grants 'a Fly Speed equal to your Speed.' The v4 taxonomy lists modify_speed as an atom, but ClassFeatureEffect (and any species-trait equivalent) does not include it. A new effect variant encoding fly speed — equal to or independent of walk speed — is required.",
+      "evidence": "During that time, you have a Fly Speed equal to your Speed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "condition_triggered_expiry in Duration or lifecycle atoms",
+      "justification": "The duration ends on three conditions: (1) 10-minute timer, (2) voluntary retraction (no action), (3) the Incapacitated condition. The existing Duration type covers 'timed' for (1) but has no shape for condition-triggered expiry. The lifecycle atom 'expire' handles timed expiry only; no 'break on condition' variant exists.",
+      "evidence": "...that last for 10 minutes or until you retract the wings (no action required) or have the Incapacitated condition."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: UnitRecord has no species_trait kind, making any encoding a lie. Secondary gaps are the missing modify_speed/grant_fly_speed effect in the ClassFeatureEffect-equivalent surface type, and the lack of a condition-triggered expiry shape in Duration. The bonus-action cost, long-rest reset, fixed-1 use count, and timed-10-minute duration all map cleanly to existing surface types and would not require widening."
+}

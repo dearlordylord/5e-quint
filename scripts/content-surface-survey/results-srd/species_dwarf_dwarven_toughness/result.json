@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_dwarf_dwarven_toughness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "SpeciesTraitRecord + passive_modifier mechanics family",
+      "justification": "UnitRecord has no 'species_trait' kind. ClassFeatureRecord requires activationCost/resource/resetCadence — all inapplicable to a permanently-on passive trait. A new top-level record type and a 'passive_modifier' (or 'passive_grant') mechanics family are needed to host species traits that are always-on with no activation.",
+      "evidence": "Your Hit Point maximum increases by 1, and it increases by 1 again whenever you gain a level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_max_hp effect in ClassFeatureEffect (or species-trait equivalent)",
+      "justification": "The v4 atom 'modify_max_hp' exists in the taxonomy and TAXONOMY §12 notes it covers Dwarven Toughness, but ClassFeatureEffect only allows GrantExtraActionEffect | HealHpEffect. A passive species-trait mechanics family would need to expose modify_max_hp as an allowed effect.",
+      "evidence": "Your Hit Point maximum increases by 1, and it increases by 1 again whenever you gain a level."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The mechanic itself is fully expressible in v4 atoms: species_trait_root → activate (or a new 'passive' procedure) → modify_max_hp with linear_per_level axis=character, base=1, perLevel=1, startingAtLevel=1. The blocker is entirely structural: no SpeciesTraitRecord, no passive-modifier family. TAXONOMY §12 already acknowledges this gap ('modify_max_hp per-level scaling — Dwarven Toughness. Current atom covers it; growth cadence is character-progression metadata.'). No content files authored."
+}

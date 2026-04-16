@@ -1,0 +1,22 @@
+{
+  "unit_slug": "ranger_feral_senses_l18",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "Feral Senses is a permanent always-on trait with no activation event, no use count, and no rest reset cadence. The only current ClassFeatureMechanics family is 'activation', which structurally requires activationCost + resource + resetCadence. Forcing this unit into 'activation' with fabricated resource fields would be dishonest — there is no action, no quota consumed, no charge that tracks uses, and no rest that refills anything. A new family (e.g., 'passive_grant') is needed for class features that take effect permanently at the level they are acquired.",
+      "evidence": "Your connection to the forces of nature grants you Blindsight with a range of 30 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_sense variant in ClassFeatureEffect",
+      "justification": "Even if a passive_grant family existed, ClassFeatureEffect only offers grant_extra_action and heal_hp. Blindsight is a special sense — the v4 atom inventory already contains grant_sense (Effect Atoms section), but it is absent from the ClassFeatureEffect union type in types.ts. A new variant is needed: { kind: 'grant_sense'; sense: 'blindsight' | 'darkvision' | 'tremorsense' | 'truesight'; rangeFeet: number }.",
+      "evidence": "grants you Blindsight with a range of 30 feet"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two layered gaps: (1) no passive/permanent-grant family exists in ClassFeatureMechanics — the activation family forces fields (resource, resetCadence) that have no semantic meaning for an always-on trait; (2) even within a hypothetical passive family, ClassFeatureEffect has no grant_sense variant. The v4 taxonomy already names grant_sense as an effect atom, so the atom itself is not new — only the surface type variant and the family shape are missing. Classification is structural_widening because the family gap is the outer blocker."
+}

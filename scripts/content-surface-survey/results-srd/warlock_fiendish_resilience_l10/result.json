@@ -1,0 +1,22 @@
+{
+  "unit_slug": "warlock_fiendish_resilience_l10",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "rest_configured_passive",
+      "justification": "Fiendish Resilience is not activated during play. It is a persistent passive whose damage-type choice is made at rest time and stays in effect indefinitely until replaced. The sole existing class-feature family (activation) mandates use_count + activationCost (free | bonus_action). Neither applies: no uses are consumed, and there is no combat-turn cost. A new family is needed — something like 'rest_configured_passive' — to express 'persistent effect whose parameters are chosen each time the player finishes a qualifying rest.'",
+      "evidence": "Choose one damage type, other than Force, whenever you finish a Short or Long Rest. You have Resistance to that damage type until you choose a different one with this feature."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_resistance (ClassFeatureEffect variant)",
+      "justification": "ClassFeatureEffect only contains grant_extra_action and heal_hp. The v4 atom inventory includes grant_resistance, but no corresponding surface variant exists for class features. Even if the structural family gap were resolved, a GrantResistanceEffect variant (specifying which damage type, or that the type is chosen at rest) would be required.",
+      "evidence": "You have Resistance to that damage type until you choose a different one with this feature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: no family exists for 'persistent passive reconfigured at rest.' The activation family cannot be used honestly — it demands use_count and a combat-turn activationCost. Secondary blocker: ClassFeatureEffect is missing a grant_resistance variant. Both gaps must be addressed together before this unit can be encoded."
+}

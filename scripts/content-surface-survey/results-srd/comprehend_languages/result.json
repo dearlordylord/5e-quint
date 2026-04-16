@@ -1,0 +1,16 @@
+{
+  "unit_slug": "comprehend_languages",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "GrantSenseOperation",
+      "justification": "Comprehend Languages is an ongoing_effect spell that grants the caster a passive comprehension ability for its timed duration. OngoingOperation only contains RollModifierOperation and DamageOnHitOperation — neither can encode a passive sense or comprehension grant. The v4 taxonomy already includes grant_sense as an effect atom, but there is no OngoingOperation variant that routes to it from ongoing_effect.operation.",
+      "evidence": "For the duration, you understand the literal meaning of any language that you hear or see signed. You also understand any written language that you see, but you must be touching the surface on which the words are written."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell fits ongoing_effect cleanly on all axes: self-attachment, timed 1-hour duration (non-concentration), action casting time, level-1 spell slot. The only missing piece is a surface variant in OngoingOperation for passive ability grants. The v4 atom grant_sense is the correct emission target; only the path from ongoing_effect.operation to grant_sense does not yet exist in types.ts."
+}

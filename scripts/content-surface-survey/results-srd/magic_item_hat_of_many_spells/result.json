@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord + MagicItemMechanics family",
+      "justification": "No 'magic_item' kind exists in UnitRecord. The taxonomy defines magic_item_root as a source atom but the surface has no record shape for magic items at all. A MagicItemRecord (with id, name, provenance, description, attunement requirements, rarity) and at least one MagicItemMechanics family are required before any magic item can be honestly encoded.",
+      "evidence": "Wondrous Item, Very Rare (Requires Attunement by a Wizard)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_check resolution phase in ActivationPhase",
+      "justification": "The Unknown Spell property is gated by an Intelligence (Arcana) ability check, not a saving throw. The ability_check atom exists in v4 taxonomy but there is no ActivationPhase variant (nor ClassFeatureMechanics variant) for ability_check resolutions with DC formulas that depend on spell level.",
+      "evidence": "make an Intelligence (Arcana) check (DC 10 plus the spell's level). On a successful check, you cast the spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access effect (runtime-selected, unknown spell from list)",
+      "justification": "The core success outcome is casting a spell not in the caster's repertoire, chosen at activation time, from a class list, at a castable slot level. The grant_spell_access atom exists in v4 taxonomy but there is no surface variant for runtime-selected, activation-time spell access gated by a check result.",
+      "evidence": "you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "random_outcome_table — stochastic failure branch with d100 dispatch",
+      "justification": "On a failed ability check, a d100 table fires with 10 distinct outcome bands, several of which nest further sub-tables (d10, d4, d6). Outcomes include conditions (Stunned, Poisoned, Petrified), creature summoning, object creation, portal opening, and casting a random spell. No surface type or atom models a stochastic dispatch table. Many sub-outcomes are individually dm_agenda (GM chooses portal destination, GM chooses magic item), but the table dispatch itself is a deterministic core mechanic that needs a closed representation.",
+      "evidence": "On a failed check, you fail to cast the spell and a random effect occurs instead, determined by rolling on the following table. [d100 table with 10 bands and nested sub-rolls]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: UnitRecord has no 'magic_item' kind. The secondary mechanics blockers (ability_check gate, grant_spell_access, random failure table) are all independently novel. The 'Spellcasting Focus' property is a passive item property with no combat mechanic — it would also need a passive_property family or similar. The use-count + Short/Long rest reset on the Unknown Spell property does fit existing vocabulary (use_count + short_or_long_rest). The random failure table's sub-outcomes mix partially-encodable mechanics (apply_condition, create_companion) with dm_agenda outcomes (portal destination, magic item selection) — the table itself requires a new stochastic dispatch subgraph even if individual outcome slots delegate to existing atoms."
+}

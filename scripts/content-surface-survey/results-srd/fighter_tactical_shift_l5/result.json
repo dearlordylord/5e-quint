@@ -1,0 +1,22 @@
+{
+  "unit_slug": "fighter_tactical_shift_l5",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "on_use_trigger (ClassFeatureMechanics family)",
+      "justification": "Tactical Shift fires automatically when Second Wind is activated — it is not independently activated. No 'on_use_trigger' or 'passive_rider' family exists in ClassFeatureMechanics. The existing 'activation' family requires an independent activationCost, use_count resource, and resetCadence, none of which apply here. Encoding with a fake resource would produce a dishonest trace.",
+      "evidence": "Whenever you activate your Second Wind with a Bonus Action, you can move up to half your Speed without provoking Opportunity Attacks."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_movement (ClassFeatureEffect variant)",
+      "justification": "The effect grants movement (up to half Speed) with opportunity attack denial. Neither GrantExtraActionEffect nor HealHpEffect covers this. The v4 taxonomy has 'move' and 'deny_opportunity_attack' atoms, but no surface shape in ClassFeatureEffect exposes them.",
+      "evidence": "you can move up to half your Speed without provoking Opportunity Attacks"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The structural gap is the missing family: Tactical Shift is a conditional rider on Second Wind's activation, not an independently activated feature. Even if ClassFeatureEffect were widened to include grant_movement, the unit still could not be encoded honestly without a triggered/passive-rider family. Both widenings are required together."
+}

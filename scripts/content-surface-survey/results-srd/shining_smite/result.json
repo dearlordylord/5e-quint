@@ -1,0 +1,34 @@
+{
+  "unit_slug": "shining_smite",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "smite_activation family",
+      "justification": "Shining Smite (and smite spells generally) fire as a Bonus Action taken AFTER a weapon hit already resolved. The immediate 2d6 Radiant damage applies to that triggering hit—not to a new spell-originated attack roll, and not to subsequent hits. No existing family captures 'post-hit activation: one-time damage on the triggering hit + concentration-based ongoing effects on the target.' The activation family requires a new attack roll from the spell itself. The ongoing_effect family's damage_on_hit operation fires when the caster makes subsequent attack hits against the attachment, not on the triggering hit.",
+      "evidence": "The target hit by the strike takes an extra 2d6 Radiant damage from the attack. Until the spell ends, the target sheds Bright Light in a 5-foot radius, attack rolls against it have Advantage, and it can't benefit from the Invisible condition."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastingTime: bonus_action_conditional (after-hit trigger)",
+      "justification": "CastingTime's bonus_action variant carries no condition field. Smite spells restrict the bonus action to 'immediately after hitting a creature with a Melee weapon or Unarmed Strike.' This timing constraint is mechanically significant: the hit must resolve first, then the bonus action is available. The closest existing type is reaction with ReactionTrigger, but smite casts are Bonus Actions that consume the bonus-action quota, not the reaction quota.",
+      "evidence": "\"which you take immediately after hitting a creature with a Melee weapon or an Unarmed Strike\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: modify_roll_advantage",
+      "justification": "The ongoing effect grants Advantage on attack rolls made against the target. OngoingOperation only supports roll_modifier (numeric delta) and damage_on_hit. There is no advantage/disadvantage variant. The atom modify_roll_advantage exists in v4 as a MasteryEffect, but is not surfaced as a spell OngoingOperation shape. Faerie Fire has the same pattern and would need this widening too.",
+      "evidence": "attack rolls against it have Advantage"
+    },
+    {
+      "kind": "new_atom",
+      "name": "deny_condition_benefit",
+      "justification": "The spell prevents the target from benefiting from the Invisible condition without removing it. The Invisible condition may still be present on the creature; only its mechanical benefits (concealment, attack disadvantage/advantage) are suppressed. remove_condition would be wrong, apply_condition is wrong. No v4 atom covers 'nullify the mechanical benefits of condition X while leaving the condition applied.' The suppress procedure atom is close but is a procedure, not an effect atom on a target.",
+      "evidence": "it can't benefit from the Invisible condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The smite pattern (bonus action post-hit, damage on triggering hit, then ongoing concentration effects) is shared by Searing Smite, Thunderous Smite, Wrathful Smite, Blinding Smite, and Staggering Smite. A new smite_activation family—or a widening of ongoing_effect to support a 'triggering_hit_damage' initial phase before the ongoing operation begins—would address the entire smite pattern in one widening. The bright-light-shedding effect is omitted from proposed_widenings because it is a presentation/environment effect (caller-owned per ARCHITECTURE.md) whose only mechanically deterministic consequence is the Advantage grant and condition-benefit denial already captured above."
+}

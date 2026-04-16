@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_disguise",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "UnitRecord has no 'magic_item' kind. The surface type union only contains SpellRecord | ClassFeatureRecord | MasteryRecord. A MagicItemRecord variant (with id, name, provenance, description, and a MagicItemMechanics discriminant) is required before any magic item can be encoded.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemMechanics / spell_grant family",
+      "justification": "The hat's mechanic is: while attuned and wearing the item, you may cast a named spell (Disguise Self) at will with no spell slot consumed. No existing family (ongoing_effect, activation, triggered_reaction, anchored_trigger, class-feature activation, on_hit_trigger) can honestly represent 'item grants at-will named-spell casting'. A new family — tentatively spell_grant — is needed, carrying: the granted spellId, the activation cost (action), the resource (no slot consumed, item-charges or unlimited), and the duration/expiry of the granted spell.",
+      "evidence": "While wearing this hat, you can cast the Disguise Self spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration: while_worn (item-conditioned expiry)",
+      "justification": "The spell ends when the hat is removed. Disguise Self's normal duration is 1 hour (timed), but here the expiry is additionally conditioned on the item being worn. None of the existing Duration variants (instantaneous, concentration, timed) express 'ends if item removed'. A new Duration kind — e.g. { kind: 'while_worn' } — or a composable expiry modifier is required.",
+      "evidence": "The spell ends if the hat is removed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "AttunementRequirement on MagicItemRecord",
+      "justification": "The item requires attunement. The attune procedure atom exists in v4, but the surface type has no field or subtype to record whether a magic item requires attunement and which attunement_slot it binds. MagicItemRecord needs an attunement field.",
+      "evidence": "Requires Attunement"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: UnitRecord has no 'magic_item' kind. No Dhall or JSON content file was written. The hat's mechanics are otherwise modest (a single named-spell grant with an item-conditioned expiry), but neither fits any existing mechanics family. The v4 taxonomy already has magic_item_root, attune, attunement_slot, and grant_spell_access atoms — the gap is entirely on the surface type / record layer, not in the atom inventory."
+}

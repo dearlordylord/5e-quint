@@ -1,0 +1,28 @@
+{
+  "unit_slug": "false_life",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_temporary_hp",
+      "justification": "Temporary Hit Points are mechanically distinct from healing: they form a separate pool, do not trigger on-heal effects, can exceed max HP, and are consumed before real HP. The v4 `heal` atom cannot represent THP grants without dishonest compression. A dedicated `grant_temporary_hp` atom is required.",
+      "evidence": "You gain 2d4 + 4 Temporary Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.direct_apply",
+      "justification": "False Life is instantaneous, targets self, and applies its effect on cast with no contested roll. The current ActivationPhase union only allows `attack_roll` and `save_gate` phases. A `direct_apply` phase kind is needed for spells that resolve without any resolution gate.",
+      "evidence": "Duration: Instant; Range: Self; no attack roll, no saving throw anywhere in the spell text."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect.grant_temporary_hp",
+      "justification": "The spell Effect union (DamageEffect | NoneEffect) has no variant for granting THP. A new surface type carrying the amount (DiceAmount) and target ('self' or 'target_creature') is needed. The upcast scaling (+5 flat per slot above 1) fits `linear_per_level` with axis=slot once this effect type exists.",
+      "evidence": "You gain 5 additional Temporary Hit Points for each spell slot level above 1."
+    }
+  ],
+  "confidence": "high",
+  "notes": "False Life cannot be honestly encoded. Root gap: no v4 atom for THP grants. Secondary gaps: no ActivationPhase variant for direct self-application without a resolution gate, and no THP variant in the spell Effect union. Classified atom_widening because the v4 atom absence is the deepest gap; the surface type variants are downstream of admitting the atom. The scaling shape (linear_per_level, axis=slot, perLevel={flat:5}) is fully representable with existing DiceAmount types."
+}

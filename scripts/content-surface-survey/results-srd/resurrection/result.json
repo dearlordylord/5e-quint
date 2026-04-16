@@ -1,0 +1,40 @@
+{
+  "unit_slug": "resurrection",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "direct_effect activation phase",
+      "justification": "Resurrection is instantaneous and applies effects directly to a touched dead creature — no attack roll, no saving throw. The current ActivationPhase union (attack_roll | save_gate) has no variant for unconditional direct-effect delivery. This is the primary structural gap.",
+      "evidence": "With a touch, you revive a dead creature... The creature returns to life with all its Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "heal_hp in spell Effect union",
+      "justification": "HealHpEffect exists in the class-feature layer but is absent from the spell Effect union (damage | none). Resurrection restores all HP to the target.",
+      "evidence": "The creature returns to life with all its Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "cleanse / remove_condition in spell Effect union",
+      "justification": "The v4 remove_condition atom exists but is not in the spell Effect union. Resurrection neutralizes poisons and closes all mortal wounds.",
+      "evidence": "This spell also neutralizes any poisons that affected the creature at the time of death. This spell closes all mortal wounds and restores any missing body parts."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_roll_numeric with per-rest decay schedule",
+      "justification": "The target receives a -4 penalty to D20 Tests that decreases by 1 per Long Rest until reaching 0. No existing atom models a persistent numeric modifier with a step-down rest-based decay. Additionally, 'D20 Tests' (attack rolls + saves + ability checks) is broader than the current RollKind union (attack_roll | saving_throw).",
+      "evidence": "The target takes a -4 penalty to D20 Tests. Every time the target finishes a Long Rest, the penalty is reduced by 1 until it becomes 0."
+    },
+    {
+      "kind": "new_atom",
+      "name": "post-cast caster-state penalty (conditional on target property)",
+      "justification": "If the target has been dead ≥ 365 days, the caster suffers until their next Long Rest: cannot cast spells and has Disadvantage on D20 Tests. This involves (a) effects targeting the caster rather than the spell's attachment target, (b) conditions gated on a property of the target evaluated at cast time, and (c) 'block spell casting' as an effect — none of which exist in the surface.",
+      "evidence": "Casting this spell to revive a creature that has been dead for 365 days or longer taxes you. Until you finish a Long Rest, you can't cast spells again, and you have Disadvantage on D20 Tests."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All five gaps must be resolved before this spell can be encoded. The structural gap (no direct-effect phase) is the hardest blocker — even if heal_hp and remove_condition were lifted into the spell Effect union, there is still no phase variant to carry them for a roll-less instantaneous cast. The caster-penalty clause is the most novel shape in the survey so far: a post-cast impairment on the caster gated on a numeric property of the target (time since death)."
+}

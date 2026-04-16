@@ -1,0 +1,40 @@
+{
+  "unit_slug": "confusion",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "random_behavior_table",
+      "justification": "Confusion's core mechanic is a per-turn 1d10 roll that selects one of four stochastic behaviors (random movement, do nothing, attack random creature, act normally). No v4 atom covers stochastic behavior dispatch from a lookup table. This is mechanically distinct from any existing effect atom.",
+      "evidence": "must roll 1d10 at the start of each of its turns to determine its behavior for that turn, consulting the table below"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation — random_behavior_table variant",
+      "justification": "The surface's OngoingOperation union (roll_modifier | damage_on_hit) has no variant for behavioral override. Confusion needs a new operation kind whose value is a probability-weighted dispatch table over behavior outcomes.",
+      "evidence": "must roll 1d10 at the start of each of its turns to determine its behavior"
+    },
+    {
+      "kind": "new_variant",
+      "name": "repeat_save on ongoing_effect — per-turn end-of-turn save to break",
+      "justification": "repeat_save exists in the v4 taxonomy (§5 Resolution Atoms) but is absent from types.ts. Confusion applies a WIS save at the end of each affected creature's turn that breaks the per-creature effect on success. ongoing_effect has no mechanism to express a per-attachment repeat save.",
+      "evidence": "At the end of each of its turns, an affected target repeats the save, ending the spell on itself on a success."
+    },
+    {
+      "kind": "new_variant",
+      "name": "StandardActionKind — bonus_action and reaction",
+      "justification": "Confusion denies Bonus Actions and Reactions. ActionRestriction.exclude references StandardActionKind, which only covers the 12 standard action types (attack, dash, …). bonus_action and reaction are missing from that enum, so restrict_action_set cannot express this denial.",
+      "evidence": "the target can't take Bonus Actions or Reactions"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Area attachment slot-scaling for radius",
+      "justification": "The area Attachment shape carries a fixed radiusFeet with no slot-scaling mechanism. Confusion's upcasting grows the sphere radius by 5 ft per slot above 4. This is a new scaling shape distinct from the target-count scaling already modeled.",
+      "evidence": "The Sphere's radius increases by 5 feet for each spell slot level above 4."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Closest family is ongoing_effect (area attachment, concentration, initial save gate per creature). The per-turn random behavior table is the primary blocker — no honest trace is possible without a new atom. Secondary blockers: repeat_save not surfaced in types.ts, StandardActionKind missing bonus_action/reaction, area radius slot-scaling absent. No confusion.dhall or confusion.json written."
+}

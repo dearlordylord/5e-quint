@@ -1,0 +1,48 @@
+{
+  "unit_slug": "paladin_lay_on_hands",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "class_feature_root",
+    "heal",
+    "rest_window",
+    "scale_numeric_bonus",
+    "use_count"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "hp_pool",
+      "justification": "Lay On Hands uses a replenishable numeric HP point pool (capacity = 5 × paladin level) that is drawn down by variable amounts across multiple uses per rest cycle. UseCountResource models discrete use-counts decremented by 1 per activation; it cannot represent a pool where each activation depletes an arbitrary number of HP (1 to pool_remaining). The pool is shared across both uses (heal HP and cure condition), so the resource atom must support partial draws, not just fixed-use-count decrement.",
+      "evidence": "you have a pool of healing power that replenishes when you finish a Long Rest. With that pool, you can restore a total number of Hit Points equal to five times your Paladin level"
+    },
+    {
+      "kind": "new_variant",
+      "name": "remove_condition (ClassFeatureEffect variant)",
+      "justification": "The secondary use expends 5 HP from the pool to remove the Poisoned condition without restoring HP. ClassFeatureEffect only has heal_hp and grant_extra_action; neither represents condition removal. A remove_condition variant requires at minimum a condition name (Condition) and a pool cost (number of HP spent), and must be expressible as an alternative to heal_hp that draws from the same hp_pool.",
+      "evidence": "You can also expend 5 Hit Points from the pool of healing power to remove the Poisoned condition from the creature; those points don't also restore Hit Points to the creature."
+    },
+    {
+      "kind": "new_variant",
+      "name": "variable_draw (DiceAmount variant)",
+      "justification": "The heal amount is 'up to the maximum amount remaining in the pool' — a player-chosen integer between 1 and pool_remaining at activation time. DiceAmount offers fixed, threshold_tiers, and linear_per_level — all compute a determined amount. None express a bounded player choice. This variant would need a reference to the hp_pool atom and a draw semantic (e.g., draw: 'up_to_pool_remaining').",
+      "evidence": "you can touch a creature (which could be yourself) and draw power from the pool of healing to restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "dual_use_pool_draw",
+      "justification": "Lay On Hands presents two mutually-exclusive activation modes (heal HP vs. cure Poisoned condition) both drawing from a single shared hp_pool. ClassFeatureActivationMechanics has a single effect field with no branching or choice mechanism. A dual-use subgraph needs: (1) a choice node (player selects heal or cure), (2) each branch specifying a pool draw cost and effect, (3) the shared hp_pool resource consumed by whichever branch fires.",
+      "evidence": "you can touch a creature … and draw power from the pool … [to heal] … You can also expend 5 Hit Points from the pool … to remove the Poisoned condition"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The tracer ran without errors on an approximation that encodes only the primary heal use. The JSON is deliberately imprecise: (1) activationCost=bonus_action is correct; (2) use_count(fixed:1) is a structural placeholder — the real resource is an hp_pool that can be drawn from multiple times per rest; (3) heal_hp with linear_per_level(class, 0d1+5, +5/level) represents the pool CAPACITY at each paladin level (5×level), not the 'up to pool remaining' bounded choice; (4) the Poisoned-cure secondary use is entirely omitted since remove_condition does not exist in ClassFeatureEffect. Four widenings are required before this unit can be cleanly encoded: hp_pool resource atom, remove_condition effect variant, variable_draw DiceAmount variant, and dual_use_pool_draw subgraph structure."
+}

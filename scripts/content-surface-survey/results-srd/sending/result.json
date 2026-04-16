@@ -1,0 +1,28 @@
+{
+  "unit_slug": "sending",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Range.unlimited",
+      "justification": "Sending's range is explicitly unlimited distance (and cross-planar). The current Range type only supports self, touch, and point(feet). A { kind: 'unlimited' } variant is needed to represent this honestly.",
+      "evidence": "You send a short message of 25 words or fewer to a creature you have met... You can send the message across any distance and even to other planes of existence"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.probability_check",
+      "justification": "The 5% cross-plane failure is a d100 probabilistic check — not an attack roll and not a saving throw. No existing ActivationPhase kind covers a raw probability check with a pass/fail outcome. If this spell were ever modeled beyond dm_agenda, a new phase kind would be needed.",
+      "evidence": "if the target is on a different plane than you, there is a 5% chance that the message doesn't arrive. You know if the delivery fails."
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_spell_access",
+      "justification": "The target can block the caster's ability to reach it again with Sending for 8 hours. This is a per-creature, duration-bounded immunity to a specific spell — not a condition, not grant_resistance, not any existing effect atom. If modeled, it would require a new effect atom.",
+      "evidence": "Upon receiving your message, a creature can block your ability to reach it again with this spell for 8 hours."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Sending's entire mechanical purpose is narrative communication: delivering a short message across unlimited distance. The message content, the target's reply, and the delivery-failure feedback are all caller-owned informational facts per ARCHITECTURE.md. The 5% cross-plane failure produces a narrative outcome (message arrives or not), not a combat-mechanical consequence. The blocking mechanic is a campaign/social state with no deterministic effect on core combat mechanics. No existing family encodes the spell without fabricating a false trace. dm_agenda is the correct classification. Range widening (unlimited) and probability-check phase widening are noted as gaps that would surface even if a suitable family existed."
+}

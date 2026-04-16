@@ -1,0 +1,34 @@
+{
+  "unit_slug": "druid_wild_shape_l2",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "assume_form",
+      "justification": "Wild Shape's core mechanic is the druid assuming a Beast form and having their game statistics replaced by the Beast's stat block. No v4 atom covers form transformation — neither 'alter_item_kind' (items only) nor any companion/summoning atom (those create separate entities rather than replacing the activating creature's statistics). This is a distinct transformation primitive.",
+      "evidence": "Your game statistics are replaced by the Beast's stat block, but you retain your creature type; Hit Points; Hit Point Dice; Intelligence, Wisdom, and Charisma scores; class features; languages; and feats."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationMechanics.duration",
+      "justification": "Wild Shape persists for a timed duration (hours equal to half druid level) with multi-condition early termination (re-use, Incapacitated condition, death, or voluntary Bonus Action exit). ClassFeatureActivationMechanics has no duration field. The activation family's current shape models only instantaneous effects; it cannot represent the lifecycle of an active form.",
+      "evidence": "You stay in that form for a number of hours equal to half your Druid level or until you use Wild Shape again, have the Incapacitated condition, or die. You can also leave the form early as a Bonus Action."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_temp_hp",
+      "justification": "Wild Shape grants Temporary Hit Points (equal to Druid level) when the form is assumed. Temporary HP are mechanically distinct from healing (they don't restore lost HP, don't stack with other temp HP, and expire on their own). The existing 'heal_hp' atom cannot represent this; it applies to restored HP pools, not the temporary HP buffer.",
+      "evidence": "When you assume a Wild Shape form, you gain a number of Temporary Hit Points equal to your Druid level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "assume_form duration: conditional_expiry with multiple triggers",
+      "justification": "The form expiry has multiple simultaneous exit conditions: timed (N hours), event-based (re-use = self-break), condition-based (Incapacitated), state-based (death), and voluntary (Bonus Action exit). The existing lifecycle atoms (expire, self_break, dismiss) cover individual cases but there is no surface-level composition mechanism for a disjunction of expiry triggers on a class feature.",
+      "evidence": "...until you use Wild Shape again, have the Incapacitated condition, or die. You can also leave the form early as a Bonus Action."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The class_feature kind and activation family structurally fit (bonus_action cost, use_count resource, partial_short_full_long reset cadence). The resource model is the cleanest part: 2 uses at L2 scaling per the Beast Shapes table, partial short rest refill, full long rest refill. The blockers are entirely on the effect side: (1) no v4 atom for form transformation/stat-block replacement, (2) no duration model on ClassFeatureActivationMechanics, (3) no grant_temp_hp atom distinct from heal_hp. The 'Known Forms' learning mechanic (choosing 4 Beast stat blocks, scaling count/CR by level) is a preparation-time choice rather than a runtime atom — it could be captured as authoring metadata without requiring a new atom, though the CR/fly-speed constraints are character-progression data not modeled in the current surface."
+}

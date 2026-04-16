@@ -1,0 +1,2254 @@
+OpenAI Codex v0.121.0 (research preview)
+--------
+workdir: /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+model: gpt-5.4
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: none
+reasoning summaries: none
+session id: 019d946c-09e3-7b60-8416-3db9277377ad
+--------
+user
+# Encode one D&D 5e unit into the content surface
+
+You are encoding ONE unit — spell, class feature, feat, species trait, mastery, or magic item — into the authored surface of a content prototype. The goal is to see whether the unit's mechanics fit the current closed atom vocabulary, and if not, to record what's missing.
+
+## Unit to encode
+
+- Name: `Bless`
+- Slug: `bless`
+- Kind: `spell`
+- Provenance: `srd-5.2.1` (srd-5.2.1 = SRD-shippable; xphb = PHB-only research)
+
+### Source text
+
+```
+{
+  "name": "Bless",
+  "source": "XPHB",
+  "page": 247,
+  "srd52": true,
+  "basicRules2024": true,
+  "referenceSources": [
+    "DrDe-TDoN",
+    "UtHftLH"
+  ],
+  "level": 1,
+  "school": "E",
+  "time": [
+    {
+      "number": 1,
+      "unit": "action"
+    }
+  ],
+  "range": {
+    "type": "point",
+    "distance": {
+      "type": "feet",
+      "amount": 30
+    }
+  },
+  "components": {
+    "v": true,
+    "s": true,
+    "m": {
+      "text": "a Holy Symbol worth 5+ GP",
+      "cost": 500
+    }
+  },
+  "duration": [
+    {
+      "type": "timed",
+      "duration": {
+        "type": "minute",
+        "amount": 1
+      },
+      "concentration": true
+    }
+  ],
+  "entries": [
+    "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds {@dice 1d4} to the attack roll or save."
+  ],
+  "entriesHigherLevel": [
+    {
+      "type": "entries",
+      "name": "Using a Higher-Level Spell Slot",
+      "entries": [
+        "You can target one additional creature for each spell slot level above 1."
+      ]
+    }
+  ],
+  "miscTags": [
+    "SCT"
+  ],
+  "areaTags": [
+    "MT"
+  ]
+}
+```
+
+## Your working directory
+
+You're operating inside a copy of `packages/prototype-content-surface/`. The files you MAY write (use EXACTLY these slug-prefixed names so concurrent worker runs don't collide):
+
+- `content/bless.dhall` — the authored source of the unit.
+- `content/bless.json` — the runtime artifact consumed by typecheck + tracer. The worker derives this from your `.dhall`; do not hand-maintain both.
+- `result-bless.json` — your structured self-report (schema below).
+- `proposal-bless.md` — prose describing widenings IF the unit doesn't fit.
+
+Do NOT write `result.json` or `proposal.md` (unsuffixed) — those names are shared across workers and will be lost.
+
+Do NOT modify `src/surface/types.ts`, `src/interpreter/tracer.ts`, or anything under `.references/`. The surface is read-only for this task.
+
+## Reference material (read before encoding)
+
+Read only what you need:
+
+1. `src/surface/types.ts` — always read this first. The current closed types are the ground truth for what JSON shapes are allowed.
+2. `src/interpreter/tracer.ts` — read only the branch(es) relevant to the family you think the unit belongs to, plus `traceUnit` if you need to check supported top-level `kind`s.
+3. Existing reference encodings in `content/` — read only the closest precedent(s). Suggested starting points:
+   - `bless.json` (ongoing effect, concentration)
+   - `acid_splash.json` (cantrip activation with AoE + save)
+   - `ice_knife.json` (multi-phase: attack then save)
+   - `action_surge.json` (class feature with use-count + rest reset)
+4. `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` — read only if you need to distinguish surface widening from atom widening.
+5. `UBIQUITOUS_LANGUAGE.md` in the repo root — read only if terminology is ambiguous.
+
+Do NOT broad-search the repo or read unrelated plans/reports unless you are blocked on a specific question.
+
+## Task steps
+
+1. Read the unit source text and identify the payload family:
+   - `ongoing_effect` (spell) — persistent state while concentration/timed.
+   - `activation` (spell) — instant/one-shot; may have multiple phases.
+   - `triggered_reaction` (spell) — reaction-shaped spell.
+   - `anchored_trigger` (spell) — planted/armed effect released by later events.
+   - `activation` (class feature) — activated class feature; see `action_surge.json`.
+   - `on_hit_trigger` (mastery) — weapon-hit rider.
+2. Decide whether an existing top-level `UnitRecord` kind and mechanics family can encode the unit HONESTLY.
+3. If the answer is **no**, STOP BEFORE AUTHORING A PLACEHOLDER JSON.
+   - Do not force the unit into the “closest” valid record shape.
+   - Do not create knowingly false traces such as “grant_extra_action” for a passive rider.
+   - Write only `result-bless.json` and `proposal-bless.md`.
+   - Classify as `structural_widening` if the family/kind is missing, or `surface_widening` / `atom_widening` if the family exists but a specific shape/atom is missing.
+4. If the answer is **yes**, author `content/bless.dhall` as the single source of truth.
+5. Run `pnpm typecheck` from `packages/prototype-content-surface/`. Fix JSON errors until typecheck passes. Do NOT modify types.ts.
+6. Run `pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md`. Observe output.
+7. If the tracer throws `unhandled <...>`, STOP — record the missing shape in `proposal.md` and classify the outcome from the failure:
+   - missing top-level kind / family = `structural_widening`
+   - missing variant of existing surface type = `surface_widening`
+   - missing v4 atom / relation = `atom_widening`
+8. Write `result-bless.json` with the schema below.
+
+## result-bless.json schema
+
+```json
+{
+  "unit_slug": "bless",
+  "outcome": "clean" | "surface_widening" | "atom_widening" | "structural_widening" | "dm_agenda" | "refused",
+  "atoms_used": [string],       // atoms in the tracer output (read from trace md)
+  "relations_used": [string],   // relations in the tracer output
+  "proposed_widenings": [
+    {
+      "kind": "new_atom" | "new_variant" | "new_relation" | "new_subgraph",
+      "name": "string",
+      "justification": "why this rule forces it",
+      "evidence": "quote from unit text"
+    }
+  ],
+  "confidence": "low" | "medium" | "high",
+  "notes": "free-form, brief"
+}
+```
+
+## Outcome classification
+
+- **`clean`** — JSON typechecks, tracer emits a mermaid graph, no proposals.
+- **`surface_widening`** — A new variant of an existing surface type is needed (e.g., a new `CastingTime` kind, a new `Attachment` origin). All atoms used exist in v4.
+- **`atom_widening`** — A new atom (not in v4) is needed. Or the tracer threw `unhandled`.
+- **`structural_widening`** — The unit's shape doesn't fit any existing payload family. A new family or cross-family composition is forced.
+- **`dm_agenda`** — The unit's CORE mechanic is DM adjudication (Wish's Reshape Reality, Geas's compliance, etc. per `ARCHITECTURE.md`). Legitimately out-of-core.
+- **`refused`** — You cannot encode this within the protocol. Must explain why in `notes`.
+
+## Guardrails
+
+- Be conservative. If you're not sure whether an atom exists, look at `src/surface/types.ts` first. If it's not there, it's a widening.
+- Be honest about family fit. If the unit does not fit an existing `UnitRecord` kind or mechanics family, do not coerce it into a fake-but-valid JSON.
+- A misleading trace is worse than no trace. If the only way to get a trace is to lie about the rule, do not produce `content/bless.dhall` or `content/bless.json`.
+- Do NOT invent atoms into a JSON hoping the tracer accepts them. The tracer has exhaustive `switch` statements that throw on unknown kinds.
+- Do NOT claim `clean` if typecheck or tracer failed.
+- Do NOT hand-edit `content/bless.json`.
+- Do NOT modify any file outside `content/bless.dhall`, `result-bless.json`, `proposal-bless.md`.
+- If tracer output surprises you (wrong atoms listed), that's a DISCREPANCY to note — don't paper over with a cleaner JSON.
+- Do not default upward to `atom_widening`. Use the narrowest honest classification:
+  - `surface_widening` if a variant of an existing surface shape would solve it
+  - `atom_widening` only if the missing concept is not in v4 taxonomy
+  - `structural_widening` if no honest family/kind exists
+- When the unit mostly fits but has a secondary omitted rider, mention the omission explicitly in `notes`/`proposal.md` rather than pretending the whole unit is clean.
+
+## When done
+
+Your final output must be valid for the path you chose:
+
+If the unit fits honestly:
+
+- `content/bless.dhall` — authored source.
+- `content/bless.json` — generated from Dhall by the worker; typechecks against `UnitRecord`.
+- `content/bless.trace.md` — the tracer's mermaid graph.
+- `result-bless.json` — your self-classification.
+- `proposal-bless.md` — if outcome != `clean`, describe the gap. Required for non-clean outcomes, optional for clean.
+
+If the unit does NOT fit honestly:
+
+- Do NOT write `content/bless.dhall`.
+- Do NOT write `content/bless.json`.
+- Do NOT write `content/bless.trace.md`.
+- Write `result-bless.json`.
+- Write `proposal-bless.md`.
+
+The harness will independently validate your outputs. Your self-verdict is an input to classification, not the final word.
+
+codex
+I’m checking the closed surface types and the closest spell precedents first, then I’ll decide whether `Bless` fits honestly or needs a widening before writing anything.
+exec
+/bin/bash -lc "sed -n '1,240p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// Closed atom types for the content surface.
+//
+// Widen on demand per red/green loop. Atom names trace to
+// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+
+// ---------- primitives ----------
+
+export type RollKind = "attack_roll" | "saving_throw";
+
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
+export type DamageType =
+  | "acid"
+  | "bludgeoning"
+  | "cold"
+  | "fire"
+  | "force"
+  | "lightning"
+  | "necrotic"
+  | "piercing"
+  | "poison"
+  | "psychic"
+  | "radiant"
+  | "slashing"
+  | "thunder";
+
+export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
+export type StandardActionKind =
+  | "attack"
+  | "dash"
+  | "disengage"
+  | "dodge"
+  | "help"
+  | "hide"
+  | "influence"
+  | "magic"
+  | "ready"
+  | "search"
+  | "study"
+  | "utilize";
+
+export type ClassName =
+  | "barbarian"
+  | "bard"
+  | "cleric"
+  | "druid"
+  | "fighter"
+  | "monk"
+  | "paladin"
+  | "ranger"
+  | "rogue"
+  | "sorcerer"
+  | "warlock"
+  | "wizard";
+
+export type RestKind = "short" | "long";
+
+export type DiceDelta = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly sign: "+" | "-";
+};
+
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+};
+
+// ---------- scaling (Option B: unified threshold + linear-per-level
+//                      with a LevelAxis parameter) ----------
+
+// Axis along which a scaling parameter advances. Cantrips use character
+// level; upcast spells use spell-slot level; class features use class
+// level; certain features use PB or subclass level.
+export type LevelAxis =
+  | "character"
+  | "class"
+  | "slot"
+  | "subclass"
+  | "proficiency_bonus";
+
+// Generic linear-per-level: value at each level = base + perLevel × (level - startingAtLevel).
+// Generic threshold_tiers: value jumps to the tier.value at each tier.atLevel.
+export type LinearPerLevel<T> = {
+  readonly kind: "linear_per_level";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly perLevel: T;
+  readonly startingAtLevel: number;
+};
+
+export type ThresholdTiers<T> = {
+  readonly kind: "threshold_tiers";
+  readonly axis: LevelAxis;
+  readonly base: T;
+  readonly tiers: ReadonlyArray<{
+    readonly atLevel: number;
+    readonly value: T;
+  }>;
+};
+
+// Back-compat alias for the integer-count scaling used by Bless target
+// count etc. Same shape as LinearPerLevel<number> with axis=slot.
+export type SlotScaling<T> = {
+  readonly kind: "linear";
+  readonly base: T;
+  readonly perSlotAboveBase: T;
+  readonly baseLevel: number;
+};
+
+// DiceExpr is the canonical "dice roll expression": N d M + flat.
+export type DiceExpr = {
+  readonly dice: number;
+  readonly dieSize: number;
+  readonly flat?: number;
+};
+
+// Partial override for tier entries and per-level increments — any of
+// dice/dieSize/flat may change per level (Shillelagh's die-size
+// progression, Second Wind's flat-addend per class level, Sneak Attack's
+// dice-count-only progression, etc.).
+export type DiceExprDelta = {
+  readonly dice?: number;
+  readonly dieSize?: number;
+  readonly flat?: number;
+};
+
+export type DiceAmount =
+  | { readonly kind: "fixed"; readonly expr: DiceExpr }
+  | {
+      readonly kind: "threshold_tiers";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly tiers: ReadonlyArray<{
+        readonly atLevel: number;
+        readonly override: DiceExprDelta;
+      }>;
+    }
+  | {
+      readonly kind: "linear_per_level";
+      readonly axis: LevelAxis;
+      readonly base: DiceExpr;
+      readonly perLevel: DiceExprDelta;
+      readonly startingAtLevel: number;
+    };
+
+// ---------- spell-card header ----------
+
+export type SpellLevel = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type SpellSchool =
+  | "abjuration"
+  | "conjuration"
+  | "divination"
+  | "enchantment"
+  | "evocation"
+  | "illusion"
+  | "necromancy"
+  | "transmutation";
+
+// Shield / Counterspell-like reactions. Trigger is part of the spell
+// card text ("Reaction, which you take when you are hit by an attack
+// roll or targeted by Magic Missile"). SRD trigger language maps to a
+// closed grammar of condition variants.
+export type ReactionTrigger =
+  | { readonly kind: "hit_by_attack_roll" }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyArray<ReactionTrigger>;
+    };
+
+export type CastingTime =
+  | { readonly kind: "action" }
+  | { readonly kind: "bonus_action" }
+  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger }
+  // Long-cast spells such as Alarm (1 minute, optionally as a Ritual).
+  | {
+      readonly kind: "minutes";
+      readonly amount: number;
+      readonly ritual: boolean;
+    };
+
+export type Range =
+  | { readonly kind: "self" }
+  | { readonly kind: "touch" }
+  | { readonly kind: "point"; readonly feet: number };
+
+export type Components = {
+  readonly v: boolean;
+  readonly s: boolean;
+  readonly m: false | string;
+};
+
+export type Duration =
+  | { readonly kind: "instantaneous" }
+  | { readonly kind: "concentration"; readonly upTo: DurationValue }
+  | { readonly kind: "timed"; readonly value: DurationValue };
+
+// ---------- attachment ----------
+
+export type TargetSelection =
+  | { readonly mode: "one" }
+  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
+
+export type AreaOrigin =
+  | { readonly kind: "point_within_range" }
+  | { readonly kind: "on_primary_target" };
+
+// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// drops to 0 HP before the spell ends, the caster can take a Bonus
+// Action to move the mark to a new creature in range.
+export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
+
+export type MarkTransferCost = { readonly kind: "bonus_action" };
+
+export type MarkTransfer = {
+  readonly onEvent: MarkTransferEvent;
+  readonly cost: MarkTransferCost;
+};
+
+export type Attachment =
+  | { readonly kind: "self" }
+  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
+      readonly origin: AreaOrigin;
+    }
+  // v4 `mark` attachment — stateful binding on a creature that effects
+  // latch onto, and that can be transferred on a configured event.
+  | {
+      readonly kind: "mark";
+      readonly selection: TargetSelection;
+      readonly transfer?: MarkTransfer;
+    };
+
+// ---------- resolution DC ----------
+
+exec
+/bin/bash -lc 'ls content' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+acid_splash.dhall
+acid_splash.json
+action_surge.dhall
+action_surge.json
+aid.json
+alarm.json
+alter_self.json
+animal_friendship.json
+animal_messenger.json
+animal_shapes.json
+animate_dead.json
+animate_objects.json
+antilife_shell.json
+antimagic_field.json
+antipathy_sympathy.json
+arcane_eye.json
+arcane_lock.json
+astral_projection.json
+augury.json
+aura_of_life.json
+awaken.json
+bane.json
+banishment.json
+barbarian_rage.json
+bard_bardic_inspiration.json
+barkskin.json
+beacon_of_hope.json
+befuddlement.json
+bestow_curse.json
+blade_barrier.json
+blight.json
+blindness_deafness.json
+blink.json
+blur.json
+burning_hands.json
+call_lightning.json
+calm_emotions.json
+chain_lightning.json
+charm_monster.json
+cleric_channel_divinity.json
+cleric_divine_spark.json
+counterspell.json
+death_ward.json
+eldritch_blast.json
+fighter_action_surge.json
+fighter_extra_attack.json
+fighter_indomitable.json
+fighter_second_wind.json
+fire_bolt.dhall
+fire_bolt.json
+fireball.json
+halfling_luck.json
+hunters_mark.json
+ice_knife.dhall
+ice_knife.json
+magic_missile.json
+mastery_cleave.json
+mastery_sap.json
+mastery_topple.json
+monk_focus_points.json
+monk_martial_arts.json
+paladin_lay_on_hands.json
+polymorph.json
+protection_from_energy.json
+rogue_sneak_attack.json
+shield.json
+shillelagh.json
+
+exec
+/bin/bash -lc "sed -n '1,240p' UBIQUITOUS_LANGUAGE.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ exited 2 in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+sed: can't read UBIQUITOUS_LANGUAGE.md: No such file or directory
+
+codex
+The surface already has the right spell families, so I’m narrowing to whether `Bless` fits `ongoing_effect` honestly and whether the tracer can represent its bonus-to-roll rider without inventing a fake atom.
+exec
+/bin/bash -lc "sed -n '241,520p' src/surface/types.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+// Save DC source: spell save DC (from caster), or weapon-attack DC
+// (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
+export type DcSource =
+  | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "weapon_attack_dc"; readonly base: number };
+
+// ---------- spell operations / effects ----------
+
+export type RollModifierOperation = {
+  readonly kind: "roll_modifier";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly delta: DiceDelta;
+};
+
+// Rider that fires when the caster hits a creature in the operation's
+// attachment scope (e.g., Hunter's Mark: +1d6 Force on each attack-roll
+// hit against the marked creature). Maps to `on_hit_window` + `damage`
+// atoms downstream.
+export type DamageOnHitOperation = {
+  readonly kind: "damage_on_hit";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+
+export type DamageEffect = {
+  readonly kind: "damage";
+  readonly damageType: DamageType;
+  readonly amount: DiceAmount;
+};
+
+export type NoneEffect = { readonly kind: "none" };
+
+export type Effect = DamageEffect | NoneEffect;
+
+// ---------- activation phases (spells) ----------
+
+export type ActivationPhase =
+  | {
+      readonly kind: "attack_roll";
+      readonly attachment: Attachment;
+      readonly attackKind: AttackKind;
+      readonly onHit: Effect;
+      readonly onMiss: Effect;
+    }
+  | {
+      readonly kind: "save_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onFail: Effect;
+      readonly onSuccess: Effect;
+    };
+
+// ---------- spell payload families ----------
+
+type SpellMechanicsHeader = {
+  readonly level: SpellLevel;
+  readonly school: SpellSchool;
+  readonly castingTime: CastingTime;
+  readonly range: Range;
+  readonly components: Components;
+  readonly duration: Duration;
+};
+
+export type OngoingEffectMechanics = SpellMechanicsHeader & {
+  readonly family: "ongoing_effect";
+  readonly attachment: Attachment;
+  readonly operation: OngoingOperation;
+};
+
+export type ActivationMechanics = SpellMechanicsHeader & {
+  readonly family: "activation";
+  readonly phases: ReadonlyArray<ActivationPhase>;
+};
+
+// Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
+// trigger is specified on the CastingTime (see `ReactionTrigger`). The
+// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
+// from the research): reaction window opens, player decides, effects
+// commit (or don't — declining does not consume reaction per
+// UBIQUITOUS_LANGUAGE §Triggers line 31).
+export type ReactionEffect =
+  | { readonly kind: "modify_ac"; readonly delta: number }
+  | {
+      readonly kind: "negate_named_effect";
+      readonly spellId: string;
+      readonly scope: "damage_only" | "all_effects";
+    };
+
+export type TriggeredReactionMechanics = SpellMechanicsHeader & {
+  readonly family: "triggered_reaction";
+  readonly attachment: Attachment;
+  readonly interruptsTrigger: boolean;
+  readonly effects: ReadonlyArray<ReactionEffect>;
+};
+
+// ---------- anchored-trigger family (hunt §4.2 widening) ----------
+//
+// Pressure case: Alarm. Future: Glyph of Warding, Contingency. Spell
+// plants a trigger on an anchor; when a matching event occurs (gated
+// by closed filter predicates) the stored spell releases a signal
+// effect.
+
+// Where the trigger is planted. Matches v4 attachment atoms `location`
+// and `area`, kept distinct from Attachment since the choice is
+// mutually exclusive at cast time.
+export type AnchorTarget =
+  | { readonly kind: "location"; readonly description: "door_or_window" }
+  | {
+      readonly kind: "area";
+      readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
+    };
+
+// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// more pressure cases land (step_on, approach_within, see_glyph,
+// named_event_signal).
+export type AnchoredEvent =
+  | { readonly kind: "physical_contact" }
+  | { readonly kind: "enters_area" };
+
+// Closed filter predicates. Alarm uses a creature exemption list
+// ("designate creatures that won't set off the alarm") that is chosen
+// at cast time.
+export type AnchoredFilter = {
+  readonly kind: "creature_exemption_list";
+  readonly chosenAtCast: true;
+};
+
+// Signal emitted on release. Audible and mental are the two Alarm
+// modes; caller is the consumer of the signal (ARCHITECTURE.md keeps
+// narrative notifications out of core, but the signal shape is still
+// closed so the trace has somewhere to point).
+export type AnchoredSignal =
+  | {
+      readonly kind: "audible";
+      readonly sound: string;
+      readonly durationSeconds: number;
+      readonly audibleRadiusFeet: number;
+    }
+  | {
+      readonly kind: "mental";
+      readonly rangeFeet: number;
+      readonly awakensIfAsleep: boolean;
+    };
+
+export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
+  readonly family: "anchored_trigger";
+  readonly anchor: AnchorTarget;
+  readonly events: ReadonlyArray<AnchoredEvent>;
+  readonly filters: ReadonlyArray<AnchoredFilter>;
+  readonly signals: ReadonlyArray<AnchoredSignal>;
+};
+
+export type SpellMechanics =
+  | OngoingEffectMechanics
+  | ActivationMechanics
+  | TriggeredReactionMechanics
+  | AnchoredTriggerMechanics;
+
+// ---------- class-feature atoms ----------
+
+// Activation cost for a class feature. Drives which (if any) quota
+// atom the tracer emits a `consumes` edge to.
+export type ClassFeatureActivationCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "bonus_action" };
+
+// use_count cap — fixed amount, or a threshold-tier schedule (Option B:
+// uses scale by class level e.g. Action Surge 1@L2 → 2@L17, Second Wind
+// 2@L1 → 3@L4 → 4@L10, Indomitable 1@L9 → 2@L13 → 3@L17).
+export type UseCountCap =
+  | { readonly kind: "fixed"; readonly uses: number }
+  | ThresholdTiers<number>;
+
+export type UseCountResource = {
+  readonly kind: "use_count";
+  readonly cap: UseCountCap;
+};
+
+// Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
+// refilling the pool.
+export type RestResetCadence =
+  | { readonly kind: "short_or_long_rest" }
+  | { readonly kind: "long_rest" }
+  | { readonly kind: "short_rest" }
+  // SRD "You regain one expended use when you finish a Short Rest, and
+  // you regain all expended uses when you finish a Long Rest." — Second
+  // Wind, Monk Focus partial-refill pattern.
+  | {
+      readonly kind: "partial_short_full_long";
+      readonly shortRestRefill: number;
+    };
+
+export type ActionRestriction =
+  | { readonly kind: "none" }
+  | {
+      readonly kind: "exclude";
+      readonly actions: ReadonlyArray<StandardActionKind>;
+    };
+
+export type GrantExtraActionEffect = {
+  readonly kind: "grant_extra_action";
+  readonly restriction: ActionRestriction;
+};
+
+// v4 atom `heal`. Amount can be any DiceAmount shape (fixed / threshold_tiers
+// / linear_per_level) — Second Wind uses linear_per_level with axis=class.
+export type HealHpEffect = {
+  readonly kind: "heal_hp";
+  readonly amount: DiceAmount;
+  readonly target: "self" | "target_creature";
+};
+
+export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+
+// ---------- class-feature payload family ----------
+
+type ClassFeatureMechanicsHeader = {
+  readonly activationCost: ClassFeatureActivationCost;
+  readonly resource: UseCountResource;
+  readonly resetCadence: RestResetCadence;
+};
+
+export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
+  readonly family: "activation";
+  readonly effect: ClassFeatureEffect;
+};
+
+export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
+
+// ---------- mastery (weapon mastery property) ----------
+
+// SRD 5.2.1 Conditions atlas-relevant to mastery riders. Only Prone is
+// currently used (Topple); widen as more mastery/feat content lands.
+export type Condition = "prone";
+
+// Mastery rider expiry — Sap: "before the start of your next turn" OR
+// when the target uses its next attack roll. Vex-style would be
+// "before the end of your next turn". Closed enum for now.
+export type RiderExpiry =
+  | { readonly kind: "target_uses_or_turn_start" }
+  | { readonly kind: "end_of_next_turn" };
+
+// Trigger for on-hit masteries. Cleave restricts to melee weapon
+// attacks; other masteries (Sap, Topple) accept any weapon hit.
+export type MasteryTrigger =
+  | { readonly kind: "weapon_hit" }
+  | { readonly kind: "weapon_hit_melee_only" };
+
+// Secondary-target selection for Cleave: the nested attack must target
+// a creature within 5 feet of the first and within the attacker's reach.
+export type SecondaryTargetSelection = {
+  readonly kind: "adjacent_to_primary";
+  readonly constraint: "within_5ft_and_reach";
+};
+
+// Nested attack-roll rider granted by Cleave. Ability modifier is only
+// applied to damage if it is negative (per SRD).
+export type GrantWeaponAttackRider = {
+  readonly kind: "grant_weapon_attack";
+  readonly attackKind: "melee_weapon_attack";
+  readonly secondaryTarget: SecondaryTargetSelection;
+  readonly onHit: {
+    readonly kind: "weapon_damage";
+    readonly abilityModifier: "negative_only";
+  };
+};
+
+// Sap — target's next attack roll has disadvantage. Generalized as
+// advantage/disadvantage rider with a count + expiry.
+export type ModifyRollAdvantageRider = {
+  readonly kind: "modify_roll_advantage";
+  readonly mode: "advantage" | "disadvantage";
+  readonly on: ReadonlyArray<RollKind>;
+  readonly count: number;
+  readonly expiresOn: RiderExpiry;
+};
+
+exec
+/bin/bash -lc 'rg -n "ongoing_effect|attack_roll|saving_throw|dice" src/interpreter/tracer.ts' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+162:    case "ongoing_effect":
+191:    case "ongoing_effect":
+268:    case "hit_by_attack_roll":
+800:    case "attack_roll": {
+805:        atomKind: "attack_roll",
+806:        label: `attack_roll [phase ${phaseNumber}]\n${phase.attackKind.replaceAll("_", " ")}`,
+1091:      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+1105:    const changesDice = amt.tiers.some((t) => t.override.dice !== undefined);
+1112:    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+1119:  const dice = d.dice ?? base.dice;
+1122:  return `${dice}d${dieSize}${flat !== undefined && flat !== 0 ? `+${flat}` : ""}`;
+1127:  if (d.dice !== undefined)
+1128:    parts.push(`${d.dice}d${d.dieSize ?? base.dieSize}`);
+1129:  if (d.dieSize !== undefined && d.dice === undefined)
+1444:  // Subgraph G — On-Hit Rider. mastery_root roots an attack_roll
+1451:    atomKind: "attack_roll",
+1452:    label: `attack_roll\n${describeMasteryTrigger(m.trigger)}`,
+1563:      // Cleave — nested attack_roll against a secondary target.
+1575:        atomKind: "attack_roll",
+1576:        label: `attack_roll\n(nested, ${e.attackKind.replaceAll("_", " ")})`,
+1720:  return `${d.sign}${d.dice}d${d.dieSize}`;
+1733:      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+1740:  return `${e.dice}d${e.dieSize}${flat}`;
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/bane.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "bane",
+  "name": "Bane",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bane"
+  },
+  "description": "Up to three creatures of your choice that you can see within range must each make a Charisma saving throw. Whenever a target that fails this save makes an attack roll or a saving throw before the spell ends, the target must subtract 1d4 from the attack roll or save.",
+  "mechanics": {
+    "family": "ongoing_effect",
+    "level": 1,
+    "school": "enchantment",
+    "castingTime": { "kind": "action" },
+    "range": { "kind": "point", "feet": 30 },
+    "components": { "v": true, "s": true, "m": "a drop of blood" },
+    "duration": { "kind": "concentration", "upTo": { "unit": "minute", "amount": 1 } },
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "choose_up_to",
+        "count": { "kind": "linear", "base": 3, "perSlotAboveBase": 1, "baseLevel": 1 }
+      }
+    },
+    "operation": {
+      "kind": "roll_modifier",
+      "on": ["attack_roll", "saving_throw"],
+      "delta": { "dice": 1, "dieSize": 4, "sign": "-" }
+    }
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/hunters_mark.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "kind": "spell",
+  "id": "hunters_mark",
+  "name": "Hunter's Mark",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hunter's Mark"
+  },
+  "description": "You magically mark one creature you can see within range as your quarry. Until the spell ends, you deal an extra 1d6 Force damage to the target whenever you hit it with an attack roll. You also have Advantage on any Wisdom (Perception or Survival) check you make to find it. If the target drops to 0 Hit Points before this spell ends, you can take a Bonus Action to move the mark to a new creature you can see within range.",
+  "mechanics": {
+    "family": "ongoing_effect",
+    "level": 1,
+    "school": "divination",
+    "castingTime": { "kind": "bonus_action" },
+    "range": { "kind": "point", "feet": 90 },
+    "components": { "v": true, "s": false, "m": false },
+    "duration": { "kind": "concentration", "upTo": { "unit": "hour", "amount": 1 } },
+    "attachment": {
+      "kind": "mark",
+      "selection": { "mode": "one" },
+      "transfer": {
+        "onEvent": { "kind": "target_drops_to_0_hp" },
+        "cost": { "kind": "bonus_action" }
+      }
+    },
+    "operation": {
+      "kind": "damage_on_hit",
+      "damageType": "force",
+      "amount": {
+        "kind": "fixed",
+        "expr": { "dice": 1, "dieSize": 6 }
+      }
+    }
+  }
+}
+
+exec
+/bin/bash -lc 'find .. -maxdepth 2 -name UBIQUITOUS_LANGUAGE.md -print' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+codex
+`Bless` is structurally close to `Bane`: same family, same attachment, same duration, same slot-scaling target count. I’m reading the tracer branch now to confirm the emitted atoms/relations and whether a positive `roll_modifier` traces cleanly.
+exec
+/bin/bash -lc "sed -n '130,240p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+function traceSpellMechanics(
+  m: SpellMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  // Procedure kind depends on family (v4 procedure atoms):
+  //   - active casts → `activate`
+  //   - triggered reactions → `respond`
+  //   - anchored triggers → `store` (released later when the anchor fires)
+  const procKind = procedureForFamily(m.family);
+  const procId = ids(procedurePrefix(procKind));
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: procKind,
+    label: procKind,
+  });
+
+  const quotaId = traceCastingTimeQuota(m.castingTime, nodes, ids);
+  edges.push({ from: procId, to: quotaId, relation: "consumes" });
+
+  const slotId =
+    m.level === 0 ? null : createSpellSlotNode(m.level, nodes, ids);
+  if (slotId !== null)
+    edges.push({ from: procId, to: slotId, relation: "consumes" });
+
+  traceDuration(m.duration, procId, nodes, edges, ids);
+
+  const ctx: SpellCtx = { procId, slotId, range: m.range };
+
+  switch (m.family) {
+    case "ongoing_effect":
+      traceOngoingEffect(m, ctx, nodes, edges, ids);
+      break;
+    case "activation":
+      traceActivation(m, ctx, nodes, edges, ids);
+      break;
+    case "triggered_reaction":
+      traceTriggeredReaction(m, ctx, nodes, edges, ids);
+      break;
+    case "anchored_trigger":
+      traceAnchoredTrigger(m, ctx, nodes, edges, ids);
+      break;
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
+    }
+  }
+
+  return procId;
+}
+
+function procedureForFamily(
+  f: SpellMechanics["family"],
+): "activate" | "respond" | "store" {
+  switch (f) {
+    case "triggered_reaction":
+      return "respond";
+    case "anchored_trigger":
+      return "store";
+    case "ongoing_effect":
+    case "activation":
+      return "activate";
+    default: {
+      const _: never = f;
+      throw new Error(`unhandled spell family for procedure: ${String(_)}`);
+    }
+  }
+}
+
+function procedurePrefix(k: "activate" | "respond" | "store"): string {
+  switch (k) {
+    case "activate":
+      return "act";
+    case "respond":
+      return "rsp";
+    case "store":
+      return "sto";
+    default: {
+      const _: never = k;
+      throw new Error(`unhandled procedure prefix: ${String(_)}`);
+    }
+  }
+}
+
+function traceCastingTimeQuota(
+  ct: CastingTime,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("q");
+  switch (ct.kind) {
+    case "action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Casting Time: Action)",
+      });
+      return id;
+    case "bonus_action":
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+      });
+      return id;
+    case "reaction":
+      nodes.push({
+
+exec
+/bin/bash -lc "sed -n '1050,1165p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+): void {
+  switch (amt.kind) {
+    case "fixed":
+      return;
+    case "threshold_tiers": {
+      const scId = ids("sc");
+      const tierText = amt.tiers
+        .map(
+          (t) => `L${t.atLevel}:${describeTierOverride(t.override, amt.base)}`,
+        )
+        .join(" | ");
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\ntiers: ${tierText}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      // For slot-axis scaling, thread the spell_slot node into the chain.
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    case "linear_per_level": {
+      const scId = ids("sc");
+      const deltaText = describeDelta_(amt.perLevel, amt.base);
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label: `${scalingAtomFor(amt)}\naxis=${amt.axis}\n+${deltaText} per level above ${amt.startingAtLevel}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      if (amt.axis === "slot" && slotId !== null) {
+        edges.push({ from: slotId, to: scId, relation: "modifies" });
+      }
+      return;
+    }
+    default: {
+      const _exhaustive: never = amt;
+      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+// Pick the v4 scaling atom kind based on what this scaling actually
+// changes. Die size changes → scale_die_size. Die count changes →
+// scale_die_count. Only flat changes → scale_numeric_bonus.
+function scalingAtomFor(amt: DiceAmount): string {
+  if (amt.kind === "fixed") return "scale_numeric_bonus";
+  if (amt.kind === "threshold_tiers") {
+    const changesDieSize = amt.tiers.some(
+      (t) => t.override.dieSize !== undefined,
+    );
+    const changesDice = amt.tiers.some((t) => t.override.dice !== undefined);
+    if (changesDieSize) return "scale_die_size";
+    if (changesDice) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  if (amt.kind === "linear_per_level") {
+    if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
+    if (amt.perLevel.dice !== undefined) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  return "scale_numeric_bonus";
+}
+
+function describeTierOverride(d: DiceExprDelta, base: DiceExpr): string {
+  const dice = d.dice ?? base.dice;
+  const dieSize = d.dieSize ?? base.dieSize;
+  const flat = d.flat ?? base.flat;
+  return `${dice}d${dieSize}${flat !== undefined && flat !== 0 ? `+${flat}` : ""}`;
+}
+
+function describeDelta_(d: DiceExprDelta, base: DiceExpr): string {
+  const parts: string[] = [];
+  if (d.dice !== undefined)
+    parts.push(`${d.dice}d${d.dieSize ?? base.dieSize}`);
+  if (d.dieSize !== undefined && d.dice === undefined)
+    parts.push(`die size ${d.dieSize}`);
+  if (d.flat !== undefined) parts.push(`${d.flat} flat`);
+  return parts.join(" + ");
+}
+
+// ============================================================
+// Class-feature tracer
+// ============================================================
+
+function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "class_feature_root",
+    label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
+  });
+
+  const procedureId = traceClassFeatureMechanics(
+    feat.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+
+  return {
+    unitId: feat.id,
+    unitName: feat.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+
+exec
+/bin/bash -lc "sed -n '1660,1755p' src/interpreter/tracer.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+        id: winId,
+        category: "window",
+        atomKind: "turn_start_window",
+        label: "turn_start_window\n(attacker, OR target uses rolled-on)",
+      });
+      break;
+    case "end_of_next_turn":
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_end_window",
+        label: "turn_end_window\n(attacker's next turn)",
+      });
+      break;
+    default: {
+      const _: never = x;
+      throw new Error(`unhandled rider expiry: ${String(_)}`);
+    }
+  }
+  edges.push({ from: effId, to: winId, relation: "persists_until" });
+}
+
+// ============================================================
+// Shared helpers
+// ============================================================
+
+type IdGen = (prefix: string) => string;
+
+function idGen(): IdGen {
+  let n = 0;
+  return (prefix: string) => `${prefix}${++n}`;
+}
+
+function describeScaling(s: SlotScaling<number>): string {
+  return `${s.base} + ${s.perSlotAboveBase} per slot above ${s.baseLevel}`;
+}
+
+function describeRange(r: Range): string {
+  switch (r.kind) {
+    case "self":
+      return "Self";
+    case "touch":
+      return "Touch";
+    case "point":
+      return `${r.feet} ft`;
+    default: {
+      const _exhaustive: never = r;
+      throw new Error(`unhandled range: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeDurationValue(d: {
+  readonly unit: string;
+  readonly amount: number;
+}): string {
+  return `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
+}
+
+function describeDelta(d: DiceDelta): string {
+  return `${d.sign}${d.dice}d${d.dieSize}`;
+}
+
+function describeDiceAmount(a: DiceAmount): string {
+  switch (a.kind) {
+    case "fixed":
+      return describeExpr(a.expr);
+    case "threshold_tiers":
+      return `${describeExpr(a.base)} (tiered by ${a.axis} level)`;
+    case "linear_per_level":
+      return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
+    default: {
+      const _exhaustive: never = a;
+      throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeExpr(e: DiceExpr): string {
+  const flat = e.flat !== undefined && e.flat !== 0 ? `+${e.flat}` : "";
+  return `${e.dice}d${e.dieSize}${flat}`;
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/acid_splash.dhall" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+-- Acid Splash — SRD 5.2.1
+-- Evocation cantrip (level 0). Authored against ../src/surface/types.ts.
+
+let CantripTier =
+      λ(atCharacterLevel : Natural) →
+      λ(dice : Natural) →
+        { atCharacterLevel = atCharacterLevel, dice = dice }
+
+in  { kind = "spell"
+    , id = "acid_splash"
+    , name = "Acid Splash"
+    , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Spells/Descriptions-A-D#Acid Splash"
+        }
+    , description =
+        "You create an acidic bubble at a point within range, where it explodes in a 5-foot-radius Sphere. Each creature in that Sphere must succeed on a Dexterity saving throw or take 1d6 Acid damage. Cantrip Upgrade: damage increases by 1d6 at levels 5 (2d6), 11 (3d6), and 17 (4d6)."
+    , mechanics =
+        { family = "activation"
+        , level = 0
+        , school = "evocation"
+        , castingTime = { kind = "action" }
+        , range = { kind = "point", feet = 60 }
+        , components = { v = True, s = True, m = None Text }
+        , duration = { kind = "instantaneous" }
+        , phases =
+            [ { kind = "save_gate"
+              , attachment =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 5 }
+                  , origin = { kind = "point_within_range" }
+                  }
+              , ability = "dex"
+              , dc = { kind = "caster_spell_save_dc" }
+              , onFail =
+                  { kind = "damage"
+                  , damageType = "acid"
+                  , amount =
+                      { kind = "cantrip_tiers"
+                      , dieSize = 6
+                      , tiers =
+                          [ CantripTier 1 1
+                          , CantripTier 5 2
+                          , CantripTier 11 3
+                          , CantripTier 17 4
+                          ]
+                      }
+                  }
+              , onSuccess = { kind = "none" }
+              }
+            ]
+        }
+    }
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/ice_knife.dhall" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+-- Ice Knife — SRD 5.2.1
+-- Level 1 Conjuration. Dual-phase activation: ranged spell attack,
+-- then unconditional AoE save centered on the primary target.
+
+in  { kind = "spell"
+    , id = "ice_knife"
+    , name = "Ice Knife"
+    , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Spells/Descriptions-E-L#Ice Knife"
+        }
+    , description =
+        "You create a shard of ice and fling it at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Piercing damage. Hit or miss, the shard then explodes. The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage. Higher slot: Cold damage +1d6 per slot level above 1."
+    , mechanics =
+        { family = "activation"
+        , level = 1
+        , school = "conjuration"
+        , castingTime = { kind = "action" }
+        , range = { kind = "point", feet = 60 }
+        , components = { v = False, s = True, m = Some "a drop of water or a piece of ice" }
+        , duration = { kind = "instantaneous" }
+        , phases =
+            [ { kind = "attack_roll"
+              , attachment = { kind = "target", selection = { mode = "one" } }
+              , attackKind = "ranged_spell_attack"
+              , onHit =
+                  { kind = "damage"
+                  , damageType = "piercing"
+                  , amount = { kind = "fixed", dice = 1, dieSize = 10 }
+                  }
+              , onMiss = { kind = "none" }
+              }
+            , { kind = "save_gate"
+              , attachment =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 5 }
+                  , origin = { kind = "on_primary_target" }
+                  }
+              , ability = "dex"
+              , dc = { kind = "caster_spell_save_dc" }
+              , onFail =
+                  { kind = "damage"
+                  , damageType = "cold"
+                  , amount =
+                      { kind = "slot_linear"
+                      , baseDice = 2
+                      , dieSize = 6
+                      , perSlotAboveBase = 1
+                      , baseLevel = 1
+                      }
+                  }
+              , onSuccess = { kind = "none" }
+              }
+            ]
+        }
+    }
+
+codex
+The tracer side looks fine for a `roll_modifier`, so I’m checking the Dhall conventions for authored ongoing effects before I write `content/bless.dhall`.
+exec
+/bin/bash -lc "rg -n 'family = \"ongoing_effect\"|roll_modifier|perSlotAboveBase|baseLevel' content/*.dhall" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+content/ice_knife.dhall:48:                      , perSlotAboveBase = 1
+content/ice_knife.dhall:49:                      , baseLevel = 1
+
+exec
+/bin/bash -lc "sed -n '1,220p' package.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "name": "@dnd/prototype-content-surface",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src",
+    "circular": "madge --extensions ts --circular src",
+    "typecheck": "tsc --noEmit",
+    "trace:bless": "tsx src/run.ts content/bless.json",
+    "trace:acid_splash": "tsx src/run.ts content/acid_splash.json",
+    "trace:ice_knife": "tsx src/run.ts content/ice_knife.json",
+    "trace:action_surge": "tsx src/run.ts content/action_surge.json"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
+
+exec
+/bin/bash -lc "sed -n '1,220p' src/run.ts" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+// CLI entry: load an authored unit JSON, trace it, emit mermaid.
+//
+// Usage:
+//   tsx src/run.ts content/<unit>.json
+//   tsx src/run.ts content/<unit>.json --out content/<unit>.trace.md
+
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { argv, exit, stdout } from "node:process";
+
+import type { UnitRecord } from "./surface/types.ts";
+import { traceUnit } from "./interpreter/tracer.ts";
+import { renderTraceDocument } from "./interpreter/mermaid.ts";
+
+function main(): void {
+  const args = argv.slice(2);
+  if (args.length === 0) {
+    stdout.write("usage: tsx src/run.ts <unit.json> [--out <file.md>]\n");
+    exit(64);
+  }
+
+  const unitPathArg = args[0];
+  if (unitPathArg === undefined) {
+    stdout.write("missing unit path\n");
+    exit(64);
+  }
+  const unitPath = resolve(unitPathArg);
+  const raw = readFileSync(unitPath, "utf8");
+  const unit = JSON.parse(raw) as UnitRecord;
+
+  const trace = traceUnit(unit);
+  const doc = renderTraceDocument(trace, unit);
+
+  const outIdx = args.indexOf("--out");
+  if (outIdx >= 0 && args.length > outIdx + 1) {
+    const outArg = args[outIdx + 1];
+    if (outArg === undefined) {
+      stdout.write("--out flag given without path\n");
+      exit(64);
+    }
+    const outPath = resolve(outArg);
+    writeFileSync(outPath, doc, "utf8");
+    stdout.write(`wrote ${outPath}\n`);
+  } else {
+    stdout.write(doc);
+  }
+}
+
+main();
+
+exec
+/bin/bash -lc "find .. -maxdepth 4 -name 'UBIQUITOUS_LANGUAGE.md' -print" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+codex
+There isn’t an in-repo Dhall compile script here, so I’m checking the existing authored files to match the expected syntax and then I’ll generate `content/bless.json` from the Dhall expression locally only if the toolchain in this workspace supports it.
+exec
+/bin/bash -lc "sed -n '1,220p' content/action_surge.dhall" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+-- Action Surge — SRD 5.2.1 Fighter level 2.
+-- First non-spell unit encoded in the prototype.
+
+in  { kind = "class_feature"
+    , id = "fighter_action_surge"
+    , name = "Action Surge"
+    , className = "fighter"
+    , acquiredAtLevel = 2
+    , provenance =
+        { kind = "srd-5.2.1"
+        , section = "Classes/Fighter#Action Surge"
+        }
+    , description =
+        "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action. Once you use this feature, you can't do so again until you finish a Short or Long Rest."
+    , mechanics =
+        { family = "activation"
+        , activationCost = { kind = "free" }
+        , resource =
+            { kind = "use_count"
+            , cap = { kind = "fixed", uses = 1 }
+            }
+        , resetCadence = { kind = "short_or_long_rest" }
+        , effect =
+            { kind = "grant_extra_action"
+            , restriction =
+                { kind = "exclude", actions = [ "magic" ] }
+            }
+        }
+    }
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/fire_bolt.dhall" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+-- Fire Bolt fits the existing spell activation family for its main line:
+-- one ranged spell attack that deals tier-scaled fire damage.
+-- The secondary rider ("flammable object hit ... starts burning") has no
+-- honest representation in the current closed effect vocabulary.
+
+let fireBolt =
+      { kind = "spell"
+      , id = "fire_bolt"
+      , name = "Fire Bolt"
+      , provenance =
+          { kind = "srd-5.2.1"
+          , section = "Spells/Descriptions-E-L#Fire Bolt"
+          }
+      , description =
+          "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: damage increases by 1d10 at levels 5 (2d10), 11 (3d10), and 17 (4d10)."
+      , mechanics =
+          { family = "activation"
+          , level = 0
+          , school = "evocation"
+          , castingTime = { kind = "action" }
+          , range = { kind = "point", feet = 120 }
+          , components = { v = True, s = True, m = None Text }
+          , duration = { kind = "instantaneous" }
+          , phases =
+              [ { kind = "attack_roll"
+                , attachment =
+                    { kind = "target", selection = { mode = "one" } }
+                , attackKind = "ranged_spell_attack"
+                , onHit =
+                    { kind = "damage"
+                    , damageType = "fire"
+                    , amount =
+                        { kind = "threshold_tiers"
+                        , axis = "character"
+                        , base = { dice = 1, dieSize = 10 }
+                        , tiers =
+                            [ { atLevel = 5, override = { dice = 2 } }
+                            , { atLevel = 11, override = { dice = 3 } }
+                            , { atLevel = 17, override = { dice = 4 } }
+                            ]
+                        }
+                    }
+                , onMiss = { kind = "none" }
+                }
+              ]
+          }
+      }
+
+in  fireBolt
+
+exec
+/bin/bash -lc 'which dhall-to-json || which dhall' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+/home/node/.local/bin/dhall-to-json
+
+exec
+/bin/bash -lc "rg -n 'dhall|json-to-dhall|dhall-to-json' -S ." in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+./README.md:46:## Authoring format: Dhall + JSON
+./README.md:48:Spells are authored in Dhall (`content/<spell>.dhall`) as the canonical source. The compiled JSON (`content/<spell>.json`) is what the tracer reads.
+./README.md:50:Right now no Dhall toolchain is required — the JSON is hand-maintained. If/when `dhall-to-json` is standardized:
+./README.md:53:dhall-to-json --file content/bless.dhall --output content/bless.json
+./README.md:62:- `content/bless.dhall` — authored source for Bless.
+
+codex
+I have enough context to implement the honest encoding now. I’m going to author `content/bless.dhall`, compile it to JSON with `dhall-to-json`, then run `pnpm typecheck` and the tracer to capture the actual atoms and relations.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+
+exec
+/bin/bash -lc 'dhall-to-json --file content/bless.dhall --output content/bless.json' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+
+exec
+/bin/bash -lc 'pnpm typecheck' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+exec
+/bin/bash -lc 'pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+exec
+/bin/bash -lc 'pnpm exec tsx src/run.ts content/bane.json' in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+
+ succeeded in 894ms:
+# Dependency graph: Bane
+
+Unit id: `bane`
+
+5e.tools: <https://5e.tools/spells.html#bane_xphb>
+
+```mermaid
+flowchart TD
+  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
+  classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
+  classDef window fill:#9467bd,color:#fff,stroke:#4a2b66
+  classDef attachment fill:#ffcc00,color:#000,stroke:#8a6d00
+  classDef resolution fill:#ff7f0e,color:#fff,stroke:#8a4308
+  classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
+  classDef resource fill:#e377c2,color:#000,stroke:#8a457a
+  classDef scaling fill:#17becf,color:#000,stroke:#0a5f6a
+  classDef effect fill:#d62728,color:#fff,stroke:#6a1414
+  root1["spell_root<br/>Bane"]:::source
+  act2["activate"]:::procedure
+  q3["action_quota<br/>(Casting Time: Action)"]:::resource
+  slot4["spell_slot<br/>≥ level 1"]:::resource
+  lock5["concentration_lock"]:::resource
+  conc6["concentrate"]:::lifecycle
+  exp7["expire<br/>≤ 1 minute"]:::lifecycle
+  att8["target<br/>choose_up_to: 3 + 1 per slot above 1<br/>range 30 ft"]:::attachment
+  sc9["scale_target_count<br/>+1/slot above 1"]:::scaling
+  op10["modify_roll_numeric<br/>-1d4<br/>on attack_roll, saving_throw"]:::effect
+  act2 -- consumes --> q3
+  act2 -- consumes --> slot4
+  act2 -- consumes --> lock5
+  act2 -- grants --> conc6
+  conc6 -- persists_until --> exp7
+  act2 -- attaches_to --> att8
+  sc9 -- modifies --> att8
+  slot4 -- modifies --> sc9
+  act2 -- grants --> op10
+  op10 -- attaches_to --> att8
+  root1 -- roots --> act2
+```
+
+## Atoms referenced
+
+- `action_quota`
+- `activate`
+- `concentrate`
+- `concentration_lock`
+- `expire`
+- `modify_roll_numeric`
+- `scale_target_count`
+- `spell_root`
+- `spell_slot`
+- `target`
+
+## Relations referenced
+
+- `attaches_to`
+- `consumes`
+- `grants`
+- `modifies`
+- `persists_until`
+- `roots`
+
+ succeeded in 913ms:
+wrote /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.trace.md
+
+ succeeded in 1564ms:
+
+> @dnd/prototype-content-surface@0.0.0 typecheck /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+> tsc --noEmit
+
+
+codex
+The encoding compiled and traced cleanly. I’m pulling the final atom and relation set from the generated trace now, then I’ll write the result report.
+exec
+/bin/bash -lc "sed -n '1,220p' content/bless.trace.md" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+# Dependency graph: Bless
+
+Unit id: `bless`
+
+5e.tools: <https://5e.tools/spells.html#bless_xphb>
+
+```mermaid
+flowchart TD
+  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
+  classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
+  classDef window fill:#9467bd,color:#fff,stroke:#4a2b66
+  classDef attachment fill:#ffcc00,color:#000,stroke:#8a6d00
+  classDef resolution fill:#ff7f0e,color:#fff,stroke:#8a4308
+  classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
+  classDef resource fill:#e377c2,color:#000,stroke:#8a457a
+  classDef scaling fill:#17becf,color:#000,stroke:#0a5f6a
+  classDef effect fill:#d62728,color:#fff,stroke:#6a1414
+  root1["spell_root<br/>Bless"]:::source
+  act2["activate"]:::procedure
+  q3["action_quota<br/>(Casting Time: Action)"]:::resource
+  slot4["spell_slot<br/>≥ level 1"]:::resource
+  lock5["concentration_lock"]:::resource
+  conc6["concentrate"]:::lifecycle
+  exp7["expire<br/>≤ 1 minute"]:::lifecycle
+  att8["target<br/>choose_up_to: 3 + 1 per slot above 1<br/>range 30 ft"]:::attachment
+  sc9["scale_target_count<br/>+1/slot above 1"]:::scaling
+  op10["modify_roll_numeric<br/>+1d4<br/>on attack_roll, saving_throw"]:::effect
+  act2 -- consumes --> q3
+  act2 -- consumes --> slot4
+  act2 -- consumes --> lock5
+  act2 -- grants --> conc6
+  conc6 -- persists_until --> exp7
+  act2 -- attaches_to --> att8
+  sc9 -- modifies --> att8
+  slot4 -- modifies --> sc9
+  act2 -- grants --> op10
+  op10 -- attaches_to --> att8
+  root1 -- roots --> act2
+```
+
+## Atoms referenced
+
+- `action_quota`
+- `activate`
+- `concentrate`
+- `concentration_lock`
+- `expire`
+- `modify_roll_numeric`
+- `scale_target_count`
+- `spell_root`
+- `spell_slot`
+- `target`
+
+## Relations referenced
+
+- `attaches_to`
+- `consumes`
+- `grants`
+- `modifies`
+- `persists_until`
+- `roots`
+
+exec
+/bin/bash -lc "sed -n '1,220p' content/bless.json" in /workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless
+ succeeded in 0ms:
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+{
+  "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1.",
+  "id": "bless",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "count": {
+          "base": 3,
+          "baseLevel": 1,
+          "kind": "linear",
+          "perSlotAboveBase": 1
+        },
+        "mode": "choose_up_to"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a Holy Symbol worth 5+ GP",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operation": {
+      "delta": {
+        "dice": 1,
+        "dieSize": 4,
+        "sign": "+"
+      },
+      "kind": "roll_modifier",
+      "on": [
+        "attack_roll",
+        "saving_throw"
+      ]
+    },
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Bless",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Bless"
+  }
+}
+
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+
+codex
+The trace matches the intended rule shape exactly: concentration, scalable multi-target attachment, and a numeric roll modifier on attack rolls and saving throws. I’m writing the final self-report now.
+apply patch
+patch: completed
+/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/result-bless.json b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..8052d6561f0834eb68c279316ed8d2a02e328718
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+@@ -0,0 +1,27 @@
++{
++  "unit_slug": "bless",
++  "outcome": "clean",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "concentrate",
++    "concentration_lock",
++    "expire",
++    "modify_roll_numeric",
++    "scale_target_count",
++    "spell_root",
++    "spell_slot",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "persists_until",
++    "roots"
++  ],
++  "proposed_widenings": [],
++  "confidence": "high",
++  "notes": "Bless fits the existing spell ongoing_effect family honestly as a concentration-gated positive roll modifier on up to three targets, with target count scaling by spell slot level."
++}
+
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/result-bless.json b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..8052d6561f0834eb68c279316ed8d2a02e328718
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+@@ -0,0 +1,27 @@
++{
++  "unit_slug": "bless",
++  "outcome": "clean",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "concentrate",
++    "concentration_lock",
++    "expire",
++    "modify_roll_numeric",
++    "scale_target_count",
++    "spell_root",
++    "spell_slot",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "persists_until",
++    "roots"
++  ],
++  "proposed_widenings": [],
++  "confidence": "high",
++  "notes": "Bless fits the existing spell ongoing_effect family honestly as a concentration-gated positive roll modifier on up to three targets, with target count scaling by spell slot level."
++}
+
+codex
+Implemented `Bless` as `ongoing_effect` in [content/bless.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall), compiled it to [content/bless.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.json), traced it to [content/bless.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.trace.md), and wrote the self-report in [result-bless.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/result-bless.json).
+
+Verification passed: `pnpm typecheck` succeeded, and `pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md` produced a clean trace. Outcome is `clean`; no widening was needed.
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+new file mode 100644
+index 0000000000000000000000000000000000000000..6df748e4a3e4c957ff8ac70c946d271ffbaae9a1
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall
+@@ -0,0 +1,42 @@
++let bless =
++      { kind = "spell"
++      , id = "bless"
++      , name = "Bless"
++      , provenance =
++          { kind = "srd-5.2.1"
++          , section = "Spells/Descriptions-A-D#Bless"
++          }
++      , description =
++          "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save. Using a Higher-Level Spell Slot: You can target one additional creature for each spell slot level above 1."
++      , mechanics =
++          { family = "ongoing_effect"
++          , level = 1
++          , school = "enchantment"
++          , castingTime = { kind = "action" }
++          , range = { kind = "point", feet = 30 }
++          , components = { v = True, s = True, m = Some "a Holy Symbol worth 5+ GP" }
++          , duration =
++              { kind = "concentration"
++              , upTo = { unit = "minute", amount = 1 }
++              }
++          , attachment =
++              { kind = "target"
++              , selection =
++                  { mode = "choose_up_to"
++                  , count =
++                      { kind = "linear"
++                      , base = 3
++                      , perSlotAboveBase = 1
++                      , baseLevel = 1
++                      }
++                  }
++              }
++          , operation =
++              { kind = "roll_modifier"
++              , on = [ "attack_roll", "saving_throw" ]
++              , delta = { dice = 1, dieSize = 4, sign = "+" }
++              }
++          }
++      }
++
++in  bless
+diff --git a/scripts/content-surface-survey/workers/2946234-bless/result-bless.json b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..8052d6561f0834eb68c279316ed8d2a02e328718
+--- /dev/null
++++ b/scripts/content-surface-survey/workers/2946234-bless/result-bless.json
+@@ -0,0 +1,27 @@
++{
++  "unit_slug": "bless",
++  "outcome": "clean",
++  "atoms_used": [
++    "action_quota",
++    "activate",
++    "concentrate",
++    "concentration_lock",
++    "expire",
++    "modify_roll_numeric",
++    "scale_target_count",
++    "spell_root",
++    "spell_slot",
++    "target"
++  ],
++  "relations_used": [
++    "attaches_to",
++    "consumes",
++    "grants",
++    "modifies",
++    "persists_until",
++    "roots"
++  ],
++  "proposed_widenings": [],
++  "confidence": "high",
++  "notes": "Bless fits the existing spell ongoing_effect family honestly as a concentration-gated positive roll modifier on up to three targets, with target count scaling by spell slot level."
++}
+
+tokens used
+95,683
+Implemented `Bless` as `ongoing_effect` in [content/bless.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.dhall), compiled it to [content/bless.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.json), traced it to [content/bless.trace.md](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/content/bless.trace.md), and wrote the self-report in [result-bless.json](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2946234-bless/result-bless.json).
+
+Verification passed: `pnpm typecheck` succeeded, and `pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md` produced a clean trace. Outcome is `clean`; no widening was needed.

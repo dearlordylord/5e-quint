@@ -1,0 +1,34 @@
+{
+  "unit_slug": "barbarian_weapon_mastery_l1",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_grant family for ClassFeatureMechanics",
+      "justification": "Weapon Mastery is not activated — it is a passive, always-on grant of the ability to use mastery properties. The current ClassFeatureMechanics has only the 'activation' family, whose header (activationCost / resource / resetCadence) is categorically wrong for features that are simply granted at level-up and remain available without a trigger. A new 'passive_grant' family (no activation cost, no use-count resource) is required.",
+      "evidence": "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_mastery_access ClassFeatureEffect variant",
+      "justification": "The effect is granting the ability to use mastery properties for a player-chosen set of weapon types. This is neither grant_extra_action nor heal_hp. A new ClassFeatureEffect variant is needed — grant_mastery_access — capturing: (a) count of weapon types accessible (scalable by barbarian level), (b) a weapon-category restriction (e.g. simple/martial + melee), and (c) a swap-on-rest mechanic (one choice replaceable per Long Rest).",
+      "evidence": "you can use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice... Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+    },
+    {
+      "kind": "new_variant",
+      "name": "WeaponCategoryRestriction surface type",
+      "justification": "The grant restricts eligible weapons to 'Simple or Martial Melee weapons.' The current type system has no weapon-category filter. A closed type encoding weapon kind (simple | martial) and attack mode (melee | ranged) is needed to make valid vs. invalid selections unrepresentable.",
+      "evidence": "two kinds of Simple or Martial Melee weapons of your choice"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Threshold-tiers count scaling in grant_mastery_access",
+      "justification": "The number of mastery-accessible weapon types scales with barbarian level according to the Barbarian Features table (2 at L1, growing at higher levels). The existing ThresholdTiers<number> shape can represent this, but it must be wired into the count field of the new grant_mastery_access effect.",
+      "evidence": "When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Weapon Mastery is structurally a passive-grant class feature: always-on, no activation cost, no use-count. The same feature pattern appears on Fighter L1, Paladin L1, Ranger L1, and Rogue L1 — so the proposed family and effect variant will serve at least five units. The swap mechanic (replace one choice per Long Rest) is a secondary concern that may fit as an attribute of grant_mastery_access or may need its own narrow surface concept. No JSON/Dhall authored: forcing activation family would produce a knowingly false trace."
+}

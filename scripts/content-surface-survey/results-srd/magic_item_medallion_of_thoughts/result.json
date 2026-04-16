@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_medallion_of_thoughts",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "No magic_item UnitRecord kind exists. UnitRecord is SpellRecord | ClassFeatureRecord | MasteryRecord. A MagicItemRecord top-level kind and a corresponding magic-item mechanics family are required before any magic item can be encoded.",
+      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.daily_at_dawn",
+      "justification": "The medallion regains 1d4 charges daily at dawn — a time-of-day cadence with no rest trigger. The current RestResetCadence union only covers short/long rest variants.",
+      "evidence": "The medallion regains 1d4 expended charges daily at dawn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DcSource.item_fixed_dc",
+      "justification": "The medallion casts Detect Thoughts at a fixed save DC 13, independent of the wearer's spellcasting stat. DcSource only models caster_spell_save_dc and weapon_attack_dc.",
+      "evidence": "you can expend 1 charge to cast Detect Thoughts (save DC 13) from it"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: MagicItemRecord does not exist in UnitRecord. Secondary widenings (daily-at-dawn cadence, item-fixed DC) would also be needed even if the kind existed. The charge resource atom (v4 'charge') exists in the taxonomy but no surface type models the dice-based dawn refill shape."
+}

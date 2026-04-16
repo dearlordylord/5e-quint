@@ -1,0 +1,22 @@
+{
+  "unit_slug": "counterspell",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger::see_creature_casting_spell",
+      "justification": "Counterspell fires when the caster sees any creature within 60 feet casting a spell with V, S, or M components. The existing trigger variants (hit_by_attack_roll, targeted_by_named_spell, any_of) cannot express this general 'observe a creature casting' condition. This is a qualitatively different trigger shape: it is observer-relative, not self-relative, and it matches on any casting rather than a named spell targeting you.",
+      "evidence": "which you take when you see a creature within 60 feet of yourself casting a spell with Verbal, Somatic, or Material components"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionEffect::save_gate_negate_current_casting",
+      "justification": "Counterspell's effect is a save-gated negate of the spell currently being cast, with explicit slot preservation on failure. Neither existing variant applies: modify_ac is unrelated; negate_named_effect requires a fixed spellId known at authoring time and has no save gate. Counterspell targets 'the spell being cast' (a runtime reference, not a static spellId) and conditionally preserves the caster's spell slot when the save fails. These two properties together — dynamic target + embedded Con save + slot-preservation clause — require a new ReactionEffect variant.",
+      "evidence": "The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted. If that spell was cast with a spell slot, the slot isn't expended."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The triggered_reaction family is the correct family for Counterspell — instantaneous, reaction-timed, uses the Prepare/Prompt/Commit subgraph. Two surface shapes are missing, both as variants of existing surface types: (1) ReactionTrigger has no variant for observing a creature cast; (2) ReactionEffect has no variant for a save-gated negate of the current casting with slot preservation. The underlying v4 atoms exist (save_gate, a negate-style effect, reaction_window, reaction_quota) — the gap is purely in the surface vocabulary that composes them for this reaction shape. The 'slot isn't expended' clause is explicitly stated in the SRD and must be represented; it cannot be left implicit in a generic negate."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "gentle_repose",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "block_state_transition",
+      "justification": "The spell prevents a corpse from becoming Undead — a deterministic mechanical block on a creature-type state transition. No v4 atom covers this. 'apply_condition' only applies SRD conditions; 'block_targeting' blocks spell targeting, not type changes. This is a new effect class.",
+      "evidence": "the target is protected from decay and can't become Undead"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment: object (corpse/remains)",
+      "justification": "The spell targets a corpse or remains, which is an object rather than a living creature. The v4 taxonomy lists 'object' as an attachment atom but it is absent from types.ts Attachment union (self | target | area | mark). Targeting a corpse cannot be honestly expressed as 'target' since that selection grammar assumes a living creature context.",
+      "evidence": "You touch a corpse or other remains."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No Dhall/JSON authored: the spell cannot be honestly encoded. Two gaps block encoding: (1) no v4 atom for blocking a state transition (undead reanimation); the closest candidates 'apply_condition' and 'block_targeting' are both wrong. (2) no 'object' attachment variant in types.ts for targeting a corpse. A third mechanic — 'days spent under this spell don't count against the time limit of Raise Dead' — is DM-agenda cross-spell bookkeeping with no deterministic combat-engine resolution and is intentionally out of core scope per ARCHITECTURE.md."
+}

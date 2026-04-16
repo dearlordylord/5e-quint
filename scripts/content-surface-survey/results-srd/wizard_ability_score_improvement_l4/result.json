@@ -1,0 +1,28 @@
+{
+  "unit_slug": "wizard_ability_score_improvement_l4",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "character_advancement",
+      "justification": "ASI is a level-up benefit, not an in-game activation. The existing `activation` family requires activationCost + use_count resource + resetCadence + effect — none of which apply. A new ClassFeatureMechanics family is needed for permanent one-time benefits conferred at specific class levels.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Wizard levels 8, 12, and 16."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The ASI feat permanently modifies ability scores — pre-runtime character state. The v4 taxonomy explicitly defers this atom as out-of-scope ('modify_ability_score as a runtime effect versus as pre-runtime character state — currently treated as out-of-scope'). It is absent from ClassFeatureEffect.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_feat",
+      "justification": "The feature grants a feat choice (ASI feat or any qualifying feat). No existing ClassFeatureEffect variant represents this. grant_spell_access exists for spells but has no parallel for feats.",
+      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "ASI is a character-advancement grant, not an in-game activation. ClassFeatureMechanics.activation requires activationCost + use_count + resetCadence + effect; none apply to ASI. The effect (permanent ability score modification or feat grant) has no analog in ClassFeatureEffect. modify_ability_score is explicitly deferred in v4. This structural gap recurs for all 12 classes at levels 4, 8, 12, 16 — it is a systemic surface gap, not a narrow edge case."
+}

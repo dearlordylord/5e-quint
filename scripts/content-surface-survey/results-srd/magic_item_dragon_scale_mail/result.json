@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_dragon_scale_mail",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord",
+      "justification": "No magic_item kind exists in UnitRecord. types.ts defines UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord only. The v4 taxonomy has magic_item_root but the surface schema has no corresponding record type.",
+      "evidence": "Armor (Scale Mail), Very Rare (Requires Attunement)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_bundle",
+      "justification": "Dragon Scale Mail's three passive benefits (+1 AC, Advantage on breath weapon saves, Resistance) are always-on while attuned and worn. No existing mechanics family models a set of always-on passive effects that activate on attunement rather than on an explicit action.",
+      "evidence": "While wearing this armor, you gain a +1 bonus to Armor Class, you have Advantage on saving throws against the breath weapons of Dragons, and you have Resistance to one damage type"
+    },
+    {
+      "kind": "new_variant",
+      "name": "scoped_advantage_on_save",
+      "justification": "The Advantage rider applies specifically to saving throws against dragon breath weapons. The existing modify_roll_advantage type accepts only a list of RollKind values (attack_roll, saving_throw) with no mechanism to filter by trigger context (creature type + ability source). A new variant of the advantage modifier type with a trigger filter is needed.",
+      "evidence": "you have Advantage on saving throws against the breath weapons of Dragons"
+    },
+    {
+      "kind": "new_atom",
+      "name": "discern_location",
+      "justification": "The active ability (Magic action, once per dawn) outputs directional/distance information about the nearest creature of a specified type within a range. No v4 atom covers this. grant_sense covers perceptual senses (darkvision, truesight) but not divination-style location awareness outputting bearing + distance.",
+      "evidence": "you can focus your senses as a Magic action to discern the distance and direction to the closest dragon within 30 miles of yourself that is of the same type as the armor"
+    },
+    {
+      "kind": "new_variant",
+      "name": "dawn_reset",
+      "justification": "The active use recharges at the next dawn. The existing RestResetCadence type covers short_rest, long_rest, short_or_long_rest, and partial_short_full_long. Dawn is a time-of-day event, not a rest event, and cannot be expressed by any existing reset cadence variant.",
+      "evidence": "This action can't be used again until the next dawn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: UnitRecord in types.ts has no magic_item kind. Even with a MagicItemRecord added, four further gaps remain: (1) no passive-bundle mechanics family for always-on worn/attuned effects, (2) no scoped advantage filter for trigger context (breath weapon of creature type), (3) no discern_location atom, (4) no dawn reset cadence. The attunement_slot resource atom exists in v4 taxonomy but is absent from types.ts, which is a fifth gap once the record type is added."
+}

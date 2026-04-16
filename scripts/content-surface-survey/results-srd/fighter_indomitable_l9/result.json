@@ -1,0 +1,22 @@
+{
+  "unit_slug": "fighter_indomitable_l9",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.triggered_on_event",
+      "justification": "Indomitable fires reactively when a specific game event occurs (failing a saving throw). ClassFeatureActivationCost only has 'free' and 'bonus_action'. Neither expresses event-triggered activation. Using 'free' would drop the trigger constraint and misrepresent the mechanic.",
+      "evidence": "If you fail a saving throw, you can reroll it with a bonus equal to your Fighter level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureEffect.modify_roll_reroll_with_bonus",
+      "justification": "Indomitable's core effect is to reroll a failed saving throw and add a class-level-scaled flat bonus to the result. The v4 atoms 'modify_roll_reroll' and 'modify_roll_numeric' both exist in the taxonomy but ClassFeatureEffect only contains GrantExtraActionEffect and HealHpEffect. A new variant expressing (reroll + numeric modifier on a named roll) is needed.",
+      "evidence": "you can reroll it with a bonus equal to your Fighter level. You must use the new roll"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Resource machinery fits cleanly: UseCountCap as ThresholdTiers<number> (axis=class, base=1, tiers L13→2, L17→3) and RestResetCadence.long_rest are both in the type system. The two blockers are surface-layer gaps, not atom gaps: (1) ClassFeatureActivationCost has no triggered/reactive variant, and (2) ClassFeatureEffect has no roll-modification variant. All required v4 atoms exist: modify_roll_reroll, modify_roll_numeric, scale_numeric_bonus, use_count, rest_window. No dhall/json authored — encoding would require lying about either the trigger condition or the effect type."
+}

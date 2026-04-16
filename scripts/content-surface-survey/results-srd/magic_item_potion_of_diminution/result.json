@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_potion_of_diminution",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "No magic_item kind exists in UnitRecord. The surface schema covers spell, class_feature, and mastery only. Magic items require their own top-level record type with an appropriate mechanics family (consumable, charged, passive-worn, attuned, etc.).",
+      "evidence": "Potion of Diminution is typed 'Potion, Rare' — a consumable magic item. There is no MagicItemRecord in types.ts and no magic_item branch in UnitRecord."
+    },
+    {
+      "kind": "new_variant",
+      "name": "rolled_duration",
+      "justification": "DurationValue requires a fixed numeric amount. The Potion of Diminution has a 1d4-hour duration — a rolled/random duration that cannot be expressed as a fixed DurationValue.",
+      "evidence": "\"you gain the 'reduce' effect of the Enlarge/Reduce spell for 1d4 hours\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "alter_size",
+      "justification": "The 'reduce' effect of Enlarge/Reduce is multi-component: the creature's size category drops by one, weapon damage dice are reduced, and the creature has disadvantage on Strength checks and Strength saving throws. No existing v4 effect atom covers size alteration. This is distinct from apply_condition (no SRD condition named 'reduced') and from modify_roll_advantage (which is a partial component only).",
+      "evidence": "\"you gain the 'reduce' effect of the Enlarge/Reduce spell\" — the reduce effect applies a size change, a die-size penalty on weapon damage, and disadvantage on Strength rolls simultaneously."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is structural: UnitRecord has no magic_item kind. Secondary blockers are a rolled/random duration type (1d4 hours, not a fixed DurationValue) and the missing alter_size effect atom (reduce is not a simple condition). All three would need to be addressed before this unit can be encoded. The reduce effect is the substantive mechanic; the cosmetic bottle-flavor text is out-of-core per ARCHITECTURE.md."
+}

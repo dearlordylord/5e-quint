@@ -1,0 +1,22 @@
+{
+  "unit_slug": "flame_blade",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.conjured_weapon_attack",
+      "justification": "Flame Blade creates a melee weapon the caster attacks with by spending a Magic action. This is not a passive roll modifier (Bless) nor a rider on existing attacks (Hunter's Mark). It is an active per-use attack option gated by an explicit action cost. No existing OngoingOperation variant models 'spend Magic action to make a melee spell attack originating from a conjured weapon.'",
+      "evidence": "As a Magic action, you can make a melee spell attack with the fiery blade."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceExpr or DiceAmount: abilityModifier addend",
+      "justification": "Damage is '3d6 + spellcasting ability modifier'. DiceExpr.flat is a fixed integer. There is no way to express a dynamic ability-score addend in the current DiceAmount vocabulary. The modifier changes per caster and cannot be collapsed into a flat number at authoring time.",
+      "evidence": "On a hit, the target takes Fire damage equal to 3d6 plus your spellcasting ability modifier."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The outer family is clearly ongoing_effect (concentration 10 min, persistent, multiple uses over duration). Both gaps are variants of existing surface types rather than a missing family. The light-shedding effect (bright 10 ft / dim 10 ft) is environmental/narrative and correctly out-of-core per ARCHITECTURE.md. The re-evocation mechanic (Bonus Action to re-summon dropped blade) is a secondary fringe interaction, omitted. Upcast scaling (+1d6 per slot above 2) IS expressible as linear_per_level with axis=slot once the core operation gap is filled."
+}

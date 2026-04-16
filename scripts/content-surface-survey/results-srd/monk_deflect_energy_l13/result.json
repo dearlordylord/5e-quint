@@ -1,0 +1,22 @@
+{
+  "unit_slug": "monk_deflect_energy_l13",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_scope_modifier",
+      "justification": "Deflect Energy is a permanent always-on modifier that widens the damage type filter on Deflect Attacks. It has no activation cost, no use count, no resource, and no trigger — the activation family cannot represent it without lying about all of those fields.",
+      "evidence": "You can now use your Deflect Attacks feature against attacks that deal any damage type, not just Bludgeoning, Piercing, or Slashing."
+    },
+    {
+      "kind": "new_variant",
+      "name": "expand_damage_type_scope (ClassFeatureEffect variant)",
+      "justification": "Even if a passive family existed, no current ClassFeatureEffect variant can express 'remove the damage type restriction on feature X'. A new effect variant is needed that names the target feature and declares the restriction being lifted.",
+      "evidence": "...not just Bludgeoning, Piercing, or Slashing."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Deflect Energy is a pure passive upgrade — it widens the eligibility filter of Deflect Attacks from physical-only to all damage types. The existing class_feature/activation family requires activationCost + resource + resetCadence, none of which apply here. ClassFeatureEffect has no 'expand_scope' variant. Two widenings are needed: (1) a new family for always-on passive class feature modifiers (passive_scope_modifier or similar), and (2) a new ClassFeatureEffect variant that references the target feature and the constraint being removed. No honest encoding is possible in the current surface."
+}

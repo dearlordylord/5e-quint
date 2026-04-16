@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_dragonborn_darkvision",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "SpeciesTraitRecord + passive mechanics family",
+      "justification": "UnitRecord has no 'species_trait' kind. types.ts defines UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — species traits are wholly absent. Darkvision is also always-on with no activation, no resource, no reset; no existing mechanics family can represent a permanent passive grant.",
+      "evidence": "You have Darkvision with a range of 60 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_sense effect variant in surface types",
+      "justification": "v4 taxonomy lists 'grant_sense' as an effect atom, but it appears in no effect union in types.ts (not ClassFeatureEffect, not MasteryEffect, not ReactionEffect). Darkvision is precisely a sense grant — the only honest atom is grant_sense with a range parameter.",
+      "evidence": "You have Darkvision with a range of 60 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Darkvision is a single-sentence always-on passive trait. No activation, no use count, no reset cadence. The surface has no SpeciesTraitRecord in UnitRecord and no passive mechanics family. Additionally grant_sense (a v4 atom) is absent from all effect unions in types.ts. All three gaps must be closed before this unit can be encoded honestly. Classification is structural_widening because the top-level kind is missing — the other two gaps are downstream consequences."
+}

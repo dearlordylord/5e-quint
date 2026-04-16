@@ -1,0 +1,40 @@
+{
+  "unit_slug": "monk_perfect_focus_l15",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_trigger (class feature family)",
+      "justification": "Perfect Focus fires automatically on a game event (Initiative roll) with no player activation choice. The only existing class feature family is 'activation', which models player-chosen abilities. A new family is needed for passive, event-triggered effects.",
+      "evidence": "When you roll Initiative and don't use Uncanny Metabolism, you regain expended Focus Points..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "initiative_window (new RestResetCadence kind or new trigger type)",
+      "justification": "The trigger is rolling Initiative — a specific combat-start event with no existing representation in RestResetCadence (short_rest, long_rest, short_or_long_rest, partial_short_full_long) or ClassFeatureActivationCost.",
+      "evidence": "When you roll Initiative..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "refill_resource_to_minimum (new ClassFeatureEffect kind)",
+      "justification": "The effect is 'regain Focus Points until you have 4' — a partial refill of a named shared resource pool to a minimum threshold. This is not heal_hp (no HP involved) and not grant_extra_action. No existing ClassFeatureEffect variant covers cross-resource refill semantics.",
+      "evidence": "you regain expended Focus Points until you have 4 if you have 3 or fewer"
+    },
+    {
+      "kind": "new_variant",
+      "name": "resource_below_threshold (conditional gate)",
+      "justification": "The effect only applies if the caster's current Focus Points count is at or below a specific threshold (3). This 'if you have N or fewer' conditional is not modeled anywhere in the current surface types.",
+      "evidence": "if you have 3 or fewer"
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_on_feature_not_used (negative feature interlock)",
+      "justification": "The effect is suppressed if the monk also used Uncanny Metabolism on the same Initiative roll. This mutual exclusion interlock between two features has no surface representation.",
+      "evidence": "...and don't use Uncanny Metabolism..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Perfect Focus is a passive initiative-triggered conditional resource refill. It has no activation cost (fires automatically), modifies a shared resource pool (Focus Points) rather than a dedicated use-count, requires a threshold check (≤3 points), and is suppressed if a sibling feature is used. None of these four characteristics are representable in the current ClassFeatureMechanics surface. The unit cannot be encoded without fabricating a misleading trace."
+}

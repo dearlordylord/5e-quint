@@ -1,0 +1,22 @@
+{
+  "unit_slug": "warlock_eldritch_master_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "feature_augmentation",
+      "justification": "Eldritch Master is not self-activated. It fires when another named class feature (Magical Cunning) is used. No existing ClassFeatureMechanics family covers 'conditional on another named feature being activated' as the trigger pattern. The activation family assumes the feature itself is independently activated.",
+      "evidence": "When you use your Magical Cunning feature, you regain all your expended Pact Magic spell slots."
+    },
+    {
+      "kind": "new_variant",
+      "name": "refund_spell_slots (new ClassFeatureEffect variant)",
+      "justification": "The effect is a full refund of a named spell slot pool (Pact Magic). ClassFeatureEffect only covers grant_extra_action and heal_hp. No variant exists for spell slot recovery. This is a surface_widening contribution layered on top of the structural gap.",
+      "evidence": "you regain all your expended Pact Magic spell slots"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Eldritch Master upgrades Magical Cunning from half-slot recovery to full-slot recovery. Two gaps prevent honest encoding: (1) the trigger is conditional on another feature being used — structural_widening since no existing family handles feature-chained activation; (2) the effect is spell slot refund — surface_widening since ClassFeatureEffect has no refund_spell_slots variant. Gap #1 dominates and forces structural_widening. No Dhall/JSON/trace produced."
+}

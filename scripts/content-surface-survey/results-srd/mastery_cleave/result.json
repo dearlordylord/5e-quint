@@ -1,0 +1,24 @@
+{
+  "unit_slug": "mastery_cleave",
+  "outcome": "clean",
+  "atoms_used": [
+    "attack_roll",
+    "damage",
+    "mastery_root",
+    "on_hit_window",
+    "target",
+    "turn_start_window",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Cleave fits OnHitTriggerMechanics with GrantWeaponAttackRider exactly. All types (weapon_hit_melee_only trigger, adjacent_to_primary secondary target, weapon_damage / negative_only ability modifier, once_per_turn usage limit) were already present in types.ts. Tracer handles grant_weapon_attack in traceMasteryEffect with the Cleave comment. No widenings needed."
+}

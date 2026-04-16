@@ -1,0 +1,34 @@
+{
+  "unit_slug": "moonbeam",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "cylinder area shape",
+      "justification": "Moonbeam creates a 5-ft-radius, 40-ft-high Cylinder. The Attachment.area.shape union currently only admits { kind: 'sphere'; radiusFeet }. A cylinder variant needs { kind: 'cylinder'; radiusFeet: number; heightFeet: number }.",
+      "evidence": "A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high Cylinder centered on a point within range."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_save_gate OngoingOperation",
+      "justification": "Moonbeam's core mechanic is a Constitution save that fires when the area appears, when the area moves into a creature's space, when a creature enters the area, and when a creature ends its turn in the area. OngoingOperation currently only supports roll_modifier and damage_on_hit. Neither captures a save gate triggered by area contact/entry/turn-end. The v4 repeat_save atom exists but is not exposed as an OngoingOperation variant.",
+      "evidence": "When the Cylinder appears, each creature in it makes a Constitution saving throw. A creature also makes this save when the spell's area moves into its space and when it enters the spell's area or ends its turn there. A creature makes this save only once per turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "movable area attachment",
+      "justification": "On each later turn the caster can spend their Magic action to move the cylinder up to 60 feet. The current surface types have no way to express that an ongoing area attachment can be relocated by paying an action cost. This is not covered by any OngoingOperation variant or any property of the Attachment type.",
+      "evidence": "you can take a Magic action on later turns to move the Cylinder up to 60 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "apply_condition (shape-shift restriction) in Effect",
+      "justification": "On a failed save, the creature reverts to its true form and cannot shape-shift until it leaves the cylinder. The Effect union only has damage and none; apply_condition is not in Effect (only in mastery SaveGateRiderResult), and the Condition type only admits 'prone'. The shape-shift restriction requires either a new Condition literal ('shape_shifted' / 'true_form') or a dedicated effect variant.",
+      "evidence": "if the creature is shape-shifted (as a result of the Polymorph spell, for example), it reverts to its true form and can't shape-shift until it leaves the Cylinder."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Moonbeam's family is honestly ongoing_effect (concentration, area, persistent operation). Four surface gaps prevent encoding: (1) cylinder area shape variant, (2) area_save_gate OngoingOperation kind (the repeat_save v4 atom exists but is unexposed), (3) movable area mechanic, (4) shape-shift prevention effect. Slot-scaling (+1d10/slot above 2) is expressible via linear_per_level axis=slot and is not a blocker. No new v4 atoms are needed for the damage/save path; the blockers are surface-type variants."
+}

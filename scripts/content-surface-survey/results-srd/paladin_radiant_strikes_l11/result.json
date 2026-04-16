@@ -1,0 +1,22 @@
+{
+  "unit_slug": "paladin_radiant_strikes_l11",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "ClassFeaturePassiveOnHitMechanics",
+      "justification": "Radiant Strikes is a permanent passive rider on every qualifying attack hit. It requires no activation, no resource pool, and no rest reset. The existing ClassFeatureMechanics = ClassFeatureActivationMechanics family mandates activationCost + resource + resetCadence, which are all wrong for a feature that is always-on. A new family with a different header structure is needed.",
+      "evidence": "When you hit a target with an attack roll using a Melee weapon or an Unarmed Strike, the target takes an extra 1d8 Radiant damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_on_hit (ClassFeatureEffect)",
+      "justification": "ClassFeatureEffect only contains grant_extra_action and heal_hp. The extra Radiant damage rider on every weapon/unarmed hit is neither. DamageOnHitOperation already exists in the spell surface (OngoingOperation) and could be reused or mirrored for the class-feature passive family.",
+      "evidence": "the target takes an extra 1d8 Radiant damage"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The mastery on_hit_trigger family is the closest structural analogue — it also adds a damage/effect rider to a weapon attack hit. The difference is: (1) masteries are weapon properties, class features are character-level; (2) Radiant Strikes has no usage limit and no wielder choice — it fires on every melee weapon or unarmed strike hit unconditionally. A new ClassFeatureMechanics family (e.g. passive_on_hit) with a minimal header (just trigger scope: melee_weapon_or_unarmed) and a DamageOnHit effect would encode this honestly."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_record",
+      "justification": "UnitRecord has no magic_item kind. types.ts defines only SpellRecord | ClassFeatureRecord | MasteryRecord. Magic items need a new top-level record kind with its own mechanics header (rarity, attunement requirement, item type) and at least one mechanics family.",
+      "evidence": "Wondrous Item, Uncommon — the unit is a magic item with no analog in the current UnitRecord union."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_container_family",
+      "justification": "The bag's primary mechanic is extradimensional storage — a passive property with capacity constraints (weight, volume), a weight override (always 5 lbs), and a time-limited air supply. No existing mechanics family models passive item properties. The closest surface shape (activation) requires an explicit activation cost and effect target, neither of which applies here.",
+      "evidence": "This bag has an interior space considerably larger than its outside dimensions — roughly 2 feet square and 4 feet deep on the inside. The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. The bag weighs 5 pounds, regardless of its contents."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_interaction_destroy_gate",
+      "justification": "The cross-item interaction mechanic — placing the bag inside another extradimensional item destroys both and opens a planar gate that sucks nearby creatures through — is a conditional destruction effect triggered by an inventory-placement interaction. No existing spell family, activation family, or mastery family models this: it has no casting time, no attunement consumption, and no wielder-initiated activation. It fires on a world-state condition (item placed inside item).",
+      "evidence": "Placing a Bag of Holding inside an extradimensional space created by a Handy Haversack, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. Any creature within a 10-foot-radius Sphere centered on the gate is sucked through it to a random location on the Astral Plane."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit fails at the record kind level — magic_item is not in UnitRecord. Even with that widening, the Bag of Holding requires at least two additional mechanics families: passive_container (capacity, weight override, air supply) and an item_interaction_destroy_gate subgraph. The only mechanic that touches an existing atom is the Utilize action required to retrieve items (action_quota), but this is a passive utility operation, not a combat activation. The v4 taxonomy lists magic_item_root as a source atom, and Section 12 explicitly calls out finer item-resource typing as a known weak spot."
+}

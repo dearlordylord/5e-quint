@@ -1,0 +1,34 @@
+{
+  "unit_slug": "wall_of_fire",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activation_plus_ongoing",
+      "justification": "Wall of Fire has two mechanically distinct phases that must coexist: (1) an instantaneous save_gate that fires when the wall appears, and (2) an ongoing area damage zone that fires when creatures enter or end their turn inside/near the wall. No existing family covers both. The 'activation' family is one-shot and cannot express a persistent operation. The 'ongoing_effect' family has no mechanism for an initial activation save. A new spell family (or cross-family composition) is needed.",
+      "evidence": "When the wall appears, each creature in its area makes a Dexterity saving throw, taking 5d8 Fire damage on a failed save or half as much damage on a successful one. One side of the wall...deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area.shape — line and ring",
+      "justification": "Attachment.area.shape currently only supports 'sphere'. Wall of Fire requires a line shape (60 ft long × 20 ft high × 1 ft thick) or a ring shape (20 ft diameter × 20 ft high). Neither is expressible. Multiple other wall spells (Wall of Ice, Wall of Stone, Wall of Force, Blade Barrier) will face the same gap.",
+      "evidence": "You can make the wall up to 60 feet long, 20 feet high, and 1 foot thick, or a ringed wall up to 20 feet in diameter, 20 feet high, and 1 foot thick."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation — damage_on_area_entry_or_turn_end",
+      "justification": "The existing OngoingOperation variants are 'roll_modifier' and 'damage_on_hit' (which fires on attack-roll hits against a creature in the attachment scope). Wall of Fire needs an operation that fires when a creature enters the area OR ends its turn within it. This is a distinct trigger: spatial proximity + turn-end event, not an attack resolution.",
+      "evidence": "A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area — directional_damage",
+      "justification": "Wall of Fire designates one side of the wall as the damage-dealing side and the other as inert. This directional property of an area effect has no representation in the current Attachment or operation grammar. A wall shape naturally has two faces; only one face's proximity counts for the ongoing damage.",
+      "evidence": "One side of the wall, selected by you when you cast this spell, deals 5d8 Fire damage...The other side of the wall deals no damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is structural: no single family can honestly express the combination of an on-cast save_gate (instantaneous, one-time) and an ongoing area damage zone (turn-end/entry trigger, persists for duration). Secondary gaps are the missing wall/ring area shapes and the missing turn-end area proximity operation. The slot scaling (+1d8 per slot above 4) is representable via linear_per_level with axis=slot and would not require widening."
+}

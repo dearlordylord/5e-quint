@@ -1,0 +1,28 @@
+{
+  "unit_slug": "reincarnate",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "restore_life",
+      "justification": "Reincarnate restores a dead creature to life in a new body. No v4 effect atom covers resurrection — `heal` restores HP only and cannot represent bringing a dead creature back. This is mechanically distinct: the target is not at 0 HP but Dead, and the restoration involves soul-calling semantics.",
+      "evidence": "the spell forms a new body for it and calls the soul to enter that body"
+    },
+    {
+      "kind": "new_atom",
+      "name": "replace_species_traits",
+      "justification": "Reincarnate permanently replaces the target's species traits with those of a new randomly-determined species. No v4 atom covers permanent species-trait replacement on a creature. `alter_item_kind` is the closest analog but is item-scoped. This is a new class of effect: remove all traits from species A, install all traits from species B.",
+      "evidence": "it loses the traits of its previous species and gains the traits of its new one"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.unconditional",
+      "justification": "Reincarnate is instantaneous and one-shot, fitting the `activation` family shape, but it has no resolution gate — no attack roll, no saving throw. `ActivationPhase` currently requires `attack_roll` or `save_gate` as its kind. An `unconditional` phase variant is needed to express 'apply effect directly on a valid target with no roll'. This is a surface_widening subordinate to the atom gaps.",
+      "evidence": "Spell text describes no attack roll and no saving throw — it fires deterministically when cast on a valid dead humanoid target within 10 days of death."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The `activation` family is the right shape (instantaneous, one-shot). CastingTime.minutes with amount=60 covers the 1-hour cast. Range touch and duration instantaneous are representable. The 1d10 species table introduces randomized selection, but once species is known the mechanical consequences (trait swap) are deterministic — this is not `dm_agenda`. A minor surface gap also exists: Components has no `consume` flag for material components that are consumed by the spell, but this is not the blocking gap."
+}

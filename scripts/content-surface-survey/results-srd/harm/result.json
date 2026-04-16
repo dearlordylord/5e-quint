@@ -1,0 +1,22 @@
+{
+  "unit_slug": "harm",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_max_hp variant in Effect",
+      "justification": "Harm's on-fail branch reduces the target's HP maximum by the amount of necrotic damage taken. The current Effect union is DamageEffect | NoneEffect with no modify_max_hp variant. The v4 atom 'modify_max_hp' exists in the taxonomy (§9 Effect Atoms) but the surface type does not expose it.",
+      "evidence": "it takes 14d6 Necrotic damage, and its Hit Point maximum is reduced by an amount equal to the Necrotic damage it took"
+    },
+    {
+      "kind": "new_variant",
+      "name": "damage_linked amount for modify_max_hp",
+      "justification": "The HP max reduction is not a static DiceAmount — it equals the actual necrotic damage rolled on that casting. No current DiceAmount shape (fixed / threshold_tiers / linear_per_level) can express 'amount = damage dealt this resolution'. A new surface coupling variant such as {kind: 'equal_to_damage_taken'} is needed alongside the modify_max_hp Effect variant.",
+      "evidence": "its Hit Point maximum is reduced by an amount equal to the Necrotic damage it took"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The save_gate + damage structure fits cleanly: activation family, CON save, caster_spell_save_dc, 14d6 necrotic on fail, 7d6 (half) on success, instantaneous duration. The sole blocking gap is the on-fail HP max reduction, which requires (1) a modify_max_hp Effect variant and (2) a damage-linked amount coupling. Both gaps are surface gaps — the v4 atom exists. No Dhall/JSON produced because omitting the HP max rider would yield a misleadingly clean trace for what is the defining mechanic of this spell."
+}

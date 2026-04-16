@@ -1,0 +1,28 @@
+{
+  "unit_slug": "conjure_animals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "conjure_companion family",
+      "justification": "Conjure Animals creates a persistent, mobile companion entity with its own spatial position. No existing spell family (ongoing_effect, activation, triggered_reaction, anchored_trigger) can honestly encode a spell that: (a) creates a companion at a point within range, (b) allows the caster to move it on their turn, (c) triggers optional save gates when creatures enter or end their turn within its proximity zone, and (d) passively benefits the caster while near it. A new spell family — e.g. conjure_companion or summon_entity — is needed to cover this shape.",
+      "evidence": "You conjure nature spirits that appear as a Large pack of spectral, intangible animals in an unoccupied space you can see within range. The pack lasts for the duration, and you choose the spirits' animal form."
+    },
+    {
+      "kind": "new_atom",
+      "name": "proximity_window",
+      "justification": "The pack triggers a save gate 'whenever the pack moves within 10 feet of a creature' or 'whenever a creature enters a space within 10 feet of the pack or ends its turn there.' This is a proximity-to-companion zone trigger. It is distinct from post_action_window (fires after an action on the acting creature) and on_hit_window (fires on a weapon/spell hit). A new window atom — proximity_window — is needed to represent 'creature enters or ends turn within N feet of this entity, or entity moves within N feet of creature.'",
+      "evidence": "Whenever the pack moves within 10 feet of a creature you can see and whenever a creature you can see enters a space within 10 feet of the pack or ends its turn there, you can force that creature to make a Dexterity saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "proximity-conditioned passive rider on caster",
+      "justification": "The caster gains Advantage on Strength saving throws while within 5 feet of the pack. This is an ongoing passive effect on the caster conditioned on runtime spatial proximity to the companion — not encodable as a roll_modifier on the companion attachment (which applies to targets of the spell, not the caster) and not encodable without a mechanism to express 'while caster is within N ft of companion.'",
+      "evidence": "You have Advantage on Strength saving throws while you're within 5 feet of the pack."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Conjure Animals (SRD 5.2.1) is a 'conjure companion' spell — it creates a mobile spectral entity with its own board position, caster-controlled movement, a proximity zone that triggers optional save gates, and a passive proximity-conditioned benefit to the caster. None of the four existing spell families can encode these mechanics without lying. The upcast scaling (+1d10 Slashing per slot above 3) is straightforward and would fit the existing DiceAmount linear_per_level shape if a suitable family existed. The 'once per turn per creature' save limit is also a new surface constraint not yet modeled."
+}

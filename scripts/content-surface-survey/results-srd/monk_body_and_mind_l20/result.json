@@ -1,0 +1,22 @@
+{
+  "unit_slug": "monk_body_and_mind_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive (ClassFeatureMechanics family)",
+      "justification": "Body and Mind is a permanent, passive character-progression effect that grants a one-time ability score increase at level 20. It has no activation cost, no use-count resource, and no reset cadence — all three fields required by the only existing family ('activation'). Forcing it into 'activation' would be dishonest: there is nothing to activate, nothing to count, nothing to reset. A 'passive' family is needed for features whose effect is a durable state change applied at level acquisition.",
+      "evidence": "Your Dexterity and Wisdom scores increase by 4, to a maximum of 25."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The sole mechanical content of this feature is a permanent increase to two ability scores (Dexterity and Wisdom, +4, capped at 25). No existing ClassFeatureEffect covers this: 'grant_extra_action' is action-economy, 'heal_hp' is HP restoration. The v4 taxonomy notes 'modify_ability_score as a runtime effect versus as pre-runtime character state (currently treated as out-of-scope)' but Body and Mind and comparable L20 capstone features (Barbarian Primal Champion: Str/Con +4) apply at character creation/progression time — the engine must track the modified score for downstream computations. This forces 'modify_ability_score' into the atom inventory.",
+      "evidence": "Your Dexterity and Wisdom scores increase by 4, to a maximum of 25."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Structural widening on two axes: (1) ClassFeatureMechanics has no 'passive' family — every existing family assumes activation with use-count and reset cadence, none of which apply to a permanent capstone stat boost; (2) no effect atom covers permanent ability score modification. Both gaps are closely related: the atom is only needed because the family is also missing. Comparable unit: Barbarian Primal Champion (Str+4, Con+4). The taxonomy already flags modify_ability_score as a known weak spot."
+}

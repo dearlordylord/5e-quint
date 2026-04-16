@@ -1,0 +1,16 @@
+{
+  "unit_slug": "fire_storm",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "area_shape_contiguous_cubes",
+      "justification": "Fire Storm's area of effect is 'up to ten 10-foot Cubes' arranged contiguously by the caster at cast time. The current Attachment.area.shape union only contains { kind: 'sphere'; radiusFeet: number }. A cube-based shape variant — minimally { kind: 'contiguous_cubes'; cubeSideFeet: number; maxCubes: number } — is needed to represent this spell without lying about its geometry.",
+      "evidence": "The area of the storm consists of up to ten 10-foot Cubes, which you arrange as you like. Each Cube must be contiguous with at least one other Cube."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary mechanic encodes cleanly into the existing activation/save_gate path: DEX save against caster spell save DC, 7d10 Fire damage on fail, half on success. The only blocker is Attachment.area.shape lacking a cube variant. The secondary effect (flammable unattended objects start burning) is an environmental world-state effect on objects with no creature-targeting resolution; it would be deferred or classified dm_agenda if surveyed separately, and does not affect this classification."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_defender",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemRecord",
+      "justification": "UnitRecord has no magic_item kind. types.ts only exports SpellRecord | ClassFeatureRecord | MasteryRecord. A MagicItemRecord family is required before any magic item can be encoded.",
+      "evidence": "Weapon (Any Melee Weapon), Legendary (Requires Attunement)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_enchantment family",
+      "justification": "The +3 bonus to attack rolls and damage rolls is a passive always-on property of the weapon, not an activated effect. No existing mechanics family (activation, ongoing_effect, on_hit_trigger) models a passive item enchantment that applies without any activation cost.",
+      "evidence": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "attunement procedure",
+      "justification": "The item requires attunement. The v4 taxonomy has an 'attune' procedure atom and 'attunement_slot' resource atom, but neither is represented in types.ts. Encoding attunement requires new surface types for the attune procedure and attunement_slot resource.",
+      "evidence": "Legendary (Requires Attunement)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "variable_bonus_split operation",
+      "justification": "The transfer mechanic lets the wielder dynamically reallocate a shared +N bonus between two targets (attack/damage rolls vs AC). The split is a free integer choice per first-attack-of-turn (e.g., +1 attack/+2 AC, or +0 attack/+3 AC). Current surface types model fixed-delta effects (modify_roll_numeric, modify_ac). There is no surface type for a shared-pool bonus that can be partitioned at runtime across two distinct effect targets.",
+      "evidence": "you can transfer some or all of the weapon's bonus to your Armor Class. For example, you could reduce the bonus to your attack rolls and damage rolls to +1 and gain a +2 bonus to Armor Class."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Primary blocker is the missing magic_item kind in UnitRecord — no encoding path exists at all. Secondary blockers are (1) no passive enchantment family, (2) no attunement surface types, and (3) no variable bonus-split operation. The variable-split mechanic is likely unique among SRD magic items and may warrant a dedicated surface type rather than a generic split primitive."
+}

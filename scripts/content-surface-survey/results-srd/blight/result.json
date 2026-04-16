@@ -1,0 +1,22 @@
+{
+  "unit_slug": "blight",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Effect.half_of_fail_damage",
+      "justification": "Blight deals half damage on a successful Constitution save. The Effect type for spell activation phases only has { kind: 'damage', amount } and { kind: 'none' }. 'Half as much' is a relative quantity: at base it is 4d8, but at slot 5 the fail branch yields 9d8, making the success branch 4.5d8 — not expressible as an integer DiceExpr. Hardcoding onSuccess independently produces a trace that lies about the scaling relationship. A new variant { kind: 'half_of_fail_damage' } (no extra fields; implies half the onFail expression, rounded down per SRD) is the minimum honest addition. This is the same gap identified in the Fireball survey result.",
+      "evidence": "taking 8d8 Necrotic damage on a failed save or half as much damage on a successful one"
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.creature_type_auto_fail",
+      "justification": "Plant creatures automatically fail the Constitution save. The ActivationPhase save_gate carries only ability, dc, onFail, and onSuccess — there is no field for creature-type conditional bypasses. A new surface field (e.g., autoFail: ReadonlyArray<CreatureType>) expressing type-based automatic save failure is needed to represent this mechanic without omission.",
+      "evidence": "A Plant creature automatically fails the save."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The core structure (activation family, single save_gate phase, Con save, necrotic damage, slot scaling +1d8/slot above 4) fits cleanly once Effect.half_of_fail_damage is added — same architecture as Fireball. The Plant auto-fail is a secondary surface widening on the save_gate shape; it does not block the core trace but would be missing from a complete encoding. The alternative 'target a nonmagical plant object' mode (no save, plant simply withers) is a world-state outcome with no deterministic mechanical resolution; it is legitimately out-of-core (dm_agenda territory for that mode) and does not block the creature-targeting mechanic. It would eventually require an object attachment variant and a wither/destroy effect atom if environmental targeting is ever modeled."
+}
