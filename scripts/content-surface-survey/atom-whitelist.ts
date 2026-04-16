@@ -183,6 +183,46 @@ export const STAGE_1_2_EXTENSIONS = [
   "concentration_lock",
 ] as const;
 
+// Stage 3 extensions: atoms the prototype surface already emits via the
+// tracer but which are not yet in the v4 research graph. Added to the
+// whitelist because the types.ts surface defines them as first-class
+// variants (e.g. `half_damage` sentinel, `charge_pool` resource,
+// `set_ability_score` effect) — flagging them as "unknown" would surface
+// a phantom atom_widening verdict on units that encode cleanly.
+export const STAGE_3_EXTENSIONS = [
+  // Resource atoms beyond v4's {spell_slot, charge, use_count, attunement_slot}.
+  "attack_slot", // Activation: consumes one of the attacker's attacks (Breath Weapon, Extra Attack).
+  "charge_pool", // Magic-item charge aggregate (Wand of Magic Missiles, Ring of the Ram).
+  // Procedure atom for direct phases (no D20 test) — tracer emits this
+  // instead of resolution atoms when ActivationPhase.kind === "direct".
+  "direct_apply",
+  // Effect atoms: save-gate half-damage sentinel + ability-score setter.
+  "half_damage", // Fireball-family "half on success" outcome.
+  "set_ability_score", // Amulet of Health "Con becomes 19".
+  // Lifecycle atom for magic-item destruction (Wand of Magic Missiles
+  // last-charge d20 destruction, single-use wand expiration).
+  "item_destruction",
+  // Resolution-category predicate atoms emitted by the tracer's
+  // EquipmentPredicate dispatch (Defense feat gates modify_ac on armor,
+  // fighting-style feats gate bonuses on weapon category).
+  "wearing_armor",
+  "wielding_weapon",
+  // Effect atoms for movement/senses/detection/crit-range modification —
+  // first-class surface primitives beyond v4's modify_speed / grant_sense.
+  "teleport", // Misty Step, Dimension Door (short-range positional).
+  "grant_speed", // Fly (fly speed), Spider Climb (climb speed).
+  "detect", // Detect Magic, Detect Evil and Good (radius + property).
+  "modify_crit_range", // Improved Critical (crit on 19-20).
+  "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.
+  "composite", // Bundle multiple effects in a single slot (Hypnotic Pattern).
+] as const;
+
+// Stage 3 relation extensions: tracer-emitted relations beyond v4.
+export const STAGE_3_RELATIONS = [
+  "repeats_as", // repeat_save cadence edge.
+  "lifecycle", // magic-item destruction edge from root → item_destruction.
+] as const;
+
 export const ALL_KNOWN_ATOMS: ReadonlyArray<string> = [
   ...V4_SOURCE_ATOMS,
   ...V4_PROCEDURE_ATOMS,
@@ -194,9 +234,13 @@ export const ALL_KNOWN_ATOMS: ReadonlyArray<string> = [
   ...V4_SCALING_ATOMS,
   ...V4_EFFECT_ATOMS,
   ...STAGE_1_2_EXTENSIONS,
+  ...STAGE_3_EXTENSIONS,
 ];
 
-export const ALL_KNOWN_RELATIONS: ReadonlyArray<string> = V4_RELATIONS;
+export const ALL_KNOWN_RELATIONS: ReadonlyArray<string> = [
+  ...V4_RELATIONS,
+  ...STAGE_3_RELATIONS,
+];
 
 export function isKnownAtom(kind: string): boolean {
   return ALL_KNOWN_ATOMS.includes(kind);
