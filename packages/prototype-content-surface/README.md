@@ -10,10 +10,7 @@ Workspace package for the content-authoring → surface → tracer flow describe
 # from the repo root
 pnpm install
 
-# trace Bless → stdout
-pnpm --filter @dnd/prototype-content-surface trace:bless
-
-# trace Bless → file
+# trace one unit → file
 pnpm --filter @dnd/prototype-content-surface exec tsx src/run.ts content/bless.json --out content/bless.trace.md
 
 # typecheck
@@ -24,7 +21,7 @@ Or from inside the package:
 
 ```sh
 cd packages/prototype-content-surface
-pnpm trace:bless
+pnpm exec tsx src/run.ts content/bless.json --out content/bless.trace.md
 pnpm typecheck
 ```
 
@@ -43,11 +40,25 @@ See `/plans/CONTENT_SURFACE_PROTOTYPE.md` §"Per-spell red/green loop".
 
 Short version: encode → trace → review mermaid → green (next spell) or red (extend `src/surface/types.ts`, re-trace).
 
+## Survey generator
+
+If you want to populate or widen this package from the SRD/PHB survey workflow, use:
+
+- [`scripts/content-surface-survey/README.md`](/workspace/typescript/dnd/scripts/content-surface-survey/README.md)
+
+That pipeline:
+
+1. selects units from the survey catalog,
+2. has Codex/Claude author `content/<slug>.dhall`,
+3. compiles Dhall to `content/<slug>.json`,
+4. validates and traces the result,
+5. promotes successful artifacts back into this package.
+
 ## Authoring format: Dhall + JSON
 
 Spells are authored in Dhall (`content/<spell>.dhall`) as the canonical source. The compiled JSON (`content/<spell>.json`) is what the tracer reads.
 
-Right now no Dhall toolchain is required — the JSON is hand-maintained. If/when `dhall-to-json` is standardized:
+The worker and local authoring flow now assume `dhall-to-json` is installed. Compile with:
 
 ```sh
 dhall-to-json --file content/bless.dhall --output content/bless.json
@@ -60,5 +71,5 @@ dhall-to-json --file content/bless.dhall --output content/bless.json
 - `src/interpreter/mermaid.ts` — mermaid renderer.
 - `src/run.ts` — CLI entry.
 - `content/bless.dhall` — authored source for Bless.
-- `content/bless.json` — compiled (hand-written).
+- `content/bless.json` — compiled runtime artifact.
 - `content/bless.trace.md` — regenerable trace output.

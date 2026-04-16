@@ -9,11 +9,7 @@
   "scripts": {
     "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src",
     "circular": "madge --extensions ts --circular src",
-    "typecheck": "tsc --noEmit",
-    "trace:bless": "tsx src/run.ts content/bless.json",
-    "trace:acid_splash": "tsx src/run.ts content/acid_splash.json",
-    "trace:ice_knife": "tsx src/run.ts content/ice_knife.json",
-    "trace:action_surge": "tsx src/run.ts content/action_surge.json"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
