@@ -154,3 +154,124 @@ At that point, Phase 1 proper begins (per the existing research-side plan).
 1. **Scope of first pass.** Build just Bless end-to-end this session, or Bless + Shield (first red/green pair)? Bless alone is sufficient to prove the flow; Shield adds the first subgraph-pattern exercise.
 2. **Dhall tolerance.** If you want to exercise the Dhall toolchain, we install `dhall-to-json`. If you'd prefer to stay pure JSON until the surface stabilizes, the Dhall files serve as documentation-only until then.
 3. **Location of trace outputs.** Colocate next to source JSON (`content/bless.trace.md`) or separate `traces/` directory? Leaning colocated — easier to review diffs when editing a spell.
+
+---
+
+## Current state (as of handoff)
+
+### Surface features shipped
+
+- **Stage 1** — `castingTime` first-class on `SpellMechanicsHeader`; `action_quota` / `bonus_action_quota` / `reaction_quota` (Quota resources from UBIQUITOUS_LANGUAGE §"Resource Consumption"); `concentration_lock` (Lock resource).
+- **Stage 2** — `SpellMechanicsHeader` carries `level`, `school`, `castingTime`, `range`, `components`, `duration`. `DiceAmount` `threshold_tiers`/`linear_per_level` axis-parameterized (character/class/slot). `UseCountCap` widens with `threshold_tiers<number>`.
+- **Option B (scaling unification)** — `LevelAxis = "character" | "class" | "slot" | "subclass" | "proficiency_bonus"`; generic `ThresholdTiers<T>` and `LinearPerLevel<T>`; `DiceExpr` + `DiceExprDelta` for partial overrides.
+- **Triggered-reaction family** — `family: "triggered_reaction"` on `SpellMechanics`; `CastingTime.reaction` carrying a `ReactionTrigger` grammar (`hit_by_attack_roll` / `targeted_by_named_spell` / `any_of`); `respond` procedure; Subgraph A (Prepare/Prompt/Commit) chain; `interrupt_resolution`, `modify_ac`, `negate_named_effect` effect atoms; `self` attachment.
+- **Class-feature basics** — `ClassFeatureActivationCost` with `free` and `bonus_action`; `UseCountCap` class-level-tier schedule; `RestResetCadence` with `short_or_long_rest` / `long_rest` / `short_rest` / `partial_short_full_long` (Second Wind pattern); `heal_hp` and `grant_extra_action` ClassFeatureEffect variants; `restrict_action_set`.
+- **Widening 1 — Mark/Transfer (Subgraph E)** — `mark` attachment kind with `MarkTransfer` (`onEvent: target_drops_to_0_hp`, `cost: bonus_action`); `damage_on_hit` operation variant on `OngoingOperation`; `bonus_action` added to `CastingTime`. Tracer emits `mark_target` + `transfer_mark` effects and a `transfers_to` edge; `damage_on_hit` opens an `on_hit_window` granting a `damage` effect attached to the mark. Pressure case: Hunter's Mark.
+- **Widening 2 — On-Hit Rider (Subgraph G)** — `MasteryRecord` as a third top-level unit kind; `on_hit_trigger` family; `MasteryTrigger` (`weapon_hit` / `weapon_hit_melee_only`); closed `MasteryEffect` with `modify_roll_advantage`, `save_gate`, `grant_weapon_attack` (Cleave); `RiderExpiry`; `DcSource` extended with `weapon_attack_dc`; `Condition` narrow atlas (`prone`); `MasteryUsageLimit` (`once_per_turn`). Tracer emits `mastery_root` → `attack_roll` → `on_hit_window` with proper `branches_on_save` edges. Pressure cases: Sap, Topple, Cleave.
+- **Widening 3 — Anchored-trigger (hunt §4.2)** — new `anchored_trigger` SpellMechanics family; `AnchorTarget` (`location` / `area(cube)`); closed `AnchoredEvent` (`physical_contact` / `enters_area`); closed `AnchoredFilter` (`creature_exemption_list`); `AnchoredSignal` (audible / mental) folded into the release node's label, never emitted as non-v4 atoms; `CastingTime.minutes { amount; ritual }` for long-cast / ritual spells. Tracer emits `store` / `release` procedures, `post_action_window` for each event, and keeps the atom inventory strictly v4. Pressure case: Alarm.
+
+### Axis × shape coverage (scaling)
+
+| axis × shape | exercised by | status |
+| --- | --- | --- |
+| `character` × `threshold_tiers` | Acid Splash | ✓ |
+| `slot` × `linear_per_level` | Ice Knife (cold dice) | ✓ |
+| `slot` × `linear` target count (Bless-style) | Bless | ✓ (legacy `scale_target_count`) |
+| `class` × `threshold_tiers` (use count) | Action Surge, Second Wind | ✓ |
+| `class` × `linear_per_level` (flat addend) | Second Wind (heal +Fighter level) | ✓ |
+| `slot` × `threshold_tiers` | — | no SRD pressure |
+| `character` × `linear_per_level` | — | no SRD pressure |
+
+### Encoded units (11)
+
+| Slug | Kind | Family | Surface exercise |
+| --- | --- | --- | --- |
+| `bless` | spell | ongoing_effect | concentration, target scaling by slot |
+| `acid_splash` | spell | activation | cantrip character-level threshold tiers, AoE sphere, save_gate |
+| `ice_knife` | spell | activation | 2 phases (attack + AoE save), `on_primary_target` origin, `branches_on_completion` between phases, slot-linear cold damage |
+| `action_surge` | class_feature | activation | class_level_tiers on use_count (L2/L17), restrict_action_set |
+| `fighter_second_wind` | class_feature | activation | bonus_action quota, class_level_tiers use_count (L1/L4/L10), partial_short_full_long reset, heal_hp with linear_per_level flat addend |
+| `shield` | spell | triggered_reaction | Subgraph A (Prepare/Prompt/Commit), reaction trigger grammar, interrupt_resolution, modify_ac, negate_named_effect |
+| `hunters_mark` | spell | ongoing_effect | `mark` attachment + `MarkTransfer`; `damage_on_hit` operation opens `on_hit_window` granting 1d6 Force damage; `bonus_action` casting time |
+| `mastery_sap` | mastery | on_hit_trigger | `modify_roll_advantage` rider with `target_uses_or_turn_start` expiry |
+| `mastery_topple` | mastery | on_hit_trigger | `save_gate` rider with `weapon_attack_dc`, `branches_on_save` → `apply_condition(prone)` |
+| `mastery_cleave` | mastery | on_hit_trigger | `grant_weapon_attack` rider with adjacent-secondary target + `once_per_turn` use fence |
+| `alarm` | spell | anchored_trigger | `store` / `release` pair; `area(cube ≤ 20 ft)` anchor; `post_action_window` × 2 (physical_contact, enters_area); filters + signals folded into release label; ritual 1-minute cast |
+
+All typecheck clean. Traces under `packages/prototype-content-surface/content/<slug>.trace.md` (gitignored). Surface types in `src/surface/types.ts`; tracer in `src/interpreter/tracer.ts`.
+
+### Survey data
+
+- `scripts/content-surface-survey/survey-results-srd.jsonl` — 28 Tier 0+1 units classified (pre-Option-B).
+- `scripts/content-surface-survey/REPORT_SRD.md` — aggregated report. Verdict: Option B (9 class_level_tiers + 3 linear_per_level, new axes forced).
+- Harness bugs identified during run: result.json race between parallel workers (result: ~4 suspect `clean` verdicts where claude self-report got clobbered); monitor-tool phantom events (cosmetic). Harness works but needs per-worker workspaces before a Tier 2 at scale.
+
+## Candidates 1–4 — status
+
+### 1. Mark/Transfer subgraph — Hunter's Mark ✅ DELIVERED
+
+**Scope.** Small. `mark_target` / `transfer_mark` effects, `mark` attachment (v4), `transfers_to` edge.
+
+**Result.** `hunters_mark.json` re-encoded as `ongoing_effect` with `mark` attachment + `MarkTransfer` + `damage_on_hit` operation; previous encoding mis-modeled the 1d6 Force as a generic `roll_modifier on attack_roll`. Trace now shows the mark attachment with its transfer rule, a `mark_target` effect, a `transfer_mark` effect with `transfers_to` edge, and an `on_hit_window` hosting the damage rider. Harness-side validator verdict: `clean`.
+
+### 2. On-Hit Rider subgraph — masteries (Sap, Topple, Cleave) ✅ DELIVERED
+
+**Scope.** Medium. New `MasteryRecord` unit kind; `on_hit_trigger` family; rider effects `modify_roll_advantage`, `save_gate` (with attack-rooted DC), `grant_weapon_attack`; `apply_condition(prone)`; `weapon_attack_dc` DcSource variant.
+
+**Result.** All three masteries trace green. Sap emits `modify_roll_advantage` attached to target with `persists_until turn_start_window`. Topple emits `save_gate` with `weapon_attack_dc`, branches_on_save to `apply_condition prone`. Cleave emits a nested `attack_roll` against the adjacent secondary target with `once_per_turn` use-count fence. Harness-side validator verdict: `clean` on all three.
+
+### 3. Anchored-trigger grammar — Alarm ✅ DELIVERED
+
+**Scope.** Large. New `anchored_trigger` payload family; closed anchor/event/filter grammar; `CastingTime.minutes` with ritual flag.
+
+**Result.** Alarm traces via `store` + `release` procedures. Anchor modeled as `area` (cube ≤ 20 ft) with `post_action_window` nodes for each event. Filters and signals are folded into the release node's label rather than emitted as nodes, so the atom inventory stays strictly v4 (per ARCHITECTURE.md: notification surfaces are caller-owned). Harness-side validator verdict: `clean`. Glyph of Warding, Contingency remain as later pressure cases.
+
+### 4. Re-run Tier 1 survey against the widened surface — HARNESS-SIDE ✅ / CLAUDE-SIDE DEFERRED
+
+**Harness side** — ran the validator directly on the four new/updated units (`hunters_mark`, `mastery_sap`, `mastery_topple`, `mastery_cleave`, `alarm`) plus baseline `bless`. All six return `verdict: clean` with 0 unknown atoms and 0 unknown relations.
+
+**Claude side** — still blocked on the harness debt documented below. The Claude-driven re-dispatch would confirm semantic cleanliness (not just structural) but requires the following fixes first:
+
+- Per-worker prototype dir (avoid `result.json` race between parallel workers).
+- Worker timeout (kill hung claude CLIs).
+- Stop using Monitor tool for completion (use blocking `until grep` via `run_in_background`).
+
+**Expected delta against last full run** (`REPORT_SRD.md`, 28 units):
+
+- `anchored_trigger_family`, `extended_casting_time`, `ritual_casting`, `notify_caster_effect` proposals (Alarm / Counterspell / Death Ward) are now absorbed by the new family for Alarm's shape. Counterspell remains a triggered_reaction (already clean); Death Ward's HP-intercept widening (§4.4) is still open.
+- `on_hit_trigger mechanics family` and `MasteryRecord + mastery unit kind` proposals (Sap, Cleave) now absorbed. `apply_condition_effect` (Topple) ships with the mastery widening.
+- `bonus_action_activation` proposals (Bardic Inspiration, Second Wind already OK, Monk Focus Points, Lay on Hands) — Hunter's Mark pressured the `bonus_action` CastingTime variant which is now in place. The class-feature side already had `ClassFeatureActivationCost.bonus_action`; no further change needed from this batch.
+
+The remaining dominant widening is `class_level_tiers` (8 units) — already addressed by the Option B scaling unification in Stage 2; the next Claude-side run should reclassify those units as clean.
+
+## Recommended next order
+
+1–3 done. 4 done on the harness side. Continue with:
+
+- **A. Scan more SRD features** — the user flagged this as the next activity after 1–4. Open candidates with the widened surface: Hunter's Mark→clean, anchored-trigger pressure on Glyph of Warding / Contingency, mastery coverage for Graze (on-miss) and Vex (advantage rider with end_of_next_turn expiry), Death Ward (HP intercept §4.4), Polymorph (stat-block projection §4.1). Each is a fresh red/green cycle.
+- **B. Fix the harness debt** before the Claude-side tier 1 re-run — per-worker dirs, worker timeout, remove Monitor-tool reliance.
+- **C. Clean up pre-existing RED content** — `fireball.json`, `fire_bolt.json`, `eldritch_blast.json`, `magic_missile.json`, `protection_from_energy.json`, `halfling_luck.json`, `fighter_extra_attack.json`, `fighter_indomitable.json`, `monk_martial_arts.json`, `shillelagh.json` were authored against stale surface shapes and don't trace today. Each one represents either another widening event or a shape drift that needs re-encoding.
+
+## How to resume in a fresh session
+
+```sh
+# Locate this plan
+cat plans/CONTENT_SURFACE_PROTOTYPE.md
+
+# See encoded units
+ls packages/prototype-content-surface/content/*.json
+
+# Regenerate a trace
+pnpm --filter @dnd/prototype-content-surface exec tsx src/run.ts content/<slug>.json --out content/<slug>.trace.md
+
+# Typecheck everything
+pnpm --filter @dnd/prototype-content-surface typecheck
+
+# See the aggregated survey report (last-computed)
+cat scripts/content-surface-survey/REPORT_SRD.md
+
+# View a mermaid graph — any markdown renderer that supports mermaid
+cat packages/prototype-content-surface/content/shield.trace.md
+```
+
+The surface types file (`src/surface/types.ts`) and tracer (`src/interpreter/tracer.ts`) are the two files that carry the state.
