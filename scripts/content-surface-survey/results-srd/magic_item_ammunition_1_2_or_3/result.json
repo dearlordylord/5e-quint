@@ -1,28 +1,22 @@
 {
   "unit_slug": "magic_item_ammunition_1_2_or_3",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord",
-      "justification": "No magic_item kind exists in UnitRecord. The surface only supports spell | class_feature | mastery. A MagicItemRecord type and corresponding mechanics family are required before any magic item can be encoded.",
-      "evidence": "Ammunition, +1, +2, or +3 is tagged Weapon (Any Ammunition) — a magic item, a unit kind with no record shape in the current surface."
+      "kind": "new_variant",
+      "name": "RollKind.damage_roll",
+      "justification": "The existing passive magic-item shape can express the rarity-scaled attack-roll bonus, but not the parallel bonus to damage rolls. Extending the existing roll-modifier surface is sufficient; no new top-level family is needed.",
+      "evidence": "You have a bonus to attack rolls and damage rolls made with this piece of magic ammunition."
     },
     {
       "kind": "new_variant",
-      "name": "rarity axis in LevelAxis",
-      "justification": "The +1/+2/+3 bonus is determined by rarity (Uncommon/Rare/Very Rare), not by character level, class level, slot level, or proficiency bonus. LevelAxis has no rarity member.",
-      "evidence": "The bonus is determined by the rarity of the ammunition."
-    },
-    {
-      "kind": "new_variant",
-      "name": "on_hit_consume trigger for UseCountResource",
-      "justification": "The ammunition loses its magic when it hits a target — a single-use-per-hit consumption trigger. RestResetCadence models rest-based refill; it has no variant for 'consumed on hit' or 'destroyed on use'.",
+      "name": "hit-triggered magic-item self-expiry / becomes_nonmagical_on_hit",
+      "justification": "The item remains a piece of ammunition but stops being magical after it hits. Current item destruction policies model depletion or destruction, not a passive item losing its magical state on a hit-triggered event.",
       "evidence": "Once it hits a target, the ammunition is no longer magical."
     }
   ],
   "confidence": "high",
-  "notes": "The unit kind (magic_item) is absent from UnitRecord — structural widening, not surface or atom widening. The core mechanic (modify_roll_numeric on attack and damage rolls) maps to existing v4 atoms cleanly; the blocker is the missing record shell. Two secondary gaps also exist even if the shell is added: no rarity axis in LevelAxis, and no on-hit consumption trigger in the resource model."
+  "notes": "Did not author content/magic_item_ammunition_1_2_or_3.dhall because the current surface cannot encode the damage-roll bonus or the on-hit loss of magical state honestly."
 }

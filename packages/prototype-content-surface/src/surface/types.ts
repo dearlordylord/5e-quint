@@ -125,6 +125,11 @@ export type RestKind = "short" | "long";
 //                         down per SRD).
 //   • ability_modifier — +/- a specific ability modifier. Covers Sacred
 //                        Weapon (+CHA mod to attack) and similar.
+//   • magic_item_rarity_bonus — derive a flat bonus from the enclosing
+//                               MagicItemRecord.rarity rather than hardcoding
+//                               one item per rarity variant. Covers
+//                               Ammunition, +1/+2/+3 and similar rarity-tiered
+//                               item lines.
 export type DiceDelta =
   | {
       readonly kind: "fixed_dice";
@@ -141,6 +146,11 @@ export type DiceDelta =
       readonly kind: "ability_modifier";
       readonly ability: Ability;
       readonly sign: "+" | "-";
+    }
+  | {
+      readonly kind: "magic_item_rarity_bonus";
+      readonly sign: "+" | "-";
+      readonly byRarity: Readonly<Record<MagicItemRarity, number>>;
     };
 
 // Upcast tier for DurationValue. Hunter's Mark: up to 1 hour at slot

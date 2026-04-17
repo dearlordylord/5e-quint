@@ -784,6 +784,14 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     "- you may edit packages/prototype-content-surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
     "- do not commit",
     "- keep the change as small and reusable as possible",
+    "- do not read broad plans or README files unless blocked; inspect the concrete files below first",
+    "",
+    "Inspect these files first:",
+    "- packages/prototype-content-surface/src/surface/types.ts",
+    "- packages/prototype-content-surface/src/interpreter/tracer.ts",
+    "- packages/prototype-content-surface/src/interpreter/mermaid.ts",
+    "- scripts/content-surface-survey/atom-whitelist.ts",
+    "- scripts/content-surface-survey/results-srd/<slug>/{result.json,verdict.json} for the target slugs",
     "",
     "Evidence:",
     evidence,
@@ -809,7 +817,7 @@ function attemptSurfaceChange(args: Args, cluster: string): SurfaceAttempt {
   }
   assertBatchBaselineReady();
   const prompt = surfaceAttemptPrompt(args, cluster, selectedSlugs);
-  const timeoutSeconds = Number(process.env.SURFACE_AGENT_TIMEOUT_SECONDS ?? "900");
+  const timeoutSeconds = Number(process.env.SURFACE_AGENT_TIMEOUT_SECONDS ?? "240");
   const codexCmd = process.env.CODEX_CMD ?? "codex";
   const codexArgs = ["exec", "--dangerously-bypass-approvals-and-sandbox", "-C", repoRoot()];
   if (process.env.CODEX_MODEL && process.env.CODEX_MODEL.length > 0) {
@@ -914,7 +922,10 @@ function clusterScore(cluster: ClusterRecord): number {
     cluster.verdicts.includes("dm_agenda") || cluster.verdicts.includes("refused") ? 2 : 0;
   const structuralBias = cluster.verdicts.includes("structural_widening") ? 2 : 0;
   const surfaceBias = cluster.verdicts.includes("surface_widening") ? 1 : 0;
-  return cluster.count * 10 + structuralBias + surfaceBias - verdictPenalty;
+  const namePenalty =
+    (/Record|UnitRecord|family|\+/.test(cluster.canonical) ? 12 : 0) +
+    (/[A-Z]/.test(cluster.canonical) ? 4 : 0);
+  return cluster.count * 10 + structuralBias + surfaceBias - verdictPenalty - namePenalty;
 }
 
 function pickNextCluster(args: Args, attempted: Set<string>): ClusterRecord | null {

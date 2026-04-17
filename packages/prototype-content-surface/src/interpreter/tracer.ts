@@ -3382,6 +3382,10 @@ function describeDelta(d: DiceDelta): string {
       return d.scale === "half" ? `${d.sign}½ PB` : `${d.sign}PB`;
     case "ability_modifier":
       return `${d.sign}${d.ability.toUpperCase()} mod`;
+    case "magic_item_rarity_bonus":
+      return `${d.sign}bonus by item rarity (${Object.entries(d.byRarity)
+        .map(([rarity, bonus]) => `${rarity}=${bonus}`)
+        .join(", ")})`;
     default: {
       const _exhaustive: never = d;
       return _exhaustive;
