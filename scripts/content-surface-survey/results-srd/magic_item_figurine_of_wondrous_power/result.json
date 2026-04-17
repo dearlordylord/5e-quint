@@ -5,42 +5,18 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item family",
-      "justification": "UnitRecord has no magic_item kind. The taxonomy lists magic_item_root as a source atom but types.ts has no MagicItemRecord, no MagicItemMechanics, and no mechanics family to house it. Every existing family (activation, ongoing_effect, on_hit_trigger, anchored_trigger, triggered_reaction) is incompatible with item semantics.",
-      "evidence": "If you take a Magic action to throw the figurine to a point on the ground within 60 feet of yourself, the figurine becomes a living creature... The creature exists for a duration specific to each figurine. At the end of the duration, the creature reverts to its figurine form... its property can't be used again until a certain amount of time has passed."
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.spawned_creature",
+      "justification": "The item's core mechanic is an activated magic item that creates a controllable creature with duration, revert triggers, and recharge timing. Those shapes exist only for spell mechanics today.",
+      "evidence": "If you take a Magic action to throw the figurine ... the figurine becomes a living creature ... The creature exists for a duration specific to each figurine."
     },
     {
       "kind": "new_variant",
-      "name": "day_cooldown variant of RestResetCadence (or new ItemRechargeKind)",
-      "justification": "Figurine recharge is measured in days (2, 5, 7, 15, 30 days) — not short/long rest. RestResetCadence has no variant for calendar-time recharge. A new closed type (e.g. DayCooldown { days: number }) is needed.",
-      "evidence": "Once it has been used, it can't be used again until 5 days have passed. / Once it has been used, it can't be used again until 2 days have passed."
-    },
-    {
-      "kind": "new_variant",
-      "name": "charge_pool with day-recharge (Goat of Traveling pattern)",
-      "justification": "Goat of Traveling uses a 24-charge pool where each hour of use costs 1 charge and the pool recharges after 7 days when empty. This is neither use_count (fixed cap + rest reset) nor spell_slot. Needs a charge resource with duration-based consumption and day-count recharge.",
-      "evidence": "It has 24 charges, and each hour or portion thereof it spends in goat form costs 1 charge. When it runs out of charges, it reverts to a figurine and can't be used again until 7 days have passed, when it regains all expended charges."
-    },
-    {
-      "kind": "new_variant",
-      "name": "multi-variant item (one item slug, several named sub-configurations)",
-      "justification": "The Figurine of Wondrous Power is a single item category with nine distinct named variants (Bronze Griffon, Ebony Fly, Golden Lions, Ivory Goats × 3, Marble Elephant, Obsidian Steed, Onyx Dog, Serpentine Owl, Silver Raven). No surface type models this one-to-many item/variant relationship.",
-      "evidence": "Bronze Griffon (Rare)... Ebony Fly (Rare)... Golden Lions (Rare)... Ivory Goats (Rare)... Obsidian Steed (Very Rare)... Onyx Dog (Rare)... Serpentine Owl (Rare)... Silver Raven (Uncommon)."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "create_companion mechanics subgraph",
-      "justification": "The core effect is summoning a named creature that acts as a friendly companion with initiative placement, obeys commands, and reverts on 0 HP or dismissal. The v4 atom create_companion exists but there is no surface mechanics shape that expresses: throw-to-point activation, creature-kind binding, duration-to-revert lifecycle, or companion command semantics.",
-      "evidence": "The creature is Friendly to you and your allies. It understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count."
-    },
-    {
-      "kind": "new_atom",
-      "name": "probabilistic_override (Obsidian Steed 10% disobedience)",
-      "justification": "The Obsidian Steed has a 10% per-use chance to ignore all commands including revert. This is not representable by any existing resolution atom (attack_roll, save_gate, ability_check). It requires a probability-weighted override that bypasses the normal command chain.",
-      "evidence": "The figurine has a 10 percent chance each time you use it to ignore your orders, including a command to revert to figurine form."
+      "name": "MagicItemRecord.variant_roster",
+      "justification": "The named SRD unit is a family of distinct figurines with different rarity, creature form, cooldown, and extra riders. A single MagicItemRecord cannot honestly represent 'rarity varies' plus the per-figurine descriptions.",
+      "evidence": "Bronze Griffon (Rare) ... Ebony Fly (Rare) ... Obsidian Steed (Very Rare) ... Silver Raven (Uncommon)."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: UnitRecord does not include magic_item as a kind. No honest coercion into SpellRecord or ClassFeatureRecord is possible — the item's core loop (throw → creature appears → creature acts → reverts → cooldown) does not map to any spell/class-feature/mastery payload family. Secondary blockers include: day-count recharge cadence (vs rest-based), charge pools with time-based drain, named multi-variant sub-items, and create_companion subgraph mechanics. The Ivory Goat of Traveling is especially novel — its charge pool has both time-rate consumption (1 charge/hour) and a day-count recharge when depleted, which is structurally distinct from anything in the current resource vocabulary. The Goat of Terror's per-turn save_gate aura (Frightened condition, DC 15 Wisdom) would be expressible if the item family existed, using existing save_gate + apply_condition atoms. Similarly the Silver Raven's grant_spell_access (Animal Messenger) and the Onyx Dog's modified stat block (Blindsight) are rider mechanics that existing atoms could cover, but they depend on the item family existing first."
+  "notes": "Stopped before authoring placeholder content. The current surface can encode spawned companions for spells, but not for magic items, and this SRD entry is an umbrella collection rather than one uniform item."
 }

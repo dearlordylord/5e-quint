@@ -1787,6 +1787,8 @@ export type ChargePoolResource = {
 // activation costs 1) or a charge pool (variable cost per activation).
 export type ActivationResource = UseCountResource | ChargePoolResource;
 
+export type RelativeDayResetTrigger = "resource_spent" | "resource_empty";
+
 // Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
 // refilling the pool. `dawn` is the magic-item recharge idiom.
 export type RestResetCadence =
@@ -1807,6 +1809,15 @@ export type RestResetCadence =
       readonly kind: "dawn";
       // null = regains all; DiceAmount for e.g. "1d6 + 4" style partial.
       readonly regain: null | DiceAmount;
+    }
+  // Relative calendar-time cooldown. Covers item text like "can't be
+  // used again until 5 days have passed" and pool-based recharge that
+  // starts only once the pool is empty.
+  | {
+      readonly kind: "elapsed_days";
+      readonly days: number;
+      readonly regain: null | DiceAmount;
+      readonly startsWhen: RelativeDayResetTrigger;
     }
   // Single-shot or bounded-use items that never refill — Chime of
   // Opening "can be used 10 times. After the tenth time, it cracks

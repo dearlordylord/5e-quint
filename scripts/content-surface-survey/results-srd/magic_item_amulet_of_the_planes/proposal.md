@@ -1,95 +1,71 @@
-# Proposal: Amulet of the Planes — structural_widening
+## Verdict
 
-## Outcome
+`Amulet of the Planes` fits the existing `magic_item` top-level kind and the `activation` mechanics family:
 
-`structural_widening` — the unit cannot be encoded because `magic_item` is not a valid `UnitRecord` kind. No `MagicItemRecord` type exists in `types.ts`. No Dhall, JSON, or trace was produced.
+- attunement-gated magic item
+- Magic action activation
+- `ability_check_gate` with DC 15 Intelligence (Arcana)
 
----
+I did **not** author `content/magic_item_amulet_of_the_planes.dhall` because the item's core transport effect does not fit the current surface honestly.
 
-## Gap 1 (primary blocker): No `magic_item` kind in `UnitRecord`
+## Why The Current Surface Fails
 
-`UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord`
+The blocking gap is the current `EffectAtom.teleport` payload:
 
-A new top-level record type is required:
+- it only models `maxFeet`
+- it only allows `destination: "unoccupied_visible_space"`
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
-};
+That is enough for `Misty Step` / `Dimension Door` style same-plane repositioning, but not for this item.
 
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord | MagicItemRecord;
+`Amulet of the Planes` needs both of these destination shapes:
+
+1. Successful check:
+   - cast-equivalent travel to a **location you are familiar with on another plane of existence**
+2. Failed check:
+   - **you and each creature and object within 15 feet of you** travel to a **random destination**
+   - the random destination is not freeform DM agenda; it is determined by an explicit `1d100` table in the item text
+
+Because the failed-check branch is the item's main deterministic mechanic, omitting it would be misleading. This is not a secondary rider like narrative sound range or GM-chosen flavor text.
+
+## Narrowest Honest Classification
+
+`surface_widening`
+
+Reason:
+
+- the existing top-level kind is correct: `magic_item`
+- the existing family is correct: `activation`
+- the missing concept is a **new variant / widening of an existing surface atom** (`teleport`), not a brand-new v4 taxonomy atom
+
+The v4 taxonomy already has `teleport`; the authored surface is just too narrow.
+
+## Proposed Widening
+
+Widen `EffectAtom.teleport` so destination is not restricted to visible same-plane spaces.
+
+Minimum pressure from this item:
+
+- named familiar location on another plane
+- random interplanar destination resolved from a closed destination table
+
+One plausible direction:
+
+```ts
+type TeleportDestination =
+  | "unoccupied_visible_space"
+  | { kind: "familiar_location_on_named_plane" }
+  | { kind: "random_destination_table"; tableId: string }
 ```
 
-At minimum one mechanics family is needed to unblock this unit. The Amulet is activated by a Magic action, which suggests a family analogous to `ClassFeatureActivationMechanics` but for items — call it `activated_item`. The tracer would also need a new `traceMagicItemUnit` branch.
+And either:
 
----
+- make `maxFeet` optional for interplanar cases, or
+- replace `maxFeet` with a destination descriptor that can represent non-distance-bounded travel
 
-## Gap 2: `ability_check` resolution not in surface types
+## Evidence
 
-The amulet's activation gating is:
+> While wearing this amulet, you can take a Magic action to name a location that you are familiar with on another plane of existence.
 
-> "make a DC 15 Intelligence (Arcana) check"
+> On a successful check, you cast Plane Shift.
 
-This is an **ability check**, not a saving throw and not an attack roll. v4 lists `ability_check` as a resolution atom, but no surface `ActivationPhase` variant exists for it. Existing variants are `attack_roll` and `save_gate`.
-
-Required new surface variant (within item mechanics or shared):
-
-```typescript
-| {
-    readonly kind: "ability_check";
-    readonly ability: Ability;
-    readonly skill?: string;          // e.g. "arcana" — or keep as free text
-    readonly dc: number;              // fixed DC (15), not caster-derived
-    readonly onSuccess: Effect;
-    readonly onFailure: Effect;
-  }
-```
-
-Note the DC is a fixed integer, not derived from a caster stat. `DcSource` would need a new variant:
-
-```typescript
-| { readonly kind: "fixed"; readonly dc: number }
-```
-
----
-
-## Gap 3: Random-table destination in `transport_exile`
-
-On a failed check, the unit transports the caster and all creatures/objects within 15 feet to a **random destination** determined by:
-
-1. Roll 1d100 → select a destination tier (01–60, 61–70, 71–80, 81–90, 91–00)
-2. Within each tier, roll a second die (1d6 or 1d8) to select a specific plane
-
-v4 has `transport_exile` as an effect atom. The current `Effect` union (`DamageEffect | NoneEffect`) has no `transport_exile` variant and no model for random-table destination selection.
-
-This would require:
-
-```typescript
-export type TransportExileEffect = {
-  readonly kind: "transport_exile";
-  readonly destination: TransportDestination;
-};
-
-export type TransportDestination =
-  | { readonly kind: "named_location"; readonly description: string }  // on-success Plane Shift path
-  | { readonly kind: "random_table"; readonly tableId: string };       // on-failure path
-```
-
-The `random_table` variant is a structural gap — the surface has no concept of a random outcome table with nested sub-rolls. The full table (1d100 → 1d6/1d8 → named plane) is pure random narrative; encoding the table entries themselves would need a separate table registry, which is outside the current surface scope.
-
-**Classification for Gap 3**: `surface_widening` (new variant of `Effect` + `TransportDestination`) plus a deferred question of whether random-table contents belong in the surface at all or are caller-owned narrative (ARCHITECTURE.md concern).
-
----
-
-## Summary of widenings in priority order
-
-| # | Kind | Name | Blocks encoding? |
-|---|------|------|-----------------|
-| 1 | `new_subgraph` | `MagicItemRecord` + `magic_item` family | Yes — primary blocker |
-| 2 | `new_variant` | `attunement_slot` in surface resource types | Yes — item identity |
-| 3 | `new_variant` | `ability_check` resolution phase | Yes — activation gate |
-| 4 | `new_variant` | `transport_exile` effect + random-table destination | Yes — failure path |
-
-All four must be addressed before this item can produce a clean trace.
+> On a failed check, you and each creature and object within 15 feet of you travel to a random destination determined by rolling 1d100 and consulting the following table.

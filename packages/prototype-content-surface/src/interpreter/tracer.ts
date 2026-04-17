@@ -2939,6 +2939,27 @@ function traceResetCadence(
       edges.push({ from: resId, to: did, relation: "persists_until" });
       return;
     }
+    case "elapsed_days": {
+      const did = ids("days");
+      const refill =
+        c.regain === null
+          ? "refill all"
+          : `refill ${describeDiceAmount(c.regain)}`;
+      const trigger =
+        c.startsWhen === "resource_empty"
+          ? "after pool empty"
+          : "after spend";
+      nodes.push({
+        id: did,
+        category: "window",
+        atomKind: "duration_window",
+        label:
+          `duration_window\n${c.days} day cooldown (${refill})\n` +
+          `${trigger}`,
+      });
+      edges.push({ from: resId, to: did, relation: "persists_until" });
+      return;
+    }
     case "never": {
       // Pool never refills. No rest/window node — the resource is
       // exhausted permanently once depleted. Pair with
