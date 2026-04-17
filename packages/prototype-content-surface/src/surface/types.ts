@@ -929,7 +929,14 @@ export type SpellSchool =
 // roll or targeted by Magic Missile"). SRD trigger language maps to a
 // closed grammar of condition variants.
 export type ReactionTrigger =
-  | { readonly kind: "hit_by_attack_roll" }
+  | {
+      readonly kind: "hit_by_attack_roll";
+      // Gloves of Missile Snaring: "hit by an attack roll made with a
+      // Ranged or Thrown weapon." Reuse the shared weapon filter
+      // vocabulary rather than introducing a reaction-only trigger
+      // variant for weapon-kind narrowing.
+      readonly weaponFilter?: WeaponFilter;
+    }
   | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
   // §C1: Counterspell — trigger fires when a creature within range
   // casts a spell using any of the listed components. Parameters of

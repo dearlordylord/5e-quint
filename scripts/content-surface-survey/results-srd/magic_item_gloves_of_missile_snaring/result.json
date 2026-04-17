@@ -1,28 +1,22 @@
 {
   "unit_slug": "magic_item_gloves_of_missile_snaring",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item mechanics family",
-      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord has no magic_item variant. The v4 taxonomy lists magic_item_root as a source atom, but src/surface/types.ts has no MagicItemRecord type, no magic_item kind discriminant, and no mechanics family for magic items (no attune procedure plumbing, no charge/use-count pattern for wondrous items, no reaction-trigger-on-incoming-hit shape).",
-      "evidence": "Gloves of Missile Snaring is a Wondrous Item (Requires Attunement) — a magic_item kind that cannot be represented by any existing UnitRecord variant."
+      "kind": "new_variant",
+      "name": "activated_ability.reaction_trigger",
+      "justification": "Magic-item activations can consume a reaction, but they cannot currently declare the trigger condition that opens that reaction window. This item needs a non-spell reaction trigger gated on a qualifying weapon hit.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon while wearing these gloves, you can take a Reaction"
     },
     {
       "kind": "new_atom",
       "name": "reduce_damage_taken",
-      "justification": "The item's core mechanic reduces incoming damage by 1d10 + Dex modifier. None of the existing effect atoms cover this: damage applies outgoing damage, modify_ac is a static AC delta, grant_resistance halves a damage type, modify_roll_numeric modifies a roll rather than the resolved damage total. The taxonomy §11.D explicitly records this as known residue: 'reduce_damage_taken distinct from grant_resistance — single-group pressure from class-feature reactions'. This item adds a second independent pressure stream (magic item reactions).",
-      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ReactionTrigger: hit_by_ranged_or_thrown_weapon_attack",
-      "justification": "The existing ReactionTrigger union has hit_by_attack_roll (used by Shield) but carries no weapon-kind filter. This item fires specifically on ranged or thrown weapon attack rolls, not melee or spell attacks. Encoding it as bare hit_by_attack_roll would be dishonest — it would incorrectly cover melee hits. A new variant or sub-filter (weapon_kind: 'ranged_or_thrown') is needed.",
-      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon"
+      "justification": "The item's primary deterministic effect is a one-shot reduction to an incoming damage instance after a hit is confirmed. Existing atoms do not model this; resistance and AC modification are different mechanics.",
+      "evidence": "to reduce the damage by 1d10 plus your Dexterity modifier"
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: no MagicItemRecord in UnitRecord. Secondary blockers: (1) reduce_damage_taken is absent from v4 effect atoms; (2) the ranged/thrown weapon-kind filter is absent from ReactionTrigger; (3) the attune procedure and attunement_slot resource are unplumbed into any typed mechanics family. The catch-the-projectile secondary ('If you reduce the damage to 0, you can catch the ammunition or weapon') is a conditional physical interaction — likely dm_agenda or would need a new conditional-secondary atom not present in v4."
+  "notes": "No content file was authored. The item's core mechanic requires both a non-spell reaction trigger surface and a damage-reduction effect atom. The catch-on-zero rider is secondary and was not separately classified."
 }

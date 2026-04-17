@@ -878,7 +878,7 @@ function traceCastingTimeQuota(
 function describeReactionTrigger(t: ReactionTrigger): string {
   switch (t.kind) {
     case "hit_by_attack_roll":
-      return "hit by attack roll";
+      return `hit by attack roll${describeWeaponFilter(t.weaponFilter)}`;
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
     case "creature_casts_spell":
