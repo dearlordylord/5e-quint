@@ -27,6 +27,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+LOCK_FILE="$SCRIPT_DIR/run-survey.lock"
 
 TIER="all"
 DRY_RUN=0
@@ -52,6 +53,12 @@ DATASET_SRD="$SCRIPT_DIR/survey-results-srd.jsonl"
 DATASET_PHB="$REPO_ROOT/.references/xphb-srd-pairing/phb-survey/survey-results-phb.jsonl"
 
 [[ -f "$QUEUE" ]] || { echo "missing $QUEUE — run unit-catalog.ts first" >&2; exit 66; }
+
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "run-survey: another survey run is already active; refusing concurrent dispatch" >&2
+  exit 67
+fi
 
 export REPO_ROOT
 export SCRIPTS_DIR="$SCRIPT_DIR"
