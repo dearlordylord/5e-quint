@@ -1,82 +1,44 @@
-# Proposal: structural_widening — Carpet of Flying
+# Carpet of Flying
 
-## Outcome
+Outcome: `surface_widening`
 
-`structural_widening` — the unit cannot be encoded. No `MagicItemRecord` exists in `UnitRecord`.
+## Why it does not fit cleanly
 
-## Primary blocking gap
+`Carpet of Flying` is still a `magic_item`, but the current authored surface cannot represent its core mechanic honestly:
 
-`types.ts` defines:
+- The activation affects the carpet itself, not the bearer. `ActivationPhase.attachment` only allows `self`, `target`, `area`, or `mark`; there is no item/object attachment.
+- The item has four closed size profiles with different capacities and Fly Speeds, but `MagicItemRecord` has no variant/mode surface comparable to spell mode choice or creature mode choice.
+- The carpet's Fly Speed changes deterministically based on carried load, and the current surface has no thresholded load predicate for persistent item movement.
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-```
+Because of those gaps, any authored JSON would have to lie by treating the carpet as:
 
-The v4 taxonomy includes `magic_item_root` as a source atom and the pipeline manifest tags this unit as `kind: magic_item`, but there is no `MagicItemRecord` in the union, no `MagicItemMechanics` type, and no payload family for magic items. This is the single blocker — everything else is secondary.
+- a self-buff on the user,
+- a creature companion,
+- or a single arbitrary size.
 
-## Secondary gaps (would be needed after the primary is resolved)
+All three would misstate the rule text.
 
-### 1. Magic-action activation cost
+## Narrowest honest widenings
 
-The carpet is activated by a **Magic action** (`StandardActionKind = "magic"`). The class-feature activation cost surface only models `"free"` and `"bonus_action"`. A third variant is needed:
+1. Add an item/object attachment variant for activation phases.
+   Evidence: "You can make this carpet hover and fly ... It moves according to your directions if you are within 30 feet of it."
 
-```typescript
-| { readonly kind: "magic_action" }
-```
+2. Add a closed variant/profile surface for magic items.
+   Evidence: "Four sizes of Carpet of Flying exist."
 
-This would wire to the `action_quota` resource atom (same as the spell `action` casting time), but the semantic meaning — consuming the Magic action specifically — is distinct from a free or bonus-action activation.
+3. Add a load-conditioned movement rule for items.
+   Evidence: "its Fly Speed is halved if it carries more than its normal capacity."
 
-### 2. GM-table size variant
+## Why this is not `structural_widening`
 
-The carpet exists in 4 size variants (3×5 ft, 4×6 ft, 5×7 ft, 6×9 ft) with different Fly Speeds and carry capacities. The specific variant is chosen by the GM or determined by a 1d100 roll at the time the item is found. No encoding exists for item-level stat variants. This is not a scaling axis (`character`/`class`/`slot`/`proficiency_bonus`) — it is a one-time, GM-adjudicated selection at acquisition time.
+The top-level unit still belongs under the existing `magic_item` kind. The failure is in missing surface variants for item-targeted movement and item profile data, not in the absence of a magic-item family altogether.
 
-A possible surface shape would be something like:
+## Files intentionally not authored
 
-```typescript
-type ItemVariant<T> = {
-  readonly kind: "gm_table";
-  readonly rollDie: number;          // 100
-  readonly variants: ReadonlyArray<{
-    readonly rollRange: [number, number];
-    readonly value: T;
-  }>;
-};
-```
+Per protocol, I did not create:
 
-This is new enough to warrant careful design before adding — it is the first item in the survey to require variant-at-acquisition-time encoding.
+- `content/magic_item_carpet_of_flying.dhall`
+- `content/magic_item_carpet_of_flying.json`
+- `content/magic_item_carpet_of_flying.trace.md`
 
-### 3. Load-conditional speed modifier
-
-> "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
-
-No conditional modifier shape exists that predicates a speed change on carried weight vs. a capacity threshold. The `modify_speed` v4 atom exists but has no conditional/predicated variant in the surface types. The needed shape is something like:
-
-```typescript
-type ConditionalSpeedModifier = {
-  readonly kind: "conditional";
-  readonly condition: { readonly kind: "carrying_above_capacity" };
-  readonly effect: { readonly kind: "halve_speed"; readonly speedKind: "fly" };
-};
-```
-
-## What v4 atoms would be used if the surface were widened
-
-Once the record type and mechanics header exist, the tracer would emit:
-
-- `magic_item_root` (source)
-- `activate` (procedure, triggered by magic action)
-- `action_quota` (resource, consumed by magic action)
-- `grant_hover` (effect — the carpet hovers/flies)
-- `modify_speed` (effect — grants the Fly Speed value)
-- Possibly a `persist` + `expire` chain if duration needs modelling (the carpet's flight appears permanent while active, with no stated duration limit)
-
-All of these atoms already exist in v4. The surface widening needed is purely in the record/mechanics type layer, not in the atom inventory.
-
-## Recommendation
-
-Add `MagicItemRecord` to `UnitRecord` before encoding any magic items. The Carpet of Flying is a useful pressure test for the first magic item mechanics family because it combines:
-- A non-spell, non-class-feature activation pattern
-- GM-table variant selection at acquisition
-- A conditional speed modifier
-
-A simpler magic item (e.g. a passive always-on bonus like Cloak of Protection's +1 AC/saves) would be an easier first encoding, but the Carpet of Flying exposes the full scope of what the magic item surface needs to support.
+Producing them would require a knowingly false encoding.

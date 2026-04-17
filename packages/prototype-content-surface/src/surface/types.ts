@@ -1782,11 +1782,12 @@ export type SpellMechanics =
 
 // Activation cost for an activated ability (class feature / magic item /
 // species trait). Drives which (if any) quota atom the tracer emits a
-// `consumes` edge to. `action` is the "use this as your Action" case
-// (magic-item activations, many class features like Channel Divinity).
-// `action_plus_bonus_action` is the bounded compound-economy case where
-// the same activation requires both quotas in sequence, without modeling
-// a new nested procedure family.
+// `consumes` edge to. Most activations spend one of the 12 standard
+// action kinds; `magic` is the main pressure from item and feature text,
+// but the surface keeps the full SRD action vocabulary reusable rather
+// than introducing item-specific cost variants. `action_plus_bonus_action`
+// is the bounded compound-economy case where the same activation requires
+// both quotas in sequence, without modeling a new nested procedure family.
 // `reaction` covers reactive uses that consume the reaction quota.
 // `replace_attack` is the Extra-Attack-economy cost: the ability is
 // triggered by spending one of the attacks you would otherwise make
@@ -1794,6 +1795,9 @@ export type SpellMechanics =
 // abilities). It consumes an attack-slot rather than an action quota.
 export type ClassFeatureActivationCost =
   | { readonly kind: "free" }
+  | { readonly kind: "standard_action"; readonly action: StandardActionKind }
+  // Back-compat alias for already-authored content that used the coarse
+  // "action" bucket before standard-action labels were surfaced.
   | { readonly kind: "action" }
   | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }

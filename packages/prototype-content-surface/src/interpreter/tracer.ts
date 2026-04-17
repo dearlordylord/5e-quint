@@ -27,6 +27,7 @@ import type {
   TargetSelection,
   SlotScaling,
   SpellLevel,
+  StandardActionKind,
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
@@ -2828,6 +2829,17 @@ function traceActivationCost(
     case "free":
       // no quota consumed — feature is free on owner's turn
       return;
+    case "standard_action": {
+      const id = ids("q");
+      nodes.push({
+        id,
+        category: "resource",
+        atomKind: "action_quota",
+        label: `action_quota\n(Activation: ${describeStandardActionCost(c.action)})`,
+      });
+      edges.push({ from: procId, to: id, relation: "consumes" });
+      return;
+    }
     case "action": {
       const id = ids("q");
       nodes.push({
@@ -2897,6 +2909,10 @@ function traceActivationCost(
       throw new Error(`unhandled activation cost: ${String(_exhaustive)}`);
     }
   }
+}
+
+function describeStandardActionCost(action: StandardActionKind): string {
+  return `${capitalizeWords(action.replaceAll("_", " "))} action`;
 }
 
 function traceActivationResource(
@@ -3536,6 +3552,10 @@ function describeDelta(d: DiceDelta): string {
 
 function describeSignedNumber(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
+}
+
+function capitalizeWords(value: string): string {
+  return value.replace(/\b[a-z]/g, (c) => c.toUpperCase());
 }
 
 function describeAbilityScoreBounds(
