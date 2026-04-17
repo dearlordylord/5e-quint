@@ -503,6 +503,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "alter_item_kind": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "alter_item_kind",
+        label: `alter_item_kind\n${e.newKind}`,
+      });
+      return id;
+    }
     case "natural_weapons": {
       const id = ids("eff");
       nodes.push({
@@ -645,6 +655,7 @@ function traceEffectAtomScaling(
     case "modify_ability_score":
     case "teleport":
     case "grant_speed":
+    case "alter_item_kind":
     case "detect":
     case "set_speed":
     case "negate_triggering_spell":

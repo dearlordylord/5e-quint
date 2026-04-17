@@ -1,34 +1,34 @@
 {
   "unit_slug": "magic_item_folding_boat",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + MagicItemMechanics family",
-      "justification": "UnitRecord has no 'magic_item' kind. types.ts defines only SpellRecord, ClassFeatureRecord, MasteryRecord. magic_item_root exists in v4 taxonomy but no corresponding record type or mechanics family exists in the surface.",
-      "evidence": "This object appears as a wooden box... This item also has three command words, each requiring a Magic action to use"
-    },
-    {
-      "kind": "new_atom",
-      "name": "alter_item_kind",
-      "justification": "The Folding Boat's core mechanic is transforming between three physical forms (box → Rowboat, box → Keelboat, vessel → box). The v4 taxonomy lists alter_item_kind under Effect Atoms, but it is absent from types.ts. This atom would be required to encode any form-switching magic item.",
-      "evidence": "The box unfolds into a Rowboat. / The box unfolds into a Keelboat. / The Folding Boat folds back into a box if no creatures are aboard."
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The item's transform effect applies to the Folding Boat itself, not to a creature-facing self/target/area attachment.",
+      "evidence": "\"The box unfolds into a Rowboat.\""
     },
     {
       "kind": "new_variant",
-      "name": "command_word activation cost (multi-command pattern)",
-      "justification": "The item exposes three discrete command words, each a Magic action, with different effects. No multi-command-word surface structure exists. ClassFeatureActivationCost has 'free' and 'bonus_action'; there is no 'magic_action' cost kind and no way to declare multiple named activation paths on one item.",
-      "evidence": "This item also has three command words, each requiring a Magic action to use"
+      "name": "resource_free_activation",
+      "justification": "The item has repeatable command-word activations with no charges, uses, or reset cadence, which the current activation surface cannot express honestly.",
+      "evidence": "\"This item also has three command words, each requiring a Magic action to use\""
     },
     {
       "kind": "new_variant",
-      "name": "activation precondition guard",
-      "justification": "The third command word is conditionally effective — it only works 'if no creatures are aboard'. No precondition check shape exists anywhere in the surface type system.",
-      "evidence": "The Folding Boat folds back into a box if no creatures are aboard."
+      "name": "activation_precondition",
+      "justification": "One command word is conditionally available only when no creatures are aboard, but activation phases have no branch-level precondition slot.",
+      "evidence": "\"The Folding Boat folds back into a box if no creatures are aboard.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.form_zero_hp",
+      "justification": "The item is destroyed when either transformed vessel reaches 0 HP, which is a different lifecycle trigger from the existing charge-depletion destruction policies.",
+      "evidence": "\"If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed.\""
     }
   ],
   "confidence": "high",
-  "notes": "Blocked at the top-level kind boundary — magic_item is not a member of UnitRecord. Even if that were fixed, the alter_item_kind effect, multi-command-word activation structure, and precondition guard would each require additional surface widenings. The v4 taxonomy already anticipates alter_item_kind as an effect atom; the surface just hasn't been widened to include it yet. No .dhall, .json, or .trace.md written."
+  "notes": "Did not author content/magic_item_folding_boat.dhall or generate JSON/trace. The existing magic-item activation family is close, but using it now would require lying about the target attachment and inventing a fake limited-use resource."
 }

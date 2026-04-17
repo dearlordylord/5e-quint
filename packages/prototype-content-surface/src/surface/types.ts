@@ -837,6 +837,16 @@ export type EffectAtom =
       readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
     }
+  // v4: alter_item_kind — the targeted item/object changes into a
+  // different named form or rules kind. Folding Boat switches between
+  // box / rowboat / keelboat forms; glamoured armor uses the same atom
+  // for appearance-level item-kind swaps once its activation/lifecycle
+  // surface exists. The attachment selects WHICH item is affected; this
+  // atom only records the destination form.
+  | {
+      readonly kind: "alter_item_kind";
+      readonly newKind: string;
+    }
   // Alter Self (Natural Weapons): replace the creature's default
   // Unarmed Strike damage profile while the effect persists. This is
   // distinct from a one-shot `damage` atom because it changes the
