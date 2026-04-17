@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.join(__dirname, "../..");
@@ -10,7 +11,7 @@ const srdDatasetPath = path.join(__dirname, "survey-results-srd.jsonl");
 const phbRoot = path.join(repoRoot, ".references/xphb-srd-pairing/phb-survey");
 const phbDatasetPath = path.join(phbRoot, "survey-results-phb.jsonl");
 
-type Verdict =
+export type Verdict =
   | "clean"
   | "surface_widening"
   | "atom_widening"
@@ -19,7 +20,7 @@ type Verdict =
   | "refused"
   | "invalid";
 
-type Source = "srd-5.2.1" | "xphb";
+export type Source = "srd-5.2.1" | "xphb";
 
 type ProposedWidening = {
   kind?: string;
@@ -28,13 +29,13 @@ type ProposedWidening = {
   evidence?: string;
 };
 
-type DatasetRow = {
+export type DatasetRow = {
   unit_slug: string;
   verdict: Verdict;
   claude_proposed_widenings: ReadonlyArray<ProposedWidening>;
 };
 
-type QueueRow = {
+export type QueueRow = {
   slug: string;
   name: string;
   source: Source;
@@ -54,7 +55,7 @@ type Args = {
   reportPath?: string;
 };
 
-type ClusterRecord = {
+export type ClusterRecord = {
   canonical: string;
   count: number;
   slugs: ReadonlyArray<string>;
@@ -192,13 +193,16 @@ function loadJsonl<T>(filePath: string): ReadonlyArray<T> {
     .map((line) => JSON.parse(line) as T);
 }
 
-function loadQueue(): Map<string, QueueRow> {
+export function loadQueue(): Map<string, QueueRow> {
   const queue = new Map<string, QueueRow>();
   for (const row of loadJsonl<QueueRow>(queuePath)) queue.set(row.slug, row);
   return queue;
 }
 
-function loadRows(source: Args["source"], queue: Map<string, QueueRow>): ReadonlyArray<DatasetRow> {
+export function loadRows(
+  source: Args["source"],
+  queue: Map<string, QueueRow>,
+): ReadonlyArray<DatasetRow> {
   const rows = [
     ...loadJsonl<DatasetRow>(srdDatasetPath),
     ...loadJsonl<DatasetRow>(phbDatasetPath),
@@ -207,14 +211,14 @@ function loadRows(source: Args["source"], queue: Map<string, QueueRow>): Readonl
   return rows.filter((row) => queue.get(row.unit_slug)?.source === source);
 }
 
-function normalize(rawName: string): string {
+export function normalize(rawName: string): string {
   for (const [pattern, canonical] of NORMALIZERS) {
     if (pattern.test(rawName)) return canonical;
   }
   return rawName.trim();
 }
 
-function buildClusters(
+export function buildClusters(
   rows: ReadonlyArray<DatasetRow>,
   queue: Map<string, QueueRow>,
   kindFilter?: string,
@@ -283,7 +287,7 @@ function verdictRank(verdict: Verdict | null): number {
   }
 }
 
-function currentVerdictForSlug(source: Source, slug: string): Verdict | null {
+export function currentVerdictForSlug(source: Source, slug: string): Verdict | null {
   const verdictPath =
     source === "srd-5.2.1"
       ? path.join(__dirname, "results-srd", slug, "verdict.json")
@@ -293,12 +297,15 @@ function currentVerdictForSlug(source: Source, slug: string): Verdict | null {
   return parsed.verdict ?? null;
 }
 
-function datasetVerdictForSlug(rows: ReadonlyArray<DatasetRow>, slug: string): Verdict | null {
+export function datasetVerdictForSlug(
+  rows: ReadonlyArray<DatasetRow>,
+  slug: string,
+): Verdict | null {
   const row = rows.findLast((candidate) => candidate.unit_slug === slug);
   return row?.verdict ?? null;
 }
 
-function selectSlugs(
+export function selectSlugs(
   args: Args,
   rows: ReadonlyArray<DatasetRow>,
   queue: Map<string, QueueRow>,
@@ -367,13 +374,13 @@ function writeReport(reportPath: string, payload: unknown): void {
   fs.writeFileSync(reportPath, JSON.stringify(payload, null, 2) + "\n", "utf8");
 }
 
-function defaultReportPath(cluster: string | undefined): string {
+export function defaultReportPath(cluster: string | undefined): string {
   const stamp = new Date().toISOString().replaceAll(":", "-");
   const safeCluster = (cluster ?? "manual").replaceAll(/[^a-zA-Z0-9._-]+/g, "_");
   return path.join(repoRoot, ".output", "content-surface-closure", `${stamp}-${safeCluster}.json`);
 }
 
-function main(): void {
+export function main(): void {
   const args = parseArgs(process.argv.slice(2));
   const queue = loadQueue();
   const rows = loadRows(args.source, queue);
@@ -450,4 +457,6 @@ function main(): void {
   process.stdout.write(`\nWrote ${reportPath}\n`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}
