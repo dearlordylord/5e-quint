@@ -2984,6 +2984,22 @@ function traceResetCadence(
       edges.push({ from: resId, to: did, relation: "persists_until" });
       return;
     }
+    case "elapsed_hours": {
+      const hid = ids("hours");
+      const refill =
+        c.regain === null
+          ? "refill all"
+          : `refill ${describeDiceAmount(c.regain)}`;
+      const hourLabel = c.hours === 1 ? "hour" : "hours";
+      nodes.push({
+        id: hid,
+        category: "window",
+        atomKind: "duration_window",
+        label: `duration_window\n${c.hours} ${hourLabel} cooldown (${refill})`,
+      });
+      edges.push({ from: resId, to: hid, relation: "persists_until" });
+      return;
+    }
     case "never": {
       // Pool never refills. No rest/window node — the resource is
       // exhausted permanently once depleted. Pair with

@@ -1819,6 +1819,14 @@ export type RestResetCadence =
       readonly regain: null | DiceAmount;
       readonly startsWhen: RelativeDayResetTrigger;
     }
+  // Relative sub-day cooldown. Covers item text like "can't be used
+  // again for 1 hour" where the lockout starts immediately after use
+  // and then refills fully/partially once the duration elapses.
+  | {
+      readonly kind: "elapsed_hours";
+      readonly hours: number;
+      readonly regain: null | DiceAmount;
+    }
   // Single-shot or bounded-use items that never refill — Chime of
   // Opening "can be used 10 times. After the tenth time, it cracks
   // and becomes useless." Typically paired with
