@@ -1,5 +1,5 @@
 {
-  "description": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you.",
+  "description": "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1.",
   "id": "charm_person",
   "kind": "spell",
   "mechanics": {
@@ -12,6 +12,11 @@
       "v": true
     },
     "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
       "kind": "timed",
       "value": {
         "amount": 1,
@@ -32,7 +37,10 @@
               "kind": "linear",
               "perSlotAboveBase": 1
             },
-            "mode": "choose_up_to"
+            "mode": "choose_up_to",
+            "typeFilter": [
+              "humanoid"
+            ]
           }
         },
         "dc": {

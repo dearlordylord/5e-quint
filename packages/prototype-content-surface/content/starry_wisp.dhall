@@ -34,20 +34,21 @@ let starryWisp =
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =
-                    { kind = "damage"
-                    , damageType = "radiant"
-                    , amount =
-                        { kind = "threshold_tiers"
-                        , axis = "character"
-                        , base = { dice = 1, dieSize = 8 }
-                        , tiers =
-                            [ { atLevel = 5, override = { dice = 2 } }
-                            , { atLevel = 11, override = { dice = 3 } }
-                            , { atLevel = 17, override = { dice = 4 } }
-                            ]
-                        }
-                    }
-                , onMiss = { kind = "none" }
+                    [ { kind = "damage"
+                      , damageType = "radiant"
+                      , amount =
+                          { kind = "threshold_tiers"
+                          , axis = "character"
+                          , base = { dice = 1, dieSize = 8 }
+                          , tiers =
+                              [ { atLevel = 5, override = { dice = 2 } }
+                              , { atLevel = 11, override = { dice = 3 } }
+                              , { atLevel = 17, override = { dice = 4 } }
+                              ]
+                          }
+                      }
+                    ]
+                , onMiss = [ { kind = "none" } ]
                 }
               ]
           }

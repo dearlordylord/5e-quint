@@ -12,6 +12,11 @@
       "v": true
     },
     "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
       "kind": "timed",
       "value": {
         "amount": 1,

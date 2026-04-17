@@ -4,11 +4,10 @@
 -- Each creature: Con save → 8d8 Necrotic on fail, half on success.
 -- Upcast: +2d8 per slot level above 6.
 --
--- Note: "half damage on success" is encoded as an independent 4d8
--- success branch (scaling: +1d8/slot above 6). The mathematical
--- relationship success = fail/2 is correct in values but is NOT
--- expressible as a linked constraint in the current surface.
--- This is recorded as a surface_widening.
+-- "Half damage on success" is expressed via the SaveSuccessOutcome
+-- `half_damage` sentinel — the interpreter/tracer links back to the
+-- onFail damage (including upcast scaling) so the success branch
+-- stays faithful to RAW without duplicating values.
 
 let circleOfDeath =
       { kind = "spell"
@@ -52,17 +51,7 @@ let circleOfDeath =
                         , startingAtLevel = 6
                         }
                     }
-                , onSuccess =
-                    { kind = "damage"
-                    , damageType = "necrotic"
-                    , amount =
-                        { kind = "linear_per_level"
-                        , axis = "slot"
-                        , base = { dice = 4, dieSize = 8 }
-                        , perLevel = { dice = 1 }
-                        , startingAtLevel = 6
-                        }
-                    }
+                , onSuccess = { kind = "half_damage" }
                 }
               ]
           }

@@ -21,11 +21,17 @@ let actionSurge =
             , cap = { kind = "fixed", uses = 1 }
             }
         , resetCadence = { kind = "short_or_long_rest" }
-        , effect =
-            { kind = "grant_extra_action"
-            , restriction =
-                { kind = "exclude", actions = [ "magic" ] }
-            }
+        , phases =
+            [ { kind = "direct"
+              , attachment = { kind = "self" }
+              , effects =
+                  [ { kind = "grant_extra_action"
+                    , restriction =
+                        { kind = "exclude", actions = [ "magic" ] }
+                    }
+                  ]
+              }
+            ]
         }
     }
 

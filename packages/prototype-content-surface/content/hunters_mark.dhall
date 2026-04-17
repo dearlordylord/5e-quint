@@ -1,15 +1,20 @@
 -- Hunter's Mark — SRD 5.2.1 Spell, level 1, Divination.
--- Primary mechanic: mark one creature; +1d6 Force on attack-roll hits against it.
--- Mark transfer: if target drops to 0 HP, Bonus Action to move mark to a new creature.
 --
--- OMITTED (surface_widening):
---   "You also have Advantage on any Wisdom (Perception or Survival) check you
---    make to find it." — no OngoingOperation variant exists for skill-check
---    advantage; the operation field is also singular (no array support).
+-- RAW: mark one creature; +1d6 Force damage on attack-roll hits
+-- against it. If target drops to 0 HP, Bonus Action to move the mark
+-- to a new creature.
 --
--- OMITTED (surface_widening):
---   Upcast duration scaling: slot 3-4 → up to 8 hours; slot 5+ → up to 24 hours.
---   Duration type has no slot-scaling variant.
+-- Consolidated validation reference for:
+--   • DurationValue.upcastTiers (new widening — the concentration
+--     upper bound scales by slot: up to 1 hour at slot 1-2, 8 hours
+--     at slot 3-4, 24 hours at slot 5+. First unit with slot-scaled
+--     duration; coalescing earlier gap.)
+--
+-- DEFERRED. "You also have Advantage on any Wisdom (Perception or
+-- Survival) check you make to find it" — requires both an
+-- OngoingOperation array (the `operation` field is currently
+-- singular) and a skill-scoped roll-advantage shape. Two widenings
+-- for one rider is more than one tick can justify; deferred.
 
 let huntersMark =
       { kind = "spell"
@@ -30,7 +35,14 @@ let huntersMark =
           , components = { v = True, s = False, m = False }
           , duration =
               { kind = "concentration"
-              , upTo = { unit = "hour", amount = 1 }
+              , upTo =
+                  { unit = "hour"
+                  , amount = 1
+                  , upcastTiers =
+                      [ { atSlot = 3, amount = 8 }
+                      , { atSlot = 5, amount = 24 }
+                      ]
+                  }
               }
           , attachment =
               { kind = "mark"

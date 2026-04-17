@@ -34,7 +34,12 @@ let bless =
           , operation =
               { kind = "roll_modifier"
               , on = [ "attack_roll", "saving_throw" ]
-              , delta = { dice = 1, dieSize = 4, sign = "+" }
+              , delta =
+                  { kind = "fixed_dice"
+                  , dice = 1
+                  , dieSize = 4
+                  , sign = "+"
+                  }
               }
           }
       }

@@ -42,16 +42,7 @@
           "kind": "damage"
         },
         "onSuccess": {
-          "amount": {
-            "expr": {
-              "dice": 3,
-              "dieSize": 8,
-              "flat": 15
-            },
-            "kind": "fixed"
-          },
-          "damageType": "necrotic",
-          "kind": "damage"
+          "kind": "half_damage"
         }
       }
     ],

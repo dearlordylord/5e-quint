@@ -14,11 +14,12 @@ let ray =
           }
       , attackKind = "ranged_spell_attack"
       , onHit =
-          { kind = "damage"
-          , damageType = "fire"
-          , amount = { kind = "fixed", expr = { dice = 2, dieSize = 6 } }
-          }
-      , onMiss = { kind = "none" }
+          [ { kind = "damage"
+            , damageType = "fire"
+            , amount = { kind = "fixed", expr = { dice = 2, dieSize = 6 } }
+            }
+          ]
+      , onMiss = [ { kind = "none" } ]
       }
 
 let scorchingRay =

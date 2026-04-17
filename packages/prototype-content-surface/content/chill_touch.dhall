@@ -31,20 +31,21 @@ let chillTouch =
                     }
                 , attackKind = "melee_spell_attack"
                 , onHit =
-                    { kind = "damage"
-                    , damageType = "necrotic"
-                    , amount =
-                        { kind = "threshold_tiers"
-                        , axis = "character"
-                        , base = { dice = 1, dieSize = 10 }
-                        , tiers =
-                            [ { atLevel = 5, override = { dice = 2 } }
-                            , { atLevel = 11, override = { dice = 3 } }
-                            , { atLevel = 17, override = { dice = 4 } }
-                            ]
-                        }
-                    }
-                , onMiss = { kind = "none" }
+                    [ { kind = "damage"
+                      , damageType = "necrotic"
+                      , amount =
+                          { kind = "threshold_tiers"
+                          , axis = "character"
+                          , base = { dice = 1, dieSize = 10 }
+                          , tiers =
+                              [ { atLevel = 5, override = { dice = 2 } }
+                              , { atLevel = 11, override = { dice = 3 } }
+                              , { atLevel = 17, override = { dice = 4 } }
+                              ]
+                          }
+                      }
+                    ]
+                , onMiss = [ { kind = "none" } ]
                 }
               ]
           }

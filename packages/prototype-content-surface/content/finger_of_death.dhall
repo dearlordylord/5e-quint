@@ -1,7 +1,7 @@
 -- Finger of Death — SRD 5.2.1 Spell, level 7, Necromancy.
 -- Family: activation (single save_gate phase).
 -- Target: one creature within 60 ft; Constitution save.
--- Fail: 7d8+30 Necrotic damage; Success: half (encoded as 3d8+15).
+-- Fail: 7d8+30 Necrotic damage; Success: half (half_damage sentinel).
 -- No upcast text in source.
 --
 -- OMITTED RIDER: "A Humanoid killed by this spell rises at the start of your
@@ -11,10 +11,9 @@
 --   filter "Humanoid only" (no creature-type predicate in v4 taxonomy).
 -- Classified as: atom_widening (on_kill_window absent from v4).
 --
--- Note: "half damage on success" is encoded as an independent 3d8+15
--- success branch. The mathematical relationship success = fail/2 is
--- approximately correct in expected values but is NOT expressible as a
--- linked constraint in the current surface (surface_widening).
+-- "Half damage on success" uses the SaveSuccessOutcome `half_damage`
+-- sentinel, which links to onFail.damage — no need to duplicate
+-- 7d8+30 at 3d8+15 and hope the math stays honest.
 
 let fingerOfDeath =
       { kind = "spell"
@@ -50,14 +49,7 @@ let fingerOfDeath =
                         , expr = { dice = 7, dieSize = 8, flat = 30 }
                         }
                     }
-                , onSuccess =
-                    { kind = "damage"
-                    , damageType = "necrotic"
-                    , amount =
-                        { kind = "fixed"
-                        , expr = { dice = 3, dieSize = 8, flat = 15 }
-                        }
-                    }
+                , onSuccess = { kind = "half_damage" }
                 }
               ]
           }

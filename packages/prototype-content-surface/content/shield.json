@@ -35,7 +35,12 @@
     },
     "effects": [
       {
-        "delta": 5,
+        "delta": {
+          "dice": 5,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
         "kind": "modify_ac"
       },
       {

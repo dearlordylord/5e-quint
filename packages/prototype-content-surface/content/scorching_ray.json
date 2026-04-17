@@ -26,20 +26,24 @@
         },
         "attackKind": "ranged_spell_attack",
         "kind": "attack_roll",
-        "onHit": {
-          "amount": {
-            "expr": {
-              "dice": 2,
-              "dieSize": 6
+        "onHit": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 2,
+                "dieSize": 6
+              },
+              "kind": "fixed"
             },
-            "kind": "fixed"
-          },
-          "damageType": "fire",
-          "kind": "damage"
-        },
-        "onMiss": {
-          "kind": "none"
-        }
+            "damageType": "fire",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
       },
       {
         "attachment": {
@@ -50,20 +54,24 @@
         },
         "attackKind": "ranged_spell_attack",
         "kind": "attack_roll",
-        "onHit": {
-          "amount": {
-            "expr": {
-              "dice": 2,
-              "dieSize": 6
+        "onHit": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 2,
+                "dieSize": 6
+              },
+              "kind": "fixed"
             },
-            "kind": "fixed"
-          },
-          "damageType": "fire",
-          "kind": "damage"
-        },
-        "onMiss": {
-          "kind": "none"
-        }
+            "damageType": "fire",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
       },
       {
         "attachment": {
@@ -74,20 +82,24 @@
         },
         "attackKind": "ranged_spell_attack",
         "kind": "attack_roll",
-        "onHit": {
-          "amount": {
-            "expr": {
-              "dice": 2,
-              "dieSize": 6
+        "onHit": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 2,
+                "dieSize": 6
+              },
+              "kind": "fixed"
             },
-            "kind": "fixed"
-          },
-          "damageType": "fire",
-          "kind": "damage"
-        },
-        "onMiss": {
-          "kind": "none"
-        }
+            "damageType": "fire",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
       }
     ],
     "range": {

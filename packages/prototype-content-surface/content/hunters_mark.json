@@ -29,7 +29,17 @@
       "kind": "concentration",
       "upTo": {
         "amount": 1,
-        "unit": "hour"
+        "unit": "hour",
+        "upcastTiers": [
+          {
+            "amount": 8,
+            "atSlot": 3
+          },
+          {
+            "amount": 24,
+            "atSlot": 5
+          }
+        ]
       }
     },
     "family": "ongoing_effect",

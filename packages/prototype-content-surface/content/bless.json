@@ -36,6 +36,7 @@
       "delta": {
         "dice": 1,
         "dieSize": 4,
+        "kind": "fixed_dice",
         "sign": "+"
       },
       "kind": "roll_modifier",

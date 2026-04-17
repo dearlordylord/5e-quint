@@ -1,16 +1,11 @@
 -- Charm Monster — SRD 5.2.1 Spell, level 4, Enchantment.
--- Family: activation (single save_gate phase).
--- Target: one creature (choose_up_to 1 + 1/slot above 4) within 30 ft.
--- WIS save → apply charmed condition on fail; none on success.
--- Duration: 1 hour (timed, not concentration).
 --
--- Surface gaps (surface_widening):
--- 1. Conditional advantage on the save: "It does so with Advantage if
---    you or your allies are fighting it." The save_gate phase has no
---    field for conditional roll modifiers on the target's throw.
--- 2. Damage-triggered early expiry: the charm ends "until you or your
---    allies damage it." The Duration timed type has no early-break
---    condition; only the fixed 1-hour window is encoded here.
+-- Parallel structure to Charm Person except (a) no Humanoid-only
+-- target restriction (Charm Monster targets any creature) and
+-- (b) base level 4 instead of 1. The save-advantage "if fighting it"
+-- clause is DM agenda (situational). The damage-triggered early
+-- expiry is now modeled via Duration.timed.earlyEnd =
+-- [ target_damaged_by_caster_or_ally ], same as Charm Person.
 
 let charmMonster =
       { kind = "spell"
@@ -32,6 +27,8 @@ let charmMonster =
           , duration =
               { kind = "timed"
               , value = { unit = "hour", amount = 1 }
+              , earlyEnd =
+                  [ { kind = "target_damaged_by_caster_or_ally" } ]
               }
           , phases =
               [ { kind = "save_gate"

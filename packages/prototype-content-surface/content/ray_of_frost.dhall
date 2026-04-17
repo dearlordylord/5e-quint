@@ -1,11 +1,72 @@
 -- Ray of Frost — SRD 5.2.1 Cantrip, Evocation.
--- Family: activation (single attack_roll phase).
--- Ranged spell attack; on hit: 1d8 Cold damage (cantrip scaling).
--- OMITTED RIDER: "its Speed is reduced by 10 feet until the start of your next turn"
--- → requires modify_speed in Effect union (surface_widening).
---   modify_speed IS a v4 atom, but Effect = DamageEffect | NoneEffect only.
---   Also needs onHit to support multiple effects (composite or array).
--- Cantrip upgrade: 1d8 → 2d8 (L5) → 3d8 (L11) → 4d8 (L17).
+--
+-- RAW:
+--   "A frigid beam of blue-white light streaks toward a creature
+--    within range. Make a ranged spell attack against the target. On
+--    a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10
+--    feet until the start of your next turn."
+--   "Cantrip Upgrade: The damage increases by 1d8 when you reach
+--    levels 5 (2d8), 11 (3d8), and 17 (4d8)."
+--
+-- Consolidated validation reference for:
+--   • Multi-effect onHit on attack_roll phase: damage + modify_speed.
+--     Uses the Dhall Optional-fields pattern to satisfy the
+--     homogeneous-list constraint — each rider record has the union
+--     of fields across the two atom variants with None / Some.
+--
+-- The "until the start of your next turn" window on the speed
+-- reduction is a turn-scoped window resolved by the session, per
+-- ARCHITECTURE.md §1; the content surface records the atom
+-- application only.
+
+let AmountRec
+    : Type
+    = { kind : Text
+      , axis : Text
+      , base : { dice : Natural, dieSize : Natural }
+      , tiers :
+          List
+            { atLevel : Natural
+            , override : { dice : Natural }
+            }
+      }
+
+let HitRider
+    : Type
+    = { kind : Text
+      , damageType : Optional Text
+      , amount : Optional AmountRec
+      , delta : Optional Integer
+      , unit : Optional Text
+      }
+
+let damageRider
+    : HitRider
+    = { kind = "damage"
+      , damageType = Some "cold"
+      , amount =
+          Some
+            { kind = "threshold_tiers"
+            , axis = "character"
+            , base = { dice = 1, dieSize = 8 }
+            , tiers =
+                [ { atLevel = 5, override = { dice = 2 } }
+                , { atLevel = 11, override = { dice = 3 } }
+                , { atLevel = 17, override = { dice = 4 } }
+                ]
+            }
+      , delta = None Integer
+      , unit = None Text
+      }
+
+let modifySpeedRider
+    : HitRider
+    = { kind = "modify_speed"
+      , damageType = None Text
+      , amount = None AmountRec
+      , delta = Some -10
+      , unit = Some "feet"
+      }
 
 let rayOfFrost =
       { kind = "spell"
@@ -32,21 +93,8 @@ let rayOfFrost =
                     , selection = { mode = "one" }
                     }
                 , attackKind = "ranged_spell_attack"
-                , onHit =
-                    { kind = "damage"
-                    , damageType = "cold"
-                    , amount =
-                        { kind = "threshold_tiers"
-                        , axis = "character"
-                        , base = { dice = 1, dieSize = 8 }
-                        , tiers =
-                            [ { atLevel = 5, override = { dice = 2 } }
-                            , { atLevel = 11, override = { dice = 3 } }
-                            , { atLevel = 17, override = { dice = 4 } }
-                            ]
-                        }
-                    }
-                , onMiss = { kind = "none" }
+                , onHit = [ damageRider, modifySpeedRider ]
+                , onMiss = [ { kind = "none" } ]
                 }
               ]
           }

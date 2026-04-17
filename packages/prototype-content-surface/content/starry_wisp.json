@@ -26,41 +26,45 @@
         },
         "attackKind": "ranged_spell_attack",
         "kind": "attack_roll",
-        "onHit": {
-          "amount": {
-            "axis": "character",
-            "base": {
-              "dice": 1,
-              "dieSize": 8
+        "onHit": [
+          {
+            "amount": {
+              "axis": "character",
+              "base": {
+                "dice": 1,
+                "dieSize": 8
+              },
+              "kind": "threshold_tiers",
+              "tiers": [
+                {
+                  "atLevel": 5,
+                  "override": {
+                    "dice": 2
+                  }
+                },
+                {
+                  "atLevel": 11,
+                  "override": {
+                    "dice": 3
+                  }
+                },
+                {
+                  "atLevel": 17,
+                  "override": {
+                    "dice": 4
+                  }
+                }
+              ]
             },
-            "kind": "threshold_tiers",
-            "tiers": [
-              {
-                "atLevel": 5,
-                "override": {
-                  "dice": 2
-                }
-              },
-              {
-                "atLevel": 11,
-                "override": {
-                  "dice": 3
-                }
-              },
-              {
-                "atLevel": 17,
-                "override": {
-                  "dice": 4
-                }
-              }
-            ]
-          },
-          "damageType": "radiant",
-          "kind": "damage"
-        },
-        "onMiss": {
-          "kind": "none"
-        }
+            "damageType": "radiant",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
       }
     ],
     "range": {

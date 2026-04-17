@@ -8,24 +8,34 @@
     "activationCost": {
       "kind": "bonus_action"
     },
-    "effect": {
-      "amount": {
-        "axis": "class",
-        "base": {
-          "dice": 1,
-          "dieSize": 10,
-          "flat": 1
-        },
-        "kind": "linear_per_level",
-        "perLevel": {
-          "flat": 1
-        },
-        "startingAtLevel": 1
-      },
-      "kind": "heal_hp",
-      "target": "self"
-    },
     "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "class",
+              "base": {
+                "dice": 1,
+                "dieSize": 10,
+                "flat": 1
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "flat": 1
+              },
+              "startingAtLevel": 1
+            },
+            "kind": "heal_hp",
+            "target": "self"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
     "resetCadence": {
       "kind": "partial_short_full_long",
       "shortRestRefill": 1

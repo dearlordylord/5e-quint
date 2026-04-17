@@ -1,9 +1,6 @@
 -- Action Surge (fighter L2) — SRD 5.2.1, tier-2 encoding.
--- Captures the threshold_tiers use-count cap: 1 use (L2–L16) → 2 uses (L17+).
--- NOTE: The SRD constraint "only once on a turn" (L17+) is not expressible in
--- ClassFeatureActivationMechanics — that family has no usageLimit / perTurnLimit
--- field (only MasteryMechanics has MasteryUsageLimit). This secondary constraint
--- is flagged as a surface_widening in the result.
+-- Captures the threshold_tiers use-count cap (1 use L2–L16, 2 uses
+-- L17+) plus the shared UsageLimit { once_per_turn }.
 
 let actionSurgeL2 =
       { kind = "class_feature"
@@ -30,11 +27,18 @@ let actionSurgeL2 =
                   }
               }
           , resetCadence = { kind = "short_or_long_rest" }
-          , effect =
-              { kind = "grant_extra_action"
-              , restriction =
-                  { kind = "exclude", actions = [ "magic" ] }
-              }
+          , usageLimit = { kind = "once_per_turn" }
+          , phases =
+              [ { kind = "direct"
+                , attachment = { kind = "self" }
+                , effects =
+                    [ { kind = "grant_extra_action"
+                      , restriction =
+                          { kind = "exclude", actions = [ "magic" ] }
+                      }
+                    ]
+                }
+              ]
           }
       }
 

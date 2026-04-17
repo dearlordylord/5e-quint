@@ -34,17 +34,23 @@ let secondWind =
               { kind = "partial_short_full_long"
               , shortRestRefill = 1
               }
-          , effect =
-              { kind = "heal_hp"
-              , target = "self"
-              , amount =
-                  { kind = "linear_per_level"
-                  , axis = "class"
-                  , base = { dice = 1, dieSize = 10, flat = 1 }
-                  , perLevel = { flat = 1 }
-                  , startingAtLevel = 1
-                  }
-              }
+          , phases =
+              [ { kind = "direct"
+                , attachment = { kind = "self" }
+                , effects =
+                    [ { kind = "heal_hp"
+                      , target = "self"
+                      , amount =
+                          { kind = "linear_per_level"
+                          , axis = "class"
+                          , base = { dice = 1, dieSize = 10, flat = 1 }
+                          , perLevel = { flat = 1 }
+                          , startingAtLevel = 1
+                          }
+                      }
+                    ]
+                }
+              ]
           }
       }
 

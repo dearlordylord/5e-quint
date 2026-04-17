@@ -50,20 +50,7 @@
           "kind": "damage"
         },
         "onSuccess": {
-          "amount": {
-            "axis": "slot",
-            "base": {
-              "dice": 4,
-              "dieSize": 8
-            },
-            "kind": "linear_per_level",
-            "perLevel": {
-              "dice": 1
-            },
-            "startingAtLevel": 6
-          },
-          "damageType": "necrotic",
-          "kind": "damage"
+          "kind": "half_damage"
         }
       }
     ],

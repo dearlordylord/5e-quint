@@ -47,12 +47,24 @@ let shield =
           , interruptsTrigger = True
           , effects =
               [ { kind = "modify_ac"
-                , delta = Some 5
+                , delta =
+                    Some
+                      { kind = "fixed_dice"
+                      , dice = 5
+                      , dieSize = 1
+                      , sign = "+"
+                      }
                 , spellId = None Text
                 , scope = None Text
                 }
               , { kind = "negate_named_effect"
-                , delta = None Natural
+                , delta =
+                    None
+                      { kind : Text
+                      , dice : Natural
+                      , dieSize : Natural
+                      , sign : Text
+                      }
                 , spellId = Some "magic_missile"
                 , scope = Some "damage_only"
                 }

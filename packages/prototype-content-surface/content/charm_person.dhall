@@ -1,25 +1,29 @@
 -- Charm Person — SRD 5.2.1 Spell, level 1, Enchantment.
--- Family: activation (single save_gate phase).
--- Target: one Humanoid (creature-type filter not expressible in surface).
--- Save: WIS → apply_condition charmed on fail, none on success.
--- Duration: timed 1 hour (NOT concentration).
--- Upcast: +1 target per slot above 1.
 --
--- Two mechanics omitted (surface_widening):
+-- RAW (Spells / Descriptions A-D / Charm Person):
+--   "One Humanoid you can see within range makes a Wisdom saving
+--    throw. It does so with Advantage if you or your allies are
+--    fighting it. On a failed save, the target has the Charmed
+--    condition until the spell ends or until you or your allies
+--    damage it. The Charmed creature is Friendly to you. When the
+--    spell ends, the target knows it was Charmed by you."
+--   "Using a Higher-Level Spell Slot. You can target one additional
+--    creature for each spell slot level above 1."
 --
--- 1. Conditional save advantage: "It does so with Advantage if you or
---    your allies are fighting it." The save_gate phase has no field for
---    a conditional advantage modifier on the target's save roll.
---    The v4 atom modify_roll_advantage exists but the surface has no
---    way to attach it as a conditional predicate on a save_gate input.
+-- Consolidated validation reference for:
+--   • TargetSelection.choose_up_to.typeFilter = [ "humanoid" ]
+--     (second instance after Hold Person; confirms the target-side
+--     creature-type filter generalizes across spells.)
+--   • Duration.timed.earlyEnd = [ target_damaged_by_caster_or_ally ]
+--     (new trigger variant added for the "or until you or your allies
+--     damage it" RAW clause; the "ally" side is DM agenda.)
+--   • save_gate onFail apply_condition charmed.
 --
--- 2. Conditional break: "until the spell ends or until you or your
---    allies damage it." The timed Duration type has no break_trigger
---    field. The v4 lifecycle atom `break` exists but the TS surface
---    exposes no shape for a damage-triggered break on a timed effect.
---
--- The Humanoid-only restriction (affectsCreatureType) is also dropped:
--- there is no creature-type filter attachment variant in the surface.
+-- DM AGENDA. "It does so with Advantage if you or your allies are
+-- fighting it" — the "fighting" predicate is situational and
+-- session-resolved; not modeled. "Friendly to you" and "knows it was
+-- Charmed by you when the spell ends" are narrative consequences of
+-- the Charmed condition, already implied by RAW.
 
 let charmPerson =
       { kind = "spell"
@@ -30,7 +34,7 @@ let charmPerson =
           , section = "Spells/Descriptions-A-D#Charm Person"
           }
       , description =
-          "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you."
+          "One Humanoid you can see within range makes a Wisdom saving throw. It does so with Advantage if you or your allies are fighting it. On a failed save, the target has the Charmed condition until the spell ends or until you or your allies damage it. The Charmed creature is Friendly to you. When the spell ends, the target knows it was Charmed by you. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1."
       , mechanics =
           { family = "activation"
           , level = 1
@@ -41,6 +45,8 @@ let charmPerson =
           , duration =
               { kind = "timed"
               , value = { unit = "hour", amount = 1 }
+              , earlyEnd =
+                  [ { kind = "target_damaged_by_caster_or_ally" } ]
               }
           , phases =
               [ { kind = "save_gate"
@@ -54,6 +60,7 @@ let charmPerson =
                             , perSlotAboveBase = 1
                             , baseLevel = 1
                             }
+                        , typeFilter = [ "humanoid" ]
                         }
                     }
                 , ability = "wis"
