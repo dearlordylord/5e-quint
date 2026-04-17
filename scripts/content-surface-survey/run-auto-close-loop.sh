@@ -133,7 +133,7 @@ prepare_worktree() {
     fi
     git -C "$WORKTREE_DIR" reset --hard HEAD >/dev/null
     git -C "$WORKTREE_DIR" clean -fd >/dev/null
-    git -C "$WORKTREE_DIR" rebase "$INTEGRATION_BRANCH" >/dev/null
+    git -C "$WORKTREE_DIR" reset --hard "$INTEGRATION_BRANCH" >/dev/null
   fi
   seed_loop_inputs
 }
