@@ -133,18 +133,36 @@ type LockPayload = {
   statePath: string;
 };
 
-const DEFAULT_STATE_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.state.json";
-const DEFAULT_LOCK_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.lock.json";
-const DEFAULT_HISTORY_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.history.jsonl";
-const DEFAULT_LATEST_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.latest.json";
-const DEFAULT_FAILED_ATTEMPTS_PATH =
-  "/workspace/typescript/dnd/.output/content-surface-closure/failed-surface-attempts.jsonl";
-const DEFAULT_REPO_ROOT = "/workspace/typescript/dnd";
-const RUN_SURVEY_LOCK_PATH = path.join(
+const DEFAULT_REPO_ROOT = process.env.AUTO_LOOP_REPO_ROOT ?? process.cwd();
+const DEFAULT_STATE_PATH = path.join(
   DEFAULT_REPO_ROOT,
-  "scripts",
-  "content-surface-survey",
-  "run-survey.lock",
+  ".output",
+  "content-surface-closure",
+  "auto-close-loop.state.json",
+);
+const DEFAULT_LOCK_PATH = path.join(
+  DEFAULT_REPO_ROOT,
+  ".output",
+  "content-surface-closure",
+  "auto-close-loop.lock.json",
+);
+const DEFAULT_HISTORY_PATH = path.join(
+  DEFAULT_REPO_ROOT,
+  ".output",
+  "content-surface-closure",
+  "auto-close-loop.history.jsonl",
+);
+const DEFAULT_LATEST_PATH = path.join(
+  DEFAULT_REPO_ROOT,
+  ".output",
+  "content-surface-closure",
+  "auto-close-loop.latest.json",
+);
+const DEFAULT_FAILED_ATTEMPTS_PATH = path.join(
+  DEFAULT_REPO_ROOT,
+  ".output",
+  "content-surface-closure",
+  "failed-surface-attempts.jsonl",
 );
 
 function parseArgs(argv: ReadonlyArray<string>): Args {
@@ -264,6 +282,10 @@ function repoRoot(): string {
   return DEFAULT_REPO_ROOT;
 }
 
+function runSurveyLockPath(): string {
+  return path.join(repoRoot(), "scripts", "content-surface-survey", "run-survey.lock");
+}
+
 function ensureParent(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
@@ -321,8 +343,8 @@ function waitForSurveyIdle(args: Args, state: PersistedState): void {
     saveState(args.statePath, state);
     sleep(Math.max(args.sleepSeconds, 5));
   }
-  if (warned && fs.existsSync(RUN_SURVEY_LOCK_PATH)) {
-    fs.rmSync(RUN_SURVEY_LOCK_PATH, { force: true });
+  if (warned && fs.existsSync(runSurveyLockPath())) {
+    fs.rmSync(runSurveyLockPath(), { force: true });
   }
 }
 
@@ -408,9 +430,9 @@ function saveState(statePath: string, state: PersistedState): void {
 
 function resultPathForSlug(source: Source, slug: string): string {
   return source === "srd-5.2.1"
-    ? path.join(DEFAULT_REPO_ROOT, "scripts", "content-surface-survey", "results-srd", slug, "result.json")
+    ? path.join(repoRoot(), "scripts", "content-surface-survey", "results-srd", slug, "result.json")
     : path.join(
-        DEFAULT_REPO_ROOT,
+        repoRoot(),
         ".references",
         "xphb-srd-pairing",
         "phb-survey",
@@ -1099,12 +1121,14 @@ function main(): void {
       } catch (error) {
         state.lastError = error instanceof Error ? error.message : String(error);
         process.stderr.write(`auto-close-loop: ${state.lastError}\n`);
+        const changes = worktreeChanges();
+        if (changes.tracked.length > 0 || changes.untracked.length > 0) {
+          restoreTracked(changes.tracked);
+          removeUntracked(changes.untracked);
+        }
         if (isTransientBatchError(state.lastError)) {
           process.stderr.write("auto-close-loop: transient batch failure; will retry after sleep\n");
         } else {
-          const changes = worktreeChanges();
-          restoreTracked(changes.tracked);
-          removeUntracked(changes.untracked);
           appendFailureLog({
             recordedAt: new Date().toISOString(),
             cluster: cluster.canonical,

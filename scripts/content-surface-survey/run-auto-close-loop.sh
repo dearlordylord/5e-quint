@@ -8,6 +8,8 @@ LOG_FILE="$OUTPUT_DIR/auto-close-loop.log"
 STATE_FILE="$OUTPUT_DIR/auto-close-loop.state.json"
 LOCK_FILE="$OUTPUT_DIR/auto-close-loop.lock.json"
 PID_FILE="$OUTPUT_DIR/auto-close-loop.pid"
+WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop}"
+WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop}"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -105,6 +107,22 @@ logs() {
   exec tail -n 80 -f "$LOG_FILE"
 }
 
+prepare_worktree() {
+  mkdir -p "$(dirname "$WORKTREE_DIR")"
+  if [[ ! -e "$WORKTREE_DIR/.git" ]]; then
+    rm -rf "$WORKTREE_DIR"
+    git -C "$REPO_ROOT" worktree add --force -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" master
+    return
+  fi
+  current_branch="$(git -C "$WORKTREE_DIR" branch --show-current)"
+  if [[ "$current_branch" != "$WORKTREE_BRANCH" ]]; then
+    git -C "$WORKTREE_DIR" checkout "$WORKTREE_BRANCH" >/dev/null
+  fi
+  git -C "$WORKTREE_DIR" reset --hard HEAD >/dev/null
+  git -C "$WORKTREE_DIR" clean -fd >/dev/null
+  git -C "$WORKTREE_DIR" rebase master >/dev/null
+}
+
 start() {
   clear_stale_lock
   if [[ -f "$LOCK_FILE" ]]; then
@@ -120,6 +138,8 @@ start() {
     fi
     rm -f "$LOCK_FILE"
   fi
+
+  prepare_worktree
 
   auto_kind="${AUTO_KIND:-magic_item}"
 
@@ -149,8 +169,8 @@ start() {
   : > "$LOG_FILE"
   quoted_args="$(printf '%q ' "${args[@]}")"
   nohup setsid bash -lc "
-    cd '$REPO_ROOT'
-    exec env MAX_PARALLEL=1 \
+    cd '$WORKTREE_DIR'
+    exec env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' \
       pnpm --filter @dnd/prototype-content-surface exec tsx \
       ../../scripts/content-surface-survey/auto-close-loop.ts \
       $quoted_args

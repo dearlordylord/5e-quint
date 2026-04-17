@@ -47,3 +47,4 @@ escalate-fuzz.log
 .codex/
 .mcp.dnd.local.json
 fat-traces/
+.worktrees/

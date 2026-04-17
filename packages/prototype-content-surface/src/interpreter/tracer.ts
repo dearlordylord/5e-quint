@@ -3193,6 +3193,8 @@ function describeDc(d: DcSource): string {
   switch (d.kind) {
     case "caster_spell_save_dc":
       return "caster spell save DC";
+    case "fixed":
+      return `fixed DC ${d.dc}`;
     case "weapon_attack_dc":
       return `${d.base} + ability mod + PB (weapon attack)`;
     case "innate_dc":

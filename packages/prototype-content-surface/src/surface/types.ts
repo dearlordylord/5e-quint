@@ -742,6 +742,11 @@ export type EffectAtom =
       readonly kind: "grant_spell_access";
       readonly spellId: string;
       readonly mode: SpellAccessMode;
+      // Optional cast-time DC override applied only to casts made through
+      // this grant. Needed for magic items that cast an existing spell
+      // using an item-defined fixed DC instead of the spell's normal
+      // caster-derived DC.
+      readonly dcOverride?: DcSource;
       readonly targetRestriction?: GrantedSpellTargetRestriction;
     }
   // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from
@@ -1113,6 +1118,7 @@ export type Attachment =
 // (Topple mastery: DC 8 + attack ability mod + Proficiency Bonus).
 export type DcSource =
   | { readonly kind: "caster_spell_save_dc" }
+  | { readonly kind: "fixed"; readonly dc: number }
   | { readonly kind: "weapon_attack_dc"; readonly base: number }
   // Innate-ability DC: `base + ability-mod + proficiency-bonus`.
   // Used by abilities that pin the DC to a specific ability
