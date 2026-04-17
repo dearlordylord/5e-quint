@@ -448,6 +448,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "transport_exile": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "transport_exile",
+        label: `transport_exile\ndest: ${e.destination}`,
+      });
+      return id;
+    }
     case "set_speed": {
       const id = ids("eff");
       nodes.push({
@@ -654,6 +664,7 @@ function traceEffectAtomScaling(
     case "set_ability_score":
     case "modify_ability_score":
     case "teleport":
+    case "transport_exile":
     case "grant_speed":
     case "alter_item_kind":
     case "detect":

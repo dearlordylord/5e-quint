@@ -83,6 +83,17 @@ export type DamageTypeRef = DamageType | CastTimeChoice<DamageType>;
 
 export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
 
+// Closed planar / extradimensional destinations for exile-style
+// transport. Kept distinct from local `teleport` destinations because
+// this surface pressure is about leaving the current play space
+// entirely, not repositioning within it.
+export type ExileDestination =
+  | "demiplane"
+  | "astral_plane"
+  | "ethereal_plane"
+  | "plane_of_origin"
+  | "different_plane";
+
 // SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
 export type StandardActionKind =
   | "attack"
@@ -869,6 +880,15 @@ export type EffectAtom =
       readonly kind: "teleport";
       readonly maxFeet: number;
       readonly destination: "unoccupied_visible_space";
+    }
+  // v4: transport_exile — planar / extradimensional relocation that
+  // removes the subject from the current play space rather than merely
+  // repositioning it nearby. Rod of Security and Robe of Stars both
+  // pressure this shape. Return semantics remain separate lifecycle
+  // concerns (`return_on_end`, repeat activation, etc.).
+  | {
+      readonly kind: "transport_exile";
+      readonly destination: ExileDestination;
     }
   // Composite: apply several effects as one bundle. Used to put
   // multiple atoms into a single slot (save_gate.onFail, attack
