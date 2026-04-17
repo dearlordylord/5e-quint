@@ -439,6 +439,12 @@ export type SpellAccessMode =
       readonly maxLevel: number;
     };
 
+// Optional narrowing applied to the spell access grant itself rather than
+// the underlying spell record. Magic items like Ring of Jumping grant a
+// normally broader-target spell, but restrict casts made through the item
+// to the wearer only.
+export type GrantedSpellTargetRestriction = { readonly kind: "self_only" };
+
 // ---------- unified effect atoms (v4 taxonomy) ----------
 //
 // Discriminated union covering the v4 effect atoms. Replaces the
@@ -736,6 +742,7 @@ export type EffectAtom =
       readonly kind: "grant_spell_access";
       readonly spellId: string;
       readonly mode: SpellAccessMode;
+      readonly targetRestriction?: GrantedSpellTargetRestriction;
     }
   // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from
   // Poison, Tiefling "Hellish Resistance" style. Survey evidence: 3 hits.

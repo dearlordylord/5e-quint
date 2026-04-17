@@ -616,6 +616,30 @@ function worktreeChanges(): {
   return { tracked, untracked };
 }
 
+function touchesPrototypeTypeScript(paths: ReadonlyArray<string>): boolean {
+  return paths.some(
+    (rel) =>
+      rel.startsWith("packages/prototype-content-surface/src/") &&
+      rel.endsWith(".ts"),
+  );
+}
+
+function assertPrototypeTypecheckPasses(): void {
+  const result = spawnSync("pnpm", ["--filter", "@dnd/prototype-content-surface", "typecheck"], {
+    cwd: repoRoot(),
+    stdio: "inherit",
+    env: {
+      ...process.env,
+      CI: "1",
+    },
+  });
+  if (result.status !== 0) {
+    throw new Error(
+      `surface-change attempt left @dnd/prototype-content-surface untypecheckable (exit=${result.status ?? "signal"})`,
+    );
+  }
+}
+
 function trackedInGit(relPath: string): boolean {
   return git(["ls-files", "--error-unmatch", "--", relPath]).status === 0;
 }
@@ -842,10 +866,14 @@ function attemptSurfaceChange(args: Args, cluster: string): SurfaceAttempt {
     throw new Error(`surface-change attempt failed for ${cluster} (exit=${result.status ?? "signal"})`);
   }
   const changes = worktreeChanges();
+  const changedPaths = [...new Set([...changes.tracked, ...changes.untracked])];
+  if (touchesPrototypeTypeScript(changedPaths)) {
+    assertPrototypeTypecheckPasses();
+  }
   return {
     cluster,
     selectedSlugs,
-    changedPaths: [...new Set([...changes.tracked, ...changes.untracked])],
+    changedPaths,
   };
 }
 

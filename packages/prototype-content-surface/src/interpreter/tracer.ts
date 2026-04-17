@@ -70,6 +70,7 @@ import type {
   StatBlockValue,
   ReanimatedCreatureMechanics,
   TemplatedMultiSpawnMechanics,
+  GrantedSpellTargetRestriction,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -370,7 +371,9 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "grant_spell_access",
-        label: `grant_spell_access\n${e.spellId}\n(${describeSpellAccessMode(e.mode)})`,
+        label:
+          `grant_spell_access\n${e.spellId}\n(${describeSpellAccessMode(e.mode)})` +
+          describeGrantedSpellTargetRestriction(e.targetRestriction),
       });
       return id;
     }
@@ -625,6 +628,8 @@ function traceEffectAtomScaling(
     case "end_ongoing_spells":
     case "maximize_healing_received":
     case "transform_target":
+    case "natural_weapons":
+    case "water_breathing":
       return;
     case "composite":
       for (const child of e.effects) {
@@ -3358,6 +3363,13 @@ function describeSpellAccessMode(m: SpellAccessMode): string {
       throw new Error(`unhandled spell access mode: ${String(_exhaustive)}`);
     }
   }
+}
+
+function describeGrantedSpellTargetRestriction(
+  restriction: GrantedSpellTargetRestriction | undefined,
+): string {
+  if (restriction === undefined) return "";
+  return restriction.kind === "self_only" ? "\ntarget: self only" : "";
 }
 
 function describeWeaponFilter(f: WeaponFilter | undefined): string {
