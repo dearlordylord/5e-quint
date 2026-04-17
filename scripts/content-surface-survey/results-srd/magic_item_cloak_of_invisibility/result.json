@@ -1,46 +1,22 @@
 {
   "unit_slug": "magic_item_cloak_of_invisibility",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord",
-      "justification": "No magic_item kind exists in UnitRecord. The type union is SpellRecord | ClassFeatureRecord | MasteryRecord only. A MagicItemRecord with its own mechanics family (or families) is required before any magic item can be encoded.",
-      "evidence": "Wondrous Item, Legendary (Requires Attunement)"
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_ends_effect_no_action",
+      "justification": "The item grants a timed condition that the wearer can end manually without spending an action; the current early-end trigger grammar has no item-driven voluntary termination variant.",
+      "evidence": "The effect ends early if you pull the hood down (no action required)"
     },
     {
       "kind": "new_variant",
-      "name": "Condition: invisible",
-      "justification": "The Cloak applies the Invisible condition. The Condition type currently only contains 'prone'. 'invisible' must be added.",
-      "evidence": "expend 1 charge to give yourself the Invisible condition for 1 hour"
-    },
-    {
-      "kind": "new_variant",
-      "name": "RestResetCadence: daily_at_dawn (or recharge_at_dawn)",
-      "justification": "Charges regain at dawn, not on a short or long rest. No dawn-based recharge cadence exists in RestResetCadence.",
-      "evidence": "regains 1d3 expended charges daily at dawn"
-    },
-    {
-      "kind": "new_variant",
-      "name": "UseCountResource: dice-based recharge amount",
-      "justification": "The recharge is a dice roll (1d3), not a fixed integer. UseCountResource.cap and all reset cadences assume fixed integer refill amounts.",
-      "evidence": "regains 1d3 expended charges daily at dawn"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureActivationCost (or item activation cost): magic_action",
-      "justification": "The cloak is activated by taking the Magic action. Only 'free' and 'bonus_action' exist as activation cost variants. 'magic_action' is a named action type in StandardActionKind but has no activation cost variant.",
-      "evidence": "you can take a Magic action to pull its hood over your head and expend 1 charge"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Duration early-end: item_interaction (no action required)",
-      "justification": "The effect ends early when the wearer pulls the hood down, which requires no action. This is an item-interaction early-end trigger not representable by existing Duration or lifecycle atoms.",
-      "evidence": "The effect ends early if you pull the hood down (no action required) or cease wearing the cloak."
+      "name": "DurationEndTrigger.target_ceases_wearing_granting_item",
+      "justification": "The granted Invisible condition is contingent on continuing to wear the source item, and the current early-end trigger grammar has no variant for losing required wear state.",
+      "evidence": "The effect ends early if you ... cease wearing the cloak"
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: UnitRecord has no magic_item kind. Even if that were added, a minimum of five surface widenings are needed: invisible condition variant, dawn-recharge cadence, dice-based recharge amount, magic_action activation cost, and an item-interaction early-end trigger. Attunement (attunement_slot atom exists in the taxonomy but has no surface type) would also need surface representation."
+  "notes": "The item otherwise fits MagicItemRecord activation cleanly: 3-charge pool, 1d3 dawn recharge, Magic action activation, self-applied Invisible condition for 1 hour. I did not author content because omitting the two early-end clauses would be dishonest."
 }

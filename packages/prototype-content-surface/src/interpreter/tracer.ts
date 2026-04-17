@@ -16,6 +16,7 @@ import type {
   DurationEndTrigger,
   Range,
   Attachment,
+  AttachmentRangeOrigin,
   EffectAtom,
   OngoingOperation,
   DiceAmount,
@@ -2205,12 +2206,12 @@ function traceAttachment(
         id,
         category: "attachment",
         atomKind: "target",
-        label: `target\n${selectionLabel}\nrange ${describeRange(range)}`,
+        label: `target\n${selectionLabel}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}`,
       });
       return id;
     }
     case "area": {
-      const originLabel = describeAreaOrigin(a.origin, range);
+      const originLabel = describeAreaOrigin(a.origin, range, a.rangeOrigin);
       nodes.push({
         id,
         category: "attachment",
@@ -2228,7 +2229,7 @@ function traceAttachment(
         id,
         category: "attachment",
         atomKind: "mark",
-        label: `mark\n${selectionLabel}\nrange ${describeRange(range)}${transferLabel}`,
+        label: `mark\n${selectionLabel}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}${transferLabel}`,
       });
       return id;
     }
@@ -2262,10 +2263,14 @@ function describeTargetSelection(s: TargetSelection): string {
   return `choose_up_to: ${describeScaling(s.count)}${repeats}${typeFilter}`;
 }
 
-function describeAreaOrigin(o: AreaOrigin, range: Range): string {
+function describeAreaOrigin(
+  o: AreaOrigin,
+  range: Range,
+  rangeOrigin: AttachmentRangeOrigin | undefined,
+): string {
   switch (o.kind) {
     case "point_within_range":
-      return `origin: point within ${describeRange(range)}`;
+      return `origin: point within ${describeAttachmentRange(range, rangeOrigin)}`;
     case "on_primary_target":
       return "origin: primary target";
     case "self":
@@ -2275,6 +2280,14 @@ function describeAreaOrigin(o: AreaOrigin, range: Range): string {
       throw new Error(`unhandled area origin: ${String(_)}`);
     }
   }
+}
+
+function describeAttachmentRange(
+  range: Range,
+  origin: AttachmentRangeOrigin | undefined,
+): string {
+  const base = describeRange(range);
+  return (origin ?? "caster") === "caster" ? base : `${base} from spell sensor`;
 }
 
 function describeAreaShape(s: AreaShapeSpec): string {

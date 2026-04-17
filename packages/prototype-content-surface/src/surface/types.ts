@@ -1143,19 +1143,32 @@ export type MarkTransfer = {
   readonly cost: MarkTransferCost;
 };
 
+// Most effects measure range from the caster. A few remote-sensor
+// effects instead measure from an existing spell sensor or similar
+// projected point in space. Keep the origin grammar closed and
+// attachment-local so the authored unit can say "30 feet from the
+// sensor" without inventing a new top-level mechanics family.
+export type AttachmentRangeOrigin = "caster" | "spell_sensor";
+
 export type Attachment =
   | { readonly kind: "self" }
-  | { readonly kind: "target"; readonly selection: TargetSelection }
+  | {
+      readonly kind: "target";
+      readonly selection: TargetSelection;
+      readonly rangeOrigin?: AttachmentRangeOrigin;
+    }
   | {
       readonly kind: "area";
       readonly shape: AreaShapeSpec;
       readonly origin: AreaOrigin;
+      readonly rangeOrigin?: AttachmentRangeOrigin;
     }
   // v4 `mark` attachment — stateful binding on a creature that effects
   // latch onto, and that can be transferred on a configured event.
   | {
       readonly kind: "mark";
       readonly selection: TargetSelection;
+      readonly rangeOrigin?: AttachmentRangeOrigin;
       readonly transfer?: MarkTransfer;
     };
 
