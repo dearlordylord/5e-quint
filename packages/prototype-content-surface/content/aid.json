@@ -44,6 +44,7 @@
               },
               "startingAtLevel": 2
             },
+            "direction": "increase",
             "kind": "modify_max_hp"
           }
         ],

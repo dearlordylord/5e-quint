@@ -225,7 +225,11 @@ export type AreaShape = (typeof AREA_SHAPES)[number];
 
 // ---------- senses (SRD 5.2.1) ----------
 
-export type SenseKind = "darkvision" | "blindsight" | "tremorsense" | "truesight";
+export type SenseKind =
+  | "darkvision"
+  | "blindsight"
+  | "tremorsense"
+  | "truesight";
 
 // ---------- creature types (SRD 5.2.1 Rules Glossary) ----------
 
@@ -343,7 +347,48 @@ export type DiceAmount =
   // of Hit Points to that creature, up to the maximum amount
   // remaining in the pool." Paired with a charge_pool resource on
   // the mechanics header.
-  | { readonly kind: "resource_spent" };
+  | { readonly kind: "resource_spent" }
+  // §A14: amount read from another atom resolved in the same phase —
+  // specifically a damage instance's total. Harm: modify_max_hp.delta
+  // = linked damage_taken (full) of the save-gate's damage atom.
+  // Vampiric Touch: heal_hp.amount = linked damage_dealt (half) of
+  // the attack_roll's damage atom. No slot or character scaling node
+  // is emitted — scaling already lives on the source damage atom and
+  // propagates through the link.
+  | { readonly kind: "linked"; readonly link: LinkedDamage };
+
+// §A14: linked-amount primitives. Two disjoint link families keep
+// invalid cross-domain references unrepresentable: speed values link
+// only to other speed stats (LinkedSpeed); HP deltas link only to a
+// damage instance resolved in the same phase (LinkedDamage).
+//
+// Use sites:
+//   • EffectAtom.grant_speed.feet widened to `number | LinkedSpeed`
+//     — Spider Climb grants a Climb Speed equal to walk Speed.
+//   • DiceAmount.linked variant above — Harm couples modify_max_hp
+//     reduction to damage taken; Vampiric Touch couples caster
+//     heal_hp to half the damage dealt.
+
+// Link one speed value to another speed stat. Currently only walk
+// speed is referenced in RAW; widen this union when a future unit
+// links one mode to another (e.g., hypothetical "Fly Speed equal to
+// your Climb Speed").
+export type LinkedSpeed = { readonly kind: "walk_speed" };
+
+// Link an HP / damage amount to a damage instance resolved in the
+// same phase.
+//
+//   • damage_taken — reads the damage the target just received
+//     (post-save, post-resistance). Harm: full.
+//   • damage_dealt — reads the damage the caster just dealt to the
+//     target. Vampiric Touch: half.
+//
+// `scale` is always explicit so authors don't guess default behavior
+// — full = 1:1, half = round-down halved (RAW "half" idiom).
+export type LinkedDamage = {
+  readonly kind: "damage_taken" | "damage_dealt";
+  readonly scale: "full" | "half";
+};
 
 // SpellAccessMode — how the grantee may cast the named spell.
 //   • at_will / once_per_long_rest / prepared / known — simple modes
@@ -399,13 +444,29 @@ export type EffectAtom =
       readonly target: "self" | "target_creature";
     }
   // v4: modify_max_hp — Aid's "Hit Point maximum and current Hit
-  // Points increase by 5". Positive delta also heals current HP by
-  // the same amount (implicit, matches RAW for every SRD unit using
-  // this shape). Distinct from grant_temp_hp (separate pool) and
-  // heal_hp (current-HP-only restore that can't exceed max).
+  // Points increase by 5" (increase variant); Harm's "Hit Point
+  // maximum is reduced" (decrease variant). An `increase` delta
+  // also heals current HP by the same amount (implicit, matches
+  // RAW for every SRD unit using this shape). A `decrease` delta
+  // lowers max HP; current HP is naturally capped by the new max
+  // (RAW). Distinct from grant_temp_hp (separate pool) and heal_hp
+  // (current-HP-only restore that can't exceed max).
+  //
+  // §A14: the two directions are modeled as distinct variants so
+  // `floor` (minimum new max HP — Harm's "can't reduce below 1")
+  // is only representable on the decrease side. Aura of Life's §A16
+  // `block_max_hp_reduction` gate suppresses the decrease variant
+  // while active.
   | {
       readonly kind: "modify_max_hp";
+      readonly direction: "increase";
       readonly delta: DiceAmount;
+    }
+  | {
+      readonly kind: "modify_max_hp";
+      readonly direction: "decrease";
+      readonly delta: DiceAmount;
+      readonly floor?: number;
     }
   // v4: modify_ac. Delta is a DiceDelta to match modify_roll_numeric
   // (flat bonuses encode as dice=N, dieSize=1). This unification lets
@@ -428,7 +489,10 @@ export type EffectAtom =
       readonly condition:
         | Condition
         | ReadonlyNonEmptyArray<Condition>
-        | { readonly kind: "choose"; readonly from: ReadonlyNonEmptyArray<Condition> };
+        | {
+            readonly kind: "choose";
+            readonly from: ReadonlyNonEmptyArray<Condition>;
+          };
     }
   // v4: remove_condition. Same three-shape condition field as
   // apply_condition:
@@ -443,7 +507,10 @@ export type EffectAtom =
       readonly condition:
         | Condition
         | ReadonlyNonEmptyArray<Condition>
-        | { readonly kind: "choose"; readonly from: ReadonlyNonEmptyArray<Condition> };
+        | {
+            readonly kind: "choose";
+            readonly from: ReadonlyNonEmptyArray<Condition>;
+          };
     }
   // v4: grant_resistance
   | {
@@ -662,8 +729,8 @@ export type EffectAtom =
       readonly damageType: DamageType;
     }
   // §A16: Aura of Life "your Hit Point maximums can't be reduced".
-  // Gate that prevents modify_max_hp with a negative delta from
-  // landing while the host effect is active.
+  // Gate that prevents modify_max_hp with direction="decrease" (§A14)
+  // from landing while the host effect is active.
   | {
       readonly kind: "block_max_hp_reduction";
     }
@@ -701,10 +768,14 @@ export type EffectAtom =
   // 60 ft with hover. The `hover` flag is fly-only in RAW; keep it
   // optional and document the coupling here rather than encoding it in
   // the type (no second "can hover" variant exists yet).
+  //
+  // §A14: `feet` accepts a bare number (Fly: 60) or a LinkedSpeed
+  // (Spider Climb: Climb Speed equal to walk Speed). The link is
+  // resolved per-target at application time.
   | {
       readonly kind: "grant_speed";
       readonly speedKind: "fly" | "swim" | "climb" | "burrow";
-      readonly feet: number;
+      readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
     }
   // v4: teleport — Misty Step, Thunder Step, Dimension Door. The
@@ -926,9 +997,17 @@ export type AreaShapeDescriptor =
   | { readonly kind: "sphere"; readonly radiusFeet: number }
   | { readonly kind: "cone"; readonly lengthFeet: number }
   | { readonly kind: "cube"; readonly sideFeet: number }
-  | { readonly kind: "cylinder"; readonly radiusFeet: number; readonly heightFeet: number }
+  | {
+      readonly kind: "cylinder";
+      readonly radiusFeet: number;
+      readonly heightFeet: number;
+    }
   | { readonly kind: "emanation"; readonly radiusFeet: number }
-  | { readonly kind: "line"; readonly lengthFeet: number; readonly widthFeet: number };
+  | {
+      readonly kind: "line";
+      readonly lengthFeet: number;
+      readonly widthFeet: number;
+    };
 
 // Area shape specification — either a fixed shape, or a use-time
 // choice among candidate shapes. Dragonborn Breath Weapon: "15-foot
@@ -1038,12 +1117,11 @@ export type OngoingTrigger =
   | { readonly kind: "on_creature_enters_area" };
 
 // Optional predicate gating the trigger.
-export type OngoingPredicate =
-  | {
-      readonly kind: "at_hp_threshold";
-      readonly threshold: number;
-      readonly comparison: "lte" | "eq" | "gte";
-    };
+export type OngoingPredicate = {
+  readonly kind: "at_hp_threshold";
+  readonly threshold: number;
+  readonly comparison: "lte" | "eq" | "gte";
+};
 
 // What fires when the trigger+predicate hold. Most effects are plain
 // EffectAtoms. Two ongoing-specific variants remain because they
@@ -1091,9 +1169,7 @@ export type ActionRestriction =
 // half — the tracer/interpreter links back to onFail.damage. For any
 // other effect on success, use a raw EffectAtom. `none` is modeled as
 // EffectAtom { kind: "none" }.
-export type SaveSuccessOutcome =
-  | { readonly kind: "half_damage" }
-  | EffectAtom;
+export type SaveSuccessOutcome = { readonly kind: "half_damage" } | EffectAtom;
 
 export type ActivationPhase =
   | {
@@ -1302,7 +1378,10 @@ export type CreatureSpeed = {
 };
 
 export type CreatureResistanceList =
-  | { readonly kind: "fixed"; readonly damageTypes: ReadonlyNonEmptyArray<DamageType> }
+  | {
+      readonly kind: "fixed";
+      readonly damageTypes: ReadonlyNonEmptyArray<DamageType>;
+    }
   | {
       readonly kind: "choose_one_from";
       readonly options: ReadonlyNonEmptyArray<DamageType>;
@@ -1879,7 +1958,9 @@ export type FeatRecord = UnitMetadata & {
 
 // SpeciesTraitMechanics: passive for most traits (e.g., Darkvision);
 // activation for trait-as-ability (e.g., Dragonborn Breath Weapon).
-export type SpeciesTraitMechanics = PassiveMechanics | ActivatedAbilityMechanics;
+export type SpeciesTraitMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics;
 
 export type SpeciesTraitRecord = UnitMetadata & {
   readonly kind: "species_trait";

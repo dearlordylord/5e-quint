@@ -1,0 +1,77 @@
+{
+  "description": "You unleash virulent magic on a creature you can see within range. The target makes a Constitution saving throw. On a failed save, it takes 14d6 Necrotic damage, and its Hit Point maximum is reduced by an amount equal to the Necrotic damage it took. On a successful save, it takes half as much damage only. This spell can't reduce a target's Hit Point maximum below 1.",
+  "id": "harm",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 14,
+                  "dieSize": 6,
+                  "flat": 0
+                },
+                "kind": "fixed"
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            },
+            {
+              "delta": {
+                "kind": "linked",
+                "link": {
+                  "kind": "damage_taken",
+                  "scale": "full"
+                }
+              },
+              "direction": "decrease",
+              "floor": 1,
+              "kind": "modify_max_hp"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Harm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Harm"
+  }
+}

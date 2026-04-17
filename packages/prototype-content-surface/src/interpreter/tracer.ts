@@ -21,6 +21,7 @@ import type {
   DiceExpr,
   DiceExprDelta,
   DiceDelta,
+  LinkedSpeed,
   WeaponFilter,
   TargetSelection,
   SlotScaling,
@@ -163,11 +164,16 @@ function traceEffectAtom(
     }
     case "modify_max_hp": {
       const id = ids("eff");
+      const directionTag = e.direction === "decrease" ? "\n(decrease)" : "";
+      const floorTag =
+        e.direction === "decrease" && e.floor !== undefined
+          ? `\nfloor: ${e.floor}`
+          : "";
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_max_hp",
-        label: `modify_max_hp\n${describeDiceAmount(e.delta)}`,
+        label: `modify_max_hp\n${describeDiceAmount(e.delta)}${directionTag}${floorTag}`,
       });
       return id;
     }
@@ -460,11 +466,15 @@ function traceEffectAtom(
     case "grant_speed": {
       const id = ids("eff");
       const suffix = e.hover === true ? " (hover)" : "";
+      const feet =
+        typeof e.feet === "number"
+          ? `${e.feet} ft`
+          : describeLinkedSpeed(e.feet);
       nodes.push({
         id,
         category: "effect",
         atomKind: "grant_speed",
-        label: `grant_speed\n${e.speedKind} ${e.feet} ft${suffix}`,
+        label: `grant_speed\n${e.speedKind} ${feet}${suffix}`,
       });
       return id;
     }
@@ -514,8 +524,8 @@ function traceEffectAtom(
         e.newForm.crBound.kind === "fixed"
           ? `CR ${e.newForm.crBound.cr}`
           : e.newForm.crBound.kind === "target_cr_or_level"
-          ? "CR ≤ target CR/level"
-          : "CR ≤ caster level";
+            ? "CR ≤ target CR/level"
+            : "CR ≤ caster level";
       const rev = e.revertTriggers.map((t) => t.kind).join(" | ");
       const extras = [
         `retain: ${e.retainedFields.join(", ")}`,
@@ -853,9 +863,10 @@ function traceDuration(
       });
       edges.push({ from: procId, to: concId, relation: "grants" });
 
-      const permTag = d.permanentIfMaintainedFull === true
-        ? "\npermanent if maintained full"
-        : "";
+      const permTag =
+        d.permanentIfMaintainedFull === true
+          ? "\npermanent if maintained full"
+          : "";
       const expId = ids("exp");
       nodes.push({
         id: expId,
@@ -1029,7 +1040,16 @@ function traceOngoingOperation(
   // window atom emitted for the trigger.
   const hostId = triggerCtx.hostId;
   const hostRelation = triggerCtx.hostRelation;
-  traceOngoingOpEffect(op.effect, hostId, hostRelation, attId, slotId, nodes, edges, ids);
+  traceOngoingOpEffect(
+    op.effect,
+    hostId,
+    hostRelation,
+    attId,
+    slotId,
+    nodes,
+    edges,
+    ids,
+  );
 }
 
 type OngoingTriggerCtx = {
@@ -1095,9 +1115,10 @@ function traceOngoingTrigger(
     }
     case "on_creature_moves": {
       const winId = ids("win");
-      const label = trigger.perFeet !== undefined
-        ? `post_action_window\n(creature moves per ${trigger.perFeet} ft)`
-        : "post_action_window\n(creature moves)";
+      const label =
+        trigger.perFeet !== undefined
+          ? `post_action_window\n(creature moves per ${trigger.perFeet} ft)`
+          : "post_action_window\n(creature moves)";
       nodes.push({
         id: winId,
         category: "window",
@@ -1499,15 +1520,18 @@ function traceSpawnedCreature(
     [m.statBlock.reactions, "reaction"],
   ] as const) {
     if (slot === undefined) continue;
-    traceCreatureActions({
-      procId: ctx.procId,
-      compId,
-      slotId: ctx.slotId,
-      kind,
-      nodes,
-      edges,
-      ids,
-    }, slot);
+    traceCreatureActions(
+      {
+        procId: ctx.procId,
+        compId,
+        slotId: ctx.slotId,
+        kind,
+        nodes,
+        edges,
+        ids,
+      },
+      slot,
+    );
   }
 }
 
@@ -1535,7 +1559,9 @@ function traceCreatureActions(
   });
   actions.attacks?.forEach((ar, idx) => traceCreatureAttack(ctx, ar, idx + 1));
   actions.saves?.forEach((sg, idx) => traceCreatureSaveGate(ctx, sg, idx + 1));
-  actions.supports?.forEach((sp, idx) => traceCreatureSupport(ctx, sp, idx + 1));
+  actions.supports?.forEach((sp, idx) =>
+    traceCreatureSupport(ctx, sp, idx + 1),
+  );
 }
 
 function maTag(count: StatBlockValue | undefined): string {
@@ -1792,12 +1818,14 @@ function tracePhase(
         ids,
       );
 
-      const autoLabel = phase.autoSuccessIfCasterSlotGte !== undefined
-        ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
-        : "";
-      const gateLabel = phase.saveAppliesIf !== undefined
-        ? `\nsave only if ${phase.saveAppliesIf}`
-        : "";
+      const autoLabel =
+        phase.autoSuccessIfCasterSlotGte !== undefined
+          ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
+          : "";
+      const gateLabel =
+        phase.saveAppliesIf !== undefined
+          ? `\nsave only if ${phase.saveAppliesIf}`
+          : "";
       const resId = ids("res");
       nodes.push({
         id: resId,
@@ -1860,7 +1888,11 @@ function tracePhase(
             edges,
           );
           if (escId !== null) {
-            edges.push({ from: repId, to: escId, relation: "branches_on_save" });
+            edges.push({
+              from: repId,
+              to: escId,
+              relation: "branches_on_save",
+            });
             edges.push({ from: escId, to: attId, relation: "attaches_to" });
           }
         }
@@ -1903,9 +1935,10 @@ function tracePhase(
       const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
       edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
 
-      const autoLabel = phase.autoSuccessIfCasterSlotGte !== undefined
-        ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
-        : "";
+      const autoLabel =
+        phase.autoSuccessIfCasterSlotGte !== undefined
+          ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
+          : "";
       const resId = ids("res");
       nodes.push({
         id: resId,
@@ -1918,13 +1951,21 @@ function tracePhase(
 
       const passId = traceEffectAtom(phase.onPass, nodes, ids, edges);
       if (passId !== null) {
-        edges.push({ from: resId, to: passId, relation: "branches_on_completion" });
+        edges.push({
+          from: resId,
+          to: passId,
+          relation: "branches_on_completion",
+        });
         edges.push({ from: passId, to: attId, relation: "attaches_to" });
       }
       if (phase.onFail !== undefined) {
         const failId = traceEffectAtom(phase.onFail, nodes, ids, edges);
         if (failId !== null) {
-          edges.push({ from: resId, to: failId, relation: "branches_on_completion" });
+          edges.push({
+            from: resId,
+            to: failId,
+            relation: "branches_on_completion",
+          });
           edges.push({ from: failId, to: attId, relation: "attaches_to" });
         }
       }
@@ -2207,6 +2248,12 @@ function traceDiceAmountScaling(
       // No scaling node — the amount is determined by the activation's
       // resource expenditure, not a character or slot axis. The
       // describe side renders the label "= resource spent".
+      return;
+    case "linked":
+      // §A14: no scaling node — the amount is derived from another
+      // atom's resolved output in the same phase. Any slot/character
+      // scaling already lives on the source damage atom and
+      // propagates through the link.
       return;
     default: {
       const _exhaustive: never = amt;
@@ -2531,7 +2578,9 @@ function traceEquipmentPredicate(
     }
     default: {
       const _exhaustive: never = p;
-      throw new Error(`unhandled equipment predicate ${JSON.stringify(_exhaustive)}`);
+      throw new Error(
+        `unhandled equipment predicate ${JSON.stringify(_exhaustive)}`,
+      );
     }
   }
 }
@@ -2757,7 +2806,10 @@ function traceResetCadence(
       break;
     case "dawn": {
       const did = ids("dawn");
-      const refill = c.regain === null ? "refill all" : `refill ${describeDiceAmount(c.regain)}`;
+      const refill =
+        c.regain === null
+          ? "refill all"
+          : `refill ${describeDiceAmount(c.regain)}`;
       nodes.push({
         id: did,
         category: "window",
@@ -3112,6 +3164,19 @@ function describeScaling(s: number | SlotScaling<number>): string {
   return `${s.base} + ${s.perSlotAboveBase} per slot above ${s.baseLevel}`;
 }
 
+// §A14: grant_speed.feet may link to another speed stat instead of a
+// fixed distance. Spider Climb: Climb Speed equal to walk Speed.
+function describeLinkedSpeed(l: LinkedSpeed): string {
+  switch (l.kind) {
+    case "walk_speed":
+      return "= walk speed";
+    default: {
+      const _exhaustive: never = l.kind;
+      throw new Error(`unhandled linked speed: ${String(_exhaustive)}`);
+    }
+  }
+}
+
 function describeRange(r: Range): string {
   switch (r.kind) {
     case "self":
@@ -3138,7 +3203,10 @@ function describeDurationValue(d: {
   const base = `${d.amount} ${d.unit}${d.amount === 1 ? "" : "s"}`;
   if (d.upcastTiers === undefined || d.upcastTiers.length === 0) return base;
   const tiers = d.upcastTiers
-    .map((t) => `${t.amount} ${d.unit}${t.amount === 1 ? "" : "s"} @ slot ≥ ${t.atSlot}`)
+    .map(
+      (t) =>
+        `${t.amount} ${d.unit}${t.amount === 1 ? "" : "s"} @ slot ≥ ${t.atSlot}`,
+    )
     .join(", ");
   return `${base}\nupcast: ${tiers}`;
 }
@@ -3207,9 +3275,7 @@ function describeDelta(d: DiceDelta): string {
       if (d.dieSize === 1) return `${d.sign}${d.dice}`;
       return `${d.sign}${d.dice}d${d.dieSize}`;
     case "proficiency_bonus":
-      return d.scale === "half"
-        ? `${d.sign}½ PB`
-        : `${d.sign}PB`;
+      return d.scale === "half" ? `${d.sign}½ PB` : `${d.sign}PB`;
     case "ability_modifier":
       return `${d.sign}${d.ability.toUpperCase()} mod`;
     default: {
@@ -3229,6 +3295,12 @@ function describeDiceAmount(a: DiceAmount): string {
       return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
     case "resource_spent":
       return "= charges spent (player choice)";
+    case "linked": {
+      const scale = a.link.scale === "half" ? "half " : "";
+      const source =
+        a.link.kind === "damage_taken" ? "damage taken" : "damage dealt";
+      return `= ${scale}${source}`;
+    }
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled dice amount: ${String(_exhaustive)}`);
@@ -3238,8 +3310,18 @@ function describeDiceAmount(a: DiceAmount): string {
 
 function describeExpr(e: DiceExpr): string {
   const hasDice = e.dice > 0;
-  const flat = e.flat !== undefined && e.flat !== 0 ? (hasDice ? `+${e.flat}` : `${e.flat}`) : "";
-  const mod = e.spellcastingMod === true ? (hasDice || flat ? "+spellcasting mod" : "spellcasting mod") : "";
+  const flat =
+    e.flat !== undefined && e.flat !== 0
+      ? hasDice
+        ? `+${e.flat}`
+        : `${e.flat}`
+      : "";
+  const mod =
+    e.spellcastingMod === true
+      ? hasDice || flat
+        ? "+spellcasting mod"
+        : "spellcasting mod"
+      : "";
   const diceStr = hasDice ? `${e.dice}d${e.dieSize}` : "";
   return `${diceStr}${flat}${mod}` || "0";
 }
@@ -3324,9 +3406,7 @@ function traceTemplatedMultiSpawn(
   edges.push({ from: ctx.procId, to: compId, relation: "attaches_to" });
 
   const capId = ids("chz");
-  const tiers = m.sizeTiers
-    .map((t) => `${t.size}(w=${t.weight})`)
-    .join(" | ");
+  const tiers = m.sizeTiers.map((t) => `${t.size}(w=${t.weight})`).join(" | ");
   nodes.push({
     id: capId,
     category: "procedure",

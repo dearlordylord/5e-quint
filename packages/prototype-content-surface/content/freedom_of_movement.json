@@ -44,6 +44,13 @@
               {
                 "condition": "restrained",
                 "kind": "grant_condition_immunity"
+              },
+              {
+                "feet": {
+                  "kind": "walk_speed"
+                },
+                "kind": "grant_speed",
+                "speedKind": "swim"
               }
             ],
             "kind": "composite"

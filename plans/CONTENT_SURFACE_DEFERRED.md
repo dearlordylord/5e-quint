@@ -325,31 +325,66 @@ when those land.
 **Next step:** defer. 2+ units pressure both atoms; coalesce with a
 third (Holy Aura or first monster trait batch).
 
-### A14. Relative-to-stat DiceAmount / SpeedValue ("linked amount")
+### A14. Relative-to-stat DiceAmount / SpeedValue ("linked amount") — RESOLVED 2026-04-16
 
-**Motivating units:** Spider Climb ("Climb Speed equal to its Speed"),
-Harm ("HP maximum reduced by an amount equal to the Necrotic damage
-it took"), likely Vampiric Touch (heal-caster-by-damage-dealt),
-possibly Enervation family.
+Landed as two disjoint link families — keeps cross-domain references
+(e.g., a speed linked to damage taken) unrepresentable:
 
-**Blockers:**
-- `EffectAtom.grant_speed.feet` is a fixed number — no "equal to walk
-  speed" variant.
-- `DiceAmount` has no variant for "amount equal to another atom's
-  resolved output in the same phase".
-
-**Proposed shape — one `LinkedAmount` grammar covering both:**
 ```ts
-type LinkedAmount =
-  | { kind: "equal_to_walk_speed" }
-  | { kind: "equal_to_damage_taken" }       // Harm
-  | { kind: "equal_to_damage_dealt" };      // Vampiric Touch candidate
-```
-Applied where: `grant_speed.value`, `modify_max_hp.delta.kind`,
-`heal_hp.amount.kind` (as extended `DiceAmount` alternatives).
+// Speed-to-speed.
+type LinkedSpeed = { kind: "walk_speed" };
 
-**Next step:** defer. Design tick when a second relative-amount unit
-surfaces (likely Vampiric Touch when authored).
+// HP / damage amount linked to a damage instance resolved in the
+// same phase. `scale` is required so authors don't guess behavior.
+type LinkedDamage = {
+  kind: "damage_taken" | "damage_dealt";
+  scale: "full" | "half";
+};
+```
+
+Use sites:
+- `DiceAmount` gains `{ kind: "linked"; link: LinkedDamage }` —
+  covers `modify_max_hp.delta` and `heal_hp.amount` (damage/heal
+  delegate via the same DiceAmount union).
+- `EffectAtom.grant_speed.feet` widened to `number | LinkedSpeed`.
+- `EffectAtom.modify_max_hp` split into two variants discriminated by
+  a mandatory `direction` field so invalid combinations (a `floor`
+  on an increase, or a direction-less author-omission) are
+  unrepresentable:
+  ```ts
+  | { kind: "modify_max_hp"; direction: "increase"; delta: DiceAmount }
+  | { kind: "modify_max_hp"; direction: "decrease"; delta: DiceAmount; floor?: number };
+  ```
+  `floor` (Harm's "can't reduce below 1") lives only on the
+  decrease variant. Aura of Life's §A16 `block_max_hp_reduction`
+  gate suppresses the decrease variant while active.
+
+No new `EffectAtom.kind` strings — the extension rides inside
+existing atoms (damage, heal_hp, modify_max_hp, grant_speed). The
+tracer adds a `linked` arm to `describeDiceAmount`, a `LinkedSpeed`
+helper for `grant_speed` feet rendering, and direction/floor tags on
+`modify_max_hp`. No STAGE_3_EXTENSIONS whitelist entries needed.
+
+Note on Vampiric Touch's `scale = "half"`: earlier sketch framed
+this as `equal_to_damage_dealt`. RAW is "regain Hit Points equal to
+**half** the amount of Necrotic damage dealt", not equal. The
+explicit `scale` field captures both full and half uniformly instead
+of adding a separate `half_damage_dealt` variant.
+
+Validation refs:
+- `content/spider_climb.dhall` — `grant_speed` feet =
+  `{ kind: "walk_speed" }`. Partial; spatial "move along vertical
+  surfaces / ceilings" is DM-agenda per ARCHITECTURE.md §1.
+- `content/freedom_of_movement.dhall` — second LinkedSpeed pressure
+  case; composite bundles two condition immunities with `grant_speed`
+  swim = walk_speed.
+- `content/harm.dhall` — composite onFail bundles `damage` +
+  `modify_max_hp` (`linked damage_taken full` + `direction:
+  "decrease"` + `floor: 1`).
+- `content/vampiric_touch.dhall` — composite onHit bundles `damage` +
+  `heal_hp` (`linked damage_dealt half`). Partial; "recast each turn
+  as a Magic action" loop is deferred pending a per-turn
+  `repeat_cast` primitive.
 
 ### A12. UseCountCap.ability_modifier
 

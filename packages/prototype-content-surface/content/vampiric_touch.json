@@ -1,0 +1,84 @@
+{
+  "description": "The touch of your shadow-wreathed hand can siphon life force from others to heal your wounds. Make a melee spell attack against one creature within reach. On a hit, the target takes 3d6 Necrotic damage, and you regain Hit Points equal to half the amount of Necrotic damage dealt. Until the spell ends, you can make the attack again on each of your turns as a Magic action, targeting the same creature or a different one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3.",
+  "id": "vampiric_touch",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "melee_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "effects": [
+              {
+                "amount": {
+                  "axis": "slot",
+                  "base": {
+                    "dice": 3,
+                    "dieSize": 6
+                  },
+                  "kind": "linear_per_level",
+                  "perLevel": {
+                    "dice": 1
+                  },
+                  "startingAtLevel": 3
+                },
+                "damageType": "necrotic",
+                "kind": "damage"
+              },
+              {
+                "amount": {
+                  "kind": "linked",
+                  "link": {
+                    "kind": "damage_dealt",
+                    "scale": "half"
+                  }
+                },
+                "kind": "heal_hp",
+                "target": "self"
+              }
+            ],
+            "kind": "composite"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "necromancy"
+  },
+  "name": "Vampiric Touch",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Vampiric Touch"
+  }
+}

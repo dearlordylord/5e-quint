@@ -14,7 +14,8 @@
 --
 -- PARTIAL. Encoded:
 --   • composite { grant_condition_immunity paralyzed,
---                 grant_condition_immunity restrained }
+--                 grant_condition_immunity restrained,
+--                 grant_speed swim (walk_speed) }
 --     — RAW: "spells and other magical effects can [not] cause the
 --     target to have the Paralyzed or Restrained conditions". The
 --     source-narrowing ("from spells/magical effects") is not
@@ -23,6 +24,9 @@
 --     attacker-type-filter shape). Authored conservatively as
 --     blanket immunity for the duration; flag as slight RAW over-
 --     application until a source-narrowing shape lands.
+--     — "Swim Speed equal to its Speed" rides the §A14 LinkedSpeed
+--     widening (second pressure case; spider_climb is the primary
+--     validation ref).
 --   • TargetSelection.choose_up_to with SlotScaling base=1, +1/slot.
 --
 -- DEFERRED.
@@ -32,9 +36,6 @@
 --   • "Spells and other magical effects can [not] reduce the target's
 --     Speed" — no source-narrowed "block_speed_modification" atom;
 --     defer pending a second pressure case.
---   • "Swim Speed equal to its Speed" — grant_speed.feet is a fixed
---     number; "equal to walk speed" is the A14 LinkedAmount shape
---     (Spider Climb's sibling case). Defer pending A14.
 --   • "Spend 5 feet of movement to automatically escape nonmagical
 --     restraints" — spatial/movement conversion (caller/DM agenda
 --     per ARCHITECTURE.md §1).
@@ -65,18 +66,36 @@ let freedomOfMovement =
               , value = { unit = "hour", amount = 1 }
               }
           , phases =
-              let Immunity
+              let LinkedSpeed
                     : Type
-                    = { kind : Text, condition : Text }
+                    = { kind : Text }
+              let CompEffect
+                    : Type
+                    = { kind : Text
+                      , condition : Optional Text
+                      , speedKind : Optional Text
+                      , feet : Optional LinkedSpeed
+                      }
               let paralyzed
-                    : Immunity
+                    : CompEffect
                     = { kind = "grant_condition_immunity"
-                      , condition = "paralyzed"
+                      , condition = Some "paralyzed"
+                      , speedKind = None Text
+                      , feet = None LinkedSpeed
                       }
               let restrained
-                    : Immunity
+                    : CompEffect
                     = { kind = "grant_condition_immunity"
-                      , condition = "restrained"
+                      , condition = Some "restrained"
+                      , speedKind = None Text
+                      , feet = None LinkedSpeed
+                      }
+              let swimSpeed
+                    : CompEffect
+                    = { kind = "grant_speed"
+                      , condition = None Text
+                      , speedKind = Some "swim"
+                      , feet = Some { kind = "walk_speed" }
                       }
               in  [ { kind = "direct"
                     , attachment =
@@ -93,7 +112,7 @@ let freedomOfMovement =
                         }
                     , effects =
                         [ { kind = "composite"
-                          , effects = [ paralyzed, restrained ]
+                          , effects = [ paralyzed, restrained, swimSpeed ]
                           }
                         ]
                     }

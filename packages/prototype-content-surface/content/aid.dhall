@@ -55,6 +55,7 @@ let aid =
                     }
                 , effects =
                     [ { kind = "modify_max_hp"
+                      , direction = "increase"
                       , delta =
                           { kind = "linear_per_level"
                           , axis = "slot"
