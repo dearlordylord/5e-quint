@@ -26,14 +26,21 @@ export type RollKind =
   // Advantage on them; other riders may surface.
   | "death_saving_throw";
 
-// Weapon filter for roll modifiers that only apply to certain weapon
-// categories. Archery Fighting Style: +2 to attack rolls with Ranged
-// weapons only. Minimal melee/ranged split — extend if finer-grained
-// weapon-category filters (e.g., "finesse", "simple") prove necessary.
-export type WeaponFilter = {
-  readonly kind: "weapon_category";
-  readonly category: "melee" | "ranged";
-};
+// Weapon filter for riders that only apply to certain weapons.
+// Archery Fighting Style scopes by category ("Ranged weapons only");
+// Staff of Power / Staff of the Magi scope by the concrete wielded
+// item ("damage rolls made with it"). Keep this as a reference to the
+// existing item id rather than duplicating weapon identity fields on
+// the effect atoms themselves.
+export type WeaponFilter =
+  | {
+      readonly kind: "weapon_category";
+      readonly category: "melee" | "ranged";
+    }
+  | {
+      readonly kind: "specific_item";
+      readonly itemId: string;
+    };
 
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
@@ -82,6 +89,17 @@ export type CastTimeEffectModeChoice = {
 export type DamageTypeRef = DamageType | CastTimeChoice<DamageType>;
 
 export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
+
+// Closed planar / extradimensional destinations for exile-style
+// transport. Kept distinct from local `teleport` destinations because
+// this surface pressure is about leaving the current play space
+// entirely, not repositioning within it.
+export type ExileDestination =
+  | "demiplane"
+  | "astral_plane"
+  | "ethereal_plane"
+  | "plane_of_origin"
+  | "different_plane";
 
 // SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
 export type StandardActionKind =
@@ -585,6 +603,16 @@ export type EffectAtom =
       readonly skillFilter?: SkillFilter;
       readonly count?: number;
     }
+  // Prototype extension: persistent additive modifier to future
+  // damage rolls. Needed for SRD magic weapons that grant "+N to
+  // damage rolls made with this weapon". Distinct from `damage`,
+  // which models a concrete dealt-damage instance, and from
+  // `modify_roll_numeric`, which is limited to d20-based roll kinds.
+  | {
+      readonly kind: "modify_damage_numeric";
+      readonly delta: DiceDelta;
+      readonly weaponFilter?: WeaponFilter;
+    }
   // Lowers the crit threshold on attack rolls (Improved Critical:
   // threshold 19 means attacks crit on natural 19 or 20). Always
   // applies to "attack_roll" — no other roll has a crit concept — so
@@ -827,6 +855,16 @@ export type EffectAtom =
       readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
     }
+  // v4: alter_item_kind — the targeted item/object changes into a
+  // different named form or rules kind. Folding Boat switches between
+  // box / rowboat / keelboat forms; glamoured armor uses the same atom
+  // for appearance-level item-kind swaps once its activation/lifecycle
+  // surface exists. The attachment selects WHICH item is affected; this
+  // atom only records the destination form.
+  | {
+      readonly kind: "alter_item_kind";
+      readonly newKind: string;
+    }
   // Alter Self (Natural Weapons): replace the creature's default
   // Unarmed Strike damage profile while the effect persists. This is
   // distinct from a one-shot `damage` atom because it changes the
@@ -849,6 +887,15 @@ export type EffectAtom =
       readonly kind: "teleport";
       readonly maxFeet: number;
       readonly destination: "unoccupied_visible_space";
+    }
+  // v4: transport_exile — planar / extradimensional relocation that
+  // removes the subject from the current play space rather than merely
+  // repositioning it nearby. Rod of Security and Robe of Stars both
+  // pressure this shape. Return semantics remain separate lifecycle
+  // concerns (`return_on_end`, repeat activation, etc.).
+  | {
+      readonly kind: "transport_exile";
+      readonly destination: ExileDestination;
     }
   // Composite: apply several effects as one bundle. Used to put
   // multiple atoms into a single slot (save_gate.onFail, attack
@@ -1737,6 +1784,9 @@ export type SpellMechanics =
 // species trait). Drives which (if any) quota atom the tracer emits a
 // `consumes` edge to. `action` is the "use this as your Action" case
 // (magic-item activations, many class features like Channel Divinity).
+// `action_plus_bonus_action` is the bounded compound-economy case where
+// the same activation requires both quotas in sequence, without modeling
+// a new nested procedure family.
 // `reaction` covers reactive uses that consume the reaction quota.
 // `replace_attack` is the Extra-Attack-economy cost: the ability is
 // triggered by spending one of the attacks you would otherwise make
@@ -1745,6 +1795,7 @@ export type SpellMechanics =
 export type ClassFeatureActivationCost =
   | { readonly kind: "free" }
   | { readonly kind: "action" }
+  | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }
   | { readonly kind: "reaction" }
   | { readonly kind: "replace_attack" };
@@ -1787,6 +1838,8 @@ export type ChargePoolResource = {
 // activation costs 1) or a charge pool (variable cost per activation).
 export type ActivationResource = UseCountResource | ChargePoolResource;
 
+export type RelativeDayResetTrigger = "resource_spent" | "resource_empty";
+
 // Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
 // refilling the pool. `dawn` is the magic-item recharge idiom.
 export type RestResetCadence =
@@ -1806,6 +1859,23 @@ export type RestResetCadence =
   | {
       readonly kind: "dawn";
       // null = regains all; DiceAmount for e.g. "1d6 + 4" style partial.
+      readonly regain: null | DiceAmount;
+    }
+  // Relative calendar-time cooldown. Covers item text like "can't be
+  // used again until 5 days have passed" and pool-based recharge that
+  // starts only once the pool is empty.
+  | {
+      readonly kind: "elapsed_days";
+      readonly days: number;
+      readonly regain: null | DiceAmount;
+      readonly startsWhen: RelativeDayResetTrigger;
+    }
+  // Relative sub-day cooldown. Covers item text like "can't be used
+  // again for 1 hour" where the lockout starts immediately after use
+  // and then refills fully/partially once the duration elapses.
+  | {
+      readonly kind: "elapsed_hours";
+      readonly hours: number;
       readonly regain: null | DiceAmount;
     }
   // Single-shot or bounded-use items that never refill — Chime of
@@ -2036,11 +2106,29 @@ export type SpeciesTraitRecord = UnitMetadata & {
   readonly mechanics: SpeciesTraitMechanics;
 };
 
+export type MagicItemComponentMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics;
+
+// Composite magic-item mechanics — a single SRD item can combine
+// always-on passive grants with a distinct activated ability while
+// remaining one authored unit. Keep this bounded to existing
+// magic-item families; trigger-shaped item abilities still require
+// their own widening rather than being smuggled through this record.
+export type CompositeMagicItemMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;
+};
+
 // MagicItemMechanics: attunement-gated passive (Cloak of Protection) or
-// charge-based activation (Wand of Magic Missiles). The attunement gate
-// is carried on the record, not the mechanics, since any mechanics shape
-// can be gated.
-export type MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics;
+// charge-based activation (Wand of Magic Missiles). Some staffs combine
+// passive held bonuses and separate activated spellcasting in one item,
+// so the surface also admits a bounded composite over those existing
+// families. The attunement gate is carried on the record, not the
+// mechanics, since any mechanics shape can be gated.
+export type MagicItemMechanics =
+  | MagicItemComponentMechanics
+  | CompositeMagicItemMechanics;
 
 export type MagicItemRarity =
   | "common"

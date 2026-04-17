@@ -1,68 +1,37 @@
 ## Rod of Security
 
-`Rod of Security` fits the existing top-level `magic_item` record kind and the `activation` mechanics family in broad shape, but it does not fit the current authored surface honestly.
+`Rod of Security` fits the existing `magic_item` top-level kind and is closest to the `activation` mechanics family, but it does not fit the current surface honestly enough to author a `content/magic_item_rod_of_security.dhall`.
 
-### Why no authored content file
+### Why I stopped
 
-The item's core deterministic rule is not "gain a passive bonus" or "cast a named spell." It is:
+The current surface can represent the initial activation cost and the outward `transport_exile` move to a `demiplane`, but three core mechanics are missing:
 
-- activate the rod with a Magic action;
-- transport the wielder and up to 199 willing visible creatures to a demiplane;
-- sustain a temporary exile state there;
-- apply an hourly restorative rider while they remain there;
-- return everyone to the origin point or nearest unoccupied space when the effect ends;
-- lock the property for 10 days after use.
+1. Dynamic duration formula
+The effect duration is not fixed. It is `200 days / number of creatures present (round down)`. Existing `DurationValue` only supports literal amounts plus slot-based upcast tiers.
 
-The current surface can encode the activation cost and long recharge cadence, but it cannot encode the demiplane transport loop itself without lying.
+2. Mandatory return loop
+The rod does not merely exile visitors. It guarantees that when the time expires, or when the wielder takes a Magic action to end the effect, all visitors return to the activation site (or nearest unoccupied space). The current surface comments explicitly call out `return_on_end` as a lifecycle concern for `transport_exile`, but `types.ts` has no authored shape for it.
 
-### Required widenings
+3. Hourly healing by each visitor's own Hit Point Die
+The demiplane grants recurring healing every hour, but the amount is not a fixed `DiceAmount`. It is derived from the healed creature's own Hit Point Die expression, which the current surface cannot reference.
 
-1. `transport_exile` effect atom in the surface
-
-The prototype has `teleport`, but that is limited to local relocation to an unoccupied visible space. `Rod of Security` moves creatures into a distinct demiplane, which is a different mechanic.
-
-Evidence:
-
-> "The rod then instantly transports you and up to 199 other willing creatures you can see to a demiplane."
-
-2. `return_on_end` lifecycle/effect support
-
-The exile is temporary and must unwind automatically on timeout or manual termination, returning occupants to their recorded origin location or nearest unoccupied space. The current surface has no way to model that return.
-
-Evidence:
-
-> "When the time runs out or you take a Magic action to end the effect, all visitors reappear in the location they occupied when you activated the rod or an unoccupied space nearest that location."
-
-3. Hourly Hit-Die-style healing variant
-
-The restorative rider is not a fixed heal and not a rest reset. It is a recurring per-hour heal calculated "as if" the creature spent one of its own Hit Dice. Current `heal_hp` authoring can express fixed dice, scaling, linked damage, or resource spent from the activation resource, but not "use the target creature's Hit Die formula once per hour."
-
-Evidence:
-
-> "For each hour spent in the demiplane, a visitor regains Hit Points as if it had spent 1 Hit Point Die."
-
-4. Dynamic duration derived from creature count
-
-The maximum stay is a formula over group size, not a fixed timed duration.
-
-Evidence:
-
-> "Visitors can remain there for up to 200 days divided by the number of creatures present (round down)."
-
-### Out-of-core / omitted narrative riders
-
-These are real text, but they are not the reason the encode fails:
-
-- choosing the demiplane's form;
-- enough food and water to sustain visitors;
-- the demiplane environment cannot harm occupants;
-- objects from the demiplane cease to exist outside it;
-- creatures do not age while there.
-
-Those read as caller/world-state concerns for this prototype. The encode is blocked before those matter because the transport/return/healing loop itself is missing.
-
-### Classification
+### Narrowest honest classification
 
 `surface_widening`
 
-Reason: the record kind and family already exist (`magic_item` + `activation`), but the current surface lacks the necessary effect/lifecycle/value variants to encode the item honestly.
+The unit does not force a new top-level kind or a new payload family. It still looks like a magic-item activation. The gaps are specific missing variants in existing authored shapes:
+
+- a dynamic duration variant for occupant-count-based exile limits;
+- a return-on-end / early-end lifecycle branch for `transport_exile`;
+- a heal amount variant derived from the attached creature's Hit Point Die.
+
+### Evidence from the unit text
+
+- "The rod then instantly transports you and up to 199 other willing creatures you can see to a demiplane."
+- "For each hour spent in the demiplane, a visitor regains Hit Points as if it had spent 1 Hit Point Die."
+- "Visitors can remain there for up to 200 days divided by the number of creatures present (round down)."
+- "When the time runs out or you take a Magic action to end the effect, all visitors reappear in the location they occupied when you activated the rod or an unoccupied space nearest that location."
+
+### Why I did not author a placeholder
+
+Authoring only the outbound exile would be false. The return behavior and the time-limit are part of the rod's main mechanic, not optional flavor. Omitting them would make the generated trace claim a one-way demiplane transport, which is materially wrong.

@@ -1,46 +1,34 @@
 {
   "unit_slug": "magic_item_instant_fortress",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item family",
-      "justification": "types.ts has no MagicItemRecord. UnitRecord is SpellRecord | ClassFeatureRecord | MasteryRecord — magic_item is not representable at all. The TAXONOMY lists magic_item_root as a v4 source atom but the surface type system never gained the corresponding record shape.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "create_object mechanics family with persistent object HP/AC profile",
-      "justification": "The Instant Fortress's primary effect is conjuring a physical structure with its own AC, HP, damage immunities, and resistances. No existing spell or class-feature mechanics family encodes 'create a persistent destructible object with typed combat statistics'. The create_object effect atom exists in v4 but there is no surface family that wraps it with object-stat fields (ac, hp, immunities, resistances).",
-      "evidence": "The roof, the door, and the walls each have AC 20; HP 100; Immunity to Bludgeoning, Piercing, and Slashing damage except that which is dealt by siege equipment; and Resistance to all other damage."
+      "kind": "new_variant",
+      "name": "resource-less activated magic-item ability",
+      "justification": "The current activation family requires an ActivationResource and reset cadence, but Instant Fortress is command-word activated repeatedly with no uses, charges, or rest-based refresh.",
+      "evidence": "\"As a Magic action, you can place this 1-inch adamantine statuette on the ground and, using a command word, cause it to grow rapidly into a square adamantine tower. Repeating the command word causes the tower to revert to statuette form\""
     },
     {
       "kind": "new_variant",
-      "name": "attunement surface field",
-      "justification": "The item requires attunement, which the surface has no way to record. The v4 attunement_slot resource atom exists, but no surface record type exposes an attunement field.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "bidirectional_transform activation (grow/shrink)",
-      "justification": "The item has two command-word activations: one grows the statuette into a tower, and one shrinks it back (conditional on the tower being empty). No existing family models a reversible object-transform with a precondition on reversal.",
-      "evidence": "Repeating the command word causes the tower to revert to statuette form, which works only if the tower is empty."
+      "name": "Attachment.object",
+      "justification": "The item's main mechanic creates and later manipulates a persistent tower object. The current surface only supports self, target, area, and mark attachments for activation phases.",
+      "evidence": "\"cause it to grow rapidly into a square adamantine tower\""
     },
     {
       "kind": "new_atom",
-      "name": "force_move (area displacement on object creation)",
-      "justification": "Creatures in the area where the tower appears are pushed to adjacent unoccupied spaces. This is a force_move effect triggered by object instantiation, not by an attack roll or save gate. force_move exists in v4 taxonomy but no surface encoding reaches it from a create_object event.",
-      "evidence": "Each creature in the area where the tower appears is pushed to an unoccupied space outside but next to the tower."
+      "name": "create_object",
+      "justification": "The surface has alter_item_kind but no way to represent creation/deployment of a durable object into the play space. Instant Fortress is not just changing an existing item's cosmetic kind; it deploys a damageable tower with persistent state.",
+      "evidence": "\"cause it to grow rapidly into a square adamantine tower\""
     },
     {
       "kind": "new_variant",
-      "name": "Bonus Action door-control sub-activation",
-      "justification": "The door opens and closes via a separate Bonus Action command — a second distinct activation on the same item that modifies a property of the created object. No surface mechanic covers sub-activations on created objects.",
-      "evidence": "The door opens only at your command, which you can issue as a Bonus Action."
+      "name": "activation precondition: attached object empty",
+      "justification": "Reverting the fortress is conditional on the created tower being empty. Current activated abilities have no precondition grammar for conditional success based on attached-object occupancy/state.",
+      "evidence": "\"Repeating the command word causes the tower to revert to statuette form, which works only if the tower is empty.\""
     }
   ],
   "confidence": "high",
-  "notes": "The blocking issue is structural: types.ts defines UnitRecord as SpellRecord | ClassFeatureRecord | MasteryRecord — there is no MagicItemRecord. No JSON that the tracer could accept exists for this unit. Even if the record type were added, a new mechanics family would be needed to encode (a) create_object with object-level HP/AC/immunity/resistance, (b) bidirectional reversible transform, (c) area force-displacement on instantiation, and (d) attunement. The Wish-based repair clause is also not encodable but is a secondary gap."
+  "notes": "Proposal-only outcome. I did not author content/magic_item_instant_fortress.dhall because any current encoding would misrepresent the item as charge-based, one-shot, or creature-attached instead of reusable object creation/manipulation."
 }

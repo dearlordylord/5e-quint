@@ -1,89 +1,75 @@
 # Scimitar of Speed
 
-## Verdict
+Outcome: `atom_widening`
 
-`Scimitar of Speed` does not fit the current surface honestly. The blocker is structural first, with additional atom and filter gaps underneath it.
+`Scimitar of Speed` fits the existing `magic_item` top-level kind and broadly wants the `passive` family, but it does not fit honestly today.
 
-## Why It Fails
+## Why it fails
 
-The item has two distinct mechanic streams:
+The item has two mechanics:
 
-1. Passive weapon-bound bonuses:
-   - `+2` to attack rolls
-   - `+2` to damage rolls
+1. `+2` to attack rolls and damage rolls made **with this magic weapon**.
+2. One attack with it as a **Bonus Action** on each of your turns.
 
-2. A repeatable action-economy rider:
-   - one attack with the scimitar as a Bonus Action on each of your turns
+The first mechanic almost fits existing atoms:
 
-The current `MagicItemMechanics` type is:
+- `modify_roll_numeric` can model attack-roll bonuses.
+- `modify_damage_numeric` can model damage-roll bonuses.
 
-- `PassiveMechanics`
-- or `ActivatedAbilityMechanics`
+But both only support the current `WeaponFilter` shape:
 
-That means one item cannot currently carry both the passive bonuses and the repeatable attack rider in a single honest record.
+- `{ kind: "weapon_category", category: "melee" | "ranged" }`
 
-## Specific Gaps
+That is too coarse. Authoring this as `melee` would incorrectly buff all melee weapons, not this scimitar alone.
 
-### 1. Structural gap: mixed passive + activation item
+The second mechanic does not fit any current atom honestly:
 
-This item needs a mechanics shape that can express both:
+- `grant_extra_action` is wrong, because the item does **not** grant an additional Action.
+- `activation` mechanics are wrong, because the bonus-action attack is not a separately recharging activated ability with an item resource.
+- No existing atom grants a bounded weapon attack permission in the Bonus Action economy.
 
-- passive grants while attuned/wielded
-- a repeatable attack permission on each turn
+## Required widenings
 
-Without that, any authored record would have to drop one half of the item.
+### 1. Surface widening: specific-weapon scoping
 
-Suggested widening:
+Add a narrower filter so passive roll and damage modifiers can apply to the enclosing weapon item only.
 
-- `MagicItemMechanics.passive_plus_activation`
-- or a more general composition shape that lets one unit carry both passive grants and activated/repeatable procedures
+Candidate shape:
 
-### 2. Missing effect atom: fixed damage-roll bonus
+```ts
+type WeaponFilter =
+  | { readonly kind: "weapon_category"; readonly category: "melee" | "ranged" }
+  | { readonly kind: "specific_item"; readonly itemId: string }
+```
 
-The surface can encode:
+Pressure text:
 
-- AC bonuses via `modify_ac`
-- roll bonuses via `modify_roll_numeric`
+> "You gain a +2 bonus to attack rolls and damage rolls made with this magic weapon."
 
-But it cannot encode:
+### 2. Atom widening: bonus-action attack permission
 
-- `+2` to damage rolls made with the weapon
+Add a new effect atom for the recurring permission to make one attack with the item as a Bonus Action on each of your turns.
 
-Suggested widening:
+Candidate direction:
 
-- new atom `modify_damage_numeric`
+```ts
+{
+  readonly kind: "grant_bonus_action_attack";
+  readonly count: 1;
+  readonly weaponFilter: { readonly kind: "specific_item"; readonly itemId: string };
+}
+```
 
-### 3. Missing filter precision: “this magic weapon”
+Pressure text:
 
-The current `WeaponFilter` only supports:
+> "In addition, you can make one attack with it as a Bonus Action on each of your turns."
 
-- `melee`
-- `ranged`
+## Why no placeholder content file was authored
 
-That is too coarse for this item. The bonus applies to this exact scimitar, not to every melee weapon.
+Any authored `content/magic_item_scimitar_of_speed.dhall` would have to lie in at least one of these ways:
 
-Suggested widening:
+- broaden the +2 bonus to all melee attacks/damage;
+- represent the bonus-action attack as `grant_extra_action`;
+- represent it as a fake activated ability with a made-up resource model.
 
-- new filter variant for a specific item / weapon instance, e.g. `item_instance_weapon_filter`
-
-### 4. Missing action-economy subgraph: bonus-action weapon attack
-
-`grant_extra_action` is not the right shape:
-
-- it grants an extra Action, not a Bonus Action
-- it does not constrain the granted use to one attack
-- it does not bind that attack to a named weapon
-
-Suggested widening:
-
-- new subgraph such as `grant_bonus_action_weapon_attack`
-
-## Evidence
-
-> You gain a +2 bonus to attack rolls and damage rolls made with this magic weapon. In addition, you can make one attack with it as a Bonus Action on each of your turns.
-
-## Recommendation
-
-Classify this unit as `structural_widening`.
-
-No `content/magic_item_scimitar_of_speed.dhall` should be authored under the current schema, because any such encoding would omit core mechanics and produce a misleading trace.
+That would produce a misleading trace, so the correct outcome is a widening proposal only.

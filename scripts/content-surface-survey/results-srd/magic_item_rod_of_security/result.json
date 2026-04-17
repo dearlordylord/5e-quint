@@ -5,30 +5,24 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_atom",
-      "name": "transport_exile",
-      "justification": "The item's primary deterministic effect is moving the user and chosen willing creatures into a safe demiplane. The current surface has local teleportation only and cannot represent transport into an out-of-play space.",
-      "evidence": "The rod then instantly transports you and up to 199 other willing creatures you can see to a demiplane."
+      "kind": "new_variant",
+      "name": "Dynamic exile-duration formula based on current occupants",
+      "justification": "The existing ActivatedAbility duration model only supports fixed timed durations. Rod of Security ends after a number of days computed from how many creatures are present in the demiplane.",
+      "evidence": "Visitors can remain there for up to 200 days divided by the number of creatures present (round down)."
     },
     {
-      "kind": "new_atom",
-      "name": "return_on_end",
-      "justification": "The demiplane stay is temporary and ends either when the duration expires or when the wielder uses another Magic action. The current surface cannot represent automatic return to the origin point or nearest unoccupied space when the effect ends.",
+      "kind": "new_variant",
+      "name": "Return-on-end exile lifecycle to original activation site",
+      "justification": "The surface can exile creatures with transport_exile, but it cannot model the mandatory return when the effect ends or when the wielder ends it early, nor the destination back to the activation location or nearest unoccupied space.",
       "evidence": "When the time runs out or you take a Magic action to end the effect, all visitors reappear in the location they occupied when you activated the rod or an unoccupied space nearest that location."
     },
     {
       "kind": "new_variant",
-      "name": "hourly_hit_die_heal",
-      "justification": "The restorative rider is not a fixed heal and not a standard rest reset. It is a recurring hourly heal amount derived from each visitor's own Hit Die expenditure formula, which the current ongoing trigger and heal amount vocabulary cannot express.",
+      "name": "Hourly healing amount derived from each visitor's Hit Point Die",
+      "justification": "The surface has heal_hp, but no way to express a recurring per-hour heal whose amount is computed from the target creature's own Hit Point Die progression rather than a fixed DiceAmount.",
       "evidence": "For each hour spent in the demiplane, a visitor regains Hit Points as if it had spent 1 Hit Point Die."
-    },
-    {
-      "kind": "new_variant",
-      "name": "dynamic_group_duration",
-      "justification": "The stay limit is a timed duration derived from the number of creatures present, not a fixed duration or slot-scaling. The current Duration grammar cannot encode a duration calculated from group size.",
-      "evidence": "Visitors can remain there for up to 200 days divided by the number of creatures present (round down)."
     }
   ],
   "confidence": "high",
-  "notes": "No content file was authored. The item's main mechanic is the temporary demiplane transport/return loop; omitting that would produce a misleading trace. Narrative/environment riders such as choosing the demiplane's form, food and water provision, harmless environment, object persistence, and no aging were treated as out of core for this survey."
+  "notes": "I did not author content/magic_item_rod_of_security.dhall because encoding only transport_exile would omit the rod's mandatory return loop and time-limit semantics, producing a misleading trace."
 }

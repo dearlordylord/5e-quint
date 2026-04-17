@@ -1,57 +1,34 @@
-# Weapon, +1, +2, or +3
+## Proposal: scope passive magic-weapon bonuses to the enchanted weapon
 
-Outcome: `atom_widening`
+`Weapon, +1, +2, or +3` fits the existing `magic_item` + `passive` family in broad shape, and the surface already has the needed bonus payloads:
 
-## Why it does not fit cleanly
+- `modify_roll_numeric` for attack-roll bonuses
+- `modify_damage_numeric` for damage-roll bonuses
+- `DiceDelta.kind = "magic_item_rarity_bonus"` for the rarity-tiered `+1/+2/+3`
 
-The unit is structurally a `magic_item` with `passive` mechanics, but its actual rule text has two requirements the current surface cannot represent honestly:
+The blocker is scoping. The item says:
 
-1. A persistent bonus to weapon damage rolls.
-2. Scoping to this exact magic weapon, not to all weapons of a category the wielder uses.
+> "You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon's rarity."
 
-## Existing surface coverage
+Current surface options cannot express "with this specific weapon":
 
-The attack-roll half is close to existing support:
+- omitting filters would incorrectly grant the bonus to all attack rolls and damage rolls;
+- `weaponFilter` only narrows by coarse category (`melee` / `ranged`), not by item identity;
+- `PassiveMechanics.condition.wielding_weapon` is also coarse and would still overgrant to other wielded weapons of the same kind.
 
-- `modify_roll_numeric` can modify `attack_roll`.
-- `DiceDelta.fixed_dice` can represent `+1`, `+2`, or `+3`.
+## Recommended widening
 
-But that still fails honesty for this item because the current scoping tools are too coarse:
+### `surface_widening`
 
-- `weaponFilter` only supports `{ kind = "weapon_category", category = "melee" | "ranged" }`.
-- `EquipmentPredicate` gates by broad wielding state, not by the weapon actually making the roll.
+Add a way for passive item grants to bind to the enchanted weapon itself rather than to all weapons in a category.
 
-This item is `Weapon (Any Simple or Martial)`, so the same authored unit must cover either melee or ranged instances depending on the concrete item. More importantly, the bonus is tied to the enchanted weapon itself.
+Candidate narrow fix:
 
-## Forced widenings
+- add a `WeaponFilter` variant such as `{"kind":"this_weapon"}` for item-authored attack/damage modifiers.
 
-### 1. New atom: `modify_damage_numeric`
+Why this is sufficient:
 
-Need a standing effect atom for flat bonuses to damage rolls.
-
-Why:
-
-- `modify_roll_numeric` only covers d20 roll kinds (`attack_roll`, `saving_throw`, `ability_check`, `initiative`, `death_saving_throw`).
-- `damage` is an effect instance, not a modifier to future weapon damage rolls.
-
-Pressure text:
-
-> You have a bonus to attack rolls and damage rolls made with this magic weapon.
-
-### 2. New surface variant: item-bound weapon scoping
-
-Need a way to say the modifier applies only when the roll/damage is made with the attached magic weapon.
-
-Why:
-
-- `weaponFilter` can only say melee or ranged.
-- `EquipmentPredicate.wielding_weapon` would be dishonest because wielding a weapon is broader than making the roll with this exact item.
-
-Pressure text:
-
-> You have a bonus to attack rolls and damage rolls made with this magic weapon.
-
-## Notes
-
-- The rarity mapping itself is not the blocker; `+1`, `+2`, and `+3` are all representable as numeric deltas once the missing atom and scoping exist.
-- I did not author `content/magic_item_weapon_1_2_or_3.dhall` because any current encoding would either omit the damage bonus or over-apply the bonus to other weapons, producing a misleading trace.
+- the top-level family already exists (`magic_item` + `passive`);
+- the effect shapes already exist (`modify_roll_numeric`, `modify_damage_numeric`);
+- the rarity-scaled delta already exists (`magic_item_rarity_bonus`);
+- only the target/scope of the modifier is missing from the authored surface.

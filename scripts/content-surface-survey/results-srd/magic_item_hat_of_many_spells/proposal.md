@@ -1,126 +1,89 @@
-# Proposal: Hat of Many Spells — Structural Widening
+# Hat of Many Spells
 
-## Outcome
+## Verdict
 
-`structural_widening` — No `magic_item` kind or mechanics family exists in `UnitRecord`. The unit cannot be honestly encoded in any current form.
+`atom_widening`
 
----
+I did not author `content/magic_item_hat_of_many_spells.dhall` because the current surface cannot encode the item's core mechanic honestly.
 
-## Primary Blocker: Missing `magic_item` Kind
+## Why It Does Not Fit Cleanly
 
-`UnitRecord` in `types.ts` is:
+The top-level shape is not the problem. This is still a `magic_item`, and if the internals were expressible it would naturally be a `composite` magic item:
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-```
+- a passive part for `Spellcasting Focus`
+- an activated part for `Unknown Spell`
 
-There is no `MagicItemRecord`. The v4 taxonomy defines `magic_item_root` as a source atom, and the survey list contains dozens of magic item slugs, but the surface layer has never been widened to accommodate them. Any attempt to encode this item in the current surface would require fabricating a fake record shape (e.g., misrepresenting it as a class feature), which would produce a dishonest trace.
+The blocker is the `Unknown Spell` property itself.
 
-### Required: `MagicItemRecord`
+## Forced Gaps
 
-Minimum shape:
+### 1. Random failure table needs a new subgraph
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly rarity: MagicItemRarity;           // new type
-  readonly requiresAttunement: false | string; // false = no attunement; string = restriction text
-  readonly mechanics: MagicItemMechanics;
-};
-```
+The failure branch is not a fixed effect. It is a percentile table with multiple qualitatively different outcomes and nested random rolls:
 
-This also requires at least one `MagicItemMechanics` family and a `magic_item_root` tracer path.
+- random spells
+- self-applied conditions
+- harmless temporary phenomena
+- nonmagical object creation
+- uncontrolled creature appearance
+- hostile swarm appearance
+- planar portal creation
+- temporary random magic item creation
 
----
+Current surface families can branch on attack rolls, saves, and ability checks, but they cannot branch on stochastic table resolution. `choose` is player/caster choice, not random determination.
 
-## Secondary Blocker: Ability Check Gate
+Forced widening:
 
-The "Unknown Spell" property is activated by expending a spell slot, then making an **Intelligence (Arcana) ability check** (DC = 10 + spell level). This is not a saving throw — it is an ability check with a variable DC rooted in the caster's own decision (spell level chosen).
+- `random_table_resolution` subgraph or equivalent random-roll resolution shape
 
-The `ability_check` atom exists in v4 taxonomy but there is no surface variant in `ActivationPhase` for it. A new phase variant is needed:
+Evidence:
 
-```typescript
-| {
-    readonly kind: "ability_check";
-    readonly skill: string;            // "arcana", "athletics", etc.
-    readonly ability: Ability;
-    readonly dc: DcSource;             // needs new variant: "spell_level_plus_flat"
-    readonly onSuccess: Effect;
-    readonly onFailure: Effect;
-  }
-```
+> On a failed check, you fail to cast the spell and a random effect occurs instead, determined by rolling on the following table.
 
-The DC formula `10 + spell's level` requires a new `DcSource` variant since the DC is not a fixed number but depends on the slot expended:
+### 2. Arbitrary filtered spell access is not representable
 
-```typescript
-| { readonly kind: "spell_level_plus_flat"; readonly flat: number }
-```
+`grant_spell_access` only supports a named `spellId`. This item instead attempts a one-off cast of any qualifying Wizard spell the wielder does not know, subject to restrictions:
 
----
+- spell must be on the Wizard spell list
+- spell must be level 1+
+- spell must be of a level the wielder can cast
+- spell cannot have Material components costing more than 1,000 GP
 
-## Secondary Blocker: Grant Spell Access (Runtime-Selected)
+That is not a fixed spell grant, and encoding it as one would be false.
 
-On a successful check, the caster "casts the spell." The spell is chosen at activation time from the Wizard spell list, must be of a castable level, and is unknown to the caster. This is a runtime-determined `grant_spell_access` effect — the specific spell is not declared in the item's authoring.
+Forced widening:
 
-The `grant_spell_access` atom exists in v4 but is absent from `ClassFeatureEffect` and no magic item effect union exists yet. A surface variant is needed for "cast any spell from [list] at [slot level], chosen at activation time."
+- a filtered spell-access / spell-selection variant, likely under `grant_spell_access` or a new activation-phase payload
 
----
+Evidence:
 
-## Secondary Blocker: Random Failure Table (d100 Dispatch)
+> While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can't have Material components costing more than 1,000 GP.
 
-On a failed ability check, a d100 table fires with 10 outcome bands. Several bands nest further sub-tables (d10 for random spell, d4 for random object or creature). The full outcome space includes:
+### 3. Wizard-only attunement is missing on the record
 
-| Band | Outcome category |
-|------|-----------------|
-| 01–50 | Cast a random spell (d10 sub-table: 10 specific spells) |
-| 51–55 | Apply Stunned condition until end of next turn |
-| 56–60 | Summon harmless butterfly swarm (10-ft cube, 1 min) |
-| 61–65 | Pull nonmagical object from hat (d4: acid vial, alchemist's fire, crowbar, torch) |
-| 66–70 | Apply Poisoned condition for 1 hour |
-| 71–75 | Apply Petrified condition until end of next turn |
-| 76–80 | Pull nonmagical object from hat (d4: dagger, rope+hook, caltrops, gem) |
-| 81–85 | Summon hostile creature for 1 hour (d4: camel, constrictor snake, elephant, mule) |
-| 86–90 | Hostile Swarm of Bats attacks wielder |
-| 91–95 | Portal to another plane (GM determines destination) |
-| 96–00 | Pull magic item of random rarity (d6 rarity, GM chooses item) |
+The record can express `requiresAttunement: true`, but not attunement restricted to a class.
 
-This requires a **new `random_outcome_table` subgraph** — a stochastic dispatch atom that maps a die roll to outcome bands, each band containing its own effect (which may itself nest a sub-table).
+Forced widening:
 
-Individual outcome atoms that already exist in v4: `apply_condition`, `create_companion` (for summoned creatures), `create_object`. Outcomes that are `dm_agenda`: portal destination (91–95), magic item selection (96–00). The dispatch mechanism itself is core mechanics regardless of what the outcomes are.
+- `MagicItemRecord.attunementRestriction`
 
-No surface type currently models stochastic dispatch. A minimal shape:
+Evidence:
 
-```typescript
-export type RandomOutcomeTable = {
-  readonly kind: "random_outcome_table";
-  readonly die: number;   // d100, d10, d4, etc.
-  readonly bands: ReadonlyArray<{
-    readonly low: number;
-    readonly high: number;
-    readonly effect: Effect | "dm_agenda" | RandomOutcomeTable;  // nested sub-table
-  }>;
-};
-```
+> Requires Attunement by a Wizard
 
----
+## Secondary Omission
 
-## Tertiary Gap: Spellcasting Focus Property
+`Spellcasting Focus` is also not modeled in the current effect vocabulary. I did not make that the primary classification because the item already fails on the core `Unknown Spell` mechanic.
 
-The hat can be used as a Spellcasting Focus for Wizard spells. This is a passive item property — it grants the item the `item` attachment role for spellcasting. No existing family models passive item-as-focus grants. This would require a `passive_property` family or equivalent, or could be modeled as a metadata flag on `MagicItemRecord` once that type exists.
+Evidence:
 
----
+> While holding the hat, you can use it as a Spellcasting Focus for your Wizard spells.
 
-## What Does Fit
+## Why This Is Not `structural_widening`
 
-- **Use-count + Short/Long rest reset** for the Unknown Spell property: `use_count` with `kind: "fixed", uses: 1` and `resetCadence: { kind: "short_or_long_rest" }` — this is directly expressible once a `MagicItemMechanics` family exists.
-- **Spell slot consumption**: `spell_slot` resource consumed at activation — fits existing vocabulary.
-- **Several individual failure outcomes**: `apply_condition` (Stunned, Poisoned, Petrified), `create_companion` (summoned creatures), `create_object` (pulled items) all have v4 atoms.
+The unit still fits an existing top-level kind and family composition:
 
----
+- `MagicItemRecord`
+- likely `CompositeMagicItemMechanics`
 
-## Widening Priority Assessment
-
-1. **`MagicItemRecord` + `MagicItemMechanics`** — gates all magic item encoding; highest priority.
-2. **`ability_check` ActivationPhase variant** — needed for Hat of Many Spells, Wand of Wonder, many check-gated items.
-3. **`random_outcome_table`** — needed for Hat of Many Spells, Wand of Wonder, Bag of Tricks, Deck of Many Things-class items; complex but structurally important for this whole category.
-4. **`grant_spell_access` runtime effect** — needed for Hat of Many Spells, Necklace of Prayer Beads, Ring of Spell Storing, Staff of the Magi, etc.
+What fails is the inner mechanic representation, primarily because the surface has no honest random-table subgraph and no way to represent arbitrary filtered spell casting.

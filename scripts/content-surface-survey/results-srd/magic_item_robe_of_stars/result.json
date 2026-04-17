@@ -1,28 +1,28 @@
 {
   "unit_slug": "magic_item_robe_of_stars",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "magic_item_multi_mechanics_bundle",
-      "justification": "The current magic-item surface allows exactly one mechanics family, but this item has an always-on passive benefit plus separate activated abilities. A single record needs to compose passive and activation behavior honestly.",
-      "evidence": "You gain a +1 bonus to saving throws while you wear it. ... you can take a Magic action to remove one of the stars and expend it to cast the level 5 version of Magic Missile. ... you can take a Magic action to enter the Astral Plane"
-    },
-    {
       "kind": "new_variant",
-      "name": "RestResetCadence.dusk",
-      "justification": "The item's expendable stars recharge on a fixed daily dusk cadence, and the current surface only models dawn, rests, or never.",
+      "name": "RestResetCadence.daily_at_time_of_day",
+      "justification": "The item's star pool recharges on a fixed daily time, but the current surface only supports daily recharge at dawn.",
       "evidence": "Daily at dusk, 1d6 removed stars reappear on the robe."
     },
     {
-      "kind": "new_atom",
-      "name": "transport_exile",
-      "justification": "The Astral Plane feature is not ordinary teleportation. It moves the wearer and carried gear to another plane, persists there until a later activation, and returns them to the previous plane at the prior space or nearest unoccupied space.",
-      "evidence": "you can take a Magic action to enter the Astral Plane along with everything you are wearing and carrying. You remain there until you take a Magic action to return to the plane you were on. You reappear in the last space you occupied or, if that space is occupied, the nearest unoccupied space."
+      "kind": "new_variant",
+      "name": "EffectAtom.transport_exile.return_destination",
+      "justification": "Exile travel exists, but the current surface cannot encode the required return point on the original plane.",
+      "evidence": "You reappear in the last space you occupied or, if that space is occupied, the nearest unoccupied space."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "repeatable_exile_return_loop",
+      "justification": "The item's Astral travel is a two-step stateful loop: one Magic action to enter exile, a later Magic action to return, and persistence in exile between them.",
+      "evidence": "You remain there until you take a Magic action to return to the plane you were on."
     }
   ],
   "confidence": "high",
-  "notes": "No content or trace file was authored. The item fails honest encoding at the mechanics-family level before typecheck/tracer, and it also exposes secondary reset-cadence and cross-plane-transport gaps."
+  "notes": "MagicItemRecord and composite mechanics already fit the overall item shape. I stopped before authoring because encoding it with dawn recharge or one-way transport_exile would be materially false."
 }

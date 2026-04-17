@@ -1,52 +1,34 @@
 {
   "unit_slug": "magic_item_eversmoking_bottle",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item mechanics family",
-      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. There is no MagicItemRecord type. The v4 taxonomy defines magic_item_root as a source atom, but types.ts has never been widened to include the corresponding record or any mechanics family for magic items.",
-      "evidence": "Wondrous Item, Uncommon — the unit is a magic item, a kind with no entry in UnitRecord."
-    },
-    {
       "kind": "new_variant",
-      "name": "ClassFeatureActivationCost.magic_action (or a parallel activation-cost type for items)",
-      "justification": "The bottle costs a Magic action to activate. Existing ClassFeatureActivationCost only supports 'free' and 'bonus_action'. Magic action is a distinct SRD action kind that consumes the Magic action quota.",
+      "name": "resource-less_magic_item_activation",
+      "justification": "The closest family is magic-item activation, but the current activation header requires a consumable resource and reset cadence. Eversmoking Bottle is a reusable open-or-close toggle with no charge pool or use counter.",
       "evidence": "As a Magic action, you can open or close this bottle."
     },
     {
-      "kind": "new_subgraph",
-      "name": "toggle_effect family (stateful open/close with two distinct persistent states)",
-      "justification": "The bottle has a stateful toggle: open produces an active, growing emanation; close transitions the cloud to a fixed, slowly dispersing state. No existing mechanics family models a persistent object toggle where opening and closing produce distinct ongoing states with different lifecycle behaviors.",
-      "evidence": "As a Magic action, you can open or close this bottle. Closing the bottle causes the cloud to become fixed in place until it disperses after 10 minutes."
-    },
-    {
       "kind": "new_variant",
-      "name": "Attachment kind: emanation_from_object (item-anchored sphere that follows the item)",
-      "justification": "The smoke fills a 60-ft Emanation originating from the bottle itself — an item attachment, not self (creature) or a placed area. Current Attachment kinds are self | target | area | mark. None models an area that originates from and moves with a held/placed item.",
-      "evidence": "forming a cloud that fills a 60-foot Emanation originating from the bottle"
-    },
-    {
-      "kind": "new_variant",
-      "name": "LevelAxis or scaling kind for time-based area growth",
-      "justification": "The Emanation grows 10 ft per minute while open (60 ft → 120 ft cap). Existing LevelAxis values are character | class | slot | subclass | proficiency_bonus — none cover time-based (per-minute) growth. A new axis or a separate time-growth shape is needed.",
+      "name": "manual_toggle_duration_for_item_effects",
+      "justification": "The smoke persists while the bottle stays open, with no fixed maximum duration, then changes behavior when the bottle is closed. Existing Duration variants do not express item-owned persistence that lasts until the user toggles it off.",
       "evidence": "Each minute the bottle remains open, the size of the Emanation increases by 10 feet until it reaches its maximum size of 120 feet."
     },
     {
-      "kind": "new_atom",
-      "name": "apply_obscurement (or grant_heavy_obscurement area effect)",
-      "justification": "The smoke makes the affected area Heavily Obscured — a vision-blocking environmental effect. The v4 taxonomy has block_targeting but no surface effect type represents granting obscurement to an area. This is mechanically distinct from block_targeting (which prevents targeting) and from any existing Effect variant in types.ts.",
-      "evidence": "The area within the smoke is Heavily Obscured."
+      "kind": "new_variant",
+      "name": "area_origin_on_item_object",
+      "justification": "The smoke emanates from the bottle itself, not from self, a target, or a point-within-range chosen at activation time. Existing area origins do not represent an item/object as the anchor.",
+      "evidence": "Opening the bottle causes thick smoke to billow out, forming a cloud that fills a 60-foot Emanation originating from the bottle."
     },
     {
-      "kind": "new_variant",
-      "name": "Duration or dispersal lifecycle: conditional_dispersal (time + environmental trigger)",
-      "justification": "The fixed cloud disperses after 10 minutes OR after 1 minute in strong wind (Gust of Wind). No existing Duration or lifecycle atom handles a dual-condition dispersal (timer + named environmental event). The timed Duration in types.ts has no conditional-override branch.",
-      "evidence": "Closing the bottle causes the cloud to become fixed in place until it disperses after 10 minutes. A strong wind... disperses the cloud after 1 minute."
+      "kind": "new_subgraph",
+      "name": "expanding_area_then_lingering_fixed_cloud",
+      "justification": "The area grows by timed increments while open, then becomes a fixed lingering cloud on close with a separate dispersal timer. That is a stateful area-life-cycle transition, not a single existing attachment or duration shape.",
+      "evidence": "Closing the bottle causes the cloud to become fixed in place until it disperses after 10 minutes."
     }
   ],
   "confidence": "high",
-  "notes": "Primary stopper is structural: magic_item is not a valid UnitRecord kind. No Dhall or JSON can be authored — the tracer would throw on the root switch before reaching any mechanics. Beyond the missing record type, the item would require at minimum: a magic_action cost variant, an emanation_from_object attachment, time-based area scaling, a heavy-obscurement area effect atom, and a dual-condition dispersal lifecycle. The open/close toggle pattern itself (two distinct persistent states on one item) has no analogous family in the current schema."
+  "notes": "No content file was authored. The closest fit is a magic-item activation, but the current surface cannot express a reusable toggleable object-centered area that expands over elapsed minutes and then lingers after closing. Per local precedent in content/cloudkill.dhall, 'Heavily Obscured' is caller-owned visibility and strong-wind dispersal is caller-resolved, so this is classified as surface_widening rather than atom_widening."
 }

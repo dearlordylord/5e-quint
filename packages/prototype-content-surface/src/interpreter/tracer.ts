@@ -30,6 +30,7 @@ import type {
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
+  CompositeMagicItemMechanics,
   EquipmentPredicate,
   FeatRecord,
   SpeciesTraitRecord,
@@ -241,6 +242,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_damage_numeric": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_damage_numeric",
+        label: `modify_damage_numeric\n${describeDelta(e.delta)}${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
     case "modify_roll_advantage": {
       const id = ids("eff");
       const by =
@@ -437,6 +448,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "transport_exile": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "transport_exile",
+        label: `transport_exile\ndest: ${e.destination}`,
+      });
+      return id;
+    }
     case "set_speed": {
       const id = ids("eff");
       nodes.push({
@@ -489,6 +510,16 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "grant_speed",
         label: `grant_speed\n${e.speedKind} ${feet}${suffix}`,
+      });
+      return id;
+    }
+    case "alter_item_kind": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "alter_item_kind",
+        label: `alter_item_kind\n${e.newKind}`,
       });
       return id;
     }
@@ -613,6 +644,7 @@ function traceEffectAtomScaling(
     case "remove_condition":
     case "grant_resistance":
     case "modify_roll_numeric":
+    case "modify_damage_numeric":
     case "modify_roll_advantage":
     case "modify_crit_range":
     case "scale_attack_count":
@@ -632,7 +664,9 @@ function traceEffectAtomScaling(
     case "set_ability_score":
     case "modify_ability_score":
     case "teleport":
+    case "transport_exile":
     case "grant_speed":
+    case "alter_item_kind":
     case "detect":
     case "set_speed":
     case "negate_triggering_spell":
@@ -2456,7 +2490,7 @@ function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
 }
 
 // Shared dispatch for families that can be either passive or activated —
-// used by FeatRecord, SpeciesTraitRecord, MagicItemRecord.
+// used by FeatRecord and SpeciesTraitRecord.
 function tracePassiveOrActivated(
   m: PassiveMechanics | ActivatedAbilityMechanics,
   nodes: TraceNode[],
@@ -2472,6 +2506,29 @@ function tracePassiveOrActivated(
       const _exhaustive: never = m;
       throw new Error(
         `unhandled mechanics family: ${String((_exhaustive as { family: string }).family)}`,
+      );
+    }
+  }
+}
+
+function traceMagicItemMechanics(
+  m: PassiveMechanics | ActivatedAbilityMechanics | CompositeMagicItemMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string[] {
+  switch (m.family) {
+    case "passive":
+    case "activation":
+      return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "composite":
+      return m.parts.map((part) =>
+        tracePassiveOrActivated(part, nodes, edges, ids),
+      );
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(
+        `unhandled magic-item mechanics family: ${String((_exhaustive as { family: string }).family)}`,
       );
     }
   }
@@ -2565,8 +2622,10 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     edges.push({ from: rootId, to: slotId, relation: "consumes" });
   }
 
-  const procId = tracePassiveOrActivated(item.mechanics, nodes, edges, ids);
-  edges.push({ from: rootId, to: procId, relation: "roots" });
+  const procIds = traceMagicItemMechanics(item.mechanics, nodes, edges, ids);
+  for (const procId of procIds) {
+    edges.push({ from: rootId, to: procId, relation: "roots" });
+  }
 
   // Item-level destruction lifecycle.
   traceItemDestruction(item.destruction, rootId, nodes, edges, ids);
@@ -2780,6 +2839,26 @@ function traceActivationCost(
       edges.push({ from: procId, to: id, relation: "consumes" });
       return;
     }
+    case "action_plus_bonus_action": {
+      const actionId = ids("q");
+      nodes.push({
+        id: actionId,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Activation: Action step)",
+      });
+      edges.push({ from: procId, to: actionId, relation: "consumes" });
+
+      const bonusId = ids("q");
+      nodes.push({
+        id: bonusId,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Activation: Bonus Action step)",
+      });
+      edges.push({ from: procId, to: bonusId, relation: "consumes" });
+      return;
+    }
     case "bonus_action": {
       const id = ids("q");
       nodes.push({
@@ -2937,6 +3016,41 @@ function traceResetCadence(
         label: `duration_window\ndaily at dawn (${refill})`,
       });
       edges.push({ from: resId, to: did, relation: "persists_until" });
+      return;
+    }
+    case "elapsed_days": {
+      const did = ids("days");
+      const refill =
+        c.regain === null
+          ? "refill all"
+          : `refill ${describeDiceAmount(c.regain)}`;
+      const trigger =
+        c.startsWhen === "resource_empty" ? "after pool empty" : "after spend";
+      nodes.push({
+        id: did,
+        category: "window",
+        atomKind: "duration_window",
+        label:
+          `duration_window\n${c.days} day cooldown (${refill})\n` +
+          `${trigger}`,
+      });
+      edges.push({ from: resId, to: did, relation: "persists_until" });
+      return;
+    }
+    case "elapsed_hours": {
+      const hid = ids("hours");
+      const refill =
+        c.regain === null
+          ? "refill all"
+          : `refill ${describeDiceAmount(c.regain)}`;
+      const hourLabel = c.hours === 1 ? "hour" : "hours";
+      nodes.push({
+        id: hid,
+        category: "window",
+        atomKind: "duration_window",
+        label: `duration_window\n${c.hours} ${hourLabel} cooldown (${refill})`,
+      });
+      edges.push({ from: resId, to: hid, relation: "persists_until" });
       return;
     }
     case "never": {
@@ -3390,8 +3504,10 @@ function describeWeaponFilter(f: WeaponFilter | undefined): string {
   switch (f.kind) {
     case "weapon_category":
       return ` [${f.category} weapons only]`;
+    case "specific_item":
+      return ` [item only: ${f.itemId}]`;
     default: {
-      const _exhaustive: never = f.kind;
+      const _exhaustive: never = f;
       return _exhaustive;
     }
   }

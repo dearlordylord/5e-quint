@@ -1,103 +1,45 @@
-# Widening Proposal: Folding Boat (`magic_item_folding_boat`)
+## Folding Boat
 
-**Outcome:** `structural_widening`
+`Folding Boat` fits the existing `magic_item` top-level kind, but not the current surface honestly.
 
----
+### Why it does not fit cleanly
 
-## Why it doesn't fit
+1. The transformation targets the item itself, not the wielder or another creature.
+   The only authored `Attachment` variants available to activation phases are `self`, `target`, `area`, and `mark`. `Folding Boat` needs an item/object attachment so `alter_item_kind` can attach to the boat rather than to a creature.
 
-The Folding Boat is a `magic_item`. `UnitRecord` in `types.ts` is:
+2. The command words are reusable and do not spend charges or uses.
+   Current magic-item `activation` requires an `ActivationResource` plus a `resetCadence`. That works for consumables, charge items, and limited-use items, but not for an always-available command-word item.
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-```
+3. The fold-back command has a deterministic activation precondition.
+   The third command word works only "if no creatures are aboard." Current activation phases have no place to encode an item-state / occupancy precondition on one branch of a mode choice.
 
-There is no `MagicItemRecord`. The tracer's top-level `switch` would throw `unhandled unit kind: magic_item` before any mechanic could be evaluated. This is a missing top-level kind — the narrowest honest classification is `structural_widening`.
+4. The item can be destroyed when either transformed vessel is reduced to 0 Hit Points.
+   Existing `ItemDestructionPolicy` variants only cover charge depletion (`last_charge_roll`, `permanent_on_empty`). `Folding Boat` needs destruction tied to the transformed form's HP reaching 0.
 
----
+### Narrowest honest classification
 
-## Required widenings (in order of dependency)
+`surface_widening`
 
-### 1. `MagicItemRecord` — new top-level record kind
+The top-level kind (`magic_item`) and broad family (`activation`) already exist, and the core effect atom (`alter_item_kind`) already exists. The missing pieces are surface variants around attachment, activation economics, activation gating, and destruction triggers.
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly requiresAttunement: boolean;
-  readonly rarity: "common" | "uncommon" | "rare" | "very_rare" | "legendary" | "artifact";
-  readonly mechanics: MagicItemMechanics;
-};
-```
+### Proposed widenings
 
-`UnitRecord` must gain `| MagicItemRecord`.
+1. `Attachment.item` or `Attachment.object`
+   So activation phases can attach `alter_item_kind` to the item itself.
 
-### 2. `MagicItemMechanics` family — new mechanics union
+2. Resource-free magic-item activation
+   A variant of activated-item mechanics that allows unlimited command-word use without inventing fake charges or use counts.
 
-The Folding Boat uses a **multi-command-word** pattern: three named activations, each consuming a Magic action, each producing a different effect. A plausible family for this is `command_word`:
+3. Optional activation/mode precondition
+   Needed for branch-specific constraints like "folds back into a box if no creatures are aboard."
 
-```typescript
-export type CommandWordMechanics = {
-  readonly family: "command_word";
-  readonly activationCost: { readonly kind: "magic_action" };
-  readonly commands: ReadonlyArray<{
-    readonly name: string;
-    readonly precondition?: CommandWordPrecondition;
-    readonly effect: MagicItemEffect;
-  }>;
-};
-```
+4. `ItemDestructionPolicy` variant keyed to transformed form HP
+   Needed for "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
 
-### 3. `alter_item_kind` effect — already in v4 taxonomy, missing from `types.ts`
+### Evidence
 
-The core effect of the Folding Boat is switching the item between three physical forms. The v4 taxonomy lists `alter_item_kind` under Effect Atoms. It needs a surface type:
-
-```typescript
-export type AlterItemKindEffect = {
-  readonly kind: "alter_item_kind";
-  readonly targetForm: string;  // e.g. "rowboat", "keelboat", "box"
-};
-```
-
-### 4. Activation cost variant: `magic_action`
-
-`ClassFeatureActivationCost` currently only has `free` and `bonus_action`. Magic items activated by the Magic action need a new variant:
-
-```typescript
-| { readonly kind: "magic_action" }
-```
-
-This is a `surface_widening` relative to the existing activation cost shape.
-
-### 5. Precondition guard on command words
-
-The third command word ("fold back to box") only works "if no creatures are aboard." No precondition check shape exists in the surface. A minimal closed enum would serve:
-
-```typescript
-export type CommandWordPrecondition =
-  | { readonly kind: "no_creatures_in_or_on_item" };
-```
-
----
-
-## What the trace would look like (sketch)
-
-```
-magic_item_root → command_word (Magic action)
-  command_word[1: "Rowboat"] → alter_item_kind(rowboat)
-  command_word[2: "Keelboat"] → alter_item_kind(keelboat)
-  command_word[3: "fold"] [precondition: no_creatures_in_or_on_item]
-    → alter_item_kind(box)
-```
-
-Relations used would be: `roots`, `grants`, `consumes`, `requires` (for the precondition).
-
----
-
-## Notes on out-of-scope behavior
-
-The following behaviors are **caller-owned** per `ARCHITECTURE.md` and do not need core atoms:
-- Weight change when becoming a vessel ("weight becomes that of a normal vessel its size")
-- Object transfer logic when folding/unfolding ("anything that was stored in the box remains in the boat")
-- Destruction on HP reduction ("if either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed")
-
-These are physical/narrative consequences of the form change, not deterministic mechanical resolution atoms. Only the HP destruction trigger might eventually warrant a `return_on_end` or `break` lifecycle atom if a future item family models item HP.
+- "This item also has three command words, each requiring a Magic action to use"
+- "The box unfolds into a Rowboat."
+- "The box unfolds into a Keelboat."
+- "The Folding Boat folds back into a box if no creatures are aboard."
+- "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
