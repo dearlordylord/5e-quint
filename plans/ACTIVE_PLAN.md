@@ -39,8 +39,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
   "schema": "ralph-plan.v1",
   "tasks": [
     { "number": 0,  "id": "CSA1",  "status": "done", "title": "Survey Mining Rerun (Exhaustive)" },
-    { "number": 1,  "id": "CSA2",  "status": "ready-for-research", "title": "Rescope Post-CSA1 Clean Queue Batch 1" },
-    { "number": 2,  "id": "CSA3",  "status": "blocked", "title": "Bulk-Author Clean Queue Batch 2" },
+    { "number": 1,  "id": "CSA2",  "status": "done", "title": "Rescope Post-CSA1 Clean Queue Batch 1" },
+    { "number": 2,  "id": "CSA3",  "status": "done", "title": "Retire Empty Post-CSA1 Clean Queue Batch 2 Slot" },
     { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
     { "number": 4,  "id": "CSA5",  "status": "ready-for-research", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
     { "number": 5,  "id": "CSA6",  "status": "ready-for-research", "title": "C4g Object-Target Attachment And True Polymorph Object Modes" },
@@ -96,13 +96,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 |---|---|---|---|---|---|---|
 | 0 | CSA1 - Survey Mining Rerun (Exhaustive) | done | none | CSA2, CSA3, CSA8, CSC1 | Landed refreshed `survey-results-srd.jsonl` + `REPORT_SRD.md` + [plans/SURVEY_RERUN_2026-04-17.md](/workspace/typescript/dnd/plans/SURVEY_RERUN_2026-04-17.md). The current SRD catalog baseline is 882 queue rows, not the older 504-unit snapshot. | Landed on 2026-04-17. Use the refreshed queue for downstream authoring picks. |
-| 1 | CSA2 - Rescope Post-CSA1 Clean Queue Batch 1 | ready-for-research | CSA1 | CSA3 | Repartition CSA1's current clean queue against existing batch ownership, then rewrite this slot as a concrete non-overlapping 10-unit authoring batch. | Ready. `plans/SURVEY_RERUN_2026-04-17.md` shows no newly-clean units in the prior 504-unit overlap; immediate clean targets are magic items, so the old spell-only scope is stale. |
-| 2 | CSA3 - Bulk-Author Clean Queue Batch 2 | blocked | CSA2 | CSA8 | After CSA2 publishes the first non-overlapping clean-queue batch, author the next 10 units from the remaining queue. | Blocked on CSA2's repartitioning result. |
+| 1 | CSA2 - Rescope Post-CSA1 Clean Queue Batch 1 | done | CSA1 | none | Verified the rerun's 116 `clean` rows all already exist under `packages/prototype-content-surface/content/`, so there is no remaining post-CSA1 clean-queue authoring batch to publish. The magic-item-heavy rerun note is still useful for family ownership, but it does not create runnable CSA2 work. | Landed on 2026-04-17. Use `plans/SURVEY_RERUN_2026-04-17.md` only as queue context; do not schedule a clean-batch authoring task without re-checking authored overlap first. |
+| 2 | CSA3 - Retire Empty Post-CSA1 Clean Queue Batch 2 Slot | done | CSA2 | none | Retired. After CSA2's overlap check proved the clean queue is already fully authored, there is no second post-CSA1 clean batch to author. If a future rerun creates un-authored `clean` rows, add a new task instead of reusing this stale slot. | Landed on 2026-04-17. |
 | 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
 | 4 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. |
 | 5 | CSA6 - C4g Object-Target Attachment And True Polymorph Object Modes | ready-for-research | none | CSA8 | Add `Attachment.object` kind; extend `transform_target` to cover object-to-creature and creature-to-object; author the True Polymorph object branches. | Ready. True Polymorph already partial-authored (creature branch only). |
 | 6 | CSA7 - Shapechange Multi-Type Filter And Form Switch | ready-for-research | CSA6 | CSA8 | Widen `PolymorphFormSource.creatureTypeFilter` to support "any except X"; add `Duration.concentration.allowsFormSwitchAs: "magic_action"`; author Shapechange. | Blocked on CSA6 for shared PolymorphFormSource shape review. |
-| 7 | CSA8 - Convergence Checkpoint A | blocked | CSA2, CSA3, CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11 | Author 10 units picked randomly from the remaining survey queue; count how many require a new widening. Convergence declared for Phase A when ≤1 new widening across 10. | Blocked on upstream widenings. |
+| 7 | CSA8 - Convergence Checkpoint A | blocked | CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11 | Author 10 units picked randomly from the remaining survey queue; count how many require a new widening. Convergence declared for Phase A when ≤1 new widening across 10. Because CSA2/CSA3 found no un-authored clean queue, this becomes the next place the post-rerun clean-authoring streak can resume once the widening tasks land. | Blocked on upstream widenings. |
 | 8 | CSB1 - Species Traits Batch | ready-for-implementation-after-light-research | none | CSC1 | Author the 17 SRD 5.2.1 species traits (Dragonborn, Elf, Dwarf, Halfling, etc.); most are `grant_sense` / `grant_resistance` / size / speed. | Ready. Existing grammar covers the common cases; any outliers become flagged partials. |
 | 9 | CSB2 - Feats Batch | ready-for-implementation-after-light-research | none | CSC1 | Author origin feats, epic boons, remaining fighting styles. ~10-15 units. | Ready. FeatMechanics already covers passive + activated patterns. |
 | 10 | CSB3 - Fighter And Rogue Class Features | ready-for-research | none | CSC1 | Research both classes; author ~20 class_feature units. Simplest martial classes; no new widenings expected beyond Sneak Attack dice scaling (already covered). | Ready for research. |
@@ -253,17 +253,17 @@ Handoff readiness:
 
 ### Task 1 - CSA2 - Rescope Post-CSA1 Clean Queue Batch 1
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: `CSA1`
 
-Blocks: `CSA3`
+Blocks: none
 
 Scope:
 
 - Re-read `plans/SURVEY_RERUN_2026-04-17.md` and correct the stale "newly-clean spells" assumption from the pre-rerun task draft.
-- Partition the current clean queue into non-overlapping ownership with the existing batch structure, especially `CSB9` and `CSB10`, before any authoring starts.
-- Rewrite CSA2 as a concrete 10-unit authoring batch only after the target slugs and unit family are explicit and do not collide with later tasks.
+- Check the current `clean` queue against both existing batch ownership (`CSB9`, `CSB10`) and the authored corpus under `packages/prototype-content-surface/content/`.
+- Decide whether a runnable post-CSA1 clean-queue authoring batch still exists.
 
 Input:
 
@@ -273,41 +273,49 @@ Input:
 
 Output:
 
-- Updated CSA2/CSA3 plan text naming the concrete first and second clean-queue authoring batches.
-- A non-overlapping 10-unit target list for the first implementation batch, with task ownership clarified if the current clean targets belong under the magic-item batches instead.
+- Plan update recording that the rerun's `clean` rows are already fully represented in the authored corpus, so no post-CSA1 clean authoring batch remains to define.
+- CSA3 retired as a stale follow-on slot rather than left blocked behind a nonexistent batch.
 
 Next action:
 
-- Compare the rerun's immediate clean targets with `CSB9` and `CSB10`, decide whether CSA2 should be folded into those batches or rewritten as a generic clean-queue batch, then update the plan accordingly.
+- Continue with the remaining widening queue (`CSA5`-`CSA7`) and the standing implementation batches (`CSB1`, `CSB2`, `CSB9`, `CSB10`); do not open a new "clean queue batch" task unless a later rerun produces un-authored `clean` rows.
 
 Research note:
 
 - `plans/SURVEY_RERUN_2026-04-17.md` reports that the prior 504-unit overlap had no non-clean→clean transitions; the immediate clean targets are newly-added queue rows and are magic-item-heavy.
-- Preserve the convergence bookkeeping after repartitioning: once the authoring batches are redefined, track the clean-authoring streak across CSA2 + CSA3 + CSA8 as before.
+- The durable follow-up fact from this task is stronger: every current `clean` row already has a matching authored content file, so the rerun exposed no runnable "easy authoring" backlog at all.
 
 Verification requirements:
 
-- Verify the selected CSA2 ownership does not overlap the slugs already promised to `CSB9` or `CSB10`.
-- Confirm the revised task text points at the actual clean queue source and no longer assumes a spell-only batch unsupported by the rerun.
+- Verified `scripts/content-surface-survey/survey-results-srd.jsonl` currently contains 116 `clean` rows.
+- Verified every one of those 116 slugs already exists under `packages/prototype-content-surface/content/*.dhall`, leaving zero un-authored clean units to assign to CSA2 or CSA3.
+- Confirmed the stale rerun note's magic-item examples fall under the existing magic-item family ownership, but they do not create runnable work because those slugs are already authored.
 - `/simplify` not applicable while this task remains plan research rather than authoring.
 
 Handoff readiness:
 
-- Ready. The rerun output is already committed; the remaining work is queue partitioning and task rewrite.
+- Complete. The rerun output is already committed, and the overlap check closed out the stale clean-batch slots.
 
-### Task 2 - CSA3 - Bulk-Author Clean Queue Batch 2
+### Task 2 - CSA3 - Retire Empty Post-CSA1 Clean Queue Batch 2 Slot
 
-Status: `blocked`
+Status: `done`
 
 Depends on: `CSA2`
 
-Blocks: `CSA8`
+Blocks: none
 
 Scope:
 
-- Author the second non-overlapping 10-unit batch from the post-CSA1 clean queue, using the partition published by CSA2.
+- No-op closeout. CSA2 established that the post-CSA1 `clean` queue is already fully authored, so there is no second batch to schedule.
 
-Input / Output / Next action / Research note / Verification / Handoff readiness: same authoring workflow as the eventual implementation version of CSA2, but against the remaining clean queue after CSA2 fixes the batch partition.
+Input / Output / Next action / Research note / Verification / Handoff readiness:
+
+- Input: CSA2's authored-overlap check.
+- Output: This stale slot is retired.
+- Next action: If a future rerun surfaces un-authored `clean` rows, add a fresh task with an explicit slug list instead of reviving CSA3.
+- Research note: none.
+- Verification: none beyond CSA2's overlap check.
+- Handoff readiness: complete.
 
 ### Task 3 - CSA4 - A14 Relative-To-Stat DiceAmount
 
