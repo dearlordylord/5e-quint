@@ -1,22 +1,37 @@
 {
   "unit_slug": "magic_item_ring_of_animal_influence",
   "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "charge_pool",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "grant_spell_access.targetTypeFilter",
-      "justification": "The ring modifies the Fear spell to affect Beasts only. grant_spell_access has no field to express a creature-type restriction on the spell as cast from the item. Without this field the encoding would claim Fear targets any creature, which is materially wrong and would produce incorrect combat outcomes.",
-      "evidence": "Fear (affects Beasts only)"
+      "name": "grant_spell_access.fixed_save_dc",
+      "justification": "Magic items can grant spell casts that use a fixed item DC instead of the wielder's own spellcasting DC.",
+      "evidence": "\"cast one of the following spells (save DC 13) from it\""
     },
     {
       "kind": "new_variant",
-      "name": "grant_spell_access.fixedDc",
-      "justification": "The ring specifies a fixed save DC of 13, independent of the wearer's spellcasting ability. grant_spell_access has no dcSource or fixedDc field; the atom provides no mechanism to override the default caster_spell_save_dc. A new field (e.g., fixedDc: number or dcSource: DcSource) is needed to express item-defined DCs.",
-      "evidence": "you can expend 1 charge to cast one of the following spells (save DC 13) from it"
+      "name": "grant_spell_access.spell_override_target_filter",
+      "justification": "A granted spell access sometimes modifies the spell's target domain without introducing a separate spell identity.",
+      "evidence": "\"Fear (affects Beasts only)\""
     }
   ],
-  "confidence": "high",
-  "notes": "The ring mostly fits magic_item / ActivatedAbilityMechanics with a charge_pool resource (cap=3, dawn regain 1d3) and three grant_spell_access effects with charge_cast mode (baseCharges=1, perLevelCharges=0). Two surface gaps prevent honest encoding: (1) the Beast-only targeting restriction on Fear cannot be expressed in grant_spell_access, and (2) the fixed DC 13 cannot be expressed without a dcSource or fixedDc field on grant_spell_access. Both are new fields on an existing surface type — surface_widening."
+  "confidence": "medium",
+  "notes": "Authoring proceeds with the honest subset: 3-charge pool, 1d3 dawn recharge, and access to Animal Friendship, Fear, and Speak with Animals. Fixed save DC 13 and the beast-only Fear override are omitted from the current surface and recorded as widenings. `pnpm typecheck` is currently blocked by a pre-existing unrelated exhaustiveness error in `src/interpreter/tracer.ts` for `natural_weapons` / `water_breathing`; this unit's JSON compiled and traced successfully."
 }

@@ -1,56 +1,57 @@
-# Proposal: Ring of Jumping — surface_widening
+# Proposal: Ring of Jumping
 
-## Unit
+## Verdict
 
-Ring of Jumping (magic_item, uncommon, requires attunement)
+`surface_widening`
+
+The unit fits the existing top-level shape:
+
+- `kind = "magic_item"`
+- `mechanics.family = "passive"`
+- grant via `EffectAtom.grant_spell_access`
+
+What does **not** fit is the rider on that granted spell access:
 
 > "While wearing this ring, you can cast *Jump* from it, but can target only yourself when you do so."
 
-## What fits
+## Missing surface shape
 
-- **Record kind**: `magic_item` — correct.
-- **Mechanics family**: `passive` — the ring is always-on while worn/attuned; no charge pool or use counter.
-- **Core atom**: `grant_spell_access` with `spellId: "jump"` and `mode: "at_will"` — Jump is castable freely, no usage limit stated in RAW.
-- **Attunement**: `requiresAttunement: true` → `attunement_slot` resource.
-- **Destruction**: `{ kind: "none" }` — no charge-burn lifecycle.
+The current `grant_spell_access` atom can express:
 
-## What is missing
+- which spell is granted
+- how often / with what resource it can be cast
 
-### `grant_spell_access.targetRestriction` (new optional field)
+It cannot express:
 
-The ring's only distinguishing rule is that Jump may only target the wearer, not other creatures. The Jump spell (1st-level transmutation) normally reads "Touch" range and "one willing creature" — meaning the caster could touch and buff an ally. The ring removes that option.
+- target restrictions on the granted casting
 
-The current `grant_spell_access` atom:
+That matters here because `Jump` is not inherently self-only; the ring changes the granted casting's legal target set. Encoding this as plain:
 
-```typescript
-| {
-    readonly kind: "grant_spell_access";
-    readonly spellId: string;
-    readonly mode: SpellAccessMode;
-  }
+```json
+{ "kind": "grant_spell_access", "spellId": "jump", "mode": "at_will" }
 ```
 
-has no field for a target override or restriction. Encoding this ring with `grant_spell_access` as-is would produce a trace claiming unrestricted Jump access, which is mechanically wrong and misleading.
+would be dishonest, because it would imply the wearer can cast `Jump` on any legal `Jump` target, not only themself.
 
-## Proposed widening
+## Narrowest widening
 
-Add an optional `targetRestriction` field to `grant_spell_access`:
+Add a target-restriction field to `grant_spell_access`, for example:
 
 ```typescript
-| {
-    readonly kind: "grant_spell_access";
-    readonly spellId: string;
-    readonly mode: SpellAccessMode;
-    readonly targetRestriction?: "self_only";  // NEW
-  }
+{
+  readonly kind: "grant_spell_access";
+  readonly spellId: string;
+  readonly mode: SpellAccessMode;
+  readonly targetRestriction?: "self_only";
+}
 ```
 
-`"self_only"` means the granted spell may only target the granting item's wearer/holder, overriding the spell's normal target selection. This is a closed value for now; the only SRD 5.2.1 pressure case found is this ring.
+This is a surface widening, not an atom widening:
 
-## Classification
+- the core mechanic is still `grant_spell_access`
+- no new top-level family is needed
+- no new v4 atom is forced
 
-`surface_widening` — the `grant_spell_access` atom exists in v4 and in `types.ts`; only a new optional field on an existing surface type is needed. No new atom, no new family, no structural change required.
+## Notes
 
-## Dhall not authored
-
-Per guardrails, no dhall was produced. A `grant_spell_access` encoding without `targetRestriction` would omit the item's sole mechanical constraint, producing a trace that misrepresents the item's rules.
+There is existing authored content with the same omission pattern (`magic_item_ring_of_water_walking`). I did not copy that omission here because the protocol for this task requires an honest fit rather than a closest-valid placeholder.
