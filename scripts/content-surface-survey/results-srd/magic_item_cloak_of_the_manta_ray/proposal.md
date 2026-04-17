@@ -1,82 +1,36 @@
-# Proposal: Cloak of the Manta Ray — Structural Widening
+## Cloak of the Manta Ray
 
-## Unit
+`Cloak of the Manta Ray` structurally fits the existing `magic_item` + `passive` family:
 
-**Cloak of the Manta Ray** — Wondrous Item, Uncommon (Requires Attunement)
+- `grant_speed` can encode "you have a Swim Speed of 60 feet"
+- `water_breathing` exists in `EffectAtom` and can encode "you can breathe underwater"
+
+The problem is verification: the current tracer implementation does not fully handle `water_breathing`.
+
+## Evidence
+
+Source text:
 
 > While wearing this cloak, you can breathe underwater, and you have a Swim Speed of 60 feet.
 
-## Why the unit does not fit
+Observed failure during `pnpm typecheck`:
 
-`UnitRecord` in `src/surface/types.ts` is:
-
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+```text
+src/interpreter/tracer.ts(...): error TS2322: Type ... | { readonly kind: "water_breathing"; } is not assignable to type 'never'.
 ```
 
-There is no `MagicItemRecord` kind. The v4 taxonomy includes `magic_item_root` as a source atom and `attune`/`attunement_slot` as procedure/resource atoms, but none are surfaced in `types.ts` or handled by `tracer.ts`. This is not a missing variant — the entire top-level kind is absent.
+That failure comes from the tracer's exhaustive handling for effect-atom scaling, which omits the existing `water_breathing` variant.
 
-## Required widenings (in priority order)
+## Narrowest Honest Classification
 
-### 1. `MagicItemRecord` top-level kind (structural)
+`atom_widening`
 
-A new record type and union member:
+Reason:
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly rarity: MagicItemRarity;          // new type: "common" | "uncommon" | "rare" | "very_rare" | "legendary" | "artifact"
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;    // new union
-};
-```
+- the unit needs a dedicated underwater-breathing capability atom;
+- the current repo surface includes `water_breathing`, but the atom is not cleanly integrated through tracing/verification;
+- producing authored content would leave the worker in a non-typechecking state, so the honest outcome is to stop and record the gap.
 
-### 2. `passive_while_worn` mechanics family (structural)
+## Suggested Fix
 
-The cloak's two effects are passive — always active while the item is worn (and attuned). No activation cost, no use count, no reset cadence. This requires a new mechanics family distinct from spell `ongoing_effect` (which requires a caster and a slot) and class feature `activation` (which requires an activation cost and resource):
-
-```typescript
-export type PassiveWhileWornMechanics = {
-  readonly family: "passive_while_worn";
-  readonly effects: ReadonlyArray<PassiveMagicItemEffect>;
-};
-```
-
-### 3. `grant_underwater_breathing` effect atom (atom widening)
-
-Underwater breathing is not a sense — `grant_sense` covers perception-extending senses (darkvision, blindsight, tremorsense). The ability to breathe water is a distinct physiological capability with no existing v4 atom. A new atom is needed:
-
-```typescript
-export type GrantUnderwaterBreathingEffect = {
-  readonly kind: "grant_underwater_breathing";
-};
-```
-
-**Evidence:** "you can breathe underwater"
-
-### 4. `modify_speed` (grant new speed type) — surface exposure + variant (surface widening)
-
-`modify_speed` exists in the v4 taxonomy but is absent from `types.ts`. For the cloak, the grant is not a modification of an existing speed but the addition of a new speed type (Swim) at a fixed value. The surface type needs:
-
-```typescript
-export type ModifySpeedEffect =
-  | { readonly kind: "modify_speed"; readonly mode: "add_flat"; readonly feet: number }
-  | { readonly kind: "modify_speed"; readonly mode: "grant_swim"; readonly feet: number }
-  | { readonly kind: "modify_speed"; readonly mode: "grant_fly"; readonly feet: number };
-```
-
-**Evidence:** "you have a Swim Speed of 60 feet"
-
-## What would make this clean
-
-Minimum required:
-1. Add `MagicItemRarity` type and `MagicItemRecord` to `UnitRecord`
-2. Add `passive_while_worn` mechanics family
-3. Add `grant_underwater_breathing` effect atom
-4. Surface `modify_speed` with `grant_swim` variant
-
-The tracer would then need a `traceMagicItemUnit` branch and a `tracePassiveWhileWornMechanics` function.
-
-## Attunement note
-
-The `attune` procedure atom and `attunement_slot` resource atom exist in v4 but are not yet surfaced. The cloak requires attunement, which means the passive effects should only be active when the item is attuned. The `passive_while_worn` family design should incorporate an optional `requiresAttunement` gate that connects to `attunement_slot`.
+Integrate `water_breathing` end-to-end in the tracer, including the exhaustive non-scaling branch, so passive magic items like this can typecheck and trace cleanly.

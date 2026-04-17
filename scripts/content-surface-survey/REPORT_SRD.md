@@ -1450,7 +1450,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### barbarian_feral_instinct_l7
 
-- **passive ClassFeatureMechanics family** (new_subgraph) — Feral Instinct is always-on with no activation cost, no use-count resource, and no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three header fields (activationCost, resource, resetCadence).
+- **passive ClassFeatureMechanics family** (new_subgraph) — Feral Instinct is always-on with no activation cost, no use-count resource, and no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three header fields (activationCost, resource, resetCadence). 
 - **"initiative" in RollKind** (new_variant) — RollKind is currently 'attack_roll' | 'saving_throw'. Initiative is a Dexterity check used at combat start — neither an attack roll nor a saving throw. Encoding advantage on initiative requires extending RollKind (or a parallel InitiativeKi
 
 ### barbarian_improved_brutal_strike_l17
@@ -1458,7 +1458,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **passive_upgrade family for ClassFeatureMechanics** (new_subgraph) — Improved Brutal Strike (L17) is a passive, always-on enhancement of an existing feature. It has no activation cost, no use-count resource, and no reset cadence. The only current ClassFeatureMechanics family is 'activation', which requires a
 - **cross_feature_reference attachment or effect target** (new_variant) — Both sub-effects of this feature operate on parameters of barbarian_brutal_strike_l9, not on a creature or area. The surface has no mechanism to point an effect at another named feature record as its scope. A cross-feature reference (target
 - **multi_effect_selection — select N from a named effect list** (new_variant) — The second component grants the ability to select *two* Brutal Strike effects simultaneously instead of one. The existing surface has no concept of 'effect multiplicity count' or 'choose N from a feature's effect menu'. This is distinct fro
-- **scale_feature_parameter — upgrade a named damage expression on a sibling feature** (new_variant) — The damage increase ('increases to 2d10') does not describe a self-contained DiceAmount; it is a write to a specific parameter slot of an already-authored feature. The existing scale_* atoms (scale_die_count, scale_numeric_bonus, etc.) all
+- **scale_feature_parameter — upgrade a named damage expression on a sibling feature** (new_variant) — The damage increase ('increases to 2d10') does not describe a self-contained DiceAmount; it is a write to a specific parameter slot of an already-authored feature. The existing scale_* atoms (scale_die_count, scale_numeric_bonus, etc.) all 
 
 ### barbarian_indomitable_might_l18
 
@@ -1467,7 +1467,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### barbarian_instinctive_pounce_l7
 
-- **activation_rider** (new_subgraph) — Instinctive Pounce fires 'as part of the Bonus Action you take to enter your Rage' — it has no independent activation cost, no use count, and no reset cadence. The current surface only models class features as independently activated units
+- **activation_rider** (new_subgraph) — Instinctive Pounce fires 'as part of the Bonus Action you take to enter your Rage' — it has no independent activation cost, no use count, and no reset cadence. The current surface only models class features as independently activated units 
 - **move effect in ClassFeatureEffect** (new_variant) — The effect 'move up to half your Speed' is a move effect. ClassFeatureEffect currently only covers grant_extra_action and heal_hp. A move variant (or fractional-speed move variant) is needed to express this mechanically.
 
 ### barbarian_primal_champion_l20
@@ -1498,7 +1498,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### bard_ability_score_improvement_l4
 
 - **level_grant family for ClassFeatureMechanics** (new_subgraph) — ASI is not an activated ability. It has no activation cost, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three. A new family (e.g. 'level_grant' or 'passive_
-- **grant_feat_choice** (new_atom) — The mechanic grants a feat from the open feat catalog (specifically the ASI feat, or any qualifying feat). No existing ClassFeatureEffect covers an open-ended feat menu. The closest v4 atoms (grant_proficiency, grant_spell_access) are more
+- **grant_feat_choice** (new_atom) — The mechanic grants a feat from the open feat catalog (specifically the ASI feat, or any qualifying feat). No existing ClassFeatureEffect covers an open-ended feat menu. The closest v4 atoms (grant_proficiency, grant_spell_access) are more 
 
 ### bard_bonus_proficiencies_l3
 
@@ -1514,15 +1514,15 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### bard_epic_boon_l19
 
-- **passive_grant** (new_subgraph) — Epic Boon is a permanent, passive level-up grant — not an activated feature. It has no use_count, no reset cadence, no activation cost. The existing 'activation' family mandates all three via ClassFeatureMechanicsHeader. A new family (e.g.
-- **grant_feat** (new_atom) — The effect is granting access to an entire feat unit record — not a narrowly scoped runtime effect. No v4 effect atom covers this. grant_proficiency and grant_spell_access are the closest analogues, but a feat grant enables a full separate
+- **passive_grant** (new_subgraph) — Epic Boon is a permanent, passive level-up grant — not an activated feature. It has no use_count, no reset cadence, no activation cost. The existing 'activation' family mandates all three via ClassFeatureMechanicsHeader. A new family (e.g. 
+- **grant_feat** (new_atom) — The effect is granting access to an entire feat unit record — not a narrowly scoped runtime effect. No v4 effect atom covers this. grant_proficiency and grant_spell_access are the closest analogues, but a feat grant enables a full separate 
 
 ### bard_font_of_inspiration_l5
 
 - **multi_mechanic_class_feature** (new_subgraph) — Font of Inspiration has two independent sub-mechanics: (1) a passive reset-cadence upgrade for Bardic Inspiration (not an activation at all), and (2) a spell-slot-cost recovery activation. The current ClassFeatureMechanics = ClassFeatureAct
 - **ClassFeatureActivationCost: spell_slot** (new_variant) — The spell-slot recovery sub-mechanic is triggered by spending a spell slot with no action required. ClassFeatureActivationCost only supports 'free' and 'bonus_action'. A new variant is needed to represent spell-slot expenditure as an activa
 - **ClassFeatureEffect: recover_resource_use** (new_variant) — The effect of the spell-slot sub-mechanic is regaining 1 expended use of a named resource (Bardic Inspiration). ClassFeatureEffect only contains GrantExtraActionEffect and HealHpEffect — neither can represent refilling a use_count resource.
-- **ClassFeatureEffect: upgrade_reset_cadence (or new family: passive_modifier)** (new_variant) — The first sub-mechanic passively changes the reset cadence of Bardic Inspiration from long-rest-only to short-or-long-rest. This is not an activation — it is a persistent rule modification on another feature's resource. The current surface
+- **ClassFeatureEffect: upgrade_reset_cadence (or new family: passive_modifier)** (new_variant) — The first sub-mechanic passively changes the reset cadence of Bardic Inspiration from long-rest-only to short-or-long-rest. This is not an activation — it is a persistent rule modification on another feature's resource. The current surface 
 
 ### bard_superior_inspiration_l18
 
@@ -1531,7 +1531,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### bard_words_of_creation_l20
 
-- **passive_class_feature family** (new_subgraph) — Words of Creation is a permanent passive modifier. The existing ClassFeatureMechanics only covers 'activation' family (requires use_count, activationCost, resetCadence). None of those fields apply: there is no activation, no use count, and
+- **passive_class_feature family** (new_subgraph) — Words of Creation is a permanent passive modifier. The existing ClassFeatureMechanics only covers 'activation' family (requires use_count, activationCost, resetCadence). None of those fields apply: there is no activation, no use count, and 
 - **grant_spell_access variant of ClassFeatureEffect** (new_variant) — The feature grants always-prepared access to two named spells. The v4 taxonomy has a grant_spell_access atom, but ClassFeatureEffect union only contains GrantExtraActionEffect | HealHpEffect. A new variant is needed, e.g. { kind: 'grant_spe
 - **modify_named_spell_targeting (secondary adjacent target)** (new_atom) — The feature allows optionally targeting a second creature within 10 feet of the first when casting the two named spells. This is a class-feature-granted modification of specific spells' cast-time target selection — not slot-level scaling, n
 
@@ -1545,7 +1545,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### call_lightning
 
 - **persistent_activation** (new_subgraph) — Call Lightning casts once (concentration, up to 10 min) and grants a repeatable Magic-action-costed activation each turn that fires a save_gate → area damage. No existing family (ongoing_effect, activation, triggered_reaction, anchored_trig
-- **save_gate_ongoing_operation** (new_variant) — The recurring lightning strike resolves through a DEX save_gate → area damage. The current OngoingOperation union only allows roll_modifier and damage_on_hit (attack-roll-keyed riders). There is no variant for a save-gated damage operation
+- **save_gate_ongoing_operation** (new_variant) — The recurring lightning strike resolves through a DEX save_gate → area damage. The current OngoingOperation union only allows roll_modifier and damage_on_hit (attack-roll-keyed riders). There is no variant for a save-gated damage operation 
 - **conditional_damage_bonus** (new_variant) — The outdoor-storm +1d10 is a runtime context predicate (caster is outdoors in a pre-existing storm). This is neither slot-scaling nor level-scaling; it is a conditional bonus with no parallel in the current DiceAmount or scaling vocabulary.
 
 ### cleric_ability_score_improvement_l4
@@ -1561,7 +1561,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### cleric_blessed_strikes_l7
 
-- **choose_one_of** (new_subgraph) — Blessed Strikes presents two mutually exclusive mechanical options; the player picks one permanently. No ClassFeatureMechanics family represents a 'choose one alternative' structure. The single activation family encodes exactly one effect,
+- **choose_one_of** (new_subgraph) — Blessed Strikes presents two mutually exclusive mechanical options; the player picks one permanently. No ClassFeatureMechanics family represents a 'choose one alternative' structure. The single activation family encodes exactly one effect, 
 - **damage_on_hit_rider (ClassFeatureEffect)** (new_variant) — Divine Strike adds extra damage on a weapon hit, once per turn. ClassFeatureEffect only contains grant_extra_action and heal_hp. The on_hit_trigger family exists only in MasteryMechanics. A class feature that grants a per-turn on-hit damage
 - **player_choice_damage_type** (new_variant) — Divine Strike lets the player choose Necrotic or Radiant at the moment of the hit. DamageType is a single closed string; there is no 'one of [type_a, type_b] chosen at activation' variant. This is distinct from a fixed type.
 - **add_ability_mod_to_damage** (new_atom) — Potent Spellcasting adds the caster's Wisdom modifier (an ability score) to the damage dealt by cantrips. No v4 atom models this. modify_roll_numeric covers roll bonuses (Bless, Bane). scale_numeric_bonus covers level-scaled flat bonuses. N
@@ -1593,12 +1593,12 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### cleric_disciple_of_life_l3
 
 - **passive_trigger family for ClassFeatureMechanics** (new_subgraph) — Disciple of Life is always-on: it fires automatically whenever the cleric casts a healing spell with a spell slot. It has no activation cost, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family is 'ac
-- **augment_spell_heal effect type** (new_variant) — The feature adds a flat HP bonus (2 + slot_level) to healing done by any spell the cleric casts with a spell slot. This is not modeled by HealHpEffect (which makes the feature itself the source of healing, like Second Wind or Divine Spark)
+- **augment_spell_heal effect type** (new_variant) — The feature adds a flat HP bonus (2 + slot_level) to healing done by any spell the cleric casts with a spell slot. This is not modeled by HealHpEffect (which makes the feature itself the source of healing, like Second Wind or Divine Spark) 
 
 ### cleric_divine_order_l1
 
 - **passive_grant** (new_subgraph) — Divine Order grants permanent proficiencies / access at character creation — no activation cost, no use-count resource, no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three. A 'passive_gran
-- **choose_one_package** (new_subgraph) — The feature requires the player to pick one of two named option sets (Protector vs Thaumaturge) at character creation. No choose/branch mechanic exists in any ClassFeatureMechanics family. The v4 taxonomy includes a 'choose' procedure atom
+- **choose_one_package** (new_subgraph) — The feature requires the player to pick one of two named option sets (Protector vs Thaumaturge) at character creation. No choose/branch mechanic exists in any ClassFeatureMechanics family. The v4 taxonomy includes a 'choose' procedure atom 
 - **grant_proficiency effect in ClassFeatureEffect** (new_variant) — The v4 atom 'grant_proficiency' exists in the taxonomy but is absent from the ClassFeatureEffect union. Protector's weapon + armor grants require it. Even if a passive_grant family were added, this effect variant would still need to be surf
 - **grant_spell_access effect in ClassFeatureEffect** (new_variant) — The v4 atom 'grant_spell_access' exists in the taxonomy but is absent from ClassFeatureEffect. Thaumaturge's extra cantrip grant requires it.
 - **ability_check_modifier effect in ClassFeatureEffect** (new_variant) — Thaumaturge grants a bonus to Intelligence (Arcana or Religion) checks equal to Wisdom modifier (min +1). This is a roll modifier on ability checks, not saving throws or attack rolls. The v4 atom 'modify_roll_numeric' exists but only covers
@@ -1636,8 +1636,8 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### conjure_celestial
 
-- **moveable_area_dual_effect** (new_subgraph) — Conjure Celestial creates a cylinder that (a) can be repositioned up to 30 ft per turn when the caster moves, and (b) applies a caster-chosen effect (heal or damage) to each creature it touches. No existing spell family supports a moveable
-- **heal in spell Effect union** (new_variant) — Spell Effect = DamageEffect | NoneEffect. Healing Light restores HP equal to 4d12 + spellcasting modifier. There is no HealEffect in the spell Effect type (heal_hp exists only in ClassFeatureEffect). This must be added before any area-heal
+- **moveable_area_dual_effect** (new_subgraph) — Conjure Celestial creates a cylinder that (a) can be repositioned up to 30 ft per turn when the caster moves, and (b) applies a caster-chosen effect (heal or damage) to each creature it touches. No existing spell family supports a moveable 
+- **heal in spell Effect union** (new_variant) — Spell Effect = DamageEffect | NoneEffect. Healing Light restores HP equal to 4d12 + spellcasting modifier. There is no HealEffect in the spell Effect type (heal_hp exists only in ClassFeatureEffect). This must be added before any area-heal 
 - **cylinder area shape** (new_variant) — The current Attachment area shape only models sphere (radiusFeet). Conjure Celestial uses a cylinder (10-ft radius, 40-ft high), which is geometrically distinct and cannot be approximated as a sphere without misrepresenting the rule.
 - **area_enter_or_end_turn window** (new_variant) — The spell fires when the cylinder moves into a creature's space, when a creature enters the cylinder, or when a creature ends its turn in the cylinder. post_action_window approximates 'after a creature acts' but does not cleanly express ent
 - **moveable attachment** (new_variant) — No Attachment shape supports repositioning. The cylinder can be moved up to 30 ft per turn as part of the caster's movement. This is structurally distinct from a static area attachment and requires a new attachment modifier or family.
@@ -1648,7 +1648,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **Condition: "restrained"** (new_variant) — The Condition type is closed at 'prone'. Conjure Elemental applies the Restrained condition, which is mechanically distinct from Prone and required for the repeat-save guard ('if the spirit has no creature Restrained').
 - **Effect: apply_condition** (new_variant) — The Effect union is DamageEffect | NoneEffect. Conjure Elemental's on-fail branch applies a condition (Restrained) in addition to dealing damage. apply_condition is in the v4 atom inventory but not surfaced in the Effect union.
 - **Effect: remove_condition** (new_variant) — The on-success branch of the repeat save removes the Restrained condition. remove_condition is in the v4 atom inventory but not in the Effect union.
-- **ActivationPhase: repeat_save** (new_variant) — The Restrained target repeats the DEX save at the start of each of its turns — a repeat_save phase. This resolution atom is in v4 but has no corresponding ActivationPhase variant in types.ts. The existing phase variants are attack_roll and
+- **ActivationPhase: repeat_save** (new_variant) — The Restrained target repeats the DEX save at the start of each of its turns — a repeat_save phase. This resolution atom is in v4 but has no corresponding ActivationPhase variant in types.ts. The existing phase variants are attack_roll and 
 - **trigger guard: condition_occupancy_check** (new_variant) — The save is only available when the spirit currently has zero Restrained creatures. This is a conditional trigger guard keyed on runtime condition state of attached targets. No existing surface shape models a trigger that is gated on whethe
 
 ### conjure_fey
@@ -1694,9 +1694,9 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### delayed_blast_fireball
 
-- **AnchoredSignal — damage_area** (new_variant) — The bead's explosion produces a Dex save against fire damage in a 20-ft sphere. AnchoredSignal only supports audible/mental notification signals. The tracer's traceAnchoredTrigger folds signal content into a label string rather than wiring
+- **AnchoredSignal — damage_area** (new_variant) — The bead's explosion produces a Dex save against fire damage in a 20-ft sphere. AnchoredSignal only supports audible/mental notification signals. The tracer's traceAnchoredTrigger folds signal content into a label string rather than wiring 
 - **DiceAmount — accumulating_per_event** (new_variant) — The spell's damage starts at 12d6 and grows by 1d6 each time the caster's turn ends without the spell ending. This is runtime state accumulation driven by a recurring in-combat event, not level-based scaling. None of the five LevelAxis valu
-- **anchored_trigger — touch/reposition composite event** (new_subgraph) — A creature physically touching the bead triggers a save gate (not a simple AnchoredEvent). The two branches are mechanically distinct: (fail) immediately terminate concentration and detonate, (success) the creature may throw the bead up to
+- **anchored_trigger — touch/reposition composite event** (new_subgraph) — A creature physically touching the bead triggers a save gate (not a simple AnchoredEvent). The two branches are mechanically distinct: (fail) immediately terminate concentration and detonate, (success) the creature may throw the bead up to 
 - **AnchoredEvent — spell_expires / concentration_ends** (new_variant) — The primary detonation trigger is 'when the spell ends' — either concentration breaks or the 1-minute duration elapses. This maps to the lifecycle atom expire, but is not modeled as an AnchoredEvent kind. The existing kinds (physical_contac
 
 ### demiplane
@@ -1711,14 +1711,14 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **multi_mode_ongoing** (new_subgraph) — Detect Thoughts activates one of two effects on cast and allows re-selection each subsequent turn via Magic action. The current ongoing_effect family has a single operation field; there is no mechanism for player-choice between N operations
 - **sense_presence** (new_atom) — The Sense Thoughts mode grants awareness of nearby thinking creatures — a detection/informational effect. No existing v4 effect atom covers presence-sensing. The current Effect union is DamageEffect | NoneEffect; grant_sense in v4 covers se
-- **grant_information** (new_atom) — The Read Thoughts mode's save-gate fail branch grants informational content (surface thoughts, then on probe: reasoning/emotions). No v4 effect atom covers information disclosure as a mechanical outcome. The save gate exists but its onFail
+- **grant_information** (new_atom) — The Read Thoughts mode's save-gate fail branch grants informational content (surface thoughts, then on probe: reasoning/emotions). No v4 effect atom covers information disclosure as a mechanical outcome. The save gate exists but its onFail 
 - **ability_check_counter (target-initiated)** (new_variant) — The target can spend their action to make an Intelligence (Arcana) check against the caster's spell save DC to end the spell. This is a target-initiated ability_check resolution that terminates the caster's ongoing concentration effect — no
 
 ### dispel_magic
 
 - **for_each_active_effect_iteration** (new_subgraph) — Dispel Magic must check each ongoing spell above the slot-level threshold separately, with a distinct DC per spell (10 + that spell's level). The phases array is an encode-time fixed sequence; it cannot represent a dynamic per-spell loop ov
-- **ability_check_by_caster (ActivationPhase)** (new_variant) — The resolution is a caster-side ability check against a spell-level-derived DC. The existing save_gate phase is the target's saving throw against the caster's DC — inverted. The v4 resolution atom ability_check exists but is not exposed in
-- **end_ongoing_effect** (new_atom) — The caster's successful check terminates an ongoing spell on the target. No v4 effect atom covers this: negate_named_effect requires naming a specific spell at encode time; expire and break are lifecycle atoms describing natural spell end,
+- **ability_check_by_caster (ActivationPhase)** (new_variant) — The resolution is a caster-side ability check against a spell-level-derived DC. The existing save_gate phase is the target's saving throw against the caster's DC — inverted. The v4 resolution atom ability_check exists but is not exposed in 
+- **end_ongoing_effect** (new_atom) — The caster's successful check terminates an ongoing spell on the target. No v4 effect atom covers this: negate_named_effect requires naming a specific spell at encode time; expire and break are lifecycle atoms describing natural spell end, 
 
 ### druid_ability_score_improvement_l4
 
@@ -1737,7 +1737,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### druid_circle_of_the_land_spells_l3
 
-- **rest_time_choice_grant** (new_subgraph) — The feature's mechanical pattern is: Long Rest completion triggers a player choice from a closed enum (land type), which determines which prepared-spell list is granted for the next adventuring day. No existing ClassFeatureMechanics family
+- **rest_time_choice_grant** (new_subgraph) — The feature's mechanical pattern is: Long Rest completion triggers a player choice from a closed enum (land type), which determines which prepared-spell list is granted for the next adventuring day. No existing ClassFeatureMechanics family 
 - **grant_spell_access variant on ClassFeatureEffect** (new_variant) — ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect. The v4 taxonomy includes a 'grant_spell_access' atom (Section 9, Effect Atoms), but it is not surfaced in the TS type for class features. This unit needs it, as do analogous domain
 - **level_gated_list variant on grant_spell_access payload** (new_variant) — The granted spells are not a flat list — they unlock progressively by class level (L3 grants 3 spells, L5 adds 1 more, L7 adds 1 more, L9 adds 1 more). This is distinct from a simple 'all spells prepared at once' grant. The grant_spell_acce
 - **branching_choice variant for rest-time player decision** (new_variant) — The druid chooses one of four mutually exclusive land types at long rest. The v4 taxonomy has a 'choose' procedure atom, but ClassFeatureMechanics has no mechanism to express a rest-time player choice that gates which downstream effect fire
@@ -1748,7 +1748,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### druid_druidic_l1
 
-- **passive (ClassFeatureMechanics family)** (new_variant) — Druidic is not activated — it is an always-on feature that grants effects at class acquisition with no activation cost, no use-count resource, and no rest reset. The current ClassFeatureMechanics union has only 'activation', which requires
+- **passive (ClassFeatureMechanics family)** (new_variant) — Druidic is not activated — it is an always-on feature that grants effects at class acquisition with no activation cost, no use-count resource, and no rest reset. The current ClassFeatureMechanics union has only 'activation', which requires 
 - **grant_spell_access (ClassFeatureEffect variant)** (new_variant) — The 'grant_spell_access' atom exists in the v4 taxonomy but has no representation in ClassFeatureEffect (which only includes GrantExtraActionEffect and HealHpEffect). Druidic grants 'Speak with Animals' as always-prepared — a spell-access g
 
 ### druid_elemental_fury_l7
@@ -1837,7 +1837,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### fighter_epic_boon_l19
 
-- **passive_grant family for ClassFeatureMechanics** (new_subgraph) — Epic Boon is a permanent character-sheet acquisition with no activation cost, no use-count resource, and no rest reset. The existing 'activation' family requires all three. A new family (e.g. 'passive_grant' or 'level_grant') is needed for
+- **passive_grant family for ClassFeatureMechanics** (new_subgraph) — Epic Boon is a permanent character-sheet acquisition with no activation cost, no use-count resource, and no rest reset. The existing 'activation' family requires all three. A new family (e.g. 'passive_grant' or 'level_grant') is needed for 
 - **grant_feat** (new_atom) — The effect of Epic Boon is acquiring a feat of the player's choice from the Epic Boon category. No ClassFeatureEffect variant covers this. The v4 taxonomy has grant_proficiency and grant_spell_access but no grant_feat atom.
 - **open_choice constraint on grant_feat** (new_variant) — The feat is not a fixed selection — the player chooses from the Epic Boon feat category (or any feat they qualify for). This is an open-choice picker pattern that the current surface has no way to encode for feat grants. The surface would n
 
@@ -1854,7 +1854,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **passive_grant (class-feature family)** (new_subgraph) — Fighting Style is a permanent passive benefit acquired at level 1. It has no activationCost, no use-count resource, and no rest-reset cadence. The existing activation family is intrinsically wrong for a once-granted passive feat slot. A new
 - **grant_feat_choice (ClassFeatureEffect variant)** (new_variant) — The effect is granting access to a feat drawn from a named category (Fighting Style feats), with the player choosing which one. This is distinct from grant_extra_action or heal_hp. The closed category constraint and the player-choice semant
-- **replaceable_on_level_up (modifier on feat-choice effects)** (new_variant) — The feature explicitly permits swapping the chosen feat for a different one from the same category whenever the fighter gains a level. This is a character-progression mechanic with no analog in current atoms — it is not a rest-window reset
+- **replaceable_on_level_up (modifier on feat-choice effects)** (new_variant) — The feature explicitly permits swapping the chosen feat for a different one from the same category whenever the fighter gains a level. This is a character-progression mechanic with no analog in current atoms — it is not a rest-window reset 
 
 ### fighter_heroic_warrior_l10
 
@@ -1868,7 +1868,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### fighter_superior_critical_l15
 
-- **passive (ClassFeatureMechanics family)** (new_variant) — Superior Critical is a permanent always-on modifier with no activation cost, no use-count resource, and no reset cadence. The existing ClassFeatureMechanics only has the 'activation' family, which requires all three. A new 'passive' family
+- **passive (ClassFeatureMechanics family)** (new_variant) — Superior Critical is a permanent always-on modifier with no activation cost, no use-count resource, and no reset cadence. The existing ClassFeatureMechanics only has the 'activation' family, which requires all three. A new 'passive' family 
 - **modify_crit_threshold** (new_atom) — The mechanic widens the d20 range that counts as a Critical Hit from 20 to 18–20. No existing v4 effect atom covers this. TAXONOMY_atoms_graph.md §12 notes 'crit_window distinct from on_hit_window' as a deferred residue atom (single-feat pr
 
 ### fighter_survivor_l18
@@ -1897,7 +1897,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **consumable_object_pool** (new_subgraph) — Goodberry creates N distinct objects (berries) that any holder can activate using their own Bonus Action. No existing family models 'N consumable items created at cast time, each activatable by any holder at the holder's cost, each triggeri
 - **Attachment.kind: consumable_pool** (new_variant) — The existing attachment kinds (self, target, area, mark) attach to creatures or locations at cast time. Goodberry's berries are physical objects placed in the caster's hand and distributed later — attachment is to the holder of an item, not
 - **OngoingOperation.kind: heal_on_consume** (new_variant) — OngoingOperation is RollModifierOperation | DamageOnHitOperation. Neither carries a heal. Goodberry's per-berry effect is heal_hp (1 HP to consumer). A third variant is needed to express 'heal the consumer on activation of a consumable.'
-- **ClassFeatureActivationCost / quota model for consumer-side cost** (new_variant) — Current quota nodes always represent the caster consuming their own action economy. Goodberry's activation cost is the *consumer's* Bonus Action — a different creature's quota. The surface has no way to express 'holder (not caster) expends
+- **ClassFeatureActivationCost / quota model for consumer-side cost** (new_variant) — Current quota nodes always represent the caster consuming their own action economy. Goodberry's activation cost is the *consumer's* Bonus Action — a different creature's quota. The surface has no way to express 'holder (not caster) expends 
 
 ### halfling_luck
 
@@ -1924,7 +1924,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **MagicItemRecord + magic_item UnitRecord kind** (new_subgraph) — types.ts UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. There is no magic_item kind. The v4 TAXONOMY has magic_item_root as a source atom but the surface has no corresponding record type. No family can be coerced to represen
 - **passive_persistent mechanics family** (new_subgraph) — Adamantine Armor is an always-on passive modifier that fires while the item is worn, with no activation cost, no use count, and no rest reset. None of the three existing families (ongoing_effect, activation, on_hit_trigger) model a worn-ite
 - **suppress_crit (or promote deferred crit_window)** (new_atom) — The effect converts an incoming critical hit to a normal hit. No v4 atom covers this. The TAXONOMY §12 explicitly defers crit_window as 'single-feat pressure, not promoted'. Adamantine Armor is a second independent pressure point (magic ite
-- **incoming attack_roll trigger (worn-item scope)** (new_variant) — All existing attack_roll resolution atoms trace outgoing attacks (attacker's roll). Adamantine Armor fires on incoming attack rolls against the wearer. The surface has no trigger variant scoped to 'attack roll targeting the item bearer'. A
+- **incoming attack_roll trigger (worn-item scope)** (new_variant) — All existing attack_roll resolution atoms trace outgoing attacks (attacker's roll). Adamantine Armor fires on incoming attack rolls against the wearer. The surface has no trigger variant scoped to 'attack roll targeting the item bearer'. A 
 
 ### magic_item_ammunition_1_2_or_3
 
@@ -1942,7 +1942,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### magic_item_apparatus_of_the_crab
 
 - **magic_item_record** (new_subgraph) — UnitRecord does not include a MagicItemRecord kind. The v4 taxonomy has magic_item_root but no corresponding record type, mechanics family, or tracer branch exists in the surface. Every magic item hits this blocker before any mechanic-level
-- **vehicle_object_family** (new_subgraph) — The apparatus is a rideable object with its own stat block (AC, HP, Speed, damage immunities). No mechanics family models an object with independent stats that occupants pilot. This is structurally distinct from all four spell families and
+- **vehicle_object_family** (new_subgraph) — The apparatus is a rideable object with its own stat block (AC, HP, Speed, damage immunities). No mechanics family models an object with independent stats that occupants pilot. This is structurally distinct from all four spell families and 
 - **lever_multimode_activation** (new_subgraph) — Ten levers each have an Up and Down mode producing independent effects (movement, attack, light, window, depth control, hatch). No mechanics family models a multi-mode stateful control panel where a single Utilize action dispatches to one o
 - **fixed_numeric_attack_bonus** (new_variant) — The claw attacks use +8 to hit — a fixed numeric bonus unrelated to caster spell save DC or weapon-attack-rooted DC formula. DcSource has caster_spell_save_dc and weapon_attack_dc (base + ability mod + PB); neither covers a hardcoded intege
 - **condition_grappled** (new_variant) — Lever 5 down applies the Grappled condition with escape DC 15. The Condition type only contains 'prone'. Grappled is a distinct SRD condition requiring its own variant.
@@ -1964,7 +1964,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemRecord + magic_item_root family** (new_subgraph) — UnitRecord has no 'magic_item' kind. traceUnit() has no case for it. The v4 taxonomy lists magic_item_root as a source atom, but types.ts never defines MagicItemRecord or any magic-item mechanics family.
 - **ChargeResource (consumable single-use item)** (new_variant) — The bead is destroyed on activation — a single-charge consumable. The v4 atom 'charge' exists but types.ts has no ChargeResource or item-level use-count that maps to an item being consumed.
-- **barrier (or block_travel + block_targeting area)** (new_atom) — The item creates an impenetrable transparent force sphere that blocks attacks, effects, and egress. v4 lists block_travel and block_targeting as effect atoms, but neither is in the current Effect union in types.ts, and a persistent barrier
+- **barrier (or block_travel + block_targeting area)** (new_atom) — The item creates an impenetrable transparent force sphere that blocks attacks, effects, and egress. v4 lists block_travel and block_targeting as effect atoms, but neither is in the current Effect union in types.ts, and a persistent barrier 
 - **apply_condition / trap (containment)** (new_atom) — Creatures that fail the save and are completely within the area are trapped inside. This is not a named SRD condition; it is a movement-blocking containment state tied to the barrier object. Not representable as apply_condition (no matching
 - **force_move (push away)** (new_atom) — Creatures that succeed the save or are partially inside are pushed away from the sphere's center. v4 lists force_move, but it is absent from the current Effect union in types.ts.
 - **mobile area attachment (sphere moveable by occupants)** (new_variant) — An enclosed creature can use a Utilize action to push the sphere up to half its Speed. The current Attachment area shape is a static origin; there is no grammar for an area that moves as a result of occupant actions.
@@ -1974,8 +1974,8 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **MagicItemRecord + magic_item family** (new_subgraph) — UnitRecord has no magic_item variant. There is no MagicItemRecord type, no magic item payload family, and no magic_item_root source atom wired into the surface. The entire encoding path is missing.
 - **modify_speed effect on surface** (new_variant) — The boots double the wearer's Speed while active. The v4 atom modify_speed exists in the taxonomy but is not present in any surface type. A magic item effect surface type would need to include it, with a multiplier (×2) or additive-flat var
 - **modify_roll_advantage scoped to enemy Opportunity Attacks against self** (new_variant) — The boots impose Disadvantage on attack rolls made by other creatures against the wearer, but only for Opportunity Attacks specifically. The existing RollKind union (attack_roll | saving_throw) has no sub-kind for Opportunity Attacks. The e
-- **duration_budget resource (timed use pool)** (new_variant) — The item's active power depletes from a shared 10-minute total across activations, not a discrete use count. This is a continuous-time budget that refills on Long Rest. UseCountResource (kind: use_count) models discrete counts; there is no
-- **toggle_deactivation activation cost** (new_variant) — The effect is ended by a second heel-click (same gesture as activation). This is a deliberate toggle pattern — the active state is self-terminating via re-invocation. No existing ClassFeatureActivationCost or effect family models voluntary
+- **duration_budget resource (timed use pool)** (new_variant) — The item's active power depletes from a shared 10-minute total across activations, not a discrete use count. This is a continuous-time budget that refills on Long Rest. UseCountResource (kind: use_count) models discrete counts; there is no 
+- **toggle_deactivation activation cost** (new_variant) — The effect is ended by a second heel-click (same gesture as activation). This is a deliberate toggle pattern — the active state is self-terminating via re-invocation. No existing ClassFeatureActivationCost or effect family models voluntary 
 - **attunement_slot resource on surface** (new_variant) — The item requires attunement. The v4 atom attunement_slot exists in the taxonomy (§7 Resource Atoms) but is not present in any surface type. A MagicItemRecord encoding path would need to surface attune + attunement_slot.
 
 ### magic_item_bowl_of_commanding_water_elementals
@@ -2019,7 +2019,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### magic_item_censer_of_controlling_air_elementals
 
 - **MagicItemRecord + magic_item UnitRecord kind** (new_subgraph) — UnitRecord is currently SpellRecord | ClassFeatureRecord | MasteryRecord. There is no magic_item variant. The v4 taxonomy lists magic_item_root as a source atom but the surface type system has no corresponding record kind or mechanics famil
-- **summoning mechanics family (create_companion)** (new_subgraph) — The core effect is summoning a specific named creature type (Air Elemental) that obeys commands, acts on its own initiative, and persists until dismissed/dead/time-expired. The v4 taxonomy has a create_companion effect atom, but no surface
+- **summoning mechanics family (create_companion)** (new_subgraph) — The core effect is summoning a specific named creature type (Air Elemental) that obeys commands, acts on its own initiative, and persists until dismissed/dead/time-expired. The v4 taxonomy has a create_companion effect atom, but no surface 
 - **dawn reset cadence** (new_variant) — The censer recharges at next dawn — a wall-clock/day-cycle reset that is not any of the existing RestResetCadence kinds (short_or_long_rest | long_rest | short_rest | partial_short_full_long). Many magic items use this pattern; it needs its
 - **magic_action activation cost** (new_variant) — The item is activated by taking the Magic action (a standard action kind in SRD 5.2.1). ClassFeatureActivationCost only allows free | bonus_action. A magic_action variant is needed for items and features that spend the Magic action.
 - **bonus_action dismiss lifecycle** (new_variant) — The elemental can be dismissed as a Bonus Action by the wielder, as a named dismissal cost mid-duration. The existing expire/dismiss lifecycle atoms don't carry an action-cost on the dismiss itself — this is a wielder-chosen early terminati
@@ -2035,7 +2035,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_cloak_of_displacement
 
-- **MagicItemRecord + passive_property family** (new_subgraph) — No magic_item kind exists in UnitRecord. The cloak is a worn item with an always-active passive property (not a spell, class feature, or mastery). A new top-level record kind and a mechanics family for passive worn/attuned effects are both
+- **MagicItemRecord + passive_property family** (new_subgraph) — No magic_item kind exists in UnitRecord. The cloak is a worn item with an always-active passive property (not a spell, class feature, or mastery). A new top-level record kind and a mechanics family for passive worn/attuned effects are both 
 - **on_damage_taken_window** (new_atom) — The suppression of the displacement property is triggered by the wearer taking damage. The v4 window inventory has on_hit_window (attacker side) but no window that opens when the bearer of an effect receives damage. The cloak's temporary-di
 - **condition_gate (Speed = 0 suppression)** (new_variant) — The cloak is suppressed whenever the wearer's Speed is 0. This is a continuous runtime-state predicate, not a windowed event. The current atom vocabulary has no gate or suppress condition tied to a numeric movement-speed check.
 - **modify_roll_advantage on incoming attacks (attachment direction: self as target)** (new_variant) — The existing modify_roll_advantage atom applies to rolls made by the bearer. The cloak's effect must apply disadvantage to rolls made by OTHER creatures targeting the bearer. The current surface schema's attachment grammar has no way to exp
@@ -2051,7 +2051,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_cloak_of_the_manta_ray
 
-- **MagicItemRecord + passive_while_attuned family** (new_subgraph) — No magic_item kind exists in UnitRecord. UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. The cloak requires a top-level MagicItemRecord type and a mechanics family for always-on passive effects granted while the item is worn
+- **MagicItemRecord + passive_while_attuned family** (new_subgraph) — No magic_item kind exists in UnitRecord. UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. The cloak requires a top-level MagicItemRecord type and a mechanics family for always-on passive effects granted while the item is worn 
 - **grant_underwater_breathing** (new_atom) — Underwater breathing is not a sense (grant_sense covers darkvision, blindsight, etc.) and is not covered by any existing v4 effect atom. It is a distinct physiological capability — the ability to breathe water as air.
 - **modify_speed (grant swim speed variant)** (new_variant) — modify_speed exists in the v4 taxonomy atom inventory but is not surfaced in types.ts Effect types. Even if surfaced, it would need a variant that grants a new speed type (swim) at a fixed value, not just modifies an existing speed.
 
@@ -2077,7 +2077,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **MagicItemRecord** (new_subgraph) — The surface type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord has no magic_item variant. The v4 taxonomy lists magic_item_root as a source atom and the survey corpus includes many magic items (tier 2), but the TypeScript su
 - **charge_recharge_daily_dice** (new_variant) — The item has 3 charges and regains 1d3 expended charges daily at dawn. The existing UseCountResource + RestResetCadence only models rest-based fixed refills. This requires a new recharge cadence variant: daily-at-dawn with a dice-valued ref
 - **cast_named_spell_via_charge** (new_variant) — Each of the two item modes (Gate, Plane Shift) works by expending a charge to cast a named spell. The surface has no shape for 'consume charge → cast spell by reference'. The v4 atom inventory has stored_spell (attachment) and grant_spell_a
-- **plane_keyed_side_selection** (new_variant) — The six faces are each keyed to a different plane determined by the GM. The portal or shift destination is the plane keyed to the pressed side. This is a DM-agenda assignment at item creation time, but the mechanical consequence (transport
+- **plane_keyed_side_selection** (new_variant) — The six faces are each keyed to a different plane determined by the GM. The portal or shift destination is the plane keyed to the pressed side. This is a DM-agenda assignment at item creation time, but the mechanical consequence (transport 
 
 ### magic_item_dagger_of_venom
 
@@ -2135,7 +2135,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_elven_chain
 
-- **MagicItemRecord + magic_item UnitRecord kind** (new_subgraph) — No magic_item kind exists in UnitRecord. types.ts only defines SpellRecord, ClassFeatureRecord, and MasteryRecord. The v4 taxonomy lists magic_item_root as a source atom and attune as a procedure atom, but the schema layer never wired them
+- **MagicItemRecord + magic_item UnitRecord kind** (new_subgraph) — No magic_item kind exists in UnitRecord. types.ts only defines SpellRecord, ClassFeatureRecord, and MasteryRecord. The v4 taxonomy lists magic_item_root as a source atom and attune as a procedure atom, but the schema layer never wired them 
 - **passive_property mechanics family** (new_subgraph) — Elven Chain's +1 AC and proficiency grant are always-on while worn — no activation cost, no use-count, no spell slot. The existing families (activation for class features, on_hit_trigger for masteries, spell families for spells) all require
 - **grant_proficiency as a surface effect type** (new_variant) — grant_proficiency exists in v4 taxonomy (§9 Effect Atoms) but is not exposed in types.ts as any Effect or ClassFeatureEffect variant. Elven Chain's training override — 'considered trained with this armor even if you lack training' — require
 - **modify_ac as a standalone passive effect (not just ReactionEffect)** (new_variant) — modify_ac appears in types.ts only as a ReactionEffect (Shield-style: fires once, during a triggered reaction window). Elven Chain's +1 AC is a persistent addend while worn — not reaction-gated. A passive modify_ac variant (or a worn_proper
@@ -2144,7 +2144,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemRecord + magic_item mechanics family** (new_subgraph) — UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. There is no MagicItemRecord type. The v4 taxonomy defines magic_item_root as a source atom, but types.ts has never been widened to include the corresponding record or any mechan
 - **ClassFeatureActivationCost.magic_action (or a parallel activation-cost type for items)** (new_variant) — The bottle costs a Magic action to activate. Existing ClassFeatureActivationCost only supports 'free' and 'bonus_action'. Magic action is a distinct SRD action kind that consumes the Magic action quota.
-- **toggle_effect family (stateful open/close with two distinct persistent states)** (new_subgraph) — The bottle has a stateful toggle: open produces an active, growing emanation; close transitions the cloud to a fixed, slowly dispersing state. No existing mechanics family models a persistent object toggle where opening and closing produce
+- **toggle_effect family (stateful open/close with two distinct persistent states)** (new_subgraph) — The bottle has a stateful toggle: open produces an active, growing emanation; close transitions the cloud to a fixed, slowly dispersing state. No existing mechanics family models a persistent object toggle where opening and closing produce 
 - **Attachment kind: emanation_from_object (item-anchored sphere that follows the item)** (new_variant) — The smoke fills a 60-ft Emanation originating from the bottle itself — an item attachment, not self (creature) or a placed area. Current Attachment kinds are self | target | area | mark. None models an area that originates from and moves wi
 - **LevelAxis or scaling kind for time-based area growth** (new_variant) — The Emanation grows 10 ft per minute while open (60 ft → 120 ft cap). Existing LevelAxis values are character | class | slot | subclass | proficiency_bonus — none cover time-based (per-minute) growth. A new axis or a separate time-growth sh
 - **apply_obscurement (or grant_heavy_obscurement area effect)** (new_atom) — The smoke makes the affected area Heavily Obscured — a vision-blocking environmental effect. The v4 taxonomy has block_targeting but no surface effect type represents granting obscurement to an area. This is mechanically distinct from block
@@ -2162,7 +2162,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **MagicItemRecord + magic_item family** (new_subgraph) — UnitRecord has no magic_item kind. The taxonomy lists magic_item_root as a source atom but types.ts has no MagicItemRecord, no MagicItemMechanics, and no mechanics family to house it. Every existing family (activation, ongoing_effect, on_hi
 - **day_cooldown variant of RestResetCadence (or new ItemRechargeKind)** (new_variant) — Figurine recharge is measured in days (2, 5, 7, 15, 30 days) — not short/long rest. RestResetCadence has no variant for calendar-time recharge. A new closed type (e.g. DayCooldown { days: number }) is needed.
 - **charge_pool with day-recharge (Goat of Traveling pattern)** (new_variant) — Goat of Traveling uses a 24-charge pool where each hour of use costs 1 charge and the pool recharges after 7 days when empty. This is neither use_count (fixed cap + rest reset) nor spell_slot. Needs a charge resource with duration-based con
-- **multi-variant item (one item slug, several named sub-configurations)** (new_variant) — The Figurine of Wondrous Power is a single item category with nine distinct named variants (Bronze Griffon, Ebony Fly, Golden Lions, Ivory Goats × 3, Marble Elephant, Obsidian Steed, Onyx Dog, Serpentine Owl, Silver Raven). No surface type
+- **multi-variant item (one item slug, several named sub-configurations)** (new_variant) — The Figurine of Wondrous Power is a single item category with nine distinct named variants (Bronze Griffon, Ebony Fly, Golden Lions, Ivory Goats × 3, Marble Elephant, Obsidian Steed, Onyx Dog, Serpentine Owl, Silver Raven). No surface type 
 - **create_companion mechanics subgraph** (new_subgraph) — The core effect is summoning a named creature that acts as a friendly companion with initiative placement, obeys commands, and reverts on 0 HP or dismissal. The v4 atom create_companion exists but there is no surface mechanics shape that ex
 - **probabilistic_override (Obsidian Steed 10% disobedience)** (new_atom) — The Obsidian Steed has a 10% per-use chance to ignore all commands including revert. This is not representable by any existing resolution atom (attack_roll, save_gate, ability_check). It requires a probability-weighted override that bypasse
 
@@ -2177,15 +2177,15 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemRecord + magic_item mechanics family** (new_subgraph) — No `magic_item` kind exists in the UnitRecord union. types.ts defines only SpellRecord | ClassFeatureRecord | MasteryRecord. The v4 taxonomy lists `magic_item_root` as a source atom but it is not wired into the surface schema. A MagicItemRe
 - **passive_while_holding mechanics family (or passive_aura)** (new_subgraph) — Frost Brand grants Fire resistance unconditionally while the weapon is held/attuned. No existing mechanics family covers a passive always-on effect tied to item possession. The ClassFeatureActivationMechanics requires an activationCost; OnH
-- **RestResetCadence: time_based** (new_variant) — The flame-extinguishing property recharges after 1 hour, not after a short or long rest. RestResetCadence is a closed union covering short_or_long_rest | long_rest | short_rest | partial_short_full_long. A time_based variant (e.g., { kind:
+- **RestResetCadence: time_based** (new_variant) — The flame-extinguishing property recharges after 1 hour, not after a short or long rest. RestResetCadence is a closed union covering short_or_long_rest | long_rest | short_rest | partial_short_full_long. A time_based variant (e.g., { kind: 
 - **extinguish_flames (or modify_environment)** (new_atom) — The draw-action property extinguishes all nonmagical flames in a 30-foot radius. No v4 effect atom covers environmental flame manipulation. The closest existing atoms (damage, apply_condition, force_move) do not represent this.
 
 ### magic_item_gem_of_seeing
 
-- **MagicItemRecord + magic_item mechanics family** (new_subgraph) — UnitRecord in types.ts has no 'magic_item' kind. The tracer's exhaustive switch on unit.kind covers only spell | class_feature | mastery. A MagicItemRecord type and at least one magic-item mechanics family (charge-based activation) must be
+- **MagicItemRecord + magic_item mechanics family** (new_subgraph) — UnitRecord in types.ts has no 'magic_item' kind. The tracer's exhaustive switch on unit.kind covers only spell | class_feature | mastery. A MagicItemRecord type and at least one magic-item mechanics family (charge-based activation) must be 
 - **daily_at_dawn recharge cadence (dice-based)** (new_variant) — The gem regains 1d3 charges daily at dawn. RestResetCadence only models short-rest and long-rest refills; no variant covers time-of-day recharge with a random dice amount.
 - **magic_action activation cost** (new_variant) — Activation costs a Magic action (one of the 12 StandardActionKind values). ClassFeatureActivationCost only has 'free' and 'bonus_action'; a 'magic_action' variant is needed for magic items that consume the Magic action.
-- **grant_sense effect (Truesight)** (new_variant) — The primary effect is Truesight out to 120 ft for 10 minutes. The v4 atom 'grant_sense' exists in TAXONOMY_atoms_graph.md but no corresponding TypeScript surface type exists in any Effect union (ClassFeatureEffect, Effect, ReactionEffect).
+- **grant_sense effect (Truesight)** (new_variant) — The primary effect is Truesight out to 120 ft for 10 minutes. The v4 atom 'grant_sense' exists in TAXONOMY_atoms_graph.md but no corresponding TypeScript surface type exists in any Effect union (ClassFeatureEffect, Effect, ReactionEffect). 
 
 ### magic_item_giant_slayer
 
@@ -2196,9 +2196,9 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_glamoured_studded_leather
 
-- **MagicItemRecord + magic_item kind** (new_subgraph) — UnitRecord has no magic_item kind. SpellRecord, ClassFeatureRecord, and MasteryRecord all require domain-specific header fields (spell level/school, className/acquiredAtLevel, on_hit_trigger family) that are inapplicable to a magic item. A
+- **MagicItemRecord + magic_item kind** (new_subgraph) — UnitRecord has no magic_item kind. SpellRecord, ClassFeatureRecord, and MasteryRecord all require domain-specific header fields (spell level/school, className/acquiredAtLevel, on_hit_trigger family) that are inapplicable to a magic item. A 
 - **passive_always_on family for MagicItemMechanics** (new_subgraph) — The +1 AC bonus is always active while wearing — no activation cost, no resource consumed, no trigger. All current families (activation, ongoing_effect, triggered_reaction, anchored_trigger, on_hit_trigger) require an activation event or sp
-- **activated_property family for MagicItemMechanics** (new_subgraph) — The glamour property is a Bonus Action activation that applies alter_item_kind effect. It needs: bonus_action_quota consumed, alter_item_kind effect (v4 atom exists), and a novel expiry model ('until you use this property again or doff the
+- **activated_property family for MagicItemMechanics** (new_subgraph) — The glamour property is a Bonus Action activation that applies alter_item_kind effect. It needs: bonus_action_quota consumed, alter_item_kind effect (v4 atom exists), and a novel expiry model ('until you use this property again or doff the 
 - **item_doffed expiry variant for lifecycle atoms** (new_variant) — The glamour lasts 'until you use this property again or doff the armor.' Neither turn_start_window, turn_end_window, rest_window, nor expire covers an equip/doff event. An item_doffed lifecycle event (or equip_window atom) is needed to repr
 
 ### magic_item_gloves_of_missile_snaring
@@ -2217,7 +2217,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemRecord** (new_subgraph) — UnitRecord has no 'magic_item' kind. The surface type union only contains SpellRecord | ClassFeatureRecord | MasteryRecord. A MagicItemRecord variant (with id, name, provenance, description, and a MagicItemMechanics discriminant) is require
 - **MagicItemMechanics / spell_grant family** (new_subgraph) — The hat's mechanic is: while attuned and wearing the item, you may cast a named spell (Disguise Self) at will with no spell slot consumed. No existing family (ongoing_effect, activation, triggered_reaction, anchored_trigger, class-feature a
-- **Duration: while_worn (item-conditioned expiry)** (new_variant) — The spell ends when the hat is removed. Disguise Self's normal duration is 1 hour (timed), but here the expiry is additionally conditioned on the item being worn. None of the existing Duration variants (instantaneous, concentration, timed)
+- **Duration: while_worn (item-conditioned expiry)** (new_variant) — The spell ends when the hat is removed. Disguise Self's normal duration is 1 hour (timed), but here the expiry is additionally conditioned on the item being worn. None of the existing Duration variants (instantaneous, concentration, timed) 
 - **AttunementRequirement on MagicItemRecord** (new_variant) — The item requires attunement. The attune procedure atom exists in v4, but the surface type has no field or subtype to record whether a magic item requires attunement and which attunement_slot it binds. MagicItemRecord needs an attunement fi
 
 ### magic_item_hat_of_many_spells
@@ -2275,7 +2275,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_iron_bands
 
-- **MagicItemRecord + magic_item payload family** (new_subgraph) — UnitRecord has no magic_item kind. The TAXONOMY has magic_item_root as a v4 source atom, but types.ts defines no corresponding record shape or mechanics family. Any honest encoding of Iron Bands (or any magic item) requires this structural
+- **MagicItemRecord + magic_item payload family** (new_subgraph) — UnitRecord has no magic_item kind. The TAXONOMY has magic_item_root as a v4 source atom, but types.ts defines no corresponding record shape or mechanics family. Any honest encoding of Iron Bands (or any magic item) requires this structural 
 - **Condition: 'restrained'** (new_variant) — Iron Bands applies the Restrained condition on a hit. The Condition type currently only includes 'prone', which was added for Topple mastery. Restrained is a distinct SRD condition with different mechanical consequences.
 - **AttackKind: 'ranged_weapon_attack' (non-spell)** (new_variant) — Iron Bands uses a ranged attack roll with Dex modifier + Proficiency Bonus — the same formula as a ranged weapon attack, not a spell attack roll. AttackKind only covers ranged_spell_attack and melee_spell_attack.
 - **RestResetCadence: 'dawn'** (new_variant) — Iron Bands recharges at the next dawn, which is a distinct cadence not expressible by short_rest, long_rest, short_or_long_rest, or partial_short_full_long.
@@ -2290,13 +2290,13 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **item_state (empty / occupied) as activation precondition** (new_variant) — The trapping action can only be taken when 'the flask is empty'. This is a mutable item-level state (empty vs. contains a creature) that gates activation — no current surface type models persistent item state as an activation precondition.
 - **per-target history modifier on save advantage** (new_variant) — 'If the target has been trapped by the flask before, it has Advantage on the save.' This is conditional advantage based on a per-target usage history — the save modifier depends on whether this specific target has been trapped by this speci
 - **extradimensional_imprisonment (duration: indefinite, until released)** (new_atom) — The trapping effect is not a timed exile (transport_exile maps to banishment-style temporary removal). The creature 'remains in the flask until released' with no time limit and no repeated save opportunity — this is a permanent-until-explic
-- **command_obedience (timed, post-release)** (new_atom) — After releasing the creature, 'the creature then obeys your commands for 1 hour'. This is a timed obedience/domination effect with edge-case behavior (defends itself if no commands or harmful commands issued). The v4 command_companion atom
+- **command_obedience (timed, post-release)** (new_atom) — After releasing the creature, 'the creature then obeys your commands for 1 hour'. This is a timed obedience/domination effect with edge-case behavior (defends itself if no commands or harmful commands issued). The v4 command_companion atom 
 
 ### magic_item_javelin_of_lightning
 
-- **MagicItemRecord + magic_item family** (new_subgraph) — UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — there is no MagicItemRecord. The v4 taxonomy includes magic_item_root as a source atom with validation passes logged, but the surface types.ts has no corresponding record kind
+- **MagicItemRecord + magic_item family** (new_subgraph) — UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — there is no MagicItemRecord. The v4 taxonomy includes magic_item_root as a source atom with validation passes logged, but the surface types.ts has no corresponding record kind 
 - **alter_damage_type** (new_atom) — The always-available passive property lets the wielder substitute Lightning for Piercing damage on any hit. No existing effect atom covers damage-type substitution. This is mechanically distinct from grant_resistance (reduces incoming damag
-- **Attachment area shape: line** (new_variant) — The Lightning Bolt property creates a 5-foot-wide Line between the caster and the target. The current Attachment area shape union only contains sphere. A line shape (defined by two endpoints — self and target, with a width) is structurally
+- **Attachment area shape: line** (new_variant) — The Lightning Bolt property creates a 5-foot-wide Line between the caster and the target. The current Attachment area shape union only contains sphere. A line shape (defined by two endpoints — self and target, with a width) is structurally 
 - **RestResetCadence: dawn** (new_variant) — The Lightning Bolt property resets at the next dawn, which is neither a short rest, long rest, nor the partial_short_full_long pattern. Dawn-cadence resets appear across many magic items and require a distinct cadence variant.
 - **forgo_attack_roll alternative activation** (new_subgraph) — The Lightning Bolt property explicitly lets the player skip making a ranged attack roll and instead fire a save-gated AoE. The surface has no mechanism for 'in place of the normal attack roll resolution, substitute an AoE save_gate.' This i
 
@@ -2305,14 +2305,14 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **magic_item_record** (new_subgraph) — UnitRecord has no magic_item kind. MagicItemRecord is absent from the type system entirely — SpellRecord, ClassFeatureRecord, and MasteryRecord are the only options, none of which accept item-specific metadata (rarity, attunement, item type
 - **passive_aura_family** (new_subgraph) — The lantern's core mechanic is a persistent spatial effect (light emission + invisibility reveal) that is always-on while the item is lit. No existing mechanics family covers passive item properties — all families require an activation even
 - **reveal_invisible** (new_atom) — Making invisible creatures and objects perceptible within the lantern's Bright Light is mechanically distinct from grant_sense (which grants a sense capability to a creature) and from any existing effect atom. The effect suppresses the conc
-- **utilize_action_cost** (new_variant) — The hood-lowering uses a Utilize action. ClassFeatureActivationCost only has 'free' and 'bonus_action'; StandardActionKind includes 'utilize' but no activation cost variant maps to it. A magic item mechanics layer would need utilize_action
+- **utilize_action_cost** (new_variant) — The hood-lowering uses a Utilize action. ClassFeatureActivationCost only has 'free' and 'bonus_action'; StandardActionKind includes 'utilize' but no activation cost variant maps to it. A magic item mechanics layer would need utilize_action 
 
 ### magic_item_luck_blade
 
 - **MagicItemRecord + MagicItemMechanics** (new_subgraph) — UnitRecord only covers spell | class_feature | mastery. There is no magic_item kind at all. The entire record shape, mechanics header, and family taxonomy are missing.
 - **dawn reset cadence in RestResetCadence** (new_variant) — Both Luck and Wish properties reset 'until the next dawn'. RestResetCadence has short_or_long_rest, long_rest, short_rest, partial_short_full_long — none covers a dawn-based reset, which is the standard magic item recharge cadence.
 - **passive_item_bonus family (always-on numeric modifier while wielded/on person)** (new_variant) — The +1 attack/damage (while wielded) and +1 saving throws (while on person) are persistent, passive bonuses — not activations, not concentration. No existing ClassFeatureMechanics or MasteryMechanics family captures an always-on numeric mod
-- **charge-based spell casting (item charges, expend 1 to cast a named spell)** (new_variant) — Wish property requires a charge resource with a randomised initial count (1d3) that is not refilled — charges are destroyed, and when 0 remain the property itself is destroyed. The charge atom exists in v4 but the surface has no family for
+- **charge-based spell casting (item charges, expend 1 to cast a named spell)** (new_variant) — Wish property requires a charge resource with a randomised initial count (1d3) that is not refilled — charges are destroyed, and when 0 remain the property itself is destroyed. The charge atom exists in v4 but the surface has no family for 
 - **reroll_failed_d20_test (triggered by failed D20 Test, must-use-second-roll constraint)** (new_variant) — Luck property is 'reroll one failed D20 Test, must use the second roll.' The modify_roll_reroll atom exists in v4 but the surface type has no shape for 'triggered on a failed roll' (as opposed to a general reroll) and no constraint encoding
 
 ### magic_item_mace_of_smiting
@@ -2353,7 +2353,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemRecord + MagicItemMechanics family** (new_subgraph) — No MagicItemRecord exists in UnitRecord. The v4 taxonomy lists magic_item_root as a source atom but types.ts has no corresponding record kind or mechanics family. All magic item encoding is blocked at the top-level kind.
 - **charge resource with random starting count** (new_variant) — The necklace starts with 1d6+3 beads — a random initial charge count, not representable by UseCountCap (fixed | threshold_tiers). Requires a new cap variant or a dedicated charge resource type with a dice-roll initializer.
-- **multi-charge consumption with linear damage scaling** (new_subgraph) — The item allows simultaneous multi-bead use: each additional bead beyond the first adds 1d6 fire damage (cap 12d6). This is a charge-count-to-damage-scale relation not expressible with any existing operation or effect type — it is not slot
+- **multi-charge consumption with linear damage scaling** (new_subgraph) — The item allows simultaneous multi-bead use: each additional bead beyond the first adds 1d6 fire damage (cap 12d6). This is a charge-count-to-damage-scale relation not expressible with any existing operation or effect type — it is not slot 
 
 ### magic_item_pearl_of_power
 
@@ -2408,7 +2408,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_quarterstaff_of_the_acrobat
 
-- **item_form_state_machine** (new_subgraph) — The item exists in three discrete forms (quarterstaff, 6-inch rod, 10-foot pole). Properties 'Acrobatic Assist', 'Attack Deflection', and 'Ranged Weapon' are form-conditional. No existing mechanics family can express form-conditional grant
+- **item_form_state_machine** (new_subgraph) — The item exists in three discrete forms (quarterstaff, 6-inch rod, 10-foot pole). Properties 'Acrobatic Assist', 'Attack Deflection', and 'Ranged Weapon' are form-conditional. No existing mechanics family can express form-conditional grant 
 - **RollKind.damage_roll** (new_variant) — The +2 weapon bonus applies to both attack rolls and damage rolls. RollKind covers attack_roll, saving_throw, ability_check, initiative, death_saving_throw — but not damage_roll. The damage bonus cannot be encoded without this variant.
 - **grant_thrown_property** (new_atom) — The quarterstaff form gains the Thrown weapon property with a normal range of 30 feet and a long range of 120 feet. No existing atom grants a weapon property. This is mechanically distinct from grant_speed, modify_speed, or force_move.
 - **return_to_hand** (new_atom) — After a ranged attack with the weapon, it flies back to the thrower's hand immediately. No existing atom models weapon auto-return. This is a post-attack lifecycle effect with no current analog.
@@ -2418,8 +2418,8 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### magic_item_ring_of_djinni_summoning
 
 - **spawned_creature mechanics family for magic items** (new_subgraph) — MagicItemMechanics is currently PassiveMechanics | ActivatedAbilityMechanics. The Ring of Djinni Summoning's core mechanic is summoning a named creature with a stat block, which requires the spawned_creature family (currently only available
-- **RestResetCadence.timed_after_use** (new_variant) — The 24-hour cooldown is 'after the djinni departs, it can't be summoned again for 24 hours'. This is not a rest-based reset nor a dawn reset — it is a fixed-duration cooldown measured from the activation event. RestResetCadence has no such
-- **ItemDestructionPolicy.on_companion_death** (new_variant) — The ring becomes nonmagical if the djinni dies — a destruction condition triggered by a summoned creature's death, not by charge exhaustion (last_charge_roll) or pool depletion (permanent_on_empty). A new destruction policy variant tied to
+- **RestResetCadence.timed_after_use** (new_variant) — The 24-hour cooldown is 'after the djinni departs, it can't be summoned again for 24 hours'. This is not a rest-based reset nor a dawn reset — it is a fixed-duration cooldown measured from the activation event. RestResetCadence has no such 
+- **ItemDestructionPolicy.on_companion_death** (new_variant) — The ring becomes nonmagical if the djinni dies — a destruction condition triggered by a summoned creature's death, not by charge exhaustion (last_charge_roll) or pool depletion (permanent_on_empty). A new destruction policy variant tied to 
 
 ### magic_item_ring_of_elemental_command
 
@@ -2441,7 +2441,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **multi_property_activated_mechanics** (new_subgraph) — MagicItemMechanics is PassiveMechanics | ActivatedAbilityMechanics — a single mechanics slot. The ring has four independent properties (at-will spells, Faerie Fire, Lightning Spheres, Shooting Stars) all drawing from a shared charge pool. N
 - **spawned_object_companion** (new_subgraph) — Lightning Spheres creates up to 4 persistent objects (not creatures) with: concentration duration, Dim Light shedding, Bonus Action movement per turn (30 ft each, max 120 ft from caster), and proximity auto-discharge (within 5 ft triggers a
-- **DiceAmount.lookup_table** (new_variant) — Lightning Spheres damage depends on how many spheres the player chose to create: 1→4d12, 2→5d4, 3→2d6, 4→2d4. This is a player-choice lookup table, not threshold_tiers by any LevelAxis (character/class/slot/subclass/proficiency_bonus). The
+- **DiceAmount.lookup_table** (new_variant) — Lightning Spheres damage depends on how many spheres the player chose to create: 1→4d12, 2→5d4, 3→2d6, 4→2d4. This is a player-choice lookup table, not threshold_tiers by any LevelAxis (character/class/slot/subclass/proficiency_bonus). The 
 - **repeat_phase_per_charge** (new_subgraph) — Shooting Stars fires one save_gate area-of-effect per charge spent (1–3 charges). Each mote targets a separately chosen point within 60 ft; the N motes are simultaneous but independent (different points). The phases array is fixed-length (s
 
 ### magic_item_ring_of_spell_storing
@@ -2457,7 +2457,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **dual_mode_activation** (new_subgraph) — The ring has two mutually exclusive activation modes chosen at use time (attack OR object-break). The current activation family models phases as a sequential list joined by branches_on_completion. No construct exists for 'choose one of N al
 - **DiceAmount.per_charge_spent** (new_variant) — Damage is 2d10 Force per charge spent (1→2d10, 2→4d10, 3→6d10). resource_spent captures charge-variable amounts but carries no dice-per-charge formula. A new variant is needed: { kind: 'per_charge_spent', perCharge: DiceExpr }.
 - **force_move per-charge distance** (new_variant) — Push distance is 5 ft per charge spent (1→5 ft, 2→10 ft, 3→15 ft). The force_move atom has a fixed distanceFeet field with no scaling hook. A per-charge variant or a distanceFeetPerCharge field is needed.
-- **ActivationPhase.ability_check_gate** (new_variant) — The object-breaking mode triggers a Strength check (not an attack roll, not a saving throw). The v4 taxonomy includes ability_check as a resolution atom, but the surface ActivationPhase union only covers attack_roll, save_gate, and direct.
+- **ActivationPhase.ability_check_gate** (new_variant) — The object-breaking mode triggers a Strength check (not an attack roll, not a saving throw). The v4 taxonomy includes ability_check as a resolution atom, but the surface ActivationPhase union only covers attack_roll, save_gate, and direct. 
 - **break_object** (new_atom) — The on-success outcome of the Strength check is breaking a nonmagical object. No v4 effect atom covers physical object destruction. The nearest atoms (damage, force_move, block_travel) target creatures or spaces. A break_object atom targeti
 
 ### magic_item_robe_of_stars
@@ -2475,7 +2475,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### magic_item_rod_of_absorption
 
 - **multi_mechanics_magic_item** (new_subgraph) — Rod of Absorption combines at least three independent mechanics: a reactive spell-absorption effect, a separate spell-slot-substitution casting mechanic, and attunement-visible stored-energy state. MagicItemMechanics = PassiveMechanics | Ac
-- **triggered_reaction_magic_item** (new_subgraph) — The rod's absorption mechanic is not a free-standing reaction activation; it is a trigger-bound response to a spell that targets only the wielder and creates no area. ActivatedAbilityMechanics can consume a reaction quota but cannot encode
+- **triggered_reaction_magic_item** (new_subgraph) — The rod's absorption mechanic is not a free-standing reaction activation; it is a trigger-bound response to a spell that targets only the wielder and creates no area. ActivatedAbilityMechanics can consume a reaction quota but cannot encode 
 - **ActivationResource: item_spell_energy_reservoir** (new_variant) — The rod tracks current stored spell-energy levels and a separate lifetime absorbed total capped at 50 over the rod's existence. Existing charge_pool models a spendable pool with a cap and reset cadence, but not externally gained energy plus
 - **spell_slot_cost_substitution** (new_subgraph) — The rod does not grant access to a named spell. It lets the wielder spend stored item energy in place of spell slots when casting any spell they have prepared or know, subject to slot-level constraints. Existing grant_spell_access cannot ex
 
@@ -2489,7 +2489,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **magic_item_mode_switch** (new_subgraph) — The item has six mutually exclusive persistent button states, each entered by a Bonus Action and lasting until another button is pressed or toggled off. The current MagicItemRecord can carry only one mechanics family and has no way to repre
 - **magic_item_composite_mechanics** (new_subgraph) — The rod combines always-on weapon bonuses, persistent alternate forms, on-hit optional riders with dawn resets, and a separate Magic action fear ability. The current magic-item surface forces one top-level mechanics family (`passive` or `ac
-- **MagicItemMechanics.on_hit_trigger** (new_variant) — Drain Life and Paralyze are optional riders that trigger when the wielder hits with a melee attack using the rod. `on_hit_trigger` exists only for mastery, not for magic items, so these cannot be represented without widening the magic-item
+- **MagicItemMechanics.on_hit_trigger** (new_variant) — Drain Life and Paralyze are optional riders that trigger when the wielder hits with a melee attack using the rod. `on_hit_trigger` exists only for mastery, not for magic items, so these cannot be represented without widening the magic-item 
 
 ### magic_item_rope_of_climbing
 
@@ -2539,9 +2539,9 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **multi_mechanics_magic_item** (new_subgraph) — Staff of Charming has three independent mechanics that do not fit a single existing MagicItemMechanics value: a charge-based activated spellcasting property, a reaction-based spell reflection property, and a separate once-per-dawn failed-sa
 - **MagicItemRecord attunement class restriction** (new_variant) — The record can express only requiresAttunement: boolean. It cannot encode that attunement is limited to specific classes, which is part of the item's deterministic eligibility rule.
 - **reaction trigger for successful spell save against self-only spell** (new_variant) — Reflect Enchantment fires only after a successful saving throw against an Enchantment spell that targets only you. Existing reaction triggers cover hit-by-attack, targeted-by-named-spell, or creature-casts-spell, but not success on a save a
-- **reflect_triggering_spell** (new_atom) — The effect is not just negation or Counterspell-style cancellation. It redirects the triggering spell onto its caster as if you had cast it. Existing atoms such as negate_triggering_spell and negate_named_effect do not express re-targeting
+- **reflect_triggering_spell** (new_atom) — The effect is not just negation or Counterspell-style cancellation. It redirects the triggering spell onto its caster as if you had cast it. Existing atoms such as negate_triggering_spell and negate_named_effect do not express re-targeting 
 - **reactionless trigger on failed spell save** (new_variant) — Resist Enchantment fires when you fail a saving throw against an Enchantment spell that targets only you, with no action or reaction cost. Existing ActivatedAbilityMechanics requires an activation cost and phases initiated by the user; it c
-- **replace_failed_save_with_success** (new_atom) — The item changes the outcome of a completed saving throw from failure to success. Current surface atoms can add bonuses or advantage before resolution, but there is no effect atom that substitutes the resolved save result after the roll is
+- **replace_failed_save_with_success** (new_atom) — The item changes the outcome of a completed saving throw from failure to success. Current surface atoms can add bonuses or advantage before resolution, but there is no effect atom that substitutes the resolved save result after the roll is 
 
 ### magic_item_staff_of_fire
 
@@ -2647,7 +2647,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **MagicItemMechanics.mixed_passive_and_activation** (new_variant) — The item has always-on attunement effects and separate activated properties with their own action economy and recharge. The current magic-item surface is a union of `passive | activation`, so one record cannot represent both honestly.
 - **EffectAtom.break_concentration** (new_variant) — The Earthquake property forces concentrating creatures to lose concentration on a failed Constitution save. The v4 taxonomy has a `break` lifecycle atom, but the authored surface and tracer expose no effect shape for concentration break.
-- **open_fissure** (new_atom) — The Earthquake property creates new terrain topology, causes creatures at chosen ground spots to fall or be displaced with the fissure edge, and collapses structures into the fissure. That is not representable with existing movement, area,
+- **open_fissure** (new_atom) — The Earthquake property creates new terrain topology, causes creatures at chosen ground spots to fall or be displaced with the fissure edge, and collapses structures into the fissure. That is not representable with existing movement, area, 
 
 ### magic_item_vicious_weapon
 
@@ -2664,7 +2664,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### magic_item_weapon_of_warning
 
-- **passive_aura_magic_item** (new_subgraph) — Weapon of Warning is a non-spell persistent aura centered on the attuned wielder that affects self and nearby allies. MagicItemMechanics only allows PassiveMechanics or ActivatedAbilityMechanics; PassiveMechanics has no attachment, radius,
+- **passive_aura_magic_item** (new_subgraph) — Weapon of Warning is a non-spell persistent aura centered on the attuned wielder that affects self and nearby allies. MagicItemMechanics only allows PassiveMechanics or ActivatedAbilityMechanics; PassiveMechanics has no attachment, radius, 
 - **Passive gate: weapon_within_reach** (new_variant) — The current passive-gating vocabulary only covers always / wearing_armor / wielding_weapon. Weapon of Warning turns on specifically while the item is within reach, which is not representable by those predicates.
 - **OngoingTrigger: on_combat_start** (new_variant) — The Alarm rider fires at a specific lifecycle boundary, combat start. No current ongoing trigger variant covers that event.
 - **wake_sleep** (new_atom) — The item wakes subjects who are sleeping naturally but explicitly does not wake magically sleeping subjects. The current condition vocabulary has no natural-vs-magical sleep distinction, and remove_condition cannot express this selective wa
@@ -2685,7 +2685,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### mirror_image
 
-- **passive_hit_intercept** (new_subgraph) — Mirror Image creates a persistent passive trigger that fires automatically when the caster is hit by an attack roll — no reaction cost, no player prompt, no Prepare/Prompt/Commit chain. This is structurally distinct from triggered_reaction
+- **passive_hit_intercept** (new_subgraph) — Mirror Image creates a persistent passive trigger that fires automatically when the caster is hit by an attack roll — no reaction cost, no player prompt, no Prepare/Prompt/Commit chain. This is structurally distinct from triggered_reaction 
 - **duplicate_pool resource** (new_variant) — The spell creates exactly 3 destroyable tokens (duplicates) that serve as an ablative HP-like pool for the spell's interception mechanism. This is not use_count (which tracks activations of a feature), not spell_slot (consumed at cast), and
 - **on_incoming_hit_window** (new_variant) — Mirror Image fires before the hit resolves — between the attacker rolling a hit and damage being applied. The existing on_hit_window fires after a hit is confirmed (attacker-side, grants a rider). Mirror Image needs an incoming-hit window o
 - **probabilistic_gate resolution** (new_variant) — The interception check is 'roll Nd6, succeed if any die >= 3' where N = remaining duplicate count. This is neither an attack_roll, save_gate, nor ability_check. It is a pool-size-dependent probabilistic check with a fixed threshold. The sur
@@ -2717,15 +2717,15 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### monk_disciplined_survivor_l14
 
-- **passive_class_feature** (new_subgraph) — The first bullet of Disciplined Survivor is a permanent passive grant (proficiency in all saving throws). It has no activation cost, no use count, and no reset cadence. The existing ClassFeatureMechanics only has `activation` family, which
-- **grant_proficiency (ClassFeatureEffect variant)** (new_variant) — The passive saving throw proficiency grant requires a `grant_proficiency` effect. ClassFeatureEffect is currently limited to `grant_extra_action | heal_hp`. The v4 taxonomy includes `grant_proficiency` as an effect atom (§9), but it is not
+- **passive_class_feature** (new_subgraph) — The first bullet of Disciplined Survivor is a permanent passive grant (proficiency in all saving throws). It has no activation cost, no use count, and no reset cadence. The existing ClassFeatureMechanics only has `activation` family, which 
+- **grant_proficiency (ClassFeatureEffect variant)** (new_variant) — The passive saving throw proficiency grant requires a `grant_proficiency` effect. ClassFeatureEffect is currently limited to `grant_extra_action | heal_hp`. The v4 taxonomy includes `grant_proficiency` as an effect atom (§9), but it is not 
 - **triggered_optional_class_feature** (new_subgraph) — The reroll mechanic is a trigger-gated optional ability: it fires on a specific event (failed saving throw = post_roll_window on failure), the player chooses whether to invoke it (optional), and it consumes a Focus Point. This is not a play
-- **focus_point (ClassFeatureActivationCost variant)** (new_variant) — The reroll costs 1 Focus Point — a monk-specific resource distinct from action economy (not `free`, not `bonus_action`). ClassFeatureActivationCost has no cost variant for expending a class-specific point resource. This is the same pattern
+- **focus_point (ClassFeatureActivationCost variant)** (new_variant) — The reroll costs 1 Focus Point — a monk-specific resource distinct from action economy (not `free`, not `bonus_action`). ClassFeatureActivationCost has no cost variant for expending a class-specific point resource. This is the same pattern 
 - **modify_roll_reroll (ClassFeatureEffect variant)** (new_variant) — The reroll effect is `modify_roll_reroll` from v4 taxonomy §9, but this atom is not represented in ClassFeatureEffect (only `grant_extra_action | heal_hp`). The effect forces a reroll of a specific roll already made, with the constraint `mu
 
 ### monk_epic_boon_l19
 
-- **permanent_grant** (new_subgraph) — The only existing ClassFeatureMechanics family is 'activation', whose header mandates activationCost, resource (use_count), and resetCadence. Epic Boon is a one-time permanent acquisition at level-up — not an activatable feature with a use
+- **permanent_grant** (new_subgraph) — The only existing ClassFeatureMechanics family is 'activation', whose header mandates activationCost, resource (use_count), and resetCadence. Epic Boon is a one-time permanent acquisition at level-up — not an activatable feature with a use 
 - **grant_feat** (new_atom) — The v4 effect atom inventory has grant_proficiency and grant_spell_access but no 'grant_feat'. A permanent-grant family would need a corresponding effect atom to record what is granted at level-up.
 
 ### monk_evasion_l7
@@ -2749,14 +2749,14 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### monk_martial_arts
 
 - **passive_class_feature family** (new_subgraph) — Martial Arts is permanently active under a condition (unarmed/monk-weapon, no armor/shield). It has no use-count resource and no reset cadence. The current ClassFeatureMechanics only has the 'activation' family, which requires both. A 'pass
-- **damage_substitute effect (new ClassFeatureEffect or OngoingOperation variant)** (new_variant) — The Martial Arts Die replaces — not adds to — the normal weapon/unarmed damage die with 1d6 (scaling to d8/d10/d12 by class level). This is a damage override. No existing DamageEffect, heal, or roll_modifier shape covers 'roll X instead of
+- **damage_substitute effect (new ClassFeatureEffect or OngoingOperation variant)** (new_variant) — The Martial Arts Die replaces — not adds to — the normal weapon/unarmed damage die with 1d6 (scaling to d8/d10/d12 by class level). This is a damage override. No existing DamageEffect, heal, or roll_modifier shape covers 'roll X instead of 
 - **modify_roll_substitute_ability surface type** (new_variant) — Dexterous Attacks allows using DEX instead of STR for attack and damage rolls, and for Grapple/Shove save DCs. The v4 taxonomy names 'modify_roll_substitute' as an atom, but types.ts has no surface shape that encodes which ability feeds a r
 - **UseCountCap: unlimited (or per-turn-reset cadence)** (new_variant) — The Bonus Unarmed Strike can be used every turn with no cap and no rest reset. UseCountCap only supports 'fixed' (a specific number) and ThresholdTiers. RestResetCadence has no 'per_turn' or 'unlimited' variant. Even if the bonus-unarmed-st
 
 ### monk_martial_arts_l1
 
-- **passive_class_feature family** (new_subgraph) — Martial Arts grants three always-on benefits that are active while the monk meets preconditions (unarmored, wielding only monk weapons, no shield). No existing ClassFeatureMechanics family handles condition-gated passive features without a
-- **grant_bonus_action_attack** (new_atom) — Bonus Unarmed Strike grants the option to make a specific attack (Unarmed Strike) as a Bonus Action. grant_extra_action grants a full extra action (which may exclude Magic); it does not model a scoped bonus-action attack. A distinct effect
+- **passive_class_feature family** (new_subgraph) — Martial Arts grants three always-on benefits that are active while the monk meets preconditions (unarmored, wielding only monk weapons, no shield). No existing ClassFeatureMechanics family handles condition-gated passive features without a 
+- **grant_bonus_action_attack** (new_atom) — Bonus Unarmed Strike grants the option to make a specific attack (Unarmed Strike) as a Bonus Action. grant_extra_action grants a full extra action (which may exclude Magic); it does not model a scoped bonus-action attack. A distinct effect 
 - **replace_damage_die** (new_atom) — Martial Arts Die replaces the normal damage die of Unarmed Strikes and Monk weapons with the Martial Arts die (1d6, scaling via scale_die_size to d12 at Monk L17). modify_roll_substitute exists in v4 taxonomy but covers roll-result substitu
 - **ability_score_substitution on attack/damage rolls** (new_variant) — Dexterous Attacks permits using DEX in place of STR for attack and damage rolls of Unarmed Strikes and Monk weapons, and for the save DC of Grapple/Shove. This is a conditional ability-score substitution on rolls, not a numeric bonus (modif
 
@@ -2764,7 +2764,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **ClassFeatureOnHitTriggerMechanics (family: on_hit_trigger)** (new_subgraph) — Open Hand Technique fires on a hit from a specific action source (Flurry of Blows), not from a free activation. ClassFeatureMechanics has only the 'activation' family, which presupposes an activationCost + use_count resource. This unit need
 - **MasteryTrigger (or new ClassFeatureTrigger) :: action_source_hit** (new_variant) — The trigger is constrained to 'attacks granted by Flurry of Blows'. Existing MasteryTrigger variants (weapon_hit, weapon_hit_melee_only) filter by weapon kind, not by action source. A new variant carrying an action source identifier (e.g. '
-- **ChooseEffect (player chooses one-of N effects)** (new_variant) — The feature presents a menu of three independent effects and the player picks one per trigger. Neither ClassFeatureEffect nor MasteryEffect has a 'choose_from' composition. The v4 taxonomy lists 'choose' as a procedure atom but there is no
+- **ChooseEffect (player chooses one-of N effects)** (new_variant) — The feature presents a menu of three independent effects and the player picks one per trigger. Neither ClassFeatureEffect nor MasteryEffect has a 'choose_from' composition. The v4 taxonomy lists 'choose' as a procedure atom but there is no 
 - **SaveGateRiderResult :: deny_opportunity_attack** (new_variant) — Addle grants an automatic on-hit effect (no save) that denies Opportunity Attacks until turn start. deny_opportunity_attack is a v4 effect atom but is absent from SaveGateRiderResult and ClassFeatureEffect. Additionally, Addle has no save g
 - **SaveGateRiderResult :: force_move** (new_variant) — Push force-moves the target up to 15 feet on a failed STR save. force_move is a v4 atom but is absent from SaveGateRiderResult (which only has apply_condition and none) and from ClassFeatureEffect.
 
@@ -2778,7 +2778,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### monk_quivering_palm_l17
 
-- **store_and_release_class_feature** (new_subgraph) — Quivering Palm is structurally a two-phase feature: (1) plant vibrations on a Flurry of Blows hit while spending Focus Points, creating a persistent marked state on one creature; (2) later detonate with a separate activation cost, firing a
+- **store_and_release_class_feature** (new_subgraph) — Quivering Palm is structurally a two-phase feature: (1) plant vibrations on a Flurry of Blows hit while spending Focus Points, creating a persistent marked state on one creature; (2) later detonate with a separate activation cost, firing a 
 - **focus_point_resource (new variant of ClassFeatureResource)** (new_variant) — The plant phase consumes 4 Focus Points — a pooled class resource with its own cap, reset cadence, and partial-refill rules (see Monk's Focus). UseCountResource with kind='use_count' models a per-feature charge count, not the shared Focus P
 - **on_flurry_hit (ClassFeatureActivationCost)** (new_variant) — The plant activation is gated on landing a hit during Flurry of Blows — an attack-conditional trigger, not a free action or a bonus action. ClassFeatureActivationCost only supports 'free' | 'bonus_action'.
 - **forgo_attack (ClassFeatureActivationCost)** (new_variant) — The detonation can alternatively be triggered by giving up one attack from the Attack action — a cost type absent from ClassFeatureActivationCost. This is distinct from 'action' (which uses the whole action) and from 'bonus_action'. An 'act
@@ -2836,7 +2836,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **feature_augmentation** (new_subgraph) — Restoring Touch is not a standalone activated feature. It fires as a rider when Lay On Hands is used, granting an optional remove_condition effect within that activation. No existing class-feature family models 'this feature augments anothe
 - **ClassFeatureActivationCost: cost_from_feature_pool (or similar trigger model)** (new_variant) — The cost is variable: 5 HP drawn from the Lay On Hands healing pool per condition removed. This is neither 'free' nor 'bonus_action'. It is a per-application expenditure from a sibling feature's resource — a cost shape the surface cannot re
-- **ClassFeatureEffect: remove_condition** (new_variant) — The v4 atom 'remove_condition' exists in the taxonomy but ClassFeatureEffect in types.ts only supports grant_extra_action and heal_hp. Restoring Touch's sole effect is removing one or more conditions — not healing and not granting an extra
+- **ClassFeatureEffect: remove_condition** (new_variant) — The v4 atom 'remove_condition' exists in the taxonomy but ClassFeatureEffect in types.ts only supports grant_extra_action and heal_hp. Restoring Touch's sole effect is removing one or more conditions — not healing and not granting an extra 
 - **Condition: blinded | charmed | deafened | frightened | paralyzed | stunned** (new_variant) — The surface Condition type currently contains only 'prone' (introduced for Topple mastery). Restoring Touch requires six additional conditions. These are all standard SRD 5.2.1 conditions and will be needed by future units regardless.
 
 ### paladin_spellcasting_l1
@@ -2855,8 +2855,8 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### planar_ally
 
 - **summon_creature_family** (new_subgraph) — Planar Ally conjures a free-willed creature into an unoccupied space within range. No existing spell mechanics family supports this shape: 'activation' phases are restricted to attack_roll and save_gate; 'ongoing_effect' requires a persiste
-- **create_companion effect variant in spell Effect type** (new_variant) — The spell Effect type only has 'damage' and 'none'. The v4 atom 'create_companion' exists in the taxonomy (Section 9, Effect Atoms) but is absent from the surface Effect union. Summoning a creature to the battlefield requires this variant.
-- **negotiation_gate** (new_subgraph) — After the creature appears it is under no compulsion. The caster must negotiate a service for payment; if no agreement is reached, the creature immediately leaves. This conditional outcome driven by DM adjudication has no representation in
+- **create_companion effect variant in spell Effect type** (new_variant) — The spell Effect type only has 'damage' and 'none'. The v4 atom 'create_companion' exists in the taxonomy (Section 9, Effect Atoms) but is absent from the surface Effect union. Summoning a creature to the battlefield requires this variant. 
+- **negotiation_gate** (new_subgraph) — After the creature appears it is under no compulsion. The caster must negotiate a service for payment; if no agreement is reached, the creature immediately leaves. This conditional outcome driven by DM adjudication has no representation in 
 
 ### plane_shift
 
@@ -2889,7 +2889,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **repeat_save in spell Effect context** (new_variant) — The Indigo layer requires tracking 3 successes and 3 failures across successive CON saves at the end of each turn, resolving to either condition-end or Petrified. The v4 atom 'repeat_save' / 'condition_progression' exists in the taxonomy bu
 - **transport_exile in spell Effect context** (new_variant) — The Violet layer on a failed WIS save teleports the creature to another plane (DM's choice). The v4 atom 'transport_exile' exists in the taxonomy but is not in the surface Effect discriminated union. Adding it to Effect would be a surface w
 - **layer_destruction_condition** (new_variant) — Each of the 7 layers has a unique destruction condition: specific damage thresholds of a given type (Red: 25+ cold damage; Blue: 25+ fire damage; Yellow: 60+ force damage), specific spells by name (Gust of Wind destroys Orange; Passwall des
-- **proximity_aura trigger** (new_variant) — The wall triggers a CON save for any creature that moves within 20 feet of it or starts its turn there. This is not 'enters_area' (which fires when a creature enters an area) but a radial proximity check relative to the wall object's edge.
+- **proximity_aura trigger** (new_variant) — The wall triggers a CON save for any creature that moves within 20 feet of it or starts its turn there. This is not 'enters_area' (which fires when a creature enters an area) but a radial proximity check relative to the wall object's edge. 
 
 ### ranger_ability_score_improvement_l4
 
@@ -2919,11 +2919,11 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### ranger_hunters_prey_l3
 
-- **passive_on_hit_rider (class feature family)** (new_subgraph) — Colossus Slayer is a passive weapon-hit rider on the class feature record. The only class feature family is 'activation', which requires an activationCost + use_count resource + resetCadence + effect. Colossus Slayer has none of these — it
+- **passive_on_hit_rider (class feature family)** (new_subgraph) — Colossus Slayer is a passive weapon-hit rider on the class feature record. The only class feature family is 'activation', which requires an activationCost + use_count resource + resetCadence + effect. Colossus Slayer has none of these — it 
 - **passive_on_attack_rider (class feature family)** (new_subgraph) — Horde Breaker fires when the ranger *makes* a weapon attack (before resolution, not on hit). There is no 'on_attack_window' atom — only 'on_hit_window'. The trigger is pre-resolution, granting a second optional weapon attack against a diffe
 - **choose_one_of_N_options (top-level class feature choice structure)** (new_subgraph) — Hunter's Prey is not a single feature — it is a container that grants one of two sub-options, replaceable on Short or Long Rest. There is no vocabulary in UnitRecord, ClassFeatureRecord, or ClassFeatureMechanics for 'choose one of these var
 - **hp_below_max_predicate (conditional filter on damage_on_hit)** (new_variant) — Colossus Slayer's +1d8 only applies if the target is currently missing HP. This is a runtime predicate on the creature's HP state that gates whether the rider fires. No existing atom or filter variant captures this check. The closest existi
-- **on_attack_window** (new_atom) — Horde Breaker's trigger is 'when you make an attack with a weapon' — before attack roll resolution. The v4 atom inventory has on_hit_window and on_miss_window (post-resolution) but no pre-resolution attack window. This is a distinct timing
+- **on_attack_window** (new_atom) — Horde Breaker's trigger is 'when you make an attack with a weapon' — before attack roll resolution. The v4 atom inventory has on_hit_window and on_miss_window (post-resolution) but no pre-resolution attack window. This is a distinct timing 
 
 ### ranger_precise_hunter_l17
 
@@ -2939,7 +2939,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### ranger_roving_l6
 
 - **passive family for ClassFeatureMechanics** (new_subgraph) — Roving is always-on with no activation trigger, no use-count resource, and no rest-reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three of those fields. A 'passive' family is needed for fea
-- **modify_speed variant of ClassFeatureEffect** (new_variant) — The v4 atom 'modify_speed' exists in the taxonomy but is not surfaced as a ClassFeatureEffect variant. Roving needs to express: increase walking Speed by +10 ft. The current ClassFeatureEffect union only contains GrantExtraActionEffect and
+- **modify_speed variant of ClassFeatureEffect** (new_variant) — The v4 atom 'modify_speed' exists in the taxonomy but is not surfaced as a ClassFeatureEffect variant. Roving needs to express: increase walking Speed by +10 ft. The current ClassFeatureEffect union only contains GrantExtraActionEffect and 
 - **grant_alternate_speed variant of ClassFeatureEffect (climb, swim)** (new_variant) — Roving grants a Climb Speed and a Swim Speed each equal to the character's walking Speed. This is not a flat numeric increase but a derived assignment (value = base walking speed). No existing effect covers granting a new movement type whos
 - **armor-type condition guard on passive effects** (new_variant) — The Speed bonus is conditional: 'while you aren't wearing Heavy armor'. The surface has no conditional predicate type for passive effects. This guard is a closed armor-category filter, not a runtime roll or save.
 
@@ -2968,7 +2968,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### regenerate
 
-- **compound_spell (activation_with_ongoing)** (new_subgraph) — Regenerate has both an immediate activation phase (4d8+15 heal on cast) and a persistent ongoing effect (1 HP/turn for 1 hour). No current family models this combination. The activation family covers one-shot resolution; the ongoing_effect
+- **compound_spell (activation_with_ongoing)** (new_subgraph) — Regenerate has both an immediate activation phase (4d8+15 heal on cast) and a persistent ongoing effect (1 HP/turn for 1 hour). No current family models this combination. The activation family covers one-shot resolution; the ongoing_effect 
 - **HealEffect (spell Effect union)** (new_variant) — Spell Effect is currently `DamageEffect | NoneEffect`. The immediate 4d8+15 HP restoration on cast is a heal, not damage. The class-feature layer already has HealHpEffect; the spell layer needs a corresponding heal variant so the tracer can
 - **periodic_heal (OngoingOperation union)** (new_variant) — OngoingOperation is currently `RollModifierOperation | DamageOnHitOperation`. The per-turn 1-HP regen is a time-gated heal that fires at the start of each of the target's turns, not on a hit and not a roll modifier. A new periodic_heal vari
 - **restore_body (or extend apply_condition / return_on_end)** (new_atom) — Severed body part regrowth has no counterpart in the v4 atom inventory. It is a physical restoration effect triggered after a time delay (2 minutes). The closest atom `return_on_end` handles returning state at spell end, not restoring physi
@@ -2984,7 +2984,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### rogue_ability_score_improvement_l4
 
 - **passive_grant family for ClassFeatureMechanics** (new_subgraph) — ASI is a permanent passive grant acquired at level-up. It has no activation cost, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which structurally requires activationCost + resource + re
-- **grant_feat_choice** (new_atom) — No existing ClassFeatureEffect covers granting a feat or a choice among feats. The two existing effects are grant_extra_action and heal_hp, both runtime combat effects. A feat grant is a character-advancement effect: it fires once at level
+- **grant_feat_choice** (new_atom) — No existing ClassFeatureEffect covers granting a feat or a choice among feats. The two existing effects are grant_extra_action and heal_hp, both runtime combat effects. A feat grant is a character-advancement effect: it fires once at level 
 
 ### rogue_cunning_action_l2
 
@@ -3005,10 +3005,10 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### rogue_devious_strikes_l14
 
 - **cunning_strike_option** (new_subgraph) — Devious Strikes adds options to the Cunning Strike menu. Each option triggers on a Sneak Attack hit (not an independent activation), costs a subset of the rogue's sneak attack dice, and fires a save-gate rider on the target. No existing cla
-- **sneak_attack_dice_cost resource** (new_variant) — Each option costs dice from the rogue's per-attack Sneak Attack pool (2d6, 3d6, or 6d6). This is not a use_count, not a spell_slot, and not a charge — it is a fractional expenditure from a per-attack dice pool. No existing UseCountResource
+- **sneak_attack_dice_cost resource** (new_variant) — Each option costs dice from the rogue's per-attack Sneak Attack pool (2d6, 3d6, or 6d6). This is not a use_count, not a spell_slot, and not a charge — it is a fractional expenditure from a per-attack dice pool. No existing UseCountResource 
 - **Condition enum: blinded, unconscious** (new_variant) — The Condition surface type is closed to only 'prone'. Obscure requires 'blinded' and Knock Out requires 'unconscious'. Both are standard SRD 5.2.1 conditions used as apply_condition targets.
 - **repeat_save surface type** (new_variant) — Knock Out requires the target to repeat the CON save at the end of each of its turns. The v4 taxonomy includes 'repeat_save' as a resolution atom, but types.ts has no surface representation for repeat saves in class feature riders.
-- **restrict_turn_economy** (new_atom) — Daze restricts the target to choosing exactly one of {move, take an action, take a bonus action} on its next turn. This is distinct from the existing restrict_action_set atom (which filters which action type is valid within an extra-action
+- **restrict_turn_economy** (new_atom) — Daze restricts the target to choosing exactly one of {move, take an action, take a bonus action} on its next turn. This is distinct from the existing restrict_action_set atom (which filters which action type is valid within an extra-action 
 
 ### rogue_evasion_l7
 
@@ -3019,7 +3019,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### rogue_reliable_talent_l7
 
 - **passive_class_feature** (new_subgraph) — Reliable Talent is always-on with no activation decision, no use_count, and no reset cadence. The sole existing ClassFeatureMechanics family ('activation') mandates all three. A 'passive' family is needed for always-on class features that f
-- **modify_roll_floor** (new_variant) — The effect replaces any d20 roll of 9 or lower with 10 — a conditional floor substitution. v4 has modify_roll_substitute, which could in principle cover this, but the exact shape (floor threshold + proficiency-gated trigger) may require an
+- **modify_roll_floor** (new_variant) — The effect replaces any d20 roll of 9 or lower with 10 — a conditional floor substitution. v4 has modify_roll_substitute, which could in principle cover this, but the exact shape (floor threshold + proficiency-gated trigger) may require an 
 
 ### rogue_rogue_subclass_l3
 
@@ -3062,7 +3062,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **passive_trait (ClassFeatureMechanics family)** (new_subgraph) — Use Magic Device grants three always-on benefits with no activation cost, no use count, and no rest reset cadence. The only existing ClassFeatureMechanics family ('activation') mandates activationCost, resource, and resetCadence. A passive_
 - **modify_attunement_cap** (new_atom) — The Attunement benefit extends the character's attunement slot count from 3 to 4. No existing ClassFeatureEffect or v4 effect atom covers a numeric change to the attunement capacity. The v4 atom 'attunement_slot' is a consumed resource, not
 - **charge_refund_on_roll** (new_atom) — The Charges benefit introduces a stochastic 'roll 1d6, on 6 do not expend charges' mechanic triggered on each magic item charge expenditure. v4 has 'refund' as a procedure atom but no surface shape for a probabilistic die-gated charge refun
-- **grant_scroll_access** (new_atom) — The Scrolls benefit unlocks use of any Spell Scroll with Intelligence as spellcasting ability, plus a level-scaled DC ability check for higher-level scrolls (DC 10 + spell level) and item destruction on failure. v4 has 'grant_spell_access'
+- **grant_scroll_access** (new_atom) — The Scrolls benefit unlocks use of any Spell Scroll with Intelligence as spellcasting ability, plus a level-scaled DC ability check for higher-level scrolls (DC 10 + spell level) and item destruction on failure. v4 has 'grant_spell_access' 
 
 ### rogue_weapon_mastery_l1
 
@@ -3073,7 +3073,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### rope_trick
 
-- **create_space family (pocket_dimension / spatial_pocket)** (new_subgraph) — Rope Trick creates a persistent extradimensional space that creatures can voluntarily enter and inhabit for the spell's duration. This requires a payload family that models: (1) an object/location attachment (the rope + portal at its tip),
+- **create_space family (pocket_dimension / spatial_pocket)** (new_subgraph) — Rope Trick creates a persistent extradimensional space that creatures can voluntarily enter and inhabit for the spell's duration. This requires a payload family that models: (1) an object/location attachment (the rope + portal at its tip), 
 - **object attachment in Attachment union (types.ts)** (new_variant) — The rope is the attachment target (casting time: Touch, caster touches a rope). The v4 taxonomy includes 'object' as an attachment atom, but it is absent from the types.ts Attachment union. Rope Trick must attach to the rope as an object to
 - **Spell Effect variants: block_targeting, block_travel, transport_exile, fall_on_end** (new_variant) — The spell's persistent effects require: (1) blocking all attacks/spells/effects from passing through the portal boundary (block_targeting + block_travel), (2) transporting entering creatures into the extradimensional space (transport_exile)
 
@@ -3107,7 +3107,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **conditional_passive_family** (new_subgraph) — Arcane Apotheosis activates no action — it is a passive benefit that applies automatically inside another feature's active window (Innate Sorcery). The only ClassFeatureMechanics family is 'activation', which models features the player expl
 - **waive_resource_cost** (new_atom) — The mechanic reduces the Sorcery Point cost of one Metamagic use per turn to zero. No existing ClassFeatureEffect variant expresses cost-waiving on a class resource. Current variants are 'grant_extra_action' and 'heal_hp' only.
 - **sorcery_points** (new_atom) — Sorcery Points are a sorcerer-specific resource pool (Font of Magic) distinct from use_count, spell_slot, and charge. The surface has no resource atom for this pool, which funds both Metamagic options and spell-slot conversions.
-- **metamagic_use** (new_atom) — Metamagic is a sorcerer-specific spell-modification system (Quickened, Twinned, Empowered, etc.) triggered at cast time using Sorcery Points. It does not fit any existing window or procedure atom. Encoding Arcane Apotheosis requires naming
+- **metamagic_use** (new_atom) — Metamagic is a sorcerer-specific spell-modification system (Quickened, Twinned, Empowered, etc.) triggered at cast time using Sorcery Points. It does not fit any existing window or procedure atom. Encoding Arcane Apotheosis requires naming 
 
 ### sorcerer_draconic_spells_l3
 
@@ -3117,7 +3117,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### sorcerer_dragon_companion_l18
 
 - **passive_spell_modifier family** (new_subgraph) — The feature permanently waives the material component for Summon Dragon. There is no class feature family for always-on passive modifications to how a specific named spell is cast. ClassFeatureMechanics only has the 'activation' family, whi
-- **ClassFeatureEffect::grant_free_cast** (new_variant) — The feature grants one slot-less casting of a named spell per long rest. ClassFeatureEffect is currently GrantExtraActionEffect | HealHpEffect — there is no variant for granting free access to a specific spell with a use_count resource and
+- **ClassFeatureEffect::grant_free_cast** (new_variant) — The feature grants one slot-less casting of a named spell per long rest. ClassFeatureEffect is currently GrantExtraActionEffect | HealHpEffect — there is no variant for granting free access to a specific spell with a use_count resource and 
 - **modify_cast_properties (or metamagic_substitute)** (new_atom) — At the moment of casting, the sorcerer may voluntarily trade away the Concentration requirement in exchange for reducing the spell's duration to 1 minute. This is a player-choice, cast-time property substitution with no v4 atom. suppress ac
 
 ### sorcerer_elemental_affinity_l6
@@ -3171,7 +3171,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **SpeciesTraitRecord** (new_variant) — UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — there is no species_trait kind. The record wrapper (id, name, provenance, description, kind, mechanics) has no matching shape for species traits.
 - **passive_trait family** (new_subgraph) — Species traits are always-on at character creation — no activation cost, no resource, no reset cadence. The existing ClassFeatureActivationMechanics forces activation + use_count + resetCadence onto every feature. A new family (e.g. passive
 - **grant_resistance effect in species/passive mechanics** (new_variant) — grant_resistance is a v4 atom but it appears nowhere in ClassFeatureEffect or any surface type accessible to non-mastery, non-spell units. The passive family needs a surface-level effect type that can carry grant_resistance with a damage ty
-- **permanent condition-scoped modify_roll_advantage** (new_variant) — The existing ModifyRollAdvantageRider (used in mastery riders) requires count and expiresOn — it is an expiring on-hit rider, not a permanent passive effect. Dwarven Resilience's advantage has no expiry and is gated on a specific condition
+- **permanent condition-scoped modify_roll_advantage** (new_variant) — The existing ModifyRollAdvantageRider (used in mastery riders) requires count and expiresOn — it is an expiring on-hit rider, not a permanent passive effect. Dwarven Resilience's advantage has no expiry and is gated on a specific condition 
 
 ### species_dwarf_dwarven_toughness
 
@@ -3221,7 +3221,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **SpeciesTraitRecord + species_trait mechanics family** (new_subgraph) — UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. No SpeciesTraitRecord exists. The taxonomy defines species_trait_root as a source atom but types.ts defines no mechanics family or record shape to hold it. Every species trait f
 - **ability_check in RollKind** (new_variant) — The grapple-escape mechanic grants Advantage specifically on ability checks (Athletics / Acrobatics). RollKind = 'attack_roll' | 'saving_throw' — ability checks are absent. Even if a species_trait record existed, modify_roll_advantage on ab
-- **modify_size_category (passive, for encumbrance rules)** (new_atom) — Counting as one size larger for carrying capacity is a non-combat passive property that modifies character-sheet calculations (Lifting/Carrying from SRD Equipment). It has no combat mechanic counterpart and likely sits outside core runtime
+- **modify_size_category (passive, for encumbrance rules)** (new_atom) — Counting as one size larger for carrying capacity is a non-combat passive property that modifies character-sheet calculations (Lifting/Carrying from SRD Equipment). It has no combat mechanic counterpart and likely sits outside core runtime 
 
 ### species_halfling_naturally_stealthy
 
@@ -3238,25 +3238,25 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 ### species_orc_darkvision
 
 - **SpeciesTraitRecord + passive_grant family** (new_subgraph) — No UnitRecord kind exists for species_trait. The tracer's exhaustive switch throws on any kind other than spell, class_feature, or mastery. A new top-level record kind and at minimum one new mechanics family are required.
-- **passive_grant mechanics family** (new_variant) — Darkvision (Orc) is a purely passive, always-on trait with no activation cost, no resource, no reset cadence, and no roll. No existing mechanics family models this shape. A new family (e.g. 'passive_grant') is needed to express traits that
+- **passive_grant mechanics family** (new_variant) — Darkvision (Orc) is a purely passive, always-on trait with no activation cost, no resource, no reset cadence, and no roll. No existing mechanics family models this shape. A new family (e.g. 'passive_grant') is needed to express traits that 
 - **grant_sense surface shape** (new_variant) — The v4 atom 'grant_sense' exists in the taxonomy but types.ts has no surface type for it. A typed surface shape is needed: { kind: 'grant_sense'; sense: 'darkvision' | 'blindsight' | ...; rangeFeet: number }.
 
 ### species_orc_relentless_endurance
 
 - **SpeciesTraitRecord (kind = "species_trait")** (new_variant) — UnitRecord has no species_trait kind. The surface types only know spell, class_feature, and mastery. Every species trait requires this new top-level record type before any mechanics can be encoded.
 - **passive_reactive_trigger mechanics family for species traits** (new_subgraph) — Relentless Endurance fires when an external combat event occurs (reduction to 0 HP). This is not player-activated (no action cost), not a spell reaction (no spell infrastructure), and not a mastery on-hit rider. A new family is needed: a pa
-- **prevent_ko (or set_hp_floor)** (new_atom) — The effect is not heal_hp (which adds dice to current HP). It sets HP to exactly 1, replacing a would-be reduction to 0. No v4 effect atom covers 'prevent knockout by setting HP to a fixed floor'. This is a distinct deterministic operation
+- **prevent_ko (or set_hp_floor)** (new_atom) — The effect is not heal_hp (which adds dice to current HP). It sets HP to exactly 1, replacing a would-be reduction to 0. No v4 effect atom covers 'prevent knockout by setting HP to a fixed floor'. This is a distinct deterministic operation 
 - **damage_threshold_window (trigger: reduced_to_0_hp)** (new_atom) — The reactive trigger that arms Relentless Endurance is a new window kind: fires when incoming damage would reduce the character to 0 HP. Not an on_hit_window (that tracks attacker hits, not defender HP floor). Not a post_action_window (whic
 
 ### species_tiefling_otherworldly_presence
 
 - **species_trait_record** (new_subgraph) — No UnitRecord kind exists for species traits. types.ts defines SpellRecord, ClassFeatureRecord, and MasteryRecord only. The v4 taxonomy has species_trait_root as a source atom but the surface has no corresponding record family to host it.
 - **grant_spell_access mechanic for species traits** (new_variant) — The core mechanic is a passive permanent grant of cantrip knowledge (Thaumaturgy). The v4 atom grant_spell_access exists but there is no surface type in ClassFeatureMechanics or any other mechanics family that can carry a passive spell-acce
-- **cross_trait_spellcasting_ability reference** (new_variant) — The spellcasting ability for this cantrip is not a fixed Ability value but a reference to whatever ability the player chose for Fiendish Legacy. No existing surface type models a spellcasting ability as a cross-trait reference — Ability is
+- **cross_trait_spellcasting_ability reference** (new_variant) — The spellcasting ability for this cantrip is not a fixed Ability value but a reference to whatever ability the player chose for Fiendish Legacy. No existing surface type models a spellcasting ability as a cross-trait reference — Ability is 
 
 ### stinking_cloud
 
-- **repeating_area_save_gate** (new_subgraph) — Stinking Cloud creates a concentration area whose only ongoing mechanic is a save gate that fires at the start of each creature's turn while inside the area. No existing family encodes a repeating per-turn save trigger: ongoing_effect only
+- **repeating_area_save_gate** (new_subgraph) — Stinking Cloud creates a concentration area whose only ongoing mechanic is a save gate that fires at the start of each creature's turn while inside the area. No existing family encodes a repeating per-turn save trigger: ongoing_effect only 
 - **Condition: poisoned** (new_variant) — The Condition type currently only includes 'prone'. Stinking Cloud's save-failure result is the Poisoned condition. The type must be widened to include 'poisoned' (and likely the full SRD condition set) before any spell that inflicts Poison
 - **SaveGateRiderResult: compound (apply_condition + restrict_action)** (new_variant) — The Poisoned condition in this spell carries an embedded action restriction: while Poisoned in this way, the creature cannot take an action or a Bonus Action. SaveGateRiderResult currently supports either apply_condition or none, with no co
 - **obscure_area** (new_atom) — The cloud is Heavily Obscured, which deterministically affects attack roll advantage/disadvantage for any attack into or out of the area. No v4 atom covers 'make this area heavily obscured'. The closest candidate (block_targeting) is narrow
@@ -3264,7 +3264,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### storm_of_vengeance
 
-- **turn_scheduled_effect_sequence** (new_subgraph) — Storm of Vengeance fires a completely different mechanical effect at the start of each caster turn (turns 1–10). No existing family supports a turn-indexed schedule of distinct resolutions over a concentration spell's duration. This is the
+- **turn_scheduled_effect_sequence** (new_subgraph) — Storm of Vengeance fires a completely different mechanical effect at the start of each caster turn (turns 1–10). No existing family supports a turn-indexed schedule of distinct resolutions over a concentration spell's duration. This is the 
 - **unconditional_damage phase variant for ActivationPhase** (new_variant) — Turns 2 and 4 deal area damage automatically — no saving throw, no attack roll. The current ActivationPhase union only has attack_roll and save_gate. A third variant is needed for area damage that always applies.
 - **deafened condition in Condition type** (new_variant) — Turn 1 applies the Deafened condition on a failed CON save. The Condition type only contains 'prone'.
 - **multi_target_n selection (n distinct creatures) for Attachment** (new_variant) — Turn 3 calls six bolts to strike six *different* creatures or objects. The current TargetSelection only supports 'one' or 'choose_up_to' (slot-scaled). A fixed multi-target selection with individual saves per target is not representable.
@@ -3295,7 +3295,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **activation_plus_ongoing** (new_subgraph) — Wall of Fire has two mechanically distinct phases that must coexist: (1) an instantaneous save_gate that fires when the wall appears, and (2) an ongoing area damage zone that fires when creatures enter or end their turn inside/near the wall
 - **area.shape — line and ring** (new_variant) — Attachment.area.shape currently only supports 'sphere'. Wall of Fire requires a line shape (60 ft long × 20 ft high × 1 ft thick) or a ring shape (20 ft diameter × 20 ft high). Neither is expressible. Multiple other wall spells (Wall of Ice
-- **OngoingOperation — damage_on_area_entry_or_turn_end** (new_variant) — The existing OngoingOperation variants are 'roll_modifier' and 'damage_on_hit' (which fires on attack-roll hits against a creature in the attachment scope). Wall of Fire needs an operation that fires when a creature enters the area OR ends
+- **OngoingOperation — damage_on_area_entry_or_turn_end** (new_variant) — The existing OngoingOperation variants are 'roll_modifier' and 'damage_on_hit' (which fires on attack-roll hits against a creature in the attachment scope). Wall of Fire needs an operation that fires when a creature enters the area OR ends 
 - **area — directional_damage** (new_variant) — Wall of Fire designates one side of the wall as the damage-dealing side and the other as inert. This directional property of an area effect has no representation in the current Attachment or operation grammar. A wall shape naturally has two
 
 ### wall_of_ice
@@ -3303,7 +3303,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 - **object_creation_spell** (new_subgraph) — Wall of Ice creates a persistent physical object (the wall) with per-section AC, HP, damage immunities, and vulnerability. No existing spell family models 'create a damageable object'. The wall is not an ongoing_effect (no persistent operat
 - **on_section_destroyed_window** (new_atom) — When a wall section reaches 0 HP, a frigid air zone is spawned in that space. No existing window atom handles 'when an object or object-section is destroyed'. post_action_window covers creature actions; rest_window covers rest events. A new
 - **hazard_zone** (new_atom) — The frigid air left behind is a persistent hazard zone that issues save gates when creatures move through it. It is not concentration-dependent (the caster may drop concentration on the wall while zones persist), it is not a creature attach
-- **force_move (in Effect union)** (new_variant) — When the wall appears and cuts through a creature's space, the creature is pushed to one side—this is a forced movement effect that fires before (and independently of) the save gate. The v4 atom force_move exists in TAXONOMY_atoms_graph.md
+- **force_move (in Effect union)** (new_variant) — When the wall appears and cuts through a creature's space, the creature is pushed to one side—this is a forced movement effect that fires before (and independently of) the save gate. The v4 atom force_move exists in TAXONOMY_atoms_graph.md 
 - **object_stats (AC, HP per section, immunities, vulnerabilities)** (new_variant) — The created object requires structured per-section statistics that have no representation in any current surface type. Even if an object_creation family were added, a new ObjectStats sub-type would be needed to carry AC, hpPerSection, immun
 
 ### wall_of_stone
@@ -3333,7 +3333,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 - **passive_grant family for ClassFeatureMechanics** (new_subgraph) — Fiend Spells has no activation cost, no use_count resource, and no rest reset. Spells are 'always prepared' — a permanent passive benefit with no player decision point beyond having the requisite warlock level. The only existing ClassFeatur
 - **grant_spell_access variant for ClassFeatureEffect** (new_variant) — ClassFeatureEffect currently supports only GrantExtraActionEffect and HealHpEffect. Granting always-prepared spells requires a grant_spell_access effect variant. The v4 taxonomy already includes grant_spell_access as an effect atom, so no a
-- **ThresholdTiers<SpellId[]> payload for grant_spell_access** (new_variant) — The spell grants are gated by warlock class-level thresholds (3, 5, 7, 9), each tier adding a new batch of spell IDs. The existing ThresholdTiers<T> is parameterized over T but only used with numeric T in the current surface. A list-valued
+- **ThresholdTiers<SpellId[]> payload for grant_spell_access** (new_variant) — The spell grants are gated by warlock class-level thresholds (3, 5, 7, 9), each tier adding a new batch of spell IDs. The existing ThresholdTiers<T> is parameterized over T but only used with numeric T in the current surface. A list-valued 
 
 ### warlock_fiendish_resilience_l10
 
@@ -3342,8 +3342,8 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### warlock_pact_magic_l1
 
-- **spellcasting_grant** (new_subgraph) — Pact Magic is not an activated feature with a discrete effect — it is a persistent spellcasting framework. It grants cantrips, a spell slot pool (with pact-specific rules: all slots same level, count+level both scale by class level), and a
-- **grant_spell_access** (new_variant) — ClassFeatureEffect needs a variant to represent granting a spell list (cantrips + prepared spells) with counts that scale by class level. This is mechanically distinct from grant_extra_action and heal_hp, and is needed for all spellcasting
+- **spellcasting_grant** (new_subgraph) — Pact Magic is not an activated feature with a discrete effect — it is a persistent spellcasting framework. It grants cantrips, a spell slot pool (with pact-specific rules: all slots same level, count+level both scale by class level), and a 
+- **grant_spell_access** (new_variant) — ClassFeatureEffect needs a variant to represent granting a spell list (cantrips + prepared spells) with counts that scale by class level. This is mechanically distinct from grant_extra_action and heal_hp, and is needed for all spellcasting 
 - **pact_magic_slot_pool** (new_variant) — The Pact Magic slot pool has two co-scaling dimensions (slot count AND slot level, both indexed by class level), all slots at the same level. This is not representable as a use_count resource cap (which only scales one scalar value). A dedi
 
 ### warlock_warlock_subclass_l3
@@ -3367,7 +3367,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### wind_wall
 
-- **dual_stream_spell** (new_subgraph) — Wind Wall has two mechanically distinct streams that must both be represented honestly: (1) an instantaneous STR save → 4d8 Bludgeoning on appearance (activation-shaped), and (2) persistent ongoing environmental/travel-blocking effects for
+- **dual_stream_spell** (new_subgraph) — Wind Wall has two mechanically distinct streams that must both be represented honestly: (1) an instantaneous STR save → 4d8 Bludgeoning on appearance (activation-shaped), and (2) persistent ongoing environmental/travel-blocking effects for 
 - **area_shape_wall** (new_variant) — Wind Wall creates a linear wall (up to 50 ft long × 15 ft high × 1 ft thick, continuous path along ground). The existing Attachment area shape only supports { kind: 'sphere'; radiusFeet: number }. A wall shape (length × height, path-shaped)
 - **deflect_projectile** (new_atom) — Wind Wall passively auto-misses ordinary ranged projectiles (arrows, bolts) aimed at targets on the far side of the wall. This is neither block_travel (movement) nor interrupt_resolution (reaction-based) nor block_targeting (targeting preve
 - **block_gas_passage** (new_atom) — Wind Wall blocks fog, smoke, gas-type environmental effects AND creatures in Gaseous Form from passing through. The existing block_travel atom covers creature movement but has no creature-type or substance filtering (Small-or-smaller flying
@@ -3399,7 +3399,7 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### wizard_ritual_adept_l1
 
-- **passive_class_feature** (new_subgraph) — Ritual Adept is always-on from level 1. It has no activation event, no use count, and no reset cadence. The surface only has 'activation' family for ClassFeatureMechanics, which requires activationCost + UseCountResource + RestResetCadence
+- **passive_class_feature** (new_subgraph) — Ritual Adept is always-on from level 1. It has no activation event, no use count, and no reset cadence. The surface only has 'activation' family for ClassFeatureMechanics, which requires activationCost + UseCountResource + RestResetCadence 
 - **modify_casting_rule** (new_atom) — The effect is not granting new spells (grant_spell_access) but modifying how existing spellbook entries may be cast: removes the preparation requirement for Ritual-tagged spells, replacing it with a physical-book requirement. No v4 effect a
 
 ### wizard_scholar_l2
@@ -3410,12 +3410,12 @@ Claude's raw proposal text is normalized to canonical tags via regex rules; unma
 
 ### wizard_wizard_subclass_l3
 
-- **subclass_acquisition** (new_subgraph) — The feature has no activation, no resource, no reset cadence, and no concrete effect. Its entire purpose is to grant the character a subclass whose features are themselves separate units. No existing ClassFeatureMechanics family (currently
+- **subclass_acquisition** (new_subgraph) — The feature has no activation, no resource, no reset cadence, and no concrete effect. Its entire purpose is to grant the character a subclass whose features are themselves separate units. No existing ClassFeatureMechanics family (currently 
 
 ### word_of_recall
 
 - **designation_recall** (new_subgraph) — Word of Recall has two mechanically distinct cast modes under one spell card: a designation cast (plant persistent sanctuary marker on caster) and a recall cast (teleport group to that marker). No existing payload family models this dual-mo
-- **transport (Effect variant)** (new_variant) — The recall cast's core effect is instantaneous teleportation to a named/designated location. The surface Effect type only has damage and none. The v4 atom transport_exile exists but covers banishment/demiplane exile, not voluntary teleport
+- **transport (Effect variant)** (new_variant) — The recall cast's core effect is instantaneous teleportation to a named/designated location. The surface Effect type only has damage and none. The v4 atom transport_exile exists but covers banishment/demiplane exile, not voluntary teleport 
 - **self_and_nearby (Attachment variant)** (new_variant) — The recall cast's attachment is caster + up to 5 willing creatures within 5 feet. This is not self (caster only), target (other creatures, not including caster by default), area (indiscriminate AoE), or mark (stateful binding). A new attach
 - **caster_sanctuary_anchor (persistent caster-level state)** (new_variant) — The designation cast stores a location permanently on the caster's character state — it has no duration, no target, no trigger. This is not a spell effect on a creature, not an anchored location trigger, not a timed persist. It is a new kin
 
@@ -3438,3 +3438,4 @@ text, e.g. "hp_pool" named but "5 × paladin level" in justification).
 Other new axes (pb_linked + subclass_level): **0**
 
 **Verdict: Option B** — class_level_tiers in 10 units ≥ 3 AND (linear_per_level in 18 ≥ 2 OR new-axis proposals in 0 ≥ 1).
+

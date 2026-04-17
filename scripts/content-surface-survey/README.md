@@ -23,6 +23,7 @@ One-liner: **this dir tells us what's MISSING; the package's `content/` dir hold
 | `prompt-template.md` | Claude-facing prompt template (substituted per unit) |
 | `worker.sh` | per-unit driver: extract → prompt → Claude → validate → append dataset row |
 | `run-survey.sh` | orchestrator: reads queue, runs N workers in parallel, resumable |
+| `close-loop.ts` | Stage 2 closure loop: ranks widening clusters, reruns a targeted batch, writes before/after closure report |
 | `provenance-check.sh` | pre-commit sweep: fails if PHB content leaked to main repo |
 
 ## Routing rule (hard)
@@ -77,6 +78,18 @@ MAX_PARALLEL=5 ./run-survey.sh --tier 2 --limit 10
 ./provenance-check.sh
 
 # 7. Aggregate report (TBD: aggregate.ts).
+pnpm --filter @dnd/prototype-content-surface exec tsx \
+  ../../scripts/content-surface-survey/aggregate.ts
+
+# 8. Run the convergence loop on one widening cluster or explicit batch.
+#    This is the tracer-bullet closure path: rank pressure, rerun a
+#    small batch sequentially, and inspect the before/after report.
+pnpm --filter @dnd/prototype-content-surface exec tsx \
+  ../../scripts/content-surface-survey/close-loop.ts --top 15
+
+pnpm --filter @dnd/prototype-content-surface exec tsx \
+  ../../scripts/content-surface-survey/close-loop.ts \
+  --cluster grant_sense --limit 3 --execute --backend codex
 ```
 
 ## Gotchas
@@ -105,9 +118,21 @@ MAX_PARALLEL=5 ./run-survey.sh --tier 2 --limit 10
 
 Tier 1 includes ~15 manually-specified class features / species / masteries for coverage. Tier 2 coverage beyond spells requires extending the catalog parser.
 
-## Next: aggregate.ts
+## Convergence loop
 
-After a tier completes, `aggregate.ts` (not yet built) turns `survey-results-srd.jsonl` into `REPORT_SRD.md`:
+After a tier completes:
+
+1. `aggregate.ts` summarizes the pressure map in `REPORT_SRD.md`.
+2. `close-loop.ts` selects one cluster or explicit rerun batch.
+3. The batch is re-mined sequentially with `--force`.
+4. The script writes a before/after closure report under:
+   - `.output/content-surface-closure/*.json`
+
+`close-loop.ts` is the supported feedback loop for survey convergence work.
+It supersedes the previous ad hoc "inspect by hand and rerun manually"
+workflow for this purpose.
+
+`aggregate.ts` turns `survey-results-srd.jsonl` into `REPORT_SRD.md`:
 
 - Outcome distribution by kind + tier
 - Atom frequency (sorted by how many units reference each atom)

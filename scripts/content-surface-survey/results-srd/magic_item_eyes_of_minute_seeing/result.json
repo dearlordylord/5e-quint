@@ -1,34 +1,16 @@
 {
   "unit_slug": "magic_item_eyes_of_minute_seeing",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item kind",
-      "justification": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — no MagicItemRecord exists. The tracer's traceUnit switch has no 'magic_item' branch and would throw. The v4 taxonomy lists magic_item_root as a source atom, but the surface type system has no corresponding record shape.",
-      "evidence": "Wondrous Item, Uncommon — the unit kind is magic_item, which has no entry in UnitRecord"
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "passive_equip mechanics family",
-      "justification": "Eyes of Minute Seeing has no activation, no casting time, no use count, no reset cadence. Its effects are always-on while the item is worn. No existing mechanics family (activation, ongoing_effect, triggered_reaction, anchored_trigger, on_hit_trigger) models a passive equip effect. A new family (e.g. passive_equip or equip_effect) is needed for magic items whose mechanics are unconditionally active while worn.",
-      "evidence": "While wearing them, your vision improves significantly — no action, no resource, no trigger"
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_sense (surface exposure)",
-      "justification": "grant_sense exists in the v4 taxonomy (§9 Effect Atoms) but is not defined in types.ts as a surface type. The Darkvision-within-1-foot effect maps directly to grant_sense, but the surface type system has no GrantSenseEffect variant. The tracer would have nowhere to route it.",
-      "evidence": "granting you Darkvision within that range"
-    },
-    {
       "kind": "new_variant",
-      "name": "ability_check in RollKind",
-      "justification": "RollKind = 'attack_roll' | 'saving_throw'. The Advantage on Intelligence (Investigation) checks effect needs a third variant 'ability_check' (or a typed sub-variant like 'intelligence_check'). The existing modify_roll_advantage shape requires a RollKind[] for its 'on' field, and ability checks are not covered.",
-      "evidence": "Advantage on Intelligence (Investigation) checks made to examine something within that range"
+      "name": "context-gated passive roll modifier",
+      "justification": "The item fits the existing magic_item + passive family, and both grant_sense and modify_roll_advantage already exist, but the surface has no honest way to gate a passive Investigation advantage to examinations occurring within a 1-foot viewing range.",
+      "evidence": "granting you Darkvision within that range and Advantage on Intelligence (Investigation) checks made to examine something within that range"
     }
   ],
   "confidence": "high",
-  "notes": "Two independent structural gaps block encoding: (1) magic_item kind missing from UnitRecord entirely — this alone is disqualifying; (2) no passive_equip family exists for always-on wearable effects. Additionally, ability_check is absent from RollKind and grant_sense is absent from the surface effect vocabulary. The item is otherwise mechanically simple — two unconditional passive riders while worn, no resource or reset cadence needed."
+  "notes": "The Darkvision half fits as a passive grant_sense with rangeFeet=1. The unit is not clean because the Investigation advantage is not unconditional; current PassiveMechanics only supports equipment-gated conditions, not a proximity/examination gate."
 }

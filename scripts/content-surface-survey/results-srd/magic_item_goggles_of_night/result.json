@@ -1,28 +1,16 @@
 {
   "unit_slug": "magic_item_goggles_of_night",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + passive_property family",
-      "justification": "No MagicItemRecord exists in UnitRecord. Magic items that are always-on while worn need a new top-level record kind and a new mechanics family distinct from spell/class-feature/mastery activation patterns.",
-      "evidence": "While wearing these dark lenses, you have Darkvision out to 60 feet."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_sense surface type (darkvision with range)",
-      "justification": "The v4 atom inventory lists grant_sense but types.ts has no surface type expressing it. A darkvision grant requires a sense kind (darkvision) and a range in feet.",
-      "evidence": "you have Darkvision out to 60 feet"
-    },
-    {
-      "kind": "new_variant",
-      "name": "conditional sense extension: grant if absent, extend if present",
-      "justification": "The item has two branches: grant 60ft darkvision if the wearer lacks it, or extend existing darkvision by 60ft. This conditional-extension pattern does not map to any existing effect atom or surface shape.",
+      "kind": "new_atom",
+      "name": "modify_sense_range",
+      "justification": "The item has conditional sense math: it grants Darkvision if absent, but otherwise increases an existing Darkvision range by 60 feet. That is not representable as grant_sense alone without losing the additive rider.",
       "evidence": "If you already have Darkvision, wearing the goggles increases its range by 60 feet."
     }
   ],
   "confidence": "high",
-  "notes": "The blocking gap is structural: UnitRecord has no magic_item kind. Even if MagicItemRecord were added, this specific item requires (a) a passive/worn mechanics family with no activation cost and no use-count resource, and (b) a conditional sense grant/extend effect that the current effect atom set cannot represent. The grant_sense v4 atom exists in the taxonomy but has no surface encoding in types.ts."
+  "notes": "Top-level fit exists as a passive magic item with no attunement requirement. I did not author content JSON/Dhall because the current surface can only grant a sense at a fixed range, not modify an existing sense's range conditionally."
 }
