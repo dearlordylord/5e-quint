@@ -1,6 +1,6 @@
 # Active Plan
 
-Date: 2026-04-16
+Date: 2026-04-17
 
 This is the single active planning queue.
 
@@ -102,7 +102,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 4 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. |
 | 5 | CSA6 - C4g Object-Target Attachment And True Polymorph Object Modes | ready-for-research | none | CSA8 | Add `Attachment.object` kind; extend `transform_target` to cover object-to-creature and creature-to-object; author the True Polymorph object branches. | Ready. True Polymorph already partial-authored (creature branch only). |
 | 6 | CSA7 - Shapechange Multi-Type Filter And Form Switch | ready-for-research | CSA6 | CSA8 | Widen `PolymorphFormSource.creatureTypeFilter` to support "any except X"; add `Duration.concentration.allowsFormSwitchAs: "magic_action"`; author Shapechange. | Blocked on CSA6 for shared PolymorphFormSource shape review. |
-| 7 | CSA8 - Convergence Checkpoint A | blocked | CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11 | Author 10 units picked randomly from the remaining survey queue; count how many require a new widening. Convergence declared for Phase A when ≤1 new widening across 10. Because CSA2/CSA3 found no un-authored clean queue, this becomes the next place the post-rerun clean-authoring streak can resume once the widening tasks land. | Blocked on upstream widenings. |
+| 7 | CSA8 - Convergence Checkpoint A | blocked | CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11 | Run the isolated auto-close loop against the remaining widening queue; use its weighted-debt history, failed-attempt log, and per-batch reruns to prove the remaining pressure is collapsing. Convergence declared for Phase A when the loop shows sustained downward weighted debt and the follow-up authoring streak resumes without new widenings. | Blocked on upstream widenings, but now measured by the auto loop rather than a manual random sample. |
 | 8 | CSB1 - Species Traits Batch | ready-for-implementation-after-light-research | none | CSC1 | Author the 17 SRD 5.2.1 species traits (Dragonborn, Elf, Dwarf, Halfling, etc.); most are `grant_sense` / `grant_resistance` / size / speed. | Ready. Existing grammar covers the common cases; any outliers become flagged partials. |
 | 9 | CSB2 - Feats Batch | ready-for-implementation-after-light-research | none | CSC1 | Author origin feats, epic boons, remaining fighting styles. ~10-15 units. | Ready. FeatMechanics already covers passive + activated patterns. |
 | 10 | CSB3 - Fighter And Rogue Class Features | ready-for-research | none | CSC1 | Research both classes; author ~20 class_feature units. Simplest martial classes; no new widenings expected beyond Sneak Attack dice scaling (already covered). | Ready for research. |
@@ -114,7 +114,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 16 | CSB9 - Magic Items Attunement-Passive Batch | ready-for-implementation-after-light-research | none | CSC1 | 20 attunement-gated passive items (Cloak of Protection family). `PassiveMechanics` + `EquipmentPredicate` already covers this. | Ready. |
 | 17 | CSB10 - Magic Items Charge-Wand Batch | ready-for-implementation-after-light-research | none | CSC1 | 15 charge-pool wands (Wand of Magic Missiles family). `ChargePoolResource` + `grant_spell_access.charge_cast` already covers this. | Ready. |
 | 18 | CSB11 - Magic Items Sentient Cursed Artifact Batch | ready-for-research | CSB9, CSB10 | CSC1 | 10 complex items. Sentience / curse / artifact tiers likely need widenings. | Blocked on CSB9, CSB10. |
-| 19 | CSC1 - Final Mining Pass And Convergence Measurement | blocked | CSA8, CSB1..CSB11 | CSC2 | Second exhaustive mining pass against the fully-authored post-Phase-B surface. Regenerate `REPORT_SRD.md`; measure the consecutive-clean streak; confirm zero `surface_widening` or `atom_widening` verdicts outside already-DEFERRED structural carveouts. If not converged, spawn follow-up widening tasks and rerun. | Blocked on all Phase A + Phase B tasks. |
+| 19 | CSC1 - Final Mining Pass And Convergence Measurement | blocked | CSA8, CSB1..CSB11 | CSC2 | Finish the isolated auto-close-loop pass, snapshot its weighted-debt / per-cluster telemetry, then run the second exhaustive mining pass against the fully-authored post-Phase-B surface. Regenerate `REPORT_SRD.md`; measure the consecutive-clean streak; confirm zero `surface_widening` or `atom_widening` verdicts outside already-DEFERRED structural carveouts. If not converged, spawn follow-up widening tasks and rerun. | Blocked on all Phase A + Phase B tasks; auto-loop telemetry is now part of the acceptance evidence. |
 | 20 | CSC2 - Surface-v1 Convergence Tag And Handoff Doc | blocked | CSC1 | CSD1 | If CSC1 shows convergence: tag the commit as `surface-v1-converged`, write a short handoff doc summarizing the frozen atom vocabulary + authored corpus + known partial carveouts, then hand off to Phase D. | Blocked on CSC1. |
 | 21 | CSD1 - Design Content-Driven Execution Architecture | blocked | CSC2 | CSD2, CSD3 | Design the rehaul: contract between surface content and core runtime, generic atom dispatch in battle.qnt, XState machine action shape, how MBT stays valid across the transition. Produce `plans/CORE_REHAUL_DESIGN.md`. | Blocked on CSC2 (frozen surface). Critical design task; all migration sub-tasks depend on this. |
 | 22 | CSD2 - Implement Quint-Variant Generator | blocked | CSD1 | CSD3 | Build generator from frozen types.ts → `.qnt` variant definitions. Lands in `packages/quint-gen/`. | Blocked on CSD1. |
@@ -177,7 +177,7 @@ Current architecture decisions for this batch:
 - DM-agenda is caller-owned per `ARCHITECTURE.md` §1: spatial geometry, perception, language / allegiance, narrative-mutation, time-of-day / weather are NOT encoded in the surface. Survey sub-agents must reject type-sound but architecture-unsound widening proposals.
 - Provenance distinction: SRD 5.2.1 is provenance for authored content; XPHB is research input only (never checked in); 5e-tools is structured input only. Content files must cite the SRD 5.2.1 section in the `provenance` field.
 - Partial authoring is encouraged. A unit whose core mechanics are encodable but whose rider is deferred gets a `PARTIAL` note in its Dhall comment + a DEFERRED entry naming the missing widening.
-- Convergence is measured on the post-CSA8 timeline: consecutive authorings that land clean without a new widening.
+- Convergence is measured on the post-CSA8 timeline using the isolated closure-loop telemetry plus the final exhaustive survey rerun: weighted debt trend, per-batch improvement rate, and the final clean-streak / widening distribution.
 
 Planning notes:
 
@@ -185,6 +185,7 @@ Planning notes:
 - The surface owns the vocabulary; Quint integration follows in Phase D. Do not start Phase D work before `CSC2` ships a frozen surface tag — the generator must be driven by a stable types.ts.
 - Tasks are sized for 1-2h clean input/output where possible. Class-design tasks (CSB3..CSB8) may legitimately take 3-4h including research; if a task overruns, split into a `-design` sub-task (research + shape) and a `-implement` sub-task rather than widening the single task.
 - Magic-items and feats batches can be parallelized with class tasks if the implementer has agent capacity; they have no inter-batch dependencies.
+- The unattended convergence loop now runs in `.worktrees/auto-close-loop` on branch `auto-close-loop`. Treat its `.output/content-surface-closure/` telemetry and per-batch commits as the operational driver for convergence work; this file remains the roadmap and freeze gate, not the runner control surface.
 
 ## Recommended Coding Loop
 
@@ -199,8 +200,9 @@ Planning notes:
    - regression sweep over all `content/*.dhall`.
 4. For any widening that adds a new `EffectAtom.kind`, update `scripts/content-surface-survey/atom-whitelist.ts` `STAGE_3_EXTENSIONS` or the validator flags false `atom_widening`.
 5. For any widening, add a RESOLVED entry in `plans/CONTENT_SURFACE_DEFERRED.md` with date + shape summary + validation refs authored.
-6. `/simplify` convergence is mandatory per the Coding Loop Handoff Rules: minimum two rounds.
-7. Commit after each task with a message naming the widening(s) + content files landed.
+6. For convergence work, prefer the isolated auto loop (`scripts/content-surface-survey/run-auto-close-loop.sh`) over ad hoc reruns. The loop owns candidate selection, bounded surface edits, reruns, weighted-debt snapshots, failed-attempt logs, and per-batch commits on `auto-close-loop`.
+7. `/simplify` convergence is mandatory per the Coding Loop Handoff Rules: minimum two rounds.
+8. Commit after each task with a message naming the widening(s) + content files landed.
 
 ## Task Bodies
 
@@ -524,20 +526,22 @@ Blocks: `CSB1`..`CSB11`
 
 Scope:
 
-- Pick 10 units at random from the remaining SRD spell queue (units not yet authored and not already flagged DM-agenda / structural).
-- Author each and count how many require a new widening.
-- Write a checkpoint note recording: the 10 units; per-unit widening count; the current consecutive-clean streak.
+- Use the isolated auto-close loop to work down the remaining non-structural widening queue in bounded batches.
+- Let the loop pick one reusable gap at a time, attempt one bounded TS/package change, rerun the affected batch, and record weighted-debt deltas.
+- Use the loop's telemetry to decide whether the surface is actually converging: per-batch improvement counts, clean flips, global weighted-debt trend, and failed-attempt backlog.
+- Once the residual queue is materially smaller, resume manual authoring from the cleaned queue and record the current consecutive-clean streak.
 
 Input:
 
 - Current `survey-results-srd.jsonl`.
 - Current `content/` corpus (now larger after CSA2 + CSA3).
+- Auto-loop telemetry under `.output/content-surface-closure/`.
 
 Output:
 
-- 10 new content files (or partials if authoring reveals a widening).
-- `plans/CONVERGENCE_CHECKPOINT_A.md` — the summary.
-- If ≤1 widening across the 10: Phase A convergence achieved → unblock Phase B. If ≥2: keep the loop open and spawn a follow-up CSA-variant task for the new widenings.
+- Updated auto-loop history / latest snapshot / failed-attempt log showing whether weighted debt is dropping.
+- A short checkpoint note summarizing: top clusters improved, net weighted-debt change, remaining residual widenings, current consecutive-clean authoring streak.
+- If the loop shows sustained downward debt and resumed authoring lands with ≤1 new widening across the next 10 authored units: Phase A convergence achieved → unblock Phase B. Otherwise keep the loop running and spawn follow-up CSA-variant widening tasks for the residual gaps.
 
 Next action:
 
@@ -545,11 +549,13 @@ Next action:
 
 Research note:
 
-- Random selection to avoid cherry-picking. Use a seeded RNG or grep + `shuf -n 10`.
+- The old random-sample approach is superseded. The loop is allowed to pick targeted clusters so long as it records before/after evidence and failed attempts; the acceptance question is whether debt collapses, not whether a random sample happened to be easy.
 
 Verification requirements:
 
-- Full regression clean. `/simplify` 1 round per new authored file.
+- The loop must keep TS typecheckable after every accepted surface change.
+- Full regression clean before declaring the checkpoint passed.
+- `/simplify` 1 round per new authored file and normal convergence requirements for any manual widening task.
 
 Handoff readiness:
 
@@ -973,22 +979,24 @@ Blocks: `CSC2`
 
 Scope:
 
-- **Second exhaustive mining pass.** Re-run the Stage-1 survey pipeline against the fully-authored post-Phase-B surface. This is the pre-freeze checkpoint — if this pass surfaces new widening pressure, we land those widenings (spawn CSA-variant tasks) and re-run this task before CSC2.
+- **Final convergence closeout.** First snapshot the isolated auto-close-loop output: weighted-debt history, per-batch improvements, clean flips, and failed-attempt backlog. Then re-run the Stage-1 survey pipeline against the fully-authored post-Phase-B surface. This is the pre-freeze checkpoint — if this pass surfaces new widening pressure, we land those widenings (spawn CSA-variant tasks) and re-run this task before CSC2.
 - Full regression sweep across the complete authored corpus.
 - Regenerate `REPORT_SRD.md`.
 - Measure the consecutive-clean streak over the post-CSA8 timeline (i.e., across all Phase B authoring).
-- Write `plans/CONVERGENCE_REPORT_FINAL.md` summarizing: total authored count, verdict distribution, consecutive-clean streak, remaining partials + DM-agenda carveouts, and the frozen atom-vocabulary list (EffectAtom variants, phase kinds, payload families).
+- Write `plans/CONVERGENCE_REPORT_FINAL.md` summarizing: total authored count, verdict distribution, closure-loop weighted-debt trend, per-cluster improvement rates, consecutive-clean streak, remaining partials + DM-agenda carveouts, and the frozen atom-vocabulary list (EffectAtom variants, phase kinds, payload families).
 - **Convergence criterion for this task:** ≥10 consecutive clean authorings over the Phase B timeline AND the fresh mining pass shows no `surface_widening` or `atom_widening` verdicts other than already-DEFERRED structural carveouts. If either fails, the task is NOT `done` — spawn follow-up widening tasks and rerun.
 
 Input:
 
 - Full `content/` corpus post-Phase B.
 - Current `types.ts` and atom whitelist.
+- Closure-loop telemetry under `.output/content-surface-closure/`.
 
 Output:
 
 - Refreshed JSONL + REPORT_SRD.md.
 - `plans/CONVERGENCE_REPORT_FINAL.md`.
+- Closure-loop telemetry snapshot archived alongside the report.
 - Regression sweep log.
 
 Next action:
@@ -997,7 +1005,7 @@ Next action:
 
 Research note:
 
-- If the consecutive-clean streak hits ≥10 over the post-CSA8 timeline, declare convergence. Otherwise, list the remaining widenings needed and spawn follow-up tasks before CSC2.
+- If the consecutive-clean streak hits ≥10 over the post-CSA8 timeline and the loop telemetry shows no meaningful remaining downward pressure, declare convergence. Otherwise, list the remaining widenings needed, keep the loop running or restart it on the residual queue, and spawn follow-up tasks before CSC2.
 
 Verification requirements:
 
