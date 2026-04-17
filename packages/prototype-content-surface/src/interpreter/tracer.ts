@@ -3504,8 +3504,10 @@ function describeWeaponFilter(f: WeaponFilter | undefined): string {
   switch (f.kind) {
     case "weapon_category":
       return ` [${f.category} weapons only]`;
+    case "specific_item":
+      return ` [item only: ${f.itemId}]`;
     default: {
-      const _exhaustive: never = f.kind;
+      const _exhaustive: never = f;
       return _exhaustive;
     }
   }

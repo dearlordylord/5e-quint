@@ -26,14 +26,21 @@ export type RollKind =
   // Advantage on them; other riders may surface.
   | "death_saving_throw";
 
-// Weapon filter for roll modifiers that only apply to certain weapon
-// categories. Archery Fighting Style: +2 to attack rolls with Ranged
-// weapons only. Minimal melee/ranged split — extend if finer-grained
-// weapon-category filters (e.g., "finesse", "simple") prove necessary.
-export type WeaponFilter = {
-  readonly kind: "weapon_category";
-  readonly category: "melee" | "ranged";
-};
+// Weapon filter for riders that only apply to certain weapons.
+// Archery Fighting Style scopes by category ("Ranged weapons only");
+// Staff of Power / Staff of the Magi scope by the concrete wielded
+// item ("damage rolls made with it"). Keep this as a reference to the
+// existing item id rather than duplicating weapon identity fields on
+// the effect atoms themselves.
+export type WeaponFilter =
+  | {
+      readonly kind: "weapon_category";
+      readonly category: "melee" | "ranged";
+    }
+  | {
+      readonly kind: "specific_item";
+      readonly itemId: string;
+    };
 
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 

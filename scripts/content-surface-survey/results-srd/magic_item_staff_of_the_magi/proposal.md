@@ -1,120 +1,86 @@
 # Staff of the Magi
 
-## Verdict
-
-`Staff of the Magi` does not fit the current authored surface honestly, so no `content/magic_item_staff_of_the_magi.dhall` was written.
-
 Outcome: `structural_widening`
-
-## What fits already
-
-- `MagicItemRecord` is the correct top-level kind.
-- The spell table mostly fits the existing charge-cast activation pattern:
-  - `charge_pool` with cap `50`
-  - `grant_spell_access` entries for the listed spells and fixed-cost casts
-  - `resetCadence.dawn` with regain `4d6 + 2`
-- Retributive Strike is at least recognizably an activated item ability rather than DM-only agenda.
 
 ## Why it does not fit honestly
 
-### 1. The item needs a reaction-shaped magic-item component
+The current surface can represent several isolated slices of this item:
 
-Current magic items can be:
+- passive held bonuses:
+  - `+2` to attack rolls with the staff
+  - `+2` to damage rolls with the staff
+  - `+2` to spell attack rolls
+  - Advantage on saving throws against spells
+- charge-based spell access from a table
+- an activated destructive effect
 
-- `passive`
-- `activation`
-- `composite` of passive + activation parts
+But `Staff of the Magi` is not just a bag of unrelated parts. Its spell table, Spell Absorption reaction, and Retributive Strike all share one live 50-charge pool, and the reaction is not authorable as a magic-item-triggered procedure today.
 
-`Staff of the Magi` has a major third component:
+The current magic-item surface has `composite`, but its components are still limited to `passive | activation`. That is not enough for this item.
 
-- passive held bonuses
-- activated spellcasting / Retributive Strike
-- a triggered reaction (`Spell Absorption`)
+## Blocking gaps
 
-There is no honest way to encode the reaction as either a passive grant or a normal activation, so the current family shape is too small.
+### 1. Reaction-shaped magic-item component
 
-### 2. The passive combat package is still underspecified
+The item needs a component equivalent to spell-side `triggered_reaction`, not just `activationCost = reaction`.
 
-The item grants all of these while used/held:
+Why: the mechanic is defined by an explicit trigger, and that trigger carries context used by the effect.
 
-- `+2` to attack rolls made with this quarterstaff
-- `+2` to damage rolls made with this quarterstaff
-- `+2` to spell attack rolls
-- Advantage on saving throws against spells
+Evidence:
 
-Current gaps:
+> "you can take a Reaction when another creature casts a spell that targets only you"
 
-- no item-specific weapon filter, only coarse melee/ranged filters
-- no passive damage-roll bonus atom
-- no `spell_attack_roll` roll kind distinct from generic `attack_roll`
-- no save/advantage filter for "against spells"
+### 2. Shared charge pool across item components
 
-The damage-roll bonus alone blocks an honest passive encoding.
+The item has one 50-charge pool, but three distinct sub-abilities touch it:
 
-### 3. Spell Absorption needs reactive charge gain and overflow handling
+- spellcasting spends charges
+- Spell Absorption gains charges
+- Retributive Strike reads current charges for damage
 
-Spell Absorption does more than negate a spell:
+Current composite item parts do not share a single resource state across components.
 
-- it triggers on an unnamed spell that targets only you
-- it cancels the triggering spell
-- it gains charges equal to the triggering spell's level
-- if the new total exceeds 50, it immediately detonates as Retributive Strike
+Evidence:
 
-The current surface has no subgraph for:
+> "This staff has 50 charges"
 
-- reaction-shaped item abilities
-- charge-pool refund/gain from a reaction outcome
-- overflow into a second resolution path
+> "gaining a number of charges equal to the absorbed spell's level"
 
-### 4. Retributive Strike adds more missing shape pressure
+> "damage equal to 16 times the number of charges in the staff"
 
-Retributive Strike needs several unsupported details:
+### 3. Charge gain from trigger context, with overflow branch
 
-- area originates from the item itself
-- self-damage and area damage are fixed multiples of current charges
-- the wielder has a 50 percent chance to avoid the blast by instant travel to a random plane
+Existing support covers:
 
-Even if the item had a reaction component, these still need widening.
+- spending charges to cast
+- dawn recharge
+- last-charge destruction checks
 
-### 5. Attunement restrictions are still too weak
+It does not cover:
 
-The record only supports `requiresAttunement: boolean`, but this staff requires attunement by one of a closed class set:
+- gaining charges from the triggering spell's level
+- checking whether the gain would overflow the cap
+- branching from that overflow into Retributive Strike
 
-- Sorcerer
-- Warlock
-- Wizard
+Evidence:
 
-That omission is not the main blocker, but it remains a real surface gap.
+> "the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level. However, if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its Retributive Strike"
 
-## Minimal widening set
+### 4. Damage amount derived from current charge pool
 
-1. Add a triggered-reaction component family for magic items, or widen `CompositeMagicItemMechanics` to admit a reaction-shaped part.
-2. Add a reaction trigger variant for "a spell that targets only you".
-3. Add a passive `modify_damage_roll` atom.
-4. Widen weapon scoping so modifiers can target a specific held item / weapon identity.
-5. Add a `spell_attack_roll` roll kind, or an equivalent roll filter.
-6. Add a spell-source filter for saving-throw advantage/disadvantage riders.
-7. Add class-restricted attunement metadata to `MagicItemRecord`.
-8. Add an item-origin area variant.
-9. Add multiplied charge-based amounts (`N × current charges`).
-10. Add a charge-pool refund / overflow resolution shape for Spell Absorption.
+`Retributive Strike` damage is not fixed dice, slot scaling, or spent-resource amount. It is a multiplier over the item's current stored charges.
 
-## Evidence
+Evidence:
 
-> This staff has 50 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it.
+> "you take Force damage equal to 16 times the number of charges in the staff"
 
-> While you hold it, you gain a +2 bonus to spell attack rolls.
+> "On a failed save, a creature takes Force damage equal to 6 times the number of charges in the staff"
 
-> While holding the staff, you have Advantage on saving throws against spells.
+## Secondary pressure
 
-> you can take a Reaction when another creature casts a spell that targets only you
+- The self-avoidance clause adds a probabilistic branch:
+  - "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion."
+- The attunement requirement is class-restricted:
+  - "Requires Attunement by a Sorcerer, Warlock, or Wizard"
 
-> the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level
-
-> if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its Retributive Strike
-
-> an explosion that fills a 30-foot Emanation originating from itself
-
-> you take Force damage equal to 16 times the number of charges in the staff
-
-> On a failed save, a creature takes Force damage equal to 6 times the number of charges in the staff.
+These are real gaps, but the first honest classification is still `structural_widening` because the item cannot yet be expressed as a truthful top-level mechanics composition.
