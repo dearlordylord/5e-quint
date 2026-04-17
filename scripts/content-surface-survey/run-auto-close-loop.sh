@@ -127,6 +127,9 @@ prepare_worktree() {
     rm -rf "$WORKTREE_DIR"
     git -C "$REPO_ROOT" worktree add --force -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" "$INTEGRATION_BRANCH"
   else
+    git -C "$WORKTREE_DIR" rebase --abort >/dev/null 2>&1 || true
+    git -C "$WORKTREE_DIR" cherry-pick --abort >/dev/null 2>&1 || true
+    git -C "$WORKTREE_DIR" merge --abort >/dev/null 2>&1 || true
     current_branch="$(git -C "$WORKTREE_DIR" branch --show-current)"
     if [[ "$current_branch" != "$WORKTREE_BRANCH" ]]; then
       git -C "$WORKTREE_DIR" checkout "$WORKTREE_BRANCH" >/dev/null
@@ -144,6 +147,9 @@ prepare_integration_worktree() {
     rm -rf "$INTEGRATION_WORKTREE"
     git -C "$REPO_ROOT" worktree add --force -B "$INTEGRATION_BRANCH" "$INTEGRATION_WORKTREE" master
   else
+    git -C "$INTEGRATION_WORKTREE" rebase --abort >/dev/null 2>&1 || true
+    git -C "$INTEGRATION_WORKTREE" cherry-pick --abort >/dev/null 2>&1 || true
+    git -C "$INTEGRATION_WORKTREE" merge --abort >/dev/null 2>&1 || true
     current_branch="$(git -C "$INTEGRATION_WORKTREE" branch --show-current)"
     if [[ "$current_branch" != "$INTEGRATION_BRANCH" ]]; then
       git -C "$INTEGRATION_WORKTREE" checkout "$INTEGRATION_BRANCH" >/dev/null
