@@ -112,15 +112,32 @@ prepare_worktree() {
   if [[ ! -e "$WORKTREE_DIR/.git" ]]; then
     rm -rf "$WORKTREE_DIR"
     git -C "$REPO_ROOT" worktree add --force -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" master
-    return
+  else
+    current_branch="$(git -C "$WORKTREE_DIR" branch --show-current)"
+    if [[ "$current_branch" != "$WORKTREE_BRANCH" ]]; then
+      git -C "$WORKTREE_DIR" checkout "$WORKTREE_BRANCH" >/dev/null
+    fi
+    git -C "$WORKTREE_DIR" reset --hard HEAD >/dev/null
+    git -C "$WORKTREE_DIR" clean -fd >/dev/null
+    git -C "$WORKTREE_DIR" rebase master >/dev/null
   fi
-  current_branch="$(git -C "$WORKTREE_DIR" branch --show-current)"
-  if [[ "$current_branch" != "$WORKTREE_BRANCH" ]]; then
-    git -C "$WORKTREE_DIR" checkout "$WORKTREE_BRANCH" >/dev/null
+  seed_loop_inputs
+}
+
+seed_loop_inputs() {
+  mkdir -p "$WORKTREE_DIR/scripts/content-surface-survey"
+  if [[ -f "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" ]]; then
+    cp "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" \
+      "$WORKTREE_DIR/scripts/content-surface-survey/unit-queue.jsonl"
+  else
+    (cd "$WORKTREE_DIR" && \
+      pnpm --filter @dnd/prototype-content-surface exec tsx \
+      ../../scripts/content-surface-survey/unit-catalog.ts >/dev/null)
   fi
-  git -C "$WORKTREE_DIR" reset --hard HEAD >/dev/null
-  git -C "$WORKTREE_DIR" clean -fd >/dev/null
-  git -C "$WORKTREE_DIR" rebase master >/dev/null
+  rm -f \
+    "$WORKTREE_DIR/scripts/content-surface-survey/run-survey.lock" \
+    "$WORKTREE_DIR/.output/content-surface-closure/auto-close-loop.lock.json" \
+    "$WORKTREE_DIR/.output/content-surface-closure/auto-close-loop.pid"
 }
 
 start() {
