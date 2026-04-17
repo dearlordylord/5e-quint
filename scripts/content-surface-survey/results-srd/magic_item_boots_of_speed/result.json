@@ -1,46 +1,28 @@
 {
   "unit_slug": "magic_item_boots_of_speed",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item family",
-      "justification": "UnitRecord has no magic_item variant. There is no MagicItemRecord type, no magic item payload family, and no magic_item_root source atom wired into the surface. The entire encoding path is missing.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    },
-    {
       "kind": "new_variant",
-      "name": "modify_speed effect on surface",
-      "justification": "The boots double the wearer's Speed while active. The v4 atom modify_speed exists in the taxonomy but is not present in any surface type. A magic item effect surface type would need to include it, with a multiplier (×2) or additive-flat variant.",
-      "evidence": "the boots double your Speed"
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_roll_advantage scoped to enemy Opportunity Attacks against self",
-      "justification": "The boots impose Disadvantage on attack rolls made by other creatures against the wearer, but only for Opportunity Attacks specifically. The existing RollKind union (attack_roll | saving_throw) has no sub-kind for Opportunity Attacks. The existing modify_roll_advantage in MasteryEffect modifies the target creature's rolls; here the attachment is reversed (self is the attachment, enemies are the rollers). Both the scoping and the directional attachment are missing surface shapes.",
-      "evidence": "any creature that makes an Opportunity Attack against you has Disadvantage on the attack roll"
-    },
-    {
-      "kind": "new_variant",
-      "name": "duration_budget resource (timed use pool)",
-      "justification": "The item's active power depletes from a shared 10-minute total across activations, not a discrete use count. This is a continuous-time budget that refills on Long Rest. UseCountResource (kind: use_count) models discrete counts; there is no surface shape for a per-unit-time depletion pool.",
+      "name": "activation_resource: active_duration_pool",
+      "justification": "Boots of Speed do not expend a discrete use or a charge per activation. They provide a pooled 10 minutes of active runtime per Long Rest, and that budget is shared across repeated on/off toggles. Current ActivationResource shapes only model discrete uses or charge pools spent at activation time, not elapsed active-duration consumption.",
       "evidence": "When you've used the boots' property for a total of 10 minutes, the magic ceases to function for you until you finish a Long Rest."
     },
     {
       "kind": "new_variant",
-      "name": "toggle_deactivation activation cost",
-      "justification": "The effect is ended by a second heel-click (same gesture as activation). This is a deliberate toggle pattern — the active state is self-terminating via re-invocation. No existing ClassFeatureActivationCost or effect family models voluntary mid-duration deactivation via a re-trigger.",
+      "name": "activated_ability: toggleable_persistent_effect",
+      "justification": "The boots are activated with a Bonus Action, remain active until manually ended, and can be ended by taking the same Bonus Action again. Current ActivatedAbilityMechanics can model a one-shot timed duration, but not a stateful on/off toggle that pauses and later resumes against the same remaining budget.",
       "evidence": "If you click your heels together again, you end the effect."
     },
     {
       "kind": "new_variant",
-      "name": "attunement_slot resource on surface",
-      "justification": "The item requires attunement. The v4 atom attunement_slot exists in the taxonomy (§7 Resource Atoms) but is not present in any surface type. A MagicItemRecord encoding path would need to surface attune + attunement_slot.",
-      "evidence": "Requires Attunement"
+      "name": "modify_roll_advantage: opportunity_attack_only filter",
+      "justification": "The disadvantage rider applies only to Opportunity Attack attack rolls made against the wearer. Existing modify_roll_advantage can target attack rolls generally, and can narrow by attacker creature type, but it cannot scope the rider to the opportunity-attack subset. Encoding it as all attack rolls would be a scope lie; encoding it as deny_opportunity_attack would overstate the effect.",
+      "evidence": "any creature that makes an Opportunity Attack against you has Disadvantage on the attack roll"
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: UnitRecord has no magic_item variant, so no encoding is possible regardless of effect shape. Secondary gaps (modify_speed, OA-scoped disadvantage, duration_budget resource, toggle deactivation, attunement) would each require surface widening even after the structural gap is closed. The OA-scope gap is the most novel: it requires either a new RollKind variant ('opportunity_attack') or an attachment-filter mechanism to scope advantage/disadvantage modifiers to a specific attack sub-type made by others against the wearer."
+  "notes": "The core family fit is still magic_item + activation, and the underlying effects are existing v4 concepts: doubled speed maps to set_speed_ratio and the OA rider maps to modify_roll_advantage. The blocker is surface shape, not a new atom. No Dhall/JSON/trace was authored because any current encoding would misrepresent the toggle semantics and/or broaden the OA rider beyond RAW."
 }

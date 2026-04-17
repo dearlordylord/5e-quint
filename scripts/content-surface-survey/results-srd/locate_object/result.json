@@ -1,16 +1,9 @@
 {
   "unit_slug": "locate_object",
-  "outcome": "surface_widening",
+  "outcome": "dm_agenda",
   "atoms_used": [],
   "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantSenseOperation",
-      "justification": "Locate Object grants the caster a continuous directional sense of a target object for the concentration duration. This is an ongoing_effect spell (self attachment, concentration), but OngoingOperation only allows roll_modifier and damage_on_hit. A grant_sense variant is needed to represent passive divination/detection operations. The v4 taxonomy already lists grant_sense in the Effect Atoms (section 9); what is missing is the OngoingOperation variant that wires it into the ongoing_effect family.",
-      "evidence": "You sense the direction to the object's location if that object is within 1,000 feet of you. If the object is in motion, you know the direction of its movement."
-    }
-  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The spell fits ongoing_effect structurally (concentration, self attachment, active for duration), but the operation layer has no variant for divination/detection effects. The v4 grant_sense atom covers this mechanically; only a surface type variant is needed in OngoingOperation. No attack roll, save, damage, or roll modifier is involved — this is purely a sensing effect. The lead-blocking exception is a filter condition on the sense range, a secondary detail that would also need surface representation if the widening is accepted."
+  "notes": "No authored surface file was created. Locate Object's payload is continuous object-location and movement-direction knowledge, which local precedent treats as session-owned spatial information rather than a core mechanics atom."
 }

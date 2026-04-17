@@ -1,105 +1,122 @@
-# Widening Proposal: Cloak of Arachnida
+# Proposal: magic_item_cloak_of_arachnida — structural_widening
 
-**Unit slug:** `magic_item_cloak_of_arachnida`
-**Outcome:** `structural_widening`
-**Confidence:** high
+## Why this does not fit honestly
 
----
+`Cloak of Arachnida` combines two different mechanics families in one item:
 
-## Why this unit cannot be encoded honestly
+- passive always-on benefits while worn:
+  - Poison resistance
+  - Climb Speed equal to Speed
+  - web-movement / web-immunity rider
+- a separately limited activated spell rider:
+  - cast `Web`
+  - fixed save DC 13
+  - doubled area
+  - refreshes at dawn
 
-The content surface (`src/surface/types.ts`) defines `UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord`. There is no `MagicItemRecord` variant and no `magic_item` family anywhere in the type system. The tracer's exhaustive `switch` on `unit.kind` would throw `"unhandled unit kind"` for any `magic_item` record. No honest encoding exists at the current surface — the blocker is structural, not cosmetic.
+The current surface allows only:
 
-Even if a `MagicItemRecord` kind were added, five further widenings would be required before the Cloak of Arachnida could be encoded fully and honestly. All six gaps are described below in dependency order.
+- `MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics`
 
----
+That means a magic item can currently be **either** passive **or** activated, but not both at once. No single existing family can represent this item without dropping real mechanics or lying about when they apply.
 
-## Gap 1 — MagicItemRecord + `magic_item` UnitRecord kind (new subgraph)
+This is the primary blocker, so the correct classification is `structural_widening`.
 
-**What the SRD says:** The Cloak of Arachnida is a Wondrous Item, Very Rare (Requires Attunement). It is a magic item with a distinct acquisition model, attunement requirement, and activation cadence — none of which map onto the spell/class-feature/mastery lifecycle.
+## Gap 1 — mixed passive + activated item mechanics
 
-**What the surface has:** `UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord`. The v4 taxonomy (`TAXONOMY_atoms_graph.md`) exposes a `magic_item_root` source atom but there is no corresponding TypeScript type, Dhall schema, or tracer branch.
+Type of gap: `structural_widening`
 
-**What is needed:** A new `MagicItemRecord` discriminated union member with at minimum: `kind: "magic_item"`, item category (wondrous/armor/weapon/…), rarity, attunement flag, and a properties array. This is a new subgraph — it affects types.ts, the Dhall package, the tracer, and likely the interpreter pipeline.
+The item needs one passive stream and one separate activated stream.
 
----
+Proposed widening:
 
-## Gap 2 — `passive_bundle` mechanics family (new subgraph)
+- `new_subgraph`: `multi_mechanics_magic_item`
 
-**What the SRD says:** "While wearing this cloak… you gain the following benefits." Four distinct always-on passive effects are granted simultaneously for as long as the item is worn and attuned:
-1. Spider Climb — Climb Speed equal to your Speed, hands-free vertical/ceiling movement
-2. Spider Walk — immunity to web restraint + move through web difficult terrain freely
-3. Web Sense — tremorsense 10 ft. over any surface connected by a web
-4. Web casting — cast *Web* once per dawn (DC 13, doubled area)
+Justification:
 
-**What the surface has:** Existing mechanics families (`spell_cast`, `class_feature`, `mastery`) model single-procedure activations: you spend a resource, a procedure runs, an effect resolves. None models a bundle of heterogeneous always-on passives gated only by wearing + attunement.
+- Many SRD items are bundles of independent mechanics rather than a single family.
+- Here, the passive benefits are not activated, and the `Web` cast is not always-on.
+- Modeling the whole item as `passive` would falsely make `Web` always available with no once-per-dawn limit.
+- Modeling the whole item as `activation` would falsely imply Poison Resistance / Climb Speed are activated uses rather than persistent benefits.
 
-**What is needed:** A `passive_bundle` family (or equivalent attunement-passive container) that can hold multiple simultaneous effect records, each active for the duration of wear + attunement, with no activation procedure of their own. This is architecturally distinct from any existing family and requires a new mechanics subgraph.
+Evidence:
 
----
+> "While wearing it, you gain the following benefits."
+>
+> "Poison Resistance. You have Resistance to Poison damage."
+>
+> "Spider Climb. You have a Climb Speed equal to your Speed..."
+>
+> "Web. You can cast Web ... Once used, this property can't be used again until the next dawn."
 
-## Gap 3 — `RestResetCadence: dawn` (new variant)
+## Gap 2 — granted-spell overrides on item-cast spells
 
-**What the SRD says:** "Once used, this property can't be used again until the next dawn."
+Type of gap: `surface_widening`
 
-**What the surface has:** `RestResetCadence` covers `short_or_long_rest | long_rest | short_rest | partial_short_full_long`. All variants reset on a rest. Dawn is a time-of-day event independent of rest.
+Even if the mixed-mechanics item shape existed, the `Web` rider still needs cast overrides that the current `grant_spell_access` surface cannot express:
 
-**What is needed:** A new `"dawn"` variant in `RestResetCadence` (or an equivalent `DawnResetCadence` type). This is a surface-level variant gap, but it is blocked by Gap 1 (no magic item kind) and Gap 2 (no passive_bundle family to host the resource field).
+- fixed save DC 13
+- modified spell geometry: "fills twice its normal area"
 
----
+Proposed widening:
 
-## Gap 4 — `charge` resource kind (new variant)
+- `new_variant`: `grant_spell_access_overrides`
 
-**What the SRD says:** The Web casting property consumes a single per-dawn charge. This is mechanically distinct from `use_count` (which resets on rest) and from `spell_slot` (which is a pooled class resource).
+Suggested fields:
 
-**What the surface has:** `types.ts` resource discriminants: `spell_slot` and `use_count`. The v4 taxonomy includes a `charge` atom, but it is not exposed in the TypeScript surface.
+- `saveDcOverride: number`
+- `spellParameterOverrides` or similarly-scoped payload for spell-specific cast modifications
 
-**What is needed:** A `"charge"` resource kind in `types.ts`, paired with the `dawn` reset cadence from Gap 3. Together they model the "once-per-dawn charge" pattern that appears on many magic items. This is a narrow variant addition but is structurally dependent on Gaps 1–3.
+Justification:
 
----
+- Existing `grant_spell_access` only says *which spell* and *what resource mode*.
+- It cannot say that the item-cast version uses a fixed DC rather than the caster's normal spell save DC.
+- It also cannot alter a spell's authored parameters for casts from this item.
 
-## Gap 5 — Climb Speed effect variant (new atom)
+Evidence:
 
-**What the SRD says:** "You have a Climb Speed equal to your Speed and can move up, down, and across vertical surfaces and along ceilings, while leaving your hands free."
+> "Web. You can cast Web (save DC 13). The web created by the spell fills twice its normal area."
 
-**What the surface has:** `ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect`. Neither grants a typed movement speed. The v4 taxonomy lists a `modify_speed` atom, but there is no speed-kind discriminant (`"climb"` vs `"fly"` vs `"swim"` vs `"burrow"`), and `ClassFeatureEffect` does not include any speed-granting variant.
+## Gap 3 — web-specific traversal / immunity rider
 
-**What is needed:** Either a new `GrantClimbSpeedEffect` variant (analogous to the v4 `modify_speed` atom) or a generic `GrantTypedSpeedEffect` with a `speed_kind: "climb" | "fly" | "swim" | "burrow"` discriminant. This is a new atom addition to the effect vocabulary.
+Type of gap: `atom_widening`
 
----
+The cloak gives a deterministic mobility rule around webs that is not representable by the current atom set:
 
-## Gap 6 — Web immunity / terrain traversal immunity atom (new atom)
+- cannot be caught in webs
+- can move through webs as if they were Difficult Terrain
 
-**What the SRD says:** "You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain."
+This is not covered by:
 
-**What the surface has:** The v4 taxonomy has a `block_travel` atom modeling movement impediment, but no atom for _immunity to a specific restraint type_ or _terrain traversal override for a named terrain kind_. Neither `ClassFeatureEffect` nor any v4 atom covers "immune to being restrained by webs" or "treat web terrain as normal terrain."
+- `grant_speed`
+- `grant_condition_immunity` (there is no "webbed" condition)
+- `block_travel` / `block_targeting`
+- any current difficult-terrain or terrain-immunity atom in `types.ts`
 
-**What is needed:** A new narrow effect atom — something like `TraversalImmunityEffect` with a `terrain_kind: "web"` discriminant, or a two-part encoding: `ConditionImmunityEffect(restrained_by_web)` + `TerrainTraversalEffect(web, normal)`. This is a new atom addition with no existing surface analog.
+Proposed widening:
 
----
+- `new_atom`: `ignore_web_restrictions`
 
-## Dependency summary
+Justification:
 
-```
-Gap 1 (MagicItemRecord kind)
-  └── Gap 2 (passive_bundle family)
-        ├── Gap 3 (dawn reset cadence)
-        │     └── Gap 4 (charge resource)
-        ├── Gap 5 (climb speed atom)
-        └── Gap 6 (web immunity atom)
-```
+- The benefit is narrower than generic movement speed and narrower than generic condition immunity.
+- The item changes how a specific environmental / spell-created obstacle affects the wearer.
+- This is deterministic core mechanics, not DM agenda.
 
-All six gaps must be resolved before any honest encoding of the Cloak of Arachnida is possible. The Web casting sub-mechanic (DC 13 save, doubled *Web* area) is the only property that partially overlaps an existing mechanics family (a spell cast with a save), but even that requires Gaps 3 and 4, and the doubled-area modifier has no surface encoding either.
+Evidence:
 
----
+> "Spider Walk. You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain."
 
-## Recommended widening order
+## Notes on partial fit
 
-1. Add `MagicItemRecord` and `magic_item` kind to `types.ts` + tracer
-2. Design `passive_bundle` mechanics family schema (Dhall + TS)
-3. Add `"dawn"` to `RestResetCadence`
-4. Add `"charge"` resource kind
-5. Add typed speed effect variant (climb / fly / swim / burrow)
-6. Add web-immunity / terrain-traversal-immunity atom
+Some parts of the item already fit cleanly in the current surface:
 
-Steps 3–6 are narrow additions once the structural skeleton (1–2) exists.
+- Poison Resistance → `grant_resistance` with `poison`
+- Climb Speed equal to Speed → `grant_speed` with `speedKind = "climb"` and `feet = { kind = "walk_speed" }`
+
+There is also direct local precedent for treating the vertical-surface / ceiling text as out-of-scope geometry while still encoding the linked climb speed:
+
+- `content/spider_climb.dhall`
+- `content/magic_item_slippers_of_spider_climbing.dhall`
+
+Those clean sub-parts do not change the top-level verdict, because the whole item still cannot be represented honestly as one existing `MagicItemMechanics` family.

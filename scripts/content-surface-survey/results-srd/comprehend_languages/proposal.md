@@ -1,65 +1,27 @@
-# Proposal: surface_widening for Comprehend Languages
+# Comprehend Languages
 
-## Unit
+## Verdict
 
-- Slug: `comprehend_languages`
-- Kind: spell
-- Family: `ongoing_effect` (correct family, cannot be encoded)
+`dm_agenda`
 
-## Gap
+## Why it is not authored
 
-`OngoingOperation` is currently:
+The spell's payload is purely informational:
 
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
+- "you understand the literal meaning of any language that you hear or see signed"
+- "You also understand any written language that you see, but you must be touching the surface on which the words are written"
+- "It takes about 1 minute to read one page of text"
+- "This spell doesn't decode symbols or secret messages"
 
-Comprehend Languages is a timed self-buff that grants the caster passive language comprehension for 1 hour. It has no roll modification, no on-hit damage, and no save gate. Its sole mechanical content is "caster gains the ability to understand any language while the spell persists."
+That does not currently correspond to a deterministic combat/runtime atom in the authored surface. The existing `detect` atom is about sensing closed mechanical properties like magic or thoughts, not granting language comprehension. Encoding this as a fake self-buff or as a detection effect would produce a misleading trace.
 
-The v4 atom for this is `grant_sense` (Section 9, Effect Atoms — unchanged from v3). No path from `ongoing_effect.operation` reaches `grant_sense` in the current surface.
+## Local precedent
 
-## Proposed widening
+The package already treats language/comprehension as caller-owned or DM agenda in authored notes:
 
-Add a new `OngoingOperation` variant:
+- [content/mass_suggestion.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2591716-comprehend_languages/content/mass_suggestion.dhall:45) notes that hearing/understanding language is "DM agenda per §B Comprehend Languages / Tongues".
+- [content/geas.dhall](/workspace/typescript/dnd/scripts/content-surface-survey/workers/2591716-comprehend_languages/content/geas.dhall:33) treats "can't understand your command" as language/comprehension handling outside core mechanics.
 
-```typescript
-export type GrantSenseOperation = {
-  readonly kind: "grant_sense";
-  readonly sense: string;          // closed enum candidate; "language_comprehension" for this unit
-};
-```
+## No widening proposed
 
-Or, more narrowly for the specific pressure case:
-
-```typescript
-export type GrantSenseOperation = {
-  readonly kind: "grant_sense";
-  readonly description: string;    // prose description of the granted sense, treated as opaque by the engine
-};
-```
-
-The tracer would emit a `grant_sense` node with a `grants` edge from the procedure node and an `attaches_to` edge to the self-attachment.
-
-## Why ongoing_effect is correct
-
-All spell-card axes map cleanly:
-
-| Field | Value |
-|---|---|
-| `family` | `ongoing_effect` |
-| `level` | `1` |
-| `school` | `divination` |
-| `castingTime` | `{ kind: "action" }` (or `{ kind: "minutes", amount: 1, ritual: true }` for ritual casting) |
-| `range` | `{ kind: "self" }` |
-| `components` | `{ v: true, s: true, m: "a pinch of soot and salt" }` |
-| `duration` | `{ kind: "timed", value: { unit: "hour", amount: 1 } }` |
-| `attachment` | `{ kind: "self" }` |
-| `operation` | **MISSING VARIANT** |
-
-The ritual flag is a secondary note: the existing `CastingTime` `minutes` variant already has `ritual: boolean`. The primary action-cost cast also works with `{ kind: "action" }` treating the ritual as an optional alternate casting mode (which the surface may want to model separately later). Neither variant blocks encoding once `GrantSenseOperation` exists.
-
-## Scope
-
-Narrowest honest classification: `surface_widening`. The `ongoing_effect` family, `grant_sense` v4 atom, and `self` attachment all exist. Only the `OngoingOperation` union needs a new member.
-
-No new v4 atoms are required.
+No surface or atom widening is proposed from this unit alone. Adding a first-class language-comprehension model would be a deliberate scope expansion into informational/caller-facing state, not a narrow patch to an otherwise-mechanical spell family.

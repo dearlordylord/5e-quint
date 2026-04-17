@@ -90,6 +90,10 @@ pnpm --filter @dnd/prototype-content-surface exec tsx \
 pnpm --filter @dnd/prototype-content-surface exec tsx \
   ../../scripts/content-surface-survey/close-loop.ts \
   --cluster grant_sense --limit 3 --execute --backend codex
+
+pnpm --filter @dnd/prototype-content-surface exec tsx \
+  ../../scripts/content-surface-survey/close-loop.ts \
+  --kind magic_item --cluster modify_speed_effect --limit 2 --execute --backend codex
 ```
 
 ## Gotchas

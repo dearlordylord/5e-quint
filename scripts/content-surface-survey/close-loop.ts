@@ -44,6 +44,7 @@ type QueueRow = {
 
 type Args = {
   source: Source | "all";
+  kind?: string;
   top: number;
   cluster?: string;
   slugs?: ReadonlyArray<string>;
@@ -113,6 +114,9 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
       case "--top":
         args.top = Number(argv[++i] ?? args.top);
         break;
+      case "--kind":
+        args.kind = argv[++i];
+        break;
       case "--cluster":
         args.cluster = argv[++i];
         break;
@@ -167,6 +171,7 @@ function printUsageAndExit(code: number): never {
       "Options:",
       "  --source srd-5.2.1|xphb|all   dataset source to inspect (default: srd-5.2.1)",
       "  --top N                        show top N clusters (default: 15)",
+      "  --kind KIND                    restrict rows/selection to one queue kind",
       "  --cluster NAME                 rerun a specific canonical cluster",
       "  --slugs a,b,c                  override cluster selection with explicit slugs",
       "  --limit N                      cap rerun batch size (default: 5)",
@@ -212,6 +217,7 @@ function normalize(rawName: string): string {
 function buildClusters(
   rows: ReadonlyArray<DatasetRow>,
   queue: Map<string, QueueRow>,
+  kindFilter?: string,
 ): ReadonlyArray<ClusterRecord> {
   const clusters = new Map<
     string,
@@ -230,6 +236,7 @@ function buildClusters(
       const canonical = normalize(raw);
       const queueRow = queue.get(row.unit_slug);
       if (!queueRow) continue;
+      if (kindFilter && queueRow.kind !== kindFilter) continue;
       const bucket = clusters.get(canonical) ?? {
         slugs: new Set<string>(),
         sources: new Set<Source>(),
@@ -304,12 +311,17 @@ function selectSlugs(
 
   const scored = cluster.slugs
     .map((slug) => {
-      const before = currentVerdictForSlug(queue.get(slug)!.source, slug) ?? datasetVerdictForSlug(rows, slug);
+      const queueRow = queue.get(slug)!;
+      if (args.kind && queueRow.kind !== args.kind) {
+        return null;
+      }
+      const before = currentVerdictForSlug(queueRow.source, slug) ?? datasetVerdictForSlug(rows, slug);
       return {
         slug,
         rank: verdictRank(before),
       };
     })
+    .filter((entry): entry is { slug: string; rank: number } => entry !== null)
     .sort((a, b) => a.rank - b.rank || a.slug.localeCompare(b.slug));
 
   return scored.slice(0, args.limit).map((entry) => entry.slug);
@@ -365,7 +377,7 @@ function main(): void {
   const args = parseArgs(process.argv.slice(2));
   const queue = loadQueue();
   const rows = loadRows(args.source, queue);
-  const clusters = buildClusters(rows, queue);
+  const clusters = buildClusters(rows, queue, args.kind);
 
   process.stdout.write(renderClusterTable(clusters, args.top) + "\n");
 

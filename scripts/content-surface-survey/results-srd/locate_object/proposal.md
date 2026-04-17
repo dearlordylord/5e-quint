@@ -1,54 +1,40 @@
-# Proposal: surface_widening for Locate Object
+# Locate Object
 
-## Unit
+## Verdict
 
-**Locate Object** — Level 2 Divination, Concentration 10 min, Action, Self range.
+`dm_agenda`
 
-## Why it doesn't fit
+No authored surface file was created for this unit.
 
-The spell is structurally an `ongoing_effect` (concentration duration, persistent effect on the caster). However, `OngoingOperation` in `types.ts` is:
+## Why
 
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
+`Locate Object`'s actual payload is informational and spatial:
 
-Locate Object's operation is neither. The spell grants the caster a **continuous directional sense** for the duration: they know the direction toward a named/described object within 1,000 feet, and if the object moves, they know the direction of movement. This is a passive divination/detection operation — no roll modifier, no damage, no save.
+> You sense the direction to the object's location if that object is within 1,000 feet of you.
 
-## What is needed
+> If the object is in motion, you know the direction of its movement.
 
-A new variant of `OngoingOperation`:
+> The spell can locate a specific object known to you if you have seen it up close... Alternatively, the spell can locate the nearest object of a particular kind...
 
-```typescript
-export type GrantSenseOperation = {
-  readonly kind: "grant_sense";
-  readonly sense: "locate_object"; // closed enum, widen as needed
-  readonly rangeCondition: { readonly feet: number };
-};
+This prototype's authored surface models deterministic combat/runtime mechanics. It does not model session-owned spatial disclosure such as object tracking, route knowledge, or remote-location revelation.
 
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | GrantSenseOperation;
-```
+Local repo precedent is consistent on that boundary:
 
-The `rangeCondition` captures "within 1,000 feet" — the bound on when the sense is active. The directional information itself (direction + movement direction) is the sense payload; it does not need further structure at this level.
+- `content/mind_spike.dhall` explicitly defers persistent target-location knowledge as DM agenda, citing sibling spells like `Locate Object`.
+- `/workspace/typescript/dnd/plans/CONTENT_SURFACE_DEFERRED.md` explicitly lists `Locate Object` under session-owned effects: "object-location sense is spatial/session-owned."
+- `content/identify.dhall` treats information-disclosure payloads as DM agenda rather than forcing a fake effect atom.
 
-## v4 taxonomy status
+## Why I Did Not Author A Placeholder
 
-`grant_sense` is already in the v4 Effect Atoms (section 9). No new atom is needed. This is purely a surface gap: the atom exists in the taxonomy but has no authored surface variant in `OngoingOperation`.
+Any existing family would require a dishonest encoding:
 
-## Secondary detail (not blocking)
+- `activation` plus `{ kind = "none" }` would erase the spell's real effect.
+- `ongoing_effect` has no honest atom for directional object-location knowledge.
+- Reusing `detect` would be false. `detect` is a closed property scan (`magic`, `thoughts`, `poison_and_disease`, etc.), not named-object tracking or nearest-object-of-kind resolution.
+- Reusing `grant_sense` would also be false. The spell does not grant a reusable sense mode like Darkvision or Blindsight.
 
-The SRD includes: "This spell can't locate an object if any thickness of lead blocks a direct path between you and the object." This is a **blocking filter** on the sense. Encoding it would require a filter/negation predicate on `GrantSenseOperation` (e.g., `blockedBy: ["lead"]`). This is a secondary concern; the primary gap is the missing operation variant. If `GrantSenseOperation` is accepted, the blocking filter can be added as an optional field in the same widening pass.
+The lead-blocking clause and 1,000-foot bound are also spatial predicates, not standalone core mechanics atoms in this package.
 
-## Other spells that would consume this widening
+## No Widening Proposed
 
-- Detect Magic (senses magical auras in 30 ft)
-- Detect Evil and Good (senses creature types)
-- Locate Creature (same shape as Locate Object, targeting creatures)
-- Locate Animals or Plants (same shape)
-- Detect Thoughts (concentration, sense of creature thoughts)
-- See Invisibility (see invisible/ethereal for duration)
-- Detect Poison and Disease (sense poisoned/diseased creatures/substances)
-
-The `grant_sense` + `ongoing_effect` composition covers a wide class of divination concentration spells. This is a high-value widening with broad applicability.
+No surface or atom widening is proposed for this worker result. Under the repo's current architecture, `Locate Object` is better classified as out-of-core than forced into a misleading trace.

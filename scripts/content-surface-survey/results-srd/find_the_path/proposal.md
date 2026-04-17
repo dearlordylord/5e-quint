@@ -1,63 +1,38 @@
-# Proposal: surface widening for Find the Path
+# Find the Path
 
-## Unit
+## Verdict
 
-- **Slug:** `find_the_path`
-- **Kind:** spell (level 6, divination, concentration up to 1 day)
-- **Outcome:** `surface_widening`
+`dm_agenda`
 
-## Why it doesn't fit today
+No authored surface file was created for this unit.
 
-Find the Path is structurally an `ongoing_effect` spell:
-- Casting time: 1 minute (`CastingTime.kind = "minutes"`, `amount = 1`, `ritual = false`)
-- Range: Self (`Range.kind = "self"`)
-- Duration: concentration, up to 1 day (`Duration.kind = "concentration"`, `upTo = { unit: "day", amount: 1 }`)
-- Attachment: `self` (the navigation faculty is granted to the caster)
+## Why
 
-All header fields type-check. The blocker is `OngoingOperation`:
+`Find the Path` does not impose a combat/runtime state change on creatures, objects, resources, or action economy. Its payload is informational:
 
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
+> You magically sense the most direct physical route to a location you name.
 
-The spell grants a **persistent navigation sense** — distance/direction awareness to a named destination, plus oracle knowledge at path-choice points. Neither `roll_modifier` nor `damage_on_hit` models this. There is no variant in `OngoingOperation` that routes to the v4 `grant_sense` atom.
+> For the duration, as long as you are on the same plane of existence as the destination, you know how far it is and in what direction it lies.
 
-## What is needed
+> Whenever you face a choice of paths along the way there, you know which path is the most direct.
 
-A new `OngoingOperation` variant, tentatively:
+Within this prototype, that kind of guidance is caller/session-owned rather than a core mechanics atom:
 
-```typescript
-export type GrantSenseOperation = {
-  readonly kind: "grant_sense";
-  readonly senseKind: string; // e.g. "navigation_awareness"
-  readonly description?: string;
-};
-```
+- `identify.dhall` explicitly classifies information disclosure as DM agenda.
+- `mind_spike.dhall` explicitly classifies persistent target-location knowledge as DM agenda, citing sibling spells like Locate Object and Scrying.
 
-Incorporated into:
+`Find the Path` is the same category, just applied to route guidance instead of creature tracking.
 
-```typescript
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | GrantSenseOperation;
-```
+## Why I did not force a placeholder encoding
 
-The `senseKind` field should be a closed enum widened on demand. For Find the Path, the value would be `"navigation_awareness"` (or similar). Future spells that grant darkvision, tremorsense, blindsight, etc. through concentration would also use this variant.
+Any existing spell family would require lying:
 
-The tracer's `traceOngoingOperation` switch would need a `grant_sense` arm that emits a `grant_sense` effect node (already in v4).
+- `activation` with `{ kind = "none" }` would discard the spell's entire effect.
+- `ongoing_effect` has no honest atom for route guidance, direction/distance knowledge, or branch-choice navigation.
+- Reusing `detect` or `grant_sense` would be false; the spell is neither property detection nor a new sensory mode.
 
-## Spell characteristics omitted from today's surface (secondary)
+Because a misleading trace is worse than no trace, the correct outcome here is to stop and record the unit as out-of-core.
 
-The spell has two eligibility conditions that the surface currently has no grammar for:
-1. **Caster familiarity requirement** — the caster must be "familiar with the location". This is a pre-cast guard, not a runtime mechanic, and is DM-adjudicated at the table.
-2. **Spell failure conditions** — fails for destinations on another plane, moving destinations, or unspecific destinations. These are also cast-time validity checks, not ongoing mechanical effects.
+## No widening proposed
 
-Both are outside-core DM agenda (per ARCHITECTURE.md). They do not need surface encoding and are not proposed widenings.
-
-## Classification rationale
-
-- Family exists: `ongoing_effect` ✓
-- v4 atom exists: `grant_sense` ✓
-- Gap: `OngoingOperation` has no variant for `grant_sense`
-- → `surface_widening` (narrowest honest classification)
+I am not proposing a surface or atom widening for this worker result. Under the repo's current architecture, navigation / route-disclosure effects belong to session-layer adjudication rather than the core authored surface.
