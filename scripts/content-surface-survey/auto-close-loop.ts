@@ -188,6 +188,8 @@ const DEFAULT_INTEGRATION_LOCK_PATH = path.join(
   "integration.lock.json",
 );
 
+class NoSurfaceChangeNeededError extends Error {}
+
 function parseArgs(argv: ReadonlyArray<string>): Args {
   const args: Args = {
     runnerId: "primary",
@@ -647,6 +649,34 @@ function removableUntracked(paths: ReadonlyArray<string>): string[] {
   );
 }
 
+function ensureSymlinkTarget(linkPath: string, targetPath: string): void {
+  if (!fs.existsSync(targetPath)) return;
+  try {
+    const stat = fs.lstatSync(linkPath);
+    if (stat.isSymbolicLink()) {
+      const resolved = fs.realpathSync(linkPath);
+      if (resolved === fs.realpathSync(targetPath)) {
+        return;
+      }
+      fs.rmSync(linkPath, { force: true, recursive: true });
+    } else {
+      fs.rmSync(linkPath, { force: true, recursive: true });
+    }
+  } catch {
+    // Path missing; create below.
+  }
+  fs.mkdirSync(path.dirname(linkPath), { recursive: true });
+  fs.symlinkSync(targetPath, linkPath);
+}
+
+function ensureWorktreeDependencyLinks(): void {
+  ensureSymlinkTarget(path.join(repoRoot(), "node_modules"), path.join(sharedRoot(), "node_modules"));
+  ensureSymlinkTarget(
+    path.join(repoRoot(), "packages", "prototype-content-surface", "node_modules"),
+    path.join(sharedRoot(), "packages", "prototype-content-surface", "node_modules"),
+  );
+}
+
 function touchesPrototypeTypeScript(paths: ReadonlyArray<string>): boolean {
   return paths.some(
     (rel) =>
@@ -656,6 +686,7 @@ function touchesPrototypeTypeScript(paths: ReadonlyArray<string>): boolean {
 }
 
 function assertPrototypeTypecheckPasses(): void {
+  ensureWorktreeDependencyLinks();
   const result = spawnSync("pnpm", ["--filter", "@dnd/prototype-content-surface", "typecheck"], {
     cwd: repoRoot(),
     stdio: "inherit",
@@ -1141,6 +1172,7 @@ function integrateCommittedBatch(commitSha: string): void {
       throw new Error(`failed to integrate batch commit ${commitSha}: ${cherryPick.stderr || cherryPick.stdout}`.trim());
     }
     gitOk(["reset", "--hard", DEFAULT_INTEGRATION_BRANCH], repoRoot());
+    ensureWorktreeDependencyLinks();
   } finally {
     release();
   }
@@ -1274,7 +1306,7 @@ function main(): void {
         leasedCluster = cluster.canonical;
         const surfaceAttempt = attemptSurfaceChange(args, cluster.canonical);
         if (surfaceAttempt.changedPaths.length === 0) {
-          throw new Error(`surface-change attempt made no changes for ${cluster.canonical}`);
+          throw new NoSurfaceChangeNeededError(`surface-change attempt made no changes for ${cluster.canonical}`);
         }
         const { reportPath, report } = runBatch(args, cluster.canonical);
         state.lastReportPath = reportPath;
@@ -1322,7 +1354,12 @@ function main(): void {
           restoreTracked(changes.tracked);
           removeUntracked(removableUntracked(changes.untracked));
         }
-        if (isTransientBatchError(state.lastError)) {
+        if (error instanceof NoSurfaceChangeNeededError) {
+          attempted.add(cluster.canonical);
+          state.attempted = [...attempted];
+          state.noImproveStreak += 1;
+          writeObservability(args, state);
+        } else if (isTransientBatchError(state.lastError)) {
           process.stderr.write("auto-close-loop: transient batch failure; will retry after sleep\n");
         } else {
           appendFailureLog({
