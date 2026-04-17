@@ -585,6 +585,16 @@ export type EffectAtom =
       readonly skillFilter?: SkillFilter;
       readonly count?: number;
     }
+  // Prototype extension: persistent additive modifier to future
+  // damage rolls. Needed for SRD magic weapons that grant "+N to
+  // damage rolls made with this weapon". Distinct from `damage`,
+  // which models a concrete dealt-damage instance, and from
+  // `modify_roll_numeric`, which is limited to d20-based roll kinds.
+  | {
+      readonly kind: "modify_damage_numeric";
+      readonly delta: DiceDelta;
+      readonly weaponFilter?: WeaponFilter;
+    }
   // Lowers the crit threshold on attack rolls (Improved Critical:
   // threshold 19 means attacks crit on natural 19 or 20). Always
   // applies to "attack_roll" — no other roll has a crit concept — so

@@ -242,6 +242,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_damage_numeric": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_damage_numeric",
+        label: `modify_damage_numeric\n${describeDelta(e.delta)}${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
     case "modify_roll_advantage": {
       const id = ids("eff");
       const by =
@@ -614,6 +624,7 @@ function traceEffectAtomScaling(
     case "remove_condition":
     case "grant_resistance":
     case "modify_roll_numeric":
+    case "modify_damage_numeric":
     case "modify_roll_advantage":
     case "modify_crit_range":
     case "scale_attack_count":
