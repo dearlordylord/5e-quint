@@ -164,7 +164,13 @@ subs = {
     '{{BLESS_JSON}}': open(sys.argv[5]).read(),
     '{{ACTION_SURGE_DHALL}}': open(sys.argv[6]).read(),
     '{{ACTION_SURGE_JSON}}': open(sys.argv[7]).read(),
-    '{{TAXONOMY_MD}}': open(sys.argv[8]).read(),
+    '{{ALERT_DHALL}}': open(sys.argv[8]).read(),
+    '{{ALERT_JSON}}': open(sys.argv[9]).read(),
+    '{{DARKVISION_ELF_DHALL}}': open(sys.argv[10]).read(),
+    '{{DARKVISION_ELF_JSON}}': open(sys.argv[11]).read(),
+    '{{CLOAK_OF_PROTECTION_DHALL}}': open(sys.argv[12]).read(),
+    '{{CLOAK_OF_PROTECTION_JSON}}': open(sys.argv[13]).read(),
+    '{{TAXONOMY_MD}}': open(sys.argv[14]).read(),
 }
 for k, v in subs.items():
     template = template.replace(k, v)
@@ -176,6 +182,12 @@ print(template, end='')
   "$PROTO_DIR/content/bless.json" \
   "$PROTO_DIR/content/action_surge.dhall" \
   "$PROTO_DIR/content/action_surge.json" \
+  "$PROTO_DIR/content/alert.dhall" \
+  "$PROTO_DIR/content/alert.json" \
+  "$PROTO_DIR/content/darkvision_elf.dhall" \
+  "$PROTO_DIR/content/darkvision_elf.json" \
+  "$PROTO_DIR/content/cloak_of_protection.dhall" \
+  "$PROTO_DIR/content/cloak_of_protection.json" \
   "$REPO_ROOT/.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md" \
   > "$prompt_path"
 rm -f "$prompt_path.tmp"
@@ -200,10 +212,12 @@ invoke_backend() {
     claude)
       (
         cd "$WORKSPACE"
+        # Prompt is piped on stdin — `"$(cat ...)"` as argv exceeds ARG_MAX
+        # once inline reference material grows past ~100KB.
         timeout --kill-after=10s "$CLAUDE_TIMEOUT_SECONDS" \
           "$CLAUDE_CMD" --model "$CLAUDE_MODEL" --print --output-format json \
             --dangerously-skip-permissions \
-            "$(cat "$prompt_path")" \
+            < "$prompt_path" \
             > "$backend_log" 2>&1
       )
       backend_exit=$?
@@ -332,14 +346,30 @@ done
 if [[ ! -f "$WORKSPACE/$result_file" ]] && [[ -f "$backend_log" ]]; then
   claude_text=$(jq -r '.result // ""' "$backend_log" 2>/dev/null)
   if [[ -n "$claude_text" ]]; then
-    # Try to match outcome keywords from the text
-    extracted_outcome=""
-    for outcome in dm_agenda structural_widening atom_widening surface_widening clean refused; do
-      if echo "$claude_text" | grep -qi "$outcome"; then
-        extracted_outcome="$outcome"
-        break
-      fi
-    done
+    # Priority 1: match an explicit self-verdict statement, e.g.
+    #   "outcome: **`surface_widening`**"
+    #   "verdict: surface_widening"
+    # These agent-author statements are the canonical verdict; the raw
+    # keyword may appear many times in the reasoning (e.g. "previously
+    # classified as structural_widening" when the real verdict is
+    # surface_widening). A declarative line wins over a keyword scan.
+    extracted_outcome=$(
+      echo "$claude_text" \
+      | grep -iEo '(outcome|verdict|classification)[[:space:]]*[:=][[:space:]]*[*`]*(dm_agenda|structural_widening|atom_widening|surface_widening|clean|refused)[*`]*' \
+      | head -1 \
+      | grep -iEo '(dm_agenda|structural_widening|atom_widening|surface_widening|clean|refused)'
+    )
+    # Priority 2: fall back to keyword scan in NARROWEST-first order so
+    # an agent discussing multiple outcome tiers picks the most specific
+    # label when no explicit verdict statement exists.
+    if [[ -z "$extracted_outcome" ]]; then
+      for outcome in clean dm_agenda surface_widening atom_widening structural_widening refused; do
+        if echo "$claude_text" | grep -qi "$outcome"; then
+          extracted_outcome="$outcome"
+          break
+        fi
+      done
+    fi
     if [[ -n "$extracted_outcome" ]]; then
       echo "worker.sh: synthesizing $result_file from text output (outcome=$extracted_outcome)" >&2
       cat > "$WORKSPACE/$result_file" <<EOF

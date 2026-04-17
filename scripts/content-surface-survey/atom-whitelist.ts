@@ -215,6 +215,13 @@ export const STAGE_3_EXTENSIONS = [
   "modify_crit_range", // Improved Critical (crit on 19-20).
   "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.
   "composite", // Bundle multiple effects in a single slot (Hypnotic Pattern).
+  // Effect atoms that are first-class EffectAtom variants in types.ts
+  // but whose atomKind strings the tracer emits aren't in the V4
+  // effect-atom list above. Listed here so units exercising them don't
+  // trip a false atom_widening verdict.
+  "grant_temp_hp", // false_life, Aid alternative, Inspiring Leader.
+  "grant_condition_immunity", // Mind Blank, Heroism (frightened), Freedom of Movement, Protection from Poison.
+  "grant_feat", // ASI "take a feat instead", Fighter bonus feats.
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.
