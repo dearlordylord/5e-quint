@@ -61,6 +61,21 @@ export type CastTimeChoice<T> = {
   readonly options: ReadonlyNonEmptyArray<T>;
 };
 
+// Named cast-time picker over bundles of effect atoms. Alter Self:
+// choose Aquatic Adaptation / Change Appearance / Natural Weapons at
+// cast time; while the spell persists, a Magic action may replace the
+// chosen option. Options may omit `effects` when the branch is purely
+// caller- / DM-owned narrative with no mechanical payload.
+export type CastTimeEffectModeChoice = {
+  readonly label: string;
+  readonly options: ReadonlyNonEmptyArray<{
+    readonly id: string;
+    readonly displayName: string;
+    readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+  }>;
+  readonly allowsMidDurationSwitchAs?: "magic_action";
+};
+
 // Damage-type reference — either a fixed type (most spells and
 // weapons), or a choice resolved at build time (Dragonborn ancestry)
 // or cast time (Chromatic Orb, Protection from Energy).
@@ -778,6 +793,20 @@ export type EffectAtom =
       readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
     }
+  // Alter Self (Natural Weapons): replace the creature's default
+  // Unarmed Strike damage profile while the effect persists. This is
+  // distinct from a one-shot `damage` atom because it changes the
+  // host creature's ongoing attack option, not a single resolution.
+  // The spellcasting-ability attack/damage substitution is part of the
+  // atom's semantics rather than additional fields on the payload.
+  | {
+      readonly kind: "natural_weapons";
+      readonly damageType: DamageType;
+      readonly damageDie: number;
+    }
+  // Alter Self (Aquatic Adaptation): simple capability flag that the
+  // host creature can breathe underwater.
+  | { readonly kind: "water_breathing" }
   // v4: teleport — Misty Step, Thunder Step, Dimension Door. The
   // destination is a closed descriptor; widen when a unit forces a
   // different destination shape (e.g., "a location you have seen" for
@@ -1226,7 +1255,11 @@ export type ActivationPhase =
   | {
       readonly kind: "direct";
       readonly attachment: Attachment;
-      readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
+      // Direct application can grant a fixed effect bundle, prompt for
+      // one of several named effect bundles, or both. At least one of
+      // `effects` / `mode` should be present at authoring sites.
+      readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+      readonly mode?: CastTimeEffectModeChoice;
     };
 
 // ---------- spell payload families ----------

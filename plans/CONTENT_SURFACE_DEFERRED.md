@@ -757,11 +757,37 @@ spell level and optionally a cast-time mode picker.
   type per mode. Authored as Radiant with the mode-typed creature
   override; the damage-type coupling is flagged as partial.
 
+### C4e. Self-modify without swap — RESOLVED 2026-04-17
+
+**Pressure:** Alter Self. RAW has three mutually exclusive modes at
+cast time, two of which carry mechanical payloads (Aquatic
+Adaptation, Natural Weapons) and one of which is pure narrative /
+caller-owned (Change Appearance). The chosen mode can be replaced
+later with a Magic action while the spell persists.
+
+**What landed:**
+- `CastTimeEffectModeChoice` on direct activation phases: a named
+  choice over effect bundles, with per-option optional effect lists so
+  narrative-only branches remain representable without fake mechanics.
+- `allowsMidDurationSwitchAs = "magic_action"` on the mode choice,
+  traced as a caller-owned replacement handle consuming an
+  `action_quota`.
+- New `EffectAtom` variants:
+  - `natural_weapons { damageType, damageDie }` — replaces the host's
+    default Unarmed Strike damage profile and implicitly uses the
+    spellcasting ability modifier for the attack and damage rolls.
+  - `water_breathing` — simple underwater-breathing capability flag.
+- Tracer support for the effect-mode picker plus the two new atoms.
+
+**Validation ref authored:**
+- `content/alter_self.dhall` — models Aquatic Adaptation and Natural
+  Weapons mechanically; records Change Appearance as the third
+  narrative-only mode.
+
 **Remaining C4 sub-problems** (see `DESIGN_C4a` §"What this does NOT
 cover"): C4b catalog reanimation (Animate Dead, Create Undead),
 C4c templated multi-spawn (Animate Objects), C4d target stat-block
-replacement (Polymorph family), C4e self-modify without swap
-(Alter Self), C4f shared companion control refinements,
+replacement (Polymorph family), C4f shared companion control refinements,
 C4g object-target transform, C4h permanent-after-concentration
 (True Polymorph). Each is its own tick.
 

@@ -229,6 +229,8 @@ export const STAGE_3_EXTENSIONS = [
   "end_ongoing_spells", // §C3 Dispel Magic — end ongoing spells on target up to a level bound.
   "maximize_healing_received", // Beacon of Hope — take max on healing dice.
   "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.
+  "natural_weapons", // §C4e Alter Self — replace default Unarmed Strike profile.
+  "water_breathing", // §C4e Alter Self — breathe underwater while the mode persists.
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.

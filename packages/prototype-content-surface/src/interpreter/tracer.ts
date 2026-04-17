@@ -10,6 +10,7 @@ import type {
   OngoingEffectMechanics,
   ActivationMechanics,
   ActivationPhase,
+  CastTimeEffectModeChoice,
   CastingTime,
   Duration,
   DurationEndTrigger,
@@ -475,6 +476,26 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "grant_speed",
         label: `grant_speed\n${e.speedKind} ${feet}${suffix}`,
+      });
+      return id;
+    }
+    case "natural_weapons": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "natural_weapons",
+        label: `natural_weapons\n1d${e.damageDie} ${e.damageType}\nuses spellcasting ability`,
+      });
+      return id;
+    }
+    case "water_breathing": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "water_breathing",
+        label: "water_breathing",
       });
       return id;
     }
@@ -1922,12 +1943,25 @@ function tracePhase(
       });
       edges.push({ from: ctx.procId, to: directId, relation: "grants" });
 
-      for (const eff of phase.effects) {
-        const effId = traceEffectAtom(eff, nodes, ids, edges);
-        if (effId === null) continue;
-        edges.push({ from: directId, to: effId, relation: "grants" });
-        edges.push({ from: effId, to: attId, relation: "attaches_to" });
-        traceEffectAtomScaling(eff, effId, ctx.slotId, nodes, edges, ids);
+      if (phase.effects !== undefined) {
+        for (const eff of phase.effects) {
+          const effId = traceEffectAtom(eff, nodes, ids, edges);
+          if (effId === null) continue;
+          edges.push({ from: directId, to: effId, relation: "grants" });
+          edges.push({ from: effId, to: attId, relation: "attaches_to" });
+          traceEffectAtomScaling(eff, effId, ctx.slotId, nodes, edges, ids);
+        }
+      }
+      if (phase.mode !== undefined) {
+        traceEffectModeChoice(
+          phase.mode,
+          directId,
+          attId,
+          ctx.slotId,
+          nodes,
+          edges,
+          ids,
+        );
       }
       return directId;
     }
@@ -1974,6 +2008,76 @@ function tracePhase(
     default: {
       const _exhaustive: never = phase;
       throw new Error(`unhandled phase: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceEffectModeChoice(
+  mode: CastTimeEffectModeChoice,
+  procId: string,
+  attId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const chooseId = ids("chz");
+  const switchTag =
+    mode.allowsMidDurationSwitchAs === "magic_action"
+      ? "\nswitch: Magic action"
+      : "";
+  nodes.push({
+    id: chooseId,
+    category: "procedure",
+    atomKind: "choose",
+    label: `choose\n${mode.label}\n${mode.options
+      .map((option) =>
+        option.effects === undefined
+          ? `${option.displayName} (DM-owned)`
+          : option.displayName,
+      )
+      .join(" | ")}${switchTag}`,
+  });
+  edges.push({ from: procId, to: chooseId, relation: "prompts" });
+
+  if (mode.allowsMidDurationSwitchAs === "magic_action") {
+    const replaceId = ids("repl");
+    nodes.push({
+      id: replaceId,
+      category: "procedure",
+      atomKind: "replace",
+      label: "replace\nmode via Magic action",
+    });
+    edges.push({ from: procId, to: replaceId, relation: "grants" });
+
+    const quotaId = ids("q");
+    nodes.push({
+      id: quotaId,
+      category: "resource",
+      atomKind: "action_quota",
+      label: "action_quota\n(mode switch)",
+    });
+    edges.push({ from: replaceId, to: quotaId, relation: "consumes" });
+    edges.push({ from: replaceId, to: chooseId, relation: "prompts" });
+  }
+
+  for (const option of mode.options) {
+    if (option.effects === undefined) continue;
+    const modeId = ids("eff");
+    nodes.push({
+      id: modeId,
+      category: "effect",
+      atomKind: "composite",
+      label: `mode\n${option.displayName}\n(${option.effects.length} effect${option.effects.length === 1 ? "" : "s"})`,
+    });
+    edges.push({ from: chooseId, to: modeId, relation: "modifies" });
+    edges.push({ from: modeId, to: attId, relation: "attaches_to" });
+    for (const effect of option.effects) {
+      const effectId = traceEffectAtom(effect, nodes, ids, edges);
+      if (effectId === null) continue;
+      edges.push({ from: modeId, to: effectId, relation: "grants" });
+      edges.push({ from: effectId, to: attId, relation: "attaches_to" });
+      traceEffectAtomScaling(effect, effectId, slotId, nodes, edges, ids);
     }
   }
 }
