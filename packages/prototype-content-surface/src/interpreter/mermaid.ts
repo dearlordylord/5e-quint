@@ -104,6 +104,7 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
 function get5etoolsSource(unit: UnitRecord): string | null {
   switch (unit.provenance.kind) {
     case "srd-5.2.1":
+    case "xphb":
       return "XPHB";
     default: {
       const _exhaustive: never = unit.provenance.kind;

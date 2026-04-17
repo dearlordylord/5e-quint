@@ -1948,7 +1948,7 @@ export type MasteryMechanics = OnHitTriggerMechanics;
 // ---------- records ----------
 
 export type Provenance = {
-  readonly kind: "srd-5.2.1";
+  readonly kind: "srd-5.2.1" | "xphb";
   readonly section: string;
 };
 

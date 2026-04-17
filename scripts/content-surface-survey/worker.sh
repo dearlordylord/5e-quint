@@ -73,6 +73,9 @@ if [[ "$source" == "xphb" ]]; then
     rsync -a --exclude node_modules --exclude 'content/*.trace.md' \
       "$REPO_ROOT/packages/prototype-content-surface/" "$TEMPLATE_DIR/"
   fi
+  # Keep the PHB research template wired to the package dependencies so
+  # scratch workspaces inherit a valid node_modules symlink.
+  ln -sfn "$REPO_ROOT/packages/prototype-content-surface/node_modules" "$TEMPLATE_DIR/node_modules"
 elif [[ "$source" == "srd-5.2.1" ]]; then
   TEMPLATE_DIR="$REPO_ROOT/packages/prototype-content-surface"
   RESULTS_DIR="$SCRIPTS_DIR/results-srd"
