@@ -140,14 +140,16 @@ Tier 1 includes ~15 manually-specified class features / species / masteries for 
 After a tier completes:
 
 1. `aggregate.ts` summarizes the pressure map in `REPORT_SRD.md`.
-2. `close-loop.ts` selects one cluster or explicit rerun batch.
-3. The batch is re-mined sequentially with `--force`.
-4. The script writes a before/after closure report under:
+2. `auto-close-loop.ts` or a human selects one reusable cluster candidate.
+3. A bounded surface-change attempt edits TS/package files for that family.
+4. The affected batch is re-mined sequentially with `--force`.
+5. The loop measures weighted-debt change and either keeps or reverts the attempt.
+6. The script writes a before/after closure report under:
    - `.output/content-surface-closure/*.json`
 
-`close-loop.ts` is the supported feedback loop for survey convergence work.
-It supersedes the previous ad hoc "inspect by hand and rerun manually"
-workflow for this purpose.
+`close-loop.ts` is the rerun engine used inside the convergence loop.
+By itself it is not enough for convergence; the reusable surface-change
+step lives in `auto-close-loop.ts`.
 
 `auto-close-loop.ts` is the unattended wrapper around that loop. It adds:
 
@@ -155,6 +157,9 @@ workflow for this purpose.
 - single-run lock in `.output/content-surface-closure/auto-close-loop.lock.json`
 - latest global convergence snapshot in `.output/content-surface-closure/auto-close-loop.latest.json`
 - append-only convergence history in `.output/content-surface-closure/auto-close-loop.history.jsonl`
+- append-only failed-attempt log in `.output/content-surface-closure/failed-surface-attempts.jsonl`
+- bounded step-2 surface-change attempt before each rerun batch
+- automatic keep-or-revert based on rerun outcome
 - per-batch hard timeout
 - failed-batch streak stopping
 - no-improvement streak stopping

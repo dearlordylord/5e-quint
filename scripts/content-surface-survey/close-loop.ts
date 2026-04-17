@@ -43,7 +43,7 @@ export type QueueRow = {
   tier: number;
 };
 
-type Args = {
+export type CloseLoopArgs = {
   source: Source | "all";
   kind?: string;
   top: number;
@@ -97,8 +97,8 @@ const NORMALIZERS: ReadonlyArray<[RegExp, string]> = [
   [/object.?attachment|attachment.*object/i, "object_attachment"],
 ];
 
-function parseArgs(argv: ReadonlyArray<string>): Args {
-  const args: Args = {
+function parseArgs(argv: ReadonlyArray<string>): CloseLoopArgs {
+  const args: CloseLoopArgs = {
     source: "srd-5.2.1",
     top: 15,
     limit: 5,
@@ -110,7 +110,7 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
     const arg = argv[i]!;
     switch (arg) {
       case "--source":
-        args.source = (argv[++i] as Args["source"]) ?? args.source;
+        args.source = (argv[++i] as CloseLoopArgs["source"]) ?? args.source;
         break;
       case "--top":
         args.top = Number(argv[++i] ?? args.top);
@@ -134,7 +134,7 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
         args.execute = true;
         break;
       case "--backend":
-        args.backend = (argv[++i] as Args["backend"]) ?? args.backend;
+        args.backend = (argv[++i] as CloseLoopArgs["backend"]) ?? args.backend;
         break;
       case "--report-path":
         args.reportPath = argv[++i];
@@ -267,7 +267,7 @@ export function buildClusters(
     .sort((a, b) => b.count - a.count || a.canonical.localeCompare(b.canonical));
 }
 
-function verdictRank(verdict: Verdict | null): number {
+export function verdictRank(verdict: Verdict | null): number {
   switch (verdict) {
     case "clean":
       return 0;
@@ -306,7 +306,7 @@ export function datasetVerdictForSlug(
 }
 
 export function selectSlugs(
-  args: Args,
+  args: CloseLoopArgs,
   rows: ReadonlyArray<DatasetRow>,
   queue: Map<string, QueueRow>,
   clusters: ReadonlyArray<ClusterRecord>,

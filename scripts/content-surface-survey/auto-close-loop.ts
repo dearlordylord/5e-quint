@@ -8,6 +8,8 @@ import {
   defaultReportPath,
   loadQueue,
   loadRows,
+  selectSlugs,
+  type CloseLoopArgs,
   type ClusterRecord,
   type DatasetRow,
   type QueueRow,
@@ -43,11 +45,20 @@ type ClosureReport = {
   summary: ClosureSummary;
   deltas: ReadonlyArray<{
     slug: string;
+    source: Source;
+    kind: string;
     before: Verdict | null;
     after: Verdict | null;
+    changed: boolean;
     improved: boolean;
     cleanFlip: boolean;
   }>;
+};
+
+type SurfaceAttempt = {
+  cluster: string;
+  selectedSlugs: ReadonlyArray<string>;
+  changedPaths: ReadonlyArray<string>;
 };
 
 type EffectiveRow = DatasetRow;
@@ -126,6 +137,8 @@ const DEFAULT_STATE_PATH = "/workspace/typescript/dnd/.output/content-surface-cl
 const DEFAULT_LOCK_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.lock.json";
 const DEFAULT_HISTORY_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.history.jsonl";
 const DEFAULT_LATEST_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.latest.json";
+const DEFAULT_FAILED_ATTEMPTS_PATH =
+  "/workspace/typescript/dnd/.output/content-surface-closure/failed-surface-attempts.jsonl";
 const DEFAULT_REPO_ROOT = "/workspace/typescript/dnd";
 const RUN_SURVEY_LOCK_PATH = path.join(
   DEFAULT_REPO_ROOT,
@@ -500,11 +513,16 @@ function git(args: string[], cwd = repoRoot()): { status: number | null; stdout:
   };
 }
 
+function gitOk(args: string[], cwd = repoRoot()): string {
+  const result = git(args, cwd);
+  if (result.status !== 0) {
+    throw new Error(`git ${args.join(" ")} failed: ${result.stderr || result.stdout}`.trim());
+  }
+  return result.stdout;
+}
+
 function assertAutoCommitReady(args: Args): void {
   if (!args.autoCommit) return;
-  if (args.source !== "srd-5.2.1") {
-    throw new Error("auto-commit currently supports only --source srd-5.2.1");
-  }
   const status = git(["status", "--porcelain", "--untracked-files=no"]);
   if (status.status !== 0) {
     throw new Error(`git status failed before auto-commit: ${status.stderr || status.stdout}`.trim());
@@ -544,9 +562,14 @@ function batchCommitPaths(report: ClosureReport): string[] {
   return [...paths];
 }
 
-function maybeCommitBatch(args: Args, state: PersistedState, report: ClosureReport): void {
+function maybeCommitBatch(
+  args: Args,
+  state: PersistedState,
+  report: ClosureReport,
+  extraPaths: ReadonlyArray<string>,
+): void {
   if (!args.autoCommit) return;
-  const paths = batchCommitPaths(report);
+  const paths = [...new Set([...extraPaths, ...batchCommitPaths(report)])];
   if (paths.length === 0) return;
 
   const add = git(["add", "--", ...paths]);
@@ -574,6 +597,248 @@ function maybeCommitBatch(args: Args, state: PersistedState, report: ClosureRepo
   if (commit.status !== 0) {
     throw new Error(`git commit failed for batch commit: ${commit.stderr || commit.stdout}`.trim());
   }
+}
+
+function worktreeChanges(): {
+  tracked: string[];
+  untracked: string[];
+} {
+  const status = gitOk(["status", "--porcelain"]);
+  const tracked: string[] = [];
+  const untracked: string[] = [];
+  for (const line of status.split("\n").filter(Boolean)) {
+    if (line.startsWith("?? ")) {
+      untracked.push(line.slice(3));
+    } else if (line.length >= 4) {
+      tracked.push(line.slice(3));
+    }
+  }
+  return { tracked, untracked };
+}
+
+function trackedInGit(relPath: string): boolean {
+  return git(["ls-files", "--error-unmatch", "--", relPath]).status === 0;
+}
+
+function restoreTracked(paths: ReadonlyArray<string>): void {
+  const tracked = paths.filter((rel) => trackedInGit(rel));
+  if (tracked.length === 0) return;
+  gitOk(["restore", "--staged", "--worktree", "--", ...tracked]);
+}
+
+function removeUntracked(paths: ReadonlyArray<string>): void {
+  for (const rel of paths) {
+    if (trackedInGit(rel)) continue;
+    fs.rmSync(path.join(repoRoot(), rel), { force: true, recursive: true });
+  }
+}
+
+function restoreOrDelete(relPath: string): void {
+  if (trackedInGit(relPath)) {
+    restoreTracked([relPath]);
+  } else {
+    fs.rmSync(path.join(repoRoot(), relPath), { force: true, recursive: true });
+  }
+}
+
+function resultDirForSlug(source: Source, slug: string): string {
+  return source === "srd-5.2.1"
+    ? `scripts/content-surface-survey/results-srd/${slug}`
+    : `.references/xphb-srd-pairing/phb-survey/results/${slug}`;
+}
+
+function contentPathsForSlug(slug: string): string[] {
+  return [
+    `packages/prototype-content-surface/content/${slug}.dhall`,
+    `packages/prototype-content-surface/content/${slug}.json`,
+    `packages/prototype-content-surface/content/${slug}.trace.md`,
+  ];
+}
+
+function cleanupBatchNoise(report: ClosureReport): void {
+  for (const delta of report.deltas) {
+    restoreOrDelete(`${resultDirForSlug(delta.source, delta.slug)}/codex-out.json`);
+    if (delta.after === "invalid" || delta.after === "refused" || delta.after === "dm_agenda") {
+      for (const rel of contentPathsForSlug(delta.slug)) {
+        restoreOrDelete(rel);
+      }
+    }
+  }
+}
+
+function revertBatchArtifacts(report: ClosureReport): void {
+  const paths = new Set<string>(["scripts/content-surface-survey/survey-results-srd.jsonl"]);
+  for (const delta of report.deltas) {
+    for (const rel of [
+      `${resultDirForSlug(delta.source, delta.slug)}/proposal.md`,
+      `${resultDirForSlug(delta.source, delta.slug)}/result.json`,
+      `${resultDirForSlug(delta.source, delta.slug)}/verdict.json`,
+      `${resultDirForSlug(delta.source, delta.slug)}/codex-out.json`,
+      ...contentPathsForSlug(delta.slug),
+    ]) {
+      paths.add(rel);
+    }
+  }
+  restoreTracked([...paths]);
+  removeUntracked([...paths]);
+}
+
+function effectiveDebt(verdict: Verdict | null): number {
+  return verdict === null ? 5 : weightedDebtForVerdict(verdict);
+}
+
+function batchOutcome(report: ClosureReport): {
+  beforeDebt: number;
+  afterDebt: number;
+  improvedCount: number;
+  regressionCount: number;
+  success: boolean;
+} {
+  let beforeDebt = 0;
+  let afterDebt = 0;
+  let improvedCount = 0;
+  let regressionCount = 0;
+  for (const delta of report.deltas) {
+    const before = effectiveDebt(delta.before);
+    const after = effectiveDebt(delta.after);
+    beforeDebt += before;
+    afterDebt += after;
+    if (after < before) improvedCount += 1;
+    if (after > before) regressionCount += 1;
+  }
+  return {
+    beforeDebt,
+    afterDebt,
+    improvedCount,
+    regressionCount,
+    success: afterDebt < beforeDebt && improvedCount > 0 && regressionCount < improvedCount,
+  };
+}
+
+function appendFailureLog(payload: unknown): void {
+  ensureParent(DEFAULT_FAILED_ATTEMPTS_PATH);
+  fs.appendFileSync(DEFAULT_FAILED_ATTEMPTS_PATH, JSON.stringify(payload) + "\n", "utf8");
+}
+
+function closeLoopArgsForCluster(args: Args, cluster: string): CloseLoopArgs {
+  return {
+    source: args.source,
+    kind: args.kind,
+    top: 15,
+    cluster,
+    limit: args.limit,
+    execute: false,
+    backend: args.backend,
+  };
+}
+
+function selectedSlugsForCluster(args: Args, cluster: string): ReadonlyArray<string> {
+  const queue = loadQueue();
+  const rows = loadRows(args.source, queue);
+  const clusters = buildClusters(rows, queue, args.kind);
+  return selectSlugs(closeLoopArgsForCluster(args, cluster), rows, queue, clusters);
+}
+
+function resultSummaryForSlug(source: Source, slug: string): string {
+  const resultPath = resultPathForSlug(source, slug);
+  const verdict = currentVerdictForSlug(source, slug);
+  if (!fs.existsSync(resultPath)) {
+    return `- ${slug}: no result.json, current verdict=${verdict ?? "missing"}`;
+  }
+  const parsed = JSON.parse(fs.readFileSync(resultPath, "utf8")) as {
+    outcome?: string;
+    proposed_widenings?: ReadonlyArray<{
+      name?: string;
+      justification?: string;
+    }>;
+    notes?: string;
+  };
+  const widenings = (parsed.proposed_widenings ?? [])
+    .slice(0, 3)
+    .map((w) => `${w.name ?? "unnamed"}: ${w.justification ?? "no justification"}`)
+    .join(" | ");
+  return `- ${slug}: verdict=${verdict ?? "missing"}, outcome=${parsed.outcome ?? "unknown"}, widenings=${widenings || "none"}, notes=${parsed.notes ?? "none"}`;
+}
+
+function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: ReadonlyArray<string>): string {
+  const queue = loadQueue();
+  const evidence = selectedSlugs
+    .map((slug) => {
+      const row = queue.get(slug);
+      if (!row) return `- ${slug}: missing queue row`;
+      return resultSummaryForSlug(row.source, slug);
+    })
+    .join("\n");
+  return [
+    "You are editing the real repository to reduce one reusable surface gap.",
+    "",
+    `Target cluster: ${cluster}`,
+    `Target source: ${args.source}`,
+    `Target kind: ${args.kind ?? "all"}`,
+    `Target slugs: ${selectedSlugs.join(", ")}`,
+    "",
+    "Goal:",
+    "- make one bounded reusable TS/package surface change that can reduce pressure for this cluster",
+    "- avoid per-slug hacks or slug checks",
+    "- if you add a new atom kind, update scripts/content-surface-survey/atom-whitelist.ts",
+    "- you may edit packages/prototype-content-surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
+    "- do not commit",
+    "- keep the change as small and reusable as possible",
+    "",
+    "Evidence:",
+    evidence,
+    "",
+    "If the cluster is too composite or no reusable change is justified, make no code changes and exit.",
+  ].join("\n");
+}
+
+function assertBatchBaselineReady(): void {
+  const status = git(["status", "--porcelain", "--untracked-files=no"]);
+  if (status.status !== 0) {
+    throw new Error(`git status failed before batch: ${status.stderr || status.stdout}`.trim());
+  }
+  if (status.stdout.trim().length > 0) {
+    throw new Error("surface-change loop requires a clean tracked worktree at batch start");
+  }
+}
+
+function attemptSurfaceChange(args: Args, cluster: string): SurfaceAttempt {
+  const selectedSlugs = selectedSlugsForCluster(args, cluster);
+  if (selectedSlugs.length === 0) {
+    throw new Error(`no selected slugs for cluster ${cluster}`);
+  }
+  assertBatchBaselineReady();
+  const prompt = surfaceAttemptPrompt(args, cluster, selectedSlugs);
+  const timeoutSeconds = Number(process.env.SURFACE_AGENT_TIMEOUT_SECONDS ?? "900");
+  const codexCmd = process.env.CODEX_CMD ?? "codex";
+  const codexArgs = ["exec", "--dangerously-bypass-approvals-and-sandbox", "-C", repoRoot()];
+  if (process.env.CODEX_MODEL && process.env.CODEX_MODEL.length > 0) {
+    codexArgs.push("-m", process.env.CODEX_MODEL);
+  }
+  codexArgs.push("-");
+
+  const result = spawnSync(
+    "timeout",
+    ["--kill-after=30s", `${timeoutSeconds}s`, codexCmd, ...codexArgs],
+    {
+      cwd: repoRoot(),
+      input: prompt,
+      encoding: "utf8",
+      stdio: ["pipe", "inherit", "inherit"],
+    },
+  );
+  if (result.status !== 0) {
+    if (result.status === 124) {
+      throw new Error(`surface-change attempt timed out for ${cluster}`);
+    }
+    throw new Error(`surface-change attempt failed for ${cluster} (exit=${result.status ?? "signal"})`);
+  }
+  const changes = worktreeChanges();
+  return {
+    cluster,
+    selectedSlugs,
+    changedPaths: [...new Set([...changes.tracked, ...changes.untracked])],
+  };
 }
 
 function buildGlobalSnapshot(
@@ -755,27 +1020,60 @@ function main(): void {
       );
 
       try {
+        const surfaceAttempt = attemptSurfaceChange(args, cluster.canonical);
+        if (surfaceAttempt.changedPaths.length === 0) {
+          throw new Error(`surface-change attempt made no changes for ${cluster.canonical}`);
+        }
         const { reportPath, report } = runBatch(args, cluster.canonical);
         state.lastReportPath = reportPath;
         state.lastError = undefined;
         state.errorStreak = 0;
-        attempted.add(cluster.canonical);
-        state.attempted = [...attempted];
-
-        if (report.summary.improved > 0) {
+        cleanupBatchNoise(report);
+        const outcome = batchOutcome(report);
+        if (outcome.success) {
+          attempted.add(cluster.canonical);
+          state.attempted = [...attempted];
           state.improvedBatches += 1;
           state.noImproveStreak = 0;
+          writeObservability(args, state, report);
+          maybeCommitBatch(args, state, report, surfaceAttempt.changedPaths);
         } else {
+          appendFailureLog({
+            recordedAt: new Date().toISOString(),
+            cluster: cluster.canonical,
+            source: args.source,
+            kind: args.kind,
+            selectedSlugs: surfaceAttempt.selectedSlugs,
+            changedPaths: surfaceAttempt.changedPaths,
+            reportPath,
+            outcome,
+            reason: "surface change did not reduce weighted debt enough",
+          });
+          revertBatchArtifacts(report);
+          restoreTracked(surfaceAttempt.changedPaths);
+          removeUntracked(surfaceAttempt.changedPaths);
+          attempted.add(cluster.canonical);
+          state.attempted = [...attempted];
           state.noImproveStreak += 1;
+          writeObservability(args, state, report);
         }
-        writeObservability(args, state, report);
-        maybeCommitBatch(args, state, report);
       } catch (error) {
         state.lastError = error instanceof Error ? error.message : String(error);
         process.stderr.write(`auto-close-loop: ${state.lastError}\n`);
         if (isTransientBatchError(state.lastError)) {
           process.stderr.write("auto-close-loop: transient batch failure; will retry after sleep\n");
         } else {
+          const changes = worktreeChanges();
+          restoreTracked(changes.tracked);
+          removeUntracked(changes.untracked);
+          appendFailureLog({
+            recordedAt: new Date().toISOString(),
+            cluster: cluster.canonical,
+            source: args.source,
+            kind: args.kind,
+            error: state.lastError,
+            changedPaths: [...changes.tracked, ...changes.untracked],
+          });
           attempted.add(cluster.canonical);
           state.attempted = [...attempted];
           state.errorStreak += 1;
