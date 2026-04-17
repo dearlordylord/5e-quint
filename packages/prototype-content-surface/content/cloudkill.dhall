@@ -45,6 +45,28 @@ let cloudkill =
               , shape = { kind = "sphere", radiusFeet = 20 }
               , origin = { kind = "point_within_range" }
               }
+          , initialPhase =
+              { kind = "save_gate"
+              , attachment =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 20 }
+                  , origin = { kind = "point_within_range" }
+                  }
+              , ability = "con"
+              , dc = { kind = "caster_spell_save_dc" }
+              , onFail =
+                  { kind = "damage"
+                  , damageType = "poison"
+                  , amount =
+                      { kind = "linear_per_level"
+                      , axis = "slot"
+                      , base = { dice = 5, dieSize = 8 }
+                      , perLevel = { dice = 1 }
+                      , startingAtLevel = 5
+                      }
+                  }
+              , onSuccess = { kind = "half_damage" }
+              }
           , operations =
               [ { trigger = { kind = "on_attached_turn_start" }
                 , effect =

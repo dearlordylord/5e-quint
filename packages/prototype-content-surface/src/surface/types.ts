@@ -1167,6 +1167,12 @@ type SpellMechanicsHeader = {
 export type OngoingEffectMechanics = SpellMechanicsHeader & {
   readonly family: "ongoing_effect";
   readonly attachment: Attachment;
+  // Optional initial resolution that fires once at cast, before the
+  // ongoing operations take effect. Cloudkill and Moonbeam both have
+  // an initial Con save on entry-at-cast that shares damage with the
+  // per-turn ongoing save; Sleep has its initial Wis save authored
+  // via activation family (which is a second valid encoding).
+  readonly initialPhase?: ActivationPhase;
   readonly operations: ReadonlyNonEmptyArray<OngoingOperation>;
 };
 

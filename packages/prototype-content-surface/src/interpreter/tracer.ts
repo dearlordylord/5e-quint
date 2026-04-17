@@ -934,6 +934,10 @@ function traceOngoingEffect(
     ids,
   );
 
+  if (m.initialPhase !== undefined) {
+    tracePhase(m.initialPhase, 0, ctx, nodes, edges, ids);
+  }
+
   for (const op of m.operations) {
     traceOngoingOperation(op, ctx.procId, attId, ctx.slotId, nodes, edges, ids);
   }

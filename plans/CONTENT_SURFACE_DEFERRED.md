@@ -615,6 +615,14 @@ Nones in the JSON output). Works but verbose; pressures a future
 "shared Op-record type alias at the top of each Dhall file" pattern
 or a Dhall → JSON pipeline that understands tagged unions.
 
+### A17b. OngoingEffectMechanics initialPhase — RESOLVED 2026-04-16
+
+Added optional `initialPhase?: ActivationPhase` on
+`OngoingEffectMechanics`. Fires once at cast before the ongoing
+operations — lets Cloudkill + Moonbeam host their initial Con save
+on cast in the same spell as the per-turn save trigger instead of
+splitting across families. Cloudkill upgraded; Moonbeam authored.
+
 ### C4d. Polymorph / target stat-block replacement — RESOLVED 2026-04-16
 
 Added `EffectAtom.transform_target` carrying `newForm:

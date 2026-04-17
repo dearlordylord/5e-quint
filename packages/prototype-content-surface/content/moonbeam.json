@@ -1,6 +1,6 @@
 {
-  "description": "You create a 20-foot-radius Sphere of yellow-green fog centered on a point within range. The fog lasts for the duration or until strong wind disperses it. Its area is Heavily Obscured. Each creature in the Sphere makes a Constitution saving throw, taking 5d8 Poison damage on a failed save or half as much damage on a successful one. A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there. A creature makes this save only once per turn. The Sphere moves 10 feet away from you at the start of each of your turns.",
-  "id": "cloudkill",
+  "description": "A silvery beam of pale light shines down in a 5-foot-radius, 40-foot-high Cylinder centered on a point within range. Dim Light fills the Cylinder. When the Cylinder appears, each creature in it makes a Constitution saving throw, taking 2d10 Radiant damage on a failed save or half on success. A creature makes this save again when the spell's area moves into its space and when it enters the Cylinder or ends its turn there (once per turn).",
+  "id": "moonbeam",
   "kind": "spell",
   "mechanics": {
     "attachment": {
@@ -9,22 +9,23 @@
         "kind": "point_within_range"
       },
       "shape": {
-        "kind": "sphere",
-        "radiusFeet": 20
+        "heightFeet": 40,
+        "kind": "cylinder",
+        "radiusFeet": 5
       }
     },
     "castingTime": {
       "kind": "action"
     },
     "components": {
-      "m": false,
+      "m": "a moonseed leaf",
       "s": true,
       "v": true
     },
     "duration": {
       "kind": "concentration",
       "upTo": {
-        "amount": 10,
+        "amount": 1,
         "unit": "minute"
       }
     },
@@ -37,8 +38,9 @@
           "kind": "point_within_range"
         },
         "shape": {
-          "kind": "sphere",
-          "radiusFeet": 20
+          "heightFeet": 40,
+          "kind": "cylinder",
+          "radiusFeet": 5
         }
       },
       "dc": {
@@ -49,23 +51,23 @@
         "amount": {
           "axis": "slot",
           "base": {
-            "dice": 5,
-            "dieSize": 8
+            "dice": 2,
+            "dieSize": 10
           },
           "kind": "linear_per_level",
           "perLevel": {
             "dice": 1
           },
-          "startingAtLevel": 5
+          "startingAtLevel": 2
         },
-        "damageType": "poison",
+        "damageType": "radiant",
         "kind": "damage"
       },
       "onSuccess": {
         "kind": "half_damage"
       }
     },
-    "level": 5,
+    "level": 2,
     "operations": [
       {
         "effect": {
@@ -78,16 +80,16 @@
             "amount": {
               "axis": "slot",
               "base": {
-                "dice": 5,
-                "dieSize": 8
+                "dice": 2,
+                "dieSize": 10
               },
               "kind": "linear_per_level",
               "perLevel": {
                 "dice": 1
               },
-              "startingAtLevel": 5
+              "startingAtLevel": 2
             },
-            "damageType": "poison",
+            "damageType": "radiant",
             "kind": "damage"
           },
           "onSuccess": {
@@ -103,11 +105,11 @@
       "feet": 120,
       "kind": "point"
     },
-    "school": "conjuration"
+    "school": "evocation"
   },
-  "name": "Cloudkill",
+  "name": "Moonbeam",
   "provenance": {
     "kind": "srd-5.2.1",
-    "section": "Spells/Descriptions-A-D#Cloudkill"
+    "section": "Spells/Descriptions-M-P#Moonbeam"
   }
 }
