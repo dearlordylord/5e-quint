@@ -1,79 +1,62 @@
-# Tome of Leadership and Influence
+**Why It Doesn't Fit**
 
-## Verdict
+`Tome of Leadership and Influence` does not fit the current `MagicItemRecord` surface honestly.
 
-`atom_widening`
+The available mechanics families are:
 
-The unit does not fit the current authored surface honestly, so no `content/magic_item_tome_of_leadership_and_influence.dhall` was written.
+- `passive` — always-on while the item is in effect
+- `activation` — a discrete use that spends a resource and immediately runs phases
 
-## Why It Does Not Fit
+This item is neither.
 
-The item is not a passive grant:
+- It is not `passive`: the Charisma increase is not an ongoing while-worn / while-attuned state.
+- It is not current `activation`: the rule requires a tracked study process, `48 hours over a period of 6 days or fewer`, before the benefit lands.
 
-- The benefit is not "while you wear/attune/use" a persistent item.
-- The item grants a one-time permanent character improvement after completing a study process.
+**Missing Pieces**
 
-The item is also not representable as the current activated-item family:
+1. A study / completion subgraph for magic items
 
-- `ClassFeatureActivationCost` models immediate activation costs (`free`, `action`, `bonus_action`, `reaction`, `replace_attack`).
-- The item instead requires a deterministic study regimen: `48 hours over a period of 6 days or fewer`.
-- `RestResetCadence` models rest/dawn/never refill patterns, not "goes dormant for 100 years, then regains magic."
+The current activation family has no honest way to represent:
 
-## Missing Pieces
+- prolonged study as the cost
+- accumulation toward a required total
+- an outer completion deadline
+- payoff only after the study completes
 
-### 1. New atom: `modify_ability_score`
+Relevant text:
 
-The existing `set_ability_score` atom is the wrong semantics. It models:
+> "If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines"
 
-- set to a fixed value, or
-- floor to a fixed minimum,
+2. An additive ability-score increase atom
 
-typically while an item is worn or attuned.
+The existing surface has `set_ability_score`, which covers:
 
-This tome instead says:
+- `set`
+- `floor`
 
-> your Charisma increases by 2, to a maximum of 30
+That is not the same as:
 
-That is an additive permanent increase with an upper cap, not a set/floor effect.
+- permanent `+2`
+- capped at `30`
 
-Suggested shape:
+Relevant text:
 
-```ts
-{
-  kind: "modify_ability_score";
-  ability: Ability;
-  delta: number;
-  maximum?: number;
-}
-```
+> "your Charisma increases by 2, to a maximum of 30"
 
-### 2. Surface widening: study-regimen activation gate
+This pressures a distinct runtime effect such as `modify_ability_score` or equivalent.
 
-The activation surface needs a way to express deterministic non-combat study/training requirements.
+3. A century-scale recharge / dormancy variant
 
-Pressure text:
+The item does not get destroyed and does not reset on a rest or at dawn. It becomes inert, then regains magic after a century.
 
-> If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines
+Relevant text:
 
-This is not DM-agenda; it is a concrete requirement. But it is not representable as any current activation cost or duration shape.
+> "The manual then loses its magic but regains it in a century."
 
-### 3. Surface widening: dormancy / recharge-after-long-elapsed-time lifecycle
+Current `RestResetCadence` cannot represent that lifecycle.
 
-The item is not destroyed and does not reset on a rest cadence.
+**Classification**
 
-Pressure text:
+`structural_widening`
 
-> The manual then loses its magic but regains it in a century
-
-This wants an item lifecycle/dormancy variant, not `ItemDestructionPolicy`.
-
-## Why This Is Not `structural_widening`
-
-The top-level kind already exists: `magic_item`.
-
-The general family also exists in principle: this is still an item with a deterministic benefit and a lifecycle. The problem is that the current surface lacks:
-
-- the correct effect atom for additive ability-score increase, and
-- activation/lifecycle variants for study and century-scale dormancy.
-
-So the narrowest honest classification is `atom_widening`, with secondary surface gaps.
+Reason: the unit's core behavior requires a different authored shape than the current `passive | activation` split for magic items. A new atom is also needed for the permanent additive ability-score increase, but the first blocker is structural: there is no honest family/subgraph for multi-day study-completion items.

@@ -2,31 +2,36 @@
 
 Why it fails:
 
-- The core effect is not `set_ability_score`. The item says: "your Intelligence increases by 2, to a maximum of 30." Existing `EffectAtom.set_ability_score` only models absolute assignment / floor semantics (`set` or `floor` to a fixed value).
-- The item has a study-completion gate: "If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines..." Current `MagicItemMechanics.activation` has only immediate activation costs (`free`, `action`, `bonus_action`, `reaction`, `replace_attack`), not a bounded multi-day study/use process.
-- The item has a very long recharge lifecycle: "The manual then loses its magic but regains it in a century." Current `RestResetCadence` can express rests, dawn, or never, but not a fixed long-duration recharge.
+- The current `set_ability_score` atom only supports setting or flooring an ability score to a fixed value. The tome does neither; it increases Intelligence by `+2`, and the increase is capped at `30`.
+- The current activation grammar assumes a discrete activation cost (`action`, `bonus_action`, `reaction`, `free`, `replace_attack`). The tome resolves through extended study: `48 hours over a period of 6 days or fewer`.
+- The current reset / lifecycle grammar has `never` and `dawn`, but not the tome's `regains it in a century` recharge cadence.
 
-Narrowest honest classification:
+Closest honest shape:
 
-- `atom_widening`
+- Existing top-level kind: `magic_item`
+- Closest family: `activation`
 
 Required widenings:
 
-1. `new_atom`: `modify_ability_score`
-   - Justification: the item changes an existing score by a delta rather than setting it to a fixed floor/value.
-   - Minimal honest shape would look like additive score change plus cap, e.g. `ability`, `delta`, `maximum`.
+1. New atom: `modify_ability_score`
+   - Why: the item permanently raises Intelligence by a delta, rather than setting it to a floor or exact value.
+   - Needed payload shape: ability, delta, optional maximum cap.
    - Evidence: "your Intelligence increases by 2, to a maximum of 30"
 
-2. `new_variant`: study/downtime activation gating
-   - Justification: the item is not consumed with an action/reaction or passive wear-state; it completes after accumulating study time within a deadline window.
-   - Evidence: "If you spend 48 hours over a period of 6 days or fewer studying the book's contents..."
+2. New activation-cost / study variant under the existing activation family
+   - Why: the item is used by prolonged study, not by an action or reaction.
+   - Likely shape: a long-form study / downtime activation with required total hours and completion window.
+   - Evidence: "If you spend 48 hours over a period of 6 days or fewer studying the book's contents"
 
-3. `new_variant`: long-duration item recharge cadence
-   - Justification: the item becomes inert after use, then naturally recharges after a fixed century-long interval.
+3. New reset cadence variant
+   - Why: the item is not destroyed and does recharge, but on a century timescale.
    - Evidence: "The manual then loses its magic but regains it in a century."
 
-Why no placeholder content file was authored:
+Why this is not `structural_widening`:
 
-- Encoding this as `set_ability_score int = 30 (floor)` would be false.
-- Encoding it as an immediate `activation` with `resetCadence = never` would erase both the study gate and the century recharge.
-- A misleading trace would be worse than no trace for this survey.
+- `magic_item` already exists.
+- `activation` is still the right family; it just lacks the needed activation-time and effect variants.
+
+Why this is not `dm_agenda`:
+
+- The core effect is deterministic: after the study requirement is completed, Intelligence increases by 2, capped at 30, and the item expends its magic until its recharge window.
