@@ -86,6 +86,12 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
       return `https://5e.tools/classfeatures.html#${
         encodeHashParts(unit.name, capitalizeAscii(unit.className), source, unit.acquiredAtLevel, source)
       }`;
+    case "feat":
+      return `https://5e.tools/feats.html#${encodeHashParts(unit.name, source)}`;
+    case "species_trait":
+      return `https://5e.tools/races.html#${encodeHashParts(unit.species, source)}`;
+    case "magic_item":
+      return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
     case "mastery":
       return null;
     default: {
