@@ -41,7 +41,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 0,  "id": "CSA1",  "status": "ready-for-implementation-after-light-research", "title": "Survey Mining Rerun (Exhaustive)" },
     { "number": 1,  "id": "CSA2",  "status": "blocked", "title": "Bulk-Author Newly-Clean Spells Batch 1" },
     { "number": 2,  "id": "CSA3",  "status": "blocked", "title": "Bulk-Author Newly-Clean Spells Batch 2" },
-    { "number": 3,  "id": "CSA4",  "status": "ready-for-research", "title": "A14 Relative-To-Stat DiceAmount" },
+    { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
     { "number": 4,  "id": "CSA5",  "status": "ready-for-research", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
     { "number": 5,  "id": "CSA6",  "status": "ready-for-research", "title": "C4g Object-Target Attachment And True Polymorph Object Modes" },
     { "number": 6,  "id": "CSA7",  "status": "ready-for-research", "title": "Shapechange Multi-Type Filter And Form Switch" },
@@ -98,7 +98,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 0 | CSA1 - Survey Mining Rerun (Exhaustive) | ready-for-implementation-after-light-research | none | CSA2, CSA3, CSA8, CSC1 | First of two scheduled exhaustive mining passes. Run the Stage-1 survey pipeline against current surface covering every SRD unit; refresh `survey-results-srd.jsonl` (currently stale vs. the surface) and `REPORT_SRD.md`; publish a delta note listing units that shifted to `clean` after this session's ~15 widenings. | Ready. Pipeline scripts exist at `scripts/content-surface-survey/run-survey.sh`; run to completion, not sampled. |
 | 1 | CSA2 - Bulk-Author Newly-Clean Spells Batch 1 | blocked | CSA1 | CSA3 | Pick 10 units from CSA1's freshly-clean queue; author Dhall + regenerate JSON + trace.md; run regression. | Blocked on CSA1 output (fresh verdict list). |
 | 2 | CSA3 - Bulk-Author Newly-Clean Spells Batch 2 | blocked | CSA2 | CSA8 | Same as CSA2 with the next 10 units. | Blocked on CSA2. |
-| 3 | CSA4 - A14 Relative-To-Stat DiceAmount | ready-for-research | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Ready. Design sketch already in `plans/CONTENT_SURFACE_DEFERRED.md` §A14. |
+| 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
 | 4 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. |
 | 5 | CSA6 - C4g Object-Target Attachment And True Polymorph Object Modes | ready-for-research | none | CSA8 | Add `Attachment.object` kind; extend `transform_target` to cover object-to-creature and creature-to-object; author the True Polymorph object branches. | Ready. True Polymorph already partial-authored (creature branch only). |
 | 6 | CSA7 - Shapechange Multi-Type Filter And Form Switch | ready-for-research | CSA6 | CSA8 | Widen `PolymorphFormSource.creatureTypeFilter` to support "any except X"; add `Duration.concentration.allowsFormSwitchAs: "magic_action"`; author Shapechange. | Blocked on CSA6 for shared PolymorphFormSource shape review. |
