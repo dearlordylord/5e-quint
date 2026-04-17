@@ -4,6 +4,14 @@ Plan: `/plans/CONTENT_SURFACE_SURVEY.md`.
 
 This directory runs a parallelized per-unit encoding survey across SRD 5.2.1 (and a PHB-only research sample) to decide between Option A and Option B for the content surface's scaling-shape encoding.
 
+## Not to be confused with `packages/prototype-content-surface/content/`
+
+This directory is the **mining / oracle pipeline**: for every SRD unit (504 distinct, 786+ subdirs with re-run history), it runs an LLM sub-agent against the current surface to propose an encoding or flag a widening. The outputs are **verdicts**, not content — `result.json` (sub-agent proposal) + `verdict.json` (harness validation) + `survey-results-srd.jsonl` (aggregate dataset) + `REPORT_SRD.md` (human-readable rollup). Nothing here is shipped as runtime content.
+
+The **authored corpus** lives elsewhere: `packages/prototype-content-surface/content/<slug>.{dhall,json,trace.md}`. That is one entry per actually-authored unit (far smaller than 504). Its `.dhall` files are the source-of-truth mechanics definitions; its `.json` files feed the tracer and (in Phase D) the content-driven runtime.
+
+One-liner: **this dir tells us what's MISSING; the package's `content/` dir holds what we've SHIPPED.** A unit typically flows: mining proposes → verdict flags a widening → we land the widening in `packages/prototype-content-surface/src/surface/types.ts` → we author the unit in `packages/prototype-content-surface/content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
+
 ## Parts
 
 | File | Role |

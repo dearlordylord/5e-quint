@@ -2,6 +2,18 @@
 
 Workspace package for the content-authoring → surface → tracer flow.
 
+## Not to be confused with `scripts/content-surface-survey/`
+
+This package holds the **authored corpus** and the **surface types** it is authored against:
+
+- `src/surface/types.ts` — the closed atom vocabulary. Widenings land here.
+- `src/interpreter/tracer.ts` — projects authored content into a mermaid-renderable dependency graph for review.
+- `content/<slug>.{dhall,json,trace.md}` — one entry per **actually-authored** unit. `.dhall` is the source-of-truth mechanics definition; `.json` is `dhall-to-json --omit-empty` output; `.trace.md` is the tracer's graph (gitignored). Roughly 130+ units currently; far smaller than the 504-unit SRD total.
+
+The **mining / oracle pipeline** lives in `scripts/content-surface-survey/`. That directory runs a per-SRD-unit LLM sub-agent survey to propose encodings and flag widenings against this package's current surface. Its outputs are **verdicts**, not content — they live in `scripts/content-surface-survey/results-srd/<slug>/` and aggregate into `survey-results-srd.jsonl` + `REPORT_SRD.md`. Nothing under `scripts/content-surface-survey/` is shipped; it's the "what's MISSING" oracle, not the "what's SHIPPED" artifact.
+
+One-liner: **this package holds what we've SHIPPED; `scripts/content-surface-survey/` tells us what's MISSING.** A unit typically flows: mining proposes → verdict flags a widening → we land the widening in this package's `src/surface/types.ts` → we author the unit in this package's `content/<slug>.dhall` → regression passes → we re-mine and the verdict goes `clean`.
+
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It
