@@ -778,6 +778,18 @@ export type EffectAtom =
       readonly value: number;
       readonly mode: "set" | "floor";
     }
+  // v4-adjacent: modify_ability_score — Tome / Manual family and other
+  // permanent ability-score riders that apply a signed delta rather than
+  // replacing the score with a fixed value. Optional bounds capture RAW
+  // caps such as "to a maximum of 30" without conflating this shape with
+  // `set_ability_score`.
+  | {
+      readonly kind: "modify_ability_score";
+      readonly ability: Ability;
+      readonly delta: number;
+      readonly minimum?: number;
+      readonly maximum?: number;
+    }
   // v4: detect — divination utility. Senses the presence of a named
   // property within a radius around the caster for the spell's
   // duration (typically concentration). The property vocabulary is

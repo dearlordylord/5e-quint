@@ -199,6 +199,7 @@ export const STAGE_3_EXTENSIONS = [
   // Effect atoms: save-gate half-damage sentinel + ability-score setter.
   "half_damage", // Fireball-family "half on success" outcome.
   "set_ability_score", // Amulet of Health "Con becomes 19".
+  "modify_ability_score", // Tome / Manual family "ability increases by N, to a maximum of M".
   // Lifecycle atom for magic-item destruction (Wand of Magic Missiles
   // last-charge d20 destruction, single-use wand expiration).
   "item_destruction",

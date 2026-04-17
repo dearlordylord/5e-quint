@@ -417,6 +417,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_ability_score": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ability_score",
+        label: `modify_ability_score\n${e.ability} ${describeSignedNumber(e.delta)}${describeAbilityScoreBounds(e.minimum, e.maximum)}`,
+      });
+      return id;
+    }
     case "teleport": {
       const id = ids("eff");
       nodes.push({
@@ -620,6 +630,7 @@ function traceEffectAtomScaling(
     case "block_max_hp_reduction":
     case "set_speed_ratio":
     case "set_ability_score":
+    case "modify_ability_score":
     case "teleport":
     case "grant_speed":
     case "detect":
@@ -3403,6 +3414,20 @@ function describeDelta(d: DiceDelta): string {
       return _exhaustive;
     }
   }
+}
+
+function describeSignedNumber(value: number): string {
+  return value >= 0 ? `+${value}` : String(value);
+}
+
+function describeAbilityScoreBounds(
+  minimum: number | undefined,
+  maximum: number | undefined,
+): string {
+  const parts: string[] = [];
+  if (minimum !== undefined) parts.push(`min ${minimum}`);
+  if (maximum !== undefined) parts.push(`max ${maximum}`);
+  return parts.length === 0 ? "" : `\n${parts.join(", ")}`;
 }
 
 function describeDiceAmount(a: DiceAmount): string {
