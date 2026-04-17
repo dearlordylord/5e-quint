@@ -30,7 +30,7 @@ All reference files are provided below. Do NOT use the Read tool on any of these
 {{BLESS_JSON}}
 ```
 
-### Reference encoding: action_surge.dhall (class feature with use-count + rest reset)
+### Reference encoding: action_surge.dhall (class feature, activation family — use-count + rest reset)
 
 ```dhall
 {{ACTION_SURGE_DHALL}}
@@ -40,6 +40,42 @@ All reference files are provided below. Do NOT use the Read tool on any of these
 
 ```json
 {{ACTION_SURGE_JSON}}
+```
+
+### Reference encoding: alert.dhall (feat, passive family — single-atom grants)
+
+```dhall
+{{ALERT_DHALL}}
+```
+
+### Reference encoding: alert.json (compiled from alert.dhall)
+
+```json
+{{ALERT_JSON}}
+```
+
+### Reference encoding: darkvision_elf.dhall (species trait, passive family — grant_sense)
+
+```dhall
+{{DARKVISION_ELF_DHALL}}
+```
+
+### Reference encoding: darkvision_elf.json
+
+```json
+{{DARKVISION_ELF_JSON}}
+```
+
+### Reference encoding: cloak_of_protection.dhall (magic item, passive + attunement)
+
+```dhall
+{{CLOAK_OF_PROTECTION_DHALL}}
+```
+
+### Reference encoding: cloak_of_protection.json
+
+```json
+{{CLOAK_OF_PROTECTION_JSON}}
 ```
 
 ### TAXONOMY_atoms_graph.md — v4 atom inventory (for widening classification)
@@ -55,7 +91,8 @@ All reference files are provided below. Do NOT use the Read tool on any of these
    - `activation` (spell) — instant/one-shot; may have multiple phases.
    - `triggered_reaction` (spell) — reaction-shaped spell.
    - `anchored_trigger` (spell) — planted/armed effect released by later events.
-   - `activation` (class feature) — activated class feature; see action_surge above.
+   - `activation` (class feature / magic item / species trait) — use-count + rest cadence + effect (action_surge).
+   - `passive` (class feature / feat / species trait / magic item) — always-on grants list (alert, darkvision_elf, cloak_of_protection).
    - `on_hit_trigger` (mastery) — weapon-hit rider.
 2. Decide whether an existing top-level `UnitRecord` kind and mechanics family can encode the unit HONESTLY.
 3. If the answer is **no**, STOP BEFORE AUTHORING A PLACEHOLDER JSON.
