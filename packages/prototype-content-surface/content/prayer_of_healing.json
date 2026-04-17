@@ -1,0 +1,63 @@
+{
+  "description": "Up to five creatures of your choice who remain within range for the spell's entire casting regain Hit Points equal to 2d8 plus your spellcasting ability modifier. This spell has no effect on Undead or Constructs. Using a Higher-Level Spell Slot. The healing increases by 1d8 for each spell slot level above 2.",
+  "id": "prayer_of_healing",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 10,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 5,
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 8,
+                "spellcastingMod": true
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 2
+            },
+            "kind": "heal_hp",
+            "target": "target_creature"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Prayer of Healing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Prayer of Healing"
+  }
+}

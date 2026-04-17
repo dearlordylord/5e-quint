@@ -1,0 +1,53 @@
+{
+  "description": "For the duration, the willing creature you touch has Truesight with a range of 120 feet.",
+  "id": "true_seeing",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "mushroom powder worth 25+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 25,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "kind": "grant_sense",
+            "rangeFeet": 120,
+            "sense": "truesight"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "divination"
+  },
+  "name": "True Seeing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#True Seeing"
+  }
+}

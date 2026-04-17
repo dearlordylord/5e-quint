@@ -1,0 +1,59 @@
+{
+  "description": "You touch a creature and end the Poisoned condition on it. For the duration, the target has Advantage on saving throws to avoid or end the Poisoned condition, and it has Resistance to Poison damage.",
+  "id": "protection_from_poison",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "effects": [
+              {
+                "condition": "poisoned",
+                "kind": "remove_condition"
+              },
+              {
+                "damageType": "poison",
+                "kind": "grant_resistance"
+              }
+            ],
+            "kind": "composite"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Protection from Poison",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Protection from Poison"
+  }
+}

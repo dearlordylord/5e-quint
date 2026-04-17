@@ -1,0 +1,57 @@
+{
+  "description": "You touch a creature. The target's Speed increases by 10 feet until the spell ends. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1.",
+  "id": "longstrider",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pinch of dirt",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 1,
+              "baseLevel": 1,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "delta": 10,
+            "kind": "modify_speed",
+            "unit": "feet"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Longstrider",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Longstrider"
+  }
+}

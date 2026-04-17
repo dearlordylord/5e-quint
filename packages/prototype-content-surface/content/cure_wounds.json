@@ -1,0 +1,59 @@
+{
+  "description": "A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier. Using a Higher-Level Spell Slot. The healing increases by 2d8 for each spell slot level above 1.",
+  "id": "cure_wounds",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 8,
+                "spellcastingMod": true
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 2
+              },
+              "startingAtLevel": 1
+            },
+            "kind": "heal_hp",
+            "target": "target_creature"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Cure Wounds",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Cure Wounds"
+  }
+}

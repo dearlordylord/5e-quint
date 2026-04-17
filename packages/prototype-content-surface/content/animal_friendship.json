@@ -1,0 +1,70 @@
+{
+  "description": "Target a Beast that you can see within range. The target must succeed on a Wisdom saving throw or have the Charmed condition for the duration. If you or one of your allies deals damage to the target, the spell ends. Using a Higher-Level Spell Slot. You can target one additional Beast for each spell slot level above 1.",
+  "id": "animal_friendship",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a morsel of food",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 1,
+              "baseLevel": 1,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to",
+            "typeFilter": [
+              "beast"
+            ]
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "charmed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Animal Friendship",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Animal Friendship"
+  }
+}

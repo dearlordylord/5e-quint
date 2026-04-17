@@ -1,0 +1,90 @@
+{
+  "description": "A vertical column of brilliant fire roars down from above. Each creature in a 10-foot-radius, 40-foot-high Cylinder centered on a point within range makes a Dexterity saving throw, taking 5d6 Fire damage and 5d6 Radiant damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The Fire damage and the Radiant damage increase by 1d6 for each spell slot level above 5.",
+  "id": "flame_strike",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pinch of sulfur",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "heightFeet": 40,
+            "kind": "cylinder",
+            "radiusFeet": 10
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 5,
+                  "dieSize": 6
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1
+                },
+                "startingAtLevel": 5
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 5,
+                  "dieSize": 6
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1
+                },
+                "startingAtLevel": 5
+              },
+              "damageType": "radiant",
+              "kind": "damage"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Flame Strike",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Flame Strike"
+  }
+}

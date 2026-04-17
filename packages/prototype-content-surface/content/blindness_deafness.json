@@ -1,0 +1,72 @@
+{
+  "description": "One creature that you can see within range must succeed on a Constitution saving throw, or it has the Blinded or Deafened condition (your choice) for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 2.",
+  "id": "blindness_deafness",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 1,
+              "baseLevel": 2,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": {
+            "from": [
+              "blinded",
+              "deafened"
+            ],
+            "kind": "choose"
+          },
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "repeatSave": {
+          "cadence": "end_of_target_turn",
+          "onSuccess": "ends_on_target"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Blindness/Deafness",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Blindness/Deafness"
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "description": "A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 Acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage only. Using a Higher-Level Spell Slot. The damage (both initial and later) increases by 1d4 for each spell slot level above 2.",
+  "id": "acid_arrow",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "powdered rhubarb leaf",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 4,
+                "dieSize": 4
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 2
+            },
+            "damageType": "acid",
+            "kind": "damage",
+            "timing": "end_of_next_turn"
+          }
+        ],
+        "onMiss": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 2,
+                "dieSize": 4,
+                "flat": 0
+              },
+              "kind": "fixed"
+            },
+            "damageType": "acid",
+            "kind": "damage"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Acid Arrow",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Acid Arrow"
+  }
+}

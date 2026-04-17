@@ -1,0 +1,68 @@
+{
+  "description": "A loud noise erupts from a point of your choice within range. Each creature in a 10-foot-radius Sphere centered there makes a Constitution saving throw, taking 3d8 Thunder damage on a failed save or half as much damage on a successful one. A Construct has Disadvantage on the save. A nonmagical object that isn't being worn or carried also takes the damage if it's in the spell's area. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2.",
+  "id": "shatter",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a chip of mica",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 10
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 3,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 2
+          },
+          "damageType": "thunder",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Shatter",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Shatter"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "description": "Up to six creatures of your choice that you can see within range regain Hit Points equal to 2d4 plus your spellcasting ability modifier. Using a Higher-Level Spell Slot. The healing increases by 1d4 for each spell slot level above 3.",
+  "id": "mass_healing_word",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 6,
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 4,
+                "spellcastingMod": true
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 3
+            },
+            "kind": "heal_hp",
+            "target": "target_creature"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Mass Healing Word",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Mass Healing Word"
+  }
+}

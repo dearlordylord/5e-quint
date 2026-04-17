@@ -1,0 +1,49 @@
+{
+  "description": "You touch a willing creature who isn't wearing armor. Until the spell ends, the target's base AC becomes 13 plus its Dexterity modifier. The spell ends early if the target dons armor.",
+  "id": "mage_armor",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "one"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a piece of cured leather",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_dons_armor"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operation": {
+      "abilityMod": "dex",
+      "const": 13,
+      "kind": "modify_ac_set_base"
+    },
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Mage Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Mage Armor"
+  }
+}

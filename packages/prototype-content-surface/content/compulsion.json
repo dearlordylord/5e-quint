@@ -1,0 +1,56 @@
+{
+  "description": "Each creature of your choice that you can see within range must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends. For the duration, you can take a Bonus Action to designate a direction that is horizontal to you. Each Charmed target must use as much of its movement as possible to move in that direction on its next turn, taking the safest route. After moving in this way, a target repeats the save, ending the spell on itself on a success.",
+  "id": "compulsion",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 4,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "any_number"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "charmed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Compulsion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Compulsion"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "description": "You gain a +1 bonus to AC and saving throws while you wear this ring.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_ring_of_protection",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 1,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_ac"
+      },
+      {
+        "delta": {
+          "dice": 1,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "saving_throw"
+        ]
+      }
+    ]
+  },
+  "name": "Ring of Protection",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RingOfProtection"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

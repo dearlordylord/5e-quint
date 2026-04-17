@@ -1,0 +1,21 @@
+{
+  "acquiredAtLevel": 3,
+  "className": "fighter",
+  "description": "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20.",
+  "id": "fighter_improved_critical",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "modify_crit_range",
+        "threshold": 19
+      }
+    ]
+  },
+  "name": "Improved Critical",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Fighter/Champion#ImprovedCritical"
+  }
+}

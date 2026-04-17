@@ -1,0 +1,60 @@
+{
+  "description": "For the duration, the willing creature you touch has Resistance to one damage type of your choice: Acid, Cold, Fire, Lightning, or Thunder.",
+  "id": "protection_from_energy",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "damageType": {
+              "kind": "choice",
+              "label": "energy type",
+              "options": [
+                "acid",
+                "cold",
+                "fire",
+                "lightning",
+                "thunder"
+              ]
+            },
+            "kind": "grant_resistance"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Protection from Energy",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Protection from Energy"
+  }
+}

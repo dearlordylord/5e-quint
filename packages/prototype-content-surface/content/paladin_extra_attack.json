@@ -1,0 +1,21 @@
+{
+  "acquiredAtLevel": 5,
+  "className": "paladin",
+  "description": "You can attack twice instead of once whenever you take the Attack action on your turn.",
+  "id": "paladin_extra_attack",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "additional": 1,
+        "kind": "scale_attack_count"
+      }
+    ]
+  },
+  "name": "Extra Attack",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin#Extra Attack"
+  }
+}

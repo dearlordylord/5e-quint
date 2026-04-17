@@ -1,0 +1,47 @@
+{
+  "description": "Until the spell ends, your attacks with weapons deal an extra 1d4 Radiant damage on a hit.",
+  "id": "divine_favor",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 1,
+    "operation": {
+      "amount": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 4
+        },
+        "kind": "fixed"
+      },
+      "damageType": "radiant",
+      "kind": "damage_on_hit"
+    },
+    "range": {
+      "kind": "self"
+    },
+    "school": "transmutation"
+  },
+  "name": "Divine Favor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Divine Favor"
+  }
+}

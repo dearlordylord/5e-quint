@@ -1,0 +1,67 @@
+{
+  "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1.",
+  "id": "burning_hands",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "cone",
+            "lengthFeet": 15
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 3,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 1
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Burning Hands",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Burning Hands"
+  }
+}

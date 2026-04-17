@@ -1,0 +1,58 @@
+{
+  "description": "You touch a willing creature. For the duration, the target gains a Fly Speed of 60 feet and can hover. When the spell ends, the target falls if it is still aloft unless it can stop the fall. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 3.",
+  "id": "fly",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a feather",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 1,
+              "baseLevel": 3,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "feet": 60,
+            "hover": true,
+            "kind": "grant_speed",
+            "speedKind": "fly"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Fly",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Fly"
+  }
+}

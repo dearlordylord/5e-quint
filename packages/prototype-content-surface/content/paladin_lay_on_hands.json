@@ -1,0 +1,51 @@
+{
+  "acquiredAtLevel": 1,
+  "className": "paladin",
+  "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you finish a Long Rest. With that pool, you can restore a total number of Hit Points equal to five times your Paladin level. As a Bonus Action, you can touch a creature (which could be yourself) and draw power from the pool of healing to restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool.",
+  "id": "paladin_lay_on_hands",
+  "kind": "class_feature",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "kind": "resource_spent"
+            },
+            "kind": "heal_hp",
+            "target": "target_creature"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "long_rest"
+    },
+    "resource": {
+      "cap": {
+        "axis": "class",
+        "base": 5,
+        "kind": "linear_per_level",
+        "perLevel": 5,
+        "startingAtLevel": 1
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Lay On Hands",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Paladin#Lay On Hands"
+  }
+}

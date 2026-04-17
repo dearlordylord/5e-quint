@@ -1,0 +1,81 @@
+{
+  "description": "You hurl a mote of fire at a creature or an object within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn't being worn or carried. Cantrip Upgrade: The damage increases by 1d10 when you reach levels 5 (2d10), 11 (3d10), and 17 (4d10).",
+  "id": "fire_bolt",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "character",
+              "base": {
+                "dice": 1,
+                "dieSize": 10
+              },
+              "kind": "threshold_tiers",
+              "tiers": [
+                {
+                  "atLevel": 5,
+                  "override": {
+                    "dice": 2
+                  }
+                },
+                {
+                  "atLevel": 11,
+                  "override": {
+                    "dice": 3
+                  }
+                },
+                {
+                  "atLevel": 17,
+                  "override": {
+                    "dice": 4
+                  }
+                }
+              ]
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Fire Bolt",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Fire Bolt"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "acquiredAtLevel": 2,
+  "className": "bard",
+  "description": "You can add half your Proficiency Bonus (round down) to any ability check you make that doesn't already use your Proficiency Bonus.",
+  "id": "bard_jack_of_all_trades",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "kind": "proficiency_bonus",
+          "scale": "half",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "ability_check"
+        ]
+      }
+    ]
+  },
+  "name": "Jack of All Trades",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Bard#Jack of All Trades"
+  }
+}

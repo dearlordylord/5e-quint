@@ -1,0 +1,43 @@
+{
+  "description": "You touch a willing creature. Until the spell ends, the target's skin assumes a bark-like appearance, and the target has an Armor Class of 17 if its AC is lower than that.",
+  "id": "barkskin",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "one"
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": "a handful of bark",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operation": {
+      "const": 17,
+      "kind": "modify_ac_set_floor"
+    },
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Barkskin",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Barkskin"
+  }
+}

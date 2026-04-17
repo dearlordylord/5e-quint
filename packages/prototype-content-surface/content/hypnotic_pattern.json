@@ -1,0 +1,78 @@
+{
+  "description": "You create a twisting pattern of colors in a 30-foot Cube within range. The pattern appears for a moment and vanishes. Each creature in the area who can see the pattern must succeed on a Wisdom saving throw or have the Charmed condition for the duration. While Charmed, the creature has the Incapacitated condition and a Speed of 0. The spell ends for an affected creature if it takes any damage or if someone else uses an action to shake the creature out of its stupor.",
+  "id": "hypnotic_pattern",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pinch of confetti",
+      "s": true,
+      "v": false
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_takes_damage"
+        }
+      ],
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "cube",
+            "sideFeet": 30
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "condition": "charmed",
+              "kind": "apply_condition"
+            },
+            {
+              "condition": "incapacitated",
+              "kind": "apply_condition"
+            },
+            {
+              "feet": 0,
+              "kind": "set_speed"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Hypnotic Pattern",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hypnotic Pattern"
+  }
+}

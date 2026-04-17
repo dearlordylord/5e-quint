@@ -1,0 +1,73 @@
+{
+  "description": "You shoot a greenish ray at a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 2d8 Poison damage and has the Poisoned condition until the end of your next turn. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
+  "id": "ray_of_sickness",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "round"
+      }
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 1
+            },
+            "damageType": "poison",
+            "kind": "damage"
+          },
+          {
+            "condition": "poisoned",
+            "kind": "apply_condition"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Ray of Sickness",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Ray of Sickness"
+  }
+}

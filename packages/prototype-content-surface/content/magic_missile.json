@@ -1,0 +1,62 @@
+{
+  "description": "You create three glowing darts of magical force. Each dart strikes a creature of your choice that you can see within range. A dart deals 1d4 + 1 Force damage to its target. The darts all strike simultaneously, and you can direct them to hit one creature or several. Using a Higher-Level Spell Slot. The spell creates one more dart for each spell slot level above 1.",
+  "id": "magic_missile",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 3,
+              "baseLevel": 1,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to",
+            "repeatsAllowed": true
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 1,
+                "dieSize": 4,
+                "flat": 1
+              },
+              "kind": "fixed"
+            },
+            "damageType": "force",
+            "kind": "damage"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Magic Missile",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Magic Missile"
+  }
+}

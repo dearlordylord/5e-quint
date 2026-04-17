@@ -1,0 +1,66 @@
+{
+  "description": "Choose a creature that you can see within range. The target must succeed on a Wisdom saving throw or have the Paralyzed condition for the duration. At the end of each of its turns, the target repeats the save, ending the spell on itself on a success. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 5.",
+  "id": "hold_monster",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a straight piece of iron",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": {
+              "base": 1,
+              "baseLevel": 5,
+              "kind": "linear",
+              "perSlotAboveBase": 1
+            },
+            "mode": "choose_up_to"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "paralyzed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "repeatSave": {
+          "cadence": "end_of_target_turn",
+          "onSuccess": "ends_on_target"
+        }
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Hold Monster",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hold Monster"
+  }
+}

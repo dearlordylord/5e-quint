@@ -1,0 +1,76 @@
+{
+  "description": "You hurl a bolt of light toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 4d6 Radiant damage, and the next attack roll made against it before the end of your next turn has Advantage. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1.",
+  "id": "guiding_bolt",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "round"
+      }
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 4,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 1
+            },
+            "damageType": "radiant",
+            "kind": "damage"
+          },
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "attack_roll"
+            ]
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Guiding Bolt",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Guiding Bolt"
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "description": "You unleash a blast of cold air. Each creature in a 60-foot Cone originating from you makes a Constitution saving throw, taking 8d8 Cold damage on a failed save or half as much damage on a successful one. A creature killed by this spell becomes a frozen statue until it thaws. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 5.",
+  "id": "cone_of_cold",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a small crystal or glass cone",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "cone",
+            "lengthFeet": 60
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 8,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 5
+          },
+          "damageType": "cold",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Cone of Cold",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Cone of Cold"
+  }
+}

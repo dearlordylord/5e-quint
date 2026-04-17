@@ -1,0 +1,77 @@
+{
+  "description": "You unleash a wave of thunderous energy. Each creature in a 15-foot Cube originating from you makes a Constitution saving throw. On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you. On a successful save, a creature takes half as much damage only. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
+  "id": "thunderwave",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "cube",
+            "sideFeet": 15
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1
+                },
+                "startingAtLevel": 1
+              },
+              "damageType": "thunder",
+              "kind": "damage"
+            },
+            {
+              "direction": "push",
+              "distanceFeet": 10,
+              "kind": "force_move"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Thunderwave",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Thunderwave"
+  }
+}

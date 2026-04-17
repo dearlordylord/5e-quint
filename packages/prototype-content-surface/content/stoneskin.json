@@ -1,0 +1,65 @@
+{
+  "description": "Until the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage.",
+  "id": "stoneskin",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "diamond dust",
+      "materialConsumed": true,
+      "materialCostGp": 100,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 4,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "effects": [
+              {
+                "damageType": "bludgeoning",
+                "kind": "grant_resistance"
+              },
+              {
+                "damageType": "piercing",
+                "kind": "grant_resistance"
+              },
+              {
+                "damageType": "slashing",
+                "kind": "grant_resistance"
+              }
+            ],
+            "kind": "composite"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Stoneskin",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Stoneskin"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "description": "A stroke of lightning forming a 100-foot-long, 5-foot-wide Line blasts from you in a direction you choose. Each creature in the Line makes a Dexterity saving throw, taking 8d6 Lightning damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 3.",
+  "id": "lightning_bolt",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of fur and a crystal rod",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "line",
+            "lengthFeet": 100,
+            "widthFeet": 5
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 8,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 3
+          },
+          "damageType": "lightning",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Lightning Bolt",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Lightning Bolt"
+  }
+}

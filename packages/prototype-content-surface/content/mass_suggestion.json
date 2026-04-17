@@ -1,0 +1,62 @@
+{
+  "description": "You suggest a course of activity — described in no more than two or three sentences — to one or more creatures you can see within range who can hear and understand you. Creatures that can't be Charmed are immune. The suggestion must sound achievable and not involve anything that would obviously harm the target. Each target must succeed on a Wisdom saving throw or be Charmed by you for the duration or until you or your allies deal damage to the target. A creature that is Charmed by you in this way pursues the course of activity you described to the best of its ability. If the activity can be completed in a shorter time than the spell's duration, the spell ends when the subject finishes what it was asked to do. Using a Higher-Level Spell Slot. The duration is longer with a spell slot of level 7 (10 days), 8 (30 days), or 9 (366 days).",
+  "id": "mass_suggestion",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a snake's tongue and a honeycomb or a drop of sweet oil",
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 12,
+            "mode": "choose_up_to"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "charmed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Mass Suggestion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Mass Suggestion"
+  }
+}

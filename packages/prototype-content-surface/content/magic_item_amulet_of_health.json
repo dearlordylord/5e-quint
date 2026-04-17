@@ -1,0 +1,26 @@
+{
+  "description": "Your Constitution score is 19 while you wear this amulet. This amulet has no effect on you if your Constitution score is already 19 or higher without it.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_amulet_of_health",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "ability": "con",
+        "kind": "set_ability_score",
+        "mode": "floor",
+        "value": 19
+      }
+    ]
+  },
+  "name": "Amulet of Health",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#AmuletOfHealth"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

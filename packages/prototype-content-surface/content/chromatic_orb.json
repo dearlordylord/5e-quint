@@ -1,0 +1,76 @@
+{
+  "description": "You hurl a 4-inch-diameter sphere of energy at a creature you can see within range. Choose Acid, Cold, Fire, Lightning, Poison, or Thunder for the type of orb you create, and then make a ranged spell attack against the target. On a hit, the target takes 3d8 damage of the chosen type. If you roll the same number on two or more of the d8s, the orb leaps to a different target of your choice within 30 feet of the target. Make an attack roll against the new target, and make a new damage roll. The orb can't leap again unless you cast the spell with a level 2+ spell slot. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1. The orb can leap a maximum number of times equal to the level of the slot expended, and a creature can be targeted only once by each casting of this spell.",
+  "id": "chromatic_orb",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a diamond worth 50+ GP",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 3,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 1
+            },
+            "damageType": {
+              "kind": "choice",
+              "label": "orb type",
+              "options": [
+                "acid",
+                "cold",
+                "fire",
+                "lightning",
+                "poison",
+                "thunder"
+              ]
+            },
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Chromatic Orb",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Chromatic Orb"
+  }
+}

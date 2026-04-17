@@ -1,0 +1,54 @@
+{
+  "description": "An aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can't be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point.",
+  "id": "aura_of_life",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 4,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "emanation",
+            "radiusFeet": 30
+          }
+        },
+        "effects": [
+          {
+            "damageType": "necrotic",
+            "kind": "grant_resistance"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "abjuration"
+  },
+  "name": "Aura of Life",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Aura of Life"
+  }
+}

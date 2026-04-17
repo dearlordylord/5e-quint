@@ -1,0 +1,33 @@
+{
+  "category": "fighting_style",
+  "description": "While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",
+  "id": "defense",
+  "kind": "feat",
+  "mechanics": {
+    "condition": {
+      "categories": [
+        "light",
+        "medium",
+        "heavy"
+      ],
+      "kind": "wearing_armor"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 1,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_ac"
+      }
+    ]
+  },
+  "name": "Defense",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Feats#Defense"
+  }
+}

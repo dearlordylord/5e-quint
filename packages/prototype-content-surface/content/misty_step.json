@@ -1,0 +1,44 @@
+{
+  "description": "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see.",
+  "id": "misty_step",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "destination": "unoccupied_visible_space",
+            "kind": "teleport",
+            "maxFeet": 30
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "conjuration"
+  },
+  "name": "Misty Step",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Misty Step"
+  }
+}

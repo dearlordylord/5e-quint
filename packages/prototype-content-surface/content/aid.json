@@ -1,0 +1,64 @@
+{
+  "description": "Choose up to three creatures within range. Each target's Hit Point maximum and current Hit Points increase by 5 for the duration. Using a Higher-Level Spell Slot. Each target's Hit Points increase by 5 for each spell slot level above 2.",
+  "id": "aid",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a strip of white cloth",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 3,
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "delta": {
+              "axis": "slot",
+              "base": {
+                "dice": 0,
+                "dieSize": 1,
+                "flat": 5
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "flat": 5
+              },
+              "startingAtLevel": 2
+            },
+            "kind": "modify_max_hp"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Aid",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Aid"
+  }
+}

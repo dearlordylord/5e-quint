@@ -1,0 +1,68 @@
+{
+  "description": "Choose a creature that you can see within range. Positive energy washes through the target, restoring 70 Hit Points. This spell also ends the Blinded, Deafened, and Poisoned conditions on the target. Using a Higher-Level Spell Slot. The healing increases by 10 for each spell slot level above 6.",
+  "id": "heal",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 0,
+                "dieSize": 1,
+                "flat": 70
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "flat": 10
+              },
+              "startingAtLevel": 6
+            },
+            "kind": "heal_hp",
+            "target": "target_creature"
+          },
+          {
+            "condition": [
+              "blinded",
+              "deafened",
+              "poisoned"
+            ],
+            "kind": "remove_condition"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Heal",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Heal"
+  }
+}

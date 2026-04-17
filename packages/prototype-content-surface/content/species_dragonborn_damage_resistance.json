@@ -1,0 +1,30 @@
+{
+  "description": "You have Resistance to the damage type determined by your Draconic Ancestry trait.",
+  "id": "species_dragonborn_damage_resistance",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "damageType": {
+          "kind": "choice",
+          "label": "draconic ancestry",
+          "options": [
+            "acid",
+            "cold",
+            "fire",
+            "lightning",
+            "poison"
+          ]
+        },
+        "kind": "grant_resistance"
+      }
+    ]
+  },
+  "name": "Damage Resistance (Dragonborn)",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Dragonborn#Damage Resistance"
+  },
+  "species": "dragonborn"
+}
