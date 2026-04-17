@@ -96,6 +96,51 @@ child_pids=()
 task_branches=()
 active_worktrees=()
 
+collect_descendant_pids() {
+  local root_pid="$1"
+  local child_pid
+
+  pgrep -P "$root_pid" 2>/dev/null || true
+  while read -r child_pid; do
+    [[ -n "$child_pid" ]] || continue
+    collect_descendant_pids "$child_pid"
+  done < <(pgrep -P "$root_pid" 2>/dev/null || true)
+}
+
+kill_process_group() {
+  local pgid="$1"
+
+  [[ -n "$pgid" ]] || return 0
+  kill -TERM -- "-$pgid" >/dev/null 2>&1 || true
+  sleep 1
+  kill -0 -- "-$pgid" >/dev/null 2>&1 && kill -KILL -- "-$pgid" >/dev/null 2>&1 || true
+}
+
+kill_process_tree() {
+  local root_pid="$1"
+  local descendants=""
+
+  [[ -n "$root_pid" ]] || return 0
+  kill -0 "$root_pid" >/dev/null 2>&1 || return 0
+
+  descendants="$(collect_descendant_pids "$root_pid")"
+  if [[ -n "$descendants" ]]; then
+    while read -r pid; do
+      [[ -n "$pid" ]] || continue
+      kill "$pid" >/dev/null 2>&1 || true
+    done <<<"$descendants"
+  fi
+  kill "$root_pid" >/dev/null 2>&1 || true
+  sleep 1
+  if [[ -n "$descendants" ]]; then
+    while read -r pid; do
+      [[ -n "$pid" ]] || continue
+      kill -0 "$pid" >/dev/null 2>&1 && kill -9 "$pid" >/dev/null 2>&1 || true
+    done <<<"$descendants"
+  fi
+  kill -0 "$root_pid" >/dev/null 2>&1 && kill -9 "$root_pid" >/dev/null 2>&1 || true
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --base)
@@ -429,7 +474,7 @@ cleanup() {
 
   for pid in "${child_pids[@]}"; do
     [[ -n "$pid" ]] || continue
-    kill "$pid" >/dev/null 2>&1 || true
+    kill_process_tree "$pid"
   done
   wait >/dev/null 2>&1 || true
 
@@ -815,6 +860,9 @@ run_claude() {
   local workspace="$1"
   local prompt="$2"
   local log_file="$3"
+  local status=0
+  local session_pid=""
+  local session_pgid=""
   local -a args=(--dangerously-skip-permissions --print --verbose --output-format stream-json --effort max)
 
   if [[ -n "${RALPH_CLAUDE_MODEL:-}" ]]; then
@@ -822,7 +870,18 @@ run_claude() {
   fi
 
   log "claude: $(quote_cmd claude "${args[@]}") < $prompt"
-  (cd "$workspace" && claude "${args[@]}" <"$prompt") 2>&1 | tee "$log_file" >&2
+  (
+    cd "$workspace"
+    exec setsid claude "${args[@]}" <"$prompt" >"$log_file" 2>&1
+  ) &
+  session_pid=$!
+  session_pgid="$(ps -o pgid= -p "$session_pid" | tr -d '[:space:]')"
+  set +e
+  wait "$session_pid"
+  status=$?
+  set -e
+  kill_process_group "${session_pgid:-$session_pid}"
+  return "$status"
 }
 
 save_diff() {
