@@ -289,6 +289,36 @@ Genuinely new atom pressure (not in v4): `grant_temp_hp` (3 hits), `grant_condit
 
 The next iteration of the TS schema should reshape — not just widen — based on this evidence. See `scripts/content-surface-survey/REPORT_SRD.md` (when generated) for the full aggregation.
 
+Reshape pass #1 (applied to `packages/prototype-content-surface/src/surface/types.ts`):
+
+- **UnitRecord kinds added**: `feat`, `species_trait`, `magic_item`. Drove by 100% structural_widening rate for these kinds (100/100 of pre-reshape verdicts).
+- **Shared `PassiveMechanics` family**: `{ family: "passive", grants: EffectAtom[] }` — the dominant non-spell shape (9+9+6 class_feature votes, 2+2+2 species/magic-item votes).
+- **Shared `ActivatedAbilityMechanics`**: renamed from `ClassFeatureActivationMechanics`; reused across class_feature, feat, species_trait, magic_item.
+- **`RestResetCadence.dawn`** variant added (4 magic-item votes) — renders to `duration_window`.
+- **`grant_feat` atom** added to `EffectAtom` (11 class_feature votes: Ability Score Improvement, Fighter bonus feats).
+- **Magic-item attunement**: gated on `MagicItemRecord.requiresAttunement`, rendered via the existing v4 `attunement_slot` resource atom (no new atom needed).
+- **`DiceDelta` flat bonuses**: `dieSize = 1` collapses to a flat `+N` at render time, avoiding schema churn for the many "+X to ability/save" shapes.
+
+None of this added new top-level v4 taxonomy families. The taxonomy stayed intact; the TS surface caught up with it.
+
+### Post-survey surface reshape (v5-in-progress)
+
+Based on the survey findings above, the TS surface was reshaped. The taxonomy additions forced by multiple units are now in effect:
+
+- `grant_temp_hp` — added as an effect atom.
+- `grant_feat` — added as an effect atom (11+ class_feature hits; Ability Score Improvement "take a feat instead", Fighter bonus feats).
+- `grant_spell_access` — added as an effect atom (6+ hits across class_feature and species). Carries mode: `at_will | once_per_long_rest | prepared | known`.
+- `grant_condition_immunity` — added as an effect atom (3 hits; Mind Blank / trait-level immunities).
+- `RestResetCadence.dawn` — added (4 magic-item hits). Emitted as a `duration_window` rather than `rest_window` since it is not a SRD Rest.
+- `ClassFeatureActivationCost.action` and `.reaction` — added (magic-item activations, reactive class features).
+- **`PassiveMechanics` family** — the dominant non-spell mechanics shape: "always-on grants while the unit is in effect". Used by class_feature / feat / species_trait / magic_item. The unified procedure atom emitted is `grant` (v4 Procedure Atom already exists).
+- **`MagicItemRecord` / `FeatRecord` / `SpeciesTraitRecord` UnitRecord kinds** — backed by `magic_item_root` / `feat_root` / `species_trait_root` (v4 Source Atoms already exist). Magic items additionally consume an `attunement_slot` resource when `requiresAttunement: true`.
+- **`EquipmentPredicate` gate on `PassiveMechanics`** — added after reshape-validate batch 1 exposed that all four Fighting Style feats (Defense, Archery, Great Weapon Fighting, Two-Weapon Fighting) depend on a wearing- or wielding-gate on their passive grants. Variants: `always` (sentinel), `wearing_armor` (categories: light / medium / heavy), `wielding_weapon` (weaponKind: ranged / melee_two_handed / melee_one_handed / two_weapons). Emitted as a `resolution`-category node (`wearing_armor` / `wielding_weapon`) connected to the passive `grant` procedure via a `requires` relation. `always` emits nothing (the existing unconditional-grant trace is preserved).
+- **`set_ability_score` effect atom** — added after reshape-validate batch 1 (amulet_of_health forced it; broader applicability across Gauntlets of Ogre Power, Headband of Intellect, Ioun Stones). Carries `{ability, value, mode: "set" | "floor"}`. `floor` is the dominant SRD idiom ("no effect if already higher"). Reference encodings: `magic_item_amulet_of_health.dhall` (con=19 floor, rare), `magic_item_gauntlets_of_ogre_power.dhall` (str=19 floor, uncommon).
+- **`replace_attack` activation cost** — added after reshape-validate batch 1. Dragonborn Breath Weapon ("you can replace one of your attacks") introduced the attack-replacement economy as a distinct cost; emits an `attack_slot` resource node consumed by the activation. Not yet exercised by a reference encoding — requires `phases` on `ActivatedAbilityMechanics` (pending) for a real use.
+
+None of these contradict v4; they realize v4 atoms in the authored surface that were previously absent.
+
 ## 13. Known Remaining Weak Spots
 
 Even `v4` may still be too weak on:
