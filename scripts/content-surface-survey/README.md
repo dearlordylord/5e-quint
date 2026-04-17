@@ -24,6 +24,8 @@ One-liner: **this dir tells us what's MISSING; the package's `content/` dir hold
 | `worker.sh` | per-unit driver: extract → prompt → Claude → validate → append dataset row |
 | `run-survey.sh` | orchestrator: reads queue, runs N workers in parallel, resumable |
 | `close-loop.ts` | Stage 2 closure loop: ranks widening clusters, reruns a targeted batch, writes before/after closure report |
+| `auto-close-loop.ts` | unattended batch driver: resumes from persisted state, applies timeouts, continues cluster-by-cluster |
+| `run-auto-close-loop.sh` | launcher for overnight runs: `start`, `status`, `logs`, `stop`, `restart` |
 | `provenance-check.sh` | pre-commit sweep: fails if PHB content leaked to main repo |
 
 ## Routing rule (hard)
@@ -94,6 +96,13 @@ pnpm --filter @dnd/prototype-content-surface exec tsx \
 pnpm --filter @dnd/prototype-content-surface exec tsx \
   ../../scripts/content-surface-survey/close-loop.ts \
   --kind magic_item --cluster modify_speed_effect --limit 2 --execute --backend codex
+
+# 9. Overnight unattended loop. Defaults:
+#    AUTO_KIND=magic_item, AUTO_BACKEND=codex, limit=2, batch timeout=30m.
+bash scripts/content-surface-survey/run-auto-close-loop.sh start
+bash scripts/content-surface-survey/run-auto-close-loop.sh status
+bash scripts/content-surface-survey/run-auto-close-loop.sh logs
+bash scripts/content-surface-survey/run-auto-close-loop.sh stop
 ```
 
 ## Gotchas
@@ -135,6 +144,18 @@ After a tier completes:
 `close-loop.ts` is the supported feedback loop for survey convergence work.
 It supersedes the previous ad hoc "inspect by hand and rerun manually"
 workflow for this purpose.
+
+`auto-close-loop.ts` is the unattended wrapper around that loop. It adds:
+
+- persisted resume state in `.output/content-surface-closure/auto-close-loop.state.json`
+- single-run lock in `.output/content-surface-closure/auto-close-loop.lock.json`
+- per-batch hard timeout
+- failed-batch streak stopping
+- no-improvement streak stopping
+- sleep between batches
+
+Use `run-auto-close-loop.sh` for overnight runs instead of manual `nohup`
+commands.
 
 `aggregate.ts` turns `survey-results-srd.jsonl` into `REPORT_SRD.md`:
 
