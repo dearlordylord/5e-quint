@@ -59,20 +59,21 @@ let passWithoutTrace =
               , shape = { kind = "emanation", radiusFeet = 30 }
               , origin = { kind = "self" }
               }
-          , operation =
-              { trigger = { kind = "passive" }
-              , effect =
-                  { kind = "modify_roll_numeric"
-                  , on = [ "ability_check" ]
-                  , delta =
-                      { kind = "fixed_dice"
-                      , dice = 10
-                      , dieSize = 1
-                      , sign = "+"
-                      }
-                  , skillFilter = { kind = "fixed", skills = [ "stealth" ] }
-                  }
-              }
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , effect =
+                    { kind = "modify_roll_numeric"
+                    , on = [ "ability_check" ]
+                    , delta =
+                        { kind = "fixed_dice"
+                        , dice = 10
+                        , dieSize = 1
+                        , sign = "+"
+                        }
+                    , skillFilter = { kind = "fixed", skills = [ "stealth" ] }
+                    }
+                }
+              ]
           }
       }
 

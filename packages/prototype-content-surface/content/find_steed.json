@@ -1,0 +1,166 @@
+{
+  "description": "You summon an otherworldly being that appears as a loyal steed in an unoccupied space of your choice within range. This creature uses the Otherworldly Steed stat block. Whenever you cast the spell, choose the steed's creature type — Celestial, Fey, or Fiend — which determines certain traits in the stat block.",
+  "id": "find_steed",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "control": {
+      "commandCost": {
+        "kind": "no_action_required"
+      },
+      "commandRangeFeet": 60,
+      "defaultBehavior": "independent",
+      "initiative": "shared_with_caster",
+      "turnOrder": "immediately_after_caster"
+    },
+    "dismissal": {
+      "caster0Hp": "disappears",
+      "leavesBehind": "equipment",
+      "onSpellEnd": "disappears",
+      "onZeroHp": "disappears"
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "spawned_creature",
+    "level": 2,
+    "mode": {
+      "label": "creature type",
+      "options": [
+        {
+          "displayName": "Celestial",
+          "id": "celestial",
+          "overrides": {
+            "creatureType": "celestial"
+          }
+        },
+        {
+          "displayName": "Fey",
+          "id": "fey",
+          "overrides": {
+            "creatureType": "fey"
+          }
+        },
+        {
+          "displayName": "Fiend",
+          "id": "fiend",
+          "overrides": {
+            "creatureType": "fiend"
+          }
+        }
+      ]
+    },
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "conjuration",
+    "statBlock": {
+      "abilityScores": {
+        "cha": 8,
+        "con": 14,
+        "dex": 12,
+        "int": 6,
+        "str": 18,
+        "wis": 12
+      },
+      "ac": {
+        "axis": "slot",
+        "base": 10,
+        "kind": "linear_per_level",
+        "perLevel": 1,
+        "startingAtLevel": 2
+      },
+      "actions": {
+        "attacks": [
+          {
+            "attackBonus": {
+              "kind": "caster_derived",
+              "source": "spell_attack_mod"
+            },
+            "attackType": "melee",
+            "name": "Otherworldly Slam",
+            "onHit": [
+              {
+                "amount": {
+                  "expr": {
+                    "dice": 1,
+                    "dieSize": 8
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": "radiant",
+                "kind": "damage"
+              }
+            ],
+            "reachFeet": 5
+          }
+        ]
+      },
+      "creatureType": {
+        "kind": "choice",
+        "label": "creature type",
+        "options": [
+          "celestial",
+          "fey",
+          "fiend"
+        ]
+      },
+      "displayName": "Otherworldly Steed",
+      "hp": {
+        "axis": "slot",
+        "base": 5,
+        "kind": "linear_per_level",
+        "perLevel": 10,
+        "startingAtLevel": 2
+      },
+      "languages": "caster_languages",
+      "saveProficiencies": [
+        "str",
+        "dex",
+        "con",
+        "wis"
+      ],
+      "size": "large",
+      "speeds": [
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 60
+          },
+          "kind": "walk"
+        },
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 60
+          },
+          "kind": "fly",
+          "requiresSlotLevel": 4
+        }
+      ],
+      "traits": [
+        {
+          "description": "When you regain Hit Points from a level 1+ spell, the steed regains the same number of Hit Points if you're within 5 feet of it.",
+          "effect": {
+            "kind": "caster_heal_link",
+            "rangeFeet": 5
+          },
+          "name": "Life Bond"
+        }
+      ]
+    }
+  },
+  "name": "Find Steed",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Find Steed"
+  }
+}

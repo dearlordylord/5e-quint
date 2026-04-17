@@ -26,15 +26,17 @@
     },
     "family": "ongoing_effect",
     "level": 2,
-    "operation": {
-      "effect": {
-        "const": 17,
-        "kind": "modify_ac_set_floor"
-      },
-      "trigger": {
-        "kind": "passive"
+    "operations": [
+      {
+        "effect": {
+          "const": 17,
+          "kind": "modify_ac_set_floor"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
       }
-    },
+    ],
     "range": {
       "kind": "touch"
     },

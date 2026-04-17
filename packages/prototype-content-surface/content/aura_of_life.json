@@ -3,6 +3,16 @@
   "id": "aura_of_life",
   "kind": "spell",
   "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "self"
+      },
+      "shape": {
+        "kind": "emanation",
+        "radiusFeet": 30
+      }
+    },
     "castingTime": {
       "kind": "action"
     },
@@ -18,27 +28,47 @@
         "unit": "minute"
       }
     },
-    "family": "activation",
+    "family": "ongoing_effect",
     "level": 4,
-    "phases": [
+    "operations": [
       {
-        "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "self"
-          },
-          "shape": {
-            "kind": "emanation",
-            "radiusFeet": 30
-          }
+        "effect": {
+          "damageType": "necrotic",
+          "kind": "grant_resistance"
         },
-        "effects": [
-          {
-            "damageType": "necrotic",
-            "kind": "grant_resistance"
-          }
-        ],
-        "kind": "direct"
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_max_hp_reduction"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 0,
+              "dieSize": 1,
+              "flat": 1
+            },
+            "kind": "fixed"
+          },
+          "kind": "heal_hp",
+          "target": "target_creature"
+        },
+        "predicate": {
+          "comparison": "eq",
+          "kind": "at_hp_threshold",
+          "threshold": 0
+        },
+        "trigger": {
+          "kind": "on_attached_turn_start"
+        }
       }
     ],
     "range": {

@@ -40,13 +40,14 @@ let barkskin =
               { kind = "target"
               , selection = { mode = "one" }
               }
-          , operation =
-              { trigger = { kind = "passive" }
-              , effect =
-                  { kind = "modify_ac_set_floor"
-                  , const = 17
-                  }
-              }
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , effect =
+                    { kind = "modify_ac_set_floor"
+                    , const = 17
+                    }
+                }
+              ]
           }
       }
 

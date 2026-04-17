@@ -1,31 +1,10 @@
--- Aura of Life — SRD 5.2.1 Spell, level 4, Abjuration.
+-- Aura of Life — SRD 5.2.1 Spell, Level 4, Abjuration.
+-- Family: ongoing_effect, multi-operation (passive grant_resistance
+-- + conditional per-turn heal). §A15-unlocked per-turn trigger + new
+-- multi-operation widening validation ref.
 --
--- RAW (Spells / Descriptions A-D / Aura of Life):
---   "An aura radiates from you in a 30-foot Emanation for the
---    duration. While in the aura, you and your allies have Resistance
---    to Necrotic damage, and your Hit Point maximums can't be reduced.
---    If an ally with 0 Hit Points starts its turn in the aura, that
---    ally regains 1 Hit Point."
---
--- PARTIAL. Encoded:
---   • Area emanation 30 ft from self.
---   • grant_resistance "necrotic" as the area's persistent effect.
---
--- DEFERRED.
---   • "Hit Point maximums can't be reduced" — there is no atom for
---     "block max-HP reduction" (modify_max_hp is an additive delta, not
---     an immunity gate). Needs a new atom; sibling case to Mind Blank
---     damage-immunity gap.
---   • "If an ally with 0 Hit Points starts its turn in the aura,
---    regains 1 HP" — conditional per-turn heal with an HP-threshold
---    predicate. Sibling case to Heroism's per-turn temp-HP refresh
---    and Beacon of Hope's maximize-healing rider. Needs a new
---    ongoing-op shape (per-turn-trigger conditional atom).
---   • Ally-vs-enemy discrimination on the resistance and heal ("you
---    and your allies") is allegiance (DM agenda per
---    plans/CONTENT_SURFACE_DEFERRED.md §B); the authored shape
---    applies the resistance inside the emanation without narrowing
---    the target set, matching other emanation authoring.
+-- All three listed mechanics now authored (§A16 block_max_hp_reduction
+-- landed alongside the multi-op widening).
 
 let auraOfLife =
       { kind = "spell"
@@ -38,7 +17,7 @@ let auraOfLife =
       , description =
           "An aura radiates from you in a 30-foot Emanation for the duration. While in the aura, you and your allies have Resistance to Necrotic damage, and your Hit Point maximums can't be reduced. If an ally with 0 Hit Points starts its turn in the aura, that ally regains 1 Hit Point."
       , mechanics =
-          { family = "activation"
+          { family = "ongoing_effect"
           , level = 4
           , school = "abjuration"
           , castingTime = { kind = "action" }
@@ -48,19 +27,69 @@ let auraOfLife =
               { kind = "concentration"
               , upTo = { unit = "minute", amount = 10 }
               }
-          , phases =
-              [ { kind = "direct"
-                , attachment =
-                    { kind = "area"
-                    , shape =
-                        { kind = "emanation", radiusFeet = 30 }
-                    , origin = { kind = "self" }
-                    }
-                , effects =
-                    [ { kind = "grant_resistance"
-                      , damageType = "necrotic"
+          , attachment =
+              { kind = "area"
+              , shape = { kind = "emanation", radiusFeet = 30 }
+              , origin = { kind = "self" }
+              }
+          -- Dhall homogeneity forces Optional-field trick across the
+          -- two operations: each record carries every variant-specific
+          -- field from both effects as Optional, with None on the
+          -- records that don't use it. --omit-empty strips the Nones.
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , predicate =
+                    None
+                      { kind : Text
+                      , threshold : Natural
+                      , comparison : Text
                       }
-                    ]
+                , effect =
+                    { kind = "grant_resistance"
+                    , damageType = Some "necrotic"
+                    , amount =
+                        None
+                          { kind : Text
+                          , expr : { dice : Natural, dieSize : Natural, flat : Natural }
+                          }
+                    , target = None Text
+                    }
+                }
+              , { trigger = { kind = "passive" }
+                , predicate =
+                    None
+                      { kind : Text
+                      , threshold : Natural
+                      , comparison : Text
+                      }
+                , effect =
+                    { kind = "block_max_hp_reduction"
+                    , damageType = None Text
+                    , amount =
+                        None
+                          { kind : Text
+                          , expr : { dice : Natural, dieSize : Natural, flat : Natural }
+                          }
+                    , target = None Text
+                    }
+                }
+              , { trigger = { kind = "on_attached_turn_start" }
+                , predicate =
+                    Some
+                      { kind = "at_hp_threshold"
+                      , threshold = 0
+                      , comparison = "eq"
+                      }
+                , effect =
+                    { kind = "heal_hp"
+                    , damageType = None Text
+                    , amount =
+                        Some
+                          { kind = "fixed"
+                          , expr = { dice = 0, dieSize = 1, flat = 1 }
+                          }
+                    , target = Some "target_creature"
+                    }
                 }
               ]
           }

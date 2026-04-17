@@ -32,24 +32,26 @@
     },
     "family": "ongoing_effect",
     "level": 1,
-    "operation": {
-      "effect": {
-        "delta": {
-          "dice": 1,
-          "dieSize": 4,
-          "kind": "fixed_dice",
-          "sign": "+"
+    "operations": [
+      {
+        "effect": {
+          "delta": {
+            "dice": 1,
+            "dieSize": 4,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_roll_numeric",
+          "on": [
+            "attack_roll",
+            "saving_throw"
+          ]
         },
-        "kind": "modify_roll_numeric",
-        "on": [
-          "attack_roll",
-          "saving_throw"
-        ]
-      },
-      "trigger": {
-        "kind": "passive"
+        "trigger": {
+          "kind": "passive"
+        }
       }
-    },
+    ],
     "range": {
       "feet": 30,
       "kind": "point"

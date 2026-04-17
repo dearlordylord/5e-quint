@@ -1,26 +1,8 @@
--- Heroism — SRD 5.2.1 Spell, level 1, Enchantment.
---
--- RAW (Spells / Descriptions E-L / Heroism):
---   "A willing creature you touch is imbued with bravery. Until the
---    spell ends, the creature is immune to the Frightened condition
---    and gains Temporary Hit Points equal to your spellcasting ability
---    modifier at the start of each of its turns."
---   "Using a Higher-Level Spell Slot. You can target one additional
---    creature for each spell slot level above 1."
---
--- PARTIAL. Encoded:
---   • grant_condition_immunity "frightened" for the spell's duration
---     (concentration, up to 1 minute).
---   • TargetSelection.choose_up_to with SlotScaling base=1, +1/slot.
---
--- DEFERRED. "Temporary Hit Points equal to your spellcasting ability
--- modifier at the start of each of its turns" is a per-turn
--- ongoing-op refresh pattern that has no current shape. Authoring
--- just grant_temp_hp once at cast time would under-apply (RAW
--- refreshes each turn). A new DEFERRED item is warranted for the
--- "per-turn-trigger ongoing effect" shape; motivating unit also
--- Aura of Life's "0-HP ally regains 1 HP at start of turn". Once that
--- ongoing-op shape lands, the temp-HP refresh can be layered in.
+-- Heroism — SRD 5.2.1 Spell, Level 1, Enchantment.
+-- Family: ongoing_effect, multi-operation. §A15 + §A17 validation
+-- ref: passive frightened-immunity + per-turn temp-HP refresh
+-- (amount = caster's spellcasting ability modifier, via DiceExpr's
+-- existing spellcastingMod flag as 0d1 + mod).
 
 let heroism =
       { kind = "spell"
@@ -33,7 +15,7 @@ let heroism =
       , description =
           "A willing creature you touch is imbued with bravery. Until the spell ends, the creature is immune to the Frightened condition and gains Temporary Hit Points equal to your spellcasting ability modifier at the start of each of its turns. Using a Higher-Level Spell Slot. You can target one additional creature for each spell slot level above 1."
       , mechanics =
-          { family = "activation"
+          { family = "ongoing_effect"
           , level = 1
           , school = "enchantment"
           , castingTime = { kind = "action" }
@@ -43,25 +25,65 @@ let heroism =
               { kind = "concentration"
               , upTo = { unit = "minute", amount = 1 }
               }
-          , phases =
-              [ { kind = "direct"
-                , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 1
-                            }
-                        }
-                    }
-                , effects =
-                    [ { kind = "grant_condition_immunity"
-                      , condition = "frightened"
+          , attachment =
+              { kind = "target"
+              , selection =
+                  { mode = "choose_up_to"
+                  , count =
+                      { kind = "linear"
+                      , base = 1
+                      , perSlotAboveBase = 1
+                      , baseLevel = 1
                       }
-                    ]
+                  }
+              }
+          -- Two heterogeneous ops: Dhall homogeneity forces Optional-
+          -- field trick on the `effect` records (condition field on
+          -- grant_condition_immunity vs amount field on grant_temp_hp).
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , predicate =
+                    None
+                      { kind : Text
+                      , threshold : Natural
+                      , comparison : Text
+                      }
+                , effect =
+                    { kind = "grant_condition_immunity"
+                    , condition = Some "frightened"
+                    , amount =
+                        None
+                          { kind : Text
+                          , expr :
+                              { dice : Natural
+                              , dieSize : Natural
+                              , flat : Natural
+                              , spellcastingMod : Bool
+                              }
+                          }
+                    }
+                }
+              , { trigger = { kind = "on_attached_turn_start" }
+                , predicate =
+                    None
+                      { kind : Text
+                      , threshold : Natural
+                      , comparison : Text
+                      }
+                , effect =
+                    { kind = "grant_temp_hp"
+                    , condition = None Text
+                    , amount =
+                        Some
+                          { kind = "fixed"
+                          , expr =
+                              { dice = 0
+                              , dieSize = 1
+                              , flat = 0
+                              , spellcastingMod = True
+                              }
+                          }
+                    }
                 }
               ]
           }

@@ -160,23 +160,28 @@ type RepeatSaveSpec = {
 **Next step:** coalesce with Dominate Person / Dominate Monster when
 authored; 3-unit family.
 
-### A10. Permanent / until-dispelled Duration
+### A10. Permanent / until-dispelled Duration — RESOLVED 2026-04-16
 
-**Motivating units:** Sequester; Geas L9 slot (currently authored as
-365 days — known partial); likely Magic Jar, Magnificent Mansion, and
-other "Until Dispelled" RAW entries.
+Landed `Duration.permanent { endsOn?: ReadonlyNonEmptyArray<"dispel" |
+"damage"> }` variant. Tracer emits a `persist (permanent)` lifecycle
+node with an optional `expire on: <triggers>` child. Authored
+Sequester as validation ref. Geas's L9 permanence is not retrofitted
+(current upcast-to-permanent pattern would need an upcast-tier on
+Duration itself — separate widening not yet pressured beyond Geas).
 
-**Proposed shape:**
-```ts
-type Duration =
-  | ...existing...
-  | { kind: "permanent"; endsOn?: ReadonlyArray<"dispel" | "damage"> };
-```
+### A11/A12 — RESOLVED 2026-04-16
 
-**Next step:** land when Sequester is authored. Would retroactively
-correct Geas L9.
+- `ActivatedAbilityHeader` gained an optional `duration?: Duration`
+  field. Bounds turn-scoped class-feature effects (Ranger Nature's
+  Veil "Invisible until end of next turn").
+- `UseCountCap` gained `{ kind: "ability_modifier"; ability }`
+  variant. Hosts Bardic Inspiration "a number of times equal to your
+  Charisma modifier" and siblings.
 
-### A11. ActivatedAbilityMechanics duration (class-feature condition
+Validation refs not yet authored (Ranger Nature's Veil, Bardic
+Inspiration both in the structural queue — see STEP 6).
+
+### A11-historical. ActivatedAbilityMechanics duration (class-feature condition
 scoping)
 
 **Motivating unit:** Ranger Nature's Veil L14 ("Invisible until end of
@@ -450,7 +455,47 @@ The following RAW clauses are intentionally omitted from the spec side:
 
 ## C. Big / complex modeling questions (open design)
 
-### C1. Counterspell
+### C1. Counterspell — RESOLVED 2026-04-16
+
+Unified `TriggeredReactionMechanics` with activation phases: field
+`phases: ReadonlyNonEmptyArray<ActivationPhase>` replaces
+`effects: EffectAtom[]`. Shield becomes a single `direct` phase.
+Added `ReactionTrigger.creature_casts_spell { components }`,
+`EffectAtom.negate_triggering_spell`, and
+`save_gate.autoSuccessIfCasterSlotGte?: "triggering_spell_level"`
+for the slot auto-success pattern. Authored Counterspell as
+validation ref. Nested counterspelling (Counterspell cast →
+creature_casts_spell event → another Counterspell reaction) works
+recursively without special casing — trigger grammar naturally
+matches Counterspell's own S-component cast.
+
+### C2. Sleep — RESOLVED 2026-04-16
+
+Extended `RepeatSaveSpec` with optional `onFailAgain: EffectAtom` for
+escalating chains. Sleep authored: first save fail → Incapacitated;
+repeat fail at end of target's next turn → Unconscious. Non-sleeper
+auto-success predicate still deferred (sibling widening, limited
+pressure).
+
+### C3. Dispel Magic — RESOLVED 2026-04-16
+
+Added `ActivationPhase.ability_check_gate { ability, dc, onPass,
+onFail, autoSuccessIfCasterSlotGte? }` — caster-rolled resolution.
+Added `EffectAtom.end_ongoing_spells { maxSpellLevel }` with
+sentinels `"caster_slot_level"` and `"contested_spell_level"` to
+carry context from the phase without re-encoding the slot numerically.
+Authored Dispel Magic as a two-phase spell: direct sweep of ≤ slot-
+level spells + ability_check_gate for higher-level spells.
+
+### Beacon of Hope — RESOLVED 2026-04-16
+
+Added `"death_saving_throw"` to `RollKind`; added
+`modify_roll_advantage.saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>`
+for narrowing saving-throw riders to specific abilities; added
+`EffectAtom.maximize_healing_received`. Authored Beacon of Hope as
+2-op ongoing_effect.
+
+### C1-historical. Counterspell
 
 **SRD 5.2.1 text:** Reaction, "which you take when you see a creature
 within 60 feet of yourself casting a spell with Verbal, Somatic, or
@@ -519,6 +564,122 @@ alternative may become preferable if a spell surfaces that is clearly
 darts that all hit the same target by force, not player choice).
 
 **Next step:** leave as-is; the current shape is RAW-faithful.
+
+### A16. Damage-type immunity + block_max_hp_reduction — RESOLVED 2026-04-16
+
+Added `grant_damage_immunity { damageType }` and
+`block_max_hp_reduction` EffectAtom variants. Mind Blank upgraded to
+full auth (adds Psychic immunity to the Charmed-immunity baseline);
+Aura of Life multi-op rewrite adds the passive HP-max-reduction
+block as a third op.
+
+### A16b. Multiplicative speed (set_speed_ratio) — RESOLVED 2026-04-16
+
+Added `set_speed_ratio { numerator, denominator }` EffectAtom.
+Covers Spirit Guardians "Speed is halved in the Emanation" and Slow
+"halved speed". Integer-fraction shape accommodates future RAW
+fractions without widening.
+
+### RepeatSave cadence "on_target_takes_damage" — RESOLVED 2026-04-16
+
+Extended `RepeatSaveSpec.cadence` with `"on_target_takes_damage"`.
+Hosts the Dominate family's "Whenever the target takes damage, it
+repeats the save, ending the spell on itself on a success." Authored
+Dominate Beast/Person/Monster as validation refs.
+
+### A17. OngoingOperation array — RESOLVED 2026-04-16
+
+Singular `operation: OngoingOperation` on `OngoingEffectMechanics`
+widened to `operations: ReadonlyNonEmptyArray<OngoingOperation>`.
+Unlocks multi-operation spells: Aura of Life (passive necrotic
+resistance + conditional turn-start heal), Heroism (pending §A14),
+Spirit Guardians (partial — speed-halving still deferred).
+
+Concurrently introduced `ReadonlyNonEmptyArray<T>` as a shared
+primitive and propagated across the surface where an empty list is
+unambiguously invalid (CastTimeChoice options, SkillFilter fixed/
+choice, ThresholdTiers tiers, DiceAmount.threshold_tiers.tiers,
+apply_condition/remove_condition array variants, modify_roll_numeric/
+advantage `on`, `attackerTypeFilter`, composite.effects,
+any_of.triggers, Duration.earlyEnd, TargetTypeFilter,
+AreaShapeSpec.choice.options, ActionRestriction.exclude.actions,
+ActivationMechanics.phases, and spawned_creature grammar). Makes
+invalid states irrepresentable at the type level.
+
+**Dhall encoding cost:** multi-operation lists hit Dhall's
+homogeneous-list constraint. Aura of Life demonstrates the
+Optional-field trick (every record in the list carries every
+variant-specific `effect` / `predicate` field as Optional, with
+`None T` on records that don't use it; `--omit-empty` strips the
+Nones in the JSON output). Works but verbose; pressures a future
+"shared Op-record type alias at the top of each Dhall file" pattern
+or a Dhall → JSON pipeline that understands tagged unions.
+
+### C4a. Spawned creature family — RESOLVED 2026-04-16
+
+(Named "§C4a" per `plans/DESIGN_C4a_spawned_companion.md`. Distinct
+from the §C4 above, which is the Magic-Missile target-selection
+question. The §C4a–§C4h cluster from the design doc covers the
+"spell spawns/replaces a creature" problem; C4a is Pattern A —
+inline level-parameterized stat block.)
+
+**Pressure:** Find Familiar (L1), Find Steed (L2), Summon Dragon (L5)
++ 8 XPHB summons (Beast/Fey/Undead/Aberration/Construct/Elemental/
+Celestial/Fiend). All ship an inline stat block parameterized by
+spell level and optionally a cast-time mode picker.
+
+**What landed:**
+- New `spawned_creature` payload family. Renamed from initial
+  "spawned_companion" because allegiance is DM-agenda (table-owned);
+  Summon Greater Demon and similar hostile-control summons fit the
+  same grammar with no extra loyalty-gate typing.
+- `CreatureStatBlock` grammar: `StatBlockValue` (literal /
+  per_spell_level / caster_derived), `CreatureSpeed`,
+  `CreatureResistanceList` (fixed / choose_one_from),
+  `CreatureImmunityList`, `CreatureSense`, `CreatureTrait` (+
+  `caster_shared_resistance` / `caster_heal_link` trait effects),
+  `CastTimeChoice<T>` generic primitive for cast-time subtype
+  picking.
+- Actions modeled as four parallel homogeneous lists
+  (`multiattacks` / `attacks` / `saves` / `supports`) rather than a
+  single tagged-union list. Dhall requires homogeneous list element
+  types; splitting by kind sidesteps the Optional-gymnastics tax
+  that a unified list imposes through EffectAtom.
+- `CreatureMode` cast-time subtype picker + `CreatureStatBlockOverrides`.
+- `CreatureControl` + `CreatureDismissal` records for the caster's
+  command handles (no loyalty/hostility gate — DM agenda).
+- Tracer arm emits `companion` attachment + `create_companion` +
+  `command_companion` + per-action subgraphs + optional `choose`
+  subgraph for the mode picker.
+
+**Validation refs authored:**
+- `content/find_familiar.dhall` — partial (Beast stat block deferred
+  to Monsters catalog; spell-driven overrides authored).
+- `content/find_steed.dhall` — level-parameterized AC/HP, type-choice
+  mode, Life Bond trait.
+- `content/summon_dragon.dhall` — multiattack dispatch + breath-weapon
+  save_gate + caster-shared-resistance trait + cast-time
+  damage-type choice.
+
+**Known partials inside the grammar:**
+- Multiattack count formula "floor(slot/2)" approximated as
+  `per_spell_level { base=2, perLevel=1, startingAtLevel=5 }`, which
+  over-counts by 1 at odd slot levels above 5. Pressures a future
+  `half_spell_level_floor` `StatBlockValue` variant when more
+  summons ship.
+- Find Steed's Otherworldly Slam damage type is "Radiant (Celestial),
+  Psychic (Fey), or Necrotic (Fiend)" — the mode picker can swap
+  action lists but the current encoding does not branch the damage
+  type per mode. Authored as Radiant with the mode-typed creature
+  override; the damage-type coupling is flagged as partial.
+
+**Remaining C4 sub-problems** (see `DESIGN_C4a` §"What this does NOT
+cover"): C4b catalog reanimation (Animate Dead, Create Undead),
+C4c templated multi-spawn (Animate Objects), C4d target stat-block
+replacement (Polymorph family), C4e self-modify without swap
+(Alter Self), C4f shared companion control refinements,
+C4g object-target transform, C4h permanent-after-concentration
+(True Polymorph). Each is its own tick.
 
 ### C5. OngoingOperation vs EffectAtom union duplication
 

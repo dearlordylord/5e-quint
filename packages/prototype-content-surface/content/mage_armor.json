@@ -31,16 +31,18 @@
     },
     "family": "ongoing_effect",
     "level": 1,
-    "operation": {
-      "effect": {
-        "abilityMod": "dex",
-        "const": 13,
-        "kind": "modify_ac_set_base"
-      },
-      "trigger": {
-        "kind": "passive"
+    "operations": [
+      {
+        "effect": {
+          "abilityMod": "dex",
+          "const": 13,
+          "kind": "modify_ac_set_base"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
       }
-    },
+    ],
     "range": {
       "kind": "touch"
     },

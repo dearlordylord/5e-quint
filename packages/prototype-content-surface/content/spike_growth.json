@@ -1,0 +1,63 @@
+{
+  "description": "The ground in a 20-foot-radius Sphere centered on a point within range sprouts hard spikes and thorns. The area becomes Difficult Terrain for the duration. When a creature moves into or within the area, it takes 2d4 Piercing damage for every 5 feet it travels.",
+  "id": "spike_growth",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "point_within_range"
+      },
+      "shape": {
+        "kind": "sphere",
+        "radiusFeet": 20
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "seven thorns",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 4
+            },
+            "kind": "fixed"
+          },
+          "damageType": "piercing",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_creature_moves",
+          "perFeet": 5
+        }
+      }
+    ],
+    "range": {
+      "feet": 150,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Spike Growth",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Spike Growth"
+  }
+}

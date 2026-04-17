@@ -53,17 +53,18 @@ let huntersMark =
                     , cost = { kind = "bonus_action" }
                     }
               }
-          , operation =
-              { trigger = { kind = "on_caster_attack_hit" }
-              , effect =
-                  { kind = "damage"
-                  , damageType = "force"
-                  , amount =
-                      { kind = "fixed"
-                      , expr = { dice = 1, dieSize = 6 }
-                      }
-                  }
-              }
+          , operations =
+              [ { trigger = { kind = "on_caster_attack_hit" }
+                , effect =
+                    { kind = "damage"
+                    , damageType = "force"
+                    , amount =
+                        { kind = "fixed"
+                        , expr = { dice = 1, dieSize = 6 }
+                        }
+                    }
+                }
+              ]
           }
       }
 

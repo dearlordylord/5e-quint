@@ -34,42 +34,43 @@ let guidance =
               { kind = "target"
               , selection = { mode = "one" }
               }
-          , operation =
-              { trigger = { kind = "passive" }
-              , effect =
-                  { kind = "modify_roll_numeric"
-                  , on = [ "ability_check" ]
-                  , delta =
-                      { kind = "fixed_dice"
-                      , dice = 1
-                      , dieSize = 4
-                      , sign = "+"
-                      }
-                  , skillFilter =
-                      { kind = "choice"
-                      , options =
-                          [ "acrobatics"
-                          , "animal_handling"
-                          , "arcana"
-                          , "athletics"
-                          , "deception"
-                          , "history"
-                          , "insight"
-                          , "intimidation"
-                          , "investigation"
-                          , "medicine"
-                          , "nature"
-                          , "perception"
-                          , "performance"
-                          , "persuasion"
-                          , "religion"
-                          , "sleight_of_hand"
-                          , "stealth"
-                          , "survival"
-                          ]
-                      }
-                  }
-              }
+          , operations =
+              [ { trigger = { kind = "passive" }
+                , effect =
+                    { kind = "modify_roll_numeric"
+                    , on = [ "ability_check" ]
+                    , delta =
+                        { kind = "fixed_dice"
+                        , dice = 1
+                        , dieSize = 4
+                        , sign = "+"
+                        }
+                    , skillFilter =
+                        { kind = "choice"
+                        , options =
+                            [ "acrobatics"
+                            , "animal_handling"
+                            , "arcana"
+                            , "athletics"
+                            , "deception"
+                            , "history"
+                            , "insight"
+                            , "intimidation"
+                            , "investigation"
+                            , "medicine"
+                            , "nature"
+                            , "perception"
+                            , "performance"
+                            , "persuasion"
+                            , "religion"
+                            , "sleight_of_hand"
+                            , "stealth"
+                            , "survival"
+                            ]
+                        }
+                    }
+                }
+              ]
           }
       }
 

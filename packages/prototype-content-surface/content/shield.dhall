@@ -1,13 +1,7 @@
--- Shield — SRD 5.2.1 Spell, level 1, Abjuration.
--- Family: triggered_reaction.
+-- Shield — SRD 5.2.1 Spell, Level 1, Abjuration.
+-- Family: triggered_reaction (unified §C1 — phases shape).
 -- Trigger: any_of [hit_by_attack_roll, targeted_by_named_spell("magic_missile")]
--- Effects: +5 AC (modify_ac) + negate Magic Missile damage (negate_named_effect)
--- Duration: 1 round (timed) — until start of next turn
---
--- DHALL NOTE:
---   The `triggers` list and `effects` list require heterogeneous records.
---   Dhall's homogeneous list constraint is satisfied with Optional fields;
---   dhall-to-json renders None T as null and the tracer dispatches on `kind` only.
+-- Single `direct` phase: +5 AC + negate Magic Missile damage.
 
 let shield =
       { kind = "spell"
@@ -30,9 +24,11 @@ let shield =
                   , triggers =
                       [ { kind = "hit_by_attack_roll"
                         , spellId = None Text
+                        , components = None (List Text)
                         }
                       , { kind = "targeted_by_named_spell"
                         , spellId = Some "magic_missile"
+                        , components = None (List Text)
                         }
                       ]
                   }
@@ -43,30 +39,34 @@ let shield =
               { kind = "timed"
               , value = { unit = "round", amount = 1 }
               }
-          , attachment = { kind = "self" }
           , interruptsTrigger = True
-          , effects =
-              [ { kind = "modify_ac"
-                , delta =
-                    Some
-                      { kind = "fixed_dice"
-                      , dice = 5
-                      , dieSize = 1
-                      , sign = "+"
+          , phases =
+              [ { kind = "direct"
+                , attachment = { kind = "self" }
+                , effects =
+                    [ { kind = "modify_ac"
+                      , delta =
+                          Some
+                            { kind = "fixed_dice"
+                            , dice = 5
+                            , dieSize = 1
+                            , sign = "+"
+                            }
+                      , spellId = None Text
+                      , scope = None Text
                       }
-                , spellId = None Text
-                , scope = None Text
-                }
-              , { kind = "negate_named_effect"
-                , delta =
-                    None
-                      { kind : Text
-                      , dice : Natural
-                      , dieSize : Natural
-                      , sign : Text
+                    , { kind = "negate_named_effect"
+                      , delta =
+                          None
+                            { kind : Text
+                            , dice : Natural
+                            , dieSize : Natural
+                            , sign : Text
+                            }
+                      , spellId = Some "magic_missile"
+                      , scope = Some "damage_only"
                       }
-                , spellId = Some "magic_missile"
-                , scope = Some "damage_only"
+                    ]
                 }
               ]
           }

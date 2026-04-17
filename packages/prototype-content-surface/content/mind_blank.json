@@ -32,6 +32,10 @@
           {
             "condition": "charmed",
             "kind": "grant_condition_immunity"
+          },
+          {
+            "damageType": "psychic",
+            "kind": "grant_damage_immunity"
           }
         ],
         "kind": "direct"

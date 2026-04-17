@@ -30,29 +30,31 @@
     },
     "family": "ongoing_effect",
     "level": 2,
-    "operation": {
-      "effect": {
-        "delta": {
-          "dice": 10,
-          "dieSize": 1,
-          "kind": "fixed_dice",
-          "sign": "+"
+    "operations": [
+      {
+        "effect": {
+          "delta": {
+            "dice": 10,
+            "dieSize": 1,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_roll_numeric",
+          "on": [
+            "ability_check"
+          ],
+          "skillFilter": {
+            "kind": "fixed",
+            "skills": [
+              "stealth"
+            ]
+          }
         },
-        "kind": "modify_roll_numeric",
-        "on": [
-          "ability_check"
-        ],
-        "skillFilter": {
-          "kind": "fixed",
-          "skills": [
-            "stealth"
-          ]
+        "trigger": {
+          "kind": "passive"
         }
-      },
-      "trigger": {
-        "kind": "passive"
       }
-    },
+    ],
     "range": {
       "kind": "self"
     },

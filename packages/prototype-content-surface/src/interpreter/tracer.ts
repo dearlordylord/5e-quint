@@ -57,6 +57,15 @@ import type {
   ItemDestructionPolicy,
   SpellAccessMode,
   SaveGateRiderResult,
+  SpawnedCreatureMechanics,
+  CreatureStatBlock,
+  CreatureActions,
+  CreatureNamedAttackRoll,
+  CreatureNamedSaveGate,
+  CreatureNamedSupport,
+  CreatureNamedMultiattack,
+  CreatureControl,
+  StatBlockValue,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -366,6 +375,26 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "grant_damage_immunity": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_damage_immunity",
+        label: `grant_damage_immunity\n${e.damageType}`,
+      });
+      return id;
+    }
+    case "block_max_hp_reduction": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_max_hp_reduction",
+        label: "block_max_hp_reduction",
+      });
+      return id;
+    }
     case "set_ability_score": {
       const id = ids("eff");
       nodes.push({
@@ -393,6 +422,16 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "set_speed",
         label: `set_speed\n= ${e.feet} ft`,
+      });
+      return id;
+    }
+    case "set_speed_ratio": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "set_speed_ratio",
+        label: `set_speed_ratio\n× ${e.numerator}/${e.denominator}`,
       });
       return id;
     }
@@ -434,6 +473,36 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "detect",
         label: `detect\nproperty: ${e.property}\nradius ${e.radiusFeet} ft`,
+      });
+      return id;
+    }
+    case "negate_triggering_spell": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "negate_triggering_spell",
+        label: "negate_triggering_spell",
+      });
+      return id;
+    }
+    case "end_ongoing_spells": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "end_ongoing_spells",
+        label: `end_ongoing_spells\nmax level: ${e.maxSpellLevel}`,
+      });
+      return id;
+    }
+    case "maximize_healing_received": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "maximize_healing_received",
+        label: "maximize_healing_received",
       });
       return id;
     }
@@ -486,11 +555,17 @@ function traceEffectAtomScaling(
     case "grant_feat":
     case "grant_spell_access":
     case "grant_condition_immunity":
+    case "grant_damage_immunity":
+    case "block_max_hp_reduction":
+    case "set_speed_ratio":
     case "set_ability_score":
     case "teleport":
     case "grant_speed":
     case "detect":
     case "set_speed":
+    case "negate_triggering_spell":
+    case "end_ongoing_spells":
+    case "maximize_healing_received":
       return;
     case "composite":
       for (const child of e.effects) {
@@ -583,6 +658,9 @@ function traceSpellMechanics(
     case "anchored_trigger":
       traceAnchoredTrigger(m, ctx, nodes, edges, ids);
       break;
+    case "spawned_creature":
+      traceSpawnedCreature(m, ctx, nodes, edges, ids);
+      break;
     default: {
       const _exhaustive: never = m;
       throw new Error(`unhandled spell family: ${String(_exhaustive)}`);
@@ -602,6 +680,7 @@ function procedureForFamily(
       return "store";
     case "ongoing_effect":
     case "activation":
+    case "spawned_creature":
       return "activate";
     default: {
       const _: never = f;
@@ -683,6 +762,8 @@ function describeReactionTrigger(t: ReactionTrigger): string {
       return "hit by attack roll";
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
+    case "creature_casts_spell":
+      return `creature casts spell (${t.components.join("/")})`;
     case "any_of":
       return t.triggers.map(describeReactionTrigger).join(" OR ");
     default: {
@@ -766,6 +847,27 @@ function traceDuration(
       edges.push({ from: persistId, to: expId, relation: "persists_until" });
       return;
     }
+    case "permanent": {
+      const persistId = ids("per");
+      nodes.push({
+        id: persistId,
+        category: "lifecycle",
+        atomKind: "persist",
+        label: "persist\npermanent",
+      });
+      edges.push({ from: procId, to: persistId, relation: "grants" });
+      if (d.endsOn !== undefined) {
+        const expId = ids("exp");
+        nodes.push({
+          id: expId,
+          category: "lifecycle",
+          atomKind: "expire",
+          label: `expire\non: ${d.endsOn.join(", ")}`,
+        });
+        edges.push({ from: persistId, to: expId, relation: "persists_until" });
+      }
+      return;
+    }
     default: {
       const _exhaustive: never = d;
       throw new Error(`unhandled duration: ${String(_exhaustive)}`);
@@ -793,15 +895,9 @@ function traceOngoingEffect(
     ids,
   );
 
-  traceOngoingOperation(
-    m.operation,
-    ctx.procId,
-    attId,
-    ctx.slotId,
-    nodes,
-    edges,
-    ids,
-  );
+  for (const op of m.operations) {
+    traceOngoingOperation(op, ctx.procId, attId, ctx.slotId, nodes, edges, ids);
+  }
 }
 
 // If the attachment is a v4 `mark`, emit the mark_target effect (and,
@@ -1125,11 +1221,6 @@ function traceTriggeredReaction(
   });
   edges.push({ from: promptId, to: commitId, relation: "commits" });
 
-  // Attachment — typically self for Shield.
-  const attId = traceAttachment(m.attachment, ctx.range, nodes, ids);
-  edges.push({ from: commitId, to: attId, relation: "attaches_to" });
-
-  // Interrupt the triggering resolution if the spell does so.
   if (m.interruptsTrigger) {
     const intId = ids("int");
     nodes.push({
@@ -1141,13 +1232,33 @@ function traceTriggeredReaction(
     edges.push({ from: commitId, to: intId, relation: "grants" });
   }
 
-  // Commit grants each reaction effect — now unified EffectAtom.
-  for (const eff of m.effects) {
-    const effId = traceEffectAtom(eff, nodes, ids, edges);
-    if (effId === null) continue;
-    edges.push({ from: commitId, to: effId, relation: "grants" });
-    edges.push({ from: effId, to: attId, relation: "attaches_to" });
-  }
+  // Phases of the reaction — unified with ActivationMechanics.
+  // ctx.procId threads through so the phase tracers emit their
+  // standard subgraphs rooted at `commit`.
+  const phaseCtx: SpellCtx = {
+    procId: commitId,
+    slotId: ctx.slotId,
+    range: ctx.range,
+  };
+  let previousResolutionId: string | null = null;
+  m.phases.forEach((phase, idx) => {
+    const thisResolutionId = tracePhase(
+      phase,
+      idx + 1,
+      phaseCtx,
+      nodes,
+      edges,
+      ids,
+    );
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: thisResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = thisResolutionId;
+  });
 }
 
 // v4 Subgraph hunt §4.2 — anchored_trigger payload family. Pressure
@@ -1279,6 +1390,275 @@ function describeAnchoredSignal(s: AnchoredSignal): string {
   }
 }
 
+type CreatureActionsKind = "action" | "bonus_action" | "reaction";
+
+type CreatureCtx = {
+  readonly procId: string;
+  readonly compId: string;
+  readonly slotId: string | null;
+  readonly kind: CreatureActionsKind;
+  readonly nodes: TraceNode[];
+  readonly edges: TraceEdge[];
+  readonly ids: IdGen;
+};
+
+function traceSpawnedCreature(
+  m: SpawnedCreatureMechanics,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const compId = ids("cmp");
+  nodes.push({
+    id: compId,
+    category: "attachment",
+    atomKind: "companion",
+    label: `companion\n${describeCreatureStatBlock(m.statBlock)}\nrange ${describeRange(ctx.range)}`,
+  });
+  edges.push({ from: ctx.procId, to: compId, relation: "attaches_to" });
+
+  const createId = ids("eff");
+  nodes.push({
+    id: createId,
+    category: "effect",
+    atomKind: "create_companion",
+    label: `create_companion\n${m.statBlock.displayName}`,
+  });
+  edges.push({ from: ctx.procId, to: createId, relation: "grants" });
+  edges.push({ from: createId, to: compId, relation: "attaches_to" });
+
+  if (m.mode !== undefined) {
+    const modeId = ids("chz");
+    nodes.push({
+      id: modeId,
+      category: "procedure",
+      atomKind: "choose",
+      label: `choose\n${m.mode.label}\n${m.mode.options.map((o) => o.displayName).join(" | ")}`,
+    });
+    edges.push({ from: ctx.procId, to: modeId, relation: "prompts" });
+    edges.push({ from: modeId, to: compId, relation: "modifies" });
+  }
+
+  const cmdId = ids("eff");
+  nodes.push({
+    id: cmdId,
+    category: "effect",
+    atomKind: "command_companion",
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft`,
+  });
+  edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
+  edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
+
+  for (const [slot, kind] of [
+    [m.statBlock.actions, "action"],
+    [m.statBlock.bonusActions, "bonus_action"],
+    [m.statBlock.reactions, "reaction"],
+  ] as const) {
+    if (slot === undefined) continue;
+    traceCreatureActions({
+      procId: ctx.procId,
+      compId,
+      slotId: ctx.slotId,
+      kind,
+      nodes,
+      edges,
+      ids,
+    }, slot);
+  }
+}
+
+function traceCreatureActions(
+  ctx: CreatureCtx,
+  actions: CreatureActions,
+): void {
+  // Multiattacks intentionally excluded from dispatch targets —
+  // RAW forbids nesting (a Multiattack can't dispatch another
+  // Multiattack; that would double-consume the action economy).
+  const definedNames = new Set<string>([
+    ...(actions.attacks ?? []).map((a) => a.name),
+    ...(actions.saves ?? []).map((a) => a.name),
+    ...(actions.supports ?? []).map((a) => a.name),
+  ]);
+  actions.multiattacks?.forEach((ma, idx) => {
+    for (const d of ma.dispatches) {
+      if (!definedNames.has(d.name)) {
+        throw new Error(
+          `multiattack "${ma.name}" dispatches to unknown action "${d.name}"`,
+        );
+      }
+    }
+    traceMultiattack(ctx, ma, idx + 1);
+  });
+  actions.attacks?.forEach((ar, idx) => traceCreatureAttack(ctx, ar, idx + 1));
+  actions.saves?.forEach((sg, idx) => traceCreatureSaveGate(ctx, sg, idx + 1));
+  actions.supports?.forEach((sp, idx) => traceCreatureSupport(ctx, sp, idx + 1));
+}
+
+function maTag(count: StatBlockValue | undefined): string {
+  return count !== undefined
+    ? `\nmultiattack ×${describeStatBlockValue(count)}`
+    : "";
+}
+
+function traceCreatureAttack(
+  ctx: CreatureCtx,
+  ar: CreatureNamedAttackRoll,
+  idx: number,
+): void {
+  const resId = ctx.ids("res");
+  ctx.nodes.push({
+    id: resId,
+    category: "resolution",
+    atomKind: "attack_roll",
+    label: `attack_roll [${ctx.kind} ${idx}: ${ar.name}]\n${ar.attackType} (+${describeStatBlockValue(ar.attackBonus)})${maTag(ar.multiattackCount)}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+  ctx.edges.push({ from: resId, to: ctx.compId, relation: "attaches_to" });
+  traceAttackWindow(
+    ar.onHit,
+    "on_hit_window",
+    resId,
+    ctx.compId,
+    ctx.slotId,
+    ctx.nodes,
+    ctx.edges,
+    ctx.ids,
+  );
+}
+
+function traceCreatureSaveGate(
+  ctx: CreatureCtx,
+  sg: CreatureNamedSaveGate,
+  idx: number,
+): void {
+  const resId = ctx.ids("res");
+  ctx.nodes.push({
+    id: resId,
+    category: "resolution",
+    atomKind: "save_gate",
+    label: `save_gate [${ctx.kind} ${idx}: ${sg.name}]\n${sg.ability.toUpperCase()} save\nDC: ${describeDc(sg.dc)}\narea: ${describeAreaShapeFixed(sg.area)}${maTag(sg.multiattackCount)}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+  ctx.edges.push({ from: resId, to: ctx.compId, relation: "attaches_to" });
+
+  traceSaveBranch(
+    sg.onFail,
+    resId,
+    ctx.compId,
+    ctx.slotId,
+    ctx.nodes,
+    ctx.edges,
+    ctx.ids,
+  );
+  if (sg.onSuccess.kind === "half_damage") {
+    const halfId = ctx.ids("eff");
+    ctx.nodes.push({
+      id: halfId,
+      category: "effect",
+      atomKind: "half_damage",
+      label: "half_damage\n(½ of onFail damage)",
+    });
+    ctx.edges.push({ from: resId, to: halfId, relation: "branches_on_save" });
+    ctx.edges.push({ from: halfId, to: ctx.compId, relation: "attaches_to" });
+  } else {
+    traceSaveBranch(
+      sg.onSuccess,
+      resId,
+      ctx.compId,
+      ctx.slotId,
+      ctx.nodes,
+      ctx.edges,
+      ctx.ids,
+    );
+  }
+}
+
+function traceCreatureSupport(
+  ctx: CreatureCtx,
+  sp: CreatureNamedSupport,
+  idx: number,
+): void {
+  const dirId = ctx.ids("dir");
+  ctx.nodes.push({
+    id: dirId,
+    category: "procedure",
+    atomKind: "direct_apply",
+    label: `direct_apply [${ctx.kind} ${idx}: ${sp.name}]\ntarget: ${sp.target}${
+      sp.rangeFeet !== undefined ? ` (${sp.rangeFeet} ft)` : ""
+    }${maTag(sp.multiattackCount)}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: dirId, relation: "grants" });
+  ctx.edges.push({ from: dirId, to: ctx.compId, relation: "attaches_to" });
+  const effId = traceEffectAtom(sp.effect, ctx.nodes, ctx.ids, ctx.edges);
+  if (effId !== null) {
+    ctx.edges.push({ from: dirId, to: effId, relation: "grants" });
+    ctx.edges.push({ from: effId, to: ctx.compId, relation: "attaches_to" });
+  }
+}
+
+function traceMultiattack(
+  ctx: CreatureCtx,
+  ma: CreatureNamedMultiattack,
+  idx: number,
+): void {
+  const dirId = ctx.ids("dir");
+  const dispatches = ma.dispatches
+    .map((d) => `${describeStatBlockValue(d.count)}× ${d.name}`)
+    .join(" + ");
+  ctx.nodes.push({
+    id: dirId,
+    category: "procedure",
+    atomKind: "direct_apply",
+    label: `direct_apply [${ctx.kind} ${idx}: ${ma.name}]\nmultiattack: ${dispatches}`,
+  });
+  ctx.edges.push({ from: ctx.procId, to: dirId, relation: "grants" });
+  ctx.edges.push({ from: dirId, to: ctx.compId, relation: "attaches_to" });
+}
+
+function describeCommandCost(c: CreatureControl): string {
+  switch (c.commandCost.kind) {
+    case "no_action_required":
+      return "no action";
+    case "bonus_action":
+      return "bonus action";
+    case "action":
+      return "action";
+    default: {
+      const _: never = c.commandCost;
+      throw new Error(`unhandled command cost: ${String(_)}`);
+    }
+  }
+}
+
+function describeStatBlockValue(v: StatBlockValue): string {
+  switch (v.kind) {
+    case "literal":
+      return String(v.value);
+    case "linear_per_level":
+      return `${v.base} + ${v.perLevel}×(${v.axis}−${v.startingAtLevel})`;
+    case "caster_derived":
+      return v.source;
+    default: {
+      const _: never = v;
+      throw new Error(`unhandled StatBlockValue: ${String(_)}`);
+    }
+  }
+}
+
+function describeCreatureStatBlock(sb: CreatureStatBlock): string {
+  const parts: string[] = [sb.displayName];
+  parts.push(
+    `size: ${typeof sb.size === "string" ? sb.size : `choice(${sb.size.label})`}`,
+  );
+  parts.push(
+    `type: ${typeof sb.creatureType === "string" ? sb.creatureType : `choice(${sb.creatureType.label})`}`,
+  );
+  parts.push(`AC ${describeStatBlockValue(sb.ac)}`);
+  parts.push(`HP ${describeStatBlockValue(sb.hp)}`);
+  return parts.join(" / ");
+}
+
 function traceActivation(
   m: ActivationMechanics,
   ctx: SpellCtx,
@@ -1369,12 +1749,15 @@ function tracePhase(
         ids,
       );
 
+      const autoLabel = phase.autoSuccessIfCasterSlotGte !== undefined
+        ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
+        : "";
       const resId = ids("res");
       nodes.push({
         id: resId,
         category: "resolution",
         atomKind: "save_gate",
-        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: ${describeDc(phase.dc)}`,
+        label: `save_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} save\nDC: ${describeDc(phase.dc)}${autoLabel}`,
       });
       edges.push({ from: ctx.procId, to: resId, relation: "grants" });
       edges.push({ from: resId, to: attId, relation: "attaches_to" });
@@ -1423,6 +1806,18 @@ function tracePhase(
         });
         edges.push({ from: resId, to: repId, relation: "repeats_as" });
         edges.push({ from: repId, to: attId, relation: "attaches_to" });
+        if (phase.repeatSave.onFailAgain !== undefined) {
+          const escId = traceEffectAtom(
+            phase.repeatSave.onFailAgain,
+            nodes,
+            ids,
+            edges,
+          );
+          if (escId !== null) {
+            edges.push({ from: repId, to: escId, relation: "branches_on_save" });
+            edges.push({ from: escId, to: attId, relation: "attaches_to" });
+          }
+        }
       }
       return resId;
     }
@@ -1457,6 +1852,37 @@ function tracePhase(
         traceEffectAtomScaling(eff, effId, ctx.slotId, nodes, edges, ids);
       }
       return directId;
+    }
+    case "ability_check_gate": {
+      const attId = traceAttachment(phase.attachment, ctx.range, nodes, ids);
+      edges.push({ from: ctx.procId, to: attId, relation: "attaches_to" });
+
+      const autoLabel = phase.autoSuccessIfCasterSlotGte !== undefined
+        ? `\nauto-success if caster slot ≥ ${phase.autoSuccessIfCasterSlotGte}`
+        : "";
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "ability_check",
+        label: `ability_check_gate [phase ${phaseNumber}]\n${phase.ability.toUpperCase()} check\nDC ${phase.dc}${autoLabel}`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+      edges.push({ from: resId, to: attId, relation: "attaches_to" });
+
+      const passId = traceEffectAtom(phase.onPass, nodes, ids, edges);
+      if (passId !== null) {
+        edges.push({ from: resId, to: passId, relation: "branches_on_completion" });
+        edges.push({ from: passId, to: attId, relation: "attaches_to" });
+      }
+      if (phase.onFail !== undefined) {
+        const failId = traceEffectAtom(phase.onFail, nodes, ids, edges);
+        if (failId !== null) {
+          edges.push({ from: resId, to: failId, relation: "branches_on_completion" });
+          edges.push({ from: failId, to: attId, relation: "attaches_to" });
+        }
+      }
+      return resId;
     }
     default: {
       const _exhaustive: never = phase;
@@ -2241,6 +2667,8 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
     }
     case "proficiency_bonus":
       return "max = proficiency bonus";
+    case "ability_modifier":
+      return `max = ${cap.ability.toUpperCase()} modifier`;
     default: {
       const _: never = cap;
       throw new Error(`unhandled use count cap: ${String(_)}`);

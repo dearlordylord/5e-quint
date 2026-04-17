@@ -9,15 +9,10 @@
 --    observe it remotely, or control its mind."
 --
 -- PARTIAL. Encoded:
---   • grant_condition_immunity "charmed" for 24 hours (timed).
+--   • grant_condition_immunity "charmed" for 24 hours.
+--   • grant_damage_immunity "psychic" (§A16-landed).
 --
 -- DEFERRED.
---   • Psychic damage immunity — no damage-immunity atom on the
---     surface. grant_resistance is resistance (half damage), not
---     immunity (zero damage). Needs a new atom (e.g.,
---     grant_damage_immunity { damageType }). Motivating units: Mind
---     Blank; likely future Holy Aura, many monster stat-block traits.
---     Add to DEFERRED §A.
 --   • "Sense emotions / alignment / read thoughts / magically detect
 --     location / gather information / observe remotely / control its
 --     mind" — all DM-agenda per ARCHITECTURE.md §1 (narrative
@@ -53,7 +48,12 @@ let mindBlank =
                     }
                 , effects =
                     [ { kind = "grant_condition_immunity"
-                      , condition = "charmed"
+                      , condition = Some "charmed"
+                      , damageType = None Text
+                      }
+                    , { kind = "grant_damage_immunity"
+                      , condition = None Text
+                      , damageType = Some "psychic"
                       }
                     ]
                 }

@@ -1,0 +1,55 @@
+{
+  "description": "With a touch, you magically sequester an object or a willing creature. For the duration, the target has the Invisible condition and (if a creature) the Unconscious condition. You may set a caster-defined early-end trigger; the spell also ends if the target takes any damage.",
+  "id": "sequester",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "gem dust worth 5,000+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 5000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": [
+        "dispel",
+        "damage"
+      ],
+      "kind": "permanent"
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "effects": [
+          {
+            "condition": [
+              "invisible",
+              "unconscious"
+            ],
+            "kind": "apply_condition"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Sequester",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Sequester"
+  }
+}

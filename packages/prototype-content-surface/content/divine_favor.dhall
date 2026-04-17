@@ -33,17 +33,18 @@ let divineFavor =
               , value = { unit = "minute", amount = 1 }
               }
           , attachment = { kind = "self" }
-          , operation =
-              { trigger = { kind = "on_caster_attack_hit" }
-              , effect =
-                  { kind = "damage"
-                  , damageType = "radiant"
-                  , amount =
-                      { kind = "fixed"
-                      , expr = { dice = 1, dieSize = 4 }
-                      }
-                  }
-              }
+          , operations =
+              [ { trigger = { kind = "on_caster_attack_hit" }
+                , effect =
+                    { kind = "damage"
+                    , damageType = "radiant"
+                    , amount =
+                        { kind = "fixed"
+                        , expr = { dice = 1, dieSize = 4 }
+                        }
+                    }
+                }
+              ]
           }
       }
 

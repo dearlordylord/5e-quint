@@ -3,9 +3,6 @@
   "id": "shield",
   "kind": "spell",
   "mechanics": {
-    "attachment": {
-      "kind": "self"
-    },
     "castingTime": {
       "kind": "reaction",
       "trigger": {
@@ -33,25 +30,33 @@
         "unit": "round"
       }
     },
-    "effects": [
-      {
-        "delta": {
-          "dice": 5,
-          "dieSize": 1,
-          "kind": "fixed_dice",
-          "sign": "+"
-        },
-        "kind": "modify_ac"
-      },
-      {
-        "kind": "negate_named_effect",
-        "scope": "damage_only",
-        "spellId": "magic_missile"
-      }
-    ],
     "family": "triggered_reaction",
     "interruptsTrigger": true,
     "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "delta": {
+              "dice": 5,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_ac"
+          },
+          {
+            "kind": "negate_named_effect",
+            "scope": "damage_only",
+            "spellId": "magic_missile"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
     "range": {
       "kind": "self"
     },

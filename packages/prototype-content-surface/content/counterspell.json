@@ -1,0 +1,61 @@
+{
+  "description": "You attempt to interrupt a creature in the process of casting a spell. The creature makes a Constitution saving throw. On a failed save, the spell dissipates with no effect, and the action, Bonus Action, or Reaction used to cast it is wasted; if a slot was used, the slot isn't expended. Using a Higher-Level Spell Slot: you automatically end a spell on the target if the spell's level is equal to or less than the level of the spell slot you use.",
+  "id": "counterspell",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "reaction",
+      "trigger": {
+        "components": [
+          "V",
+          "S",
+          "M"
+        ],
+        "kind": "creature_casts_spell"
+      }
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": false
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "triggered_reaction",
+    "interruptsTrigger": true,
+    "level": 3,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "autoSuccessIfCasterSlotGte": "triggering_spell_level",
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "kind": "negate_triggering_spell"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Counterspell",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Counterspell"
+  }
+}

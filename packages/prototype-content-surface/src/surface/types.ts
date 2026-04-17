@@ -3,6 +3,12 @@
 // Widen on demand per red/green loop. Atom names trace to
 // .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
 
+// Non-empty readonly array. Use wherever an empty list is invalid
+// (closed-enum option sets, list-based EffectAtom bundles, per-spell
+// operation lists, etc.). The first element is typed distinctly so
+// TypeScript rejects `[]` at construction sites.
+export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
+
 // ---------- primitives ----------
 
 // Per SRD 5.2.1 Rules Glossary, initiative is a Dexterity check. For
@@ -14,7 +20,11 @@ export type RollKind =
   | "attack_roll"
   | "saving_throw"
   | "ability_check"
-  | "initiative";
+  | "initiative"
+  // Death saves — special in 5e: no ability mod, no DC, fixed
+  // 10/20 success thresholds at 0 HP. Beacon of Hope grants
+  // Advantage on them; other riders may surface.
+  | "death_saving_throw";
 
 // Weapon filter for roll modifiers that only apply to certain weapon
 // categories. Archery Fighting Style: +2 to attack rolls with Ranged
@@ -42,26 +52,19 @@ export type DamageType =
   | "slashing"
   | "thunder";
 
+// "Caster picks one at cast/build time from a closed list." Generic
+// primitive for build-time (Dragonborn ancestry) or cast-time
+// (Chromatic Orb damage, Summon Dragon creature type) selection.
+export type CastTimeChoice<T> = {
+  readonly kind: "choice";
+  readonly label: string;
+  readonly options: ReadonlyNonEmptyArray<T>;
+};
+
 // Damage-type reference — either a fixed type (most spells and
-// weapons), or a build-time choice from a named option set. Dragonborn
-// Breath Weapon: "damage of the type determined by your Draconic
-// Ancestry trait" — the author provides the candidate list (10
-// subspecies options) and a human-readable label. The choice is
-// resolved once, at character creation; it is not re-rolled per use.
-// DamageTypeRef — a specific damage type, a choice resolved when the
-// owning construct is instantiated (character creation for species
-// traits — Dragonborn ancestry; cast time for spells — Protection
-// from Energy / Chromatic Orb), or a simultaneous-multiple set
-// (Flame Strike: "5d6 Fire damage and 5d6 Radiant damage" is modeled
-// as two separate damage atoms via composite, but some spells specify
-// the union inline — kept available for future pressure).
-export type DamageTypeRef =
-  | DamageType
-  | {
-      readonly kind: "choice";
-      readonly label: string;
-      readonly options: ReadonlyArray<DamageType>;
-    };
+// weapons), or a choice resolved at build time (Dragonborn ancestry)
+// or cast time (Chromatic Orb, Protection from Energy).
+export type DamageTypeRef = DamageType | CastTimeChoice<DamageType>;
 
 export type AttackKind = "ranged_spell_attack" | "melee_spell_attack";
 
@@ -139,7 +142,7 @@ export type DurationUpcastTier = {
 export type DurationValue = {
   readonly unit: "round" | "minute" | "hour" | "day";
   readonly amount: number;
-  readonly upcastTiers?: ReadonlyArray<DurationUpcastTier>;
+  readonly upcastTiers?: ReadonlyNonEmptyArray<DurationUpcastTier>;
 };
 
 // ---------- SRD 5.2.1 skills (Playing-the-Game) ----------
@@ -181,8 +184,8 @@ export type Skill = (typeof SKILLS)[number];
 //   • `choice` — Guidance ("you choose a skill" at cast time from any
 //     of the 18 SRD skills). Parallels DamageTypeRef.choice.
 export type SkillFilter =
-  | { readonly kind: "fixed"; readonly skills: ReadonlyArray<Skill> }
-  | { readonly kind: "choice"; readonly options: ReadonlyArray<Skill> };
+  | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
+  | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Skill> };
 
 // ---------- SRD 5.2.1 conditions (Rules-Glossary) ----------
 
@@ -277,7 +280,7 @@ export type ThresholdTiers<T> = {
   readonly kind: "threshold_tiers";
   readonly axis: LevelAxis;
   readonly base: T;
-  readonly tiers: ReadonlyArray<{
+  readonly tiers: ReadonlyNonEmptyArray<{
     readonly atLevel: number;
     readonly value: T;
   }>;
@@ -322,7 +325,7 @@ export type DiceAmount =
       readonly kind: "threshold_tiers";
       readonly axis: LevelAxis;
       readonly base: DiceExpr;
-      readonly tiers: ReadonlyArray<{
+      readonly tiers: ReadonlyNonEmptyArray<{
         readonly atLevel: number;
         readonly override: DiceExprDelta;
       }>;
@@ -424,8 +427,8 @@ export type EffectAtom =
       readonly kind: "apply_condition";
       readonly condition:
         | Condition
-        | ReadonlyArray<Condition>
-        | { readonly kind: "choose"; readonly from: ReadonlyArray<Condition> };
+        | ReadonlyNonEmptyArray<Condition>
+        | { readonly kind: "choose"; readonly from: ReadonlyNonEmptyArray<Condition> };
     }
   // v4: remove_condition. Same three-shape condition field as
   // apply_condition:
@@ -439,8 +442,8 @@ export type EffectAtom =
       readonly kind: "remove_condition";
       readonly condition:
         | Condition
-        | ReadonlyArray<Condition>
-        | { readonly kind: "choose"; readonly from: ReadonlyArray<Condition> };
+        | ReadonlyNonEmptyArray<Condition>
+        | { readonly kind: "choose"; readonly from: ReadonlyNonEmptyArray<Condition> };
     }
   // v4: grant_resistance
   | {
@@ -478,7 +481,7 @@ export type EffectAtom =
   // modify_roll_advantage (§A13).
   | {
       readonly kind: "modify_roll_numeric";
-      readonly on: ReadonlyArray<RollKind>;
+      readonly on: ReadonlyNonEmptyArray<RollKind>;
       readonly delta: DiceDelta;
       readonly weaponFilter?: WeaponFilter;
       readonly skillFilter?: SkillFilter;
@@ -513,9 +516,13 @@ export type EffectAtom =
   | {
       readonly kind: "modify_roll_advantage";
       readonly mode: "advantage" | "disadvantage";
-      readonly on: ReadonlyArray<RollKind>;
-      readonly attackerTypeFilter?: ReadonlyArray<CreatureType>;
+      readonly on: ReadonlyNonEmptyArray<RollKind>;
+      readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?: SkillFilter;
+      // Beacon of Hope "Advantage on Wisdom saving throws" — narrow
+      // saving_throw riders to specific abilities. Only meaningful
+      // when `on` contains "saving_throw".
+      readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
       readonly count?: number;
       readonly expiresOn?: RiderExpiry;
     }
@@ -536,6 +543,14 @@ export type EffectAtom =
       readonly kind: "set_speed";
       readonly feet: number;
     }
+  // Multiplicative speed modifier. Spirit Guardians and Slow both
+  // halve speed inside/on target. Integer fraction covers every RAW
+  // case observed; Dhall encodes Naturals.
+  | {
+      readonly kind: "set_speed_ratio";
+      readonly numerator: number;
+      readonly denominator: number;
+    }
   // v4: force_move — push, pull, or slide
   | {
       readonly kind: "force_move";
@@ -552,11 +567,36 @@ export type EffectAtom =
       readonly kind: "block_travel";
       readonly scope: string;
     }
-  // v4: negate_named_effect — Counterspell, Shield vs. Magic Missile
+  // Shield vs. Magic Missile — named-spell negation.
   | {
       readonly kind: "negate_named_effect";
       readonly spellId: string;
       readonly scope: "damage_only" | "all_effects";
+    }
+  // §C1 Counterspell: negate whatever spell triggered this reaction.
+  // Distinct from negate_named_effect (targets a specific spellId):
+  // the target here is the triggering spell, whatever it was.
+  | {
+      readonly kind: "negate_triggering_spell";
+    }
+  // Beacon of Hope: "when the target regains Hit Points, it regains
+  // the maximum number possible." Dodges the normal dice roll.
+  | {
+      readonly kind: "maximize_healing_received";
+    }
+  // §C3 Dispel Magic: end ongoing spells currently on the target.
+  // `maxSpellLevel` bounds the set:
+  //   • `"caster_slot_level"` — Dispel Magic phase-1 direct sweep:
+  //     "any ongoing spell of level ≤ slot used ends".
+  //   • `"contested_spell_level"` — Dispel Magic phase-2 gate pass:
+  //     the specific spell the check was contested against ends.
+  //   • number — explicit bound (not yet pressured but available).
+  | {
+      readonly kind: "end_ongoing_spells";
+      readonly maxSpellLevel:
+        | number
+        | "caster_slot_level"
+        | "contested_spell_level";
     }
   // v4: grant_sense — darkvision, blindsight, etc.
   | {
@@ -596,6 +636,20 @@ export type EffectAtom =
   | {
       readonly kind: "grant_condition_immunity";
       readonly condition: Condition;
+    }
+  // §A16: damage-type immunity — Mind Blank (Psychic), future Holy
+  // Aura, monster stat-block traits (Zombie fortitude, etc.).
+  // Distinct from grant_resistance (half damage): immunity is zero
+  // damage.
+  | {
+      readonly kind: "grant_damage_immunity";
+      readonly damageType: DamageType;
+    }
+  // §A16: Aura of Life "your Hit Point maximums can't be reduced".
+  // Gate that prevents modify_max_hp with a negative delta from
+  // landing while the host effect is active.
+  | {
+      readonly kind: "block_max_hp_reduction";
     }
   // v4-adjacent: set_ability_score — Amulet of Health "your Con becomes
   // 19"; Gauntlets of Ogre Power / Headband of Intellect / Ioun Stone of
@@ -654,7 +708,7 @@ export type EffectAtom =
   // discouraged — flatten when authoring.
   | {
       readonly kind: "composite";
-      readonly effects: ReadonlyArray<EffectAtom>;
+      readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
   // Sentinel: explicit "no effect" for branches (e.g., save onSuccess)
   | { readonly kind: "none" };
@@ -680,9 +734,18 @@ export type SpellSchool =
 export type ReactionTrigger =
   | { readonly kind: "hit_by_attack_roll" }
   | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
+  // §C1: Counterspell — trigger fires when a creature within range
+  // casts a spell using any of the listed components. Parameters of
+  // the triggering spell (level, caster) are exposed to downstream
+  // phases via the reaction's resolution context (used by
+  // autoSuccessIfCasterSlotGte).
+  | {
+      readonly kind: "creature_casts_spell";
+      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
+    }
   | {
       readonly kind: "any_of";
-      readonly triggers: ReadonlyArray<ReactionTrigger>;
+      readonly triggers: ReadonlyNonEmptyArray<ReactionTrigger>;
     };
 
 export type CastingTime =
@@ -759,12 +822,21 @@ export type Duration =
   | {
       readonly kind: "concentration";
       readonly upTo: DurationValue;
-      readonly earlyEnd?: ReadonlyArray<DurationEndTrigger>;
+      readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
     }
   | {
       readonly kind: "timed";
       readonly value: DurationValue;
-      readonly earlyEnd?: ReadonlyArray<DurationEndTrigger>;
+      readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+    }
+  // §A10: "Until Dispelled" / permanent spells (Sequester, Magic Jar,
+  // Magnificent Mansion, Geas at L9, True Polymorph concentrate-full
+  // → permanent). `endsOn` names the closed set of triggers that can
+  // end the effect (empty = truly permanent — rare but the SRD has a
+  // few).
+  | {
+      readonly kind: "permanent";
+      readonly endsOn?: ReadonlyNonEmptyArray<"dispel" | "damage">;
     };
 
 // ---------- attachment ----------
@@ -777,14 +849,23 @@ export type Duration =
 // semantics. `ends_on_target` means the spell ends on the succeeding
 // target only, not globally (important for multi-target upcasts).
 export type RepeatSaveSpec = {
-  readonly cadence: "end_of_target_turn";
+  // "on_target_takes_damage" — Dominate family (Beast, Person,
+  // Monster): the Charmed target repeats the save whenever it takes
+  // damage.
+  readonly cadence: "end_of_target_turn" | "on_target_takes_damage";
   readonly onSuccess: "ends_on_target";
+  // §C2 Sleep: on the repeat save's failure, escalate to a further
+  // effect instead of keeping the onFail effect active. Sleep's
+  // chain: first fail → Incapacitated; repeat fail → Unconscious.
+  // Absent = repeat save simply keeps the original onFail applied
+  // until success (the Hold Person pattern).
+  readonly onFailAgain?: EffectAtom;
 };
 
 // Target-side creature-type filter. Hold Person: "Choose a Humanoid".
 // When present, only creatures of one of the listed types are
 // eligible targets. Omitted = no type restriction.
-export type TargetTypeFilter = ReadonlyArray<CreatureType>;
+export type TargetTypeFilter = ReadonlyNonEmptyArray<CreatureType>;
 
 export type TargetSelection =
   | { readonly mode: "one"; readonly typeFilter?: TargetTypeFilter }
@@ -837,7 +918,7 @@ export type AreaShapeSpec =
   | AreaShapeDescriptor
   | {
       readonly kind: "choice";
-      readonly options: ReadonlyArray<AreaShapeDescriptor>;
+      readonly options: ReadonlyNonEmptyArray<AreaShapeDescriptor>;
     };
 
 // Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
@@ -980,7 +1061,7 @@ export type ActionRestriction =
   | { readonly kind: "none" }
   | {
       readonly kind: "exclude";
-      readonly actions: ReadonlyArray<StandardActionKind>;
+      readonly actions: ReadonlyNonEmptyArray<StandardActionKind>;
     };
 
 // Outcome on a successful saving throw inside a save_gate phase. The
@@ -1002,8 +1083,8 @@ export type ActivationPhase =
       // Shocking Grasp can layer damage + deny_opportunity_attack, and
       // Ray of Frost can stack damage + modify_speed on the same hit.
       // Single-effect spells pass a singleton array.
-      readonly onHit: ReadonlyArray<EffectAtom>;
-      readonly onMiss: ReadonlyArray<EffectAtom>;
+      readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
+      readonly onMiss: ReadonlyNonEmptyArray<EffectAtom>;
     }
   | {
       readonly kind: "save_gate";
@@ -1013,13 +1094,35 @@ export type ActivationPhase =
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
       readonly repeatSave?: RepeatSaveSpec;
+      // §C1/§C3 slot-auto-success bypass. Counterspell / Dispel
+      // Magic "You automatically end a spell on the target if the
+      // spell's level is equal to or less than the level of the
+      // spell slot you use." The only pressure case is a comparison
+      // against the triggering spell's level; the field is a
+      // sentinel (not a numeric slot threshold) to keep the
+      // dependency on reaction-context explicit.
+      readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
+    }
+  // §C3 Dispel Magic — caster rolls an ability check (spellcasting
+  // ability vs fixed DC) to resolve the phase. Distinct from
+  // save_gate (target rolls) and attack_roll (caster d20+mod vs AC).
+  // `autoSuccessIfCasterSlotGte` shares the Counterspell-style DC
+  // bypass for "auto-end if slot level ≥ target spell level".
+  | {
+      readonly kind: "ability_check_gate";
+      readonly attachment: Attachment;
+      readonly ability: Ability;
+      readonly dc: number;
+      readonly onPass: EffectAtom;
+      readonly onFail?: EffectAtom;
+      readonly autoSuccessIfCasterSlotGte?: "target_spell_level";
     }
   // Direct application — spells that just apply effects with no
   // resolution gate (no attack roll, no saving throw).
   | {
       readonly kind: "direct";
       readonly attachment: Attachment;
-      readonly effects: ReadonlyArray<EffectAtom>;
+      readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     };
 
 // ---------- spell payload families ----------
@@ -1036,12 +1139,12 @@ type SpellMechanicsHeader = {
 export type OngoingEffectMechanics = SpellMechanicsHeader & {
   readonly family: "ongoing_effect";
   readonly attachment: Attachment;
-  readonly operation: OngoingOperation;
+  readonly operations: ReadonlyNonEmptyArray<OngoingOperation>;
 };
 
 export type ActivationMechanics = SpellMechanicsHeader & {
   readonly family: "activation";
-  readonly phases: ReadonlyArray<ActivationPhase>;
+  readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
 // Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
@@ -1050,11 +1153,14 @@ export type ActivationMechanics = SpellMechanicsHeader & {
 // from the research): reaction window opens, player decides, effects
 // commit (or don't — declining does not consume reaction per
 // UBIQUITOUS_LANGUAGE §Triggers line 31).
+// §C1 unified shape: phases mirror ActivationMechanics. Shield is a
+// single `direct` phase; Counterspell is a single `save_gate` phase
+// with `autoSuccessIfCasterSlotGte` for the slot-auto-success rule.
+// Silvery Barbs-style future units compose additional phases.
 export type TriggeredReactionMechanics = SpellMechanicsHeader & {
   readonly family: "triggered_reaction";
-  readonly attachment: Attachment;
   readonly interruptsTrigger: boolean;
-  readonly effects: ReadonlyArray<EffectAtom>;
+  readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
 // ---------- anchored-trigger family (hunt §4.2 widening) ----------
@@ -1114,11 +1220,213 @@ export type AnchoredTriggerMechanics = SpellMechanicsHeader & {
   readonly signals: ReadonlyArray<AnchoredSignal>;
 };
 
+// ---------- spawned-creature family (§C4a) ----------
+//
+// Allegiance is DM-agenda (table-owned), not a property of the spell
+// grammar — XPHB Summon Greater Demon and similar hostile-control
+// summons fit the same shape with no loyalty-gate typing.
+
+// Numeric field in a spawned-creature stat block. Literal,
+// linear-per-slot formula ("AC 14 + spell's level" — reuses the
+// shared LinearPerLevel<number> primitive with axis="slot"), or a
+// value derived from the caster (spell attack mod, spell save DC,
+// PB, spellcasting ability mod).
+export type StatBlockValue =
+  | { readonly kind: "literal"; readonly value: number }
+  | LinearPerLevel<number>
+  | {
+      readonly kind: "caster_derived";
+      readonly source:
+        | "spell_attack_mod"
+        | "spell_save_dc"
+        | "proficiency_bonus"
+        | "spellcasting_ability_mod";
+    };
+
+export type StatBlockSize =
+  | "tiny"
+  | "small"
+  | "medium"
+  | "large"
+  | "huge"
+  | "gargantuan";
+
+export type SixAbilityScores = {
+  readonly str: number;
+  readonly dex: number;
+  readonly con: number;
+  readonly int: number;
+  readonly wis: number;
+  readonly cha: number;
+};
+
+export type CreatureSpeed = {
+  readonly kind: "walk" | "fly" | "swim" | "climb" | "burrow";
+  readonly feet: StatBlockValue;
+  // Otherworldly Steed: Fly speed unlocks only at slot 4+.
+  readonly requiresSlotLevel?: number;
+};
+
+export type CreatureResistanceList =
+  | { readonly kind: "fixed"; readonly damageTypes: ReadonlyNonEmptyArray<DamageType> }
+  | {
+      readonly kind: "choose_one_from";
+      readonly options: ReadonlyNonEmptyArray<DamageType>;
+    };
+
+export type CreatureImmunityList = {
+  readonly damageTypes?: ReadonlyNonEmptyArray<DamageType>;
+  readonly conditions?: ReadonlyNonEmptyArray<Condition>;
+};
+
+export type CreatureSense = {
+  readonly kind: SenseKind;
+  readonly rangeFeet: number;
+};
+
+// Creature actions split into four parallel homogeneous lists (one
+// per kind) rather than a single tagged-union list. Dhall requires
+// homogeneous list element types, and nesting a tagged union in one
+// list forces Optional gymnastics through the entire type tree
+// including EffectAtom. Multiattack dispatches reference other
+// actions by name; the tracer validates name resolution at emit.
+
+export type CreatureNamedAttackRoll = {
+  readonly name: string;
+  readonly attackType: "melee" | "ranged";
+  readonly attackBonus: StatBlockValue;
+  readonly reachFeet?: number;
+  readonly rangeFeet?: { readonly normal: number; readonly long: number };
+  readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
+  readonly multiattackCount?: StatBlockValue;
+};
+
+export type CreatureNamedSaveGate = {
+  readonly name: string;
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly area: AreaShapeDescriptor;
+  readonly onFail: EffectAtom;
+  readonly onSuccess: SaveSuccessOutcome;
+  readonly multiattackCount?: StatBlockValue;
+};
+
+export type CreatureNamedSupport = {
+  readonly name: string;
+  readonly target: "self" | "ally_in_range";
+  readonly rangeFeet?: number;
+  readonly effect: EffectAtom;
+  readonly multiattackCount?: StatBlockValue;
+};
+
+export type CreatureNamedMultiattack = {
+  readonly name: string;
+  readonly dispatches: ReadonlyNonEmptyArray<{
+    readonly name: string;
+    readonly count: StatBlockValue;
+  }>;
+};
+
+export type CreatureActions = {
+  readonly multiattacks?: ReadonlyNonEmptyArray<CreatureNamedMultiattack>;
+  readonly attacks?: ReadonlyNonEmptyArray<CreatureNamedAttackRoll>;
+  readonly saves?: ReadonlyNonEmptyArray<CreatureNamedSaveGate>;
+  readonly supports?: ReadonlyNonEmptyArray<CreatureNamedSupport>;
+};
+
+export type CreatureTraitEffect =
+  | {
+      readonly kind: "caster_shared_resistance";
+      readonly chosenFrom: "resistances_list";
+    }
+  | {
+      readonly kind: "caster_heal_link";
+      readonly rangeFeet: number;
+    };
+
+export type CreatureTrait = {
+  readonly name: string;
+  readonly description: string;
+  readonly effect?: CreatureTraitEffect;
+};
+
+export type CreatureStatBlock = {
+  readonly displayName: string;
+  readonly size: StatBlockSize | CastTimeChoice<StatBlockSize>;
+  readonly creatureType: CreatureType | CastTimeChoice<CreatureType>;
+  readonly ac: StatBlockValue;
+  readonly hp: StatBlockValue;
+  readonly speeds: ReadonlyNonEmptyArray<CreatureSpeed>;
+  readonly abilityScores: SixAbilityScores;
+  readonly saveProficiencies?: ReadonlyNonEmptyArray<Ability>;
+  readonly resistances?: CreatureResistanceList;
+  readonly immunities?: CreatureImmunityList;
+  readonly senses?: ReadonlyNonEmptyArray<CreatureSense>;
+  readonly languages?: "caster_languages" | ReadonlyNonEmptyArray<string>;
+  readonly actions?: CreatureActions;
+  readonly bonusActions?: CreatureActions;
+  readonly reactions?: CreatureActions;
+  readonly traits?: ReadonlyNonEmptyArray<CreatureTrait>;
+};
+
+// Partial stat-block updates applied by a CreatureMode option.
+export type CreatureStatBlockOverrides = {
+  readonly creatureType?: CreatureType;
+  readonly speeds?: ReadonlyNonEmptyArray<CreatureSpeed>;
+  readonly resistances?: CreatureResistanceList;
+  readonly immunities?: CreatureImmunityList;
+  readonly traits?: ReadonlyNonEmptyArray<CreatureTrait>;
+  readonly actions?: CreatureActions;
+  readonly bonusActions?: CreatureActions;
+};
+
+export type CreatureMode = {
+  readonly label: string;
+  readonly options: ReadonlyNonEmptyArray<{
+    readonly id: string;
+    readonly displayName: string;
+    readonly overrides: CreatureStatBlockOverrides;
+  }>;
+};
+
+export type CreatureControl = {
+  readonly initiative: "shared_with_caster" | "own_roll";
+  readonly turnOrder?: "immediately_after_caster";
+  readonly commandCost:
+    | { readonly kind: "no_action_required" }
+    | { readonly kind: "bonus_action" }
+    | { readonly kind: "action" };
+  readonly commandRangeFeet: number;
+  readonly defaultBehavior: "dodge_and_avoid" | "independent";
+  readonly telepathy?: {
+    readonly rangeFeet: number;
+    readonly sharedSenses?: "bonus_action";
+  };
+  readonly oneAtATime?: true;
+};
+
+export type CreatureDismissal = {
+  readonly onZeroHp: "disappears";
+  readonly onSpellEnd: "disappears";
+  readonly caster0Hp?: "disappears";
+  readonly manualDismiss?: "magic_action" | "never";
+  readonly leavesBehind?: "equipment" | "nothing";
+};
+
+export type SpawnedCreatureMechanics = SpellMechanicsHeader & {
+  readonly family: "spawned_creature";
+  readonly statBlock: CreatureStatBlock;
+  readonly mode?: CreatureMode;
+  readonly control: CreatureControl;
+  readonly dismissal: CreatureDismissal;
+};
+
 export type SpellMechanics =
   | OngoingEffectMechanics
   | ActivationMechanics
   | TriggeredReactionMechanics
-  | AnchoredTriggerMechanics;
+  | AnchoredTriggerMechanics
+  | SpawnedCreatureMechanics;
 
 // ---------- class-feature atoms ----------
 
@@ -1149,7 +1457,12 @@ export type UseCountCap =
   | { readonly kind: "fixed"; readonly uses: number }
   | ThresholdTiers<number>
   | LinearPerLevel<number>
-  | { readonly kind: "proficiency_bonus" };
+  | { readonly kind: "proficiency_bonus" }
+  // §A12: cap scales with the caster's ability modifier. Bardic
+  // Inspiration uses: "a number of times equal to your Charisma
+  // modifier". The ability is authored with the feature; the
+  // resolved mod is taken at rest-reset time.
+  | { readonly kind: "ability_modifier"; readonly ability: Ability };
 
 export type UseCountResource = {
   readonly kind: "use_count";
@@ -1210,6 +1523,10 @@ type ActivatedAbilityHeader = {
   readonly activationCost: ClassFeatureActivationCost;
   readonly resource: ActivationResource;
   readonly resetCadence: RestResetCadence;
+  // §A11: effect duration for class-feature-scoped conditions.
+  // Ranger Nature's Veil: Invisible until end of next turn. Omitted
+  // when the ability has no outlasting effect window.
+  readonly duration?: Duration;
   // Action Surge L17: "twice before a rest but only once on a turn."
   // The per-turn cap is vacuous while the feature has only one use
   // per rest (L2-L16), so the field can be set uniformly — the cap
@@ -1225,7 +1542,7 @@ type ActivatedAbilityHeader = {
 // `direct` phase wrapping what was previously `effect: EffectAtom`.
 export type ActivatedAbilityMechanics = ActivatedAbilityHeader & {
   readonly family: "activation";
-  readonly phases: ReadonlyArray<ActivationPhase>;
+  readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
 // Back-compat alias: content files historically referenced this name.

@@ -3,6 +3,18 @@
   "id": "heroism",
   "kind": "spell",
   "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "count": {
+          "base": 1,
+          "baseLevel": 1,
+          "kind": "linear",
+          "perSlotAboveBase": 1
+        },
+        "mode": "choose_up_to"
+      }
+    },
     "castingTime": {
       "kind": "action"
     },
@@ -18,29 +30,34 @@
         "unit": "minute"
       }
     },
-    "family": "activation",
+    "family": "ongoing_effect",
     "level": 1,
-    "phases": [
+    "operations": [
       {
-        "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": {
-              "base": 1,
-              "baseLevel": 1,
-              "kind": "linear",
-              "perSlotAboveBase": 1
-            },
-            "mode": "choose_up_to"
-          }
+        "effect": {
+          "condition": "frightened",
+          "kind": "grant_condition_immunity"
         },
-        "effects": [
-          {
-            "condition": "frightened",
-            "kind": "grant_condition_immunity"
-          }
-        ],
-        "kind": "direct"
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 0,
+              "dieSize": 1,
+              "flat": 0,
+              "spellcastingMod": true
+            },
+            "kind": "fixed"
+          },
+          "kind": "grant_temp_hp"
+        },
+        "trigger": {
+          "kind": "on_attached_turn_start"
+        }
       }
     ],
     "range": {

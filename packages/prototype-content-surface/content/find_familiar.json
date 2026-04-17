@@ -1,0 +1,133 @@
+{
+  "description": "You gain the service of a familiar, a spirit that takes an animal form you choose from a list of CR-0 Beasts. The familiar has the statistics of the chosen form, though it is a Celestial, Fey, or Fiend (your choice) instead of a Beast. It obeys your commands, acts on its own Initiative, and cannot attack. While within 100 feet you can communicate telepathically and as a Bonus Action see/hear through its senses. It can deliver your touch spells. It disappears at 0 HP and is replaced by recasting; One Familiar Only.",
+  "id": "find_familiar",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": "burning incense worth 10+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 10,
+      "s": true,
+      "v": true
+    },
+    "control": {
+      "commandCost": {
+        "kind": "no_action_required"
+      },
+      "commandRangeFeet": 100,
+      "defaultBehavior": "independent",
+      "initiative": "own_roll",
+      "oneAtATime": true,
+      "telepathy": {
+        "rangeFeet": 100,
+        "sharedSenses": "bonus_action"
+      }
+    },
+    "dismissal": {
+      "leavesBehind": "equipment",
+      "manualDismiss": "magic_action",
+      "onSpellEnd": "disappears",
+      "onZeroHp": "disappears"
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "spawned_creature",
+    "level": 1,
+    "mode": {
+      "label": "creature type",
+      "options": [
+        {
+          "displayName": "Celestial",
+          "id": "celestial",
+          "overrides": {
+            "creatureType": "celestial"
+          }
+        },
+        {
+          "displayName": "Fey",
+          "id": "fey",
+          "overrides": {
+            "creatureType": "fey"
+          }
+        },
+        {
+          "displayName": "Fiend",
+          "id": "fiend",
+          "overrides": {
+            "creatureType": "fiend"
+          }
+        }
+      ]
+    },
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "school": "conjuration",
+    "statBlock": {
+      "abilityScores": {
+        "cha": 7,
+        "con": 8,
+        "dex": 13,
+        "int": 2,
+        "str": 3,
+        "wis": 12
+      },
+      "ac": {
+        "kind": "literal",
+        "value": 11
+      },
+      "creatureType": {
+        "kind": "choice",
+        "label": "creature type",
+        "options": [
+          "celestial",
+          "fey",
+          "fiend"
+        ]
+      },
+      "displayName": "Familiar (CR-0 Beast form)",
+      "hp": {
+        "kind": "literal",
+        "value": 1
+      },
+      "size": "tiny",
+      "speeds": [
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 5
+          },
+          "kind": "walk"
+        },
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 60
+          },
+          "kind": "fly"
+        }
+      ],
+      "traits": [
+        {
+          "description": "While your familiar is within 100 feet of you, you can communicate with it telepathically. As a Bonus Action, you can see through the familiar's eyes and hear what it hears until the start of your next turn.",
+          "name": "Telepathic Connection"
+        },
+        {
+          "description": "When you cast a spell with a range of touch, your familiar can deliver the touch. Your familiar must be within 100 feet of you, and it must take a Reaction to deliver the touch when you cast the spell.",
+          "name": "Touch-Spell Delivery"
+        }
+      ]
+    }
+  },
+  "name": "Find Familiar",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Find Familiar"
+  }
+}
