@@ -1,30 +1,30 @@
 {
   "unit_slug": "fighter_action_surge_l2",
-  "outcome": "surface_widening",
+  "outcome": "surface_widening_landed",
   "atoms_used": [
     "activate",
     "class_feature_root",
+    "direct_apply",
     "grant_extra_action",
     "rest_window",
     "restrict_action_set",
     "scale_numeric_bonus",
+    "self",
     "use_count"
   ],
   "relations_used": [
+    "attaches_to",
     "consumes",
     "grants",
     "modifies",
     "persists_until",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureActivationMechanics.usageLimit",
-      "justification": "Action Surge at L17 permits 2 uses per Short/Long Rest but restricts spending to once per turn. ClassFeatureActivationMechanics has no per-turn usage limit field. MasteryMechanics has MasteryUsageLimit { kind: 'once_per_turn' } but that concept is not available on class feature mechanics. A new optional field (e.g. usageLimit?: { kind: 'once_per_turn' }) on ClassFeatureActivationMechanics would capture this constraint.",
-      "evidence": "Starting at level 17, you can use it twice before a rest but only once on a turn."
-    }
+  "landed_widenings": [
+    "UsageLimit shared between masteries and ActivatedAbilityHeader"
   ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Core mechanic encodes cleanly: activation family, free cost, grant_extra_action excluding Magic, use_count with threshold_tiers cap (1@L2 → 2@L17), short_or_long_rest reset. Typecheck passes; tracer emits valid graph. The only gap is the L17 per-turn spending constraint ('only once on a turn'), which requires a new optional usageLimit field on ClassFeatureActivationMechanics. This is a surface_widening because the missing concept is a new variant/field on an existing surface type, not a missing v4 atom."
+  "notes": "Session 2026-04-16: Same disposition as fighter_action_surge; two variants of the same feature (tier-1 vs tier-2 encoding).",
+  "session": "2026-04-16-interactive"
 }

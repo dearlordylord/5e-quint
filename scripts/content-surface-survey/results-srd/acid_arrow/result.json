@@ -1,0 +1,31 @@
+{
+  "unit_slug": "acid_arrow",
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "on_hit_window",
+    "on_miss_window",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "roots"
+  ],
+  "landed_widenings": [
+    "damage.timing (end_of_next_turn)"
+  ],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Migrated to onHit/onMiss array shape. damage.timing = end_of_next_turn captures 'On a hit, the target takes 4d4 Acid damage at the end of its next turn' without widening Duration.",
+  "session": "2026-04-16-interactive"
+}

@@ -32,13 +32,16 @@ let bless =
                   }
               }
           , operation =
-              { kind = "roll_modifier"
-              , on = [ "attack_roll", "saving_throw" ]
-              , delta =
-                  { kind = "fixed_dice"
-                  , dice = 1
-                  , dieSize = 4
-                  , sign = "+"
+              { trigger = { kind = "passive" }
+              , effect =
+                  { kind = "modify_roll_numeric"
+                  , on = [ "attack_roll", "saving_throw" ]
+                  , delta =
+                      { kind = "fixed_dice"
+                      , dice = 1
+                      , dieSize = 4
+                      , sign = "+"
+                      }
                   }
               }
           }

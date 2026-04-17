@@ -1,40 +1,28 @@
 {
   "unit_slug": "chromatic_orb",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "DamageType — chosen_at_cast_from_set",
-      "justification": "The caster picks the damage type (Acid, Cold, Fire, Lightning, Poison, or Thunder) at cast time from a closed set. DamageType is a closed string literal union; there is no variant expressing 'player-chosen at cast from enumerated options.' Encoding any fixed type would misrepresent the spell.",
-      "evidence": "Choose Acid, Cold, Fire, Lightning, Poison, or Thunder for the type of orb you create, and then make a ranged spell attack against the target."
-    },
-    {
-      "kind": "new_atom",
-      "name": "matching_dice_window",
-      "justification": "The leap fires when two or more d8s in the damage roll show the same face. This is a conditional trigger on the result pattern of rolled dice (matching faces among a set of dice), not representable as any existing v4 window atom (on_hit_window, post_roll_window, save_gate, reaction_window, etc.).",
-      "evidence": "If you roll the same number on two or more of the d8s, the orb leaps to a different target of your choice within 30 feet of the target."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "spell_leap_chain",
-      "justification": "The leap spawns a fresh attack roll and a fresh damage roll against a secondary target — and can repeat up to [slot level] times. The current surface has no subgraph for a conditional, repeatable, slot-count-capped spell attack chain. Cleave's grant_weapon_attack is close in shape but is a mastery rider against a known weapon, not a re-rolled spell attack.",
-      "evidence": "Make an attack roll against the new target, and make a new damage roll. The orb can't leap again unless you cast the spell with a level 2+ spell slot. / The orb can leap a maximum number of times equal to the level of the slot expended."
-    },
-    {
-      "kind": "new_variant",
-      "name": "UsageLimit — unique_target_per_cast",
-      "justification": "Higher-level casting adds a constraint that each creature can only be targeted once per casting. No existing UsageLimit or attachment filter represents a per-casting unique-target requirement. The current MasteryUsageLimit only has once_per_turn.",
-      "evidence": "a creature can be targeted only once by each casting of this spell"
-    },
-    {
-      "kind": "new_variant",
-      "name": "SlotScaling — leap_count_equals_slot_level",
-      "justification": "The maximum leap count equals the slot level expended (not base + per-slot-above-base). No existing scaling shape captures 'max invocations = slot level' as a direct equality rather than an additive increment.",
-      "evidence": "The orb can leap a maximum number of times equal to the level of the slot expended"
-    }
+  "outcome": "partial",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "on_hit_window",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The primary attack-roll + 3d8 damage mechanic is encodable as an activation/attack_roll phase with linear_per_level (axis=slot) scaling. However two blockers make honest encoding impossible: (1) DamageType has no chosen-at-cast variant — picking any fixed type falsifies the spell; (2) the matching-dice leap trigger requires a new window atom not in v4. The higher-slot leap chain and unique-target constraint add further surface and atom gaps. Classification is atom_widening (the matching-dice window is the decisive absent atom; the damage-type choice alone would be surface_widening). No dhall/json/trace produced."
+  "notes": "Session 2026-04-16 (batch mixed-6): Partial. First validation ref for DamageTypeRef.choice (caster picks one of 6 damage types at cast time). Ranged spell attack + linear-per-slot damage scaling authored. DEFERRED: 'matching-dice leap' (repeated attack_roll chain triggered by damage-roll result pattern) is unmodeled; layered slot-indexed leap count and once-per-casting constraint pile on top.",
+  "session": "2026-04-16-batch-mixed-6"
 }

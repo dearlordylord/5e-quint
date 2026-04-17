@@ -1,0 +1,79 @@
+{
+  "description": "You touch a willing creature and choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill.",
+  "id": "guidance",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "one"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 0,
+    "operation": {
+      "effect": {
+        "delta": {
+          "dice": 1,
+          "dieSize": 4,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "ability_check"
+        ],
+        "skillFilter": {
+          "kind": "choice",
+          "options": [
+            "acrobatics",
+            "animal_handling",
+            "arcana",
+            "athletics",
+            "deception",
+            "history",
+            "insight",
+            "intimidation",
+            "investigation",
+            "medicine",
+            "nature",
+            "perception",
+            "performance",
+            "persuasion",
+            "religion",
+            "sleight_of_hand",
+            "stealth",
+            "survival"
+          ]
+        }
+      },
+      "trigger": {
+        "kind": "passive"
+      }
+    },
+    "range": {
+      "kind": "touch"
+    },
+    "school": "divination"
+  },
+  "name": "Guidance",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Guidance"
+  }
+}

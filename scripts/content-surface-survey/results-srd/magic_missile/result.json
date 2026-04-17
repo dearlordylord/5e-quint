@@ -1,22 +1,28 @@
 {
   "unit_slug": "magic_missile",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "auto_hit",
-      "justification": "Magic Missile's darts automatically hit with no attack roll and no saving throw. ActivationPhase is a union of attack_roll | save_gate only. There is no variant for unconditional/guaranteed damage delivery. Adding auto_hit (or direct_damage) as a third ActivationPhase variant would cover this spell and any other auto-hit effects.",
-      "evidence": "A dart deals 1d4 + 1 Force damage to its target. The darts all strike simultaneously"
-    },
-    {
-      "kind": "new_variant",
-      "name": "dart_count_scaling",
-      "justification": "Magic Missile scales on dart count (3 + 1 per slot level above 1), not on damage per dart or on a target-selection count. The existing choose_up_to TargetSelection with SlotScaling captures 'up to N different targets' semantics, but Magic Missile allows N darts to all hit the same creature. A dart_count parameter on the auto_hit phase (distinct from target selection) would model this correctly. Alternatively, the choose_up_to model could be reused if its semantics are loosened to 'N applications, may repeat target'.",
-      "evidence": "The spell creates one more dart for each spell slot level above 1. The darts all strike simultaneously, and you can direct them to hit one creature or several."
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "damage",
+    "direct_apply",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [
+    "TargetSelection.choose_up_to.repeatsAllowed"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The spell cleanly fits the activation family (instantaneous, action cast time, no ongoing state). The sole blocker is the ActivationPhase union: attack_roll and save_gate are the only two variants, and neither applies — Magic Missile has no resolution step. A new auto_hit ActivationPhase variant is the narrowest fix. All v4 atoms needed (damage, target, scale_die_count) already exist; only the phase-level surface shape is missing. The dart-count scaling is a secondary design question: if choose_up_to is reinterpreted as 'N applications' it may suffice, but semantically it differs from 'up to N distinct creatures'."
+  "notes": "Session 2026-04-16: Added repeatsAllowed?: true to the choose_up_to selection. Default-absent = distinct targets (Chain Lightning). Magic Missile is the canonical multiset case for the 'darts can hit one creature or several'.",
+  "session": "2026-04-16-interactive"
 }

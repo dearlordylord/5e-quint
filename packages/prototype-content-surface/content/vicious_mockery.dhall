@@ -9,32 +9,45 @@
 --   "Cantrip Upgrade. The damage increases by 1d6 when you reach
 --    levels 5 (2d6), 11 (3d6), and 17 (4d6)."
 --
--- PARTIAL AUTHOR. Core damage branch encoded via save_gate phase
--- with WIS save, onFail = psychic damage (character-level threshold
--- tiers), onSuccess = none.
---
--- DEFERRED. The "Disadvantage on the next attack roll it makes
--- before the end of its next turn" rider is NOT encoded. Blocker:
--- `EffectAtom.modify_roll_advantage` has no `count` field and no
--- `expiresOn` field — so it cannot express "the NEXT attack roll
--- only" with a turn-scoped expiry. The mastery-side
--- `ModifyRollAdvantageRider` (used for Sap) does carry these fields,
--- but is not reachable from a save_gate's onFail EffectAtom slot.
---
--- Authoring this rider without those fields would over-apply — it
--- would impose disadvantage on all attack rolls for the spell's
--- duration, which diverges from RAW ("next attack roll it makes").
--- Honest omission per CLAUDE.md SRD-feature-parity rule.
---
--- Proposed future widening: extend `EffectAtom.modify_roll_advantage`
--- with optional `count: number` + `expiresOn: RiderExpiry` fields,
--- unifying the spell-Effect path with the mastery rider shape. Once
--- landed, add a composite onFail bundling damage + this rider, and
--- bend Duration to `timed, 1 round` to bound the rider expiry
--- (matching the Ray of Sickness convention).
+-- FULL AUTHOR (after §A13 landed). save_gate onFail = composite of
+-- damage (character-axis threshold-tiered 1d6 → 4d6 psychic) +
+-- modify_roll_advantage disadvantage on attack_roll with count=1 and
+-- expiresOn=end_of_next_turn. The count=1 captures "the next attack
+-- roll it makes" (one-shot); the expiresOn bounds it to "before the
+-- end of its next turn". Spell Duration is bent from "Instantaneous"
+-- to timed 1 round per the Ray of Sickness convention so the rider
+-- has a host window to live in.
 
-let amount =
-      { kind = "threshold_tiers"
+let AmountRec
+    : Type
+    = { kind : Text
+      , axis : Text
+      , base : { dice : Natural, dieSize : Natural }
+      , tiers : List { atLevel : Natural, override : { dice : Natural } }
+      }
+
+let OnRolls
+    : Type
+    = List Text
+
+let ExpiryRec
+    : Type
+    = { kind : Text }
+
+let Rider
+    : Type
+    = { kind : Text
+      , damageType : Optional Text
+      , amount : Optional AmountRec
+      , mode : Optional Text
+      , on : Optional OnRolls
+      , count : Optional Natural
+      , expiresOn : Optional ExpiryRec
+      }
+
+let amount
+    : AmountRec
+    = { kind = "threshold_tiers"
       , axis = "character"
       , base = { dice = 1, dieSize = 6 }
       , tiers =
@@ -42,6 +55,28 @@ let amount =
           , { atLevel = 11, override = { dice = 3 } }
           , { atLevel = 17, override = { dice = 4 } }
           ]
+      }
+
+let damageRider
+    : Rider
+    = { kind = "damage"
+      , damageType = Some "psychic"
+      , amount = Some amount
+      , mode = None Text
+      , on = None OnRolls
+      , count = None Natural
+      , expiresOn = None ExpiryRec
+      }
+
+let disadvRider
+    : Rider
+    = { kind = "modify_roll_advantage"
+      , damageType = None Text
+      , amount = None AmountRec
+      , mode = Some "disadvantage"
+      , on = Some [ "attack_roll" ]
+      , count = Some 1
+      , expiresOn = Some { kind = "end_of_next_turn" }
       }
 
 let viciousMockery =
@@ -61,7 +96,10 @@ let viciousMockery =
           , castingTime = { kind = "action" }
           , range = { kind = "point", feet = 60 }
           , components = { v = True, s = False, m = False }
-          , duration = { kind = "instantaneous" }
+          , duration =
+              { kind = "timed"
+              , value = { unit = "round", amount = 1 }
+              }
           , phases =
               [ { kind = "save_gate"
                 , attachment =
@@ -71,9 +109,8 @@ let viciousMockery =
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }
                 , onFail =
-                    { kind = "damage"
-                    , damageType = "psychic"
-                    , amount = amount
+                    { kind = "composite"
+                    , effects = [ damageRider, disadvRider ]
                     }
                 , onSuccess = { kind = "none" }
                 }

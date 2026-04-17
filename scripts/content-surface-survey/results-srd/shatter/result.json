@@ -1,22 +1,28 @@
 {
   "unit_slug": "shatter",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "halfDamageOnSuccess flag on save_gate ActivationPhase",
-      "justification": "Shatter deals half damage on a successful save. Effect = DamageEffect | NoneEffect cannot represent halved damage. Encoding onSuccess as none is false; encoding it as full damage is also false. A flag or new Effect variant is required before any save-for-half spell can be encoded honestly.",
-      "evidence": "taking 3d8 Thunder damage on a failed save or half as much damage on a successful one"
-    },
-    {
-      "kind": "new_variant",
-      "name": "creature_type_save_modifier on save_gate",
-      "justification": "Constructs have Disadvantage on the save. save_gate has no mechanism for creature-type-conditional roll modifiers. Secondary gap; single-unit pressure.",
-      "evidence": "A Construct has Disadvantage on the save."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "damage",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Core shape (activation / area sphere / save_gate / CON / thunder damage / slot scaling +1d8/slot above 2) fits the existing surface completely. Blocking gap is half-damage on success: no Effect variant exists for this. Secondary gaps: Construct disadvantage on the save; nonmagical object damage. The save-for-half pattern is ubiquitous (Fireball, Thunderwave, Cone of Cold, etc.) and must be widened before any such spell can be encoded cleanly."
+  "notes": "Session 2026-04-16: Zero-widening. Sphere + save + thunder damage + half_damage. Construct-has-disadvantage clause is a creature-type-conditional save modifier — DM agenda for now (A5-related deferral).",
+  "session": "2026-04-16-interactive"
 }

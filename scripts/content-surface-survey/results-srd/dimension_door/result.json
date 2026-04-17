@@ -1,34 +1,24 @@
 {
   "unit_slug": "dimension_door",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "teleport",
-      "justification": "Dimension Door's primary mechanic is voluntary, caster-chosen positional displacement to a destination within range. This is not `transport_exile` (which is involuntary planar banishment) and is not `move` or `force_move` (which are constrained traversal). Teleportation bypasses intervening space, walls, and terrain — it is mechanically distinct from movement. No v4 atom covers voluntary same-plane short-range teleportation.",
-      "evidence": "You teleport to a location within range. You arrive at exactly the spot desired."
-    },
-    {
-      "kind": "new_variant",
-      "name": "teleport_phase (ActivationPhase variant)",
-      "justification": "The existing `ActivationPhase` union only has `attack_roll` and `save_gate` variants, both of which resolve against a target's defense. Dimension Door's resolution is 'declare destination, arrive there' — no binary roll against a target. A new phase kind is needed for unconditional positional displacement (possibly with an occupancy-failure branch).",
-      "evidence": "You teleport to a location within range. You arrive at exactly the spot desired. It can be a place you can see, one you can visualize, or one you can describe by stating distance and direction."
-    },
-    {
-      "kind": "new_variant",
-      "name": "teleport_companion (Attachment or secondary-target grammar)",
-      "justification": "The spell can bring one willing creature within 5 ft of the caster to a space within 5 ft of the destination. This is an optional companion-inclusion that is distinct from the `target` attachment (which models creatures the spell acts ON) and from `area` attachment. No existing attachment kind models 'bring willing creature in adjacency to caster along for the teleport'.",
-      "evidence": "You can also teleport one willing creature. The creature must be within 5 feet of you when you teleport, and it teleports to a space within 5 feet of your destination space."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "occupancy_failure_branch",
-      "justification": "The damage rider 'if you or the companion would arrive in an occupied/filled space, take 4d6 Force and the teleportation fails' is not a save_gate or attack_roll. It is a positional-precondition branch: at resolution time, check destination occupancy; if blocked, apply damage and void the displacement. No existing resolution or window atom models a 'destination-occupancy check with damage-and-cancel on failure' outcome.",
-      "evidence": "If you, the other creature, or both would arrive in a space occupied by a creature or completely filled by one or more objects, you and any creature traveling with you each take 4d6 Force damage, and the teleportation fails."
-    }
+  "outcome": "partial",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "self",
+    "spell_root",
+    "spell_slot",
+    "teleport"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Dimension Door's core mechanic — unconditional voluntary teleportation to a caster-chosen destination — requires a new atom (`teleport`) not in v4. The existing `transport_exile` atom is a close surface cousin but models involuntary planar exile, not voluntary in-plane short-range teleportation. The `activation` family is the correct family, but the `ActivationPhase` type needs a new variant for 'teleport to destination' since neither `attack_roll` nor `save_gate` describes this resolution. The occupancy-failure damage branch is a secondary widening: it is not a save_gate (no target makes a save) and not an attack_roll, but a positional constraint that applies damage and cancels the effect when the destination is blocked."
+  "notes": "Session 2026-04-16 (batch mixed-6): Partial. Teleport atom with maxFeet=500 and destination=unoccupied_visible_space authored (second teleport validation ref after Misty Step). DEFERRED: '1 willing passenger traveling with you' is a companion-transport rider with no current atom (single-unit pressure, defer).",
+  "session": "2026-04-16-batch-mixed-6"
 }

@@ -1,1 +1,24 @@
-{"unit_slug":"lesser_restoration","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "lesser_restoration",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "remove_condition",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening reference — uses the choose-one form of remove_condition.condition that landed with today's three-shape refinement. Contrasts with Heal (array-of-all form).",
+  "session": "2026-04-16-interactive"
+}

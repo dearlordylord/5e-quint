@@ -1,1 +1,30 @@
-{"unit_slug":"thunderwave","outcome":"surface_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "thunderwave",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "composite",
+    "damage",
+    "force_move",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Composite onFail with damage + force_move (push 10 ft away from caster). onSuccess=half_damage halves the damage branch only. Audible-thunderclap clause is DM agenda.",
+  "session": "2026-04-16-interactive"
+}

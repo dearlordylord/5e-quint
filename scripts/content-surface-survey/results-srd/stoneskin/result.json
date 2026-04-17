@@ -1,16 +1,29 @@
 {
   "unit_slug": "stoneskin",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantResistanceOperation",
-      "justification": "Stoneskin grants Resistance to three damage types (Bludgeoning, Piercing, Slashing) as an ongoing concentration effect. OngoingOperation currently only has roll_modifier and damage_on_hit variants. A grant_resistance variant is needed. The v4 atom grant_resistance already exists (Section 9 Effect Atoms), so no new atom is required — only a new surface variant of OngoingOperation.",
-      "evidence": "Until the spell ends, one willing creature you touch has Resistance to Bludgeoning, Piercing, and Slashing damage."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "composite",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "grant_resistance",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Family fit is clean: ongoing_effect, target (one, touch), concentration up to 1 hour. All header fields encode without issue. The consumed material component (diamond dust) is representable as a string in components.m. The sole gap is OngoingOperation lacking a grant_resistance variant. No new atom is needed; the widening is purely at the surface type level."
+  "notes": "Session 2026-04-16: Zero-widening. Exercises composite for multi-damage-type grant_resistance (bludgeoning+piercing+slashing). Third instance of material-cost metadata on a consumed material (100 GP diamond dust), pairing with Protection from Evil and Good (Holy Water) and Identify (pearl, not consumed).",
+  "session": "2026-04-16-interactive"
 }

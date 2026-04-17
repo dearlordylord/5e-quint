@@ -34,11 +34,14 @@ let divineFavor =
               }
           , attachment = { kind = "self" }
           , operation =
-              { kind = "damage_on_hit"
-              , damageType = "radiant"
-              , amount =
-                  { kind = "fixed"
-                  , expr = { dice = 1, dieSize = 4 }
+              { trigger = { kind = "on_caster_attack_hit" }
+              , effect =
+                  { kind = "damage"
+                  , damageType = "radiant"
+                  , amount =
+                      { kind = "fixed"
+                      , expr = { dice = 1, dieSize = 4 }
+                      }
                   }
               }
           }

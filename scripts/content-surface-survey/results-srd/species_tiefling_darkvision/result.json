@@ -1,1 +1,18 @@
-{"unit_slug":"species_tiefling_darkvision","outcome":"structural_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "species_tiefling_darkvision",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "grant_sense",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Validation reference. species_trait + passive family + grant_sense atom — all pre-existing shapes.",
+  "session": "2026-04-16-interactive"
+}

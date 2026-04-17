@@ -1,34 +1,29 @@
 {
   "unit_slug": "heal",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ActivationPhase { kind: \"unconditional\" }",
-      "justification": "Heal is an action-cast spell that applies its effect directly to a target — no attack roll, no saving throw. The current ActivationPhase union only has 'attack_roll' and 'save_gate' variants. A third variant is needed for spells that unconditionally deliver their effect on cast (no resolution gate).",
-      "evidence": "Choose a creature that you can see within range. Positive energy washes through the target, restoring 70 Hit Points."
-    },
-    {
-      "kind": "new_variant",
-      "name": "HealHpEffect in spell Effect union",
-      "justification": "The spell Effect type is currently 'DamageEffect | NoneEffect'. Heal's primary mechanic is healing HP. HealHpEffect already exists as a ClassFeatureEffect but is not available in the spell Effect union. It must be promoted (or duplicated) to the spell side.",
-      "evidence": "Positive energy washes through the target, restoring 70 Hit Points."
-    },
-    {
-      "kind": "new_variant",
-      "name": "RemoveConditionEffect in spell Effect union",
-      "justification": "Heal ends three conditions (Blinded, Deafened, Poisoned) on the target. The v4 atom 'remove_condition' exists in the taxonomy but there is no surface Effect variant for it. A RemoveConditionEffect type with a conditions array is needed.",
-      "evidence": "This spell also ends the Blinded, Deafened, and Poisoned conditions on the target."
-    },
-    {
-      "kind": "new_variant",
-      "name": "FlatAmount scalar in DiceAmount (or DiceExpr with dice=0)",
-      "justification": "Heal restores a flat 70 HP with a flat +10 per slot level above 6 — no dice at all. DiceExpr requires dice and dieSize fields, so a flat-only amount must be represented as { dice: 0, dieSize: 0, flat: 70 }, which is semantically misleading. A dedicated 'flat' DiceAmount variant would be cleaner, though this is lower priority than the phase/effect gaps above.",
-      "evidence": "restoring 70 Hit Points [...] The healing increases by 10 for each spell slot level above 6."
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "heal",
+    "remove_condition",
+    "scale_numeric_bonus",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [
+    "EffectAtom.remove_condition.condition accepts ReadonlyArray<Condition>"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Heal fits the 'spell' kind and would belong to the 'activation' family (instantaneous, single-target). All four gaps are surface-level: new ActivationPhase variant, heal_hp in spell Effect, remove_condition in spell Effect, and optionally a cleaner flat-amount scalar. No new v4 atoms are required — 'heal' and 'remove_condition' already exist in the taxonomy. The Condition type in types.ts only lists 'prone'; it would also need to widen to include 'blinded', 'deafened', 'poisoned' for the RemoveConditionEffect, but that is a surface widening, not an atom widening."
+  "notes": "Session 2026-04-16: Widened remove_condition.condition to accept ReadonlyArray<Condition> (all-at-once removal; semantics distinct from apply_condition.condition array which is caster-choice).",
+  "session": "2026-04-16-interactive"
 }

@@ -45,15 +45,20 @@
     "family": "ongoing_effect",
     "level": 1,
     "operation": {
-      "amount": {
-        "expr": {
-          "dice": 1,
-          "dieSize": 6
+      "effect": {
+        "amount": {
+          "expr": {
+            "dice": 1,
+            "dieSize": 6
+          },
+          "kind": "fixed"
         },
-        "kind": "fixed"
+        "damageType": "force",
+        "kind": "damage"
       },
-      "damageType": "force",
-      "kind": "damage_on_hit"
+      "trigger": {
+        "kind": "on_caster_attack_hit"
+      }
     },
     "range": {
       "feet": 90,

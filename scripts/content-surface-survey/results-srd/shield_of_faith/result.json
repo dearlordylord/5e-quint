@@ -1,1 +1,28 @@
-{"unit_slug":"shield_of_faith","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "shield_of_faith",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "modify_ac",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening. EffectAtom.modify_ac with fixed +2 delta. Third AC-modifier shape in the corpus (modify_ac_set_base Mage Armor, modify_ac_set_floor Barkskin, modify_ac additive here).",
+  "session": "2026-04-16-interactive"
+}

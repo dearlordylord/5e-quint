@@ -27,8 +27,13 @@
     "family": "ongoing_effect",
     "level": 2,
     "operation": {
-      "const": 17,
-      "kind": "modify_ac_set_floor"
+      "effect": {
+        "const": 17,
+        "kind": "modify_ac_set_floor"
+      },
+      "trigger": {
+        "kind": "passive"
+      }
     },
     "range": {
       "kind": "touch"

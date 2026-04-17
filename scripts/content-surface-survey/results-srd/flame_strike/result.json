@@ -1,1 +1,29 @@
-{"unit_slug":"flame_strike","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "flame_strike",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "composite",
+    "damage",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: First multi-damage-type spell — composite onFail with fire + radiant damage atoms. onSuccess=half_damage sentinel links to the composite bundle. First authored use of cylinder AreaShape.",
+  "session": "2026-04-16-interactive"
+}

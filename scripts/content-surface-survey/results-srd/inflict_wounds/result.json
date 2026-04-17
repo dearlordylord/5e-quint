@@ -1,1 +1,28 @@
-{"unit_slug":"inflict_wounds","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "inflict_wounds",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "damage",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening. SRD 5.2.1 save-for-half touch damage (distinct from 5.1 attack-roll variant).",
+  "session": "2026-04-16-interactive"
+}

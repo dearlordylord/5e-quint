@@ -1,0 +1,66 @@
+{
+  "description": "You radiate a concealing aura in a 30-foot Emanation for the duration. While in the aura, you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks and leave no tracks.",
+  "id": "pass_without_trace",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "self"
+      },
+      "shape": {
+        "kind": "emanation",
+        "radiusFeet": 30
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "ashes from burned mistletoe",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operation": {
+      "effect": {
+        "delta": {
+          "dice": 10,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "ability_check"
+        ],
+        "skillFilter": {
+          "kind": "fixed",
+          "skills": [
+            "stealth"
+          ]
+        }
+      },
+      "trigger": {
+        "kind": "passive"
+      }
+    },
+    "range": {
+      "kind": "self"
+    },
+    "school": "abjuration"
+  },
+  "name": "Pass without Trace",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Pass without Trace"
+  }
+}

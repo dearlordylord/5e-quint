@@ -33,17 +33,22 @@
     "family": "ongoing_effect",
     "level": 1,
     "operation": {
-      "delta": {
-        "dice": 1,
-        "dieSize": 4,
-        "kind": "fixed_dice",
-        "sign": "+"
+      "effect": {
+        "delta": {
+          "dice": 1,
+          "dieSize": 4,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "attack_roll",
+          "saving_throw"
+        ]
       },
-      "kind": "roll_modifier",
-      "on": [
-        "attack_roll",
-        "saving_throw"
-      ]
+      "trigger": {
+        "kind": "passive"
+      }
     },
     "range": {
       "feet": 30,

@@ -1,28 +1,28 @@
 {
   "unit_slug": "grease",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "difficult_terrain",
-      "justification": "Grease creates Difficult Terrain in a 10-foot square for 1 minute. Difficult terrain halves movement speed — mechanically distinct from block_travel (which prevents movement entirely). No v4 atom covers terrain-speed modification.",
-      "evidence": "Nonflammable grease covers the ground in a 10-foot square centered on a point within range and turns it into Difficult Terrain for the duration."
-    },
-    {
-      "kind": "new_variant",
-      "name": "OngoingOperation.save_gate",
-      "justification": "Grease applies a repeated DEX save gate to every creature that enters the area or ends its turn there. OngoingOperation currently only has roll_modifier and damage_on_hit. A save_gate variant is needed with: ability, dc, onFail (apply_condition prone), onSuccess (none), and a trigger set (enters_area | ends_turn_in_area).",
-      "evidence": "When the grease appears, each creature standing in its area must succeed on a Dexterity saving throw or have the Prone condition. A creature that enters the area or ends its turn there must also succeed on that save or fall Prone."
-    },
-    {
-      "kind": "new_variant",
-      "name": "AnchoredEvent.ends_turn_in_area",
-      "justification": "Grease fires the save gate when a creature ends its turn in the area — a distinct trigger from enters_area. The existing AnchoredEvent union has physical_contact and enters_area but not ends_turn_in_area. (This would also be needed as a trigger kind on the proposed OngoingOperation.save_gate.)",
-      "evidence": "A creature that enters the area or ends its turn there must also succeed on that save or fall Prone."
-    }
+  "outcome": "partial",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "area",
+    "expire",
+    "persist",
+    "save_gate",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Two distinct save behaviors exist: an on-cast pulse (creatures in the area when grease appears) and an ongoing per-creature trigger (enter or end-turn). The on-cast behavior could be collapsed into the enter-area trigger with a 'creatures currently in area count as entering' interpretation, but the SRD describes them separately. The primary blocker is (a) no difficult_terrain atom in v4, and (b) no save_gate variant in OngoingOperation. The Condition type already includes 'prone', so no Condition widening is needed."
+  "notes": "Session 2026-04-16 (batch mixed-5): Partial. 10-ft area + initial DEX save authored. RAW shape is 10\u00d710 ft SQUARE; AREA_SHAPES has no 2D square primitive so authored as `cube { sideFeet = 10 }` \u2014 minor RAW divergence (3D vs 2D). DEFERRED: 'difficult terrain' persistence + 'creature entering must save' recurring event are \u00a7A15 per-turn-trigger ongoing-op / area-save-gate pressure. Sibling with web, spike_growth, moonbeam, insect_plague.",
+  "session": "2026-04-16-batch-mixed-5"
 }

@@ -1,1 +1,26 @@
-{"unit_slug":"sacred_flame","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "sacred_flame",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening reference. Standard save_gate cantrip with threshold_tiers damage. Cover-immunity clause is DM agenda per ARCHITECTURE.md §1.",
+  "session": "2026-04-16-interactive"
+}

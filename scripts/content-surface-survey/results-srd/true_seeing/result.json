@@ -1,16 +1,29 @@
 {
   "unit_slug": "true_seeing",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "grant_sense_operation",
-      "justification": "True Seeing grants Truesight as an ongoing effect for 1 hour. The ongoing_effect family and grant_sense v4 atom both exist, but OngoingOperation in types.ts has no variant for granting a sense. A new operation kind carrying sense type and range is needed.",
-      "evidence": "For the duration, the willing creature you touch has Truesight with a range of 120 feet."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "expire",
+    "grant_sense",
+    "persist",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [
+    "GrantSenseOperation (new OngoingOperation variant)"
   ],
   "confidence": "high",
-  "notes": "The spell fits ongoing_effect cleanly: Action cast, Touch range, timed 1-hour duration, target:one selection. The sole gap is OngoingOperation lacking a grant_sense variant. The v4 atom grant_sense exists in the taxonomy (§9 Effect Atoms). Narrowly surface_widening: add { kind: 'grant_sense'; sense: SenseName; rangeFeet: number } to OngoingOperation. No Dhall or JSON authored — forced encoding via roll_modifier or damage_on_hit would be false."
+  "notes": "Session 2026-04-16: Stale proposal — grant_sense already exists as an EffectAtom and the activation + direct + grant_sense path (See Invisibility precedent) reaches it without an OngoingOperation widening. Material cost / consumed metadata (25 GP, consumed) recorded on Components alongside Stoneskin (100 GP consumed) and Identify (100 GP non-consumed).",
+  "session": "2026-04-16-interactive"
 }

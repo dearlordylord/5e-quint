@@ -1,1 +1,32 @@
-{"unit_slug":"protection_from_evil_and_good","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "protection_from_evil_and_good",
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "modify_roll_advantage",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "CreatureType closed enum (14 SRD types)",
+    "modify_roll_advantage.attackerTypeFilter",
+    "Components.materialCostGp + materialConsumed"
+  ],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Shared CreatureType enum across target-side (Hold Person, Charm Person) and attacker-side (this unit). Material-cost metadata captures the 25-GP Holy Water 'which the spell consumes'. Charm/frighten immunity and save-advantage-against-already-applied-X-by-type deferred (see CONTENT_SURFACE_DEFERRED.md A5).",
+  "session": "2026-04-16-interactive"
+}

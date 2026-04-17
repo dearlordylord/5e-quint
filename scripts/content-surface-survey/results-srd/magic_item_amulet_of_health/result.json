@@ -1,28 +1,18 @@
 {
   "unit_slug": "magic_item_amulet_of_health",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item mechanics family",
-      "justification": "UnitRecord has no 'magic_item' kind. The v4 taxonomy has magic_item_root as a source atom but types.ts defines no MagicItemRecord, no MagicItemMechanics family, and no mechanics header for attuned wearable items. Every magic item in the survey will hit this gap first.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement) — a top-level record shape is needed before any magic-item mechanic can be expressed."
-    },
-    {
-      "kind": "new_atom",
-      "name": "modify_ability_score",
-      "justification": "The amulet's core mechanic is 'Your Constitution is 19 while you wear this amulet' — a floor-set override on an ability score. v4 TAXONOMY section 12 explicitly lists this as out-of-scope ('modify_ability_score as a runtime effect versus as pre-runtime character state'). It needs promotion to a first-class effect atom before this item can be encoded.",
-      "evidence": "Your Constitution is 19 while you wear this amulet. It has no effect on you if your Constitution is 19 or higher without it."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "attunement mechanics",
-      "justification": "Requires Attunement means the item's effect is gated behind an attune procedure consuming an attunement_slot. The v4 taxonomy has 'attune' (procedure) and 'attunement_slot' (resource) atoms but they are not surfaced in any mechanics type. Magic items that require attunement need an attunement header analogous to spell-slot consumption.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "set_ability_score"
   ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Two independent blockers exist. Primary: no MagicItemRecord kind in UnitRecord — the tracer's exhaustive switch on unit.kind would throw before any mechanics are reached. Secondary: the core mechanic (modify_ability_score with floor-set semantics) is explicitly flagged out-of-scope in v4 taxonomy section 12. No placeholder encoding is possible without lying about both the record shape and the effect atom. The no-effect clause ('It has no effect on you if your Constitution is 19 or higher without it') is a conditional guard on ability-score state, which also has no surface representation."
+  "notes": "set_ability_score with mode=floor captures the SRD 'no effect if already >= 19' clause exactly. The existing dhall/json were missing the required destruction field; fixed in both files. Outcome: clean."
 }

@@ -1,1 +1,9 @@
-{"unit_slug":"feat_defense","outcome":"structural_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "feat_defense",
+  "outcome": "clean",
+  "atoms_used": ["feat_root", "grant", "modify_ac", "wearing_armor"],
+  "relations_used": ["grants", "requires", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Full clean fit. PassiveMechanics with wearing_armor EquipmentPredicate (light/medium/heavy) and a modify_ac +1 grant. The EquipmentPredicate.wearing_armor variant was added specifically for this family of Fighting Style feats; Defense is the canonical motivation case."
+}

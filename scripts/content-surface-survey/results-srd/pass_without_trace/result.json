@@ -1,22 +1,29 @@
 {
   "unit_slug": "pass_without_trace",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "AreaOrigin.on_caster",
-      "justification": "Pass without Trace creates a 30-foot Emanation centered on the caster that moves with them throughout the duration. The existing AreaOrigin union has only 'point_within_range' and 'on_primary_target'. Neither captures an area that is anchored to and travels with the caster. Forced encoding as 'point_within_range' would be false — the area is not fixed in space.",
-      "evidence": "\"You radiate a concealing aura in a 30-foot Emanation for the duration.\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "RollKind.ability_check",
-      "justification": "The spell's core mechanical effect is a +10 numeric bonus to Dexterity (Stealth) checks. RollKind only admits 'attack_roll' and 'saving_throw'. Ability checks are absent. The v4 atom 'modify_roll_numeric' is the correct atom, but the surface type RollModifierOperation.on cannot express an ability check target, making the effect unrepresentable without this variant. A general 'ability_check' variant (or a more specific 'dexterity_check') is required.",
-      "evidence": "\"you and each creature you choose have a +10 bonus to Dexterity (Stealth) checks\""
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "modify_roll_numeric",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "SkillFilter on roll-modifier \u2014 \u00a7A1 resolved"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Spell family (ongoing_effect, concentration area) fits cleanly. Both gaps are surface-type variants — no new v4 atoms are required. The 'modify_roll_numeric' atom handles the +10 bonus once RollKind is widened. The 'leave no tracks' rider is DM-agenda (world-state tracking, not a deterministic core-mechanic) and should be omitted from the encoded mechanics without penalty."
+  "notes": "Full auth after \u00a7A1 landed. ongoing_effect + area emanation (origin=self) + roll_modifier ability_check with skillFilter={fixed, [stealth]}, +10 flat. 'Leave no tracks' = DM \u00a7B (world-layer pursuit agenda).",
+  "session": "2026-04-16-a1-a13-landed"
 }

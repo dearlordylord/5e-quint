@@ -1,1 +1,16 @@
-{"unit_slug":"feat_alert","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "feat_alert",
+  "outcome": "atom_widening",
+  "atoms_used": ["feat_root", "grant", "modify_roll_numeric"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "swap_initiative_order",
+      "justification": "Initiative Swap lets the player exchange their initiative value with a willing ally's initiative value immediately after rolling. This is a deterministic mechanical operation on the initiative order — not DM agenda — but no v4 atom covers creature-to-creature initiative-value exchange. The atom would need to express: trigger = 'immediately after rolling initiative', target = 'one willing ally', constraint = 'neither participant has Incapacitated', effect = swap the two initiative numbers in the encounter order.",
+      "evidence": "Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Initiative Proficiency (add PB to initiative roll) fits cleanly as a passive modify_roll_numeric grant with proficiency_bonus delta. That part is fully encoded and traces correctly. Initiative Swap is a distinct mechanic with no matching v4 atom and was intentionally omitted from feat_alert.json rather than force-fitted. The 2024 SRD 5.2.1 version of Alert replaces the old '+5 flat bonus' with the PB grant and adds the new swap clause; this is a genuine widening relative to the old encoding in content/alert.dhall."
+}

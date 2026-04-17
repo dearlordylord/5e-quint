@@ -1,6 +1,6 @@
 {
   "unit_slug": "chill_touch",
-  "outcome": "atom_widening",
+  "outcome": "clean",
   "atoms_used": [
     "action_quota",
     "activate",
@@ -19,14 +19,9 @@
     "opens_window",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "block_healing",
-      "justification": "Chill Touch applies a timed rider on hit that prevents the target from regaining Hit Points until the end of the caster's next turn. The current Effect type only supports damage | none; v4 has no atom for suppressing or blocking HP recovery. The rider is mechanically deterministic (it fires on every hit, lasts until a fixed turn boundary) and is a primary defining mechanic of the spell — not a narrative side-effect. A new atom is needed to represent this pattern, which also appears in other necromancy effects.",
-      "evidence": "On a hit, the target takes 1d10 Necrotic damage, and it can't regain Hit Points until the end of your next turn."
-    }
-  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The activation family, attack_roll phase, melee_spell_attack, and threshold_tiers cantrip scaling all fit cleanly. The chill_touch.dhall encodes the damage portion honestly. The 'can't regain HP' rider is intentionally omitted from the Dhall because Effect = damage | none and no block_healing atom exists in v4. The trace is complete for what it encodes and the omission is documented here and in proposal-chill_touch.md."
+  "notes": "Session 2026-04-16: Migrated onHit/onMiss to array shape (single-element [damage], [none]). No widening.",
+  "session": "2026-04-16-interactive"
 }

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_ring_of_the_ram",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "dual_mode_activation",
+      "justification": "The ring has two mutually exclusive activation modes chosen at use time (attack OR object-break). The current activation family models phases as a sequential list joined by branches_on_completion. No construct exists for 'choose one of N alternative phase sequences per activation.' Adding both as phases implies they execute sequentially, which is false.",
+      "evidence": "While wearing the ring, you can take a Magic action to expend 1 to 3 charges to make a ranged spell attack... Alternatively, you can expend 1 to 3 of the ring's charges as a Magic action to try to break a nonmagical object..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.per_charge_spent",
+      "justification": "Damage is 2d10 Force per charge spent (1→2d10, 2→4d10, 3→6d10). resource_spent captures charge-variable amounts but carries no dice-per-charge formula. A new variant is needed: { kind: 'per_charge_spent', perCharge: DiceExpr }.",
+      "evidence": "for each charge you spend, the target takes 2d10 Force damage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "force_move per-charge distance",
+      "justification": "Push distance is 5 ft per charge spent (1→5 ft, 2→10 ft, 3→15 ft). The force_move atom has a fixed distanceFeet field with no scaling hook. A per-charge variant or a distanceFeetPerCharge field is needed.",
+      "evidence": "for each charge you spend, the target takes 2d10 Force damage and is pushed 5 feet away from you"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.ability_check_gate",
+      "justification": "The object-breaking mode triggers a Strength check (not an attack roll, not a saving throw). The v4 taxonomy includes ability_check as a resolution atom, but the surface ActivationPhase union only covers attack_roll, save_gate, and direct. The ability_check phase variant is absent from the surface.",
+      "evidence": "the ring makes a Strength check with a +5 bonus for each charge you spend"
+    },
+    {
+      "kind": "new_atom",
+      "name": "break_object",
+      "justification": "The on-success outcome of the Strength check is breaking a nonmagical object. No v4 effect atom covers physical object destruction. The nearest atoms (damage, force_move, block_travel) target creatures or spaces. A break_object atom targeting objects is needed.",
+      "evidence": "expend 1 to 3 of the ring's charges as a Magic action to try to break a nonmagical object you can see within 60 feet of yourself"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit cannot be honestly encoded. The primary blocker is structural: the ring's two exclusive activation modes (ranged spell attack vs. Strength check to break object) have no honest representation in a phases array, which is sequential and not a choice. Secondary blockers: per-charge damage scaling (2d10 × N) is not expressible by DiceAmount.resource_spent; per-charge push (5 ft × N) is not expressible by fixed force_move; and the object-break mode requires an ability_check ActivationPhase variant and a break_object effect atom neither of which exist in the surface or v4 taxonomy."
+}

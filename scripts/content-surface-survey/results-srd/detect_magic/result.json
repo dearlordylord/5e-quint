@@ -1,22 +1,31 @@
 {
   "unit_slug": "detect_magic",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantSenseOperation",
-      "justification": "Detect Magic grants the caster a persistent magical sense (detect magic within 30 ft) while concentrating. The ongoing_effect family is structurally correct, but OngoingOperation = RollModifierOperation | DamageOnHitOperation — neither covers a sense-granting effect. The v4 atom grant_sense exists in the taxonomy; it needs an OngoingOperation variant to expose it on the surface.",
-      "evidence": "For the duration, you sense the presence of magical effects within 30 feet of yourself."
-    },
-    {
-      "kind": "new_variant",
-      "name": "CastingTime.minutes with ritual flag",
-      "justification": "Detect Magic can be cast as a Ritual (10-minute cast, no slot expended). The existing CastingTime minutes variant already supports the ritual flag (ritual: boolean). This is already present in the surface — no new variant needed. Noted here for completeness.",
-      "evidence": "meta: { ritual: true }"
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "detect",
+    "direct_apply",
+    "expire",
+    "self",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "CastingTime.action.ritual",
+    "EffectAtom.detect"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The ongoing_effect family is the right shape: concentration up to 10 min, self attachment, passive persistent operation. The sole blocking gap is OngoingOperation missing a grant_sense variant. The secondary mechanic (take the Magic action while concentrating to see auras + learn spell school) requires a conditioned sub-action pattern not currently on the surface; the school-identification output is DM-informational and caller-owned per ARCHITECTURE.md — omit from core. The ritual casting path already has surface support via CastingTime.minutes { ritual: true }. Not classified as dm_agenda because the sensing state itself is mechanically deterministic (range-gated, material-blocked); only the reported output is informational."
+  "notes": "Session 2026-04-16: ritual?: true on action casting time (~12 SRD utility spells share this). detect EffectAtom with closed property enum (magic/evil_and_good/poison_and_disease/thoughts) + radiusFeet. 'Magic action for aura' follow-up and barrier-permeability are DM/GM agenda.",
+  "session": "2026-04-16-interactive"
 }

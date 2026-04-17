@@ -1,6 +1,6 @@
 {
   "unit_slug": "fire_bolt",
-  "outcome": "atom_widening",
+  "outcome": "partial",
   "atoms_used": [
     "action_quota",
     "activate",
@@ -19,14 +19,9 @@
     "opens_window",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "ignite_object",
-      "justification": "The spell has an on-hit rider that starts a flammable object burning, but the closed spell effect vocabulary only supports damage or none.",
-      "evidence": "A flammable object hit by this spell starts burning if it isn't being worn or carried."
-    }
-  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Encoded honestly as a one-phase activation for the ranged spell attack and tier-scaled fire damage. The object-ignition rider is preserved in description text but omitted from mechanics because the current surface/tracer lacks an ignition or burning effect."
+  "notes": "Session 2026-04-16 (batch mixed-4): Partial. Core ranged_spell_attack + 1d10 fire damage with character-axis threshold tiers (2d10/3d10/4d10 at L5/11/17) authored cleanly. DEFERRED: 'A flammable object hit by this spell ignites if it isn't being worn or carried' is a world-object interaction (DM/session agenda \u00a7B).",
+  "session": "2026-04-16-batch-mixed-4"
 }

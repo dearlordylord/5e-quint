@@ -24,15 +24,20 @@
     "family": "ongoing_effect",
     "level": 1,
     "operation": {
-      "amount": {
-        "expr": {
-          "dice": 1,
-          "dieSize": 4
+      "effect": {
+        "amount": {
+          "expr": {
+            "dice": 1,
+            "dieSize": 4
+          },
+          "kind": "fixed"
         },
-        "kind": "fixed"
+        "damageType": "radiant",
+        "kind": "damage"
       },
-      "damageType": "radiant",
-      "kind": "damage_on_hit"
+      "trigger": {
+        "kind": "on_caster_attack_hit"
+      }
     },
     "range": {
       "kind": "self"

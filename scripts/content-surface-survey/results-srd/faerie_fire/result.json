@@ -1,1 +1,29 @@
-{"unit_slug":"faerie_fire","outcome":"surface_widening","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"medium","notes":"auto-extracted from Claude text output — agent did not write result file"}
+{
+  "unit_slug": "faerie_fire",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "modify_roll_advantage",
+    "save_gate",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening reference. Resolves sub-agent's 'save_gated_ongoing_effect' proposal without a new family. activation + save_gate phase + modify_roll_advantage on-fail + concentration duration composes naturally — the modifier persists for the concentration window because the surrounding spell is concentration-bound. No new atom needed. (Applied also to Bane.)",
+  "session": "2026-04-16-interactive"
+}

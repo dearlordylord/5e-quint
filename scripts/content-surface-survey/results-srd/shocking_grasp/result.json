@@ -1,11 +1,12 @@
 {
   "unit_slug": "shocking_grasp",
-  "outcome": "surface_widening",
+  "outcome": "surface_widening_landed",
   "atoms_used": [
     "action_quota",
     "activate",
     "attack_roll",
     "damage",
+    "deny_opportunity_attack",
     "on_hit_window",
     "scale_die_count",
     "spell_root",
@@ -19,20 +20,11 @@
     "opens_window",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "DenyOpportunityAttackEffect",
-      "justification": "The on-hit rider 'can't make Opportunity Attacks until the start of its next turn' maps to the v4 atom deny_opportunity_attack, but the Effect union in types.ts is restricted to DamageEffect | NoneEffect. The atom exists in v4 taxonomy but is absent from the surface type.",
-      "evidence": "On a hit, the target takes 1d8 Lightning damage, and it can't make Opportunity Attacks until the start of its next turn."
-    },
-    {
-      "kind": "new_variant",
-      "name": "onHit multi-effect composite",
-      "justification": "Shocking Grasp delivers two simultaneous on-hit effects: damage and deny_opportunity_attack. The current ActivationPhase has onHit: Effect (single). A composite form (e.g., onHit: ReadonlyArray<Effect>) is needed to represent spells with multiple co-occurring on-hit effects.",
-      "evidence": "On a hit, the target takes 1d8 Lightning damage, and it can't make Opportunity Attacks until the start of its next turn."
-    }
+  "landed_widenings": [
+    "onHit/onMiss: ReadonlyArray<EffectAtom>"
   ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Primary mechanics (melee spell attack, lightning damage, character-level cantrip scaling) encode cleanly into activation/attack_roll with threshold_tiers. The deny_opportunity_attack on-hit rider is omitted from the encoded JSON — the atom is in v4 but not in the Effect surface union. This is the same structural gap as ray_of_frost (modify_speed) and chill_touch (block_healing). The trace correctly reflects only the damage branch; the omission is documented here and in proposal-shocking_grasp.md."
+  "notes": "Session 2026-04-16: Same migration as Ray of Frost — onHit carries damage + deny_opportunity_attack riders. 'Until start of its next turn' window is session-owned.",
+  "session": "2026-04-16-interactive"
 }

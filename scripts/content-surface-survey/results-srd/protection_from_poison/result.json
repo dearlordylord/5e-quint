@@ -1,34 +1,29 @@
 {
   "unit_slug": "protection_from_poison",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantResistanceOperation",
-      "justification": "The spell grants Resistance to Poison damage for its duration. OngoingOperation only covers roll_modifier and damage_on_hit — there is no operation variant that emits the v4 grant_resistance atom.",
-      "evidence": "it has Resistance to Poison damage"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ModifyRollAdvantageOperation",
-      "justification": "The spell grants Advantage on saving throws related to the Poisoned condition. OngoingOperation's RollModifierOperation only adds a numeric DiceDelta — it cannot express advantage/disadvantage. A new operation variant is needed to carry the modify_roll_advantage atom.",
-      "evidence": "the target has Advantage on saving throws to avoid or end the Poisoned condition"
-    },
-    {
-      "kind": "new_variant",
-      "name": "OngoingEffectMechanics.operations (plural)",
-      "justification": "OngoingEffectMechanics.operation is a single OngoingOperation. This spell needs two concurrent ongoing effects (resistance + advantage on saves). Changing to operations: ReadonlyArray<OngoingOperation> is the minimal surface fix.",
-      "evidence": "the target has Advantage on saving throws to avoid or end the Poisoned condition, and it has Resistance to Poison damage"
-    },
-    {
-      "kind": "new_variant",
-      "name": "SpellMechanics cast-time instant effect slot",
-      "justification": "The spell immediately removes the Poisoned condition at cast time, independent of the ongoing effect. No existing family supports 'instantaneous effect at cast + ongoing effect for duration'. A castEffect field (or similar) on OngoingEffectMechanics would cover this; alternatively a new family for instant+ongoing spells.",
-      "evidence": "You touch a creature and end the Poisoned condition on it."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "composite",
+    "direct_apply",
+    "expire",
+    "grant_resistance",
+    "persist",
+    "remove_condition",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The spell is structurally closest to ongoing_effect (timed duration, single target via touch, no concentration). The immediate remove_condition at cast is an additional omission on top of the two missing OngoingOperation variants and the single-operation constraint. All four gaps are variants or field changes on existing surface shapes — no new top-level family is required if the cast-time instant effect is modeled as an optional field on OngoingEffectMechanics. The tracer was not run because the unit cannot be honestly encoded without widening."
+  "notes": "Session 2026-04-16: composite bundles remove_condition (cast-time) + grant_resistance (ongoing). The narrow 'Advantage on saves to avoid/end Poisoned' is deferred (A1 — ability/condition-scoped save advantage).",
+  "session": "2026-04-16-interactive"
 }

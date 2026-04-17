@@ -1,22 +1,32 @@
 {
   "unit_slug": "fly",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ModifySpeedOperation",
-      "justification": "The ongoing_effect family exists and is the correct fit for Fly, but OngoingOperation only supports roll_modifier and damage_on_hit. Fly grants a fly speed (60 ft) + hover — a modify_speed operation. The v4 atom 'modify_speed' exists in the taxonomy but has not been added as an OngoingOperation variant.",
-      "evidence": "For the duration, the target gains a Fly Speed of 60 feet and can hover."
-    },
-    {
-      "kind": "new_variant",
-      "name": "FallOnEndLifecycleEffect",
-      "justification": "The spell specifies a conditional fall-on-end consequence: 'When the spell ends, the target falls if it is still aloft unless it can stop the fall.' The v4 atom 'fall_on_end' exists in the taxonomy but is not yet surfaced in any surface type. This is secondary to the modify_speed widening — the core blocker is the missing operation variant.",
-      "evidence": "When the spell ends, the target falls if it is still aloft unless it can stop the fall."
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "grant_speed",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "EffectAtom.grant_speed"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The spell shape maps cleanly to ongoing_effect: touch attachment, concentration duration, target-count slot scaling (+1 per slot above 3 via existing SlotScaling). The sole blocker is the missing OngoingOperation variant for speed modification. A 'modify_speed' variant on OngoingOperation would need: speedKind (fly | walk | swim | climb), valueFeet (number), and hover (boolean). The fall_on_end consequence is a separate secondary gap — it is in the v4 atom list but not in any surface type; it could be added as an optional field on OngoingEffectMechanics or as a new lifecycle entry."
+  "notes": "Session 2026-04-16: First NEW-speed-mode grant (distinct from modify_speed which adjusts Walking Speed additively). grant_speed { speedKind: fly|swim|climb|burrow, feet, hover? }. 'Target falls if still aloft' clause treated as DM agenda (spatial physics per ARCHITECTURE.md §1).",
+  "session": "2026-04-16-interactive"
 }

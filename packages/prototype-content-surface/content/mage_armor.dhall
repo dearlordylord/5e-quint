@@ -43,9 +43,12 @@ let mageArmor =
               , selection = { mode = "one" }
               }
           , operation =
-              { kind = "modify_ac_set_base"
-              , const = 13
-              , abilityMod = "dex"
+              { trigger = { kind = "passive" }
+              , effect =
+                  { kind = "modify_ac_set_base"
+                  , const = 13
+                  , abilityMod = "dex"
+                  }
               }
           }
       }

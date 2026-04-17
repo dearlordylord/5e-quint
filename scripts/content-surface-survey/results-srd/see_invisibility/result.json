@@ -1,1 +1,27 @@
-{"unit_slug":"see_invisibility","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "see_invisibility",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "expire",
+    "grant_sense",
+    "persist",
+    "self",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Modeled as grant_sense truesight. SenseKind widening to add a strictly 'see_invisible' variant is deferred until a unit demands the narrower semantic.",
+  "session": "2026-04-16-interactive"
+}

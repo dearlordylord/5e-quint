@@ -1,22 +1,31 @@
 {
   "unit_slug": "geas",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ApplyConditionEffect in spell Effect",
-      "justification": "Geas applies the Charmed condition on a failed WIS save. Spell Effect is currently DamageEffect | NoneEffect — there is no apply_condition variant for spells. The mastery surface has apply_condition in SaveGateRiderResult, but that type is not reachable from spell ActivationPhase.",
-      "evidence": "the target must succeed on a Wisdom saving throw or have the Charmed condition for the duration"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Slot-threshold Duration",
-      "justification": "Geas duration jumps at slot thresholds: 30 days (L5), 365 days (L7–8), and 'lasts until ended by Remove Curse / Greater Restoration / Wish' (L9, effectively permanent). Duration only has instantaneous, concentration, and timed — no slot-threshold variant.",
-      "evidence": "If you use a level 7 or 8 spell slot, the duration is 365 days. If you use a level 9 spell slot, the spell lasts until it is ended by one of the spells mentioned above."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "expire",
+    "persist",
+    "save_gate",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [
+    "ApplyConditionEffect in spell Effect",
+    "Slot-threshold Duration (partially — upcastTiers covers L7-8, L9 until-dispelled deferred)"
   ],
   "confidence": "high",
-  "notes": "Two surface widenings block honest encoding. First, spell Effect has no apply_condition variant — Geas inflicts the Charmed condition on a failed save, and there is no way to express that in ActivationPhase.onFail. Second, Duration has no slot-threshold variant, so the 30d/365d/permanent progression cannot be authored. Additionally, the core enforcement mechanic — '5d10 Psychic damage if it acts in a manner directly counter to your command' — is DM-adjudicated: the trigger 'acts directly counter to your command' requires DM judgment, not a deterministic game event. This ongoing conditional damage has no honest surface mapping even after the two widenings above, because its trigger is DM agenda. The spell is not dm_agenda outright — the initial save gate is deterministic — but the secondary damage behavior is. Both widenings are narrowly surface_widening (new variants of existing types); the dm_agenda component is a secondary rider, not the whole spell."
+  "notes": "Session 2026-04-16 (batch apply_condition digest): Stale for apply_condition — EffectAtom.apply_condition already reachable from save_gate.onFail. Slot scaling handled by the existing DurationValue.upcastTiers with base 30 days and { atSlot: 7, amount: 365 }. DEFERRED (§A7 / §C pending): L9 'until dispelled by Remove Curse / Greater Restoration / Wish' needs a permanent Duration variant (paired with Sequester's pressure). The encoding currently reports 365 days at slot 9 — known partial. The 5d10 psychic compliance damage is DM agenda ('acts directly counter to your command' is behavior judgment) per ARCHITECTURE.md §1; same class as Charm Person's 'fighting' predicate. 'Automatically succeeds if it can't understand your command' is a language/comprehension predicate, also DM agenda.",
+  "session": "2026-04-16-batch-apply-condition"
 }

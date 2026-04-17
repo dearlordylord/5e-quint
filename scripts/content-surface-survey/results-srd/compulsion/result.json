@@ -1,34 +1,34 @@
 {
   "unit_slug": "compulsion",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "Condition: charmed",
-      "justification": "The initial save gate applies the Charmed condition on failure. The Condition type currently only contains 'prone'. 'charmed' must be added.",
-      "evidence": "Each creature of your choice that you can see within range must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends."
-    },
-    {
-      "kind": "new_variant",
-      "name": "Effect: apply_condition (for spells)",
-      "justification": "The spell's save_gate result must apply a condition (Charmed). The Effect union for spells is DamageEffect | NoneEffect only — no apply_condition variant exists. The mastery-layer SaveGateRiderResult has apply_condition but it is not reachable from the spell Effect type.",
-      "evidence": "must succeed on a Wisdom saving throw or have the Charmed condition until the spell ends"
-    },
-    {
-      "kind": "new_variant",
-      "name": "OngoingOperation: bonus_action_command (force_move + repeat_save)",
-      "justification": "The ongoing mechanic requires: (a) caster spends a Bonus Action each turn to activate the command, (b) each Charmed target is force-moved in a designated direction, (c) after moving the target repeats the save to break the spell. This is a caster-activated per-turn operation — not a passive roll modifier or damage-on-hit rider. No OngoingOperation variant covers it.",
-      "evidence": "For the duration, you can take a Bonus Action to designate a direction that is horizontal to you. Each Charmed target must use as much of its movement as possible to move in that direction on its next turn... After moving in this way, a target repeats the save, ending the spell on itself on a success."
-    },
-    {
-      "kind": "new_variant",
-      "name": "Per-turn repeat save (break condition)",
-      "justification": "After executing the forced movement, each target independently repeats the saving throw to end the spell on itself. The surface has no mechanism for a per-turn repeat save that can individually break concentration on a per-target basis. The repeat_save atom exists in v4 taxonomy but no surface type exposes it.",
-      "evidence": "After moving in this way, a target repeats the save, ending the spell on itself on a success."
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "save_gate",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "TargetSelection.mode = \"any_number\" (unbounded open selection)"
+  ],
+  "rejected_widenings": [
+    "Condition: charmed (stale — in CONDITIONS enum)",
+    "Effect: apply_condition for spells (stale — EffectAtom.apply_condition reachable from save_gate.onFail)"
   ],
   "confidence": "high",
-  "notes": "The spell fits the spell kind and concentration/ongoing family concept, but four surface gaps prevent honest encoding. The most structurally novel gap is the 'caster-activated Bonus Action command each turn' pattern — existing OngoingOperation variants are passive (triggered by external events like hits). The per-target repeat-save-to-break mechanic is also absent from the surface. No dhall/json/trace produced."
+  "notes": "Session 2026-04-16 (batch apply_condition digest, tick 2): Landed TargetSelection.mode = 'any_number' from DEFERRED §A8. Pressure case: 'Each creature of your choice that you can see within range' with no numeric cap. Shared with Beacon of Hope and Divine Word. Partial encoding: core WIS-save → Charmed + concentration authored cleanly. BA-directed movement + post-move repeat save remain deferred — needs (1) caster-activated on-turn ongoing operation atom, (2) movement-triggered repeat save cadence (distinct from end_of_target_turn and on_damage). 'That you can see' + 'safest route' are spatial/perception DM agenda per ARCHITECTURE.md §1.",
+  "session": "2026-04-16-batch-apply-condition"
 }

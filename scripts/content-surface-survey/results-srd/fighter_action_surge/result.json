@@ -1,30 +1,30 @@
 {
   "unit_slug": "fighter_action_surge",
-  "outcome": "surface_widening",
+  "outcome": "surface_widening_landed",
   "atoms_used": [
     "activate",
     "class_feature_root",
+    "direct_apply",
     "grant_extra_action",
     "rest_window",
     "restrict_action_set",
     "scale_numeric_bonus",
+    "self",
     "use_count"
   ],
   "relations_used": [
+    "attaches_to",
     "consumes",
     "grants",
     "modifies",
     "persists_until",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureActivationMechanics.usageLimit",
-      "justification": "At level 17 the SRD explicitly limits Action Surge to once per turn even though two uses are available per rest. ClassFeatureActivationMechanics has no perTurnLimit / usageLimit field; only MasteryMechanics has one (MasteryUsageLimit = {kind: 'once_per_turn'}). A parallel optional field on ClassFeatureActivationMechanics would let the tracer emit a use_count fence + turn_start_window for the per-turn cap, keeping it consistent with the mastery subgraph pattern.",
-      "evidence": "Starting at level 17, you can use it twice before a rest but only once on a turn."
-    }
+  "landed_widenings": [
+    "UsageLimit shared between masteries and ActivatedAbilityHeader"
   ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Core mechanic traces cleanly: grant_extra_action (exclude: magic), threshold_tiers cap (base 1, L17→2), short_or_long_rest reset. The existing action_surge.json uses fixed(1) and silently drops the L17 scaling; this encoding uses threshold_tiers to be faithful. The only unrepresentable constraint is the 'only once on a turn' cap at L17 — a new optional usageLimit field on ClassFeatureActivationMechanics (mirroring MasteryUsageLimit) would close this gap. All atoms used are in v4."
+  "notes": "Session 2026-04-16: Promoted MasteryUsageLimit to shared UsageLimit; added optional usageLimit field on ActivatedAbilityHeader. L17 'once per turn' now renders as a use_count fence node. Vacuous below L17 (only 1 use available).",
+  "session": "2026-04-16-interactive"
 }

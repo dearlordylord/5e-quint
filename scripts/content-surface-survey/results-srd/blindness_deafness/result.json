@@ -1,34 +1,34 @@
 {
   "unit_slug": "blindness_deafness",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ApplyConditionEffect (spell Effect union)",
-      "justification": "The spell's save_gate onFail must apply a condition (blinded or deafened). The Effect union for ActivationPhase only has DamageEffect | NoneEffect. The v4 atom apply_condition exists but is absent from the spell Effect union.",
-      "evidence": "One creature ... must succeed on a Constitution saving throw, or it has the Blinded or Deafened condition"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Condition: \"blinded\" | \"deafened\"",
-      "justification": "The Condition type only contains \"prone\". Blindness/Deafness requires \"blinded\" and \"deafened\". These are standard SRD conditions and will be needed by many spells and features.",
-      "evidence": "or it has the Blinded or Deafened condition (your choice) for the duration"
-    },
-    {
-      "kind": "new_variant",
-      "name": "repeat_save ActivationPhase variant",
-      "justification": "The spell has an ongoing repeat-save-to-break mechanic: at the end of each target turn, the target repeats the save and ends the spell on success. ActivationPhase has attack_roll and save_gate but no repeat_save variant. v4 atom repeat_save exists but is unrepresented in the surface.",
-      "evidence": "At the end of each of its turns, the target repeats the save, ending the spell on itself on a success."
-    },
-    {
-      "kind": "new_variant",
-      "name": "caster_choice_condition (Effect or ActivationPhase variant)",
-      "justification": "The caster chooses at cast time whether the condition is blinded or deafened. No existing surface type models a 'choose one of [conditionA, conditionB] at caster's discretion' mechanic. This differs from a random or target-determined branch.",
-      "evidence": "or it has the Blinded or Deafened condition (your choice) for the duration"
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "expire",
+    "persist",
+    "repeat_save",
+    "save_gate",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "repeats_as",
+    "roots"
+  ],
+  "landed_widenings": [
+    "EffectAtom.apply_condition.condition accepts ReadonlyArray<Condition> for caster choice"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "All four blockers are new variants of existing surface types (Effect, Condition, ActivationPhase). The v4 atom inventory already contains apply_condition and repeat_save; the gap is purely in the surface schema. The slot-scaling for higher-level casting (+1 target per slot above 2) fits the existing SlotScaling<number> / choose_up_to pattern used by Bless. If apply_condition, blinded/deafened, and repeat_save are added, the remaining issue is the caster-choice-of-condition, which may need a ChoiceEffect variant or a condition set on ApplyConditionEffect."
+  "notes": "Session 2026-04-16: Sub-agent originally proposed 4 widenings. Three already resolved by prior session work (apply_condition atom, full CONDITIONS enum, RepeatSaveSpec). Only caster-choice-of-condition was new — landed as array-valued condition field on apply_condition atom (parallel to AreaShapeSpec.choice pattern).",
+  "session": "2026-04-16-interactive"
 }

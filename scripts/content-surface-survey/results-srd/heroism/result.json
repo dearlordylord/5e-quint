@@ -1,34 +1,33 @@
 {
   "unit_slug": "heroism",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "grant_condition_immunity",
-      "justification": "Heroism grants blanket immunity to the Frightened condition for the spell's duration. The existing apply_condition and remove_condition atoms are per-instance transitions, not persistent immunity grants. No v4 atom covers granting condition immunity as a durable ongoing state.",
-      "evidence": "the creature is immune to the Frightened condition"
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_temporary_hit_points",
-      "justification": "Heroism grants THP equal to the caster's spellcasting ability modifier at the start of each of the target's turns. THP is mechanically distinct from healing: THP and HP are separate pools, THP don't stack, and THP expire when the effect ends. The existing heal atom covers actual HP restoration, not THP grants. A separate atom is needed.",
-      "evidence": "gains Temporary Hit Points equal to your spellcasting ability modifier at the start of each of its turns"
-    },
-    {
-      "kind": "new_variant",
-      "name": "per_turn_grant variant of OngoingOperation",
-      "justification": "The THP grant fires at the target's turn_start_window, recurring each turn for the spell's duration. This is a new operation shape — a recurring per-turn trigger — not a roll modifier (RollModifierOperation) nor an on-hit rider (DamageOnHitOperation). The current OngoingOperation union cannot express it.",
-      "evidence": "gains Temporary Hit Points equal to your spellcasting ability modifier at the start of each of its turns"
-    },
-    {
-      "kind": "new_variant",
-      "name": "multi-operation support in OngoingEffectMechanics",
-      "justification": "Heroism applies two simultaneous ongoing effects to the same target: condition immunity and per-turn THP. The current OngoingEffectMechanics family has a single operation field. Encoding both effects requires either an array of operations or a compound operation variant.",
-      "evidence": "the creature is immune to the Frightened condition and gains Temporary Hit Points equal to your spellcasting ability modifier at the start of each of its turns"
-    }
+  "outcome": "partial",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "grant_condition_immunity",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [
+    "GrantConditionImmunityOperation (stale)",
+    "ApplyConditionImmunity (stale)"
   ],
   "confidence": "high",
-  "notes": "Both of Heroism's core mechanics require new atoms not present in v4. (1) Condition immunity (frightened) has no covering atom — grant_condition_immunity is needed. (2) Per-turn THP grants are mechanically distinct from healing and require grant_temporary_hit_points. Additionally, OngoingEffectMechanics only supports a single operation field, but Heroism needs two concurrent operations on the same attachment. No honest encoding is possible without widening. Dhall/JSON/trace not produced."
+  "notes": "Session 2026-04-16 (batch mixed-3): Partial. Core grant_condition_immunity(frightened) + concentration + slot-scaled target count encoded. DEFERRED: per-turn temp-HP refresh ('gains Temp HP equal to your spellcasting ability modifier at the start of each of its turns') \u2014 needs new per_turn_start ongoing-op shape. Shared pressure with Aura of Life + Beacon of Hope (\u22653 units). See NW-2 in batch report / DEFERRED \u00a7A15 candidate.",
+  "session": "2026-04-16-batch-mixed-3"
 }

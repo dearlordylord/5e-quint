@@ -1,1 +1,32 @@
-{"unit_slug":"guiding_bolt","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "guiding_bolt",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attack_roll",
+    "damage",
+    "expire",
+    "modify_roll_advantage",
+    "on_hit_window",
+    "persist",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening. Ranged attack with multi-effect onHit (damage + modify_roll_advantage attached to target). The 'next attack only' single-use semantic is session bookkeeping (first-use-wins); surface records the 1-round window.",
+  "session": "2026-04-16-interactive"
+}

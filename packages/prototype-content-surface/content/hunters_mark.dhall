@@ -54,11 +54,14 @@ let huntersMark =
                     }
               }
           , operation =
-              { kind = "damage_on_hit"
-              , damageType = "force"
-              , amount =
-                  { kind = "fixed"
-                  , expr = { dice = 1, dieSize = 6 }
+              { trigger = { kind = "on_caster_attack_hit" }
+              , effect =
+                  { kind = "damage"
+                  , damageType = "force"
+                  , amount =
+                      { kind = "fixed"
+                      , expr = { dice = 1, dieSize = 6 }
+                      }
                   }
               }
           }

@@ -1,1 +1,36 @@
-{"unit_slug":"hold_person","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "hold_person",
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "repeat_save",
+    "save_gate",
+    "scale_target_count",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "repeats_as",
+    "roots"
+  ],
+  "landed_widenings": [
+    "RepeatSaveSpec on save_gate phase",
+    "TargetSelection.typeFilter (humanoid)"
+  ],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Added RepeatSaveSpec { cadence=end_of_target_turn, onSuccess=ends_on_target } as optional field on ActivationPhase.save_gate — reuses parent ability + DC. Target-side creature-type filter via shared CreatureType enum.",
+  "session": "2026-04-16-interactive"
+}

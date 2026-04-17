@@ -1,28 +1,27 @@
 {
   "unit_slug": "disintegrate",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "on_zero_hp_window",
-      "justification": "Disintegrate's disintegration effect is gated on 'if this damage reduces target to 0 HP' — a conditional window that fires only when a specific HP threshold is crossed by the spell's damage. No existing window atom covers this trigger. The closest is on_hit_window (fires on any hit) or post_roll_window (fires after roll resolution), but neither expresses the 0-HP threshold condition. This is structurally distinct from the save outcome: a creature can fail the save, take damage, survive, and NOT be disintegrated.",
-      "evidence": "If this damage reduces it to 0 Hit Points, it and everything nonmagical it is wearing and carrying are disintegrated into gray dust."
-    },
-    {
-      "kind": "new_atom",
-      "name": "apply_permanent_destruction",
-      "justification": "The disintegration state is mechanically distinct from normal death: the body is destroyed (no corpse for Raise Dead/Resurrection), carried equipment is also destroyed, and only True Resurrection or Wish can revive the target. No existing v4 effect atom captures 'permanent destruction with restricted revival path'. apply_condition cannot cover this — 'disintegrated' is not a SRD condition. transport_exile is wrong (the creature isn't moved). A new effect atom is needed to represent the state of being reduced to gray dust.",
-      "evidence": "The target can be revived only by a True Resurrection or a Wish spell."
-    },
-    {
-      "kind": "new_variant",
-      "name": "ActivationPhase.auto_effect (or object_target attachment)",
-      "justification": "Nonmagical objects and magical force constructs targeted by Disintegrate have no saving throw — the spell automatically disintegrates them (Large or smaller instantly; Huge+ yields a 10-ft Cube portion). The current ActivationPhase union only has attack_roll and save_gate kinds; neither can express 'no resolution step, automatic effect.' Object targeting also has no representation in the Attachment type for spells (target implies creature-like entities with saves and HP).",
-      "evidence": "This spell automatically disintegrates a Large or smaller nonmagical object or a creation of magical force. If such a target is Huge or larger, this spell disintegrates a 10-foot-Cube portion of it."
-    }
+  "outcome": "partial",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The spell's primary creature mechanic (DEX save gate → 10d6+40 Force damage with linear_per_level slot scaling at axis=slot, +3d6/slot above 6) fits the activation/save_gate family cleanly — the DiceAmount shape is fully expressible. Encoding was blocked because the on-0-HP disintegration is the defining mechanic of the spell: without it, the trace is indistinguishable from any other high-damage Force save spell, which would be misleading. The object-targeting auto-disintegrate (no save) is a secondary gap. Narrowest honest classification is atom_widening: both missing pieces (on_zero_hp_window trigger and apply_permanent_destruction effect) are absent from the v4 atom inventory, not merely missing surface variants of existing atoms."
+  "notes": "Session 2026-04-16 (batch mixed-5): Partial. Core DEX save + 10d6+40 force damage (+3d6/slot) authored cleanly. DEFERRED: 'reduced to 0 HP \u2192 disintegrated to pile of fine gray dust' \u2014 new death-state atom (distinct from death saves); pairs with other instant-kill pressures (power_word_kill). \u00a7B note: revivification restrictions are narrative/session state.",
+  "session": "2026-04-16-batch-mixed-5"
 }

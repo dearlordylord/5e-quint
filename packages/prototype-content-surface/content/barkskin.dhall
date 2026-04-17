@@ -41,8 +41,11 @@ let barkskin =
               , selection = { mode = "one" }
               }
           , operation =
-              { kind = "modify_ac_set_floor"
-              , const = 17
+              { trigger = { kind = "passive" }
+              , effect =
+                  { kind = "modify_ac_set_floor"
+                  , const = 17
+                  }
               }
           }
       }

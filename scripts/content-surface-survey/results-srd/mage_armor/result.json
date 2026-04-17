@@ -1,1 +1,28 @@
-{"unit_slug":"mage_armor","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "mage_armor",
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "expire",
+    "modify_ac",
+    "persist",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "DurationEndTrigger.target_dons_armor"
+  ],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: RAW 'spell ends early if target dons armor' now round-trips via Duration.timed.earlyEnd = [ { kind = target_dons_armor } ]. Also exercises ModifyAcOngoingOperation.modify_ac_set_base (added this session for 'base AC = 13 + DEX mod').",
+  "session": "2026-04-16-interactive"
+}

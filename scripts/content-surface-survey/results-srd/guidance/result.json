@@ -1,22 +1,28 @@
 {
   "unit_slug": "guidance",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "RollKind: \"ability_check\"",
-      "justification": "Guidance modifies ability checks. The current RollKind union only covers 'attack_roll' and 'saving_throw'. Adding 'ability_check' is the minimum required to encode any roll modifier on ability checks.",
-      "evidence": "the creature adds 1d4 to any ability check using the chosen skill"
-    },
-    {
-      "kind": "new_variant",
-      "name": "RollModifierOperation: optional skill scope field",
-      "justification": "Guidance scopes its bonus to a single skill chosen at cast time. RollModifierOperation has no field to express this constraint. A new optional field (e.g., 'skillScope: ChosenAtCast | null') is needed so the encoding is honest about which checks receive the bonus.",
-      "evidence": "you choose a skill. Until the spell ends, the creature adds 1d4 to any ability check using the chosen skill"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "modify_roll_numeric",
+    "spell_root",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [
+    "SkillFilter.choice variant \u2014 \u00a7A1"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "No Dhall/JSON/trace produced — encoding would require a RollKind value ('ability_check') that does not exist in the closed union. The ongoing_effect family fits. The v4 atom modify_roll_numeric applies. Both gaps are surface_widening: new variants of existing surface types, not new atoms or new families."
+  "notes": "Full auth after \u00a7A1 landed. ongoing_effect + concentration 1min + touch-target + roll_modifier ability_check with skillFilter={choice, all 18 skills}, +1d4. Caster picks skill at cast time (DamageTypeRef.choice precedent).",
+  "session": "2026-04-16-a1-a13-landed"
 }

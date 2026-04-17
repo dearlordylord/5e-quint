@@ -1,1 +1,9 @@
-{"unit_slug":"species_dwarf_darkvision","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "species_dwarf_darkvision",
+  "outcome": "clean",
+  "atoms_used": ["grant", "grant_sense", "species_trait_root"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Structurally identical to darkvision_elf — passive grant_sense atom, rangeFeet=120 instead of 60. Typecheck and tracer both clean. The other Dwarf traits (Dwarven Resilience, Dwarven Toughness, Stonecunning) are out of scope for this slug."
+}

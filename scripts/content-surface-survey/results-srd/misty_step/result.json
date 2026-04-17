@@ -1,22 +1,26 @@
 {
   "unit_slug": "misty_step",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ActivationPhase.unconditional",
-      "justification": "Misty Step fires an effect on cast with no roll and no save gate. The activation family is the right family (one-shot, instant), but every ActivationPhase variant currently requires either attack_roll or save_gate. An unconditional phase — one that simply grants its effect on resolution — is needed for all spells that have no resolution gate.",
-      "evidence": "You teleport up to 30 feet to an unoccupied space you can see."
-    },
-    {
-      "kind": "new_variant",
-      "name": "Effect.move",
-      "justification": "Teleportation is positional displacement of the caster (or a target). The v4 atom inventory already includes 'move' and 'transport_exile', but the Effect union in types.ts only contains 'damage' and 'none'. A 'move' effect variant is needed to express unconditional positional displacement with a distance cap.",
-      "evidence": "you teleport up to 30 feet to an unoccupied space you can see"
-    }
+  "outcome": "surface_widening_landed",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "direct_apply",
+    "self",
+    "spell_root",
+    "spell_slot",
+    "teleport"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "landed_widenings": [
+    "EffectAtom.teleport"
+  ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Both gaps are surface_widening: the activation family exists and is the correct fit, but requires an unconditional phase variant; the v4 'move' atom exists but is absent from types.ts Effect. No dhall or json authored — the unit cannot be honestly encoded without both widenings."
+  "notes": "Session 2026-04-16: First pure-teleport unit. teleport { maxFeet, destination='unoccupied_visible_space' }. Dimension Door and Thunder Step will reuse.",
+  "session": "2026-04-16-interactive"
 }

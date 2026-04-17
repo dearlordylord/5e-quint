@@ -1,28 +1,28 @@
 {
   "unit_slug": "color_spray",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "area shape: cone",
-      "justification": "Color Spray targets a 15-foot Cone originating from the caster. The Attachment area shape union currently only has { kind: 'sphere'; radiusFeet: number }. A cone shape requires { kind: 'cone'; lengthFeet: number } (origin is always the caster, so no AreaOrigin needed for self-originating cones, or it could reuse the existing AreaOrigin grammar).",
-      "evidence": "Each creature in a 15-foot Cone originating from you must succeed on a Constitution saving throw"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Effect variant: apply_condition",
-      "justification": "The save_gate ActivationPhase takes onFail/onSuccess of type Effect, which is DamageEffect | NoneEffect. Color Spray's on-fail result is applying the Blinded condition — not damage. The apply_condition atom exists in v4 taxonomy and already appears in SaveGateRiderResult (mastery surface), but is absent from the spell Effect union.",
-      "evidence": "must succeed on a Constitution saving throw or have the Blinded condition until the end of your next turn"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Condition: 'blinded'",
-      "justification": "The Condition type is currently only 'prone'. Color Spray inflicts 'blinded'. This type must be widened to include 'blinded' before apply_condition can be used in spell effects.",
-      "evidence": "have the Blinded condition until the end of your next turn"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "area",
+    "expire",
+    "persist",
+    "save_gate",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The spell structure maps cleanly to activation + save_gate once the three surface gaps are filled. The timed expiry ('until the end of your next turn') would also need a condition-duration shape in the apply_condition effect (e.g., { expiresOn: { kind: 'end_of_next_turn' } }), but this can be modeled as a rider expiry analogous to the mastery RiderExpiry type. All required v4 atoms (apply_condition, area, save_gate) already exist. No new atoms are needed."
+  "notes": "Session 2026-04-16: Zero-widening reference. Sub-agent's original 3 proposals (cone area shape, apply_condition in Effect, end_of_next_turn expiry) all resolved by prior session work. Modeled 'until end of your next turn' as Duration.timed 1 round; caster-vs-target timeline distinction is session bookkeeping.",
+  "session": "2026-04-16-interactive"
 }

@@ -1,40 +1,28 @@
 {
   "unit_slug": "species_dragonborn_breath_weapon",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "SpeciesTraitRecord",
-      "justification": "UnitRecord has no 'species_trait' kind. SpellRecord, ClassFeatureRecord, and MasteryRecord are the only variants. A SpeciesTraitRecord is required before any species trait mechanics can be encoded.",
-      "evidence": "Kind: species_trait (from task specification and TAXONOMY_atoms_graph.md §1 which lists 'species_trait_root' as a source atom without a corresponding TypeScript record)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "cone and line shapes in Attachment area",
-      "justification": "Breath Weapon fires in either a 15-foot Cone or 30-foot Line (5 ft wide). The current Attachment area shape only supports 'sphere'. Cone and Line are distinct geometric shapes with different SRD rules.",
-      "evidence": "an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide"
-    },
-    {
-      "kind": "new_variant",
-      "name": "proficiency_bonus-scaled UseCountCap",
-      "justification": "Breath Weapon uses are equal to the character's Proficiency Bonus. UseCountCap only supports 'fixed' and 'threshold_tiers'. A PB-derived cap is a recurring SRD 5.2.1 pattern (multiple species traits, some class features) that cannot be expressed with the current variants.",
-      "evidence": "You can use this Breath Weapon a number of times equal to your Proficiency Bonus"
-    },
-    {
-      "kind": "new_variant",
-      "name": "half_damage save result in Effect",
-      "justification": "On a successful Dexterity save the target takes half damage. This is not expressible as a DiceAmount (no half-of-roll expression exists) and is semantically distinct from a fixed reduced DiceExpr. Half-damage on save is a fundamental SRD damage pattern appearing on dozens of area spells and features.",
-      "evidence": "On a successful save, a creature takes half as much damage."
-    },
-    {
-      "kind": "new_variant",
-      "name": "ability-specific DcSource for species traits",
-      "justification": "The Breath Weapon DC is 8 + CON modifier + PB. The existing 'weapon_attack_dc' kind says 'attack ability mod' without specifying which ability, making it semantically incorrect for a CON-based species-trait DC. A named-ability DC source variant would correctly capture this.",
-      "evidence": "DC 8 plus your Constitution modifier and Proficiency Bonus"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "area",
+    "attack_slot",
+    "damage",
+    "half_damage",
+    "rest_window",
+    "save_gate",
+    "scale_die_count",
+    "species_trait_root",
+    "use_count"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Primary blocker is structural: 'species_trait' is absent from UnitRecord entirely, so no encoding attempt can be made. Four secondary surface widenings are also documented — these would need to be resolved before a clean encode could proceed even after the structural gap is filled. The damage scaling (1d10 → 2d10 → 3d10 → 4d10 at character levels 5/11/17) is expressible with the existing threshold_tiers DiceAmount shape (axis=character, die-count changes only), so no new atom is needed there."
+  "notes": "All surface types were designed with Dragonborn Breath Weapon as an explicit reference case: innate_dc, AreaOrigin.self, AreaShapeSpec.choice, DamageTypeRef.build_time_choice, and UseCountCap.proficiency_bonus all have doc comments citing this trait. The save_gate phase with half_damage onSuccess and threshold_tiers character-axis scaling composes cleanly from existing atoms. Typecheck passes; tracer produces a complete mermaid graph with no unhandled branches."
 }

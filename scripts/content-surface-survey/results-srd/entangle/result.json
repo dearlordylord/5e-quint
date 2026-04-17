@@ -1,1 +1,29 @@
-{"unit_slug":"entangle","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "entangle",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "save_gate",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
+  "confidence": "high",
+  "notes": "Session 2026-04-16: Zero-widening. Area + STR save + apply Restrained + concentration. Difficult-terrain clause DM agenda. 'Action to escape with Athletics' is a nested activation (see deferred A3-like nested-action question).",
+  "session": "2026-04-16-interactive"
+}

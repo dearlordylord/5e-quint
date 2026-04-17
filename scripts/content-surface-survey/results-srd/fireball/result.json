@@ -1,16 +1,28 @@
 {
   "unit_slug": "fireball",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "Effect.half_of_fail_damage",
-      "justification": "Fireball deals half damage on a successful save. The surface Effect type only has { kind: 'damage', amount } and { kind: 'none' }. 'Half as much' is a relative quantity: at base it is 4d6, but at slot 4 it is 4.5d6 — not expressible as an integer DiceExpr. The onSuccess amount cannot be independently specified as a DiceAmount that correctly tracks the upcasted onFail amount. A new variant { kind: 'half_of_fail_damage' } (no extra fields needed; the type implies half the onFail expression, rounded down per SRD) is the minimum honest addition.",
-      "evidence": "taking 8d6 Fire damage on a failed save or half as much damage on a successful one"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "damage",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The core mechanic (AoE Dex save, damage on fail) fits the activation/save_gate family cleanly. Only the half-damage-on-success outcome is blocked — this is the canonical 'save half' pattern shared by Lightning Bolt, Cone of Cold, and many other evocation spells. A single new Effect variant would unblock all of them. Secondary effect: 'Flammable objects in the area that aren't being worn or carried start burning' is a world-state/environmental effect with no foothold in the current surface; it is legitimately out-of-core for now and should be noted separately if environmental triggers are ever modeled."
+  "notes": "Session 2026-04-16: Zero-widening validation reference. Canonical L3 point-anchored sphere AoE exercising sphere(r=20) + point_within_range(150) + save_gate + linear_per_level. Pairs with Circle of Death (same shape, L6).",
+  "session": "2026-04-16-interactive"
 }

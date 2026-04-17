@@ -1,6 +1,6 @@
 {
   "unit_slug": "charm_person",
-  "outcome": "surface_widening",
+  "outcome": "surface_widening_landed",
   "atoms_used": [
     "action_quota",
     "activate",
@@ -22,26 +22,11 @@
     "persists_until",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "save_gate.saveAdvantageIf",
-      "justification": "The save_gate ActivationPhase has no field for a conditional advantage modifier on the target's saving throw. The spell grants advantage on the save under a specific combat-state predicate (caster or allies fighting the target), which is a distinct mechanical fact from the save itself.",
-      "evidence": "\"It does so with Advantage if you or your allies are fighting it.\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "Duration.break_trigger (or timed + conditional_break)",
-      "justification": "The timed Duration type has no mechanism to express an early-break condition triggered by a game event. The v4 lifecycle atom `break` exists but the TS surface exposes no field on Duration or on the persisted EffectAtom to attach a damage-triggered break. A new variant like `{ kind: 'timed'; value: DurationValue; breakIf?: BreakCondition }` or a separate `break_trigger` surface type is needed.",
-      "evidence": "\"...the Charmed condition until the spell ends or until you or your allies damage it.\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "Attachment creature-type filter",
-      "justification": "The target Attachment has no field to restrict the valid creature types. Charm Person targets only Humanoids; this restriction is currently unrepresentable and is silently dropped. A `creatureTypeFilter` field on the target attachment (or a new attachment variant) would close the gap.",
-      "evidence": "\"One Humanoid you can see within range...\""
-    }
+  "landed_widenings": [
+    "DurationEndTrigger.target_damaged_by_caster_or_ally"
   ],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "Core mechanic (WIS save_gate → apply_condition: charmed, timed 1 hour, slot-scaled target count) encodes cleanly and typechecks + traces without errors. Three mechanics are dropped: (1) conditional advantage on the save roll, (2) damage-triggered early break on the condition, (3) Humanoid-only creature-type restriction. All three need new variants of existing surface types — no new v4 atoms are required. The 'Friendly' attitude and post-spell awareness text are narrative/DM-agenda and correctly omitted."
+  "notes": "Session 2026-04-16: Added target_damaged_by_caster_or_ally for 'or until you or your allies damage it'. The 'ally' side is DM agenda (session resolves allegiance). Also exercises TargetSelection.typeFilter=[humanoid] (second instance after Hold Person).",
+  "session": "2026-04-16-interactive"
 }

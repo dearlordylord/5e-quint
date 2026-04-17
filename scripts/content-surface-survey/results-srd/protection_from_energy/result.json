@@ -1,16 +1,28 @@
 {
   "unit_slug": "protection_from_energy",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantResistanceOperation",
-      "justification": "OngoingOperation currently supports only roll_modifier and damage_on_hit. Protection from Energy grants Resistance to a damage type — halving all incoming damage of that type on the target. This concept has no representation in the current operation vocabulary. The v4 taxonomy already includes grant_resistance as a named atom (TAXONOMY_atoms_graph.md line 198), so no new atom is needed — only a new variant of OngoingOperation and a corresponding branch in traceOngoingOperation.",
-      "evidence": "the willing creature you touch has Resistance to one damage type of your choice: Acid, Cold, Fire, Lightning, or Thunder"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "grant_resistance",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "All structural fields fit cleanly: family=ongoing_effect, castingTime=action, range=touch, components={v,s}, duration=concentration up to 1 hour, attachment=target(one). The DamageType atom covers all five damage types listed. The caster chooses one damage type at cast time; the encoded form stores the chosen DamageType in the operation. The only gap is the missing OngoingOperation variant. Proposed shape: { kind: 'grant_resistance'; damageType: DamageType }. The tracer would need a grant_resistance case in traceOngoingOperation emitting a grant_resistance atom node with a grants edge from procId and an attaches_to edge to attId."
+  "notes": "Session 2026-04-16: Zero-widening. Renamed DamageTypeRef.build_time_choice → DamageTypeRef.choice to reflect the broader cast-time vs build-time applicability. Protection from Energy is the cast-time case; Dragonborn ancestry is the build-time case. Shape identical.",
+  "session": "2026-04-16-interactive"
 }

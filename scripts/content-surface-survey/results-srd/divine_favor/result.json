@@ -1,16 +1,28 @@
 {
   "unit_slug": "divine_favor",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "DamageOnHitOperation.scope (caster_any_weapon_hit)",
-      "justification": "DamageOnHitOperation currently fires 'when the caster hits a creature in the attachment scope' — the attachment IS the hit target (e.g., Hunter's Mark mark). Divine Favor has no specific target: the rider fires on any weapon attack hit by the caster regardless of target. Using self attachment produces a false on_hit_window label ('caster hits self') and routes the damage attaches_to edge to the caster rather than the hit creature. A scope field (or a new attachment kind) is needed to express 'caster-scoped: any weapon hit made by the caster' distinct from 'target-scoped: hit against the specific attached creature'.",
-      "evidence": "\"Until the spell ends, your attacks with weapons deal an extra 1d4 Radiant damage on a hit.\""
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "damage",
+    "expire",
+    "on_hit_window",
+    "persist",
+    "self",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "The ongoing_effect family fits cleanly and all required v4 atoms exist (on_hit_window, damage, self, spell_slot, bonus_action_quota, persist, expire). The sole gap is the DamageOnHitOperation scope: the existing type assumes the attachment identifies the hit target, but Divine Favor fires on any weapon hit the caster makes. No structural or atom widening is needed — only a surface variant that adds a caster-wide weapon-hit scope."
+  "notes": "Session 2026-04-16: Zero-widening. First self-anchored damage_on_hit — family=ongoing_effect + attachment=self + operation=damage_on_hit. Hunter's Mark was mark-anchored; Divine Favor validates the same operation with a different attachment.",
+  "session": "2026-04-16-interactive"
 }

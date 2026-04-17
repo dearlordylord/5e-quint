@@ -12,7 +12,11 @@
       "v": true
     },
     "duration": {
-      "kind": "instantaneous"
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "round"
+      }
     },
     "family": "activation",
     "level": 0,
@@ -30,36 +34,52 @@
         },
         "kind": "save_gate",
         "onFail": {
-          "amount": {
-            "axis": "character",
-            "base": {
-              "dice": 1,
-              "dieSize": 6
+          "effects": [
+            {
+              "amount": {
+                "axis": "character",
+                "base": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "threshold_tiers",
+                "tiers": [
+                  {
+                    "atLevel": 5,
+                    "override": {
+                      "dice": 2
+                    }
+                  },
+                  {
+                    "atLevel": 11,
+                    "override": {
+                      "dice": 3
+                    }
+                  },
+                  {
+                    "atLevel": 17,
+                    "override": {
+                      "dice": 4
+                    }
+                  }
+                ]
+              },
+              "damageType": "psychic",
+              "kind": "damage"
             },
-            "kind": "threshold_tiers",
-            "tiers": [
-              {
-                "atLevel": 5,
-                "override": {
-                  "dice": 2
-                }
+            {
+              "count": 1,
+              "expiresOn": {
+                "kind": "end_of_next_turn"
               },
-              {
-                "atLevel": 11,
-                "override": {
-                  "dice": 3
-                }
-              },
-              {
-                "atLevel": 17,
-                "override": {
-                  "dice": 4
-                }
-              }
-            ]
-          },
-          "damageType": "psychic",
-          "kind": "damage"
+              "kind": "modify_roll_advantage",
+              "mode": "disadvantage",
+              "on": [
+                "attack_roll"
+              ]
+            }
+          ],
+          "kind": "composite"
         },
         "onSuccess": {
           "kind": "none"

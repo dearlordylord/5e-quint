@@ -1,34 +1,26 @@
 {
   "unit_slug": "mass_healing_word",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ActivationPhase.direct_effect",
-      "justification": "Mass Healing Word is instantaneous and involves no attack roll and no saving throw. The existing ActivationPhase union only has 'attack_roll' and 'save_gate'. A 'direct_effect' (or 'heal') phase kind is needed for spells whose effect fires unconditionally on targets with no resolution gate.",
-      "evidence": "Up to six creatures of your choice that you can see within range regain Hit Points equal to 2d4 plus your spellcasting ability modifier."
-    },
-    {
-      "kind": "new_variant",
-      "name": "Effect.heal (spell-side)",
-      "justification": "The spell Effect union for spells is DamageEffect | NoneEffect. Mass Healing Word's output is HP recovery, not damage. A heal variant in the spell Effect type (mirroring the existing HealHpEffect in ClassFeatureEffect) is required for honest encoding.",
-      "evidence": "Up to six creatures of your choice that you can see within range regain Hit Points equal to 2d4 plus your spellcasting ability modifier."
-    },
-    {
-      "kind": "new_variant",
-      "name": "DiceExpr ability modifier addend",
-      "justification": "The heal amount is '2d4 + spellcasting ability modifier'. DiceExpr.flat is a number literal; no field or variant exists for dynamic caster-ability-modifier references. A new field (e.g., abilityModifierBonus: 'spellcasting' | Ability) or a new DiceAmount variant is needed to express this class of heal formula — which also appears in Healing Word, Cure Wounds, and many other heal spells.",
-      "evidence": "regain Hit Points equal to 2d4 plus your spellcasting ability modifier"
-    },
-    {
-      "kind": "new_variant",
-      "name": "TargetSelection.choose_up_to_fixed",
-      "justification": "The spell targets up to 6 creatures with no slot-based scaling of target count. TargetSelection only offers 'one' or 'choose_up_to' (backed by SlotScaling). A fixed-count multi-target variant is needed, or SlotScaling must be clarified to allow perSlotAboveBase=0 as a stable idiom.",
-      "evidence": "Up to six creatures of your choice that you can see within range"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "direct_apply",
+    "heal",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot",
+    "target"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "landed_widenings": [],
+  "rejected_widenings": [],
   "confidence": "high",
-  "notes": "All required v4 atoms exist (heal, activate, spell_slot, scale_die_count, target, bonus_action_quota). The gap is entirely on the surface type layer: no ActivationPhase variant for unconditional healing, no heal in the spell Effect union, and no way to express 'flat = spellcasting ability modifier' in DiceExpr. This widening pattern recurs across all heal spells (Healing Word, Cure Wounds, Prayer of Healing, Mass Cure Wounds, etc.) — adding a direct_effect phase + heal Effect variant + ability-modifier DiceExpr field would unblock the entire heal-spell category."
+  "notes": "Session 2026-04-16: Zero-widening. Multi-target heal with fixed-6 count (bare-number count field from Aid) + spellcastingMod + slot-scaled dice.",
+  "session": "2026-04-16-interactive"
 }
