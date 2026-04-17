@@ -1,0 +1,138 @@
+{
+  "description": "Choose a pile of bones or a corpse of a Medium or Small Humanoid within range. The target becomes a Skeleton if you chose bones or a Zombie if you chose a corpse. As a Bonus Action within 60 ft, issue commands. The creature is under your control for 24 hours; recast within that window to reassert control over up to four creatures. Higher-level slots animate or reassert two additional Undead per slot above 3.",
+  "id": "animate_dead",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "a drop of blood, a piece of flesh, and a pinch of bone dust",
+      "s": true,
+      "v": true
+    },
+    "control": {
+      "commandCost": {
+        "kind": "bonus_action"
+      },
+      "commandRangeFeet": 60,
+      "defaultBehavior": "dodge_and_avoid",
+      "initiative": "own_roll"
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "reanimated_creature",
+    "level": 3,
+    "menu": [
+      {
+        "options": [
+          {
+            "count": 1,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 1,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 3
+      },
+      {
+        "options": [
+          {
+            "count": 3,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 3,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 4
+      },
+      {
+        "options": [
+          {
+            "count": 5,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 5,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 5
+      },
+      {
+        "options": [
+          {
+            "count": 7,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 7,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 6
+      },
+      {
+        "options": [
+          {
+            "count": 9,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 9,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 7
+      },
+      {
+        "options": [
+          {
+            "count": 11,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 11,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 8
+      },
+      {
+        "options": [
+          {
+            "count": 13,
+            "monsterId": "skeleton"
+          },
+          {
+            "count": 13,
+            "monsterId": "zombie"
+          }
+        ],
+        "slotLevel": 9
+      }
+    ],
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "reassertWindow": {
+      "hours": 24,
+      "maxReassertPerCast": 4
+    },
+    "school": "necromancy",
+    "targetKind": "corpse_or_bones_of_small_or_medium_humanoid"
+  },
+  "name": "Animate Dead",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Animate Dead"
+  }
+}

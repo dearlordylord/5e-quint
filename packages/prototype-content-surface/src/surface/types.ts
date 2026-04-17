@@ -584,6 +584,22 @@ export type EffectAtom =
   | {
       readonly kind: "maximize_healing_received";
     }
+  // §C4d Polymorph family — transform target into a new form.
+  // Target's stats replace with a catalog-ref stat block; named
+  // fields carry over. Polymorph: Beast CR ≤ target CR/level, retain
+  // alignment/personality/creature-type/HP/HD, gain Temp HP = new
+  // form's HP. True Polymorph / Shapechange / Wild Shape variants
+  // use the same atom with different parameters. The transform is
+  // typically the onFail of a save_gate phase (Wis save for
+  // Polymorph) or applied directly (willing targets / Shapechange).
+  | {
+      readonly kind: "transform_target";
+      readonly newForm: PolymorphFormSource;
+      readonly retainedFields: ReadonlyNonEmptyArray<PolymorphRetainedField>;
+      readonly tempHpFromForm?: true;
+      readonly actionRestriction?: PolymorphActionRestriction;
+      readonly revertTriggers: ReadonlyNonEmptyArray<PolymorphRevertTrigger>;
+    }
   // §C3 Dispel Magic: end ongoing spells currently on the target.
   // `maxSpellLevel` bounds the set:
   //   • `"caster_slot_level"` — Dispel Magic phase-1 direct sweep:
@@ -823,6 +839,11 @@ export type Duration =
       readonly kind: "concentration";
       readonly upTo: DurationValue;
       readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+      // §C4h: True Polymorph "if you maintain Concentration on this
+      // spell for the full duration, the spell lasts until dispelled."
+      // Promotes the concentration window into a permanent effect on
+      // maintenance.
+      readonly permanentIfMaintainedFull?: true;
     }
   | {
       readonly kind: "timed";
@@ -1102,6 +1123,13 @@ export type ActivationPhase =
       // sentinel (not a numeric slot threshold) to keep the
       // dependency on reaction-context explicit.
       readonly autoSuccessIfCasterSlotGte?: "triggering_spell_level";
+      // §C4d True Polymorph: "An unwilling creature can make a
+      // Wisdom saving throw". Willing targets skip the save and
+      // auto-fail (the onFail effect applies). Distinct from the
+      // general 5e "voluntary fail" rule because the save is GATED
+      // by willingness — unwilling targets get the save at all;
+      // willing targets don't.
+      readonly saveAppliesIf?: "unwilling_target";
     }
   // §C3 Dispel Magic — caster rolls an ability check (spellcasting
   // ability vs fixed DC) to resolve the phase. Distinct from
@@ -1413,6 +1441,126 @@ export type CreatureDismissal = {
   readonly leavesBehind?: "equipment" | "nothing";
 };
 
+// ---------- polymorph / transform (§C4d) ----------
+
+// Catalog-ref form source with a CR / level constraint. Polymorph:
+// Beast, CR ≤ target's CR-or-level. Shapechange: any creature, CR ≤
+// caster level. Wild Shape: Beast roster from the Druid's known
+// forms (caller-owned).
+export type PolymorphFormSource = {
+  readonly kind: "catalog_ref";
+  readonly creatureType: CreatureType;
+  readonly crBound:
+    | { readonly kind: "target_cr_or_level" }
+    | { readonly kind: "caster_level" }
+    | { readonly kind: "fixed"; readonly cr: number };
+};
+
+export type PolymorphRetainedField =
+  | "alignment"
+  | "personality"
+  | "creature_type"
+  | "hit_points"
+  | "hit_point_dice"
+  | "intelligence"
+  | "wisdom"
+  | "charisma"
+  | "skill_proficiencies"
+  | "languages";
+
+export type PolymorphActionRestriction = "no_speech_no_spells";
+
+export type PolymorphRevertTrigger =
+  | { readonly kind: "zero_hp" }
+  | { readonly kind: "spell_ends" }
+  | { readonly kind: "temp_hp_depleted" }
+  | { readonly kind: "dismissed_by_caster" };
+
+// ---------- templated multi-spawn family (§C4c) ----------
+//
+// Animate Objects — caster spends capacity points (= spellcasting
+// ability modifier) across a menu of size tiers. Each object becomes
+// a size-specific Animated Object; shared stat block on the
+// mechanics, per-tier HP + Slam damage override.
+
+export type TemplatedCapacity = {
+  readonly kind: "caster_ability_modifier";
+  readonly ability: Ability;
+};
+
+export type TemplatedSizeTier = {
+  readonly size: StatBlockSize;
+  readonly weight: number;
+  readonly hp: StatBlockValue;
+  readonly slamDamage: DiceAmount;
+};
+
+export type TemplatedMultiSpawnMechanics = SpellMechanicsHeader & {
+  readonly family: "templated_multi_spawn";
+  readonly capacity: TemplatedCapacity;
+  readonly baseStatBlock: CreatureStatBlock;
+  readonly sizeTiers: ReadonlyNonEmptyArray<TemplatedSizeTier>;
+  readonly control: CreatureControl;
+  // Animate Objects "When the creature drops to 0 Hit Points, it
+  // reverts to its object form, and any remaining damage carries
+  // over to that form."
+  readonly revertOnZeroHp: true;
+};
+
+// ---------- reanimated-creature family (§C4b) ----------
+//
+// Pattern B: reference-the-catalog reanimation. Spell references
+// external monster stat blocks (Skeleton, Zombie, Ghoul, Ghast,
+// Wight, Mummy) rather than shipping an inline stat block. Animate
+// Dead + Create Undead. The monster catalog itself is not modeled
+// by this package yet — `monsterId` is a stable string key that the
+// monster-database plan will resolve later.
+
+// Valid reanimation targets per RAW.
+export type ReanimationTargetKind =
+  | "corpse_or_bones_of_small_or_medium_humanoid"
+  | "corpse_of_small_or_medium_humanoid";
+
+// Per-slot menu entry. Each slot level the spell may be cast at
+// lists the options the caster picks from. Each option names a
+// monster catalog id + the count of creatures that option spawns /
+// reasserts control over.
+export type ReanimationSlotOption = {
+  readonly monsterId: string;
+  readonly count: number;
+};
+
+export type ReanimationSlotEntry = {
+  readonly slotLevel: number;
+  // "animate" = create new from corpses; "reassert" = reassert
+  // control over previously-animated creatures. Both share the
+  // same count per RAW ("animate or reassert control"). Keep the
+  // single `options` list; the distinction happens at table time.
+  readonly options: ReadonlyNonEmptyArray<ReanimationSlotOption>;
+};
+
+export type ReanimationMenu = ReadonlyNonEmptyArray<ReanimationSlotEntry>;
+
+export type ReanimationReassertWindow = {
+  readonly hours: number;
+  // "you must cast this spell on the creature again before the
+  // current 24-hour period ends" — reassert uses the same cast slot;
+  // this field names only the cadence the caller tracks.
+  readonly maxReassertPerCast: number;
+};
+
+export type ReanimatedCreatureMechanics = SpellMechanicsHeader & {
+  readonly family: "reanimated_creature";
+  readonly targetKind: ReanimationTargetKind;
+  readonly menu: ReanimationMenu;
+  readonly control: CreatureControl;
+  readonly reassertWindow: ReanimationReassertWindow;
+  // "You can cast this spell only at night" — Create Undead's
+  // time-of-day gate. Caller-resolved; recorded here so the trace
+  // surfaces the constraint.
+  readonly nightOnly?: true;
+};
+
 export type SpawnedCreatureMechanics = SpellMechanicsHeader & {
   readonly family: "spawned_creature";
   readonly statBlock: CreatureStatBlock;
@@ -1426,7 +1574,9 @@ export type SpellMechanics =
   | ActivationMechanics
   | TriggeredReactionMechanics
   | AnchoredTriggerMechanics
-  | SpawnedCreatureMechanics;
+  | SpawnedCreatureMechanics
+  | ReanimatedCreatureMechanics
+  | TemplatedMultiSpawnMechanics;
 
 // ---------- class-feature atoms ----------
 

@@ -228,6 +228,7 @@ export const STAGE_3_EXTENSIONS = [
   "negate_triggering_spell", // §C1 Counterspell — negate whatever spell fired the reaction.
   "end_ongoing_spells", // §C3 Dispel Magic — end ongoing spells on target up to a level bound.
   "maximize_healing_received", // Beacon of Hope — take max on healing dice.
+  "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.

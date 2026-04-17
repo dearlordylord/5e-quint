@@ -1,0 +1,83 @@
+{
+  "description": "Choose one creature or nonmagical object that you can see within range. The creature shape-shifts into a different creature or a nonmagical object, or the object shape-shifts into a creature. The transformation lasts for the duration or until the target dies or is destroyed, but if you maintain Concentration on this spell for the full duration, the spell lasts until dispelled. An unwilling creature can make a Wisdom saving throw, and if it succeeds, it isn't affected by this spell.",
+  "id": "true_polymorph",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a drop of mercury, a dollop of gum arabic, and a wisp of smoke",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "permanentIfMaintainedFull": true,
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 9,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "actionRestriction": "no_speech_no_spells",
+          "kind": "transform_target",
+          "newForm": {
+            "crBound": {
+              "kind": "target_cr_or_level"
+            },
+            "creatureType": "beast",
+            "kind": "catalog_ref"
+          },
+          "retainedFields": [
+            "alignment",
+            "personality",
+            "hit_points",
+            "hit_point_dice"
+          ],
+          "revertTriggers": [
+            {
+              "kind": "temp_hp_depleted"
+            },
+            {
+              "kind": "spell_ends"
+            },
+            {
+              "kind": "zero_hp"
+            }
+          ],
+          "tempHpFromForm": true
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "saveAppliesIf": "unwilling_target"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "True Polymorph",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#True Polymorph"
+  }
+}

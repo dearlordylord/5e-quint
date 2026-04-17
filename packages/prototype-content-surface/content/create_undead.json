@@ -1,0 +1,105 @@
+{
+  "description": "Cast only at night. Choose up to three corpses of Medium or Small Humanoids within range. Each one becomes a Ghoul under your control. As a Bonus Action within 120 ft, command any animated creature. Control lasts 24 hours; recast within that window to reassert control over up to three creatures. Higher-level slots open a per-slot menu of Ghoul / Ghast / Wight / Mummy counts.",
+  "id": "create_undead",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "one 150+ GP black onyx stone for each corpse",
+      "materialCostGp": 150,
+      "s": true,
+      "v": true
+    },
+    "control": {
+      "commandCost": {
+        "kind": "bonus_action"
+      },
+      "commandRangeFeet": 120,
+      "defaultBehavior": "dodge_and_avoid",
+      "initiative": "own_roll"
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "reanimated_creature",
+    "level": 6,
+    "menu": [
+      {
+        "options": [
+          {
+            "count": 3,
+            "monsterId": "ghoul"
+          }
+        ],
+        "slotLevel": 6
+      },
+      {
+        "options": [
+          {
+            "count": 4,
+            "monsterId": "ghoul"
+          }
+        ],
+        "slotLevel": 7
+      },
+      {
+        "options": [
+          {
+            "count": 5,
+            "monsterId": "ghoul"
+          },
+          {
+            "count": 2,
+            "monsterId": "ghast"
+          },
+          {
+            "count": 2,
+            "monsterId": "wight"
+          }
+        ],
+        "slotLevel": 8
+      },
+      {
+        "options": [
+          {
+            "count": 6,
+            "monsterId": "ghoul"
+          },
+          {
+            "count": 3,
+            "monsterId": "ghast"
+          },
+          {
+            "count": 3,
+            "monsterId": "wight"
+          },
+          {
+            "count": 2,
+            "monsterId": "mummy"
+          }
+        ],
+        "slotLevel": 9
+      }
+    ],
+    "nightOnly": true,
+    "range": {
+      "feet": 10,
+      "kind": "point"
+    },
+    "reassertWindow": {
+      "hours": 24,
+      "maxReassertPerCast": 3
+    },
+    "school": "necromancy",
+    "targetKind": "corpse_of_small_or_medium_humanoid"
+  },
+  "name": "Create Undead",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Create Undead"
+  }
+}

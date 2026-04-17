@@ -1,0 +1,79 @@
+{
+  "description": "You attempt to transform a creature that you can see within range into a Beast. The target must succeed on a Wisdom saving throw or shape-shift into a Beast form for the duration. That form can be any Beast with CR ≤ the target's (or the target's level if it doesn't have a CR). The target's stats are replaced by the chosen Beast but retains its alignment, personality, creature type, Hit Points, and Hit Point Dice. The target gains Temp HP equal to the Beast form's HP; spell ends if Temp HP depletes.",
+  "id": "polymorph",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a caterpillar cocoon",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 4,
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "actionRestriction": "no_speech_no_spells",
+          "kind": "transform_target",
+          "newForm": {
+            "crBound": {
+              "kind": "target_cr_or_level"
+            },
+            "creatureType": "beast",
+            "kind": "catalog_ref"
+          },
+          "retainedFields": [
+            "alignment",
+            "personality",
+            "creature_type",
+            "hit_points",
+            "hit_point_dice"
+          ],
+          "revertTriggers": [
+            {
+              "kind": "temp_hp_depleted"
+            },
+            {
+              "kind": "spell_ends"
+            }
+          ],
+          "tempHpFromForm": true
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Polymorph",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Polymorph"
+  }
+}

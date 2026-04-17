@@ -615,6 +615,47 @@ Nones in the JSON output). Works but verbose; pressures a future
 "shared Op-record type alias at the top of each Dhall file" pattern
 or a Dhall → JSON pipeline that understands tagged unions.
 
+### C4d. Polymorph / target stat-block replacement — RESOLVED 2026-04-16
+
+Added `EffectAtom.transform_target` carrying `newForm:
+PolymorphFormSource` (catalog-ref with CR constraint),
+`retainedFields: NonEmpty<PolymorphRetainedField>`,
+`tempHpFromForm?`, `actionRestriction?: "no_speech_no_spells"`, and
+`revertTriggers: NonEmpty<PolymorphRevertTrigger>`. Added
+`save_gate.saveAppliesIf?: "unwilling_target"` for True Polymorph's
+willing-target auto-apply gate. Authored Polymorph (L4: universal
+save, Beast) and True Polymorph (L9: willing/unwilling gate,
+creature-into-creature partial). Shapechange and object-target
+modes deferred (multi-type filter + object attachment respectively).
+
+### C4h. Permanent-after-concentration — RESOLVED 2026-04-16
+
+Added `Duration.concentration.permanentIfMaintainedFull?: true` for
+True Polymorph's "if you maintain Concentration on this spell for
+the full duration, the spell lasts until dispelled." Tracer surfaces
+the promotion on the expire lifecycle node.
+
+### C4c. Templated multi-spawn family — RESOLVED 2026-04-16
+
+New `templated_multi_spawn` family for Animate Objects: caster
+spends `capacity` (here: spellcasting ability modifier) across a
+size-tiered menu where each tier has a `weight`, `hp`, and
+`slamDamage`. Shared `baseStatBlock` carries AC / speeds / ability
+scores / immunities / senses. `revertOnZeroHp: true` encodes "reverts
+to object form, overflow damage carries over". Authored Animate
+Objects as validation ref.
+
+### C4b. Reanimated creature family — RESOLVED 2026-04-16
+
+New `reanimated_creature` payload family for catalog-ref spells
+(Animate Dead, Create Undead). Carries a slot-tiered menu
+(`ReanimationMenu`) of `{monsterId, count}` options per slot level,
+a 24-hour `reassertWindow`, a `targetKind` predicate, and an
+optional `nightOnly` gate. Monster catalog itself is not modeled —
+`monsterId` is a stable string key for the future
+monster-database. Authored Animate Dead (slot 3–9 scaling count)
+and Create Undead (L6–9 menu of Ghoul / Ghast / Wight / Mummy).
+
 ### C4a. Spawned creature family — RESOLVED 2026-04-16
 
 (Named "§C4a" per `plans/DESIGN_C4a_spawned_companion.md`. Distinct

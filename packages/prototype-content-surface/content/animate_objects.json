@@ -1,0 +1,192 @@
+{
+  "description": "Objects animate at your command. Choose up to spellcasting-mod nonmagical objects within range; Medium or smaller = 1, Large = 2, Huge = 3 toward the cap. Each becomes a Construct using the Animated Object stat block. Reverts to object form at 0 HP (overflow damage carries over).",
+  "id": "animate_objects",
+  "kind": "spell",
+  "mechanics": {
+    "baseStatBlock": {
+      "abilityScores": {
+        "cha": 1,
+        "con": 10,
+        "dex": 10,
+        "int": 3,
+        "str": 16,
+        "wis": 3
+      },
+      "ac": {
+        "kind": "literal",
+        "value": 15
+      },
+      "actions": {
+        "attacks": [
+          {
+            "attackBonus": {
+              "kind": "caster_derived",
+              "source": "spell_attack_mod"
+            },
+            "attackType": "melee",
+            "name": "Slam",
+            "onHit": [
+              {
+                "amount": {
+                  "expr": {
+                    "dice": 1,
+                    "dieSize": 4,
+                    "flat": 3
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": "force",
+                "kind": "damage"
+              }
+            ],
+            "reachFeet": 5
+          }
+        ]
+      },
+      "creatureType": "construct",
+      "displayName": "Animated Object",
+      "hp": {
+        "kind": "literal",
+        "value": 10
+      },
+      "immunities": {
+        "conditions": [
+          "charmed",
+          "exhaustion",
+          "frightened",
+          "paralyzed",
+          "poisoned"
+        ],
+        "damageTypes": [
+          "poison",
+          "psychic"
+        ]
+      },
+      "languages": "caster_languages",
+      "senses": [
+        {
+          "kind": "blindsight",
+          "rangeFeet": 30
+        }
+      ],
+      "size": "medium",
+      "speeds": [
+        {
+          "feet": {
+            "kind": "literal",
+            "value": 30
+          },
+          "kind": "walk"
+        }
+      ]
+    },
+    "capacity": {
+      "ability": "cha",
+      "kind": "caster_ability_modifier"
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "control": {
+      "commandCost": {
+        "kind": "bonus_action"
+      },
+      "commandRangeFeet": 500,
+      "defaultBehavior": "dodge_and_avoid",
+      "initiative": "shared_with_caster",
+      "turnOrder": "immediately_after_caster"
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "templated_multi_spawn",
+    "level": 5,
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "revertOnZeroHp": true,
+    "school": "transmutation",
+    "sizeTiers": [
+      {
+        "hp": {
+          "kind": "literal",
+          "value": 10
+        },
+        "size": "medium",
+        "slamDamage": {
+          "axis": "slot",
+          "base": {
+            "dice": 1,
+            "dieSize": 4,
+            "flat": 3
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 5
+        },
+        "weight": 1
+      },
+      {
+        "hp": {
+          "kind": "literal",
+          "value": 20
+        },
+        "size": "large",
+        "slamDamage": {
+          "axis": "slot",
+          "base": {
+            "dice": 2,
+            "dieSize": 6,
+            "flat": 3,
+            "spellcastingMod": true
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 5
+        },
+        "weight": 2
+      },
+      {
+        "hp": {
+          "kind": "literal",
+          "value": 40
+        },
+        "size": "huge",
+        "slamDamage": {
+          "axis": "slot",
+          "base": {
+            "dice": 2,
+            "dieSize": 12,
+            "flat": 3,
+            "spellcastingMod": true
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 5
+        },
+        "weight": 3
+      }
+    ]
+  },
+  "name": "Animate Objects",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Animate Objects"
+  }
+}
