@@ -1777,6 +1777,9 @@ export type SpellMechanics =
 // species trait). Drives which (if any) quota atom the tracer emits a
 // `consumes` edge to. `action` is the "use this as your Action" case
 // (magic-item activations, many class features like Channel Divinity).
+// `action_plus_bonus_action` is the bounded compound-economy case where
+// the same activation requires both quotas in sequence, without modeling
+// a new nested procedure family.
 // `reaction` covers reactive uses that consume the reaction quota.
 // `replace_attack` is the Extra-Attack-economy cost: the ability is
 // triggered by spending one of the attacks you would otherwise make
@@ -1785,6 +1788,7 @@ export type SpellMechanics =
 export type ClassFeatureActivationCost =
   | { readonly kind: "free" }
   | { readonly kind: "action" }
+  | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }
   | { readonly kind: "reaction" }
   | { readonly kind: "replace_attack" };

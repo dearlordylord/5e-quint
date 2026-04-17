@@ -2839,6 +2839,26 @@ function traceActivationCost(
       edges.push({ from: procId, to: id, relation: "consumes" });
       return;
     }
+    case "action_plus_bonus_action": {
+      const actionId = ids("q");
+      nodes.push({
+        id: actionId,
+        category: "resource",
+        atomKind: "action_quota",
+        label: "action_quota\n(Activation: Action step)",
+      });
+      edges.push({ from: procId, to: actionId, relation: "consumes" });
+
+      const bonusId = ids("q");
+      nodes.push({
+        id: bonusId,
+        category: "resource",
+        atomKind: "bonus_action_quota",
+        label: "bonus_action_quota\n(Activation: Bonus Action step)",
+      });
+      edges.push({ from: procId, to: bonusId, relation: "consumes" });
+      return;
+    }
     case "bonus_action": {
       const id = ids("q");
       nodes.push({
