@@ -126,6 +126,14 @@ prepare_worktree() {
 
 seed_loop_inputs() {
   mkdir -p "$WORKTREE_DIR/scripts/content-surface-survey"
+  if [[ ! -e "$WORKTREE_DIR/node_modules" && -d "$REPO_ROOT/node_modules" ]]; then
+    ln -s "$REPO_ROOT/node_modules" "$WORKTREE_DIR/node_modules"
+  fi
+  if [[ ! -e "$WORKTREE_DIR/packages/prototype-content-surface/node_modules" && -d "$REPO_ROOT/packages/prototype-content-surface/node_modules" ]]; then
+    ln -s \
+      "$REPO_ROOT/packages/prototype-content-surface/node_modules" \
+      "$WORKTREE_DIR/packages/prototype-content-surface/node_modules"
+  fi
   if [[ -f "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" ]]; then
     cp "$REPO_ROOT/scripts/content-surface-survey/unit-queue.jsonl" \
       "$WORKTREE_DIR/scripts/content-surface-survey/unit-queue.jsonl"
