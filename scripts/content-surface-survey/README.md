@@ -104,6 +104,14 @@ bash scripts/content-surface-survey/run-auto-close-loop.sh status
 bash scripts/content-surface-survey/run-auto-close-loop.sh logs
 bash scripts/content-surface-survey/run-auto-close-loop.sh stop
 
+# 9b. Parallel workers with shared cluster leasing and serialized integration.
+#     Each runner gets its own worktree/state/log, but successful batch commits
+#     integrate through the shared auto-close-loop-integration branch.
+AUTO_RUNNER_NAME=worker-a bash scripts/content-surface-survey/run-auto-close-loop.sh start
+AUTO_RUNNER_NAME=worker-b bash scripts/content-surface-survey/run-auto-close-loop.sh start
+AUTO_RUNNER_NAME=worker-a bash scripts/content-surface-survey/run-auto-close-loop.sh status
+AUTO_RUNNER_NAME=worker-b bash scripts/content-surface-survey/run-auto-close-loop.sh status
+
 # 10. Same, but auto-commit each completed batch atom.
 #     Requires a clean tracked worktree before start.
 AUTO_COMMIT=1 bash scripts/content-surface-survey/run-auto-close-loop.sh start
@@ -165,6 +173,10 @@ step lives in `auto-close-loop.ts`.
 - no-improvement streak stopping
 - sleep between batches
 - optional per-batch git commits for completed atoms (`AUTO_COMMIT=1`)
+- optional multi-worker mode via `AUTO_RUNNER_NAME`
+- shared cluster leasing so workers do not duplicate spend on the same family
+- serialized integration onto `auto-close-loop-integration` after each successful batch atom
+- worker reset to the merged integration state before the next batch
 
 Use `run-auto-close-loop.sh` for overnight runs instead of manual `nohup`
 commands.

@@ -18,6 +18,7 @@ import {
 } from "./close-loop.ts";
 
 type Args = {
+  runnerId: string;
   source: Source | "all";
   kind?: string;
   backend: "codex" | "claude";
@@ -59,6 +60,13 @@ type SurfaceAttempt = {
   cluster: string;
   selectedSlugs: ReadonlyArray<string>;
   changedPaths: ReadonlyArray<string>;
+};
+
+type ClusterLease = {
+  cluster: string;
+  runnerId: string;
+  pid: number;
+  acquiredAt: string;
 };
 
 type EffectiveRow = DatasetRow;
@@ -134,6 +142,9 @@ type LockPayload = {
 };
 
 const DEFAULT_REPO_ROOT = process.env.AUTO_LOOP_REPO_ROOT ?? process.cwd();
+const DEFAULT_SHARED_ROOT = process.env.AUTO_LOOP_SHARED_ROOT ?? DEFAULT_REPO_ROOT;
+const DEFAULT_INTEGRATION_BRANCH = process.env.AUTO_LOOP_INTEGRATION_BRANCH ?? "auto-close-loop-integration";
+const DEFAULT_INTEGRATION_WORKTREE = process.env.AUTO_LOOP_INTEGRATION_WORKTREE ?? path.join(DEFAULT_SHARED_ROOT, ".worktrees", "auto-close-loop-integration");
 const DEFAULT_STATE_PATH = path.join(
   DEFAULT_REPO_ROOT,
   ".output",
@@ -159,14 +170,27 @@ const DEFAULT_LATEST_PATH = path.join(
   "auto-close-loop.latest.json",
 );
 const DEFAULT_FAILED_ATTEMPTS_PATH = path.join(
-  DEFAULT_REPO_ROOT,
+  DEFAULT_SHARED_ROOT,
   ".output",
   "content-surface-closure",
   "failed-surface-attempts.jsonl",
 );
+const DEFAULT_CLUSTER_LEASES_DIR = path.join(
+  DEFAULT_SHARED_ROOT,
+  ".output",
+  "content-surface-closure",
+  "cluster-leases",
+);
+const DEFAULT_INTEGRATION_LOCK_PATH = path.join(
+  DEFAULT_SHARED_ROOT,
+  ".output",
+  "content-surface-closure",
+  "integration.lock.json",
+);
 
 function parseArgs(argv: ReadonlyArray<string>): Args {
   const args: Args = {
+    runnerId: "primary",
     source: "srd-5.2.1",
     backend: "codex",
     autoCommit: false,
@@ -187,6 +211,9 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
     switch (arg) {
       case "--source":
         args.source = (argv[++i] as Args["source"]) ?? args.source;
+        break;
+      case "--runner-id":
+        args.runnerId = argv[++i] ?? args.runnerId;
         break;
       case "--kind":
         args.kind = argv[++i];
@@ -260,6 +287,7 @@ function usage(code: number): never {
       "",
       "Options:",
       "  --source srd-5.2.1|xphb|all   dataset source (default: srd-5.2.1)",
+      "  --runner-id ID                 worker identity for leases/integration",
       "  --kind KIND                    restrict to one queue kind",
       "  --backend codex|claude         backend for reruns (default: codex)",
       "  --auto-commit                  commit each completed batch atom",
@@ -280,6 +308,10 @@ function usage(code: number): never {
 
 function repoRoot(): string {
   return DEFAULT_REPO_ROOT;
+}
+
+function sharedRoot(): string {
+  return DEFAULT_SHARED_ROOT;
 }
 
 function runSurveyLockPath(): string {
@@ -582,43 +614,6 @@ function batchCommitPaths(report: ClosureReport): string[] {
     }
   }
   return [...paths];
-}
-
-function maybeCommitBatch(
-  args: Args,
-  state: PersistedState,
-  report: ClosureReport,
-  extraPaths: ReadonlyArray<string>,
-): void {
-  if (!args.autoCommit) return;
-  const paths = [...new Set([...extraPaths, ...batchCommitPaths(report)])];
-  if (paths.length === 0) return;
-
-  const add = git(["add", "--", ...paths]);
-  if (add.status !== 0) {
-    throw new Error(`git add failed for batch commit: ${add.stderr || add.stdout}`.trim());
-  }
-
-  const staged = git(["diff", "--cached", "--name-only"]);
-  if (staged.status !== 0) {
-    throw new Error(`git diff --cached failed: ${staged.stderr || staged.stdout}`.trim());
-  }
-  if (staged.stdout.trim().length === 0) {
-    return;
-  }
-
-  const cluster = (report.cluster ?? state.currentCluster ?? "manual").replaceAll(/\s+/g, " ");
-  const message = [
-    `chore(survey): close-loop batch ${state.batch} ${cluster}`,
-    "",
-    `Improved: ${report.summary.improved}`,
-    `Changed: ${report.summary.changed}`,
-    `Clean flips: ${report.summary.cleanFlips}`,
-  ].join("\n");
-  const commit = git(["commit", "-m", message]);
-  if (commit.status !== 0) {
-    throw new Error(`git commit failed for batch commit: ${commit.stderr || commit.stdout}`.trim());
-  }
 }
 
 function worktreeChanges(): {
@@ -998,6 +993,151 @@ function writeObservability(args: Args, state: PersistedState, report?: ClosureR
   fs.appendFileSync(DEFAULT_HISTORY_PATH, JSON.stringify(history) + "\n", "utf8");
 }
 
+function clusterLeasePath(cluster: string): string {
+  const safe = encodeURIComponent(cluster);
+  return path.join(DEFAULT_CLUSTER_LEASES_DIR, `${safe}.json`);
+}
+
+function leaseTtlMs(batchTimeoutSeconds: number): number {
+  return Math.max(batchTimeoutSeconds * 2, 1800) * 1000;
+}
+
+function tryAcquireClusterLease(args: Args, cluster: string): boolean {
+  const leasePath = clusterLeasePath(cluster);
+  ensureParent(leasePath);
+  if (fs.existsSync(leasePath)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(leasePath, "utf8")) as ClusterLease;
+      const ageMs = Date.now() - new Date(existing.acquiredAt).getTime();
+      if (existing.runnerId === args.runnerId && processAlive(existing.pid)) {
+        return true;
+      }
+      if (ageMs <= leaseTtlMs(args.batchTimeoutSeconds) && processAlive(existing.pid)) {
+        return false;
+      }
+    } catch {
+      // stale or corrupt lease; remove and replace
+    }
+    fs.rmSync(leasePath, { force: true });
+  }
+
+  const payload: ClusterLease = {
+    cluster,
+    runnerId: args.runnerId,
+    pid: process.pid,
+    acquiredAt: new Date().toISOString(),
+  };
+  try {
+    fs.writeFileSync(leasePath, JSON.stringify(payload, null, 2) + "\n", { flag: "wx" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function clusterLeasedByOther(args: Args, cluster: string): boolean {
+  const leasePath = clusterLeasePath(cluster);
+  if (!fs.existsSync(leasePath)) return false;
+  try {
+    const existing = JSON.parse(fs.readFileSync(leasePath, "utf8")) as ClusterLease;
+    const ageMs = Date.now() - new Date(existing.acquiredAt).getTime();
+    if (existing.runnerId === args.runnerId && processAlive(existing.pid)) {
+      return false;
+    }
+    if (ageMs <= leaseTtlMs(args.batchTimeoutSeconds) && processAlive(existing.pid)) {
+      return true;
+    }
+  } catch {
+    // treat corrupt lease as unavailable only until claim path clears it
+  }
+  return false;
+}
+
+function releaseClusterLease(cluster?: string): void {
+  if (!cluster) return;
+  fs.rmSync(clusterLeasePath(cluster), { force: true });
+}
+
+function acquireIntegrationLock(): () => void {
+  ensureParent(DEFAULT_INTEGRATION_LOCK_PATH);
+  if (fs.existsSync(DEFAULT_INTEGRATION_LOCK_PATH)) {
+    try {
+      const existing = JSON.parse(fs.readFileSync(DEFAULT_INTEGRATION_LOCK_PATH, "utf8")) as LockPayload;
+      if (processAlive(existing.pid)) {
+        throw new Error(`integration already running with pid ${existing.pid}`);
+      }
+    } catch (error) {
+      if (error instanceof Error && /integration already running/.test(error.message)) {
+        throw error;
+      }
+    }
+    fs.rmSync(DEFAULT_INTEGRATION_LOCK_PATH, { force: true });
+  }
+  const payload: LockPayload = {
+    pid: process.pid,
+    startedAt: new Date().toISOString(),
+    cwd: sharedRoot(),
+    statePath: DEFAULT_INTEGRATION_LOCK_PATH,
+  };
+  fs.writeFileSync(DEFAULT_INTEGRATION_LOCK_PATH, JSON.stringify(payload, null, 2) + "\n", { flag: "wx" });
+  return () => fs.rmSync(DEFAULT_INTEGRATION_LOCK_PATH, { force: true });
+}
+
+function maybeCommitBatch(
+  args: Args,
+  state: PersistedState,
+  report: ClosureReport,
+  extraPaths: ReadonlyArray<string>,
+): string | null {
+  if (!args.autoCommit) return null;
+  const paths = [...new Set([...extraPaths, ...batchCommitPaths(report)])];
+  if (paths.length === 0) return null;
+
+  const add = git(["add", "--", ...paths]);
+  if (add.status !== 0) {
+    throw new Error(`git add failed for batch commit: ${add.stderr || add.stdout}`.trim());
+  }
+
+  const staged = git(["diff", "--cached", "--name-only"]);
+  if (staged.status !== 0) {
+    throw new Error(`git diff --cached failed: ${staged.stderr || staged.stdout}`.trim());
+  }
+  if (staged.stdout.trim().length === 0) {
+    return null;
+  }
+
+  const cluster = (report.cluster ?? state.currentCluster ?? "manual").replaceAll(/\s+/g, " ");
+  const message = [
+    `chore(survey): close-loop batch ${state.batch} ${cluster}`,
+    "",
+    `Improved: ${report.summary.improved}`,
+    `Changed: ${report.summary.changed}`,
+    `Clean flips: ${report.summary.cleanFlips}`,
+  ].join("\n");
+  const commit = git(["commit", "-m", message]);
+  if (commit.status !== 0) {
+    throw new Error(`git commit failed for batch commit: ${commit.stderr || commit.stdout}`.trim());
+  }
+  return gitOk(["rev-parse", "HEAD"]).trim();
+}
+
+function integrateCommittedBatch(commitSha: string): void {
+  const release = acquireIntegrationLock();
+  try {
+    gitOk(["checkout", DEFAULT_INTEGRATION_BRANCH], DEFAULT_INTEGRATION_WORKTREE);
+    gitOk(["reset", "--hard", "HEAD"], DEFAULT_INTEGRATION_WORKTREE);
+    gitOk(["clean", "-fd"], DEFAULT_INTEGRATION_WORKTREE);
+    const cherryPick = git(["cherry-pick", commitSha], DEFAULT_INTEGRATION_WORKTREE);
+    if (cherryPick.status !== 0) {
+      git(["cherry-pick", "--abort"], DEFAULT_INTEGRATION_WORKTREE);
+      throw new Error(`failed to integrate batch commit ${commitSha}: ${cherryPick.stderr || cherryPick.stdout}`.trim());
+    }
+    gitOk(["reset", "--hard", DEFAULT_INTEGRATION_BRANCH], repoRoot());
+  } finally {
+    release();
+  }
+}
+
 function clusterEligible(cluster: ClusterRecord, queueKind?: string, minClusterSize = 2): boolean {
   if (cluster.count < minClusterSize) return false;
   if (queueKind && !cluster.kinds.includes(queueKind)) return false;
@@ -1021,6 +1161,7 @@ function pickNextCluster(args: Args, attempted: Set<string>): ClusterRecord | nu
   const clusters = buildClusters(rows, queue, args.kind)
     .filter((cluster) => clusterEligible(cluster, args.kind, args.minClusterSize))
     .filter((cluster) => !attempted.has(cluster.canonical))
+    .filter((cluster) => !clusterLeasedByOther(args, cluster.canonical))
     .sort((a, b) => clusterScore(b) - clusterScore(a) || a.canonical.localeCompare(b.canonical));
   return clusters[0] ?? null;
 }
@@ -1117,7 +1258,12 @@ function main(): void {
         `\n=== Auto batch ${state.batch}/${args.maxBatches}: ${cluster.canonical} (${cluster.count} units) ===\n`,
       );
 
+      let leasedCluster: string | undefined;
       try {
+        if (!tryAcquireClusterLease(args, cluster.canonical)) {
+          throw new Error(`cluster ${cluster.canonical} is currently leased by another runner`);
+        }
+        leasedCluster = cluster.canonical;
         const surfaceAttempt = attemptSurfaceChange(args, cluster.canonical);
         if (surfaceAttempt.changedPaths.length === 0) {
           throw new Error(`surface-change attempt made no changes for ${cluster.canonical}`);
@@ -1134,7 +1280,10 @@ function main(): void {
           state.improvedBatches += 1;
           state.noImproveStreak = 0;
           writeObservability(args, state, report);
-          maybeCommitBatch(args, state, report, surfaceAttempt.changedPaths);
+          const commitSha = maybeCommitBatch(args, state, report, surfaceAttempt.changedPaths);
+          if (commitSha) {
+            integrateCommittedBatch(commitSha);
+          }
           ensureCleanTrackedWorktreeAfterBatch(`successful batch ${cluster.canonical}`);
         } else {
           appendFailureLog({
@@ -1182,6 +1331,7 @@ function main(): void {
           writeObservability(args, state);
         }
       } finally {
+        releaseClusterLease(leasedCluster);
         state.currentCluster = undefined;
         state.currentBatchStartedAt = undefined;
         saveState(args.statePath, state);

@@ -4,12 +4,25 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 OUTPUT_DIR="$REPO_ROOT/.output/content-surface-closure"
-LOG_FILE="$OUTPUT_DIR/auto-close-loop.log"
-STATE_FILE="$OUTPUT_DIR/auto-close-loop.state.json"
-LOCK_FILE="$OUTPUT_DIR/auto-close-loop.lock.json"
-PID_FILE="$OUTPUT_DIR/auto-close-loop.pid"
-WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop}"
-WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop}"
+RUNNER_NAME="${AUTO_RUNNER_NAME:-primary}"
+INTEGRATION_BRANCH="${AUTO_INTEGRATION_BRANCH:-auto-close-loop-integration}"
+INTEGRATION_WORKTREE="${AUTO_INTEGRATION_WORKTREE:-$REPO_ROOT/.worktrees/auto-close-loop-integration}"
+
+if [[ "$RUNNER_NAME" == "primary" ]]; then
+  LOG_FILE="$OUTPUT_DIR/auto-close-loop.log"
+  STATE_FILE="$OUTPUT_DIR/auto-close-loop.state.json"
+  LOCK_FILE="$OUTPUT_DIR/auto-close-loop.lock.json"
+  PID_FILE="$OUTPUT_DIR/auto-close-loop.pid"
+  WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop}"
+  WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop}"
+else
+  LOG_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.log"
+  STATE_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.state.json"
+  LOCK_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.lock.json"
+  PID_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.pid"
+  WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop-$RUNNER_NAME}"
+  WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop-$RUNNER_NAME}"
+fi
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -108,10 +121,11 @@ logs() {
 }
 
 prepare_worktree() {
+  prepare_integration_worktree
   mkdir -p "$(dirname "$WORKTREE_DIR")"
   if [[ ! -e "$WORKTREE_DIR/.git" ]]; then
     rm -rf "$WORKTREE_DIR"
-    git -C "$REPO_ROOT" worktree add --force -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" master
+    git -C "$REPO_ROOT" worktree add --force -B "$WORKTREE_BRANCH" "$WORKTREE_DIR" "$INTEGRATION_BRANCH"
   else
     current_branch="$(git -C "$WORKTREE_DIR" branch --show-current)"
     if [[ "$current_branch" != "$WORKTREE_BRANCH" ]]; then
@@ -119,9 +133,24 @@ prepare_worktree() {
     fi
     git -C "$WORKTREE_DIR" reset --hard HEAD >/dev/null
     git -C "$WORKTREE_DIR" clean -fd >/dev/null
-    git -C "$WORKTREE_DIR" rebase master >/dev/null
+    git -C "$WORKTREE_DIR" rebase "$INTEGRATION_BRANCH" >/dev/null
   fi
   seed_loop_inputs
+}
+
+prepare_integration_worktree() {
+  mkdir -p "$(dirname "$INTEGRATION_WORKTREE")"
+  if [[ ! -e "$INTEGRATION_WORKTREE/.git" ]]; then
+    rm -rf "$INTEGRATION_WORKTREE"
+    git -C "$REPO_ROOT" worktree add --force -B "$INTEGRATION_BRANCH" "$INTEGRATION_WORKTREE" master
+  else
+    current_branch="$(git -C "$INTEGRATION_WORKTREE" branch --show-current)"
+    if [[ "$current_branch" != "$INTEGRATION_BRANCH" ]]; then
+      git -C "$INTEGRATION_WORKTREE" checkout "$INTEGRATION_BRANCH" >/dev/null
+    fi
+    git -C "$INTEGRATION_WORKTREE" reset --hard HEAD >/dev/null
+    git -C "$INTEGRATION_WORKTREE" clean -fd >/dev/null
+  fi
 }
 
 seed_loop_inputs() {
@@ -169,6 +198,7 @@ start() {
   auto_kind="${AUTO_KIND:-magic_item}"
 
   args=(
+    --runner-id "$RUNNER_NAME"
     --source "${AUTO_SOURCE:-srd-5.2.1}"
     --backend "${AUTO_BACKEND:-codex}"
     --limit "${AUTO_LIMIT:-2}"
@@ -195,7 +225,7 @@ start() {
   quoted_args="$(printf '%q ' "${args[@]}")"
   nohup setsid bash -lc "
     cd '$WORKTREE_DIR'
-    exec env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' \
+    exec env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' AUTO_LOOP_SHARED_ROOT='$REPO_ROOT' AUTO_LOOP_INTEGRATION_BRANCH='$INTEGRATION_BRANCH' AUTO_LOOP_INTEGRATION_WORKTREE='$INTEGRATION_WORKTREE' \
       pnpm --filter @dnd/prototype-content-surface exec tsx \
       ../../scripts/content-surface-survey/auto-close-loop.ts \
       $quoted_args
