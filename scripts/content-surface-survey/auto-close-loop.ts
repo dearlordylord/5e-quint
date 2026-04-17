@@ -606,7 +606,6 @@ function batchCommitPaths(report: ClosureReport): string[] {
     for (const rel of [
       `packages/prototype-content-surface/content/${slug}.dhall`,
       `packages/prototype-content-surface/content/${slug}.json`,
-      `packages/prototype-content-surface/content/${slug}.trace.md`,
     ]) {
       if (fs.existsSync(path.join(repoRoot(), rel))) {
         paths.add(rel);
@@ -707,6 +706,11 @@ function contentPathsForSlug(slug: string): string[] {
   return [
     `packages/prototype-content-surface/content/${slug}.dhall`,
     `packages/prototype-content-surface/content/${slug}.json`,
+  ];
+}
+
+function transientContentPathsForSlug(slug: string): string[] {
+  return [
     `packages/prototype-content-surface/content/${slug}.trace.md`,
   ];
 }
@@ -716,6 +720,9 @@ function cleanupBatchNoise(report: ClosureReport): void {
     restoreOrDelete(`${resultDirForSlug(delta.source, delta.slug)}/codex-out.json`);
     if (delta.after === "invalid" || delta.after === "refused" || delta.after === "dm_agenda") {
       for (const rel of contentPathsForSlug(delta.slug)) {
+        restoreOrDelete(rel);
+      }
+      for (const rel of transientContentPathsForSlug(delta.slug)) {
         restoreOrDelete(rel);
       }
     }
@@ -753,6 +760,7 @@ function revertBatchArtifacts(report: ClosureReport): void {
       `${resultDirForSlug(delta.source, delta.slug)}/verdict.json`,
       `${resultDirForSlug(delta.source, delta.slug)}/codex-out.json`,
       ...contentPathsForSlug(delta.slug),
+      ...transientContentPathsForSlug(delta.slug),
     ]) {
       paths.add(rel);
     }

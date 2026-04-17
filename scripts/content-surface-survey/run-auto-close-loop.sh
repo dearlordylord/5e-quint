@@ -155,11 +155,30 @@ prepare_integration_worktree() {
 
 seed_loop_inputs() {
   mkdir -p "$WORKTREE_DIR/scripts/content-surface-survey"
-  if [[ ! -e "$WORKTREE_DIR/node_modules" && -d "$REPO_ROOT/node_modules" ]]; then
-    ln -s "$REPO_ROOT/node_modules" "$WORKTREE_DIR/node_modules"
+  ensure_symlink_target() {
+    local target="$1"
+    local link_path="$2"
+    local parent_dir
+    parent_dir="$(dirname "$link_path")"
+    mkdir -p "$parent_dir"
+    if [[ -L "$link_path" ]]; then
+      local resolved
+      resolved="$(readlink -f "$link_path" 2>/dev/null || true)"
+      if [[ "$resolved" == "$target" ]]; then
+        return 0
+      fi
+      rm -f "$link_path"
+    elif [[ -e "$link_path" ]]; then
+      rm -rf "$link_path"
+    fi
+    ln -s "$target" "$link_path"
+  }
+
+  if [[ -d "$REPO_ROOT/node_modules" ]]; then
+    ensure_symlink_target "$REPO_ROOT/node_modules" "$WORKTREE_DIR/node_modules"
   fi
-  if [[ ! -e "$WORKTREE_DIR/packages/prototype-content-surface/node_modules" && -d "$REPO_ROOT/packages/prototype-content-surface/node_modules" ]]; then
-    ln -s \
+  if [[ -d "$REPO_ROOT/packages/prototype-content-surface/node_modules" ]]; then
+    ensure_symlink_target \
       "$REPO_ROOT/packages/prototype-content-surface/node_modules" \
       "$WORKTREE_DIR/packages/prototype-content-surface/node_modules"
   fi
