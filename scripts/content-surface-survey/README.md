@@ -103,6 +103,10 @@ bash scripts/content-surface-survey/run-auto-close-loop.sh start
 bash scripts/content-surface-survey/run-auto-close-loop.sh status
 bash scripts/content-surface-survey/run-auto-close-loop.sh logs
 bash scripts/content-surface-survey/run-auto-close-loop.sh stop
+
+# 10. Same, but auto-commit each completed batch atom.
+#     Requires a clean tracked worktree before start.
+AUTO_COMMIT=1 bash scripts/content-surface-survey/run-auto-close-loop.sh start
 ```
 
 ## Gotchas
@@ -149,10 +153,13 @@ workflow for this purpose.
 
 - persisted resume state in `.output/content-surface-closure/auto-close-loop.state.json`
 - single-run lock in `.output/content-surface-closure/auto-close-loop.lock.json`
+- latest global convergence snapshot in `.output/content-surface-closure/auto-close-loop.latest.json`
+- append-only convergence history in `.output/content-surface-closure/auto-close-loop.history.jsonl`
 - per-batch hard timeout
 - failed-batch streak stopping
 - no-improvement streak stopping
 - sleep between batches
+- optional per-batch git commits for completed atoms (`AUTO_COMMIT=1`)
 
 Use `run-auto-close-loop.sh` for overnight runs instead of manual `nohup`
 commands.

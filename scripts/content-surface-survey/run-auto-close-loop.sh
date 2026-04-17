@@ -49,6 +49,17 @@ clear_stale_lock() {
   fi
 }
 
+wait_for_cleanup() {
+  for _ in $(seq 1 20); do
+    clear_stale_lock
+    if [[ ! -f "$LOCK_FILE" && ! -f "$PID_FILE" ]]; then
+      return 0
+    fi
+    sleep 1
+  done
+  return 1
+}
+
 status() {
   clear_stale_lock
   if [[ -f "$LOCK_FILE" ]]; then
@@ -64,7 +75,8 @@ stop() {
   if [[ -n "${sid:-}" ]] && session_live; then
     pkill -TERM -s "$sid" 2>/dev/null || true
     for _ in $(seq 1 20); do
-      if ! session_live; then
+      clear_stale_lock
+      if ! session_live && ! lock_live; then
         rm -f "$LOCK_FILE" "$PID_FILE"
         echo "stopped session $sid"
         exit 0
@@ -96,6 +108,11 @@ logs() {
 start() {
   clear_stale_lock
   if [[ -f "$LOCK_FILE" ]]; then
+    if wait_for_cleanup; then
+      clear_stale_lock
+    fi
+  fi
+  if [[ -f "$LOCK_FILE" ]]; then
     pid="$(lock_pid)"
     if [[ -n "${pid:-}" ]] && kill -0 "$pid" 2>/dev/null; then
       echo "already running with pid $pid"
@@ -119,6 +136,9 @@ start() {
     --state-path "$STATE_FILE"
     --lock-path "$LOCK_FILE"
   )
+  if [[ "${AUTO_COMMIT:-0}" == "1" ]]; then
+    args+=(--auto-commit)
+  fi
   if [[ -n "$auto_kind" ]]; then
     args+=(--kind "$auto_kind")
   fi

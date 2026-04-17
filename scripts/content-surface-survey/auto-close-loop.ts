@@ -3,10 +3,14 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import {
   buildClusters,
+  currentVerdictForSlug,
+  datasetVerdictForSlug,
   defaultReportPath,
   loadQueue,
   loadRows,
   type ClusterRecord,
+  type DatasetRow,
+  type QueueRow,
   type Source,
   type Verdict,
 } from "./close-loop.ts";
@@ -15,6 +19,7 @@ type Args = {
   source: Source | "all";
   kind?: string;
   backend: "codex" | "claude";
+  autoCommit: boolean;
   limit: number;
   maxBatches: number;
   maxNoImprove: number;
@@ -45,6 +50,53 @@ type ClosureReport = {
   }>;
 };
 
+type EffectiveRow = DatasetRow;
+
+type GlobalSnapshot = {
+  recordedAt: string;
+  batch: number;
+  source: Args["source"];
+  kind?: string;
+  backend: Args["backend"];
+  currentCluster?: string;
+  selectedCluster?: string | null;
+  summary?: ClosureSummary;
+  totals: {
+    queueUnits: number;
+    observedUnits: number;
+    structural_widening: number;
+    atom_widening: number;
+    surface_widening: number;
+    clean: number;
+    dm_agenda: number;
+    invalid: number;
+    refused: number;
+    missing: number;
+  };
+  weightedDebt: number;
+  topClusters: ReadonlyArray<{
+    canonical: string;
+    count: number;
+    verdicts: ReadonlyArray<Verdict>;
+  }>;
+};
+
+type HistoryRecord = {
+  recordedAt: string;
+  batch: number;
+  cluster: string | null;
+  source: Args["source"];
+  kind?: string;
+  backend: Args["backend"];
+  summary?: ClosureSummary;
+  stopReason?: string;
+  error?: string;
+  weightedDebt: number;
+  totals: GlobalSnapshot["totals"];
+  topClusters: GlobalSnapshot["topClusters"];
+  reportPath?: string;
+};
+
 type PersistedState = {
   version: 1;
   source: Args["source"];
@@ -72,6 +124,8 @@ type LockPayload = {
 
 const DEFAULT_STATE_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.state.json";
 const DEFAULT_LOCK_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.lock.json";
+const DEFAULT_HISTORY_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.history.jsonl";
+const DEFAULT_LATEST_PATH = "/workspace/typescript/dnd/.output/content-surface-closure/auto-close-loop.latest.json";
 const DEFAULT_REPO_ROOT = "/workspace/typescript/dnd";
 const RUN_SURVEY_LOCK_PATH = path.join(
   DEFAULT_REPO_ROOT,
@@ -84,6 +138,7 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
   const args: Args = {
     source: "srd-5.2.1",
     backend: "codex",
+    autoCommit: false,
     limit: 2,
     maxBatches: 999,
     maxNoImprove: 4,
@@ -107,6 +162,9 @@ function parseArgs(argv: ReadonlyArray<string>): Args {
         break;
       case "--backend":
         args.backend = (argv[++i] as Args["backend"]) ?? args.backend;
+        break;
+      case "--auto-commit":
+        args.autoCommit = true;
         break;
       case "--limit":
         args.limit = Number(argv[++i] ?? args.limit);
@@ -173,6 +231,7 @@ function usage(code: number): never {
       "  --source srd-5.2.1|xphb|all   dataset source (default: srd-5.2.1)",
       "  --kind KIND                    restrict to one queue kind",
       "  --backend codex|claude         backend for reruns (default: codex)",
+      "  --auto-commit                  commit each completed batch atom",
       "  --limit N                      slugs per batch (default: 2)",
       "  --max-batches N                stop after N batches (default: 999)",
       "  --max-no-improve N             stop after N no-improve batches (default: 4)",
@@ -334,6 +393,251 @@ function saveState(statePath: string, state: PersistedState): void {
   fs.writeFileSync(statePath, JSON.stringify(state, null, 2) + "\n", "utf8");
 }
 
+function resultPathForSlug(source: Source, slug: string): string {
+  return source === "srd-5.2.1"
+    ? path.join(DEFAULT_REPO_ROOT, "scripts", "content-surface-survey", "results-srd", slug, "result.json")
+    : path.join(
+        DEFAULT_REPO_ROOT,
+        ".references",
+        "xphb-srd-pairing",
+        "phb-survey",
+        "results",
+        slug,
+        "result.json",
+      );
+}
+
+function effectiveRowForSlug(
+  queueRow: QueueRow,
+  datasetRows: ReadonlyArray<DatasetRow>,
+): EffectiveRow | null {
+  const verdict = currentVerdictForSlug(queueRow.source, queueRow.slug) ?? datasetVerdictForSlug(datasetRows, queueRow.slug);
+  const resultPath = resultPathForSlug(queueRow.source, queueRow.slug);
+  if (fs.existsSync(resultPath)) {
+    const parsed = JSON.parse(fs.readFileSync(resultPath, "utf8")) as {
+      proposed_widenings?: ReadonlyArray<{
+        kind?: string;
+        name?: string;
+        justification?: string;
+        evidence?: string;
+      }>;
+    };
+    return {
+      unit_slug: queueRow.slug,
+      verdict: verdict ?? "invalid",
+      claude_proposed_widenings: parsed.proposed_widenings ?? [],
+    };
+  }
+  if (!verdict) return null;
+  const datasetRow = datasetRows.findLast((row) => row.unit_slug === queueRow.slug);
+  if (!datasetRow) {
+    return {
+      unit_slug: queueRow.slug,
+      verdict,
+      claude_proposed_widenings: [],
+    };
+  }
+  return {
+    unit_slug: queueRow.slug,
+    verdict,
+    claude_proposed_widenings: datasetRow.claude_proposed_widenings,
+  };
+}
+
+function loadEffectiveRows(args: Args): {
+  queue: Map<string, QueueRow>;
+  rows: ReadonlyArray<EffectiveRow>;
+  queueUnits: number;
+} {
+  const queue = loadQueue();
+  const datasetRows = loadRows(args.source, queue);
+  const eligibleQueueRows = [...queue.values()].filter((row) => {
+    if (args.source !== "all" && row.source !== args.source) return false;
+    if (args.kind && row.kind !== args.kind) return false;
+    return true;
+  });
+
+  const rows = eligibleQueueRows
+    .map((row) => effectiveRowForSlug(row, datasetRows))
+    .filter((row): row is EffectiveRow => row !== null);
+
+  return {
+    queue,
+    rows,
+    queueUnits: eligibleQueueRows.length,
+  };
+}
+
+function weightedDebtForVerdict(verdict: Verdict): number {
+  switch (verdict) {
+    case "structural_widening":
+      return 4;
+    case "atom_widening":
+      return 3;
+    case "surface_widening":
+      return 2;
+    case "dm_agenda":
+      return 2;
+    case "invalid":
+      return 2;
+    case "refused":
+      return 1;
+    case "clean":
+      return 0;
+  }
+}
+
+function git(args: string[], cwd = repoRoot()): { status: number | null; stdout: string; stderr: string } {
+  const result = spawnSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return {
+    status: result.status,
+    stdout: result.stdout ?? "",
+    stderr: result.stderr ?? "",
+  };
+}
+
+function assertAutoCommitReady(args: Args): void {
+  if (!args.autoCommit) return;
+  if (args.source !== "srd-5.2.1") {
+    throw new Error("auto-commit currently supports only --source srd-5.2.1");
+  }
+  const status = git(["status", "--porcelain", "--untracked-files=no"]);
+  if (status.status !== 0) {
+    throw new Error(`git status failed before auto-commit: ${status.stderr || status.stdout}`.trim());
+  }
+  if (status.stdout.trim().length > 0) {
+    throw new Error("auto-commit requires a clean tracked worktree before start");
+  }
+}
+
+function batchCommitPaths(report: ClosureReport): string[] {
+  const paths = new Set<string>(["scripts/content-surface-survey/survey-results-srd.jsonl"]);
+  for (const delta of report.deltas) {
+    if (delta.source !== "srd-5.2.1") continue;
+    const slug = delta.slug;
+    for (const rel of [
+      `scripts/content-surface-survey/results-srd/${slug}/proposal.md`,
+      `scripts/content-surface-survey/results-srd/${slug}/result.json`,
+      `scripts/content-surface-survey/results-srd/${slug}/verdict.json`,
+    ]) {
+      if (fs.existsSync(path.join(repoRoot(), rel))) {
+        paths.add(rel);
+      }
+    }
+    if (delta.after === "invalid" || delta.after === "refused" || delta.after === "dm_agenda") {
+      continue;
+    }
+    for (const rel of [
+      `packages/prototype-content-surface/content/${slug}.dhall`,
+      `packages/prototype-content-surface/content/${slug}.json`,
+      `packages/prototype-content-surface/content/${slug}.trace.md`,
+    ]) {
+      if (fs.existsSync(path.join(repoRoot(), rel))) {
+        paths.add(rel);
+      }
+    }
+  }
+  return [...paths];
+}
+
+function maybeCommitBatch(args: Args, state: PersistedState, report: ClosureReport): void {
+  if (!args.autoCommit) return;
+  const paths = batchCommitPaths(report);
+  if (paths.length === 0) return;
+
+  const add = git(["add", "--", ...paths]);
+  if (add.status !== 0) {
+    throw new Error(`git add failed for batch commit: ${add.stderr || add.stdout}`.trim());
+  }
+
+  const staged = git(["diff", "--cached", "--name-only"]);
+  if (staged.status !== 0) {
+    throw new Error(`git diff --cached failed: ${staged.stderr || staged.stdout}`.trim());
+  }
+  if (staged.stdout.trim().length === 0) {
+    return;
+  }
+
+  const cluster = (report.cluster ?? state.currentCluster ?? "manual").replaceAll(/\s+/g, " ");
+  const message = [
+    `chore(survey): close-loop batch ${state.batch} ${cluster}`,
+    "",
+    `Improved: ${report.summary.improved}`,
+    `Changed: ${report.summary.changed}`,
+    `Clean flips: ${report.summary.cleanFlips}`,
+  ].join("\n");
+  const commit = git(["commit", "-m", message]);
+  if (commit.status !== 0) {
+    throw new Error(`git commit failed for batch commit: ${commit.stderr || commit.stdout}`.trim());
+  }
+}
+
+function buildGlobalSnapshot(
+  args: Args,
+  state: PersistedState,
+  report?: ClosureReport,
+): GlobalSnapshot {
+  const { queue, rows, queueUnits } = loadEffectiveRows(args);
+  const clusters = buildClusters(rows, queue, args.kind).slice(0, 10);
+  const totals = {
+    queueUnits,
+    observedUnits: rows.length,
+    structural_widening: rows.filter((row) => row.verdict === "structural_widening").length,
+    atom_widening: rows.filter((row) => row.verdict === "atom_widening").length,
+    surface_widening: rows.filter((row) => row.verdict === "surface_widening").length,
+    clean: rows.filter((row) => row.verdict === "clean").length,
+    dm_agenda: rows.filter((row) => row.verdict === "dm_agenda").length,
+    invalid: rows.filter((row) => row.verdict === "invalid").length,
+    refused: rows.filter((row) => row.verdict === "refused").length,
+    missing: queueUnits - rows.length,
+  };
+  return {
+    recordedAt: new Date().toISOString(),
+    batch: state.batch,
+    source: args.source,
+    kind: args.kind,
+    backend: args.backend,
+    currentCluster: state.currentCluster,
+    selectedCluster: report?.cluster ?? state.currentCluster ?? null,
+    summary: report?.summary,
+    totals,
+    weightedDebt: rows.reduce((sum, row) => sum + weightedDebtForVerdict(row.verdict), 0),
+    topClusters: clusters.map((cluster) => ({
+      canonical: cluster.canonical,
+      count: cluster.count,
+      verdicts: cluster.verdicts,
+    })),
+  };
+}
+
+function writeObservability(args: Args, state: PersistedState, report?: ClosureReport): void {
+  const snapshot = buildGlobalSnapshot(args, state, report);
+  ensureParent(DEFAULT_LATEST_PATH);
+  fs.writeFileSync(DEFAULT_LATEST_PATH, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+
+  const history: HistoryRecord = {
+    recordedAt: snapshot.recordedAt,
+    batch: snapshot.batch,
+    cluster: snapshot.selectedCluster ?? null,
+    source: snapshot.source,
+    kind: snapshot.kind,
+    backend: snapshot.backend,
+    summary: snapshot.summary,
+    stopReason: state.stopReason,
+    error: state.lastError,
+    weightedDebt: snapshot.weightedDebt,
+    totals: snapshot.totals,
+    topClusters: snapshot.topClusters,
+    reportPath: state.lastReportPath,
+  };
+  ensureParent(DEFAULT_HISTORY_PATH);
+  fs.appendFileSync(DEFAULT_HISTORY_PATH, JSON.stringify(history) + "\n", "utf8");
+}
+
 function clusterEligible(cluster: ClusterRecord, queueKind?: string, minClusterSize = 2): boolean {
   if (cluster.count < minClusterSize) return false;
   if (queueKind && !cluster.kinds.includes(queueKind)) return false;
@@ -425,6 +729,7 @@ function isTransientBatchError(message: string): boolean {
 
 function main(): void {
   const args = parseArgs(process.argv.slice(2));
+  assertAutoCommitReady(args);
   const releaseLock = acquireLock(args.lockPath, args.statePath);
   try {
     const state = loadState(args);
@@ -463,6 +768,8 @@ function main(): void {
         } else {
           state.noImproveStreak += 1;
         }
+        writeObservability(args, state, report);
+        maybeCommitBatch(args, state, report);
       } catch (error) {
         state.lastError = error instanceof Error ? error.message : String(error);
         process.stderr.write(`auto-close-loop: ${state.lastError}\n`);
@@ -472,6 +779,7 @@ function main(): void {
           attempted.add(cluster.canonical);
           state.attempted = [...attempted];
           state.errorStreak += 1;
+          writeObservability(args, state);
         }
       } finally {
         state.currentCluster = undefined;
@@ -482,12 +790,14 @@ function main(): void {
       if (state.errorStreak >= args.maxErrors) {
         summarizeStop("too many failed batches", state);
         saveState(args.statePath, state);
+        writeObservability(args, state);
         return;
       }
 
       if (state.noImproveStreak >= args.maxNoImprove) {
         summarizeStop("too many no-improve batches", state);
         saveState(args.statePath, state);
+        writeObservability(args, state);
         return;
       }
 
@@ -496,6 +806,7 @@ function main(): void {
 
     summarizeStop("reached max batches", state);
     saveState(args.statePath, state);
+    writeObservability(args, state);
   } finally {
     releaseLock();
   }
