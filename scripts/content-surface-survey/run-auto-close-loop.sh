@@ -181,7 +181,7 @@ start() {
     --state-path "$STATE_FILE"
     --lock-path "$LOCK_FILE"
   )
-  if [[ "${AUTO_COMMIT:-0}" == "1" ]]; then
+  if [[ "${AUTO_COMMIT:-1}" == "1" ]]; then
     args+=(--auto-commit)
   fi
   if [[ -n "$auto_kind" ]]; then

@@ -638,6 +638,21 @@ function worktreeChanges(): {
   return { tracked, untracked };
 }
 
+const PERSISTENT_UNTRACKED_PREFIXES = [
+  "node_modules",
+  "packages/prototype-content-surface/node_modules",
+  ".output/content-surface-closure",
+] as const;
+
+function removableUntracked(paths: ReadonlyArray<string>): string[] {
+  return paths.filter(
+    (rel) =>
+      !PERSISTENT_UNTRACKED_PREFIXES.some(
+        (prefix) => rel === prefix || rel.startsWith(`${prefix}/`),
+      ),
+  );
+}
+
 function touchesPrototypeTypeScript(paths: ReadonlyArray<string>): boolean {
   return paths.some(
     (rel) =>
@@ -710,6 +725,28 @@ function cleanupBatchNoise(report: ClosureReport): void {
       }
     }
   }
+}
+
+function ensureCleanTrackedWorktreeAfterBatch(context: string): void {
+  const status = git(["status", "--porcelain", "--untracked-files=no"]);
+  if (status.status !== 0) {
+    throw new Error(`git status failed after ${context}: ${status.stderr || status.stdout}`.trim());
+  }
+  if (status.stdout.trim().length === 0) {
+    return;
+  }
+  const changes = worktreeChanges();
+  if (changes.tracked.length > 0) {
+    restoreTracked(changes.tracked);
+  }
+  const retry = git(["status", "--porcelain", "--untracked-files=no"]);
+  if (retry.status !== 0) {
+    throw new Error(`git status failed after cleanup for ${context}: ${retry.stderr || retry.stdout}`.trim());
+  }
+  if (retry.stdout.trim().length > 0) {
+    throw new Error(`tracked worktree still dirty after ${context}`);
+  }
+  process.stdout.write(`auto-close-loop: restored leftover tracked changes after ${context}\n`);
 }
 
 function revertBatchArtifacts(report: ClosureReport): void {
@@ -1098,6 +1135,7 @@ function main(): void {
           state.noImproveStreak = 0;
           writeObservability(args, state, report);
           maybeCommitBatch(args, state, report, surfaceAttempt.changedPaths);
+          ensureCleanTrackedWorktreeAfterBatch(`successful batch ${cluster.canonical}`);
         } else {
           appendFailureLog({
             recordedAt: new Date().toISOString(),
@@ -1112,11 +1150,12 @@ function main(): void {
           });
           revertBatchArtifacts(report);
           restoreTracked(surfaceAttempt.changedPaths);
-          removeUntracked(surfaceAttempt.changedPaths);
+          removeUntracked(removableUntracked(surfaceAttempt.changedPaths));
           attempted.add(cluster.canonical);
           state.attempted = [...attempted];
           state.noImproveStreak += 1;
           writeObservability(args, state, report);
+          ensureCleanTrackedWorktreeAfterBatch(`reverted batch ${cluster.canonical}`);
         }
       } catch (error) {
         state.lastError = error instanceof Error ? error.message : String(error);
@@ -1124,7 +1163,7 @@ function main(): void {
         const changes = worktreeChanges();
         if (changes.tracked.length > 0 || changes.untracked.length > 0) {
           restoreTracked(changes.tracked);
-          removeUntracked(changes.untracked);
+          removeUntracked(removableUntracked(changes.untracked));
         }
         if (isTransientBatchError(state.lastError)) {
           process.stderr.write("auto-close-loop: transient batch failure; will retry after sleep\n");
