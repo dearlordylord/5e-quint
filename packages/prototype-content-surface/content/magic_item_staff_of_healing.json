@@ -1,0 +1,84 @@
+{
+  "description": "This staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it, using your spellcasting ability modifier. The table indicates how many charges you must expend to cast the spell: Cure Wounds (1 charge per spell level, maximum 4 for a level 4 spell), Lesser Restoration (2 charges), Mass Cure Wounds (5 charges). The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff vanishes in a flash of light, lost forever.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_staff_of_healing",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 4,
+              "minLevel": 1,
+              "perLevelCharges": 1
+            },
+            "spellId": "cure_wounds"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 2,
+              "kind": "charge_cast",
+              "maxLevel": 2,
+              "minLevel": 2,
+              "perLevelCharges": 0
+            },
+            "spellId": "lesser_restoration"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 5,
+              "kind": "charge_cast",
+              "maxLevel": 5,
+              "minLevel": 5,
+              "perLevelCharges": 0
+            },
+            "spellId": "mass_cure_wounds"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6,
+          "flat": 4
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 10
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Staff of Healing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StaffOfHealing"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

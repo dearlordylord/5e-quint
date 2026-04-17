@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ring_of_mind_shielding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.mixed_mode",
+      "justification": "The item combines always-on passive protection, an activated Magic action toggle, and a death-triggered post-mortem state. The current magic-item surface only allows one mechanics family at a time: passive or activation.",
+      "evidence": "\"While wearing this ring, you are immune ...\" / \"You can take a Magic action ...\" / \"If you die while wearing the ring, your soul enters it...\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_information_magic",
+      "justification": "The passive protection is not resistance, condition immunity, or targeting denial. It specifically blocks magic that reads thoughts or reveals lie/alignment/creature-type information.",
+      "evidence": "\"you are immune to magic that allows other creatures to read your thoughts, determine whether you are lying, know your alignment, or know your creature type\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "telepathy_gate",
+      "justification": "The item regulates telepathic communication in two directions: outside creatures may communicate only with the wearer's permission, but a housed soul can always communicate with the wearer.",
+      "evidence": "\"Creatures can telepathically communicate with you only if you allow it.\" / \"A wearer can't prevent this telepathic communication.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_soul_vessel",
+      "justification": "The death-triggered soul-storage behavior creates persistent occupant state on the item and grants a new communication channel while that state persists.",
+      "evidence": "\"If you die while wearing the ring, your soul enters it, unless it already houses a soul. ... As long as your soul is in the ring, you can telepathically communicate with any creature wearing it.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The unit does not fit the current MagicItemRecord mechanics union honestly, and several clauses would still need new atoms even if mixed-mode items were allowed."
+}

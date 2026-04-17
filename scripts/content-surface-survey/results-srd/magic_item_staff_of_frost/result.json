@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_staff_of_frost",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "composite_magic_item_mechanics",
+      "justification": "The item simultaneously grants a passive resistance effect and a separate charge-based spellcasting activation, but MagicItemMechanics currently allows only one family at a time.",
+      "evidence": "\"You have Resistance to Cold damage while you hold this staff.\" / \"The staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it, using your spell save DC.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_staff_of_frost.dhall because any current encoding would have to omit either the passive cold resistance or the activated spellcasting half. Existing atoms appear sufficient once the magic-item mechanics shape can compose both families."
+}

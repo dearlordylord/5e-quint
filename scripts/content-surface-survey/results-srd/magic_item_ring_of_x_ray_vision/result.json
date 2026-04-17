@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_ring_of_x_ray_vision",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SenseKind.x_ray_vision",
+      "justification": "grant_sense exists in EffectAtom and the tracer handles it, but SenseKind is a closed union of darkvision | blindsight | tremorsense | truesight. X-ray vision is a distinct magical sense (see-through-solid-objects) that cannot be expressed with any current variant.",
+      "evidence": "you can take a Magic action to gain X-ray vision with a range of 30 feet for 1 minute. To you, solid objects within that radius appear transparent"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.usagePenalty (or equivalent trigger on ActivationPhase)",
+      "justification": "The penalty save only triggers on the second+ use within a long rest. No existing surface type can express a conditional activation-phase that fires only when usage-count > 1 within the reset cadence. OngoingTrigger has no 'on_reuse' variant; ActivationPhase has no guard predicate based on prior use history. A new mechanism is needed — either a usagePenalty field on ActivatedAbilityMechanics or an on_reuse OngoingTrigger variant.",
+      "evidence": "Whenever you use the ring again before taking a Long Rest, you must succeed on a DC 15 Constitution saving throw or gain 1 Exhaustion level."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The main effect (x-ray vision, 1 minute, timed) fits ActivatedAbilityMechanics structurally — activation cost is action, reset cadence is long_rest, duration timed 1 minute. The blocker is that grant_sense.sense has no x_ray_vision variant. The secondary blocker (usage-conditional save) is a novel 'usage penalty' pattern absent from the surface: a DC 15 Con save triggered only on the second and subsequent activations within a long rest window. Penetration limits (1 ft stone, 1 in metal, 3 ft wood/dirt, lead blocks) are DM reference data and legitimately excluded from core mechanics. Both widenings are surface type variants, not absent v4 atoms, hence surface_widening rather than atom_widening."
+}

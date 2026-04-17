@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_thunderous_greatclub",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.mixed_passive_and_activation",
+      "justification": "The item has always-on attunement effects and separate activated properties with their own action economy and recharge. The current magic-item surface is a union of `passive | activation`, so one record cannot represent both honestly.",
+      "evidence": "\"While you are attuned to this magic weapon, your Strength is 20... The weapon deals an extra 1d8 Thunder damage...\" and \"Clap of Thunder. As a Magic action...\" and \"Earthquake. As a Magic action... Once you use this property, it can't be used again until the next dawn.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.break_concentration",
+      "justification": "The Earthquake property forces concentrating creatures to lose concentration on a failed Constitution save. The v4 taxonomy has a `break` lifecycle atom, but the authored surface and tracer expose no effect shape for concentration break.",
+      "evidence": "\"If that creature is also concentrating, it must succeed on a DC 20 Constitution saving throw, or its Concentration is broken.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "open_fissure",
+      "justification": "The Earthquake property creates new terrain topology, causes creatures at chosen ground spots to fall or be displaced with the fissure edge, and collapses structures into the fissure. That is not representable with existing movement, area, or damage atoms.",
+      "evidence": "\"you can cause a 30-foot-deep, 10-foot-wide fissure to open up on the ground anywhere in the area. Any creature on a spot where the fissure opens must make a DC 20 Dexterity saving throw, falling into the fissure on a failed save or moving with the fissure's edge on a successful one. Any structure on a spot where the fissure opens collapses into the fissure.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Even before the fissure and concentration-break riders, the item fails honest fit because one MagicItemRecord cannot currently carry both passive attunement grants and activated properties."
+}

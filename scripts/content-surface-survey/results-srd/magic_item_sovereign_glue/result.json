@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object",
+      "justification": "The item targets objects, not creatures, self, areas, or marks. Its core mechanic attaches adhesive state to two chosen objects or surfaces.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The surface lacks an effect atom for creating a persistent adhesive bond between two objects that prevents separation until broken by specific counters.",
+      "evidence": "Once it has done so, the bond it creates can be broken only by the application of Universal Solvent or Oil of Etherealness, or with a Wish spell."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Existing magic-item activation scaffolding is close, but encoding this honestly would require at least object targeting plus a dedicated object-bond effect. I did not author placeholder Dhall/JSON because any current encoding would misrepresent the rule."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_sword_of_wounding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_on_hit_trigger",
+      "justification": "The item is a weapon-hit rider, but MagicItemRecord only supports passive grants or activated abilities. It needs an on-hit trigger family analogous to mastery-side on_hit_trigger.",
+      "evidence": "When you hit a creature with an attack using this magic weapon, the target takes an extra 2d6 Necrotic damage..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DcSource.fixed",
+      "justification": "The save uses a fixed item DC 15, which is not representable by caster spell save DC, weapon attack DC, or innate DC.",
+      "evidence": "...must succeed on a DC 15 Constitution saving throw..."
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_hp_regain",
+      "justification": "The effect prevents a target from regaining hit points for a duration. Existing atoms cover healing, max-HP changes, and healing maximization, but not a healing-prevention lockout.",
+      "evidence": "...or be unable to regain Hit Points for 1 hour."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content/tracer files were authored. The primary blocker is structural: current magic-item mechanics cannot express weapon-hit riders honestly. Even with that family added, the unit still needs a fixed save DC source and an atom for preventing HP regain. The repeat-save tail itself would fit once those gaps are addressed."
+}

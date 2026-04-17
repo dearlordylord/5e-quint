@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_potion_of_invisibility",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "apply_condition",
+    "bonus_action_quota",
+    "direct_apply",
+    "item_destruction",
+    "magic_item_root",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly as magic_item / activation family. The timed 1-hour duration and three early-end triggers (target_makes_attack_roll, target_deals_damage, target_casts_spell) are authored on the ActivatedAbilityHeader duration field — all three DurationEndTrigger variants exist in the surface. The tracer does not currently emit duration nodes for the activated-ability header (only for spell families), so the trace graph omits the duration/earlyEnd structure; this is a tracer gap, not an encoding gap. No attunement required. Destruction: permanent_on_empty (single-use consumable)."
+}

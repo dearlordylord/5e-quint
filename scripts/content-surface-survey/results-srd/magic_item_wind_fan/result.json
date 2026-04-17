@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wind_fan",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.fixed_save_dc",
+      "justification": "Magic-item spell grants currently record only spell id and casting mode. Wind Fan casts Gust of Wind at a fixed item DC 13, which materially changes spell resolution and cannot be omitted honestly.",
+      "evidence": "While holding this fan, you can cast Gust of Wind (save DC 13) from it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "cumulative_pre_dawn_failure_policy",
+      "justification": "The item does not use charges or a fixed use count. Instead, each reuse before dawn increases a cumulative failure chance, and failure destroys the item. Existing ActivationResource and ItemDestructionPolicy variants cannot represent that escalating stateful risk honestly.",
+      "evidence": "Each subsequent time the fan is used before the next dawn, it has a cumulative 20 percent chance of not working; if the fan fails to work, it tears into useless, nonmagical tatters."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content/magic_item_wind_fan.dhall. The unit fits magic_item + activation in principle, but the current surface cannot encode the fixed spell save DC or the cumulative pre-dawn failure/destruction mechanic without producing a misleading record."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_withering",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_on_hit_trigger_activation",
+      "justification": "The item's core mechanic is an optional charge spend inside a quarterstaff hit window that adds extra damage and opens a saving throw rider. Existing magic-item families only support passive grants or explicit activations, not weapon-hit-triggered item activations.",
+      "evidence": "On a hit, it deals damage as a normal Quarterstaff, and you can expend 1 charge to deal an extra 2d10 Necrotic damage to the target and force it to make a DC 15 Constitution saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.abilityCheckAbilityFilter",
+      "justification": "The failed-save rider applies to any Strength or Constitution ability check, not just named skills. The current surface can filter saving throws by ability and ability checks by skill, but it cannot express raw ability-based check filtering without losing non-skill checks.",
+      "evidence": "On a failed save, the target has Disadvantage for 1 hour on any ability check or saving throw that uses Strength or Constitution."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because encoding this as passive or standard activation would be misleading. Charges, dawn recharge, rarity, and attunement all fit existing surface; the blocking issue is the missing magic-item on-hit rider family."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_vorpal_sword",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item compound mechanics (passive + on_hit_trigger)",
+      "justification": "Vorpal Sword has always-on weapon bonuses and a separate nat-20 on-hit rider. Current MagicItemMechanics allows only passive or activation, not an honest composition of passive grants with a weapon-hit trigger.",
+      "evidence": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. ... When you use this weapon to attack ... and roll a 20 on the d20 for the attack roll, you cut off one of the creature's heads."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.bypass_resistance",
+      "justification": "The current authored surface cannot represent a weapon effect that ignores resistance to a specific damage type, even though v4 taxonomy already distinguishes this concept from granting resistance.",
+      "evidence": "the weapon ignores Resistance to Slashing damage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "roll modifier for weapon damage rolls",
+      "justification": "The surface can modify attack rolls, saving throws, ability checks, initiative, and death saves, but it has no honest passive rider for '+3 to damage rolls made with this weapon'.",
+      "evidence": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon."
+    },
+    {
+      "kind": "new_atom",
+      "name": "decapitate_or_kill_target",
+      "justification": "The item's core rider is not just extra damage. On a natural 20 with the weapon, it severs a head and can kill the creature outright, with conditional fallback damage instead. No current effect atom models severing a body part or instant death from that event.",
+      "evidence": "you cut off one of the creature's heads. The creature dies if it can't survive without the lost head."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "critical-hit natural-20 rider with fallback replacement",
+      "justification": "The trigger is specifically a natural 20 on the d20 for the attack roll, not a generic weapon hit. The rider also branches into fallback extra damage when the decapitation is prevented by immunity, anatomy, size adjudication, or Legendary Resistance.",
+      "evidence": "roll a 20 on the d20 for the attack roll ... Such a creature instead takes an extra 30 Slashing damage from the hit. If the creature has Legendary Resistance, it can expend one daily use of that trait to avoid losing its head, taking the extra Slashing damage instead."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. A passive-only encoding would falsely omit the item's defining rider, and the rider itself needs more than a simple surface tweak."
+}

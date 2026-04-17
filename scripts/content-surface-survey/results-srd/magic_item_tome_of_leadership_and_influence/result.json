@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_tome_of_leadership_and_influence",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_ability_score",
+      "justification": "The item permanently increases an existing ability score by a fixed amount, capped at a maximum, rather than setting or flooring it to a specific value while worn or attuned.",
+      "evidence": "your Charisma increases by 2, to a maximum of 30"
+    },
+    {
+      "kind": "new_variant",
+      "name": "activated ability study regimen",
+      "justification": "The current activation surface has action / bonus action / reaction / replace_attack costs, but not a deterministic long-study requirement measured across multiple days.",
+      "evidence": "If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item dormancy recharge cadence",
+      "justification": "The item does not get destroyed or reset on a rest cadence; it becomes nonmagical for a century and then regains magic, which is a distinct lifecycle state.",
+      "evidence": "The manual then loses its magic but regains it in a century"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest authored record was produced. Passive misstates the temporary/worn semantics, and activation cannot currently encode multi-day study plus century-scale dormancy."
+}

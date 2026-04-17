@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ring_of_shooting_stars",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_property_activated_mechanics",
+      "justification": "MagicItemMechanics is PassiveMechanics | ActivatedAbilityMechanics — a single mechanics slot. The ring has four independent properties (at-will spells, Faerie Fire, Lightning Spheres, Shooting Stars) all drawing from a shared charge pool. No 'menu of abilities, choose one per activation' subgraph exists. The only current multi-property shape is the phases array, which models sequential steps of a single activation, not independent selectable abilities.",
+      "evidence": "You can cast Dancing Lights or Light from the ring. [...] You can expend 1 charge to cast Faerie Fire [...] You can expend 2 charges as a Magic action to create up to four 3-foot-diameter spheres of lightning [...] You can expend 1 to 3 charges as a Magic action [for Shooting Stars]."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "spawned_object_companion",
+      "justification": "Lightning Spheres creates up to 4 persistent objects (not creatures) with: concentration duration, Dim Light shedding, Bonus Action movement per turn (30 ft each, max 120 ft from caster), and proximity auto-discharge (within 5 ft triggers a Dex save then the sphere disappears). The spawned_creature family models creatures via CreatureStatBlock and is only available for SpellMechanics. No 'spawned_object' family exists for magic item activations, and objects don't have creature stat blocks.",
+      "evidence": "You can expend 2 charges as a Magic action to create up to four 3-foot-diameter spheres of lightning. Each sphere appears in an unoccupied space you can see within 120 feet of yourself. The spheres last as long as you maintain Concentration, up to 1 minute. As a Bonus Action, you can move each sphere up to 30 feet [...] The first time the sphere comes within 5 feet of a creature other than you that isn't behind Total Cover, the sphere discharges lightning at that creature and disappears."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.lookup_table",
+      "justification": "Lightning Spheres damage depends on how many spheres the player chose to create: 1→4d12, 2→5d4, 3→2d6, 4→2d4. This is a player-choice lookup table, not threshold_tiers by any LevelAxis (character/class/slot/subclass/proficiency_bonus). The values are non-monotonic in both dice count and die size, so no linear formula fits. A new DiceAmount variant keyed by 'number of objects created' (or more generally, a player-choice-at-activation integer) is needed.",
+      "evidence": "Number of Spheres / Lightning Damage: 1→4d12, 2→5d4, 3→2d6, 4→2d4"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "repeat_phase_per_charge",
+      "justification": "Shooting Stars fires one save_gate area-of-effect per charge spent (1–3 charges). Each mote targets a separately chosen point within 60 ft; the N motes are simultaneous but independent (different points). The phases array is fixed-length (sequential steps of one activation). There is no 'repeat this phase N times where N = charges spent' mechanic; resource_spent in DiceAmount only scales the damage of a single instance, not the count of instantiated phases.",
+      "evidence": "You can expend 1 to 3 charges as a Magic action. For every charge you expend, you launch a glowing mote of light from the ring at a point you can see within 60 feet of yourself. Each creature in a 15-foot Cube originating from that point is showered in sparks and makes a DC 15 Dexterity saving throw, taking 5d4 Radiant damage on a failed save or half as much damage on a successful one."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The at-will Dancing Lights and Light grants would individually encode cleanly as passive grant_spell_access(at_will). Faerie Fire fits grant_spell_access with charge_cast(1 charge). The charge pool with dawn reset and 1d6 regain fits ChargePoolResource + RestResetCadence.dawn. The destruction policy would be last_charge_roll. However, there is no honest single-mechanics-family encoding that combines passive at-will spells with charge-based activated abilities on a shared pool. The Lightning Spheres spawned-object pattern and Shooting Stars repeat-per-charge pattern are additionally absent from the surface."
+}

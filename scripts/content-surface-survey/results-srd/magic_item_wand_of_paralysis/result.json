@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_wand_of_paralysis",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DcSource.fixed",
+      "justification": "The item uses a hard-coded saving throw DC that is neither caster-derived nor formula-based. The current surface cannot express a fixed item DC honestly.",
+      "evidence": "The target must succeed on a DC 15 Constitution saving throw or have the Paralyzed condition for 1 minute."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.magic_action",
+      "justification": "Magic-item activations can specifically require the Magic action, but the current activation cost surface collapses this to a generic action.",
+      "evidence": "While holding it, you can take a Magic action to expend 1 charge..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.attunementRestriction",
+      "justification": "The record can only say whether attunement is required, not who is allowed to attune. This item requires attunement specifically by a spellcaster.",
+      "evidence": "Wand, Rare (Requires Attunement by a Spellcaster)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because the core save DC is not representable without lying. The item otherwise matches the existing magic_item activation family: charge pool, repeat save, dawn recharge, and last-charge destruction."
+}

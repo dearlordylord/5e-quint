@@ -1,0 +1,25 @@
+{
+  "description": "While wearing this ring, you cast Water Walk from it, targeting only yourself.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_ring_of_water_walking",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "water_walk"
+      }
+    ]
+  },
+  "name": "Ring of Water Walking",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Ring of Water Walking"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

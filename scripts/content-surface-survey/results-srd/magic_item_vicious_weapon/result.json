@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_vicious_weapon",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_on_hit_rider_for_non_mastery_units",
+      "justification": "The existing magic-item mechanics families only cover always-on passive grants and resource-based activations. Vicious Weapon is an always-armed on-hit rider that adds extra damage when the wielder hits with the weapon, which requires a trigger-coupled subgraph rather than a static grant.",
+      "evidence": "This magic weapon deals an extra 2d6 damage to any creature it hits."
+    },
+    {
+      "kind": "new_variant",
+      "name": "weapon_damage_type_reference",
+      "justification": "The extra damage is not a fixed damage type. It inherits the struck weapon's normal damage type, and the current surface only supports fixed damage types or author-time/cast-time choices.",
+      "evidence": "This extra damage is of the same type as the weapon's normal damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author a content JSON/Dhall file because forcing this into MagicItemRecord.passive would lose the on-hit trigger, and forcing it into activation would falsely add a resource-gated use. The closest existing family is mastery.on_hit_trigger, but that family is not available for magic items."
+}

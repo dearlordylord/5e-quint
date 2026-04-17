@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_ring_of_evasion",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "succeed_on_save",
+      "justification": "The ring's core mechanic converts a failed saving throw into a success after the roll is resolved. No existing EffectAtom models a post-roll failure override. modify_roll_advantage applies before rolling; modify_roll_numeric adds a delta (not guaranteed success); neither can represent 'you succeed instead'. This is a distinct post-resolution override atom.",
+      "evidence": "When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge to succeed on that save instead."
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction trigger condition on ActivatedAbilityMechanics",
+      "justification": "Spell reactions carry a ReactionTrigger on CastingTime (hit_by_attack_roll, targeted_by_named_spell, creature_casts_spell). Non-spell activations using activationCost { kind: 'reaction' } have no equivalent field to constrain when the reaction may fire. The Ring of Evasion's reaction is only legal when the wearer fails a Dexterity saving throw — this condition is currently not expressible on ActivatedAbilityMechanics.",
+      "evidence": "When you fail a Dexterity saving throw while wearing the ring, you can take a Reaction to expend 1 charge to succeed on that save instead."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The charge pool (3 charges, dawn reset with 1d3) and reaction activation cost both fit the current surface cleanly — RestResetCadence.dawn with a DiceAmount regain and ClassFeatureActivationCost.reaction are already modeled. The blocking gaps are (1) no effect atom for post-roll save-failure override and (2) no trigger condition on non-spell reaction activations. Without atom (1) there is no honest EffectAtom to put in a direct phase; coercing this to modify_roll_advantage or any existing atom would produce a false trace."
+}

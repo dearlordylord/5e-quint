@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_staff_of_thunder_and_lightning",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_ability_set",
+      "justification": "The item combines shared passive grants with multiple named item abilities that have different trigger/cost/resource shapes and separate once-per-dawn usage tracking.",
+      "evidence": "It also has the following additional properties. Once one of these properties is used, it can't be used again until the next dawn."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_damage_roll_numeric",
+      "justification": "The passive quarterstaff bonus includes weapon damage-roll modification, which the current effect vocabulary cannot express.",
+      "evidence": "This staff can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "weapon_filter.specific_item_or_weapon",
+      "justification": "The passive bonus is scoped to attacks and damage made with this specific staff, but current weapon filters only distinguish melee versus ranged.",
+      "evidence": "made with it"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item does not fit a single existing MagicItemMechanics family honestly, and forcing it into passive-only or activation-only would omit core mechanics."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_talisman_of_ultimate_evil",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_mixed_mechanics",
+      "justification": "The item needs passive grants and a separate activated charge-based ability on the same record, but MagicItemMechanics is currently passive-or-activation only.",
+      "evidence": "\"You gain a +2 bonus to spell attack rolls while you wear or hold it.\" and \"While wearing or holding the talisman, you can take a Magic action to expend 1 charge...\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_contact_or_possession_trigger",
+      "justification": "The talisman deals damage on touch and repeats that damage at end of turn while the creature continues holding or carrying it; PassiveMechanics cannot encode item-owned triggered damage.",
+      "evidence": "\"A creature that isn't a Fiend or an Undead that touches the talisman takes 8d6 Necrotic damage and takes the damage again each time it ends its turn holding or carrying the talisman.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.target_type_disadvantage",
+      "justification": "The activation needs a creature-type-conditional penalty on the target's saving throw, which the current save_gate surface cannot express.",
+      "evidence": "\"If the target is a Celestial, it has Disadvantage on the save.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "The failed-save branch annihilates the target rather than merely damaging, moving, or conditioning it.",
+      "evidence": "\"On a failed save, the target falls into the fissure and is destroyed, leaving no remains.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because forcing this into passive-only or activation-only would produce a misleading trace. Existing support covers the charge pool and deterministic destruction on empty, but not the item's mixed-family structure or its touch/end-turn harm rider."
+}

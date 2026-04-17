@@ -1,0 +1,63 @@
+{
+  "description": "This potion's container looks empty but feels as though it holds liquid. When you drink the potion, you have the Invisible condition for 1 hour. The effect ends early if you make an attack roll, deal damage, or cast a spell.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_invisibility",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "bonus_action"
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_makes_attack_roll"
+        },
+        {
+          "kind": "target_deals_damage"
+        },
+        {
+          "kind": "target_casts_spell"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "condition": "invisible",
+            "kind": "apply_condition"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Invisibility",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Potion of Invisibility"
+  },
+  "rarity": "rare",
+  "requiresAttunement": false
+}

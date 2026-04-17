@@ -1,0 +1,25 @@
+{
+  "description": "While wearing this ring, you can cast Telekinesis from it.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "ring_of_telekinesis",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "telekinesis"
+      }
+    ]
+  },
+  "name": "Ring of Telekinesis",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Ring of Telekinesis"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": true
+}

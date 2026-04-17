@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_staff_of_swarming_insects",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "create_obscurement",
+      "justification": "The item's primary non-spell effect is an area of heavy obscuration with an asymmetric exemption. No existing effect atom models area obscuration or visibility denial honestly.",
+      "evidence": "The insects remain for 10 minutes, making the area Heavily Obscured for creatures other than you."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "shared_resource_activation_menu",
+      "justification": "One magic item exposes multiple distinct activated options that consume the same charge pool. The current activation family does not represent choosing among separate item abilities without collapsing them into one false effect bundle.",
+      "evidence": "expend 1 charge to cause a swarm ... You can cast one of the spells on the following table from it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "duration_end_trigger.dispersed_by_strong_wind",
+      "justification": "The cloud has an explicit environmental early-end trigger that is not target-side and is not covered by the current duration-end grammar.",
+      "evidence": "A strong wind (like that created by Gust of Wind) disperses the swarm and ends the effect."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current encoding would be misleading. The spell-casting half alone resembles existing charge-cast items, but the added insect-cloud activation and obscuration field force widenings."
+}

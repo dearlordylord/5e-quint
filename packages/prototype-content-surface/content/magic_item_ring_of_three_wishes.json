@@ -1,0 +1,52 @@
+{
+  "description": "While wearing this ring, you can expend 1 of its 3 charges to cast Wish from it. The ring becomes nonmagical when you use the last charge.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "ring_of_three_wishes",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 9,
+              "minLevel": 9,
+              "perLevelCharges": 0
+            },
+            "spellId": "wish"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 3
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Ring of Three Wishes",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Ring of Three Wishes"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": false
+}

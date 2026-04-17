@@ -1,0 +1,72 @@
+{
+  "description": "The rod has 5 charges. While you hold it, you can cast one of the following spells from it: Heal (expends 1 charge) or Resurrection (expends 5 charges). The rod regains 1 expended charge daily at dawn. If you expend the last charge, roll 1d20. On a 1, the rod disappears in a harmless burst of radiance.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_rod_of_resurrection",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 6,
+              "minLevel": 6,
+              "perLevelCharges": 0
+            },
+            "spellId": "heal"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 5,
+              "kind": "charge_cast",
+              "maxLevel": 7,
+              "minLevel": 7,
+              "perLevelCharges": 0
+            },
+            "spellId": "resurrection"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 1
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 5
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Rod of Resurrection",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RodOfResurrection"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": true
+}

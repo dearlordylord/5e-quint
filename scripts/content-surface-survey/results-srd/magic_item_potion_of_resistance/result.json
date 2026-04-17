@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_potion_of_resistance",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DamageTypeRef.gm_determined_table",
+      "justification": "The potion's damage type is determined by the GM (by choice or random d10 roll), not by the player/caster. CastTimeChoice is explicitly 'Caster picks one at cast/build time' which is a different semantic — player agency vs GM agency. There is no variant in DamageTypeRef for GM-selected or random-table-selected damage types.",
+      "evidence": "The GM chooses the type or determines it randomly by rolling on the following table. [d10 table of 10 damage types]"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The rest of the unit maps cleanly: MagicItemRecord with ActivatedAbilityMechanics (activationCost: action, resource: use_count fixed 1, resetCadence: never, destruction: permanent_on_empty), duration: timed 1 hour, effect: grant_resistance. The sole gap is that DamageTypeRef has no variant for GM-determined / random-table selection. Adding { kind: 'gm_determined_table'; options: ReadonlyNonEmptyArray<DamageType> } to DamageTypeRef would fully close the gap. No new v4 atom is needed; only a surface-level variant addition."
+}

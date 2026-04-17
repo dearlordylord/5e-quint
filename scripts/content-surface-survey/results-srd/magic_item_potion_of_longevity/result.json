@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_potion_of_longevity",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_age",
+      "justification": "The potion's core effect is to reduce (or increase) the character's physical age by a dice roll amount. No v4 effect atom covers age modification. Age is not HP, AC, a condition, an ability score, a speed, or any other currently modeled quantity. A new effect atom is required.",
+      "evidence": "your physical age is reduced by 1d6 + 6 years, to a minimum of 13 years"
+    },
+    {
+      "kind": "new_variant",
+      "name": "cumulative_use_probability",
+      "justification": "The adverse effect on repeat consumption uses a 10% cumulative probability per prior use. This is a stateful probabilistic modifier on activation — not a save, not a fixed resource cost, but a growing chance that requires tracking the count of prior consumptions of this item type. Neither use_count resources, save_gate phases, nor any existing activation modifier expresses this shape.",
+      "evidence": "Each time you subsequently drink a Potion of Longevity, there is a 10 percent cumulative chance that you instead age by 1d6 + 6 years."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The magic_item kind and activation family would otherwise apply (consumable, one use, no reset/never cadence). However, the core effect — modifying a character's physical age — maps to no v4 atom or existing EffectAtom variant. Physical age has no mechanical consequences in SRD 5.2.1 (no stat penalties, no condition thresholds defined by age), but the rule is deterministic and clearly stated in the SRD text, making this atom_widening rather than dm_agenda. The cumulative 10% chance mechanic on repeated consumption is a second novel shape: a probability gate that scales with prior use history, expressible by neither existing resource atoms nor save/check resolution phases."
+}

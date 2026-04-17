@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.item_spell_override",
+      "justification": "The existing magic-item activation chassis can represent charges, dawn recharge, and last-charge destruction, but grant_spell_access can only point at a spell id plus cast mode. This wand modifies the accessed spells with item-defined parameters that are not the base spell definitions.",
+      "evidence": "While holding the wand, you can cast one of the spells (save DC 15) on the following table from it. Command (\"flee\" or \"grovel\" only). Fear (60-foot Cone)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.holding_item",
+      "justification": "Magic-item spell access on this wand is gated by actively holding the wand, not just by attunement or ownership. The current passive/activation gates do not model held-item state.",
+      "evidence": "While holding the wand, you can cast one of the spells ..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author against the current surface: using plain grant_spell_access would falsely inherit the base spell save DC and spell geometry/options. The reusable charge-pool, dawn recharge, and last-charge destruction pieces already exist."
+}

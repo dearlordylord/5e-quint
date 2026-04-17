@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_scarab_of_protection",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "mixed_magic_item_mechanics",
+      "justification": "The item combines always-on passive benefits with a separate reaction-based charge-spend ability, but MagicItemMechanics currently allows only one family at a time.",
+      "evidence": "This beetle-shaped medallion provides three benefits while it is on your person."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_source_filter_against_spells",
+      "justification": "Current roll-advantage shaping can narrow by save ability, but not by the source of the save such as spells.",
+      "evidence": "You have Advantage on saving throws against spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "failed_saving_throw_reaction_trigger",
+      "justification": "The preservation benefit triggers after a failed save and needs source predicates for Necromancy spells or harmful effects from Undead.",
+      "evidence": "If you fail a saving throw against a Necromancy spell or a harmful effect originating from an Undead, you can take a Reaction ..."
+    },
+    {
+      "kind": "new_atom",
+      "name": "override_save_outcome",
+      "justification": "The reaction rewrites an already failed saving throw into a success, which is not modeled by numeric modifiers or advantage.",
+      "evidence": "... turn the failed save into a successful one."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Defense, 12 charges, and destruction on empty fit existing shapes, but the item as a whole needs a mixed passive-plus-reaction magic-item shape and save-source/result-override support."
+}

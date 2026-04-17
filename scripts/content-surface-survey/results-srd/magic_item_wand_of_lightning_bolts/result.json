@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wand_of_lightning_bolts",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DcSource.fixed",
+      "justification": "The item casts an existing spell but overrides its save DC to a fixed value. The current surface can express caster-derived, weapon-derived, and innate ability DCs, but not an item-specified fixed DC.",
+      "evidence": "you can expend no more than 3 charges to cast Lightning Bolt (save DC 15) from it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.attunementRestriction",
+      "justification": "Magic items currently record only a boolean attunement flag. This item further restricts attunement eligibility to spellcasters, which cannot be expressed without losing a real rule on the record.",
+      "evidence": "Rare (Requires Attunement by a Spellcaster)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because the honest encoding needs a fixed save DC for an item-cast spell. Reusing grant_spell_access.charge_cast would silently inherit Lightning Bolt's caster_spell_save_dc, which is false for this item. Secondary omission: the attunement-by-a-spellcaster restriction is also not representable."
+}

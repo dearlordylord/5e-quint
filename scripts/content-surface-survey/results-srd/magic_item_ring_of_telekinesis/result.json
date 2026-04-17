@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_ring_of_telekinesis",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The ring grants at_will access to Telekinesis with no stated charges or daily limits in the source text. Encoded as passive family + grant_spell_access(at_will). The actual spell save DC (conventionally 17 for this item) is not surfaced on the grant_spell_access atom — DC resolution is deferred to the engine at cast time, which is consistent with how other spell-granting items are encoded."
+}

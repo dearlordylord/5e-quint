@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_ring_of_jumping",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.targetRestriction",
+      "justification": "The ring grants Jump but constrains targeting to self only. The existing grant_spell_access atom carries spellId and mode but has no field for overriding or restricting the granted spell's target selection. Encoding without this field would falsely imply the wearer can cast Jump on others, which contradicts RAW.",
+      "evidence": "\"you can cast Jump from it, but can target only yourself when you do so\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive + grant_spell_access family fits structurally (magic_item, requires attunement, at_will mode). The only gap is the missing targetRestriction field on grant_spell_access. Omitting it would produce a misleading trace — the trace would show unrestricted Jump access rather than self-only access, which is the item's sole distinguishing constraint vs. simply knowing the Jump spell. No dhall authored per guardrails."
+}

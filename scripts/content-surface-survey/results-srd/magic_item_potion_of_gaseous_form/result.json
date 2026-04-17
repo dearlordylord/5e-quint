@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_movement_through_openings",
+      "justification": "Gaseous Form's signature trait — moving through spaces as small as ~1 inch — has no v4 atom. It is not reducible to any speed grant or force_move: it is a permanent movement-mode property of the transformed form.",
+      "evidence": "the target can move through a space as small as 1 inch wide without squeezing (Gaseous Form, SRD 5.2.1)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "PolymorphFormSource — named_spell_form",
+      "justification": "Gaseous Form transforms the caster into a specific named gaseous form defined by the spell, not a catalog creature. transform_target requires PolymorphFormSource { kind: 'catalog_ref', creatureType, crBound }, which presupposes the new form is an external monster entry. A new variant { kind: 'named_spell_form', spellId: string } is needed for spell-defined self-transformations.",
+      "evidence": "you gain the effect of the Gaseous Form spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_resistance — nonmagical qualifier",
+      "justification": "grant_resistance takes a DamageTypeRef (a specific damage type or choice thereof). Gaseous Form grants resistance to Bludgeoning, Piercing, and Slashing from Nonmagical Attacks. The 'nonmagical' qualifier is mechanically distinct and not currently expressible; without it the resistance would incorrectly cover magical damage too.",
+      "evidence": "resistance to Bludgeoning, Piercing, and Slashing damage from Nonmagical Attacks"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger — caster_dismisses_as_bonus_action",
+      "justification": "The potion ends 'until you end the effect as a Bonus Action'. All existing DurationEndTrigger variants are passive (target_takes_damage, target_makes_attack_roll, etc.). A caster-initiated, action-economy-costed dismiss is a distinct pattern not yet in the enum.",
+      "evidence": "until you end the effect as a Bonus Action"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The structural frame (magic_item, activation family, timed 1-hour duration, never-reset consumable with permanent_on_empty destruction) fits cleanly. The blocking gaps are all in the effect layer: (1) no atom for gaseous-form movement-through-openings, (2) transform_target requires a catalog_ref which does not apply to spell-defined self-transformation forms, (3) grant_resistance has no nonmagical qualifier. The Bonus Action dismiss early-end is a secondary surface_widening. The unit cannot be honestly encoded without at minimum the named_spell_form PolymorphFormSource variant or a new gaseous_form-shaped atom bundle."
+}

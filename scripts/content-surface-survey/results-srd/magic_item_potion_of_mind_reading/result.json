@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_potion_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.operations",
+      "justification": "The potion grants the effect of Detect Thoughts for 10 minutes with no concentration. The effect's core mechanic is an on-demand save-gated thought probe available as an action during the entire 10-minute window. This is an ongoing interactive operation (trigger: player spends action, effect: target makes Wis save DC 13, on fail: surface/deep thoughts revealed, on success: effect ends). ActivatedAbilityMechanics.phases only supports one-time resolution steps fired at activation; there is no operations field to express ongoing per-use interactions during the duration. OngoingEffectMechanics has operations: ReadonlyNonEmptyArray<OngoingOperation>, but that family is restricted to SpellMechanics — not available for MagicItemMechanics.",
+      "evidence": "you gain the effect of the Detect Thoughts spell (save DC 13) for 10 minutes (no Concentration required)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityHeader.earlyEndOnSave",
+      "justification": "Detect Thoughts ends early when a creature succeeds on the Wis save during the thought probe. This early-end trigger is tied to the outcome of an ongoing save, not to an action taken by the drinker (unlike the target_makes_attack_roll / target_deals_damage / target_casts_spell variants in DurationEndTrigger). The existing DurationEndTrigger variants do not cover 'target succeeds on the periodic save'.",
+      "evidence": "save DC 13 — implicit from Detect Thoughts RAW: if the creature succeeds on the Wis save, it notices you are probing and the spell/effect ends"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The record shape (magic_item, activation family, permanent_on_empty destruction) is correct. The detect atom (property: thoughts, radiusFeet: 30) exists and covers the passive presence-detection aspect. What is missing is a mechanism for expressing ongoing on-demand interactive operations within the duration window of an ActivatedAbilityMechanics unit. A partial encoding using only the detect atom would silently omit the explicitly-stated save DC 13, which is the primary interactive mechanic of this item. Not encoded to avoid a misleading trace."
+}

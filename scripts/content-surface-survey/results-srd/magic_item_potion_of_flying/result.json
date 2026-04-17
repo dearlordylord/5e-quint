@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_potion_of_flying",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "grant_speed",
+    "item_destruction",
+    "magic_item_root",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly. 'Fly Speed equal to your Speed' maps to grant_speed with feet: { kind: 'walk_speed' } (LinkedSpeed §A14). hover: true captures the hover clause. The 1-hour timed duration is carried on ActivatedAbilityMechanics.duration (not traced explicitly by the tracer, but typechecks). Single-use consumable: resetCadence never + permanent_on_empty destruction. The 'fall if in the air' consequence is DM-agenda physics; omitted per ARCHITECTURE.md."
+}

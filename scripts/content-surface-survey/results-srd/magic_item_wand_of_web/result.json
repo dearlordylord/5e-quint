@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_web",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.fixed_save_dc",
+      "justification": "The magic-item activation shell, charge pool, dawn recharge, and last-charge destruction all fit, but the current spell-access surface can only cast the referenced spell using its normal resolution context. Wand of Web needs the cast to carry a fixed DC 13 instead of the wielder's spell save DC.",
+      "evidence": "While holding it, you can expend 1 charge to cast Web (save DC 13) from it."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_wand_of_web.dhall because encoding this as ordinary grant_spell_access would incorrectly use Web's existing caster_spell_save_dc resolution. The item otherwise matches the existing magic-item activation pattern: 7-charge pool, dawn regain 1d6+1, attunement true, and last-charge d20 destruction on 1."
+}

@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_stone_of_good_luck_luckstone",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive attunement-gated magic item with a +1 modify_roll_numeric grant on ability_check, initiative, and saving_throw. Initiative is included explicitly because the surface models it as a separate RollKind."
+}

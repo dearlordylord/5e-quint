@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.composite",
+      "justification": "The item has always-on held-item bonuses and separate charge-based activated abilities at the same time. The current magic-item surface is an exclusive union of passive or activation, so encoding only one side would be dishonest.",
+      "evidence": "\"This staff has 6 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you have a +2 bonus to spell attack rolls.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.holding_item",
+      "justification": "The passive spell-attack bonus applies only while holding this item. Existing passive gates only model armor and weapon-category predicates, not item-specific held-state.",
+      "evidence": "\"While holding it, you have a +2 bonus to spell attack rolls.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_damage_numeric",
+      "justification": "The staff adds a flat bonus to damage rolls made with the weapon form. The current surface can modify attack rolls and AC, but it has no effect atom for weapon damage-roll bonuses.",
+      "evidence": "\"...grants a +2 bonus to attack rolls and damage rolls made with it.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_to_object_transform",
+      "justification": "Tree Form changes the item into a planted tree, later reverts it to staff form, and forces riders on creatures in the tree when it reverts. That is not representable by the existing passive/activation shapes.",
+      "evidence": "\"...expend 1 charge to transform the staff into a healthy tree... While touching the tree and using a Magic action, you return the staff to its normal form. Any creature in the tree falls when the tree reverts to a staff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No Dhall/JSON content was authored. The item does not fit the current magic-item mechanics union honestly, and Tree Form adds further unsupported item/object transformation behavior. The attunement restriction \"by a Druid\" is also not representable on MagicItemRecord."
+}

@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_rope_of_climbing",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.composite",
+      "justification": "The item combines activated command behavior, a passive rider tied to a knotted state, and item durability/regeneration. The current magic-item surface only permits one mechanics family at a time.",
+      "evidence": "While holding one end of the rope, you can take a Magic action to command the other end of the rope to animate and move toward a destination you choose ... If you tell the rope to knot ... grants Advantage on ability checks made to climb using the rope. The rope has AC 20, HP 20 ..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because any current encoding would omit substantial mechanics. Secondary gaps likely remain for knotted-state gating, commanded item movement over multiple turns, and item durability/regeneration."
+}

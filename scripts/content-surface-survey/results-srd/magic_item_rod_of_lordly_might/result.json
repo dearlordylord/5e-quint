@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_lordly_might",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_mode_switch",
+      "justification": "The item has six mutually exclusive persistent button states, each entered by a Bonus Action and lasting until another button is pressed or toggled off. The current MagicItemRecord can carry only one mechanics family and has no way to represent item-local mode state with replacement semantics across passive and utility forms.",
+      "evidence": "\"You can press one of the following buttons as a Bonus Action; a button's effect lasts until you push a different button or until you push the same button again, which causes the rod to revert to its normal form.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_composite_mechanics",
+      "justification": "The rod combines always-on weapon bonuses, persistent alternate forms, on-hit optional riders with dawn resets, and a separate Magic action fear ability. The current magic-item surface forces one top-level mechanics family (`passive` or `activation`) and cannot honestly encode a multi-property item with independent triggers and resources.",
+      "evidence": "\"It has three other properties as well, detailed below.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.on_hit_trigger",
+      "justification": "Drain Life and Paralyze are optional riders that trigger when the wielder hits with a melee attack using the rod. `on_hit_trigger` exists only for mastery, not for magic items, so these cannot be represented without widening the magic-item mechanics union or introducing composition.",
+      "evidence": "\"When you hit a creature with a melee attack using the rod, you can force the target to make a DC 17 Constitution saving throw.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author a placeholder content record. The main failure is structural: the item is a stateful multi-mode bundle, not a single passive or single activation. Secondary surface gaps also exist for emitted light, navigation/depth knowledge, and object-form utility, but those are downstream of the larger family-fit problem."
+}

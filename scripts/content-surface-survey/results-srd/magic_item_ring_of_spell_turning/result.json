@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "spell_source_filter on modify_roll_advantage",
+      "justification": "The ring grants advantage only on saving throws against spells — not all saving throws. The existing modify_roll_advantage atom has attackerTypeFilter and saveAbilityFilter but no mechanism to narrow the bonus to saves triggered by spell sources. Encoding without this filter would grant advantage on all saving throws, which is dishonestly broader.",
+      "evidence": "you have Advantage on saving throws against spells"
+    },
+    {
+      "kind": "new_atom",
+      "name": "negate_spell_on_save_success",
+      "justification": "When the wearer succeeds on a save against a spell of level 7 or lower, the spell has no effect. This is not negate_named_effect (targets a specific spellId) nor negate_triggering_spell (reaction-based, fires on trigger). This is a passive gate: any spell of level ≤ 7 whose save the wearer passes is nullified. Needs a level-bounded, save-success-conditional spell nullification atom.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you"
+    },
+    {
+      "kind": "new_atom",
+      "name": "reflect_spell",
+      "justification": "The wearer may take a Reaction to redirect a qualifying spell back at its caster, who must then make a saving throw against the spell using their own spell save DC. No existing atom models spell redirection to origin caster. This is distinct from negate_triggering_spell (which cancels the spell) — the spell still resolves, but against the original caster.",
+      "evidence": "you can take a Reaction to deflect the spell back at the spell's caster; the caster must make a saving throw against the spell using their own spell save DC"
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction trigger condition on ActivatedAbilityMechanics",
+      "justification": "The deflect reaction fires under a specific condition: the wearer succeeded on a save against a spell of level ≤ 7 that targeted only them with no area of effect. ActivatedAbilityMechanics supports activationCost: { kind: 'reaction' } but has no field to specify a trigger predicate (unlike CastingTime.reaction.trigger on spells). Magic item reaction abilities that are conditional on a prior resolution outcome cannot express their guard condition.",
+      "evidence": "If that spell targeted only you and didn't create an area of effect, you can take a Reaction to deflect the spell back"
+    }
+  ],
+  "confidence": "high",
+  "notes": "All three core mechanics of the ring require new atoms or new surface variants. Mechanic 1 (advantage vs spells) needs a spell-source filter; without it any encoding would dishonestly grant advantage on all saving throws. Mechanic 2 (nullification on save success) is a new passive conditional-negate pattern with a spell-level bound. Mechanic 3 (spell reflection) is the deepest gap: it redirects resolution to the original caster using the caster's own spell save DC — a 'reflect_spell' subgraph with no v4 equivalent. Additionally, the reaction trigger condition cannot be expressed on ActivatedAbilityMechanics. No honest partial encoding is possible without omitting the dominant mechanics."
+}

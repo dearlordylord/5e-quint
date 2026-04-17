@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_staff_of_charming",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_mechanics_magic_item",
+      "justification": "Staff of Charming has three independent mechanics that do not fit a single existing MagicItemMechanics value: a charge-based activated spellcasting property, a reaction-based spell reflection property, and a separate once-per-dawn failed-save replacement property. MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics can encode only one family per item.",
+      "evidence": "This staff has 10 charges. While holding the staff, you can use any of its properties: Cast Spell. ... Reflect Enchantment. ... Resist Enchantment."
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord attunement class restriction",
+      "justification": "The record can express only requiresAttunement: boolean. It cannot encode that attunement is limited to specific classes, which is part of the item's deterministic eligibility rule.",
+      "evidence": "Requires Attunement by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard"
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction trigger for successful spell save against self-only spell",
+      "justification": "Reflect Enchantment fires only after a successful saving throw against an Enchantment spell that targets only you. Existing reaction triggers cover hit-by-attack, targeted-by-named-spell, or creature-casts-spell, but not success on a save against a triggering spell with school and targeting predicates.",
+      "evidence": "If you succeed on a saving throw against an Enchantment spell that targets only you, you can take a Reaction"
+    },
+    {
+      "kind": "new_atom",
+      "name": "reflect_triggering_spell",
+      "justification": "The effect is not just negation or Counterspell-style cancellation. It redirects the triggering spell onto its caster as if you had cast it. Existing atoms such as negate_triggering_spell and negate_named_effect do not express re-targeting and ownership transfer of the triggering spell's full effects.",
+      "evidence": "turn the spell back on its caster as if you had cast the spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "reactionless trigger on failed spell save",
+      "justification": "Resist Enchantment fires when you fail a saving throw against an Enchantment spell that targets only you, with no action or reaction cost. Existing ActivatedAbilityMechanics requires an activation cost and phases initiated by the user; it cannot express an automatic trigger tied to a failed save.",
+      "evidence": "If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one."
+    },
+    {
+      "kind": "new_atom",
+      "name": "replace_failed_save_with_success",
+      "justification": "The item changes the outcome of a completed saving throw from failure to success. Current surface atoms can add bonuses or advantage before resolution, but there is no effect atom that substitutes the resolved save result after the roll is known.",
+      "evidence": "you can turn your failed save into a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Cast Spell property alone would fit the current charge_pool + dawn regain + last_charge_roll + grant_spell_access surface. The item is non-clean because the existing magic-item record cannot combine that activation with Reflect Enchantment and Resist Enchantment, both of which are triggered mechanics with distinct trigger grammars and reset behavior. No dhall/json/trace authored."
+}

@@ -1,0 +1,25 @@
+{
+  "unit_slug": "magic_item_potion_of_heroism",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "grant_temp_hp",
+    "item_destruction",
+    "magic_item_root",
+    "modify_roll_numeric",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "medium",
+  "notes": "Encoded honestly as a single-use activated magic item with a timed 1-hour self effect: 10 temporary hit points plus Bless's +1d4 to attack rolls and saving throws, with no concentration lock. Tracer caveat: the authored activation duration is present in JSON but current trace output does not emit persist/expire lifecycle atoms for ActivatedAbilityMechanics.duration."
+}

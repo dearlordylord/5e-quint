@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_robe_of_scintillating_colors",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "shed_light",
+      "justification": "The robe emits Bright Light in a 30-foot radius and Dim Light for an additional 30 feet while active. No v4 atom covers light emission from a creature or item. This is not cosmetic: the bright-light radius defines the zone of effect for the Wis save, and the light source determines which creatures can meet the 'can see you' visibility condition that gates both the save and the disadvantage. The effect is mechanically load-bearing, not narrative.",
+      "evidence": "the robe sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet"
+    },
+    {
+      "kind": "new_variant",
+      "name": "visibility_filter on modify_roll_advantage and save_gate area",
+      "justification": "Both the disadvantage rider and the save_gate are conditioned on 'creatures that can see you'. The surface has attackerTypeFilter (creature type) on modify_roll_advantage but no visibility filter. Similarly, area-targeted save_gate phases have no filter for line-of-sight or visibility. Without this filter, encoding applies the effects to all attackers/area creatures unconditionally, which contradicts the rule. A new variant (e.g., { kind: 'can_see_target' }) on both modify_roll_advantage and on area-phase targeting is needed.",
+      "evidence": "creatures that can see you have Disadvantage on attack rolls against you. Any creature in the Bright Light that can see you when the robe's power is activated must succeed on a DC 15 Wisdom saving throw"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The charge pool (3 charges, 1d3 at dawn), Magic action activation cost, timed duration (~1 round), save_gate (Wis DC 15 → Stunned), and modify_roll_advantage (disadvantage on attack_roll) all map cleanly to existing surface atoms. The two blockers are the missing shed_light atom and the missing visibility filter. The visibility condition is the primary gate for both resolution mechanics — omitting it would misrepresent the rule, not merely omit a secondary rider. The light emission also directly defines the save zone (bright-light radius = 30 ft), making it structurally integrated into the mechanics rather than purely narrative. No dhall or json authored."
+}

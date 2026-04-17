@@ -1,0 +1,25 @@
+{
+  "description": "You have a Swim Speed of 40 feet while wearing this ring.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "ring_of_swimming",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "feet": 40,
+        "kind": "grant_speed",
+        "speedKind": "swim"
+      }
+    ]
+  },
+  "name": "Ring of Swimming",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Ring of Swimming"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

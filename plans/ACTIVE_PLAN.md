@@ -38,8 +38,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 0,  "id": "CSA1",  "status": "ready-for-implementation-after-light-research", "title": "Survey Mining Rerun (Exhaustive)" },
-    { "number": 1,  "id": "CSA2",  "status": "blocked", "title": "Bulk-Author Newly-Clean Spells Batch 1" },
+    { "number": 0,  "id": "CSA1",  "status": "done", "title": "Survey Mining Rerun (Exhaustive)" },
+    { "number": 1,  "id": "CSA2",  "status": "ready-for-implementation-after-light-research", "title": "Bulk-Author Newly-Clean Spells Batch 1" },
     { "number": 2,  "id": "CSA3",  "status": "blocked", "title": "Bulk-Author Newly-Clean Spells Batch 2" },
     { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
     { "number": 4,  "id": "CSA5",  "status": "ready-for-research", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
@@ -95,8 +95,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 |---|---|---|---|---|---|---|
-| 0 | CSA1 - Survey Mining Rerun (Exhaustive) | ready-for-implementation-after-light-research | none | CSA2, CSA3, CSA8, CSC1 | First of two scheduled exhaustive mining passes. Run the Stage-1 survey pipeline against current surface covering every SRD unit; refresh `survey-results-srd.jsonl` (currently stale vs. the surface) and `REPORT_SRD.md`; publish a delta note listing units that shifted to `clean` after this session's ~15 widenings. | Ready. Pipeline scripts exist at `scripts/content-surface-survey/run-survey.sh`; run to completion, not sampled. |
-| 1 | CSA2 - Bulk-Author Newly-Clean Spells Batch 1 | blocked | CSA1 | CSA3 | Pick 10 units from CSA1's freshly-clean queue; author Dhall + regenerate JSON + trace.md; run regression. | Blocked on CSA1 output (fresh verdict list). |
+| 0 | CSA1 - Survey Mining Rerun (Exhaustive) | done | none | CSA2, CSA3, CSA8, CSC1 | Landed refreshed `survey-results-srd.jsonl` + `REPORT_SRD.md` + [plans/SURVEY_RERUN_2026-04-17.md](/workspace/typescript/dnd/plans/SURVEY_RERUN_2026-04-17.md). The current SRD catalog baseline is 882 queue rows, not the older 504-unit snapshot. | Landed on 2026-04-17. Use the refreshed queue for downstream authoring picks. |
+| 1 | CSA2 - Bulk-Author Newly-Clean Spells Batch 1 | ready-for-implementation-after-light-research | CSA1 | CSA3 | Pick 10 units from CSA1's refreshed clean queue; author Dhall + regenerate JSON + trace.md; run regression. | Ready. Use `plans/SURVEY_RERUN_2026-04-17.md` rather than the stale 504-unit assumption. |
 | 2 | CSA3 - Bulk-Author Newly-Clean Spells Batch 2 | blocked | CSA2 | CSA8 | Same as CSA2 with the next 10 units. | Blocked on CSA2. |
 | 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
 | 4 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. |
@@ -137,7 +137,7 @@ The repo has two parallel per-unit directories that both look like "content" but
 | Path | What it is | Unit granularity | Produced by | Consumed by |
 |---|---|---|---|---|
 | `packages/prototype-content-surface/content/<slug>.{dhall,json,trace.md}` | **Authored corpus.** One entry per actually-authored unit (131 entries currently). `.dhall` is the source-of-truth mechanics authoring in Dhall; `.json` is `dhall-to-json --omit-empty` output; `.trace.md` is the tracer's mermaid-renderable dependency graph (gitignored). | Only authored units (subset of all SRD units). | Human author writes `.dhall`; regression sweep produces `.json`; `src/run.ts` produces `.trace.md`. | The tracer validates the atom graph; downstream (Phase D) the `.json` is consumed by the content-driven runtime. |
-| `scripts/content-surface-survey/results-srd/<slug>/{prompt.md,result.json,codex-out.json,verdict.json}` | **Survey mining outputs.** One subdir per SRD unit SCANNED (786 subdirs — more than authored because every SRD unit gets scanned whether or not it's been authored, plus re-runs on surface changes). Not content — proposals and verdicts from the LLM-sub-agent mining pipeline. | Every SRD unit (504 distinct units plus re-run history). | `run-survey.sh` + `worker.sh` orchestrate; each worker feeds the SRD text to an LLM sub-agent with `prompt-template.md`, records the proposal + verdict. | `aggregate.ts` rolls up into `survey-results-srd.jsonl` + `REPORT_SRD.md`; planners read the report to decide what to author or widen next. |
+| `scripts/content-surface-survey/results-srd/<slug>/{prompt.md,result.json,codex-out.json,verdict.json}` | **Survey mining outputs.** One subdir per SRD unit SCANNED. Not content — proposals and verdicts from the LLM-sub-agent mining pipeline. | Every SRD unit in the current queue (882 distinct SRD rows as of the 2026-04-17 rerun), plus re-run history. | `run-survey.sh` + `worker.sh` orchestrate; each worker feeds the SRD text to an LLM sub-agent with `prompt-template.md`, records the proposal + verdict. | `aggregate.ts` rolls up into `survey-results-srd.jsonl` + `REPORT_SRD.md`; planners read the report to decide what to author or widen next. |
 
 One-liner: **`packages/prototype-content-surface/content/`** is what we have authored. **`scripts/content-surface-survey/results-srd/`** is what the machine suggests we COULD author + whether the current surface supports it. The mining pipeline is the "what's missing" oracle; the authored corpus is the "what's shipped" artifact.
 
@@ -206,7 +206,7 @@ Planning notes:
 
 ### Task 0 - CSA1 - Survey Mining Rerun (Exhaustive)
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -214,7 +214,7 @@ Blocks: `CSA2`, `CSA3`, `CSA8`, `CSC1`
 
 Scope:
 
-- **Exhaustive** re-run of the Stage-1 survey pipeline against the current surface. "Exhaustive" means every SRD unit gets a fresh verdict — not a spot-check, not just previously-failing units. The existing `scripts/content-surface-survey/survey-results-srd.jsonl` has 1060 rows across 504 units (multi-pass history); after this task it should have ONE fresh verdict per unit against the current surface.
+- **Exhaustive** re-run of the Stage-1 survey pipeline against the current surface. "Exhaustive" means every SRD unit gets a fresh verdict — not a spot-check, not just previously-failing units. The older plan snapshot referenced 504 SRD units, but the current queue-backed baseline is 882 SRD rows. This task refreshes to ONE latest verdict per queued SRD unit against the current surface.
 - The vocabulary has grown substantially since the last mining run (15+ new widenings landed, including `spawned_creature`, `reanimated_creature`, `templated_multi_spawn`, `transform_target`, `ability_check_gate`, multi-op `operations`, `ReadonlyNonEmptyArray<T>`, `saveAppliesIf`, `autoSuccessIfCasterSlotGte`, `death_saving_throw` RollKind, etc.). A large share of units previously verdict'd `surface_widening` or `atom_widening` are now cleanly encodable.
 - Refresh `scripts/content-surface-survey/survey-results-srd.jsonl` + `scripts/content-surface-survey/REPORT_SRD.md`.
 - Publish the delta — how many units shifted clean / surface / atom / dm-agenda / structural — into a one-page summary note committed under `plans/`.
@@ -243,7 +243,7 @@ Research note:
 
 Verification requirements:
 
-- Confirm the JSONL row count matches the SRD unit count (504 total units per prior-batch handoff).
+- Confirm the JSONL row count matches the current SRD queue unit count (882 rows as of the 2026-04-17 rerun).
 - Confirm the REPORT_SRD.md regenerates cleanly (no mismatched atom-whitelist entries — if `validate.ts` throws `unknown atomKind`, that atom needs a `STAGE_3_EXTENSIONS` entry first).
 - `/simplify` not applicable — this is a pipeline-execution task.
 
@@ -253,7 +253,7 @@ Handoff readiness:
 
 ### Task 1 - CSA2 - Bulk-Author Newly-Clean Spells Batch 1
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `CSA1`
 

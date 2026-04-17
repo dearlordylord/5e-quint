@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_binding",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.item_save_dc_override",
+      "justification": "The existing magic-item activation shape can model charges, recharge, attunement, and spell grants, but it cannot carry an item-defined fixed save DC for spells cast from the item. Omitting that DC would misstate how Hold Person and Hold Monster resolve when cast from this wand.",
+      "evidence": "\"While holding the wand, you can cast one of the spells (save DC 17) on the following table from it.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit otherwise fits MagicItemRecord + activation mechanics: action activation, charge_pool 7, dawn recharge 1d6+1, grant_spell_access for Hold Person and Hold Monster, and last-charge destruction. The blocking gap is the fixed item save DC 17."
+}

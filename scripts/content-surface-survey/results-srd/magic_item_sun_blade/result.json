@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_sun_blade",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "manifested_item_mode",
+      "justification": "The item has a persistent manifested/unmanifested state that gates all of its weapon behavior, but the current magic-item surface has no way to model a stateful mode toggle on top of passive grants.",
+      "evidence": "While grasping the hilt, you can take a Bonus Action to cause a blade of pure radiance to spring into existence or make the blade disappear. While the blade exists, this magic weapon functions as a Longsword with the Finesse property."
+    },
+    {
+      "kind": "new_variant",
+      "name": "composable_magic_item_mechanics",
+      "justification": "Sun Blade is neither purely passive nor an honest resource-spending activation. It needs one item record to combine repeatable no-resource activations with passive while-active grants.",
+      "evidence": "While the blade persists, you can take a Magic action to expand or reduce its radius of Bright Light and Dim Light by 5 feet each..."
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item deterministically emits bright and dim light, and the emitted light has the sunlight tag plus adjustable radii.",
+      "evidence": "The sword's luminous blade emits Bright Light in a 15-foot radius and Dim Light for an additional 15 feet. The light is sunlight."
+    },
+    {
+      "kind": "new_atom",
+      "name": "weapon_on_hit_bonus_damage_vs_creature_type",
+      "justification": "The item adds extra weapon-hit damage only against a closed creature-type subset, which is not representable by existing passive grants.",
+      "evidence": "When you hit an Undead with it, that target takes an extra 1d8 Radiant damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Forcing this into current passive magic-item shape would lose the blade manifestation state, the repeatable light-control actions, and several weapon-specific riders."
+}

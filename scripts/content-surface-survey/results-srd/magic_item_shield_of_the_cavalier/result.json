@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_shield_of_the_cavalier",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "compound_magic_item_properties",
+      "justification": "Shield of the Cavalier combines an always-on passive AC bonus, an Attack-action replacement attack property, and a separate reaction property that creates a persistent field. MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics allows only one mechanics value per item, so no honest encoding can carry all three properties together.",
+      "evidence": "While holding this Shield, you have a +2 bonus to Armor Class. ... Forceful Bash. When you take the Attack action... Protective Field. As a Reaction..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "non_spell_triggered_reaction_for_magic_items",
+      "justification": "Protective Field is a reaction-shaped item property with an explicit trigger and a concentration-bounded persistent area. The existing triggered_reaction family is spell-only, while ActivatedAbilityMechanics has reaction cost but no trigger grammar and no way to host an ongoing attached field after the reaction resolves.",
+      "evidence": "As a Reaction, when you or an ally you can see within 5 feet of you is targeted by an attack or makes a saving throw against an area of effect, you can use the Shield to create an immobile 5-foot Emanation originating from you. ... lasts as long as you maintain Concentration, up to 1 minute."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.attack_roll.attackKind: melee_weapon_attack",
+      "justification": "Forceful Bash is not a spell attack. The current attack phase only supports ranged_spell_attack and melee_spell_attack, so encoding this as a spell attack would be a category lie.",
+      "evidence": "you can make one of the attack rolls using the Shield against a target within 5 feet of yourself. Apply your Proficiency Bonus and Strength modifier to the attack roll."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceExpr or DiceAmount: ability_modifier damage addend",
+      "justification": "The hit damage is 2d6 + 2 + Strength modifier. DiceExpr can encode a flat bonus and spellcastingMod only; it cannot express adding a named ability modifier to non-spell damage.",
+      "evidence": "the Shield deals Force damage to the target equal to 2d6 + 2 plus your Strength modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_on_target_size",
+      "justification": "The prone rider applies only if the target creature is your size or smaller. Existing EffectAtom composition can apply condition and force movement, but it cannot gate only part of the on-hit bundle on a size comparison between source and target.",
+      "evidence": "if the target is a creature, you can push it up to 10 feet directly away from yourself. If the creature is your size or smaller, you can also knock it down, giving it the Prone condition."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The passive + multiple activated-property structure is the blocking issue. Protective Field adds a second independent blocker: it is a triggered reaction that creates a concentration field on a magic item, which the current magic-item mechanics union cannot host honestly."
+}

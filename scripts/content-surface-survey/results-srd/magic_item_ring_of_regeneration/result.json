@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_ring_of_regeneration",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "restore_body_part",
+      "justification": "Limb regrowth is a mechanical effect with no v4 atom. It is not remove_condition (no condition is being removed), not heal_hp (current HP is unaffected), and not any existing EffectAtom variant. It restores functional anatomy — a distinct category absent from the taxonomy.",
+      "evidence": "If you lose a body part, the ring causes the missing part to regrow and return to full functionality after 1d6 + 1 days if you have at least 1 Hit Point the whole time."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_time_interval",
+      "justification": "The HP regeneration fires every 10 minutes — a real-time/exploration-time interval not representable by any existing OngoingTrigger variant (passive, on_caster_attack_hit, on_attached_turn_start, on_caster_turn_start, on_attached_damaged, on_creature_moves, on_creature_enters_area). A new trigger variant is needed: { kind: 'on_time_interval'; minutes: number }.",
+      "evidence": "you regain 1d6 Hit Points every 10 minutes if you have at least 1 Hit Point"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "MagicItemMechanics ongoing_effect family",
+      "justification": "MagicItemMechanics is PassiveMechanics | ActivatedAbilityMechanics. Neither family can express periodic ongoing operations with triggers and predicates. OngoingEffectMechanics (which has the operations array with trigger+predicate+effect grammar) is spell-only. Magic items with time-interval heal riders require either extending MagicItemMechanics to include an ongoing_effect-like family, or lifting OngoingEffectMechanics to be usable by non-spell units.",
+      "evidence": "While wearing this ring, you regain 1d6 Hit Points every 10 minutes if you have at least 1 Hit Point."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two distinct mechanics are both unrepresentable. (1) Periodic HP regen is blocked by two layered gaps: MagicItemMechanics has no ongoing_effect family, and OngoingTrigger has no on_time_interval variant. The HP-threshold predicate (≥ 1 HP) would map cleanly to the existing at_hp_threshold predicate if the structural gaps were resolved. (2) Limb regeneration has no atom at any layer of the taxonomy — it is a genuinely new mechanical concept. The 1d6+1 day duration of the regrowth is also unrepresented (duration values exist for concentration/timed spells but no equivalent for item passive effects with a resolution timer). Neither mechanic can be honestly approximated with existing atoms without producing a false trace."
+}

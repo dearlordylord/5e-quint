@@ -1,0 +1,34 @@
+{
+  "description": "While this polished agate is on your person, you gain a +1 bonus to ability checks and saving throws.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_stone_of_good_luck_luckstone",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 1,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "ability_check",
+          "initiative",
+          "saving_throw"
+        ]
+      }
+    ]
+  },
+  "name": "Stone of Good Luck (Luckstone)",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StoneOfGoodLuckLuckstone"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}

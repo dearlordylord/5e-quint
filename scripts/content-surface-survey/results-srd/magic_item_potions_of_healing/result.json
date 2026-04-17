@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_potions_of_healing",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "direct_apply",
+    "heal",
+    "item_destruction",
+    "magic_item_root",
+    "target",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded the Common tier (Potion of Healing, 2d4+2) as the representative unit. The Potions of Healing family has four tiers (Common 2d4+2, Uncommon 4d4+4, Rare 8d4+8, Very Rare 10d4+20) that are mechanically identical except for rarity and DiceExpr — each would be a separate MagicItemRecord. SRD 5.2.1 Equipment confirms the Bonus Action cost and 5-ft administration range. Target encoded as 'target_creature' (covers both drinking-self and administering-to-other within 5 ft). resetCadence: never + permanent_on_empty destruction correctly model the consumable lifecycle."
+}

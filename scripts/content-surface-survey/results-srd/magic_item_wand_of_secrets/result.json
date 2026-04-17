@@ -1,0 +1,9 @@
+{
+  "unit_slug": "magic_item_wand_of_secrets",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "No content file authored. The item fits the existing magic_item activation shell structurally (action, charge pool, dawn recharge), but its only payload is information reveal: if a secret door or trap is within 60 feet, the wand points to the nearest one. Per ARCHITECTURE guidance in the taxonomy notes, hidden-world discovery and notification are caller-owned / DM-agenda rather than core deterministic combat-state atoms."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wand_of_enemy_detection",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.detect.property = hostile_creature with nearest-direction readout",
+      "justification": "The existing magic-item activation family and charge-pool shell fit, but the current detect shape only models sensing the presence of a closed property within a radius. This item reports the direction of the nearest hostile creature, not mere presence, and keys the scan to hostility.",
+      "evidence": "For 1 minute, you know the direction of the nearest creature Hostile to you within 60 feet, but not its distance from you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_stops_holding_item",
+      "justification": "The item's timed effect has a deterministic early-end condition tied to ceasing to hold the item. Current duration early-end triggers do not cover equipment-state termination.",
+      "evidence": "The effect ends if you stop holding the wand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author a placeholder record. The magic-item activation shell is valid, but encoding this honestly needs a detect-shape widening and an item-holding early-end trigger."
+}

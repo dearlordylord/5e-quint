@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_slippers_of_spider_climbing",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_speed",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "medium",
+  "notes": "Encoded as a passive attunement-gated magic item granting a Climb Speed equal to walk Speed. Per the existing spider_climb precedent in this package, the vertical-surface/ceiling traversal text and slippery-surface exception are treated as out-of-surface spatial adjudication rather than new authored atoms."
+}

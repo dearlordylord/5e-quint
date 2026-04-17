@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_sword_of_sharpness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "triggered passive weapon rider family for magic items",
+      "justification": "Sword of Sharpness is not an always-on passive grant and not an activated ability. Its mechanics are conditional weapon-hit and critical-hit riders attached to wielding the item. Current MagicItemMechanics only allows passive or activation, so any encoding would misstate timing or action economy.",
+      "evidence": "When you attack an object with this magic weapon and hit, maximize your weapon damage dice against the target. When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll, that target takes an extra 14 Slashing damage and gains 1 Exhaustion level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "trigger variant for natural-20 weapon attack",
+      "justification": "The creature rider keys off a natural 20 on the d20, not merely a hit. Existing on-hit trigger shapes only express weapon_hit or melee-only weapon_hit, so they cannot distinguish this stricter trigger.",
+      "evidence": "When you attack a creature with this weapon and roll a 20 on the d20 for the attack roll"
+    },
+    {
+      "kind": "new_atom",
+      "name": "maximize_weapon_damage_dice",
+      "justification": "The object rider replaces the rolled weapon damage dice result with its maximum value. Existing atoms can add damage or modify d20 rolls, but they cannot maximize an already-resolving weapon damage roll.",
+      "evidence": "maximize your weapon damage dice against the target"
+    },
+    {
+      "kind": "new_variant",
+      "name": "increment leveled exhaustion by 1",
+      "justification": "apply_condition with condition=exhaustion only captures presence of the condition, not gaining one additional exhaustion level. Sword of Sharpness needs an incremental leveled-condition effect.",
+      "evidence": "gains 1 Exhaustion level"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item's primary mechanic is a passive triggered weapon rider, and MagicItemRecord currently has no honest family for that shape. Secondary gaps remain even if such a family existed: no natural-20 trigger variant, no representable maximize-weapon-damage-dice effect, and no leveled exhaustion increment effect."
+}

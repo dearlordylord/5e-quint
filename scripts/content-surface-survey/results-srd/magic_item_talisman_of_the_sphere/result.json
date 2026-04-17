@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_talisman_of_the_sphere",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_combined_passive_and_activation",
+      "justification": "The item has an always-on passive rider and a separate turn-gated activated capability. Current magic items must choose exactly one mechanics family: passive or activation.",
+      "evidence": "\"While holding or wearing this talisman, you have Advantage on any Intelligence (Arcana) check you make to control a Sphere of Annihilation. In addition, when you start your turn in control of a Sphere of Annihilation, you can take a Magic action to move it...\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object",
+      "justification": "The activated half targets and moves another specific object, not self, a creature target, an area, or a mark.",
+      "evidence": "\"you can take a Magic action to move it\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.move_object",
+      "justification": "The surface lacks an authored way to express deterministic movement of an external object with a distance formula derived from an ability modifier.",
+      "evidence": "\"move it 10 feet plus a number of additional feet equal to 10 times your Intelligence modifier\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author placeholder content. The passive Arcana-check advantage fits existing atoms, but the item as a whole cannot be represented honestly because the current magic-item surface cannot combine passive and activated mechanics, and the activation moves an object tied to control-state over a Sphere of Annihilation."
+}

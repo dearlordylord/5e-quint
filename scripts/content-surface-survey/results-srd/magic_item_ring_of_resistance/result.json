@@ -1,0 +1,9 @@
+{
+  "unit_slug": "magic_item_ring_of_resistance",
+  "outcome": "clean",
+  "atoms_used": ["grant", "grant_resistance", "magic_item_root"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The damage type is GM-determined at item creation from a closed table of 10 types. Encoded as CastTimeChoice<DamageType> — the closest honest shape in the surface. The item does not require attunement per the SRD text (no 'Requires Attunement' clause). Passive family with a single grant_resistance atom fits cleanly."
+}

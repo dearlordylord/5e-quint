@@ -1,0 +1,56 @@
+{
+  "description": "When you drink this potion, you gain a Fly Speed equal to your Speed for 1 hour and can hover. If you're in the air when the potion wears off, you fall unless you have some other means of staying aloft.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_flying",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "feet": {
+              "kind": "walk_speed"
+            },
+            "hover": true,
+            "kind": "grant_speed",
+            "speedKind": "fly"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Flying",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Potion of Flying"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": false
+}

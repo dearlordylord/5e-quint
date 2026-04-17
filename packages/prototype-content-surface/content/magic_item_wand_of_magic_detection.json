@@ -1,0 +1,59 @@
+{
+  "description": "This wand has 3 charges. While holding it, you can expend 1 charge to cast Detect Magic from it. The wand regains 1d3 expended charges daily at dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_wand_of_magic_detection",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 1,
+              "minLevel": 1,
+              "perLevelCharges": 0
+            },
+            "spellId": "detect_magic"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 3
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 3
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Wand of Magic Detection",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#WandOfMagicDetection"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

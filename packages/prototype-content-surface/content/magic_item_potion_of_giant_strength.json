@@ -1,0 +1,54 @@
+{
+  "description": "When you drink this potion, your Strength score changes for 1 hour. The type of giant determines the score. The potion has no effect on you if your Strength is equal to or greater than that score. (Hill variant: Strength 21, Uncommon.)",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_giant_strength",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "ability": "str",
+            "kind": "set_ability_score",
+            "mode": "floor",
+            "value": 21
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Giant Strength",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#PotionOfGiantStrength"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

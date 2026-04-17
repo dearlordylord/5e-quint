@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "multi_mechanics_magic_item",
+      "justification": "Rod of Absorption combines at least three independent mechanics: a reactive spell-absorption effect, a separate spell-slot-substitution casting mechanic, and attunement-visible stored-energy state. MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics only allows one mechanics shape, so no single existing family can represent the whole item honestly.",
+      "evidence": "While holding this rod, you can take a Reaction to absorb a spell ... If you are a spellcaster holding the rod, you can convert energy stored in it into spell slots to cast spells you have prepared or know."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "triggered_reaction_magic_item",
+      "justification": "The rod's absorption mechanic is not a free-standing reaction activation; it is a trigger-bound response to a spell that targets only the wielder and creates no area. ActivatedAbilityMechanics can consume a reaction quota but cannot encode reaction triggers, while triggered_reaction currently exists only for spells.",
+      "evidence": "you can take a Reaction to absorb a spell that is targeting only you and doesn't create an area of effect"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource: item_spell_energy_reservoir",
+      "justification": "The rod tracks current stored spell-energy levels and a separate lifetime absorbed total capped at 50 over the rod's existence. Existing charge_pool models a spendable pool with a cap and reset cadence, but not externally gained energy plus a second monotonic lifetime counter.",
+      "evidence": "The rod can absorb and store up to 50 levels of energy over the course of its existence. Once the rod absorbs 50 levels of energy, it can't absorb more."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "spell_slot_cost_substitution",
+      "justification": "The rod does not grant access to a named spell. It lets the wielder spend stored item energy in place of spell slots when casting any spell they have prepared or know, subject to slot-level constraints. Existing grant_spell_access cannot express this because it is keyed to a specific spellId.",
+      "evidence": "you can convert energy stored in it into spell slots to cast spells you have prepared or know. You use the stored levels in place of your slots but otherwise cast the spell as normal."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content/trace files were produced. The current surface can represent the canceling piece in isolation via negate_triggering_spell, but not the full item honestly because the missing shape is structural: reaction-bound magic-item mechanics plus absorbed-energy state and arbitrary spell-slot substitution."
+}

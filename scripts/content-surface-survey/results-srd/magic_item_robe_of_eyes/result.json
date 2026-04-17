@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_robe_of_eyes",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "sense-gated roll modifier predicate",
+      "justification": "The surface can narrow roll modifiers by skill, but not by whether the check relies on sight. Encoding plain Perception advantage would overgrant.",
+      "evidence": "The robe gives you Advantage on Wisdom (Perception) checks that rely on sight."
+    },
+    {
+      "kind": "new_variant",
+      "name": "triggered passive mechanics for magic items",
+      "justification": "Passive magic items currently support always-on grants only. Robe of Eyes also has a deterministic drawback triggered by external spell events while worn.",
+      "evidence": "A Light spell cast on the robe or a Daylight spell cast within 5 feet of the robe gives you the Blinded condition for 1 minute."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item-exposure named-spell trigger",
+      "justification": "The existing trigger grammar does not represent named spells cast on a worn item or within a radius of that item.",
+      "evidence": "A Light spell cast on the robe or a Daylight spell cast within 5 feet of the robe..."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "trigger-parameterized repeat-save drawback",
+      "justification": "The repeat save exists conceptually, but its DC depends on which trigger branch caused the blinded condition. The current passive-item surface cannot carry that branch-specific parameterization.",
+      "evidence": "At the end of each of your turns, you make a Constitution saving throw (DC 11 for Light or DC 15 for Daylight), ending the condition on yourself on a success."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item's always-on senses mostly fit, but the sight-only Perception rider and triggered blindness drawback cannot be represented honestly with the current passive magic-item surface."
+}

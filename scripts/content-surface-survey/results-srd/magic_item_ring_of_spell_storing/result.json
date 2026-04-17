@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_storing",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "spell_reservoir",
+      "justification": "The ring's core mechanic is a dynamic spell pool whose contents are determined at runtime by external casters. No existing payload family models an item that receives spells cast into it by arbitrary creatures and stores them as a variable-content pool. The activation family requires fixed spell lists via grant_spell_access.spellId; no dynamic/stored variant exists.",
+      "evidence": "Any creature can cast a spell of level 1 through 5 into the ring by touching the ring as the spell is cast. The spell has no effect other than to be stored in the ring."
+    },
+    {
+      "kind": "new_atom",
+      "name": "receive_spell_into_item",
+      "justification": "There is no trigger or operation for 'another creature casts a spell while touching this item, which absorbs the spell rather than resolving it.' The on_caster_attack_hit / on_attached_turn_start / on_creature_enters_area trigger vocabulary has no entry for this.",
+      "evidence": "Any creature can cast a spell of level 1 through 5 into the ring by touching the ring as the spell is cast. The spell has no effect other than to be stored in the ring."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.mode = stored_dynamic",
+      "justification": "grant_spell_access requires a fixed spellId known at authoring time. The ring releases whichever spell happens to be stored — the spell identity is runtime state, not a compile-time constant. A 'stored_dynamic' mode (or equivalent) is needed to express 'cast the spell currently stored in this slot.'",
+      "evidence": "While wearing this ring, you can cast any spell stored in it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "cast_with_borrowed_caster_stats",
+      "justification": "When the wearer releases a stored spell, the spell uses the original caster's slot level, save DC, attack bonus, and spellcasting ability — not the wearer's. No existing SpellAccessMode or EffectAtom variant models borrowed-caster-stats semantics. The surface has no mechanism to record that a cast resolves with another creature's derived values.",
+      "evidence": "The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster but is otherwise treated as if you cast the spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "charge_pool with spell-level capacity tracking",
+      "justification": "The ring's 5-level capacity is consumed in variable chunks (1–5 per stored spell). The existing charge_pool resource only tracks a numeric count; it has no notion of 'this charge expenditure corresponds to a particular stored spell with specific borrowed stats.' A spell-level-capacity variant of ChargePoolResource is needed.",
+      "evidence": "The ring can store up to 5 levels worth of spells at a time. The level of the slot used to cast the spell determines how much space it uses."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ring's mechanic is a dynamic spell reservoir: runtime-variable content, two-actor input/output (any caster stores; attuned wearer releases), and borrowed caster stats on release. None of these three dimensions are representable in the current surface. The v4 taxonomy lists 'stored_spell' as an attachment atom but it is absent from types.ts; even if added, the receive/release subgraph and borrowed-stats semantics would still be missing. The GM-chosen initial state ('1d6−1 levels chosen by the GM') is DM agenda and would remain unencoded regardless."
+}

@@ -1,0 +1,9 @@
+{
+  "unit_slug": "magic_item_ring_of_swimming",
+  "outcome": "clean",
+  "atoms_used": ["grant", "grant_speed", "magic_item_root"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Ring of Swimming encodes exactly as a passive MagicItemRecord with a single grant_speed atom (speedKind: swim, feet: 40). No attunement required. Typecheck passes; tracer emits a clean graph."
+}

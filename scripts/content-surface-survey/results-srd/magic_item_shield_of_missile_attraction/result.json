@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_shield_of_missile_attraction",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_resistance.sourceFilter",
+      "justification": "The existing resistance atom only models resistance by damage type. This item grants resistance based on attack source: attacks made with ranged weapons.",
+      "evidence": "While holding this Shield, you have Resistance to damage from attacks made with Ranged weapons."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "redirect_attack_target",
+      "justification": "The curse passively intercepts a qualifying ranged-weapon attack targeting a nearby creature and replaces that target with the cursed bearer before attack resolution.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Top-level magic_item passive family exists, but the unit is not honestly encodable with the current effect vocabulary."
+}

@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_wand_of_magic_detection",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "charge_pool",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit to existing magic_item activation surface: fixed 3-charge pool, Detect Magic via charge_cast at level 1, and partial dawn recharge of 1d3. No attunement or destruction rider is present in the source text."
+}

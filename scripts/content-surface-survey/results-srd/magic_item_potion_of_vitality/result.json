@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_potion_of_vitality",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "maximize_hit_die_recovery",
+      "justification": "The potion grants 'you regain the maximum number of Hit Points for any Hit Point Die you spend' for 24 hours. The closest existing atom is maximize_healing_received (Beacon of Hope: 'when the target regains Hit Points, it regains the maximum number possible'), but that applies to ALL sources of HP regain — spell healing, features, potions, etc. The Potion of Vitality scopes the maximization exclusively to Hit Die spending during short rests. Using maximize_healing_received would be a dishonest overstatement of the effect (it would imply cure wounds also heals at max), so a scoped variant is required.",
+      "evidence": "For the next 24 hours, you regain the maximum number of Hit Points for any Hit Point Die you spend."
+    },
+    {
+      "kind": "new_variant",
+      "name": "mixed_duration_phases",
+      "justification": "The unit has both permanent instantaneous effects (remove all Exhaustion levels, end Poisoned) and a 24h timed ongoing effect (maximize Hit Die recovery). The ActivatedAbilityMechanics.duration field applies to the overall activation, not to individual phase effects selectively. There is no way to express that effects 1 and 2 are permanent while effect 3 is timed 24h. The Potion of Flying avoids this because its single effect (fly speed) is naturally timed. A surface-level mechanism to attach per-effect durations — or a separate 'ongoing_operations' field on ActivatedAbilityMechanics — would be needed to express this cleanly.",
+      "evidence": "When you drink this potion, it removes any Exhaustion levels you have and ends the Poisoned condition on you. For the next 24 hours, you regain the maximum number of Hit Points for any Hit Point Die you spend."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The permanent remove_condition effects (exhaustion, poisoned) could fit existing atoms cleanly. The blocker is the 24h Hit-Die maximization: maximize_healing_received is too broad (scoped to all HP regain per Beacon of Hope), and no narrowed variant exists. Secondary issue: the ActivatedAbilityMechanics pattern cannot cleanly express that only one of three simultaneous effects is timed while the others are permanent. No dhall/json/trace authored — the unit does not fit honestly."
+}
