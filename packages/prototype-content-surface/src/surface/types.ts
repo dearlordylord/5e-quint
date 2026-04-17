@@ -2047,11 +2047,29 @@ export type SpeciesTraitRecord = UnitMetadata & {
   readonly mechanics: SpeciesTraitMechanics;
 };
 
+export type MagicItemComponentMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics;
+
+// Composite magic-item mechanics — a single SRD item can combine
+// always-on passive grants with a distinct activated ability while
+// remaining one authored unit. Keep this bounded to existing
+// magic-item families; trigger-shaped item abilities still require
+// their own widening rather than being smuggled through this record.
+export type CompositeMagicItemMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;
+};
+
 // MagicItemMechanics: attunement-gated passive (Cloak of Protection) or
-// charge-based activation (Wand of Magic Missiles). The attunement gate
-// is carried on the record, not the mechanics, since any mechanics shape
-// can be gated.
-export type MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics;
+// charge-based activation (Wand of Magic Missiles). Some staffs combine
+// passive held bonuses and separate activated spellcasting in one item,
+// so the surface also admits a bounded composite over those existing
+// families. The attunement gate is carried on the record, not the
+// mechanics, since any mechanics shape can be gated.
+export type MagicItemMechanics =
+  | MagicItemComponentMechanics
+  | CompositeMagicItemMechanics;
 
 export type MagicItemRarity =
   | "common"

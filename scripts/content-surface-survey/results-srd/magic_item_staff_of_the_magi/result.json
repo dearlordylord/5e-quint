@@ -5,30 +5,66 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "MagicItemMechanics.composite",
-      "justification": "The item has multiple independent mechanics families at once: passive held bonuses, charge-based spell activation, a triggered reaction, and a distinct destructive activation. The current magic-item record allows only one mechanics family.",
-      "evidence": "\"While you hold it, you gain a +2 bonus to spell attack rolls.\" / \"While holding the staff, you can cast one of the spells...\" / \"you can take a Reaction when another creature casts a spell that targets only you.\" / \"You can take a Magic action to break the staff...\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "TriggeredReactionMechanics for magic items",
-      "justification": "Spell Absorption is a genuine reaction-shaped item ability with a trigger and effect. Existing triggered-reaction support is spell-only, while activated magic items have no trigger grammar.",
-      "evidence": "\"you can take a Reaction when another creature casts a spell that targets only you\""
-    },
-    {
       "kind": "new_subgraph",
-      "name": "charge_gain_from_absorbed_spell_level_with_overflow_branch",
-      "justification": "The surface can spend charges and recharge at dawn, but it cannot gain charges from a reacted-to spell's level or branch on exceeding the pool cap into a second ability.",
-      "evidence": "\"the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level. However, if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its Retributive Strike\""
+      "name": "triggered_reaction_magic_item_component",
+      "justification": "Magic items can currently compose only passive and activation parts. Staff of the Magi has a major reaction-shaped ability that cannot be expressed as either without lying about timing and trigger semantics.",
+      "evidence": "In addition, you can take a Reaction when another creature casts a spell that targets only you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction_trigger.targeted_by_spell_self_only",
+      "justification": "Existing reaction triggers only cover named spells or generic spellcasting with components. Spell Absorption keys off an unnamed spell whose targeting restriction is 'targets only you'.",
+      "evidence": "when another creature casts a spell that targets only you"
     },
     {
       "kind": "new_atom",
-      "name": "modify_damage_roll_numeric",
-      "justification": "The passive quarterstaff rider grants a bonus to weapon damage rolls made with the item. Current atoms can modify AC, attack rolls, saves, and checks, but not damage rolls.",
-      "evidence": "\"grants a +2 bonus to attack rolls and damage rolls made with it\""
+      "name": "modify_damage_roll",
+      "justification": "The passive quarterstaff mode grants a bonus to damage rolls made with the item, and the surface has no atom for passive damage-roll modifiers.",
+      "evidence": "grants a +2 bonus to attack rolls and damage rolls made with it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "weapon_filter.specific_item",
+      "justification": "Current weapon scoping only distinguishes melee vs ranged. Staff of the Magi needs bonuses scoped to this held quarterstaff specifically.",
+      "evidence": "can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "roll_kind.spell_attack_roll",
+      "justification": "The item separately boosts spell attack rolls while held. The current roll taxonomy cannot target spell attacks without also hitting weapon attacks.",
+      "evidence": "While you hold it, you gain a +2 bonus to spell attack rolls."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.source_filter_spell",
+      "justification": "Spell Absorption grants Advantage on saving throws against spells, but current save/advantage riders cannot narrow by the source being a spell.",
+      "evidence": "you have Advantage on saving throws against spells"
+    },
+    {
+      "kind": "new_variant",
+      "name": "magic_item_attunement.class_restriction",
+      "justification": "MagicItemRecord only captures a boolean attunement flag. Staff of the Magi requires attunement by one of a closed class set.",
+      "evidence": "Requires Attunement by a Sorcerer, Warlock, or Wizard"
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_origin.item_self",
+      "justification": "Retributive Strike's explosion originates from the staff itself, not the wielder, a target, or a point within range.",
+      "evidence": "an explosion that fills a 30-foot Emanation originating from itself"
+    },
+    {
+      "kind": "new_variant",
+      "name": "dice_amount.resource_spent_multiplier",
+      "justification": "Retributive Strike damage is a fixed multiple of the staff's current charges, not simply equal to charges spent.",
+      "evidence": "you take Force damage equal to 16 times the number of charges in the staff ... a creature takes Force damage equal to 6 times the number of charges in the staff"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "charge_pool_refund_and_overflow_resolution",
+      "justification": "Spell Absorption adds charges based on absorbed spell level and can overflow into an immediate Retributive Strike-style explosion. The current surface has no honest way to model reactive charge gain plus overflow consequences.",
+      "evidence": "the staff absorbs the magic of the spell, canceling its effect and gaining a number of charges equal to the absorbed spell's level. However, if doing so brings the staff's total number of charges above 50, the staff explodes as if you activated its Retributive Strike"
     }
   ],
   "confidence": "high",
-  "notes": "No content file was authored. The clean subsets already supported by the surface are outweighed by structural mismatch: one item contains passive, activation, triggered-reaction, and overflow-destruction mechanics. Retributive Strike also adds further pressure around area damage keyed to current charges and a random-plane avoidance branch."
+  "notes": "The spell table, charge pool, and dawn recharge mostly fit existing magic-item activation patterns, but the unit as a whole does not fit honestly because it combines passive, triggered-reaction, and activated mechanics, and several supporting filters/atoms are still missing."
 }

@@ -30,6 +30,7 @@ import type {
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
+  CompositeMagicItemMechanics,
   EquipmentPredicate,
   FeatRecord,
   SpeciesTraitRecord,
@@ -2456,7 +2457,7 @@ function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
 }
 
 // Shared dispatch for families that can be either passive or activated —
-// used by FeatRecord, SpeciesTraitRecord, MagicItemRecord.
+// used by FeatRecord and SpeciesTraitRecord.
 function tracePassiveOrActivated(
   m: PassiveMechanics | ActivatedAbilityMechanics,
   nodes: TraceNode[],
@@ -2472,6 +2473,29 @@ function tracePassiveOrActivated(
       const _exhaustive: never = m;
       throw new Error(
         `unhandled mechanics family: ${String((_exhaustive as { family: string }).family)}`,
+      );
+    }
+  }
+}
+
+function traceMagicItemMechanics(
+  m: PassiveMechanics | ActivatedAbilityMechanics | CompositeMagicItemMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string[] {
+  switch (m.family) {
+    case "passive":
+    case "activation":
+      return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "composite":
+      return m.parts.map((part) =>
+        tracePassiveOrActivated(part, nodes, edges, ids),
+      );
+    default: {
+      const _exhaustive: never = m;
+      throw new Error(
+        `unhandled magic-item mechanics family: ${String((_exhaustive as { family: string }).family)}`,
       );
     }
   }
@@ -2565,8 +2589,10 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     edges.push({ from: rootId, to: slotId, relation: "consumes" });
   }
 
-  const procId = tracePassiveOrActivated(item.mechanics, nodes, edges, ids);
-  edges.push({ from: rootId, to: procId, relation: "roots" });
+  const procIds = traceMagicItemMechanics(item.mechanics, nodes, edges, ids);
+  for (const procId of procIds) {
+    edges.push({ from: rootId, to: procId, relation: "roots" });
+  }
 
   // Item-level destruction lifecycle.
   traceItemDestruction(item.destruction, rootId, nodes, edges, ids);
@@ -2946,9 +2972,7 @@ function traceResetCadence(
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       const trigger =
-        c.startsWhen === "resource_empty"
-          ? "after pool empty"
-          : "after spend";
+        c.startsWhen === "resource_empty" ? "after pool empty" : "after spend";
       nodes.push({
         id: did,
         category: "window",

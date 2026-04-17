@@ -2,99 +2,83 @@
 
 ## Verdict
 
-`Staff of Power` does not fit the current authored surface honestly.
+`Staff of Power` does not fit the current authored surface honestly, so no `content/magic_item_staff_of_power.dhall` was written.
 
-The blocking issue is structural: the item is simultaneously:
+Outcome: `atom_widening`
 
-- a passive attunement/holding item with ongoing bonuses;
-- a charge-cast spell item;
-- an item with a separate destructive activated ability;
-- an item with a last-charge outcome table that degrades properties rather than only destroying or emptying the item.
+## What fits already
 
-The current surface allows `MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics`, so one record can only be one of those families at a time.
+- `MagicItemRecord` is the correct top-level kind.
+- The spell table fits the existing charge-cast activation pattern:
+  - `charge_pool` with cap 20
+  - `grant_spell_access` for `cone_of_cold`, `fireball` at level 5, `globe_of_invulnerability`, `hold_monster`, `levitate`, `lightning_bolt` at level 5, `magic_missile`, `ray_of_enfeeblement`, and `wall_of_force`
+  - `resetCadence.dawn` with regain `2d8 + 4`
 
-## Why Existing Families Fail
+## Why it does not fit honestly
 
-### 1. Mixed passive + activation item
+### 1. Passive combat package is underspecified by the current surface
 
-The staff has passive mechanics:
+The item grants three distinct passive bonuses:
 
-> "This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls."
+- `+2` to attack rolls made with this staff
+- `+2` to damage rolls made with this staff
+- `+2` to AC, saving throws, and spell attack rolls while holding it
 
-It also has activated spellcasting:
+Current gaps:
 
-> "While holding the staff, you can cast one of the spells on the following table from it..."
+- `WeaponFilter` cannot scope a bonus to one specific item; it only distinguishes `melee` vs `ranged`.
+- `RollKind` cannot target `spell_attack_roll` separately from generic `attack_roll`.
+- There is no effect atom for a passive bonus to damage rolls.
 
-And it also has a distinct activated destructive ability:
+The damage-roll bonus is the blocking gap: encoding the item without it would misstate one of its headline properties.
 
-> "You can take a Magic action to break the staff over your knee or against a solid surface..."
+## 2. Last-charge behavior is not a simple destruction roll
 
-Encoding it as `passive` drops the spellcasting and Retributive Strike.
-Encoding it as `activation` drops the always-on bonuses.
-That is not an omission on a secondary rider; it is the item's core shape.
+Current `ItemDestructionPolicy.last_charge_roll` only models:
 
-### 2. Last-charge degradation is not existing destruction policy
+- expend the last charge
+- roll a die
+- destroy on a threshold
 
-Current `ItemDestructionPolicy` supports:
+`Staff of Power` instead says:
 
-- `none`
-- `last_charge_roll` => destroy on threshold
-- `permanent_on_empty`
+- on `1`, it is not destroyed immediately but loses all properties except the quarterstaff `+2 attack/+2 damage` bonus
+- on `20`, it regains `1d8 + 2` charges
 
-But Staff of Power says:
+That is a richer outcome table than the current destruction policy can express.
 
-> "On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges."
+## 3. Retributive Strike forces more shape widening
 
-That is neither destruction nor simple empty/nonmagical exhaustion. It is a state transition to a reduced-property item plus a special recharge outcome.
+Retributive Strike adds several unsupported mechanics:
 
-### 3. Retributive Strike pressures additional surface shapes
+- the area originates from the item itself: "a 30-foot Emanation originating from itself"
+- the self-damage and area damage are fixed multiples of the staff's current charges
+- the wielder has a 50 percent chance to avoid the explosion by instantly traveling to a random plane of existence
 
-Retributive Strike also needs shapes that do not currently exist:
+Specific pressures:
 
-- damage based on current charges remaining (`16 × charges` to self, `4 × charges` to others);
-- interplanar random travel on a 50% chance;
-- an activation whose effect destroys the item immediately.
+- `AreaOrigin` needs an item-origin variant.
+- `DiceAmount.resource_spent` needs a multiplied form, not just `= charges spent`.
+- The random-plane travel is at least a surface gap and likely caller/runtime-adjacent even if the damage were modeled.
 
-These are secondary to the main structural blocker, but they are real follow-on gaps.
+## Minimal widening set
 
-## Proposed Widenings
+1. Add a new effect atom for passive damage-roll bonuses, e.g. `modify_damage_roll`.
+2. Widen weapon scoping so passive modifiers can target a specific held item / weapon identity.
+3. Widen roll targeting so `spell_attack_roll` can be modified independently.
+4. Widen magic-item attunement metadata to express class-restricted attunement.
+5. Widen last-charge policies to support nonbinary outcome tables.
+6. Widen charge-based amounts to allow multiplied charge damage.
+7. Widen area origin to support emanations from the item itself.
 
-### 1. New mechanics composition for magic items
+## Evidence
 
-Add a way for one `MagicItemRecord` to carry both passive grants and one or more activated abilities.
+> This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it.
 
-Possible direction:
+> While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls.
 
-- `MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics | { family = "composite", passive = PassiveMechanics, activations = NonEmptyArray<ActivatedAbilityMechanics> }`
+> If you expend the last charge, roll 1d20. On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges.
 
-This is the minimum honest widening for items like Staff of Power.
+> The staff is destroyed and releases its magic in an explosion that fills a 30-foot Emanation originating from itself.
 
-### 2. New last-charge outcome table variant
-
-Add an item-lifecycle variant that can express outcome tables on last-charge expenditure, not just destruction.
-
-Pressure text:
-
-> "On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges."
-
-### 3. Resource-remaining amount shape
-
-Add a `DiceAmount` or equivalent shape for "amount equals current charges remaining × N".
-
-Pressure text:
-
-> "you take Force damage equal to 16 times the number of charges in the staff"
-
-and
-
-> "a creature takes Force damage equal to 4 times the number of charges in the staff"
-
-### 4. Interplanar random-travel shape
-
-If modeled in-core, add a teleport/transport variant for random-plane travel.
-
-Pressure text:
-
-> "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion."
-
-If the random destination is considered caller-owned / out-of-core, that should be stated explicitly in the surface rules.
+> If you fail to avoid the effect, you take Force damage equal to 16 times the number of charges in the staff. Each other creature in the area makes a DC 17 Dexterity saving throw. On a failed save, a creature takes Force damage equal to 4 times the number of charges in the staff.

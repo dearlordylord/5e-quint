@@ -83,9 +83,13 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
     case "spell":
       return `https://5e.tools/spells.html#${encodeHashParts(unit.name, source)}`;
     case "class_feature":
-      return `https://5e.tools/classfeatures.html#${
-        encodeHashParts(unit.name, capitalizeAscii(unit.className), source, unit.acquiredAtLevel, source)
-      }`;
+      return `https://5e.tools/classfeatures.html#${encodeHashParts(
+        unit.name,
+        capitalizeAscii(unit.className),
+        source,
+        unit.acquiredAtLevel,
+        source,
+      )}`;
     case "feat":
       return `https://5e.tools/feats.html#${encodeHashParts(unit.name, source)}`;
     case "species_trait":
