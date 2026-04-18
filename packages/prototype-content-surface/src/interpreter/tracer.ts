@@ -329,6 +329,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "suppress_incoming_critical_hit": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_incoming_critical_hit",
+        label: "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
+      });
+      return id;
+    }
     case "scale_attack_count": {
       const id = ids("eff");
       nodes.push({
@@ -753,6 +763,7 @@ function traceEffectAtomScaling(
     case "modify_damage_numeric":
     case "modify_roll_advantage":
     case "modify_crit_range":
+    case "suppress_incoming_critical_hit":
     case "scale_attack_count":
     case "modify_speed":
     case "force_move":

@@ -219,6 +219,7 @@ export const STAGE_3_EXTENSIONS = [
   "ignore_web_restrictions", // Cloak of Arachnida spider-walk web immunity / traversal carveout.
   "detect", // Detect Magic, Detect Evil and Good (radius + property).
   "modify_crit_range", // Improved Critical (crit on 19-20).
+  "suppress_incoming_critical_hit", // Adamantine Armor: incoming critical hits against the bearer become normal hits.
   "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.
   "composite", // Bundle multiple effects in a single slot (Hypnotic Pattern).
   // Effect atoms that are first-class EffectAtom variants in types.ts

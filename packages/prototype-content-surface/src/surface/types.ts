@@ -758,6 +758,13 @@ export type EffectAtom =
       readonly threshold: number;
       readonly weaponFilter?: WeaponFilter;
     }
+  // Incoming critical-hit suppression on the bearer. Adamantine Armor:
+  // while worn, any critical hit against you becomes a normal hit.
+  // Keep this as a first-class inbound effect rather than forcing a
+  // synthetic incoming-attack trigger family for a passive item.
+  | {
+      readonly kind: "suppress_incoming_critical_hit";
+    }
   // v4: modify_roll_advantage — advantage/disadvantage on roll kinds.
   // Optional attackerTypeFilter narrows the effect to rolls made BY a
   // creature of one of the listed types (Protection from Evil and
