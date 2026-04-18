@@ -180,6 +180,12 @@ export type ClassName =
 
 export type RestKind = "short" | "long";
 
+export type FeatCategory =
+  | "general"
+  | "fighting_style"
+  | "epic_boon"
+  | "origin";
+
 // DiceDelta is a signed numeric delta. v4 adds source variants so content
 // can express bonuses derived from character state — not just fixed dice.
 //
@@ -903,11 +909,20 @@ export type EffectAtom =
     }
   // v4 (additive): grant_feat — Ability Score Improvement "you can take a
   // feat instead", Fighter bonus feats, etc. Records the eligibility
-  // gate; the actual feat pick is build-time.
-  | {
+  // gate; the actual feat pick is build-time. Some level-up grants
+  // allow one feat from multiple permitted categories (for example,
+  // Epic Boon or another qualifying feat), so the payload admits
+  // either a single category or a closed list of allowed categories.
+  | ({
       readonly kind: "grant_feat";
-      readonly category: "general" | "fighting_style" | "epic_boon" | "origin";
-    }
+    } & (
+      | {
+          readonly category: FeatCategory;
+        }
+      | {
+          readonly categories: ReadonlyNonEmptyArray<FeatCategory>;
+        }
+    ))
   // v4 grant_spell_access — class features, species traits, and magic
   // items that add specific spells to the known / always-prepared pool,
   // or grant the ability to cast a named spell with specified resources.
@@ -2492,7 +2507,7 @@ export type FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics;
 
 export type FeatRecord = UnitMetadata & {
   readonly kind: "feat";
-  readonly category: "general" | "fighting_style" | "epic_boon" | "origin";
+  readonly category: FeatCategory;
   readonly mechanics: FeatMechanics;
 };
 

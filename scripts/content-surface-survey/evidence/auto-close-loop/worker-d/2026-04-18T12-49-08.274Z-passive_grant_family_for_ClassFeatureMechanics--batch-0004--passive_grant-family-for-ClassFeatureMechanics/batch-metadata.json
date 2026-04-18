@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "passive_grant family for ClassFeatureMechanics",
+  "archivedAt": "2026-04-18T12:53:17.566Z",
+  "selectedSlugs": [
+    "barbarian_weapon_mastery_l1",
+    "cleric_epic_boon_l19"
+  ]
+}

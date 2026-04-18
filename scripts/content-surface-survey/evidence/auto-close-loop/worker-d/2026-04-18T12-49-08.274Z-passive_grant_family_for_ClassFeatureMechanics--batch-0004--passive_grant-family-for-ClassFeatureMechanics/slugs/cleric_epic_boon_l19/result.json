@@ -1,0 +1,9 @@
+{
+  "unit_slug": "cleric_epic_boon_l19",
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as a class_feature with passive mechanics. The feat choice is represented with grant_feat.categories across the currently surfaced feat categories, which matches the schema comment for Epic Boon-or-another-feat grants."
+}

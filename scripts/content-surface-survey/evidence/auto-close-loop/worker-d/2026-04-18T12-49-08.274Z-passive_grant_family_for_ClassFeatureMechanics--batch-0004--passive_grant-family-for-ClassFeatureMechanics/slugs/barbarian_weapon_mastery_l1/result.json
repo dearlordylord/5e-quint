@@ -1,0 +1,22 @@
+{
+  "unit_slug": "barbarian_weapon_mastery_l1",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_mastery_access",
+      "justification": "The feature's core mechanic is a persistent entitlement to use mastery properties for a chosen set of weapon kinds. The surface can encode mastery properties themselves as standalone `mastery` records, but it has no effect atom that grants access to those properties through weapon-kind selections.",
+      "evidence": "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "long_rest_reconfigure_mastery_choice",
+      "justification": "The feature includes a deterministic reconfiguration rider tied to finishing a Long Rest: one chosen weapon kind can be replaced. Existing passive mechanics have no long-rest-triggered replace/choose grammar for persistent selections.",
+      "evidence": "Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A `class_feature` with passive semantics is the closest family fit, but authoring it honestly would require at least a new effect atom for mastery-access grants. I did not create a placeholder content record because no existing atom can express the feature's primary mechanic. The later-level increase in number of weapon kinds is secondary scaling pressure on the same missing concept."
+}

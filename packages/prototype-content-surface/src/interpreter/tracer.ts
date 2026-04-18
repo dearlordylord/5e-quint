@@ -417,11 +417,13 @@ function traceEffectAtom(
     }
     case "grant_feat": {
       const id = ids("eff");
+      const categories =
+        "category" in e ? e.category : e.categories.join(" | ");
       nodes.push({
         id,
         category: "effect",
         atomKind: "grant_feat",
-        label: `grant_feat\n${e.category}`,
+        label: `grant_feat\n${categories}`,
       });
       return id;
     }
