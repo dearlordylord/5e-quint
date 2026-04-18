@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "bonus_action_activation",
+  "archivedAt": "2026-04-18T12:40:34.085Z",
+  "selectedSlugs": [
+    "conjure_woodland_beings",
+    "divine_smite"
+  ]
+}
