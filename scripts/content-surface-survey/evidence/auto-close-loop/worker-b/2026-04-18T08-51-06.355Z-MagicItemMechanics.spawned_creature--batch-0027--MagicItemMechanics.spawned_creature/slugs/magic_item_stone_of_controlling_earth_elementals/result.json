@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_stone_of_controlling_earth_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item_spawned_creature.catalog_ref_stat_block",
+      "justification": "The item already fits the existing magic-item spawned-creature activation shape, but it summons a named existing monster rather than an inline item-specific stat block. The current surface can only encode magic-item summons with an inline CreatureStatBlock, which would force duplication or a placeholder and would not honestly model the item as written.",
+      "evidence": "\"you can take a Magic action to summon an Earth Elemental\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The rest of the item fits existing surface concepts: magic-item activation, Magic action cost, 30-foot placement, commanded companion, immediate-after-you turn order, 1-hour duration, Bonus Action dismissal, and dawn reset. The blocker is the missing catalog-reference summon variant for magic-item spawned creatures."
+}
