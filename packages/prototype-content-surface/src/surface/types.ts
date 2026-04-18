@@ -1633,6 +1633,11 @@ export type OngoingTrigger =
   // typically combined with on_attached_turn_start via multi-operation).
   // Web, Moonbeam entry, Grease area.
   | { readonly kind: "on_creature_enters_area" }
+  // Creature ends its turn inside the area attachment. SRD idiom
+  // "ends its turn there" — paired with on_creature_enters_area in
+  // area-hazard spells (Cloudkill, Wall of Fire, Spike Growth, Blade
+  // Barrier, Spirit Guardians).
+  | { readonly kind: "on_creature_ends_turn_in_area" }
   // The caster optionally spends {cost} on each of their later turns
   // while the effect persists to fire the operation. Produce Flame
   // (Magic action to hurl fire), Heat Metal (Bonus Action to deal
@@ -2358,7 +2363,13 @@ export type UseCountCap =
   // Inspiration uses: "a number of times equal to your Charisma
   // modifier". The ability is authored with the feature; the
   // resolved mod is taken at rest-reset time.
-  | { readonly kind: "ability_modifier"; readonly ability: Ability };
+  | { readonly kind: "ability_modifier"; readonly ability: Ability }
+  // No finite per-period cap — the activation is gated only by its
+  // action-economy cost. Glamoured Studded Leather (Bonus Action
+  // disguise toggle), Folding Boat / Carpet of Flying command words,
+  // Ring of Invisibility. Pair with ResetCadence { kind: "never" }.
+  // Not valid for ChargePoolResource (see cap type below).
+  | { readonly kind: "unlimited" };
 
 export type UseCountResource = {
   readonly kind: "use_count";
@@ -2380,7 +2391,9 @@ export type UseCountResource = {
 // existence, they cannot take in more.
 export type ChargePoolResource = {
   readonly kind: "charge_pool";
-  readonly cap: UseCountCap;
+  // An unlimited charge pool is nonsense domain-wise (no pool to draw
+  // from). Exclude the "unlimited" variant at the type level.
+  readonly cap: Exclude<UseCountCap, { readonly kind: "unlimited" }>;
   readonly initialCount?: DiceAmount;
   readonly lifetimeAbsorptionCap?: number;
 };
@@ -2596,6 +2609,10 @@ type NonAlwaysEquipmentPredicate =
         | "melee_one_handed"
         | "two_weapons";
     }
+  // Monk / Barbarian Unarmored Defense: "while you aren't wearing
+  // armor or wielding a Shield." Narrow to shields — SRD has no
+  // other "not wielding X" gate pressure today.
+  | { readonly kind: "not_wielding_shield" }
   | {
       readonly kind: "all_of";
       readonly predicates: ReadonlyNonEmptyArray<NonAlwaysEquipmentPredicate>;

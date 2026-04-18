@@ -1495,6 +1495,17 @@ function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_creature_ends_turn_in_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: "post_action_window\n(creature ends turn in area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     default: {
       const _: never = trigger;
       throw new Error(`unhandled ongoing trigger: ${String(_)}`);
@@ -3557,6 +3568,16 @@ function traceEquipmentPredicate(
       return p.predicates.flatMap((predicate) =>
         traceEquipmentPredicate(predicate, nodes, ids),
       );
+    case "not_wielding_shield": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "not_wielding_shield",
+        label: "not_wielding_shield",
+      });
+      return [id];
+    }
     default: {
       const _exhaustive: never = p;
       throw new Error(
@@ -3965,6 +3986,8 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
       return "max = proficiency bonus";
     case "ability_modifier":
       return `max = ${cap.ability.toUpperCase()} modifier`;
+    case "unlimited":
+      return "unlimited";
     default: {
       const _: never = cap;
       throw new Error(`unhandled use count cap: ${String(_)}`);
