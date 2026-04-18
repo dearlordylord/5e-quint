@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 3,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "modify_speed_effect",
+  "archivedAt": "2026-04-18T15:16:01.492Z",
+  "selectedSlugs": [
+    "spider_climb",
+    "spirit_guardians"
+  ]
+}
