@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 11,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "modify_speed_effect",
+  "archivedAt": "2026-04-18T13:40:22.557Z",
+  "selectedSlugs": [
+    "barbarian_brutal_strike_l9",
+    "barbarian_fast_movement_l5"
+  ]
+}

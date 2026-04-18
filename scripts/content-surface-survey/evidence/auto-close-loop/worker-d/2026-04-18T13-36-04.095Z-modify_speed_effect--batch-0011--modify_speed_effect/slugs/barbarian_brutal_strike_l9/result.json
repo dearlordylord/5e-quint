@@ -1,0 +1,28 @@
+{
+  "unit_slug": "barbarian_brutal_strike_l9",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "class_feature_on_hit_trigger",
+      "justification": "Brutal Strike modifies one existing Strength-based attack roll made during the Attack action after choosing to forgo Reckless Attack's advantage; class features cannot currently attach an on-hit rider to an already-existing attack procedure.",
+      "evidence": "If you use Reckless Attack, you can forgo any Advantage on one Strength-based attack roll of your choice on your turn. If the chosen attack roll hits..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "damageTypeRef.triggering_attack_damage_type",
+      "justification": "The bonus damage inherits the triggering weapon or Unarmed Strike's damage type, but `damage.damageType` only supports a fixed type or closed choice.",
+      "evidence": "the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed Strike"
+    },
+    {
+      "kind": "new_atom",
+      "name": "move_self",
+      "justification": "Forceful Blow grants voluntary self-movement toward the target tied to half the user's Speed. The current surface only supports forced movement of another creature or teleportation.",
+      "evidence": "You can then move up to half your Speed straight toward the target without provoking Opportunity Attacks."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring Dhall/JSON because encoding this as a standard activation would create a fake standalone attack roll instead of modifying an existing Attack-action hit. Hamstring Blow also needs turn-bounded attachment semantics once the primary on-hit family exists."
+}

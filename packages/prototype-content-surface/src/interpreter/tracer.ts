@@ -3303,6 +3303,16 @@ function traceEquipmentPredicate(
       });
       return [id];
     }
+    case "not_wearing_armor": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "not_wearing_armor",
+        label: `not_wearing_armor\n[${p.categories.join(", ")}]`,
+      });
+      return [id];
+    }
     case "wielding_weapon": {
       const id = ids("pred");
       nodes.push({

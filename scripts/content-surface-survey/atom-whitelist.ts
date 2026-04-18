@@ -211,6 +211,7 @@ export const STAGE_3_EXTENSIONS = [
   "wearing_item",
   "unarmored",
   "wearing_armor",
+  "not_wearing_armor",
   "wielding_weapon",
   // Effect atoms for movement/senses/detection/crit-range modification —
   // first-class surface primitives beyond v4's modify_speed / grant_sense.

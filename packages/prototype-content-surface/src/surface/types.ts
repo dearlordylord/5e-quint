@@ -2380,7 +2380,11 @@ export type CompositeClassFeatureMechanics = {
 // `unarmored` covers inverse armor gates on passive benefits such as
 // Robe of the Archmagi's AC formula while not wearing armor.
 // `wearing_armor` carries a category list because Defense's SRD text
-// enumerates three allowed categories. `wielding_weapon` carries a
+// enumerates three allowed categories. `not_wearing_armor` is the
+// bounded inverse for "while you aren't wearing Heavy armor"-style
+// clauses; it avoids inventing a general boolean predicate language
+// while still covering passive bonuses that remain active for
+// unarmored + allowed armor categories. `wielding_weapon` carries a
 // coarse weapon-kind enum sufficient to scope the Fighting Style pool;
 // finer discrimination (specific weapon types,
 // versatile-used-two-handed, dual-wielding off-hand) can be added as
@@ -2396,6 +2400,10 @@ type NonAlwaysEquipmentPredicate =
   | { readonly kind: "unarmored" }
   | {
       readonly kind: "wearing_armor";
+      readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;
+    }
+  | {
+      readonly kind: "not_wearing_armor";
       readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;
     }
   | {
