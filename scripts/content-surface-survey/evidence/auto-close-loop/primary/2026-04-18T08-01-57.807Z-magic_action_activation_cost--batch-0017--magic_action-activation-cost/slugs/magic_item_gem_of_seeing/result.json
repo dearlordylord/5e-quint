@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "timed grant predicate for active item use (e.g. peering_through_item)",
+      "justification": "The item's activated duration grants an existing sense atom, but only while the user is actively peering through the gem. The current surface can express unconditional timed grants and coarse equipment predicates like holding/wearing, but not this narrower during-duration gate.",
+      "evidence": "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author a Dhall/JSON unit because the honest rule is conditional Truesight during the 10-minute window, not unconditional Truesight. Charge pool, dawn recharge, duration, and grant_sense all fit; the missing shape is the ongoing peering-through-the-item gate."
+}
