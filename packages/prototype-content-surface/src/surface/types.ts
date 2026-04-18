@@ -125,6 +125,21 @@ export type ExileDestination =
   | "plane_of_origin"
   | "different_plane";
 
+// Passive container / storage profile for magic items whose primary
+// mechanic is a persistent storage space rather than an activation.
+// Bag of Holding is the pressure case: extradimensional interior,
+// bounded carrying capacity, fixed external carried weight, and a
+// shared finite air supply for breathing occupants.
+export type ContainerStorageProfile = {
+  readonly maxWeightPounds: number;
+  readonly maxVolumeCubicFeet: number;
+  readonly weightOverridePounds?: number;
+  readonly airSupply?: {
+    readonly sharedMinutes: number;
+  };
+  readonly extradimensional?: true;
+};
+
 // SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
 export type StandardActionKind =
   | "attack"
@@ -1014,6 +1029,13 @@ export type EffectAtom =
   | {
       readonly kind: "transport_exile";
       readonly destination: ExileDestination;
+    }
+  // Passive item/container storage profile. Encodes persistent carrying
+  // capacity and related constraints without forcing passive magic items
+  // through an activation family. Pressure case: Bag of Holding.
+  | {
+      readonly kind: "container_storage";
+      readonly storage: ContainerStorageProfile;
     }
   // Composite: apply several effects as one bundle. Used to put
   // multiple atoms into a single slot (save_gate.onFail, attack

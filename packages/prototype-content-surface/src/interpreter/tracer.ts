@@ -518,6 +518,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "container_storage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "container_storage",
+        label: describeContainerStorage(e.storage),
+      });
+      return id;
+    }
     case "set_speed": {
       const id = ids("eff");
       nodes.push({
@@ -751,6 +761,7 @@ function traceEffectAtomScaling(
     case "modify_proficiency_bonus":
     case "teleport":
     case "transport_exile":
+    case "container_storage":
     case "grant_speed":
     case "ignore_web_restrictions":
     case "alter_item_kind":
@@ -3125,6 +3136,25 @@ function describePassiveOperationWindow(operation: PassiveOperation): string {
     `duration_window\nevery ${operation.trigger.amount} ${unitLabel}` +
     predicate
   );
+}
+
+function describeContainerStorage(
+  storage: Extract<EffectAtom, { readonly kind: "container_storage" }>["storage"],
+): string {
+  const lines = [
+    "container_storage",
+    `capacity: ${storage.maxWeightPounds} lb / ${storage.maxVolumeCubicFeet} cu ft`,
+  ];
+  if (storage.weightOverridePounds !== undefined) {
+    lines.push(`carry weight: ${storage.weightOverridePounds} lb`);
+  }
+  if (storage.airSupply !== undefined) {
+    lines.push(`air: ${storage.airSupply.sharedMinutes} min shared`);
+  }
+  if (storage.extradimensional === true) {
+    lines.push("extradimensional");
+  }
+  return lines.join("\n");
 }
 
 function traceEquipmentPredicate(

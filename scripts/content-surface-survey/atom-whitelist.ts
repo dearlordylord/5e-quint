@@ -241,6 +241,7 @@ export const STAGE_3_EXTENSIONS = [
   "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.
   "natural_weapons", // §C4e Alter Self — replace default Unarmed Strike profile.
   "water_breathing", // §C4e Alter Self — breathe underwater while the mode persists.
+  "container_storage", // Passive magic-item/container storage profile: capacity, fixed carried weight, shared air, extradimensional interior.
   // Random roll-driven branch selection and traced table-result nodes
   // for percentile/d20 outcome tables authored as activation phases.
   "random_table",
