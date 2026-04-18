@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_wand_of_lightning_bolts",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.attunementRestriction = { kind: \"spellcaster\" }",
+      "justification": "The current magic-item record can express that attunement is required, but not who is eligible to attune. This wand's cast/recharge/destruction mechanics fit today; only the attunement qualifier is missing.",
+      "evidence": "Rare (Requires Attunement by a Spellcaster)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored successfully as an activation-family magic item. The fixed save DC is representable via grant_spell_access.dcOverride with DcSource.fixed. Outcome remains surface_widening because the spellcaster-only attunement restriction is not representable."
+}
