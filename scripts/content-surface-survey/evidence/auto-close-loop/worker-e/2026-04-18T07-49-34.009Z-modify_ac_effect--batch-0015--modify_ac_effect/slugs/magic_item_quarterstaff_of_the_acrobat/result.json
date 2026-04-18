@@ -1,0 +1,46 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can be toggled to produce a specific dim-light radius. Light level is deterministic combat-facing state, but the current surface has no atom for granting or toggling illumination.",
+      "evidence": "While holding this weapon, you can cause it to emit green Dim Light out to 10 feet, either as a Bonus Action or after you roll Initiative, or you can extinguish the light as a Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object_or_item",
+      "justification": "The form-change mechanic targets the item itself, not the wielder, a creature target, an area, or a mark. `alter_item_kind` exists, but there is no honest attachment shape for item-targeted activations.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod (for ease of storage) or a 10-foot pole, or reverting it a Quarterstaff."
+    },
+    {
+      "kind": "new_variant",
+      "name": "component/form_state predicate",
+      "justification": "Several riders apply only in specific runtime item forms. Existing gates only cover holding/wearing/wielding, not conditional grants keyed to the item's current transformed state.",
+      "evidence": "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only). ... Attack Deflection (Quarterstaff Form Only). ... Ranged Weapon (Quarterstaff Form Only)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_ac scoped_to_triggering_attack",
+      "justification": "The reaction does not grant a standing AC bonus; it applies only against the triggering attack. Existing `modify_ac` encodes persistent AC modification but has no count/expiry/trigger-attack scope.",
+      "evidence": "When you are hit by an attack while holding the weapon, you can take a Reaction to twirl the weapon around you, gaining a +5 bonus to your Armor Class against the triggering attack, potentially causing the attack to miss you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.modify_range for weapon form",
+      "justification": "The quarterstaff temporarily gains the Thrown property with explicit normal and long ranges. v4 already has `modify_range`, but the current authored surface does not expose it.",
+      "evidence": "This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "return_item_after_ranged_attack",
+      "justification": "The item returns to the wielder immediately after a ranged attack with it. The current surface has no way to express post-attack item return behavior for a weapon.",
+      "evidence": "Immediately after you make a ranged attack with the weapon, it flies back to your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level family fit is available via composite magic-item mechanics, but the unit cannot be encoded honestly with the current surface. The decisive blocker is light emission, which is not a surfaced v4 atom today; additional surface gaps also exist for item-targeted form changes, form-specific gates, scoped reaction AC, and thrown-return behavior."
+}

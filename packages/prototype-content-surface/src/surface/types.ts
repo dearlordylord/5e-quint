@@ -2035,6 +2035,8 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // magic items. `wearing_item` covers worn-item gates on generic magic
 // items such as gauntlets, rings, cloaks, and orbiting Ioun Stones
 // (which the SRD explicitly treats as worn objects while orbiting).
+// `unarmored` covers inverse armor gates on passive benefits such as
+// Robe of the Archmagi's AC formula while not wearing armor.
 // `wearing_armor` carries a category list because Defense's SRD text
 // enumerates three allowed categories. `wielding_weapon` carries a
 // coarse weapon-kind enum sufficient to scope the Fighting Style pool;
@@ -2045,6 +2047,7 @@ export type EquipmentPredicate =
   | { readonly kind: "always" }
   | { readonly kind: "holding_item" }
   | { readonly kind: "wearing_item" }
+  | { readonly kind: "unarmored" }
   | {
       readonly kind: "wearing_armor";
       readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;

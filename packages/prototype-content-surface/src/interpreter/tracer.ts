@@ -2954,6 +2954,16 @@ function traceEquipmentPredicate(
       });
       return id;
     }
+    case "unarmored": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "unarmored",
+        label: "unarmored",
+      });
+      return id;
+    }
     case "wearing_armor": {
       const id = ids("pred");
       nodes.push({
