@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reservoir",
+      "justification": "The Reserve variant needs persistent item-owned storage for arbitrary incoming spells, later release by the attuned wearer, capacity measured in cumulative spell levels, and replay using the original caster's slot level/DC/attack bonus/spellcasting ability. No existing magic-item family or effect atom can honestly model storing another creature's spell payload and later re-casting it from item state.",
+      "evidence": "“This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time.”"
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_proficiency_bonus",
+      "justification": "The Mastery variant changes Proficiency Bonus itself, which propagates into saves, skills, attack bonuses, save DCs, and other derived values. This is broader than any existing roll-only numeric modifier and cannot be represented honestly as a bundle of current atoms without duplicating downstream derivations.",
+      "evidence": "“Your Proficiency Bonus increases by 1 while this pale green prism orbits your head.”"
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction_trigger.creature_casts_spell_visible",
+      "justification": "The Absorption variants trigger on any spell cast by a creature you can see, not on a component-filtered cast within a feet-based range. The current reaction trigger grammar only supports component-scoped spellcasting triggers.",
+      "evidence": "“you can take a Reaction to cancel a spell of level 4 or lower cast by a creature you can see”"
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation_resource.absorbed_spell_levels_pool",
+      "justification": "Absorption and Greater Absorption track burn-out by total spell levels canceled, not by fixed uses or player-spent charges. The pool is consumed by trigger resolution amount equal to triggering spell level, then permanently exhausts at 20.",
+      "evidence": "“Once the stone has canceled 20 levels of spells, it burns out, turns dull gray, and loses its magic.”"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The collection wrapper and several passive variants fit existing MagicItemRecord variants, but the whole Ioun Stone unit does not fit honestly because Reserve forces a stored-spell lifecycle and Mastery forces proficiency-bonus modification. I did not author placeholder Dhall/JSON/trace files."
+}

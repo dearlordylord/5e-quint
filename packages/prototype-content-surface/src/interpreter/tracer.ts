@@ -33,10 +33,12 @@ import type {
   ActivatedAbilityMechanics,
   PassiveMechanics,
   CompositeMagicItemMechanics,
+  MagicItemMechanics,
   EquipmentPredicate,
   FeatRecord,
   SpeciesTraitRecord,
   MagicItemRecord,
+  MagicItemAttunement,
   ClassFeatureActivationCost,
   ActivationResource,
   UseCountResource,
@@ -76,6 +78,7 @@ import type {
   TemplatedMultiSpawnMechanics,
   GrantedSpellTargetRestriction,
   MagicItemAttunementRestriction,
+  MagicItemVariant,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -2638,14 +2641,61 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
   const ids = idGen();
 
   const rootId = ids("root");
-  const attun = describeMagicItemAttunement(item);
   nodes.push({
     id: rootId,
     category: "source",
     atomKind: "magic_item_root",
-    label: `magic_item_root\n${item.name}\n(${item.rarity})${attun}`,
+    label:
+      "variants" in item
+        ? `magic_item_root\n${item.name}\n(${item.variants.length} variants)`
+        : `magic_item_root\n${item.name}\n(${item.rarity})${describeMagicItemAttunement(item)}`,
   });
 
+  if ("variants" in item) {
+    for (const variant of item.variants) {
+      traceMagicItemVariant(rootId, variant, nodes, edges, ids);
+    }
+  } else {
+    traceMagicItemPayload(rootId, item, nodes, edges, ids);
+  }
+
+  return {
+    unitId: item.id,
+    unitName: item.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceMagicItemVariant(
+  parentRootId: string,
+  variant: MagicItemVariant,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const variantRootId = ids("root");
+  nodes.push({
+    id: variantRootId,
+    category: "source",
+    atomKind: "magic_item_root",
+    label: `magic_item_root\n${variant.name}\n(${variant.rarity})${describeMagicItemPayloadAttunement(variant)}`,
+  });
+  edges.push({ from: parentRootId, to: variantRootId, relation: "roots" });
+  traceMagicItemPayload(variantRootId, variant, nodes, edges, ids);
+}
+
+function traceMagicItemPayload(
+  rootId: string,
+  item: {
+    readonly mechanics: MagicItemMechanics;
+    readonly destruction: ItemDestructionPolicy;
+  } & MagicItemAttunement,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
   // Attunement slot is a v4 resource atom. Only emit when required.
   if (item.requiresAttunement) {
     const slotId = ids("attun");
@@ -2663,19 +2713,20 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     edges.push({ from: rootId, to: procId, relation: "roots" });
   }
 
-  // Item-level destruction lifecycle.
   traceItemDestruction(item.destruction, rootId, nodes, edges, ids);
-
-  return {
-    unitId: item.id,
-    unitName: item.name,
-    nodes,
-    edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
-  };
 }
 
 function describeMagicItemAttunement(item: MagicItemRecord): string {
+  if ("variants" in item) return "";
+  return describeMagicItemPayloadAttunement(item);
+}
+
+function describeMagicItemPayloadAttunement(
+  item: {
+    readonly requiresAttunement: boolean;
+    readonly attunementRestriction?: MagicItemAttunementRestriction;
+  },
+): string {
   if (!item.requiresAttunement) return "";
   if (item.attunementRestriction === undefined) return " [attunement]";
   return ` [attunement: ${describeMagicItemAttunementRestriction(item.attunementRestriction)}]`;

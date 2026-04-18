@@ -148,8 +148,10 @@ export type RestKind = "short" | "long";
 //   • ability_modifier — +/- a specific ability modifier. Covers Sacred
 //                        Weapon (+CHA mod to attack) and similar.
 //   • magic_item_rarity_bonus — derive a flat bonus from the enclosing
-//                               MagicItemRecord.rarity rather than hardcoding
-//                               one item per rarity variant. Covers
+//                               magic-item rarity (record-level for
+//                               single items, variant-level for
+//                               collection items) rather than
+//                               hardcoding one item per rarity variant. Covers
 //                               Ammunition, +1/+2/+3 and similar rarity-tiered
 //                               item lines.
 export type DiceDelta =
@@ -2253,19 +2255,37 @@ export type ItemDestructionPolicy =
   // SRD wands).
   | { readonly kind: "permanent_on_empty" };
 
+export type MagicItemAttunement =
+  | {
+      readonly requiresAttunement: false;
+    }
+  | {
+      readonly requiresAttunement: true;
+      readonly attunementRestriction?: MagicItemAttunementRestriction;
+    };
+
+// Some SRD magic-item slugs are collection records rather than a single
+// mechanical payload: one shared item header with several named
+// variants, each carrying its own rarity/mechanics/destruction. Keep
+// the variant metadata on the variant itself so mixed-rarity collection
+// states are representable without inventing parallel item records.
+export type MagicItemVariant = {
+  readonly id: string;
+  readonly name: string;
+  readonly rarity: MagicItemRarity;
+  readonly mechanics: MagicItemMechanics;
+  readonly destruction: ItemDestructionPolicy;
+} & MagicItemAttunement;
+
 export type MagicItemRecord = UnitMetadata &
-  {
-    readonly kind: "magic_item";
-    readonly rarity: MagicItemRarity;
-    readonly mechanics: MagicItemMechanics;
-    readonly destruction: ItemDestructionPolicy;
-  } & (
+  { readonly kind: "magic_item" } & (
+    | ({
+        readonly rarity: MagicItemRarity;
+        readonly mechanics: MagicItemMechanics;
+        readonly destruction: ItemDestructionPolicy;
+      } & MagicItemAttunement)
     | {
-        readonly requiresAttunement: false;
-      }
-    | {
-        readonly requiresAttunement: true;
-        readonly attunementRestriction?: MagicItemAttunementRestriction;
+        readonly variants: ReadonlyNonEmptyArray<MagicItemVariant>;
       }
   );
 
