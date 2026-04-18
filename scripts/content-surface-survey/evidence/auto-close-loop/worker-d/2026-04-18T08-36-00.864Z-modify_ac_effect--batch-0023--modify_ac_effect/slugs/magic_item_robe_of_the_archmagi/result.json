@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_robe_of_the_archmagi",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.sourceFilter for spells and other magical effects",
+      "justification": "The robe's Magic Resistance rider is still the existing modify_roll_advantage atom, but the current surface cannot scope that advantage to saving throws caused by spells or other magical effects. Without that qualifier, any encoding would overstate the item as advantage on all saving throws.",
+      "evidence": "You have Advantage on saving throws against spells and other magical effects."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_robe_of_the_archmagi.dhall because the Magic Resistance rider cannot be encoded honestly. The rest of the item otherwise fits a composite passive magic item: class-list attunement for sorcerer/warlock/wizard, an unarmored wearing-item AC base of 15 + Dex mod, and +2 to spell save DC and spell attack rolls while wearing the robe."
+}
