@@ -1,0 +1,50 @@
+{
+  "description": "While touching this crystal orb, you can cast Scrying (save DC 17) with it. In addition, you can cast Detect Thoughts (save DC 17) targeting creatures you can see within 30 feet of the spell's sensor. You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_crystal_ball_of_mind_reading",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "dcOverride": {
+          "dc": 17,
+          "kind": "fixed"
+        },
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "scrying"
+      },
+      {
+        "dcOverride": {
+          "dc": 17,
+          "kind": "fixed"
+        },
+        "durationOverride": {
+          "endsWhenGrantedSpellEnds": "scrying",
+          "removeConcentration": true
+        },
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "detect_thoughts",
+        "targetRestriction": {
+          "feet": 30,
+          "kind": "visible_target_within_feet",
+          "origin": "spell_sensor"
+        }
+      }
+    ]
+  },
+  "name": "Crystal Ball of Mind Reading",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#CrystalBallOfMindReading"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": true
+}

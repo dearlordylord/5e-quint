@@ -66,6 +66,7 @@ import type {
   DamageTypeRef,
   ItemDestructionPolicy,
   SpellAccessMode,
+  GrantedSpellDurationOverride,
   SaveGateRiderResult,
   SpawnedCreaturePayload,
   CreatureStatBlock,
@@ -432,7 +433,8 @@ function traceEffectAtom(
           `grant_spell_access\n${e.spellId}\n(${describeSpellAccessMode(e.mode)})` +
           describeGrantedSpellDcOverride(e.dcOverride) +
           describeGrantedSpellAreaOverride(e.areaOverride) +
-          describeGrantedSpellTargetRestriction(e.targetRestriction),
+          describeGrantedSpellTargetRestriction(e.targetRestriction) +
+          describeGrantedSpellDurationOverride(e.durationOverride),
       });
       return id;
     }
@@ -4150,6 +4152,22 @@ function describeGrantedSpellTargetRestriction(
       return _exhaustive;
     }
   }
+}
+
+function describeGrantedSpellDurationOverride(
+  durationOverride: GrantedSpellDurationOverride | undefined,
+): string {
+  if (durationOverride === undefined) return "";
+  const lines: string[] = [];
+  if (durationOverride.removeConcentration === true) {
+    lines.push("duration override: no concentration");
+  }
+  if (durationOverride.endsWhenGrantedSpellEnds !== undefined) {
+    lines.push(
+      `duration override: ends when ${durationOverride.endsWhenGrantedSpellEnds} ends`,
+    );
+  }
+  return lines.length === 0 ? "" : `\n${lines.join("\n")}`;
 }
 
 function describeGrantedSpellDcOverride(

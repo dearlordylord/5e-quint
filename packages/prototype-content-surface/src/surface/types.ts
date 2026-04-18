@@ -508,6 +508,22 @@ export type GrantedSpellTargetRestriction =
       readonly origin: AttachmentRangeOrigin;
     };
 
+// Optional duration override applied only to casts made through a
+// specific spell grant. This is intentionally delta-shaped rather than
+// a full replacement Duration: the underlying spell still owns the base
+// time span, while the grant may remove concentration or add an extra
+// linked early-end condition.
+export type GrantedSpellDurationOverride = {
+  // Crystal Ball of Mind Reading: the item-granted Detect Thoughts cast
+  // keeps the spell's printed duration but explicitly removes the need
+  // to concentrate on it.
+  readonly removeConcentration?: true;
+  // Some grants tie the granted spell's persistence to another granted
+  // spell from the same unit without restating the granted spell's
+  // entire duration.
+  readonly endsWhenGrantedSpellEnds?: string;
+};
+
 // ---------- unified effect atoms (v4 taxonomy) ----------
 //
 // Discriminated union covering the v4 effect atoms. Replaces the
@@ -860,6 +876,7 @@ export type EffectAtom =
       // Arachnida's Web filling twice the spell's normal area.
       readonly areaOverride?: AreaShapeSpec;
       readonly targetRestriction?: GrantedSpellTargetRestriction;
+      readonly durationOverride?: GrantedSpellDurationOverride;
     }
   // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from
   // Poison, Tiefling "Hellish Resistance" style. Survey evidence: 3 hits.
