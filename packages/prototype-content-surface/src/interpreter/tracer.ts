@@ -4370,12 +4370,13 @@ function describeExpr(e: DiceExpr): string {
         ? `+${e.flat}`
         : `${e.flat}`
       : "";
-  const mod =
+  const modLabel =
     e.spellcastingMod === true
-      ? hasDice || flat
-        ? "+spellcasting mod"
-        : "spellcasting mod"
-      : "";
+      ? "spellcasting mod"
+      : e.abilityModifier !== undefined
+        ? `${e.abilityModifier.toUpperCase()} mod`
+        : "";
+  const mod = modLabel === "" ? "" : hasDice || flat ? `+${modLabel}` : modLabel;
   const diceStr = hasDice ? `${e.dice}d${e.dieSize}` : "";
   return `${diceStr}${flat}${mod}` || "0";
 }

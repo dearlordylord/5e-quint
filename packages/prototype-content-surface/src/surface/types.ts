@@ -393,18 +393,32 @@ export type SlotScaling<T> = {
 };
 
 // DiceExpr is the canonical "dice roll expression": N d M + flat +
-// (optional) caster's spellcasting ability modifier. Cure Wounds and
-// Healing Word read "2d8 plus your spellcasting ability modifier";
-// since the actual ability depends on caster context (Cleric=Wis,
-// Wizard=Int, Bard=Cha, …) the surface records only that the mod is
-// added, not which ability. The concrete ability is resolved at cast
-// time by the engine against the caster's class spellcasting ability.
-export type DiceExpr = {
+// (optional) one ability-derived modifier. Most spell healing uses the
+// caster's spellcasting ability modifier; some non-spell item/feature
+// riders instead name a specific ability (for example "1d10 + your
+// Dexterity modifier"). Keep the source explicit while making the
+// two cases mutually exclusive.
+type DiceExprBase = {
   readonly dice: number;
   readonly dieSize: number;
   readonly flat?: number;
-  readonly spellcastingMod?: true;
 };
+
+export type DiceExpr = DiceExprBase &
+  (
+    | {
+        readonly spellcastingMod?: undefined;
+        readonly abilityModifier?: undefined;
+      }
+    | {
+        readonly spellcastingMod: true;
+        readonly abilityModifier?: undefined;
+      }
+    | {
+        readonly spellcastingMod?: undefined;
+        readonly abilityModifier: Ability;
+      }
+  );
 
 // Partial override for tier entries and per-level increments — any of
 // dice/dieSize/flat may change per level (Shillelagh's die-size

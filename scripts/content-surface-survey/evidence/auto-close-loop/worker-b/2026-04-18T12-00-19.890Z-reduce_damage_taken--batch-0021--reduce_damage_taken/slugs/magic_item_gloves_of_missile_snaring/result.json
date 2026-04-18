@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The item's reaction is only legal when the wearer has a free hand, and the current non-spell activation/passive gating surface cannot express that requirement.",
+      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier if you have a free hand"
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_triggering_item",
+      "justification": "After reducing the triggering damage to 0, the item can move the triggering ammunition or weapon into the wearer's hand. No current effect atom models conditional capture of the triggering item.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon if it is small enough for you to hold in that hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The existing magic-item triggered_reaction family and reduce_damage_taken atom cover the main reaction shape, but authoring it now would be dishonest because the free-hand gate cannot be represented. The zero-damage catch rider is also currently unmodeled."
+}
