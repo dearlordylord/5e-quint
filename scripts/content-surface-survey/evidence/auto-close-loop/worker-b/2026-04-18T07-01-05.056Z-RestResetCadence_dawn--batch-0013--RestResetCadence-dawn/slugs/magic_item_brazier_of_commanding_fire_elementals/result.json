@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.spawned_creature",
+      "justification": "The item's core mechanic is a magic-item activation that creates, controls, and dismisses a summoned companion. The surface has spawned-creature support only for spells, not for magic items.",
+      "evidence": "you can take a Magic action to summon a Fire Elemental"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_proximity_activation_gate",
+      "justification": "The activation is gated by being near the item itself, not by holding/wearing it. Existing EquipmentPredicate variants cannot express 'within 5 feet of this brazier'.",
+      "evidence": "While you are within 5 feet of this brazier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_origin_spawn_placement",
+      "justification": "The summoned creature's placement is anchored to the item's location rather than the caster's range origin. Existing spawned-creature spell range semantics are caster-originated.",
+      "evidence": "The elemental appears in an unoccupied space as close to the brazier as possible"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The blocker is structural: magic items cannot currently use the spawned_creature family. A secondary surface gap remains even after that: proximity-to-item activation and item-anchored spawn placement."
+}

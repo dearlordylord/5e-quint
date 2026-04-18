@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "activated_ability_ongoing_operations",
+      "justification": "The item's activated property creates a temporary weapon rider that persists after activation and resolves later on a weapon hit. Current non-spell activation mechanics support immediate phases plus an optional duration, but they cannot carry ongoing trigger/effect operations during that duration.",
+      "evidence": "You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "weapon_hit_consumes_stored_rider",
+      "justification": "The coating is consumed by the first hit made with this specific weapon, then resolves a save gate on the struck creature. The current surface has no honest way to bind an activated temporary rider to a specific item, spend it on first qualifying hit, and branch into save/damage/condition on that hit target.",
+      "evidence": "That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 attack-roll and damage-roll bonuses fit cleanly as passive grants scoped to this specific weapon, but the activated poison rider does not fit the current non-spell mechanics family honestly."
+}
