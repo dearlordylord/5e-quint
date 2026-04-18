@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cube_of_force",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "shared_charge_spell_access_pool",
+      "justification": "The current magic-item families can model a charge-pooled activation with one item-wide activation cost, or a triggered reaction with its own resource, but not one shared charge pool that truthfully grants both action/long-cast spells and a reaction spell. Encoding Cube of Force as a single activation would lie about Shield's reaction timing; encoding it as composite activation plus triggered_reaction would duplicate the same 10-charge pool across parts.",
+      "evidence": "\"You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17), as shown in the Cube of Force Faces table.\" The table includes \"Shield | 1\" alongside non-reaction spells."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic item kind exists, but no honest existing mechanics family represents one shared item charge pool across heterogeneous granted-spell casting times. No content file was authored."
+}
