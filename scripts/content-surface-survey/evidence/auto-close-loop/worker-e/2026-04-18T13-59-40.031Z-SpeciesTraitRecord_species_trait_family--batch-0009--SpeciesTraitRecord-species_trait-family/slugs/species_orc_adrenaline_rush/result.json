@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_orc_adrenaline_rush",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.bonus_action_as_standard_action",
+      "justification": "The unit fits the existing species_trait activation family, but the surface cannot currently encode taking a specific standard action, here Dash, using the bonus-action quota. Existing variants can express either the quota or the action kind, but not both together.",
+      "evidence": "You can take the Dash action as a Bonus Action. When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The missing shape is surface-level, not structural: species_trait + activation is still the honest family, but omitting the Dash-as-bonus-action mechanic would misstate the unit."
+}
