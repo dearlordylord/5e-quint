@@ -219,15 +219,15 @@ invoke_backend() {
         # once inline reference material grows past ~100KB.
         #
         # --strict-mcp-config with no --mcp-config = no MCP servers loaded.
-        # --bare skips hooks, LSP, plugin sync, auto-memory, background
-        # prefetches, keychain reads, and CLAUDE.md auto-discovery. Combined
-        # they prevent the per-invocation MCP child process leak that
-        # accumulated GB of memory across parallel workers and OOM-killed
-        # prior re-mine runs.
+        # Prevents the per-invocation MCP child process leak that
+        # accumulated GB of memory across parallel workers and
+        # OOM-killed prior re-mine runs.
+        # (--bare was considered but it disables keychain auth, forcing
+        # ANTHROPIC_API_KEY; dropping it keeps OAuth login working.)
         timeout --kill-after=10s "$CLAUDE_TIMEOUT_SECONDS" \
           "$CLAUDE_CMD" --model "$CLAUDE_MODEL" --print --output-format json \
             --dangerously-skip-permissions \
-            --strict-mcp-config --bare \
+            --strict-mcp-config \
             < "$prompt_path" \
             > "$backend_log" 2>&1
       )
