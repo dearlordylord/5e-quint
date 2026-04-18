@@ -1,0 +1,22 @@
+{
+  "unit_slug": "ranger_superior_hunters_defense_l15",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.takes_damage",
+      "justification": "The feature fits the existing class_feature activation family with a reaction cost, but the current ReactionTrigger union cannot express a generic trigger that opens when the ranger takes damage.",
+      "evidence": "When you take damage, you can take a Reaction"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration.until_end_of_current_turn",
+      "justification": "The resistance rider persists only through the current turn. The current Duration union can express rounds, concentration, permanence, and some early-end triggers, but not a turn-local duration anchored to the current turn rather than the user's next turn or a full round.",
+      "evidence": "until the end of the current turn"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level shape is still an honest class_feature activation: reaction-costed self-target effect granting resistance to the triggering damage type via existing EffectAtom.grant_resistance with damageType = { kind: \"triggering_damage_type\" }. I did not author content because the missing trigger and duration variants would force a misleading placeholder."
+}
