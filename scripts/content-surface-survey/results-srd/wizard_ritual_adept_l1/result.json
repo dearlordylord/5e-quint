@@ -1,16 +1,1 @@
-{
-  "unit_slug": "wizard_ritual_adept_l1",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "grant_ritual_casting",
-      "justification": "Ritual Adept grants the ability to ritual-cast any spell in the spellbook with the Ritual tag, without preparation. This is a categorical casting-mode enabler, not a per-spell access grant. The existing grant_spell_access atom requires a specific spellId and a SpellAccessMode — it cannot express a rule that applies to an open-ended, tag-filtered set of spells drawn from a named source (the spellbook). A new atom is needed to capture: (a) the categorical scope (Ritual-tagged spells), (b) the source constraint (must be in spellbook), and (c) the derived casting requirement (must read from book).",
-      "evidence": "You can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family is the right mechanics family. The gap is entirely at the atom level: grant_spell_access is per-spell (requires spellId), but Ritual Adept applies categorically to all Ritual-tagged spells in the spellbook. No honest encoding is possible without a new atom or a categorical variant of grant_spell_access. The 'must read from book' constraint is an additional surface detail (a source gate on casting) that existing activation cost kinds do not express, but is secondary to the categorical scope gap."
-}
+{"unit_slug":"wizard_ritual_adept_l1","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

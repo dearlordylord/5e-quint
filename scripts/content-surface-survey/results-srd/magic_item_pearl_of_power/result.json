@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_pearl_of_power",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "recover_spell_slot",
-      "justification": "The Pearl of Power's sole mechanic is recovering an expended spell slot up to a given level. No existing EffectAtom models the recovery/restoration of an expended spell slot. This is distinct from grant_spell_access (which grants access to cast a spell), grant_temp_hp, heal_hp, and all other existing atoms. The concept of a character's spell slot economy being restored mid-encounter or mid-day has no current surface representation.",
-      "evidence": "you can take a Magic action to regain one expended spell slot of level 3 or lower"
-    }
-  ],
-  "confidence": "high",
-  "notes": "The activation family and record structure fit well: MagicItemRecord, activation family, standard_action cost (magic), use_count cap=1, dawn reset, attunement restricted to spellcaster, wearing_item condition. The only gap is the effect atom. The entire mechanical payload of this item is the slot recovery — there is no secondary rider. Without recover_spell_slot (or equivalent), no honest encoding is possible."
-}
+{"unit_slug":"magic_item_pearl_of_power","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

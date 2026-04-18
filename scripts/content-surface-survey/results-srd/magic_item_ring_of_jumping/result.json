@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_ring_of_jumping",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "grant_spell_access target restriction",
-      "justification": "The surface can represent an item granting at-will spell access, but it cannot constrain that granted casting to self-target only. Encoding this as plain at-will spell access would falsely allow casting Jump on other creatures.",
-      "evidence": "While wearing this ring, you can cast Jump from it, but can target only yourself when you do so."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Top-level fit is still MagicItemRecord with passive mechanics; the missing piece is a target-restriction variant on granted spell access. No content or trace file was authored to avoid a dishonest encoding."
-}
+{"unit_slug":"magic_item_ring_of_jumping","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

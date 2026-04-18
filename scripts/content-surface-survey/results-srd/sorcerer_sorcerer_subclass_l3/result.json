@@ -1,16 +1,1 @@
-{
-  "unit_slug": "sorcerer_sorcerer_subclass_l3",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "subclass_grant",
-      "justification": "Subclass selection is a one-time character-progression gate with no activation cost, no resource, no rest reset, and no combat-relevant effect. The existing class_feature/activation family requires activationCost + resource + resetCadence + effect (grant_extra_action | heal_hp), none of which apply to 'you gain a subclass of your choice.'",
-      "evidence": "You gain a Sorcerer subclass of your choice. The Draconic Sorcery subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Sorcerer levels. For the rest of your career, you gain each of your subclass's features that are of your Sorcerer level or lower."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Identical structural gap as all other <Class> Subclass L3 features across every class (barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, warlock, wizard). A new payload family is needed for one-time subclass selection / permanent progression grants that have no in-play activation, no consumable resource, and no combat-atom effect."
-}
+{"unit_slug":"sorcerer_sorcerer_subclass_l3","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

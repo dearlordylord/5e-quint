@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_cloak_of_the_manta_ray",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "water_breathing",
-      "justification": "The item's underwater-breathing rider is a distinct deterministic capability that the current verification pipeline cannot trace end-to-end.",
-      "evidence": "While wearing this cloak, you can breathe underwater, and you have a Swim Speed of 60 feet."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The item fits magic_item + passive in principle, using grant_speed for the swim-speed rider. I did not keep authored content files because pnpm typecheck fails in tracer exhaustiveness on the existing water_breathing EffectAtom, so no clean trace could be produced."
-}
+{"unit_slug":"magic_item_cloak_of_the_manta_ray","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

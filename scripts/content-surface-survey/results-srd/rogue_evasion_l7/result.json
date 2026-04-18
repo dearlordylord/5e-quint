@@ -1,16 +1,1 @@
-{
-  "unit_slug": "rogue_evasion_l7",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "upgrade_save_damage_outcome",
-      "justification": "Evasion remaps the two damage tiers of a Dex-save-for-half effect: success goes from half → no damage; failure goes from full → half damage. No existing atom covers this save-outcome-tier remap. grant_resistance halves unconditionally (wrong tier logic). modify_roll_advantage changes the roll itself. reduce_damage_taken is a fixed subtraction independent of save outcome. The semantic here is 'for qualifying save-gated damage effects, shift both outcome tiers down by one level' — a distinct effect not representable from existing atoms.",
-      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family and class_feature kind both fit cleanly. suppressedBy: [{kind: 'condition_active', conditions: ['incapacitated']}] handles the incapacitation guard. The sole blocker is the missing effect atom for remapping save-outcome damage tiers. The proposed atom needs: saveAbility ('dex'), a qualifier for 'half-damage-on-success effects only', and the remap semantics (success→none, fail→half). Monk Improved Deflect Attacks and similar future units may share this atom."
-}
+{"unit_slug":"rogue_evasion_l7","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

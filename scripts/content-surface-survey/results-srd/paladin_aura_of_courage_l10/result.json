@@ -1,16 +1,1 @@
-{
-  "unit_slug": "paladin_aura_of_courage_l10",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "PassiveMechanics.auraScope",
-      "justification": "The Aura of Courage grants frightened immunity to the paladin AND all allies within a 10-ft emanation. PassiveMechanics has no attachment or area scope concept — its grants are implicitly bearer-only. Encoding just the bearer's immunity produces a provably false trace that omits the defining mechanic of the feature.",
-      "evidence": "You and your allies have Immunity to the Frightened condition while in your Aura of Protection. If a Frightened ally enters the aura, that condition has no effect on that ally while there."
-    }
-  ],
-  "confidence": "high",
-  "notes": "PassiveMechanics and grant_condition_immunity both now exist (gaps from the older aura_of_devotion proposal were since closed). The sole remaining gap is that PassiveMechanics has no optional area/aura attachment to express 'grants apply to friendly creatures within N-ft emanation of the bearer'. An analogous concept exists for spells (ongoing_effect with area attachment + occupantDispositionFilter: friendly_to_source), but is unavailable to class features. A new optional field on PassiveMechanics — e.g. auraScope: { kind: 'emanation', radiusFeet: number, occupants: 'friendly_to_source' } — would close this gap and cover all paladin aura features (Aura of Protection L6, Aura of Courage L10, Aura Expansion L18, subclass auras)."
-}
+{"unit_slug":"paladin_aura_of_courage_l10","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

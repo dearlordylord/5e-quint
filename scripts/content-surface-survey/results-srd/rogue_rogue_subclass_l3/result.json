@@ -1,16 +1,1 @@
-{
-  "unit_slug": "rogue_rogue_subclass_l3",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "subclass_selection",
-      "justification": "Subclass selection at level 3 is a one-time character-progression choice with no activation cost, no use-count resource, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires all three. No existing family or ClassFeatureEffect kind can honestly represent 'at this level, choose a subclass and permanently gain its feature track.'",
-      "evidence": "You gain a Rogue subclass of your choice. The Thief subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Rogue levels. For the rest of your career, you gain each of your subclass's features that are of your Rogue level or lower."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Every subclass-selection feature across all classes (barbarian L3, bard L3, cleric L3, druid L3, fighter L3, monk L3, paladin L3, ranger L3, sorcerer L3, warlock L3, wizard L3) hits this same structural gap. The pattern is identical: a one-time level-up choice that unlocks a named subclass feature track, not an activatable feature with a resource. The surface needs a new ClassFeatureMechanics family such as 'subclass_selection' (or a 'grant_subclass' ClassFeatureEffect paired with a 'passive' family) to cover this pattern honestly."
-}
+{"unit_slug":"rogue_rogue_subclass_l3","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

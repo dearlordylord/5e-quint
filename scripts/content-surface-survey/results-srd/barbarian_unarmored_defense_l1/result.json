@@ -1,16 +1,1 @@
-{
-  "unit_slug": "barbarian_unarmored_defense_l1",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "modify_ac_set_base (multi-ability)",
-      "justification": "ModifyAcSetBaseEffect currently accepts a single `abilityMod: Ability`. Barbarian Unarmored Defense requires base AC = 10 + DEX mod + CON mod — two distinct ability modifiers summed together. The existing single-modifier shape cannot express this without omitting CON, which would be a dishonest trace. Widening `abilityMod` to `ReadonlyNonEmptyArray<Ability>` (or adding a second optional `secondAbilityMod?: Ability`) would resolve this without a new atom or new family. The same widening would cover Monk Unarmored Defense (10 + DEX + WIS) from a single shape.",
-      "evidence": "your base Armor Class equals 10 plus your Dexterity and Constitution modifiers"
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family, unarmored equipment predicate, and modify_ac_set_base atom all exist. The sole blocker is that modify_ac_set_base supports exactly one ability modifier. Shield interaction ('You can use a Shield and still gain this benefit') is already handled implicitly by the RAW AC calculation rules and does not require a separate atom."
-}
+{"unit_slug":"barbarian_unarmored_defense_l1","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

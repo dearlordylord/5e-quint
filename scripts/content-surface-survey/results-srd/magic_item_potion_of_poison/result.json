@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_potion_of_poison",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "fixed_dc",
-      "justification": "The Potion of Poison has a fixed DC 13 Constitution saving throw printed on the item. No existing DcSource variant represents a fixed numeric DC — caster_spell_save_dc scales with the caster, weapon_attack_dc is 8 + ability + PB, and innate_dc is base + ability_mod + PB. A magic item consumed by a player has no 'caster' to derive from, and the DC does not scale with any character stat.",
-      "evidence": "must succeed on a DC 13 Constitution saving throw or have the Poisoned condition for 1 hour"
-    }
-  ],
-  "confidence": "high",
-  "notes": "The unit fits magic_item + activation family cleanly otherwise: activationCost=action, resource=use_count fixed 1, resetCadence=never, phase 1 = direct { damage 4d6 poison, self }, phase 2 = save_gate { con DC 13, onFail: apply_condition poisoned, onSuccess: none }, duration = timed 1 hour. The sole blocker is that DcSource has no fixed_dc variant. The illusion-masquerade flavor (looks like a Potion of Healing) is DM-agenda narrative with no core-mechanics consequence and can stay in description only."
-}
+{"unit_slug":"magic_item_potion_of_poison","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

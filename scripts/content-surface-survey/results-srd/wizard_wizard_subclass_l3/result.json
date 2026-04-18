@@ -1,16 +1,1 @@
-{
-  "unit_slug": "wizard_wizard_subclass_l3",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "subclass_acquisition",
-      "justification": "The feature has no activation, no resource, no reset cadence, and no concrete effect. Its entire purpose is to grant the character a subclass whose features are themselves separate units. No existing ClassFeatureMechanics family (currently only 'activation') can encode this without fabricating fields that do not exist in the rule text. A new family — 'subclass_acquisition' or 'passive_grant' — is required to honestly represent one-time character-progression gates that delegate all downstream mechanics to another unit tree.",
-      "evidence": "You gain a Wizard subclass of your choice. The Evoker subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Wizard levels. For the rest of your career, you gain each of your subclass's features that are of your Wizard level or lower."
-    }
-  ],
-  "confidence": "high",
-  "notes": "This is a structural gap that affects every class in the SRD: Barbarian L3, Bard L3, Cleric L3, Druid L3, Fighter L3, Monk L3, Paladin L3, Ranger L3, Rogue L3, Sorcerer L3, Warlock L3, Wizard L3 all share the identical pattern. The v4 taxonomy includes a 'choose' procedure atom and a 'grant_spell_access'/'grant_proficiency' effect atom, but no composition of existing atoms produces an honest 'you now have a subclass' gate. A dedicated ClassFeatureRecord family ('subclass_acquisition'?) with no resource/effect fields — just a reference to the subclass identity — is the correct widening."
-}
+{"unit_slug":"wizard_wizard_subclass_l3","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

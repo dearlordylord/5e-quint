@@ -148,6 +148,7 @@ export const V4_EFFECT_ATOMS = [
   "bond_objects",
   "lock_object",
   "reposition_attachment",
+  "area_is_difficult_terrain",
 ] as const;
 
 export const V4_RELATIONS = [

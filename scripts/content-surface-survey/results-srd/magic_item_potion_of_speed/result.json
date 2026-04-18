@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_potion_of_speed",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ActionRestriction.allow_only with attack rider narrowing",
-      "justification": "Potion of Speed fits the existing magic_item + activation family, and most of Haste's positive effects already map to existing atoms. The blocker is the granted extra action: the current surface can only exclude standard action kinds, but Haste requires an allow-list and additionally constrains Attack to a single weapon attack.",
-      "evidence": "\"you gain the effect of the Haste spell for 1 minute (no Concentration required)\""
-    }
-  ],
-  "confidence": "high",
-  "notes": "Did not author content JSON/Dhall because any current encoding would lie about the Haste extra action. Existing atoms cover doubled speed, +2 AC, and advantage on Dexterity saves; the extra-action restriction shape is the missing surface piece. The omitted lethargy rider is not a blocker because Potion of Speed explicitly suppresses it."
-}
+{"unit_slug":"magic_item_potion_of_speed","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

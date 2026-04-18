@@ -676,6 +676,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "area_is_difficult_terrain": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_is_difficult_terrain",
+        label: "area_is_difficult_terrain",
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -915,6 +925,7 @@ function traceEffectAtomScaling(
     case "bond_objects":
     case "lock_object":
     case "reposition_attachment":
+    case "area_is_difficult_terrain":
       return;
     case "composite":
       for (const child of e.effects) {

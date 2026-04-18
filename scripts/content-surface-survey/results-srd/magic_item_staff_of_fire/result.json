@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_staff_of_fire",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "composite_magic_item_mechanics",
-      "justification": "The current magic-item surface only allows one mechanics family at a time (`passive` or `activation`). Staff of Fire needs a passive fire-resistance grant while held and an independent charge-based spellcasting payload with dawn recharge and last-charge destruction.",
-      "evidence": "\"You have Resistance to Fire damage while you hold this staff.\" / \"The staff has 10 charges. While holding the staff, you can cast one of the spells on the following table from it...\""
-    }
-  ],
-  "confidence": "high",
-  "notes": "Not authored into content because any single-family encoding would omit either the passive resistance or the charge-based spellcasting half."
-}
+{"unit_slug":"magic_item_staff_of_fire","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

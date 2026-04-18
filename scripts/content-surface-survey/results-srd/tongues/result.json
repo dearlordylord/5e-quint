@@ -1,16 +1,1 @@
-{
-  "unit_slug": "tongues",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "grant_sense (OngoingOperation variant)",
-      "justification": "Tongues grants the touched creature universal language comprehension and universal intelligibility. The ongoing_effect family is the correct structural fit (timed duration, target attachment, no concentration), but OngoingOperation only covers roll_modifier and damage_on_hit. The v4 atom grant_sense exists but has no surface-level OngoingOperation variant to carry it.",
-      "evidence": "This spell grants the creature you touch the ability to understand any spoken or signed language that it hears or sees. Moreover, when the target communicates by speaking or signing, any creature that knows at least one language can understand it."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Tongues is a clean ongoing_effect spell (Action cast, touch range, 1-hour timed duration, target:one). The only gap is that OngoingOperation has no grant_sense variant. A new variant such as { kind: 'grant_sense'; senseKind: 'universal_language' } (or a two-field decomposition covering comprehend + be-understood) would close the gap with no other widening required. No structural widening is needed."
-}
+{"unit_slug":"tongues","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

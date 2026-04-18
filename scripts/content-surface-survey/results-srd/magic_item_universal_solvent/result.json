@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_universal_solvent",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "dissolve_adhesive",
-      "justification": "Universal Solvent dissolves adhesive bonds — both mundane adhesives and magical ones created by Sovereign Glue's bond_objects atom — per ounce applied to the surface. No existing effect atom covers ending a bond_objects effect or dissolving general adhesive contact. The bond_objects atom comment in types.ts explicitly defers these counter-item semantics: 'those counter-items carry the dispelling semantics in their own content, not this atom.' A new atom is therefore required in the surface.",
-      "evidence": "Each ounce instantly dissolves up to 1 square foot of adhesive it touches, including Sovereign Glue."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The item frame fits cleanly: magic_item activation family, legendary, no attunement, charge_pool with initialCount { kind: 'fixed', expr: { dice: 1, dieSize: 6, flat: 1 } }, activationCost { kind: 'standard_action', action: 'utilize' }, object attachment (adhesive surface within reach → Touch range), resetCadence: never. The sole encoding gap is the effect atom. dissolve_adhesive would carry a per-ounce coverage area (1 sq ft/ounce) and target: adhesive bonds including bond_objects effects. The variable spend (1+ ounces) maps naturally to the charge_pool idiom."
-}
+{"unit_slug":"magic_item_universal_solvent","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

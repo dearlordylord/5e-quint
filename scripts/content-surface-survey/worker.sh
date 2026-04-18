@@ -447,7 +447,11 @@ esac
 
 {
   flock -w 30 200
-  if [[ "$FORCE" == "1" && -f "$DATASET" ]]; then
+  # Only replace the prior row if we actually have a new row to record.
+  # Without this guard, a `--force` re-mine whose fresh verdict is
+  # `refused`/`invalid` deletes the old row but appends nothing, losing
+  # the slug entirely from the dataset.
+  if [[ "$FORCE" == "1" && "$should_record" == "1" && -f "$DATASET" ]]; then
     tmp_dataset=$(mktemp "${DATASET}.tmp.XXXXXX")
     # Dataset rows are one-line JSON objects separated by blank lines.
     # Remove any prior row for this slug, leaving other rows untouched.

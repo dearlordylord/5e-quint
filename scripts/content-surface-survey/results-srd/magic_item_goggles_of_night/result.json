@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_goggles_of_night",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "modify_sense_range",
-      "justification": "The item has conditional sense math: it grants Darkvision if absent, but otherwise increases an existing Darkvision range by 60 feet. That is not representable as grant_sense alone without losing the additive rider.",
-      "evidence": "If you already have Darkvision, wearing the goggles increases its range by 60 feet."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Top-level fit exists as a passive magic item with no attunement requirement. I did not author content JSON/Dhall because the current surface can only grant a sense at a fixed range, not modify an existing sense's range conditionally."
-}
+{"unit_slug":"magic_item_goggles_of_night","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

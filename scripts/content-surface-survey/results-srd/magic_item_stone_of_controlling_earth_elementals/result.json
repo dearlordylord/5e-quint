@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_stone_of_controlling_earth_elementals",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "MagicItemMechanics.spawned_creature",
-      "justification": "The item deterministically creates and governs a temporary companion with its own placement, control model, dismissal, and recharge cadence. The current magic-item surface only permits passive grants or activation phases, not companion-spawn payloads.",
-      "evidence": "you can take a Magic action to summon an Earth Elemental. The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Top-level kind `magic_item` exists, but no honest magic-item mechanics family can encode a summoned companion. `spawned_creature` exists only for spells, and `ActivatedAbilityMechanics` cannot author `create_companion` / `command_companion` state without inventing unsupported shapes."
-}
+{"unit_slug":"magic_item_stone_of_controlling_earth_elementals","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

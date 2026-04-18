@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_hat_of_disguise",
-  "outcome": "surface_widening",
-  "atoms_used": ["attunement_slot", "grant", "grant_spell_access", "magic_item_root"],
-  "relations_used": ["consumes", "grants", "roots"],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "GrantedSpellDurationOverride.endsWhenItemRemoved",
-      "justification": "The hat-granted Disguise Self cast ends when the hat is removed — a duration early-end condition tied to item equipment state. GrantedSpellDurationOverride currently only supports removeConcentration and endsWhenGrantedSpellEnds; neither can express 'ends when the granting item is no longer worn/held'.",
-      "evidence": "The spell ends if the hat is removed."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Primary mechanic (at_will Disguise Self while wearing, gated by attunement) encodes cleanly as passive + grant_spell_access. The 'spell ends if hat is removed' clause is a secondary duration constraint that cannot be expressed: GrantedSpellDurationOverride needs an endsWhenItemRemoved boolean flag. Omitted from the encoding without falsifying the core mechanic."
-}
+{"unit_slug":"magic_item_hat_of_disguise","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

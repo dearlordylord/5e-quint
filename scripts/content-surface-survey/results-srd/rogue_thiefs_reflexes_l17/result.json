@@ -1,16 +1,1 @@
-{
-  "unit_slug": "rogue_thiefs_reflexes_l17",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "grant_extra_turn",
-      "justification": "The feature grants a second full combat turn at a specific initiative offset (Initiative - 10), scoped to the first round only. This is mechanically distinct from grant_extra_action (which adds one of the 12 standard actions within an existing turn). No existing v4 atom covers multi-turn allocation within a single round or initiative-offset-based turn scheduling.",
-      "evidence": "You can take two turns during the first round of any combat. You take your first turn at your normal Initiative and your second turn at your Initiative minus 10."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family is the correct container (always-on, no resource, no activation cost). The gap is purely at the effect-atom level: grant_extra_action captures an extra action quota within a turn, not a second full turn at a different initiative count. The first-round-only scope and the -10 initiative offset are both novel parameters with no existing surface encoding. No honest dhall encoding is possible without the new atom."
-}
+{"unit_slug":"rogue_thiefs_reflexes_l17","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

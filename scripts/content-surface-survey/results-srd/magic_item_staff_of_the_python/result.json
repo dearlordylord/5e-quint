@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_staff_of_the_python",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "magic_item_companion_creation_family",
-      "justification": "The item's primary mechanic is an activated magic item that creates and controls a companion creature, but MagicItemMechanics only permits passive or generic activation families and has no honest spawned-creature shape.",
-      "evidence": "As a Magic action, you can throw this staff ... causing the staff to become a Giant Constrictor Snake in that space. The snake is under your control and shares your Initiative count, taking its turn immediately after yours."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Stopped before authoring Dhall/JSON because the unit's core mechanic requires a creature-companion family for magic items. Secondary gaps include the 1-hour reuse lockout and explicit revert-to-item lifecycle handling, but the first blocker is structural."
-}
+{"unit_slug":"magic_item_staff_of_the_python","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

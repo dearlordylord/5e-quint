@@ -1,16 +1,1 @@
-{
-  "unit_slug": "monk_evasion_l7",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "evasion_save_outcome",
-      "justification": "Evasion changes the success/failure outcome semantics for a specific class of effects (Dex save, succeed = half damage): success → 0 damage, failure → half damage. No existing atom modifies save outcome semantics. modify_roll_advantage changes the roll; grant_resistance halves damage broadly; grant_damage_immunity is type-scoped. None of these express 'when you succeed a Dex save that would normally deal half damage, you take 0 instead; when you fail, you take half.'",
-      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family fits well: family=passive, suppressedBy=[{kind: condition_active, conditions: [incapacitated]}]. The suppressor mechanism is already in the surface (see Danger Sense). What's missing is an atom for the save-outcome modification. The feature is not about rolling better (not modify_roll_advantage), not about a flat damage type reduction (not grant_resistance), and not about blanket immunity (not grant_damage_immunity). It specifically upgrades the outcome tier of Dex-save-for-half-damage effects: the normal (succeed=half, fail=full) table becomes (succeed=0, fail=half). This is a new class of atom that does not exist in v4."
-}
+{"unit_slug":"monk_evasion_l7","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

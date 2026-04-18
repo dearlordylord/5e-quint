@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_weapon_1_2_or_3",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "WeaponFilter.this_weapon",
-      "justification": "The passive magic-item family and rarity-scaled numeric bonus atoms already exist, but the surface cannot scope attack-roll and damage-roll bonuses to the enchanted weapon itself. Current filters only support coarse melee/ranged categories or broad wielding predicates, which would overgrant the bonus.",
-      "evidence": "\"You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon's rarity.\""
-    }
-  ],
-  "confidence": "high",
-  "notes": "Did not author content/magic_item_weapon_1_2_or_3.dhall because any currently valid encoding would misrepresent the rule as applying to attacks or damage beyond this specific magic weapon."
-}
+{"unit_slug":"magic_item_weapon_1_2_or_3","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

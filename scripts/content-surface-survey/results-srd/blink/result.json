@@ -1,16 +1,1 @@
-{
-  "unit_slug": "blink",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "PerTurnRollCheckOperation",
-      "justification": "Blink's core mechanic fires at the end of each turn: roll 1d6, and on a threshold result (4-6) apply a transport effect. The existing OngoingOperation union (RollModifierOperation | DamageOnHitOperation) has no variant for 'per-turn probabilistic check against a die-roll threshold'. A new variant is needed that specifies: the window (turn_end_window), the die rolled, the threshold range, and the effect on success (transport_exile + return_on_end at turn_start_window). All v4 atoms required to build this subgraph already exist.",
-      "evidence": "Roll 1d6 at the end of each of your turns for the duration. On a roll of 4-6, you vanish from your current plane of existence and appear in the Ethereal Plane (the spell ends instantly if you are already on that plane)."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The ongoing_effect family is the honest structural home: timed duration (1 minute, non-concentration), self attachment, persistent per-turn operation. The gap is entirely within OngoingOperation — a new variant is needed rather than a new family. V4 atoms that would be used by the new variant: transport_exile (displacement to Ethereal Plane), return_on_end (return when spell ends), turn_end_window (where the roll fires), turn_start_window (where the caster returns). The perceptual/targeting isolation while displaced (limited sight, block_targeting for material-plane creatures) composes from existing atoms but is a secondary concern — the blocking gap is the per-turn roll check operation itself."
-}
+{"unit_slug":"blink","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

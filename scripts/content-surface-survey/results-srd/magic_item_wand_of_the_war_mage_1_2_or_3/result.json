@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_wand_of_the_war_mage_1_2_or_3",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "magic_item_variant_family",
-      "justification": "The existing MagicItemRecord shape only supports one fixed rarity and one fixed mechanics payload per record. This unit is a single SRD family spanning three item variants whose attack-roll bonus changes with rarity, so one honest record needs a way to bind rarity and granted bonus together instead of collapsing to an arbitrary representative tier.",
-      "evidence": "Wand, Uncommon (+1), Rare (+2), or Very Rare (+3) ... you gain a bonus to spell attack rolls determined by the wand's rarity."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Did not author content JSON/Dhall. The passive-item family exists, but this combined +1/+2/+3 unit cannot be represented as one honest MagicItemRecord because rarity is a single fixed enum field and the roll bonus is a single fixed DiceDelta. The Half Cover clause was not treated as widening pressure; local precedent already treats cover-immunity riders as caller-owned/DM agenda."
-}
+{"unit_slug":"magic_item_wand_of_the_war_mage_1_2_or_3","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

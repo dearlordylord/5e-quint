@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_potion_of_water_breathing",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "grant_environmental_adaptation",
-      "justification": "The potion grants the ability to breathe underwater for 24 hours. This is an environmental survival ability — distinct from senses (grant_sense), movement modes (grant_speed), condition immunities (grant_condition_immunity), and damage resistances (grant_resistance). No v4 atom covers environmental adaptations such as water breathing, lava swimming, or similar survival traits.",
-      "evidence": "You can breathe underwater for 24 hours after drinking this potion."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The MagicItemRecord kind and ActivatedAbilityMechanics family fit cleanly: activation cost = action (drinking a potion), use_count fixed=1, resetCadence=never, duration=timed 24 hours. The sole gap is the missing effect atom for the water breathing grant. The structural scaffolding is unambiguously correct; only one new atom is needed. No atom in v4 covers environmental survival adaptations — 'suffocating' is not in the SRD CONDITIONS list so grant_condition_immunity cannot be repurposed, and water breathing is semantically distinct from swim speed."
-}
+{"unit_slug":"magic_item_potion_of_water_breathing","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

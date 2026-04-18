@@ -1,16 +1,1 @@
-{
-  "unit_slug": "magic_item_winged_boots",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "expire -> descend_on_end",
-      "justification": "The existing magic_item activation family, charge_pool resource, dawn reset, and grant_speed atom cover the item's main activation, but the surface has no honest way to attach a deterministic movement consequence to duration expiry. The missing piece is an expiry-linked effect subgraph, likely realized with the v4-era fall/descent effect plus a surface hook from Duration expiry.",
-      "evidence": "If you are flying when the duration expires, you descend at a rate of 30 feet per round until you land."
-    }
-  ],
-  "confidence": "high",
-  "notes": "Did not author content/magic_item_winged_boots.dhall. Omitting the expiry descent rider would produce a misleading partial trace."
-}
+{"unit_slug":"magic_item_winged_boots","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

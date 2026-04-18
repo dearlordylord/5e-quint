@@ -1,16 +1,1 @@
-{
-  "unit_slug": "paladin_aura_expansion_l18",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "modify_feature_area",
-      "justification": "The unit's entire mechanic is expanding the area of an existing named class feature (Aura of Protection) from 10 ft to 30 ft. No current EffectAtom can reference another feature by ID and replace its area descriptor. The modify_* atoms in the surface cover AC, rolls, speed, HP max, save DC, crit range, damage, ability scores, and PB — none express 'change the emanation radius of feature X'.",
-      "evidence": "Your Aura of Protection is now a 30-foot Emanation."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family exists and would be the right shell for this feature. The gap is solely the absence of an effect atom that can reference another class feature by ID and modify one of its structural parameters (area radius). A possible encoding once the atom exists: passive { grants: [{ kind: 'modify_feature_area', featureId: 'paladin_aura_of_protection', area: { kind: 'emanation', radiusFeet: 30 } }] }. This is distinct from the modify_speed / modify_ac family because those act on character-sheet stats; this acts on a feature's own geometry."
-}
+{"unit_slug":"paladin_aura_expansion_l18","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

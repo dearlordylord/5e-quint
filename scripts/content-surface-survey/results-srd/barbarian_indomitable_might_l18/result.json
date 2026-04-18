@@ -1,16 +1,1 @@
-{
-  "unit_slug": "barbarian_indomitable_might_l18",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "set_roll_floor",
-      "justification": "The mechanic sets a minimum value on the final total of certain roll kinds, pegged to the character's raw ability score (not the modifier). No existing atom expresses a conditional total-replacement rule: modify_roll_numeric is additive only, modify_roll_advantage picks the higher of two d20 rolls (not a floor on total), and set_ability_score acts on the score itself. A new atom is required: { kind: 'set_roll_floor', on: RollKind[], floor: { kind: 'ability_score', ability: Ability } }.",
-      "evidence": "If your total for a Strength check or Strength saving throw is less than your Strength score, you can use that score in place of the total."
-    }
-  ],
-  "confidence": "high",
-  "notes": "The passive family and class_feature kind both fit. The sole gap is the effect atom. The rule is total = max(roll_total, STR_score) — a conditional replacement keyed to the full ability score value, not the modifier. This is mechanically distinct from advantage (two-roll max) and from any additive delta. No honest encoding is possible without the new atom."
-}
+{"unit_slug":"barbarian_indomitable_might_l18","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}

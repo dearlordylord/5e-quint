@@ -1212,6 +1212,12 @@ export type EffectAtom =
       readonly kind: "reposition_attachment";
       readonly maxMoveFeet?: number;
     }
+  // Marks the host effect's area as Difficult Terrain (Rules
+  // Glossary: each foot of movement costs 1 extra). Binary per RAW
+  // — no "doubly difficult" tier — so the atom carries no
+  // parameters. Only meaningful on Attachment.area. Grease, Spike
+  // Growth, Entangle, Web, Plant Growth, Sleet Storm, Ice Storm.
+  | { readonly kind: "area_is_difficult_terrain" }
   // Emits illumination around the effect's Attachment origin. SRD:
   // Bright Light within brightRadiusFeet; optional Dim Light extends
   // dimAdditionalFeet BEYOND the bright radius. The RAW consequence

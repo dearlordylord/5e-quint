@@ -1,16 +1,1 @@
-{
-  "unit_slug": "hellish_rebuke",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ReactionTrigger.take_damage_from_creature",
-      "justification": "Hellish Rebuke fires whenever the caster takes damage from a visible creature within range — not just on attack roll hits. The existing 'hit_by_attack_roll' variant is too narrow: it covers melee/ranged attack rolls but not damage from saving throw spells, AoE effects, or other damage sources. A new variant is needed to honestly encode the trigger.",
-      "evidence": "which you take in response to taking damage from a creature that you can see within 60 feet of yourself"
-    }
-  ],
-  "confidence": "high",
-  "notes": "Everything else fits cleanly: triggered_reaction family, single save_gate phase (DEX vs caster spell save DC), onFail = 2d10 fire damage, onSuccess = half_damage sentinel, linear_per_level slot scaling (+1d10 per slot above 1). The only gap is the trigger shape. The existing 'hit_by_attack_roll' variant would be a dishonest encoding."
-}
+{"unit_slug":"hellish_rebuke","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
