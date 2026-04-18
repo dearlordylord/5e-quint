@@ -1,0 +1,63 @@
+{
+  "description": "This helm has 3 charges. While wearing it, you can expend 1 charge to cast Teleport from it. The helm regains 1d3 expended charges daily at dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_helm_of_teleportation",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 7,
+              "minLevel": 7,
+              "perLevelCharges": 0
+            },
+            "spellId": "teleport"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 3
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 3
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Helm of Teleportation",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#HelmOfTeleportation"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

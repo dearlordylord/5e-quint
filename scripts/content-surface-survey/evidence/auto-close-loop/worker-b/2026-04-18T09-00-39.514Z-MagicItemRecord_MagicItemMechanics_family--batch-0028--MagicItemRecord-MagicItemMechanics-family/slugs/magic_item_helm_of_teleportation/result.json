@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_helm_of_teleportation",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "magic_item_root",
+    "self",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly as a charge-based magic_item activation gated by wearing_item, with attunement, a 3-charge pool, dawn recharge of 1d3, and a direct grant_spell_access to cast Teleport at level 7 for 1 charge."
+}

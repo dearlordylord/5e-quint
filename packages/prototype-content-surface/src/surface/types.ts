@@ -1997,10 +1997,14 @@ export type UseCountResource = {
 // magic-item wand idiom: "expend 1-3 charges to cast Magic Missile,
 // 1 charge per spell level". `cap` is the pool size; the per-activation
 // cost schedule lives on the effect atom that spends them
-// (grant_spell_access.mode = charge_cast).
+// (grant_spell_access.mode = charge_cast). Some items also randomize
+// their initial stock when found/created ("has 1d6 + 3 beads hanging
+// from it"). Keep that separate from `cap`: `cap` remains the maximum
+// pool size, while `initialCount` captures the one-time starting roll.
 export type ChargePoolResource = {
   readonly kind: "charge_pool";
   readonly cap: UseCountCap;
+  readonly initialCount?: DiceAmount;
 };
 
 // Activated-ability resource — either a discrete use counter (each

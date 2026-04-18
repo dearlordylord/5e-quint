@@ -3270,8 +3270,9 @@ function traceMagicItemSpawnedCreature(
   });
 
   if (m.condition !== undefined && m.condition.kind !== "always") {
-    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
-    edges.push({ from: procId, to: predId, relation: "requires" });
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
   }
 
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
@@ -3431,11 +3432,15 @@ function traceActivationResource(
   const atomKind = r.kind === "use_count" ? "use_count" : "charge";
   const id = ids(r.kind === "use_count" ? "use" : "pool");
   const capLabel = describeUseCountCap(r.cap);
+  const initialLabel =
+    r.kind === "charge_pool" && r.initialCount !== undefined
+      ? `\ninitial ${describeDiceAmount(r.initialCount)}`
+      : "";
   nodes.push({
     id,
     category: "resource",
     atomKind,
-    label: `${atomKind}\n${capLabel}`,
+    label: `${atomKind}\n${capLabel}${initialLabel}`,
   });
   // If the cap scales by level, emit a scaling node that modifies the pool/counter.
   if (r.cap.kind === "threshold_tiers") {
