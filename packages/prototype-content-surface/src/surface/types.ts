@@ -1203,6 +1203,15 @@ export type EffectAtom =
       readonly kind: "lock_object";
       readonly password?: string;
     }
+  // Silent Image, Major Image, Dancing Lights: mid-duration caster
+  // action that relocates the host effect's Attachment origin to a
+  // new spot within the spell's casting range. `maxMoveFeet` absent
+  // = unbounded within range (images); present = per-hop cap (Dancing
+  // Lights: 60 ft).
+  | {
+      readonly kind: "reposition_attachment";
+      readonly maxMoveFeet?: number;
+    }
   // Emits illumination around the effect's Attachment origin. SRD:
   // Bright Light within brightRadiusFeet; optional Dim Light extends
   // dimAdditionalFeet BEYOND the bright radius. The RAW consequence
@@ -1531,6 +1540,7 @@ export type CreatedObjectDurability = {
   readonly acValue: number;
   readonly hpPerSection: number;
   readonly damageImmunities?: ReadonlyNonEmptyArray<DamageType>;
+  readonly damageResistances?: ReadonlyNonEmptyArray<DamageType>;
   readonly damageVulnerabilities?: ReadonlyNonEmptyArray<DamageType>;
 };
 
@@ -1632,7 +1642,13 @@ export type OngoingTrigger =
   | {
       readonly kind: "on_caster_spends_action";
       readonly cost: OngoingCasterActionCost;
-    };
+    }
+  // Silent Image, Major Image, Phantasmal Force, Maze: a creature
+  // spends the Study action examining the attached effect, gating an
+  // Investigation vs spell DC check (paired with an ongoing
+  // ability_check_gate effect). The Attachment scopes which subject
+  // is being studied — no separate filter needed.
+  | { readonly kind: "on_creature_studies" };
 
 // Subset of action-economy costs valid for a per-turn optional
 // caster-spent action within an ongoing effect. Narrower than
@@ -1677,6 +1693,17 @@ export type OngoingEffect =
       readonly dc: DcSource;
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
+    }
+  // Ability-check resolution fired by an OngoingTrigger. Illusion
+  // disbelief: Int (Investigation) vs spell save DC on pass =
+  // creature sees through. Mirrors ActivationPhase.ability_check_gate
+  // minus attachment (host carries it).
+  | {
+      readonly kind: "ability_check_gate";
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly onPass: EffectAtom;
+      readonly onFail?: EffectAtom;
     }
   // Attack-roll resolution fired by an OngoingTrigger. Produce Flame:
   // "you can take a Magic action to hurl fire... Make a ranged spell

@@ -664,6 +664,18 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "reposition_attachment": {
+      const id = ids("eff");
+      const capTag =
+        e.maxMoveFeet !== undefined ? `\nmax ${e.maxMoveFeet} ft` : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reposition_attachment",
+        label: `reposition_attachment${capTag}`,
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -902,6 +914,7 @@ function traceEffectAtomScaling(
     case "force_drop_item":
     case "bond_objects":
     case "lock_object":
+    case "reposition_attachment":
       return;
     case "composite":
       for (const child of e.effects) {
@@ -1471,6 +1484,17 @@ function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_creature_studies": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "action_window",
+        label: "action_window\n(creature Study action on attachment)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     default: {
       const _: never = trigger;
       throw new Error(`unhandled ongoing trigger: ${String(_)}`);
@@ -1548,6 +1572,32 @@ function traceOngoingOpEffect(
         const missId = traceEffectAtom(miss, nodes, ids, edges);
         if (missId !== null) {
           edges.push({ from: arId, to: missId, relation: "branches_on_miss" });
+        }
+      }
+      return;
+    }
+    case "ability_check_gate": {
+      const acgId = ids("acg");
+      nodes.push({
+        id: acgId,
+        category: "resolution",
+        atomKind: "ability_check_gate",
+        label: `ability_check_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+      });
+      edges.push({ from: hostId, to: acgId, relation: hostRelation });
+      edges.push({ from: acgId, to: attId, relation: "attaches_to" });
+      const passId = traceEffectAtom(eff.onPass, nodes, ids, edges);
+      if (passId !== null) {
+        edges.push({ from: acgId, to: passId, relation: "branches_on_pass" });
+      }
+      if (eff.onFail !== undefined) {
+        const failId = traceEffectAtom(eff.onFail, nodes, ids, edges);
+        if (failId !== null) {
+          edges.push({
+            from: acgId,
+            to: failId,
+            relation: "branches_on_fail",
+          });
         }
       }
       return;

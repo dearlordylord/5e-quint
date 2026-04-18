@@ -147,6 +147,7 @@ export const V4_EFFECT_ATOMS = [
   "force_drop_item",
   "bond_objects",
   "lock_object",
+  "reposition_attachment",
 ] as const;
 
 export const V4_RELATIONS = [
@@ -167,6 +168,8 @@ export const V4_RELATIONS = [
   "branches_on_save",
   "branches_on_hit",
   "branches_on_miss",
+  "branches_on_pass",
+  "branches_on_fail",
   "prepares",
   "prompts",
   "commits",

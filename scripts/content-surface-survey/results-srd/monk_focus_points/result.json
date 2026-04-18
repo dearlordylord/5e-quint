@@ -5,24 +5,30 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "class_feature.mechanics.family = persistent_resource_bundle",
-      "justification": "The unit is a passive feature that creates a level-scaled resource pool, restores it on rest, and grants multiple subordinate activations rather than being one activation itself.",
-      "evidence": "This energy is represented by Focus Points. Your Monk level determines the number of points you have ... You start knowing three such features"
-    },
-    {
       "kind": "new_subgraph",
-      "name": "granted_subfeature_activations",
-      "justification": "The feature grants three distinct downstream options with different costs and effects, including no-cost and paid branches.",
-      "evidence": "Flurry of Blows ... Patient Defense ... Step of the Wind"
+      "name": "shared_resource_pool",
+      "justification": "Focus Points is a single level-scaled pool shared across Flurry of Blows, Patient Defense, and Step of the Wind. The current surface gives each ActivatedAbilityMechanics its own resource/resetCadence — there is no way to name a pool and have multiple activations draw from it. Encoding each sub-feature with its own use_count cap=1 would lie: a monk with 5 FP can use Flurry of Blows 3× and Patient Defense twice in one fight; independent use-counts would wrongly allow each feature once independently.",
+      "evidence": "Your Monk level determines the number of points you have, as shown in the Focus Points column of the Monk Features table. When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest."
     },
     {
-      "kind": "new_variant",
-      "name": "class_feature.shared_save_dc_formula",
-      "justification": "The feature establishes a reusable save DC formula for other Monk features, which is not an activation effect.",
-      "evidence": "Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus."
+      "kind": "new_atom",
+      "name": "grant_bonus_action_standard_action",
+      "justification": "Patient Defense (free tier) grants 'take the Disengage action as a Bonus Action' and Step of the Wind (free tier) grants 'take the Dash action as a Bonus Action'. The existing grant_extra_action atom grants an additional Action (main-action economy), not a Bonus Action slot for a specific standard action. There is no atom for 'take StandardActionKind X as a Bonus Action'.",
+      "evidence": "Patient Defense: You can take the Disengage action as a Bonus Action. Step of the Wind: You can take the Dash action as a Bonus Action."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_bonus_action_unarmed_strikes",
+      "justification": "Flurry of Blows grants two Unarmed Strikes as a Bonus Action when 1 FP is expended. No existing atom covers a bonus-action multi-unarmed-strike grant. grant_extra_action is for the main Action economy; scale_attack_count widens the Attack action's attack count but does not grant a separate Bonus Action attack sequence.",
+      "evidence": "Flurry of Blows: You can expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_jump_distance",
+      "justification": "Step of the Wind's enhanced (1 FP) tier doubles jump distance for the turn. No existing atom covers jump distance modification. modify_speed adjusts walking speed; grant_speed adds a speed mode; neither covers the jump-distance multiplier the SRD defines as a separate movement property.",
+      "evidence": "Step of the Wind (1 FP): your jump distance is doubled for the turn."
     }
   ],
   "confidence": "high",
-  "notes": "Did not author content JSON because the current surface only supports a single activated class feature with one effect. Encoding this as such would misrepresent the rule."
+  "notes": "The shared-pool gap is the blocking structural issue. Even if resolved, the three sub-features each require new atoms: (1) bonus-action standard-action grant, (2) bonus-action unarmed-strike grant, (3) jump-distance multiplier. Patient Defense and Step of the Wind each also have a two-tier shape (free BA version vs. enhanced FP version) that requires expressing optional resource expenditure for an upgraded effect — a pattern the current activation family does not support."
 }
