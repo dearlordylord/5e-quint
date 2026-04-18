@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "WeaponFilter.any_of",
+      "justification": "The trigger needs a disjunctive filter over existing weapon scopes rather than a single category/property test.",
+      "evidence": "\"hit by an attack roll made with a Ranged or Thrown weapon\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceExpr ability modifier addend",
+      "justification": "Incoming damage reduction needs dice plus a specific ability modifier, which current DiceAmount shapes cannot express.",
+      "evidence": "\"reduce the damage by 1d10 plus your Dexterity modifier\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The reaction is gated on having an available hand, which is a real mechanical precondition and not just flavor.",
+      "evidence": "\"if you have a free hand\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_triggering_projectile",
+      "justification": "The item can convert a fully negated hit into possession/control of the triggering ammunition or weapon; the current atom inventory has no object-catching effect.",
+      "evidence": "\"If you reduce the damage to 0, you can catch the ammunition or weapon\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level kind and reaction-family shape exist, but the unit cannot be authored honestly without both surface variants and a new object-catching effect atom. No Dhall/JSON content was written."
+}
