@@ -206,6 +206,7 @@ export const STAGE_3_EXTENSIONS = [
   // EquipmentPredicate dispatch (Defense feat gates modify_ac on armor,
   // fighting-style feats gate bonuses on weapon category).
   "holding_item",
+  "wearing_item",
   "wearing_armor",
   "wielding_weapon",
   // Effect atoms for movement/senses/detection/crit-range modification —

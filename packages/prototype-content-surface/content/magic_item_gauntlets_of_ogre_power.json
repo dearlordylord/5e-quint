@@ -6,6 +6,9 @@
   "id": "magic_item_gauntlets_of_ogre_power",
   "kind": "magic_item",
   "mechanics": {
+    "condition": {
+      "kind": "wearing_item"
+    },
     "family": "passive",
     "grants": [
       {

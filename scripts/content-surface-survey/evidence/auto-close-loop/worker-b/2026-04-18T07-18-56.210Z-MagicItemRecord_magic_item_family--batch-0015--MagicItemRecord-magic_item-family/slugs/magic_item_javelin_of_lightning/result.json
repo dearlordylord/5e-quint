@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "replace_weapon_damage_type",
+      "justification": "The passive rider changes the damage type of the weapon's existing hit from Piercing to Lightning on a hit, tied to this specific magic weapon. The current surface can add damage, modify numeric damage, or model one-shot damage, but it cannot replace a weapon hit's intrinsic damage type.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_exclusion.exclude_self",
+      "justification": "The Lightning Bolt property is close to an activation save-gate over a line area, but the line explicitly excludes the wielder. Current area attachment/origin shapes have no way to express an excluded source creature.",
+      "evidence": "The target and each other creature in the Line (excluding you) makes a DC 13 Dexterity saving throw"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "return_thrown_item_to_hand",
+      "justification": "The activated property deterministically returns the same weapon to the wielder's hand immediately after resolution. The current surface has no authored item-return effect/lifecycle for a thrown item that briefly transforms and then returns.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit is otherwise plausible as a composite magic item: a passive weapon rider plus a once-per-dawn activated ability using replace_attack and a fixed-DC line save. I did not author placeholder content because the passive rider cannot be encoded honestly with the current atoms."
+}

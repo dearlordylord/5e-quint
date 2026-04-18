@@ -2802,6 +2802,16 @@ function traceEquipmentPredicate(
       });
       return id;
     }
+    case "wearing_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "wearing_item",
+        label: "wearing_item",
+      });
+      return id;
+    }
     case "wearing_armor": {
       const id = ids("pred");
       nodes.push({
