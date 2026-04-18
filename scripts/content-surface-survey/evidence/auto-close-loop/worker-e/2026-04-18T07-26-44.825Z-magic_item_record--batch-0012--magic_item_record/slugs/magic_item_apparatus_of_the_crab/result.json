@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "vehicle_object",
+      "justification": "The apparatus is an independent Large object with its own AC, HP, movement modes, and damage immunities. Current magic-item mechanics only cover passive grants, activated abilities, reactions, and composites of those; none model a piloted object/vehicle as the acting entity.",
+      "evidence": "The Apparatus of the Crab is a Large object with the following statistics: AC 20; HP 200; Speed 30 ft., Swim 30 ft. ... Immunity to Poison and Psychic damage."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "lever_control_panel",
+      "justification": "The item is operated through ten reusable levers with distinct up/down behaviors, with up to two lever changes per Utilize action and automatic reset to neutral. No existing family models a stateful control panel that dispatches repeated vehicle actions during play.",
+      "evidence": "A creature in the compartment can take a Utilize action to move as many as two of the apparatus's levers up or down. After each use, a lever goes back to its neutral position."
+    },
+    {
+      "kind": "new_variant",
+      "name": "vehicle_occupancy_and_pilot_requirements",
+      "justification": "The unit needs explicit pilot and passenger semantics, including capacity and who can operate the object. That is not representable in any current magic-item mechanics header.",
+      "evidence": "allowing two Medium or smaller creatures to crawl inside. To be used as a vehicle, the apparatus requires one pilot."
+    },
+    {
+      "kind": "new_variant",
+      "name": "vehicle_environmental_rules",
+      "justification": "The apparatus has sealed-compartment, breathable-air, submersion-depth, and periodic pressure-damage rules. These are persistent vehicle lifecycle rules, not one-shot effects or passive grants to a creature.",
+      "evidence": "While the apparatus's hatch is closed, the compartment is airtight and watertight. The compartment holds enough air for 10 hours of breathing, divided by the number of breathing creatures inside. Below that, the vehicle takes 2d6 Bludgeoning damage each minute from pressure."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author a Dhall/JSON content file because doing so would require lying about the unit's shape. The blocker is structural: this is a piloted vehicle with its own stateful control surface, not a passive item or ordinary activated ability."
+}
