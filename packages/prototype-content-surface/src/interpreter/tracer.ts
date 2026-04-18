@@ -641,7 +641,10 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "negate_triggering_spell",
-        label: "negate_triggering_spell",
+        label:
+          e.maxSpellLevel === undefined
+            ? "negate_triggering_spell"
+            : `negate_triggering_spell\nmax level: ${e.maxSpellLevel}`,
       });
       return id;
     }

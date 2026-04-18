@@ -816,8 +816,11 @@ export type EffectAtom =
   // §C1 Counterspell: negate whatever spell triggered this reaction.
   // Distinct from negate_named_effect (targets a specific spellId):
   // the target here is the triggering spell, whatever it was.
+  // `maxSpellLevel` covers level-bounded cancellation on the same
+  // trigger shape, e.g. Ioun Stone of Absorption / Greater Absorption.
   | {
       readonly kind: "negate_triggering_spell";
+      readonly maxSpellLevel?: number;
     }
   // Reflection idiom for post-save magic-item reactions such as Ring
   // of Spell Turning and Staff of Charming. Unlike

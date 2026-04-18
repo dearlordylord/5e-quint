@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "replace_weapon_damage_type",
+      "justification": "The passive rider replaces this weapon's normal piercing damage with lightning damage on a qualifying hit. The current surface can add damage or modify damage numbers, but it cannot substitute one existing weapon damage type for another.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_item_to_hand",
+      "justification": "The activated throw effect deterministically relocates the weapon back to the wielder's hand after the line-save damage resolves. The current surface has no honest item-motion or return-to-hand atom.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a composite magic item with a passive rider plus a replace-attack, once-per-dawn activation. I did not author a Dhall/JSON content file because those two mechanics cannot be represented honestly with the current atoms."
+}
