@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellOptionRestriction",
+      "justification": "The current magic-item activation surface can model shared charges, dawn recharge, fixed save DC, and multiple granted spells, but it cannot narrow an existing spell grant to only specific authored modes or commands. Encoding Command here as unrestricted would be mechanically false.",
+      "evidence": "*Command* (\"flee\" or \"grovel\" only)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The unit fits the existing magic_item + activation family structurally, but one of its two spell rows cannot be expressed honestly with the current grant_spell_access shape. Fear itself also pressures an area override, but that field already exists on grant_spell_access."
+}
