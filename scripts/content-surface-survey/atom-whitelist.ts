@@ -224,6 +224,7 @@ export const STAGE_3_EXTENSIONS = [
   // trip a false atom_widening verdict.
   "grant_temp_hp", // false_life, Aid alternative, Inspiring Leader.
   "modify_damage_numeric", // Magic weapons: persistent +N to damage rolls made with the weapon.
+  "reduce_damage_taken", // Ring of Warmth, Gloves of Missile Snaring: subtract from incoming damage taken.
   "modify_save_dc", // Robe of the Archmagi: persistent +N to the wearer's spell save DC.
   "grant_condition_immunity", // Mind Blank, Heroism (frightened), Freedom of Movement, Protection from Poison.
   "grant_feat", // ASI "take a feat instead", Fighter bonus feats.

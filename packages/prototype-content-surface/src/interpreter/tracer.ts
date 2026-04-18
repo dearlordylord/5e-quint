@@ -250,6 +250,20 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "reduce_damage_taken": {
+      const id = ids("eff");
+      const scope =
+        e.damageType === undefined
+          ? ""
+          : `\nvs ${describeDamageTypeRef(e.damageType)}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reduce_damage_taken",
+        label: `reduce_damage_taken\n${describeDiceAmount(e.amount)}${scope}`,
+      });
+      return id;
+    }
     case "grant_extra_action": {
       const id = ids("eff");
       nodes.push({
@@ -674,6 +688,9 @@ function traceEffectAtomScaling(
       return;
     case "modify_max_hp":
       traceDiceAmountScaling(e.delta, effectId, slotId, nodes, edges, ids);
+      return;
+    case "reduce_damage_taken":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
     case "grant_extra_action":
       traceActionRestriction(e.restriction, effectId, nodes, edges, ids);

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.hit_by_attack_roll.weaponFilter.thrown_or_ranged",
+      "justification": "The existing reaction trigger can narrow by weapon category, but it cannot express the SRD trigger's mixed \"Ranged or Thrown weapon\" set honestly. \"Thrown\" is not equivalent to the existing melee/ranged category split.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The triggered-reaction magic-item family already supports gating by equipment state, but there is no way to require an available free hand as part of the reaction's legality.",
+      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier if you have a free hand"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author placeholder content. The top-level fit is a magic_item triggered reaction with reduce_damage_taken, but the current surface cannot state the ranged-or-thrown trigger or the free-hand gate honestly. The secondary catch rider (catch the ammunition/weapon if damage becomes 0 and it is small enough) is also unmodeled and caller/object-state heavy, but the primary blocker is the missing trigger and hand-gate variants."
+}

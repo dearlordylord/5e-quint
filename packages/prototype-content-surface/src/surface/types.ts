@@ -594,6 +594,16 @@ export type EffectAtom =
       readonly kind: "grant_resistance";
       readonly damageType: DamageTypeRef;
     }
+  // Prototype extension: subtract a rolled or fixed amount from an
+  // incoming damage instance before it is applied. Distinct from
+  // grant_resistance (halves damage) and modify_damage_numeric
+  // (changes outgoing damage rolls you make). Optional damageType
+  // narrows the reduction to qualifying incoming damage only.
+  | {
+      readonly kind: "reduce_damage_taken";
+      readonly amount: DiceAmount;
+      readonly damageType?: DamageTypeRef;
+    }
   // v4: grant_extra_action
   | {
       readonly kind: "grant_extra_action";
