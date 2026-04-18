@@ -1,0 +1,41 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "activate",
+    "area",
+    "attack_slot",
+    "damage",
+    "duration_window",
+    "half_damage",
+    "holding_item",
+    "magic_item_root",
+    "save_gate",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "replace_damage_type",
+      "justification": "The passive rider changes the damage type of an existing weapon hit without changing its amount or attack resolution.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_item_to_hand",
+      "justification": "The Lightning Bolt activation deterministically restores the thrown item to the wielder's hand after its save-gated damage resolves.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Lightning Bolt activation subset compiles, typechecks, and traces cleanly. Classification remains atom_widening because the passive damage-type swap and the deterministic return-to-hand rider are both outside the current atom surface."
+}

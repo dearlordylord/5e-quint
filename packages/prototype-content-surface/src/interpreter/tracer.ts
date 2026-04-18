@@ -488,6 +488,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_proficiency_bonus": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_proficiency_bonus",
+        label: `modify_proficiency_bonus\n${describeSignedNumber(e.delta)}${describeNumericBounds(e.minimum, e.maximum)}`,
+      });
+      return id;
+    }
     case "teleport": {
       const id = ids("eff");
       nodes.push({
@@ -738,6 +748,7 @@ function traceEffectAtomScaling(
     case "set_speed_ratio":
     case "set_ability_score":
     case "modify_ability_score":
+    case "modify_proficiency_bonus":
     case "teleport":
     case "transport_exile":
     case "grant_speed":
@@ -4251,6 +4262,13 @@ function capitalizeWords(value: string): string {
 }
 
 function describeAbilityScoreBounds(
+  minimum: number | undefined,
+  maximum: number | undefined,
+): string {
+  return describeNumericBounds(minimum, maximum);
+}
+
+function describeNumericBounds(
   minimum: number | undefined,
   maximum: number | undefined,
 ): string {

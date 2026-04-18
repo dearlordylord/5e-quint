@@ -924,6 +924,16 @@ export type EffectAtom =
       readonly minimum?: number;
       readonly maximum?: number;
     }
+  // v4-adjacent: persistent modifier to the creature's proficiency
+  // bonus itself. Distinct from DiceDelta.kind = proficiency_bonus,
+  // which references PB as an input when modifying some other number.
+  // Pressure case: Ioun Stone of Mastery.
+  | {
+      readonly kind: "modify_proficiency_bonus";
+      readonly delta: number;
+      readonly minimum?: number;
+      readonly maximum?: number;
+    }
   // v4: detect — divination utility. Senses the presence of a named
   // property within a radius around the caster for the spell's
   // duration (typically concentration). The property vocabulary is

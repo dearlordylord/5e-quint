@@ -199,6 +199,7 @@ export const STAGE_3_EXTENSIONS = [
   "half_damage", // Fireball-family "half on success" outcome.
   "set_ability_score", // Amulet of Health "Con becomes 19".
   "modify_ability_score", // Tome / Manual family "ability increases by N, to a maximum of M".
+  "modify_proficiency_bonus", // Ioun Stone of Mastery: persistent +N to the wearer's PB.
   // Lifecycle atom for magic-item destruction (Wand of Magic Missiles
   // last-charge d20 destruction, single-use wand expiration).
   "item_destruction",
