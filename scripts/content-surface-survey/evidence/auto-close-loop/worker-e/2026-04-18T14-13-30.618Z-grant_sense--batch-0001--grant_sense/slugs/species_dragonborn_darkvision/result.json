@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_dragonborn_darkvision",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "grant_sense",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits the existing SpeciesTraitRecord passive shape exactly as a single always-on darkvision grant."
+}
