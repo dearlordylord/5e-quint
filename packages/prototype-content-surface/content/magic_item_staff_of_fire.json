@@ -1,0 +1,101 @@
+{
+  "description": "You have Resistance to Fire damage while you hold this staff. The staff has 10 charges. While holding the staff, you can cast Burning Hands (1 charge), Fireball (3 charges), or Wall of Fire (4 charges) from it, using your spell save DC. The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles into cinders and is destroyed.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_staff_of_fire",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "damageType": "fire",
+            "kind": "grant_resistance"
+          }
+        ]
+      },
+      {
+        "activationCost": {
+          "kind": "action"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "burning_hands"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 3,
+                  "kind": "charge_cast",
+                  "maxLevel": 3,
+                  "minLevel": 3,
+                  "perLevelCharges": 0
+                },
+                "spellId": "fireball"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 4,
+                  "kind": "charge_cast",
+                  "maxLevel": 4,
+                  "minLevel": 4,
+                  "perLevelCharges": 0
+                },
+                "spellId": "wall_of_fire"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "dawn",
+          "regain": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 6,
+              "flat": 4
+            },
+            "kind": "fixed"
+          }
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 10
+          },
+          "kind": "charge_pool"
+        }
+      }
+    ]
+  },
+  "name": "Staff of Fire",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StaffOfFire"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": true
+}
