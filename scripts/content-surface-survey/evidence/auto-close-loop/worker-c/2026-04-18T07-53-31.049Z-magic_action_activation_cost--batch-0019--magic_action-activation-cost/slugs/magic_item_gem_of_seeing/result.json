@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.peering_through_item",
+      "justification": "The existing surface can model a charge-based magic-item activation, a 10-minute duration, and a truesight grant, but it cannot truthfully express that the sense is available only while the user peers through the item during that duration. `holding_item` is too broad and would overgrant the effect.",
+      "evidence": "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author a placeholder record. The honest fit is blocked by a missing gating variant on the granted sense, not by a missing top-level magic-item family."
+}
