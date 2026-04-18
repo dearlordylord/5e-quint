@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "area origin anchored to planted item location",
+      "justification": "The Protective Aura is a timed stationary area centered on the rod after it is planted in the ground. Existing area origins only cover self, point within range, or primary target, so the aura cannot stay with the planted rod honestly.",
+      "evidence": "\"As a Magic action, you can plant the haft end of the rod in the ground\" and \"While in that Bright Light\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "duration end trigger for item removed by action",
+      "justification": "The aura ends early when a creature later takes a Magic action to pull the rod from the ground. Current duration/end-trigger shapes do not express that non-spell manual termination hook.",
+      "evidence": "\"the effect ends after 10 minutes or when a creature takes a Magic action to pull the rod from the ground\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_sense qualifier for invisible-creature location within attached bright-light area",
+      "justification": "The aura grants only location-sensing of Invisible creatures that are also in the aura's Bright Light. Current grant_sense only carries a raw sense kind and range, so it cannot express this condition- and area-scoped rider honestly.",
+      "evidence": "\"can sense the location of any Invisible creature that is also in the Bright Light\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Held advantages and at-will spell grants fit the existing passive magic-item surface, but the Protective Aura is a real blocker. I did not author a partial content file because centering the aura on the bearer instead of the planted rod would be misleading."
+}
