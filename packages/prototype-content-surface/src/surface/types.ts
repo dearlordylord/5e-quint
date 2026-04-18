@@ -33,13 +33,21 @@ export type RollKind =
 // Weapon filter for riders that only apply to certain weapons.
 // Archery Fighting Style scopes by category ("Ranged weapons only");
 // Staff of Power / Staff of the Magi scope by the concrete wielded
-// item ("damage rolls made with it"). Keep this as a reference to the
-// existing item id rather than duplicating weapon identity fields on
-// the effect atoms themselves.
+// item ("damage rolls made with it"). Gloves of Missile Snaring
+// needs property-level narrowing ("Ranged or Thrown weapon"), so the
+// shared filter vocabulary also admits closed weapon properties.
+// Keep this as a reference to the existing item id rather than
+// duplicating weapon identity fields on the effect atoms themselves.
+export type WeaponProperty = "thrown";
+
 export type WeaponFilter =
   | {
       readonly kind: "weapon_category";
       readonly category: "melee" | "ranged";
+    }
+  | {
+      readonly kind: "weapon_property";
+      readonly property: WeaponProperty;
     }
   | {
       readonly kind: "specific_item";

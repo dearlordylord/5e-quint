@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less triggered_reaction magic-item ability",
+      "justification": "The existing magic-item triggered_reaction family inherits mandatory item resource and reset fields, but this item is an at-will reaction that only spends the wearer’s reaction quota.",
+      "evidence": "\"you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The damage-reduction reaction is gated by having a free hand. Current equipment predicates cover holding/wearing/wielding states, but not an available empty hand.",
+      "evidence": "\"if you have a free hand\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item’s main reaction fits an existing magic-item triggered-reaction shape only after widening that family to allow no extra resource/reset and widening the predicate surface for a free-hand gate. The catch-on-zero rider was left unmodeled because authoring stopped before placeholder encoding."
+}
