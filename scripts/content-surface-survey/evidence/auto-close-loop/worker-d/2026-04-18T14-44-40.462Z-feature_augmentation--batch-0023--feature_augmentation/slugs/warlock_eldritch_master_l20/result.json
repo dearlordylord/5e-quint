@@ -1,0 +1,22 @@
+{
+  "unit_slug": "warlock_eldritch_master_l20",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "feature_augmentation",
+      "justification": "Eldritch Master is not independently activated. It modifies the outcome of another named class feature when that feature is used. The current class-feature families only cover passive grants, standalone activations, or composites of those, not feature-chained augmentation.",
+      "evidence": "When you use your Magical Cunning feature, you regain all your expended Pact Magic spell slots."
+    },
+    {
+      "kind": "new_variant",
+      "name": "refund_spell_slots",
+      "justification": "The rule's payload is a full refund of the Pact Magic spell-slot pool. No existing effect atom or class-feature mechanics variant expresses replenishing a named spell-slot pool, and this must stay distinct from generic spell access or action-grant effects.",
+      "evidence": "you regain all your expended Pact Magic spell slots"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Eldritch Master upgrades Magical Cunning from partial Pact Magic slot recovery to full recovery. The dominant gap is structural: the feature fires only when another feature is used. No content/warlock_eldritch_master_l20.dhall, .json, or .trace.md was authored."
+}

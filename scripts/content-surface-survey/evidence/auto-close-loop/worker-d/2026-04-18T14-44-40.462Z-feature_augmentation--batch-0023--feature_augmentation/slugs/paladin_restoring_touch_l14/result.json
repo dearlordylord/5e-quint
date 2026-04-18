@@ -1,0 +1,28 @@
+{
+  "unit_slug": "paladin_restoring_touch_l14",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activation_augment_on_named_feature_use",
+      "justification": "Restoring Touch is not an independently activated class feature. It augments a specific existing activation, Lay On Hands, and spends from that same charge pool during the same use.",
+      "evidence": "\"When you use Lay On Hands on a creature, you can also remove one or more of the following conditions from the creature\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "remove_condition.choose_subset",
+      "justification": "The existing remove_condition surface supports removing one named condition, all listed conditions, or choosing exactly one from a list. Restoring Touch needs choosing one or more conditions from a fixed list in a single activation.",
+      "evidence": "\"you can also remove one or more of the following conditions from the creature: Blinded, Charmed, Deafened, Frightened, Paralyzed, or Stunned\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "resource_spent_per_selected_condition",
+      "justification": "The current surface can express heal amount equals resource spent, but not a side effect whose cost is fixed per selected condition and explicitly competes with healing from the same pool inside the same Lay On Hands activation.",
+      "evidence": "\"You must expend 5 Hit Points from the healing pool of Lay On Hands for each of these conditions you remove; those points don't also restore Hit Points to the creature.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Encoding this as a separate activation would be dishonest because it would duplicate or decouple the Lay On Hands pool and misrepresent the feature as independently invokable."
+}
