@@ -1,0 +1,28 @@
+{
+  "unit_slug": "cleric_divine_order_l1",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "class_feature_acquisition_choice",
+      "justification": "The feature requires choosing one permanent passive branch at level acquisition, but current class-feature mechanics only support passive, activation, and composite without a build-time choice node.",
+      "evidence": "You have dedicated yourself to one of the following sacred roles of your choice."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.class_list_pick",
+      "justification": "The current spell-access surface names concrete spell ids only. This feature instead grants one extra cantrip chosen from the Cleric spell list.",
+      "evidence": "You know one extra cantrip from the Cleric spell list."
+    },
+    {
+      "kind": "new_variant",
+      "name": "dice_delta_ability_modifier_with_minimum",
+      "justification": "The current ability-modifier delta can express Wisdom modifier scaling, but not the printed minimum floor of +1.",
+      "evidence": "The bonus equals your Wisdom modifier (minimum of +1)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current encoding would be misleading. Protector mostly fits existing passive grants; Thaumaturge exposes the missing choice, spell-list pick, and floored ability-modifier variants."
+}

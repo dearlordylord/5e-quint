@@ -286,6 +286,36 @@ export type SkillFilter =
   | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
   | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Skill> };
 
+export type WeaponProficiencyCategory = "simple" | "martial";
+
+export type ArmorTrainingCategory =
+  | "light"
+  | "medium"
+  | "heavy"
+  | "shield";
+
+export type ProficiencyGrantSubject =
+  | { readonly kind: "skill"; readonly skill: Skill }
+  | {
+      readonly kind: "weapon_category";
+      readonly category: WeaponProficiencyCategory;
+    }
+  | {
+      readonly kind: "armor_category";
+      readonly category: ArmorTrainingCategory;
+    };
+
+export type ProficiencyGrant =
+  | {
+      readonly kind: "fixed";
+      readonly proficiencies: ReadonlyNonEmptyArray<ProficiencyGrantSubject>;
+    }
+  | {
+      readonly kind: "choice";
+      readonly count: number;
+      readonly options: ReadonlyNonEmptyArray<ProficiencyGrantSubject>;
+    };
+
 // ---------- SRD 5.2.1 conditions (Rules-Glossary) ----------
 
 // All 15 RAW conditions from SRD 5.2.1 Rules Glossary.
@@ -936,6 +966,12 @@ export type EffectAtom =
           readonly categories: ReadonlyNonEmptyArray<FeatCategory>;
         }
     ))
+  // v4: grant_proficiency — permanent grants of skill / weapon / armor
+  // proficiency, including counted picks from a closed list.
+  | {
+      readonly kind: "grant_proficiency";
+      readonly proficiency: ProficiencyGrant;
+    }
   // v4 grant_spell_access — class features, species traits, and magic
   // items that add specific spells to the known / always-prepared pool,
   // or grant the ability to cast a named spell with specified resources.

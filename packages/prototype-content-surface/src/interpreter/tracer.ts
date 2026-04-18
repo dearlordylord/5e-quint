@@ -31,6 +31,8 @@ import type {
   SlotScaling,
   SpellLevel,
   StandardActionKind,
+  ProficiencyGrant,
+  ProficiencyGrantSubject,
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
@@ -441,6 +443,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "grant_proficiency": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_proficiency",
+        label: `grant_proficiency\n${describeProficiencyGrant(e.proficiency)}`,
+      });
+      return id;
+    }
     case "grant_spell_access": {
       const id = ids("eff");
       nodes.push({
@@ -773,6 +785,7 @@ function traceEffectAtomScaling(
     case "grant_sense":
     case "deny_opportunity_attack":
     case "grant_feat":
+    case "grant_proficiency":
     case "grant_spell_access":
     case "grant_condition_immunity":
     case "grant_damage_immunity":
@@ -3690,6 +3703,38 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
     default: {
       const _: never = cap;
       throw new Error(`unhandled use count cap: ${String(_)}`);
+    }
+  }
+}
+
+function describeProficiencyGrant(grant: ProficiencyGrant): string {
+  switch (grant.kind) {
+    case "fixed":
+      return grant.proficiencies.map(describeProficiencyGrantSubject).join(", ");
+    case "choice":
+      return `choose ${grant.count}: ${grant.options
+        .map(describeProficiencyGrantSubject)
+        .join(", ")}`;
+    default: {
+      const _exhaustive: never = grant;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeProficiencyGrantSubject(
+  subject: ProficiencyGrantSubject,
+): string {
+  switch (subject.kind) {
+    case "skill":
+      return `${subject.skill} skill`;
+    case "weapon_category":
+      return `${subject.category} weapons`;
+    case "armor_category":
+      return `${subject.category} armor`;
+    default: {
+      const _exhaustive: never = subject;
+      return _exhaustive;
     }
   }
 }

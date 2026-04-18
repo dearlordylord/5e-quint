@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 7,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_proficiency",
+  "archivedAt": "2026-04-18T13:11:57.356Z",
+  "selectedSlugs": [
+    "bard_bonus_proficiencies_l3",
+    "cleric_divine_order_l1"
+  ]
+}

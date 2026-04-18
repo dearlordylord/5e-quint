@@ -1,0 +1,16 @@
+{
+  "unit_slug": "bard_bonus_proficiencies_l3",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_proficiency"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean passive class-feature fit as a counted skill-proficiency choice over the closed SRD skill list."
+}
