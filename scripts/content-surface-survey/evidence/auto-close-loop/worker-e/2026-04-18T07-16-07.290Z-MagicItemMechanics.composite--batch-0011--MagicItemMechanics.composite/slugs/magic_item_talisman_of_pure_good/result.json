@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_ongoing_hazard_component",
+      "justification": "The item has a persistent triggered hazard that damages specific creature types on touch and again on turn end while they continue carrying it. Current magic-item mechanics only allow passive grants, activated abilities, and triggered reactions.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke's failed-save outcome is deterministic creature removal with no remains, not damage, condition application, transport, or any existing effect atom.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.disadvantage_for_target_types",
+      "justification": "The save gate needs a target-side creature-type conditional disadvantage rider. Existing target type filters gate who can be selected, and existing roll-advantage filters cover attacker-side roll modifiers, not the target's save within a save gate.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grounded_target_restriction",
+      "justification": "Pure Rebuke only targets a creature on the ground. Current targeting grammar can express range and creature-type filters, but not positional state like grounded versus airborne.",
+      "evidence": "target one creature you can see on the ground within 120 feet of yourself"
+    },
+    {
+      "kind": "new_variant",
+      "name": "spell_attack_only_roll_modifier",
+      "justification": "The passive holy-symbol bonus applies only to spell attack rolls. The current roll-modifier surface only offers generic attack-roll targeting, which would incorrectly also buff weapon attacks.",
+      "evidence": "You gain a +2 bonus to spell attack rolls while you wear or hold it."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Existing composite magic-item mechanics can represent the attunement restriction, a held-or-worn activation gate, the charge pool, Magic action cost, last-charge destruction, and the successful-save psychic damage rider. The item still does not fit honestly because its passive contact hazard requires a missing non-reaction triggered component family, the holy-symbol rider needs spell-attack-only roll scoping, and the activated fissure's failed-save outcome requires a missing destroy-creature atom."
+}
