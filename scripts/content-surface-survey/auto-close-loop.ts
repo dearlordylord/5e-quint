@@ -589,19 +589,10 @@ function assertAutoCommitReady(args: Args): void {
 }
 
 function batchCommitPaths(report: ClosureReport): string[] {
-  const paths = new Set<string>(["scripts/content-surface-survey/survey-results-srd.jsonl"]);
+  const paths = new Set<string>();
   for (const delta of report.deltas) {
     if (delta.source !== "srd-5.2.1") continue;
     const slug = delta.slug;
-    for (const rel of [
-      `scripts/content-surface-survey/results-srd/${slug}/proposal.md`,
-      `scripts/content-surface-survey/results-srd/${slug}/result.json`,
-      `scripts/content-surface-survey/results-srd/${slug}/verdict.json`,
-    ]) {
-      if (fs.existsSync(path.join(repoRoot(), rel))) {
-        paths.add(rel);
-      }
-    }
     if (delta.after === "invalid" || delta.after === "refused" || delta.after === "dm_agenda") {
       continue;
     }
