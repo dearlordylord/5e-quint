@@ -18,6 +18,10 @@ export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 // ability discriminant.
 export type RollKind =
   | "attack_roll"
+  // Spell attacks need their own bucket for held-item and feature riders
+  // that apply to spell attacks but not weapon attacks. Staff of the
+  // Woodlands is the pressure case on the magic-item surface.
+  | "spell_attack_roll"
   | "saving_throw"
   | "ability_check"
   | "initiative"

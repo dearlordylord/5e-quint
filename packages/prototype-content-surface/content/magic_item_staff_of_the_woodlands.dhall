@@ -8,8 +8,6 @@
 --   • existing last-charge roll lifecycle shape
 --
 -- Explicit omissions recorded in proposal/result:
---   • "+2 bonus to spell attack rolls while holding it" has no spell-attack-only
---     narrowing on modify_roll_numeric (attack_roll would overgrant).
 --   • Tree Form needs item/object attachment + revert/fall semantics not in the
 --     current surface.
 --   • On last-charge failure the item becomes a nonmagical Quarterstaff, which is
@@ -129,6 +127,16 @@ let staffOfTheWoodlands =
                               { kind = "specific_item"
                               , itemId = "magic_item_staff_of_the_woodlands"
                               }
+                        }
+                      , { kind = "modify_roll_numeric"
+                        , delta =
+                            { kind = "fixed_dice"
+                            , dice = 2
+                            , dieSize = 1
+                            , sign = "+"
+                            }
+                        , on = Some ["spell_attack_roll"]
+                        , weaponFilter = None SpecificItemFilter
                         }
                       ]
                 , activationCost = None ActivationCost

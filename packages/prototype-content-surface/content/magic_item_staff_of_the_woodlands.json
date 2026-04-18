@@ -50,6 +50,18 @@
               "itemId": "magic_item_staff_of_the_woodlands",
               "kind": "specific_item"
             }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "spell_attack_roll"
+            ]
           }
         ]
       },
