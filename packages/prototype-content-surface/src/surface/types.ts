@@ -775,12 +775,18 @@ export type EffectAtom =
   //     Reuses the existing RiderExpiry union (target_uses_or_turn_start
   //     | end_of_next_turn). Absent = rider persists until the host
   //     effect's duration ends.
+  // `conditionFilter` narrows the rider to D20 tests made to avoid or
+  // end one of the listed conditions. Dwarven Resilience and Fey
+  // Ancestry are the pressure cases on species traits; the same shape
+  // also covers ability checks made to escape a condition such as
+  // Grappled.
   | {
       readonly kind: "modify_roll_advantage";
       readonly mode: "advantage" | "disadvantage";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
       readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?: SkillFilter;
+      readonly conditionFilter?: ReadonlyNonEmptyArray<Condition>;
       // Beacon of Hope "Advantage on Wisdom saving throws" — narrow
       // saving_throw riders to specific abilities. Only meaningful
       // when `on` contains "saving_throw".

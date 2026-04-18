@@ -306,12 +306,16 @@ function traceEffectAtom(
         e.attackerTypeFilter !== undefined && e.attackerTypeFilter.length > 0
           ? `\nby: ${e.attackerTypeFilter.join("/")}`
           : "";
+      const condition =
+        e.conditionFilter !== undefined && e.conditionFilter.length > 0
+          ? `\ncondition: ${e.conditionFilter.join("/")}`
+          : "";
       const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${saveSource}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${saveSource}`,
       });
       return id;
     }
