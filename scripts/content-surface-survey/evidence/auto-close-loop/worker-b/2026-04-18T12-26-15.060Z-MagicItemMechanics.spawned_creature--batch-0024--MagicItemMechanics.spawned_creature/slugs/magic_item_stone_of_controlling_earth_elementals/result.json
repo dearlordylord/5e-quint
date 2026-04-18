@@ -1,0 +1,33 @@
+{
+  "unit_slug": "magic_item_stone_of_controlling_earth_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "command_companion",
+    "companion",
+    "create_companion",
+    "duration_window",
+    "expire",
+    "magic_item_root",
+    "persist",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.touching_item_to_ground",
+      "justification": "The item fits the existing magic_item + spawned_creature family, but the activation gate cannot currently express that the item must be touching the ground when used.",
+      "evidence": "\"While touching this 5-pound stone to the ground, you can take a Magic action to summon an Earth Elemental.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored successfully as a spawned_creature magic item. Typecheck and tracer both passed. The only omitted rule detail is the activation precondition requiring the stone to be touching the ground."
+}
