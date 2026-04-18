@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_shield_of_missile_attraction",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "retarget_triggering_attack",
+      "justification": "The curse deterministically rewrites the target of a qualifying ranged-weapon attack to the bearer. No existing effect atom changes the target of an in-flight attack.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
+    },
+    {
+      "kind": "new_variant",
+      "name": "passive_attack_target_trigger",
+      "justification": "Passive item operations only support elapsed-time cadence today. This curse needs an always-on trigger that listens for a ranged-weapon attack targeting a nearby creature.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you..."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "The resistance rider fits existing passive magic-item encoding: while holding the shield, grant resistance to damage from attacks made with ranged weapons. The curse does not fit honestly. Beyond the missing retarget mechanic, the curse is established by attunement and is not ended by simply removing the shield, which current magic-item passive modeling does not represent cleanly."
+}
