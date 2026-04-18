@@ -132,7 +132,13 @@ type PersistedState = {
   lastError?: string;
   updatedAt: string;
   stopReason?: string;
+  /** Clusters that have been reverted >=PARK_THRESHOLD times; skipped by picker. Persists across recycles. */
+  parkedClusters?: string[];
+  /** Per-cluster running count of consecutive validator-reverts. Persists across recycles. */
+  clusterFailures?: Record<string, number>;
 };
+
+const PARK_THRESHOLD = Number(process.env.AUTO_PARK_THRESHOLD ?? "3");
 
 type LockPayload = {
   pid: number;
@@ -402,6 +408,8 @@ function initialState(args: Args): PersistedState {
     improvedBatches: 0,
     noImproveStreak: 0,
     errorStreak: 0,
+    parkedClusters: [],
+    clusterFailures: {},
     updatedAt: new Date().toISOString(),
   };
 }
@@ -420,7 +428,34 @@ function loadState(args: Args): PersistedState {
   ) {
     return initialState(args);
   }
+  if (!parsed.parkedClusters) parsed.parkedClusters = [];
+  if (!parsed.clusterFailures) parsed.clusterFailures = {};
   return parsed;
+}
+
+function recordClusterFailure(state: PersistedState, cluster: string): boolean {
+  const failures = state.clusterFailures ?? {};
+  const parked = state.parkedClusters ?? [];
+  failures[cluster] = (failures[cluster] ?? 0) + 1;
+  state.clusterFailures = failures;
+  if (failures[cluster] >= PARK_THRESHOLD && !parked.includes(cluster)) {
+    parked.push(cluster);
+    state.parkedClusters = parked;
+    process.stderr.write(
+      `auto-close-loop: parked cluster ${cluster} after ${failures[cluster]} reverts\n`,
+    );
+    return true;
+  }
+  state.parkedClusters = parked;
+  return false;
+}
+
+function recordClusterSuccess(state: PersistedState, cluster: string): void {
+  const failures = state.clusterFailures ?? {};
+  if (failures[cluster]) {
+    failures[cluster] = 0;
+    state.clusterFailures = failures;
+  }
 }
 
 function saveState(statePath: string, state: PersistedState): void {
@@ -900,6 +935,46 @@ function resultSummaryForSlug(source: Source, slug: string): string {
   return `- ${slug}: verdict=${verdict ?? "missing"}, outcome=${parsed.outcome ?? "unknown"}, widenings=${widenings || "none"}, notes=${parsed.notes ?? "none"}`;
 }
 
+type PriorAttemptRecord = {
+  cluster?: string;
+  reason?: string | null;
+  at?: string | null;
+};
+
+function loadPriorAttemptsForCluster(cluster: string, limit = 5): ReadonlyArray<PriorAttemptRecord> {
+  if (!fs.existsSync(DEFAULT_FAILED_ATTEMPTS_PATH)) return [];
+  const lines = fs.readFileSync(DEFAULT_FAILED_ATTEMPTS_PATH, "utf8").split("\n");
+  const matched: PriorAttemptRecord[] = [];
+  for (let i = lines.length - 1; i >= 0 && matched.length < limit; i--) {
+    const line = lines[i].trim();
+    if (line.length === 0) continue;
+    try {
+      const entry = JSON.parse(line) as PriorAttemptRecord;
+      if (entry.cluster === cluster) matched.push(entry);
+    } catch {
+      /* skip malformed line */
+    }
+  }
+  return matched;
+}
+
+function clusterContextForPrompt(
+  args: Args,
+  cluster: string,
+): { total: number; sampleSummaries: ReadonlyArray<string> } {
+  const { queue, rows } = loadEffectiveRows(args);
+  const clusters = buildClusters(rows, queue, args.kind);
+  const record = clusters.find((c) => c.canonical === cluster);
+  if (!record) return { total: 0, sampleSummaries: [] };
+  const sampleSlugs = record.slugs.slice(0, 10);
+  const sampleSummaries = sampleSlugs.map((slug) => {
+    const row = queue.get(slug);
+    if (!row) return `- ${slug}: (no queue row)`;
+    return resultSummaryForSlug(row.source, slug);
+  });
+  return { total: record.count, sampleSummaries };
+}
+
 function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: ReadonlyArray<string>): string {
   const queue = loadQueue();
   const integrationBranch = process.env.AUTO_LOOP_INTEGRATION_BRANCH ?? DEFAULT_INTEGRATION_BRANCH;
@@ -910,6 +985,16 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
       return resultSummaryForSlug(row.source, slug);
     })
     .join("\n");
+  const clusterContext = clusterContextForPrompt(args, cluster);
+  const priorAttempts = loadPriorAttemptsForCluster(cluster);
+  const priorAttemptsBlock = priorAttempts.length === 0
+    ? "(no prior reverted attempts logged for this cluster)"
+    : priorAttempts
+        .map((a) => `- ${a.at ?? "unknown time"}: ${a.reason ?? "no reason recorded"}`)
+        .join("\n");
+  const clusterSampleBlock = clusterContext.sampleSummaries.length === 0
+    ? "(cluster not found in current effective rows)"
+    : clusterContext.sampleSummaries.join("\n");
   return [
     "You are editing the real repository to reduce one reusable surface gap.",
     "",
@@ -920,10 +1005,21 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     `Target cluster: ${cluster}`,
     `Target source: ${args.source}`,
     `Target kind: ${args.kind ?? "all"}`,
-    `Target slugs: ${selectedSlugs.join(", ")}`,
+    `Cluster size: ${clusterContext.total} member slug(s); this batch touches ${selectedSlugs.length} of them.`,
+    `Batched target slugs (will be re-mined after your change): ${selectedSlugs.join(", ")}`,
+    "",
+    "Design scope:",
+    `- You must design for the full cluster (${clusterContext.total} members), not just the ${selectedSlugs.length} batched slugs.`,
+    "- A fix that only closes the batched slugs and leaves most of the cluster broken is a per-batch hack; refuse instead.",
+    "- In your result notes, state roughly how many cluster members your change is intended to close, and why the rest would still need separate work (if any).",
+    "- Abstaining is preferred over shipping a narrow or speculative widening that will be reverted.",
+    "",
+    "Prior reverted surface-change attempts for this cluster (most recent first):",
+    priorAttemptsBlock,
+    "- If your proposed change is structurally similar to a prior reverted attempt, try a different angle or refuse.",
     "",
     "Goal:",
-    "- make one bounded reusable TS/package surface change that can reduce pressure for this cluster",
+    "- make one bounded reusable TS/package surface change that closes most of this cluster",
     "- avoid per-slug hacks or slug checks",
     "- if you add a new atom kind, update scripts/content-surface-survey/atom-whitelist.ts",
     "- you may edit packages/prototype-content-surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
@@ -941,7 +1037,10 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     "- scripts/content-surface-survey/atom-whitelist.ts",
     "- scripts/content-surface-survey/results-srd/<slug>/{result.json,verdict.json} for the target slugs",
     "",
-    "Evidence:",
+    "Representative cluster widening proposals (design for this shape, not just the batch):",
+    clusterSampleBlock,
+    "",
+    "Batched-slug evidence (the re-mine will use these):",
     evidence,
     "",
     "If the cluster is too composite or no reusable change is justified, make no code changes and exit.",
@@ -1247,11 +1346,16 @@ function clusterScore(cluster: ClusterRecord): number {
   return cluster.count * 10 + structuralBias + surfaceBias - verdictPenalty - namePenalty;
 }
 
-function pickNextCluster(args: Args, attempted: Set<string>): ClusterRecord | null {
+function pickNextCluster(
+  args: Args,
+  attempted: Set<string>,
+  parked: ReadonlySet<string>,
+): ClusterRecord | null {
   const { queue, rows } = loadEffectiveRows(args);
   const clusters = buildClusters(rows, queue, args.kind)
     .filter((cluster) => clusterEligible(cluster, args.kind, args.minClusterSize))
     .filter((cluster) => !attempted.has(cluster.canonical))
+    .filter((cluster) => !parked.has(cluster.canonical))
     .filter((cluster) => !clusterLeasedByOther(args, cluster.canonical))
     .sort((a, b) => clusterScore(b) - clusterScore(a) || a.canonical.localeCompare(b.canonical));
   return clusters[0] ?? null;
@@ -1329,6 +1433,7 @@ function main(): void {
   try {
     const state = loadState(args);
     const attempted = new Set<string>(state.attempted);
+    const parked = new Set<string>(state.parkedClusters ?? []);
 
     while (true) {
       if (state.batch >= args.maxBatches) {
@@ -1342,7 +1447,7 @@ function main(): void {
         continue;
       }
 
-      const cluster = pickNextCluster(args, attempted);
+      const cluster = pickNextCluster(args, attempted, parked);
       if (!cluster) {
         summarizeStop("no eligible clusters left", state);
         saveState(args.statePath, state);
@@ -1387,6 +1492,7 @@ function main(): void {
           state.attempted = [...attempted];
           state.improvedBatches += 1;
           state.noImproveStreak = 0;
+          recordClusterSuccess(state, cluster.canonical);
           writeObservability(args, state, report);
           const commitSha = maybeCommitBatch(args, state, report, [
             ...surfaceAttempt.changedPaths,
@@ -1414,6 +1520,9 @@ function main(): void {
           attempted.add(cluster.canonical);
           state.attempted = [...attempted];
           state.noImproveStreak += 1;
+          if (recordClusterFailure(state, cluster.canonical)) {
+            parked.add(cluster.canonical);
+          }
           writeObservability(args, state, report);
           const commitSha = maybeCommitBatch(args, state, report, archivedEvidencePaths);
           if (commitSha) {
