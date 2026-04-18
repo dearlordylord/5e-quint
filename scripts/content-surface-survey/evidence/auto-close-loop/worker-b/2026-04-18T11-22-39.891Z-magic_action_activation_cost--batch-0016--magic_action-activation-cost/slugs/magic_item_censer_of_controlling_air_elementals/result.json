@@ -1,0 +1,47 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "command_companion",
+    "companion",
+    "create_companion",
+    "duration_window",
+    "expire",
+    "holding_item",
+    "magic_item_root",
+    "persist",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item_spawn_placement_nearest_to_item",
+      "justification": "The spawned-creature family can express only a coarse range header, not placement in the nearest unoccupied space relative to the item.",
+      "evidence": "The elemental appears in an unoccupied space as close to the censer as possible."
+    },
+    {
+      "kind": "new_variant",
+      "name": "catalog_ref_understands_summoner_languages",
+      "justification": "Catalog-ref summons cannot carry deterministic summon-side overrides like inherited language comprehension.",
+      "evidence": "understands your languages"
+    },
+    {
+      "kind": "new_variant",
+      "name": "optional_creature_control_range_and_fallback",
+      "justification": "CreatureControl currently forces commandRangeFeet and defaultBehavior even when the rules text leaves both implicit, which required conservative placeholders here.",
+      "evidence": "obeys your commands, and takes its turn immediately after you on your Initiative count."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as magic_item + spawned_creature and traced successfully. The core summon loop fits, but placement near the item, language inheritance, and implicit control metadata are not representable without surface widening."
+}
