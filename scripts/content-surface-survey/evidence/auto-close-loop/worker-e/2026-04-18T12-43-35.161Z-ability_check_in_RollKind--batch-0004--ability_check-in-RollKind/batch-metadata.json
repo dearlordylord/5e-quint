@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "ability_check in RollKind",
+  "archivedAt": "2026-04-18T12:47:59.265Z",
+  "selectedSlugs": [
+    "species_goliath_large_form",
+    "species_goliath_powerful_build"
+  ]
+}
