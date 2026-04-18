@@ -2,6 +2,9 @@
 
 Workspace package for the content-authoring → surface → tracer flow.
 
+Temporary system-level pipeline map:
+- [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
+
 ## Not to be confused with `scripts/content-surface-survey/`
 
 This package holds the **authored corpus** and the **surface types** it is authored against:

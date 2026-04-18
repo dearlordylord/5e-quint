@@ -4,6 +4,9 @@ Date: 2026-04-17
 
 This is the single active planning queue.
 
+Temporary system-level pipeline map:
+- [plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md](/workspace/typescript/dnd/plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md)
+
 **Batch:** Content-Surface Taxonomy Convergence + Core Rehaul To Content-Driven Execution.
 
 **Batch goal:** two phases.

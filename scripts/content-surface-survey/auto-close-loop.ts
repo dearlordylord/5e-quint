@@ -188,7 +188,7 @@ const DEFAULT_INTEGRATION_LOCK_PATH = path.join(
   "integration.lock.json",
 );
 const DEFAULT_TRACKED_EVIDENCE_ROOT = path.join(
-  DEFAULT_SHARED_ROOT,
+  DEFAULT_REPO_ROOT,
   "scripts",
   "content-surface-survey",
   "evidence",
