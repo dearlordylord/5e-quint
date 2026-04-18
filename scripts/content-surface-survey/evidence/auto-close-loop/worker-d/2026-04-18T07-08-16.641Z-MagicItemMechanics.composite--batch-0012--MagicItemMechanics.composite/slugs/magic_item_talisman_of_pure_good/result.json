@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item ongoing-trigger component",
+      "justification": "The item needs a standing worn/held rule that damages qualifying creatures on touch and again at turn end while carrying or holding it. Current magic-item components only admit passive, activation, and triggered_reaction.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke has an outright destruction branch that is neither damage nor transport_exile; the target is destroyed and leaves no remains.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item mixes passive, activation, and a non-reaction ongoing item trigger; forcing it into the current surface would omit core mechanics."
+}
