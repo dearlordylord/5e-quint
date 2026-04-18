@@ -3546,6 +3546,17 @@ function traceResetCadence(
       edges.push({ from: resId, to: did, relation: "persists_until" });
       return;
     }
+    case "century": {
+      const cid = ids("century");
+      nodes.push({
+        id: cid,
+        category: "window",
+        atomKind: "duration_window",
+        label: "duration_window\ncentury cooldown (refill all)\nafter spend",
+      });
+      edges.push({ from: resId, to: cid, relation: "persists_until" });
+      return;
+    }
     case "elapsed_days": {
       const did = ids("days");
       const refill =

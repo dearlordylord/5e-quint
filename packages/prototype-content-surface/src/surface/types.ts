@@ -2037,6 +2037,10 @@ export type RestResetCadence =
       // omitting the field.
       readonly regain?: null | DiceAmount;
     }
+  // Tome/manual family idiom: the item loses its magic after use and
+  // regains it in a century. Keep this first-class rather than
+  // encoding a magic number day count at each call site.
+  | { readonly kind: "century" }
   // Relative calendar-time cooldown. Covers item text like "can't be
   // used again until 5 days have passed" and pool-based recharge that
   // starts only once the pool is empty.
