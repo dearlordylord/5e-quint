@@ -165,6 +165,8 @@ export const V4_RELATIONS = [
   "persists_until",
   "branches_on_completion",
   "branches_on_save",
+  "branches_on_hit",
+  "branches_on_miss",
   "prepares",
   "prompts",
   "commits",

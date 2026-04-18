@@ -1,16 +1,28 @@
 {
   "unit_slug": "produce_flame",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "OngoingEffect.attack_roll",
-      "justification": "Produce Flame's optional per-turn Magic action resolves as a ranged spell attack (d20 + spell attack mod vs AC) before dealing damage. OngoingEffect currently supports save_gate and EffectAtom but not attack_roll. The on_caster_spends_action trigger fires correctly; the missing piece is an attack_roll resolution variant in OngoingEffect that mirrors the existing save_gate variant. Without it the offensive half of the spell (its primary damage vector) cannot be encoded honestly.",
-      "evidence": "Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_window",
+    "activate",
+    "attack_roll",
+    "bonus_action_quota",
+    "damage",
+    "emit_light",
+    "expire",
+    "persist",
+    "self",
+    "spell_root"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_hit",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The passive half (emit_light + timed duration + caster_recasts_spell earlyEnd) encodes cleanly with existing atoms. The on_caster_spends_action trigger with kind=standard_action/action=magic also exists. Only the attack_roll variant in OngoingEffect is missing. Cantrip damage scaling (1d8 → 2d8 → 3d8 → 4d8 at levels 5/11/17) would use threshold_tiers with axis=character and scale_die_count. No dhall/json produced because omitting the attack roll would give a misleading trace."
+  "notes": "All surface features used here were recently added targeting this spell: on_caster_spends_action, OngoingEffect.attack_roll, caster_recasts_spell, emit_light. Clean encode with two caveats: (1) The 60-foot attack range of the hurled flame is not captured — OngoingEffect.attack_roll omits `attachment`, so the session resolves targeting range. (2) The cantrip scaling node (scale_die_count) is not emitted by the tracer for OngoingEffect.attack_roll hits — traceEffectAtomScaling is not called from that handler branch. Both are tracer/surface limitations noted in the Dhall comments, not blocking widenings."
 }
