@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "grant_spell_access",
+  "archivedAt": "2026-04-18T14:25:20.737Z",
+  "selectedSlugs": [
+    "species_elf_elven_lineage",
+    "species_gnome_gnomish_lineage"
+  ]
+}
