@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_goliath_giant_ancestry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.build_time_choice_of_mechanics",
+      "justification": "The trait is one species unit whose runtime behavior is selected once from multiple mutually exclusive ancestry benefits; the chosen branch, not all branches, should exist at runtime, and the choice must preserve the shared PB-scaled resource and long-rest reset.",
+      "evidence": "Choose one of the following benefits... you can use the chosen benefit a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.triggered_reaction_and_on_hit_trigger",
+      "justification": "The available ancestry branches include reaction-shaped mechanics and on-hit riders, but species traits currently only admit passive or activation families.",
+      "evidence": "When you hit a target with an attack roll and deal damage to it... / When you take damage, you can take a Reaction..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content JSON per protocol. Existing atoms appear sufficient for several individual branches, but the top-level species-trait family cannot represent a build-time choice among activation, on-hit, and reaction branches without lying about the rule."
+}
