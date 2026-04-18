@@ -1,0 +1,28 @@
+{
+  "unit_slug": "arcane_lock",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Duration: permanent",
+      "justification": "Arcane Lock has a permanent duration (until dispelled by Dispel Magic). The current Duration type only has instantaneous, concentration, and timed. A permanent-until-dispelled duration cannot be honestly represented.",
+      "evidence": "\"magically lock it for the duration\" — duration field: {\"type\": \"permanent\", \"ends\": [\"dispel\"]}"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment: object",
+      "justification": "The spell targets a physical object (door, window, gate, container, or hatch), not a creature. The v4 taxonomy includes an 'object' attachment atom, but the surface Attachment type has no object variant.",
+      "evidence": "\"You touch a closed door, window, gate, container, or hatch and magically lock it\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation: lock_object (block_access)",
+      "justification": "The mechanical effect is preventing nonmagical unlocking/opening of the object. No existing OngoingOperation variant covers access-blocking; roll_modifier and damage_on_hit are the only options. The v4 atom 'block_travel' is the closest match but is not surfaced as an operation.",
+      "evidence": "\"This lock can't be unlocked by any nonmagical means.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Arcane Lock is structurally closest to ongoing_effect (persistent state applied to a target, no combat resolution, no concentration) but requires three surface widenings before it can be encoded: a permanent Duration variant, an object Attachment variant, and an access-blocking OngoingOperation variant. Secondary omission: the password mechanic (spoken within 5 ft unlocks for 1 minute) would require a further conditional-suppression sub-trigger mechanism beyond these three widenings and is not the primary blocker."
+}
