@@ -1,0 +1,28 @@
+{
+  "unit_slug": "fabricate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase / direct",
+      "justification": "Fabricate has no attack roll and no saving throw — it is an unconditional transformation. The current ActivationPhase union only has 'attack_roll' and 'save_gate'. A 'direct' phase variant (no resolution gating) is needed for spells whose effect fires without any check.",
+      "evidence": "You convert raw materials into products of the same material."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Effect / create_object",
+      "justification": "Fabricate's sole effect is producing a physical object from raw materials. The v4 taxonomy lists 'create_object' as an effect atom (§9), but the surface Effect type only contains DamageEffect | NoneEffect. A create_object variant is required.",
+      "evidence": "you can fabricate a Large or smaller object (contained within a 10-foot Cube or eight connected 5-foot Cubes) given a sufficient quantity of material"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment / object",
+      "justification": "The spell targets raw materials (objects), not creatures. The v4 taxonomy lists 'object' as an attachment atom (§3), but the surface Attachment union only covers self | target | area | mark. An 'object' attachment variant is needed for spells that operate on inanimate matter.",
+      "evidence": "Choose raw materials that you can see within range."
+    }
+  ],
+  "confidence": "high",
+  "notes": "All three missing surface shapes have corresponding v4 atoms (create_object, object attachment, and an unconditional activation phase implicitly covered by the 'activate' procedure atom). No new taxonomy-level atoms are needed; only three new variants of existing surface union types. The proficiency-gating restriction ('unless you have proficiency') and size/material constraints are authoring-time predicates that would be expressed in the description field, not as runtime atoms."
+}
