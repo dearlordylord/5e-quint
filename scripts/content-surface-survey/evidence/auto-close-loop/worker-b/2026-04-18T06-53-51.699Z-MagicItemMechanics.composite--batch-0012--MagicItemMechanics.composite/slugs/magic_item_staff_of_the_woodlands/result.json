@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item_or_object",
+      "justification": "Tree Form changes the staff itself into a tree and back. The current activation surface can only attach to self, target, area, or mark, so there is no honest attachment site for alter_item_kind on the item.",
+      "evidence": "You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_numeric.spell_attack_only",
+      "justification": "The item grants +2 to spell attack rolls only. The current roll surface can target generic attack rolls, but it cannot distinguish spell attacks from weapon attacks for a passive rider.",
+      "evidence": "While holding it, you have a +2 bonus to spell attack rolls."
+    },
+    {
+      "kind": "new_atom",
+      "name": "fall_on_end",
+      "justification": "Tree Form has a deterministic rider when the altered item reverts: creatures in the tree fall. The v4 taxonomy already names this atom, but the authored TS surface does not expose it.",
+      "evidence": "Any creature in the tree falls when the tree reverts to a staff."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.last_charge_roll_nonmagical",
+      "justification": "The existing last-charge policy only models destruction. This item survives but loses its magical properties, which is materially different lifecycle behavior.",
+      "evidence": "If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff."
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.attunementRestriction",
+      "justification": "The record can only say attunement is required, not who can attune. This item's attunement gate is class-specific.",
+      "evidence": "Staff, Rare (Requires Attunement by a Druid)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Composite magic-item mechanics would cover the passive bonuses, spell list, charge pool, and dawn recharge, but Tree Form and the non-destructive last-charge rider cannot be encoded honestly in the current read-only surface."
+}
