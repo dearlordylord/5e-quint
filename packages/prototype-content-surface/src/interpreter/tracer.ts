@@ -2504,6 +2504,7 @@ function describeObjectFilter(f: ObjectFilter | undefined): string {
   const parts: string[] = [];
   if (f.material !== undefined) parts.push(f.material);
   if (f.manufactured === true) parts.push("manufactured");
+  if (f.maxSize !== undefined) parts.push(`${f.maxSize}_or_smaller`);
   switch (f.heldOrWorn) {
     case "required":
       parts.push("held_or_worn");

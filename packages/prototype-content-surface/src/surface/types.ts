@@ -1295,7 +1295,10 @@ export type DurationEndTrigger =
   // watches damage OUTGOING from the target) and from
   // target_damaged_by_caster_or_ally (which narrows the source). This
   // variant ends on damage from ANY source.
-  | { readonly kind: "target_takes_damage" };
+  | { readonly kind: "target_takes_damage" }
+  // Light, Produce Flame, Silent Image, Secret Chest: "The spell ends
+  // if you cast it again." Caster-side event (not target-side).
+  | { readonly kind: "caster_recasts_spell" };
 
 export type Duration =
   | { readonly kind: "instantaneous" }
@@ -1482,6 +1485,7 @@ export type ObjectFilter = {
   readonly material?: ObjectMaterial;
   readonly heldOrWorn?: "required" | "forbidden";
   readonly manufactured?: boolean;
+  readonly maxSize?: Size;
 };
 
 // ---------- resolution DC ----------
@@ -1839,7 +1843,7 @@ export type StatBlockValue =
         | "spellcasting_ability_mod";
     };
 
-export type StatBlockSize =
+export type Size =
   | "tiny"
   | "small"
   | "medium"
@@ -1951,7 +1955,7 @@ export type CreatureTrait = {
 
 export type CreatureStatBlock = {
   readonly displayName: string;
-  readonly size: StatBlockSize | CastTimeChoice<StatBlockSize>;
+  readonly size: Size | CastTimeChoice<Size>;
   readonly creatureType: CreatureType | CastTimeChoice<CreatureType>;
   readonly ac: StatBlockValue;
   readonly hp: StatBlockValue;
@@ -2065,7 +2069,7 @@ export type TemplatedCapacity = {
 };
 
 export type TemplatedSizeTier = {
-  readonly size: StatBlockSize;
+  readonly size: Size;
   readonly weight: number;
   readonly hp: StatBlockValue;
   readonly slamDamage: DiceAmount;

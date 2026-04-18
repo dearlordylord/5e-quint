@@ -1,6 +1,6 @@
 {
   "unit_slug": "light",
-  "outcome": "surface_widening",
+  "outcome": "clean",
   "atoms_used": [
     "action_quota",
     "activate",
@@ -18,20 +18,7 @@
     "persists_until",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ObjectFilter.maxSize",
-      "justification": "Light targets 'one Large or smaller object' — a size cap on the valid target objects. ObjectFilter has no size field, so the encoded spell silently widens to objects of any size.",
-      "evidence": "You touch one Large or smaller object that isn't being worn or carried by someone else."
-    },
-    {
-      "kind": "new_variant",
-      "name": "DurationEndTrigger.caster_recasts_spell",
-      "justification": "Light ends early when the caster casts it again. No existing DurationEndTrigger variant matches this. The v4 lifecycle atom replace_on_recast exists but has no surface hook on Duration.",
-      "evidence": "The spell ends if you cast it again."
-    }
-  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Core mechanic (emit_light on an object for 1 hour) encodes cleanly as activation + direct + object attachment. Two secondary constraints are unrepresentable: (1) the Large-or-smaller size cap on the object target and (2) the 'cast again ends it' early-end trigger. The encoding is honest — the omitted constraints are surfaced as explicit widenings rather than faked with wrong atoms."
+  "notes": "Both gaps in the prior prototype encoding are now closed: ObjectFilter.maxSize (added recently) captures 'Large or smaller'; DurationEndTrigger.caster_recasts_spell captures 'spell ends if you cast it again'. Omitted DM-narrative riders: color choice and opaque-covering rule are DM-agenda with no deterministic mechanical consequence. Typecheck passes, tracer clean."
 }

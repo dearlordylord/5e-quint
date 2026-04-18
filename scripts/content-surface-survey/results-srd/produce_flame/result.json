@@ -1,1 +1,16 @@
-{"unit_slug":"produce_flame","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 137"}
+{
+  "unit_slug": "produce_flame",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_caster_action",
+      "justification": "Produce Flame's attack is optional: the caster may spend a Magic action during the spell's 10-minute duration to make a ranged spell attack. This is distinct from all existing OngoingTrigger variants. passive fires unconditionally; on_caster_attack_hit fires when an existing attack hits (it doesn't grant a new attack). The v4 taxonomy already names action_window as a Window Atom, but OngoingTrigger has no variant that exposes it. A new variant { kind: 'on_caster_action'; actionKind: StandardActionKind } would express 'while this effect persists, if the caster spends the named action, the effect fires'. This covers Produce Flame (Magic action -> ranged spell attack) and would generalize to any future ongoing effect triggered by an optional caster-action expenditure.",
+      "evidence": "Until the spell ends, you can take a Magic action to hurl fire at a creature or an object within 60 feet of you. Make a ranged spell attack. On a hit, the target takes 1d8 Fire damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is structurally correct. Three parts encode cleanly: emit_light for the passive light (20ft bright / 20ft dim additional), threshold_tiers with axis=character for the 1d8/2d8/3d8/4d8 cantrip scaling, and caster_recasts_spell as the earlyEnd trigger on the timed 10-minute duration. The sole gap is the OngoingTrigger variant for the optional Magic-action attack. Encoding only the light would omit a core mechanic and produce a misleading trace, so no dhall/json/trace was authored."
+}
