@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less activated magic-item ability",
+      "justification": "The item uses action-costed command words but does not consume charges, uses, or any resettable pool.",
+      "evidence": "This item also has three command words, each requiring a Magic action to use."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The transformation applies to the source item itself rather than a creature target or area.",
+      "evidence": "The box unfolds into a Rowboat. The box unfolds into a Keelboat."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.on_active_form_zero_hp",
+      "justification": "The item's destruction is triggered by the vessel form reaching 0 Hit Points, not by charges or pool exhaustion.",
+      "evidence": "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because the current magic-item activation surface cannot represent command-word activations with no resource/reset, the effect should attach to the item itself, and the destruction trigger is missing. The fold-back command also has a secondary missing precondition: \"if no creatures are aboard.\""
+}
