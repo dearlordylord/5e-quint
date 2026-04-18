@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "grant_sense",
+  "archivedAt": "2026-04-18T15:24:04.444Z",
+  "selectedSlugs": [
+    "scrying",
+    "tongues"
+  ]
+}
