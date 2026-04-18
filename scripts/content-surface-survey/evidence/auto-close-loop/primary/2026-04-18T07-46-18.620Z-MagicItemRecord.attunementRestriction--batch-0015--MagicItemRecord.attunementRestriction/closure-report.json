@@ -1,0 +1,36 @@
+{
+  "cluster": "MagicItemRecord.attunementRestriction",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_staff_of_power",
+    "magic_item_wand_of_lightning_bolts"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 1,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_staff_of_power",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_wand_of_lightning_bolts",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}
