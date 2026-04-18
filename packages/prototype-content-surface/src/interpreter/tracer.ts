@@ -2916,6 +2916,21 @@ function traceActivationCost(
       }
       return;
     }
+    case "study": {
+      const id = ids("study");
+      const hourLabel = c.hours === 1 ? "hour" : "hours";
+      const dayLabel = c.withinDays === 1 ? "day" : "days";
+      nodes.push({
+        id,
+        category: "window",
+        atomKind: "duration_window",
+        label:
+          `duration_window\nstudy ${c.hours} ${hourLabel}\n` +
+          `within ${c.withinDays} ${dayLabel}`,
+      });
+      edges.push({ from: procId, to: id, relation: "requires" });
+      return;
+    }
     case "replace_attack": {
       const id = ids("q");
       nodes.push({

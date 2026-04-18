@@ -1833,6 +1833,13 @@ export type ClassFeatureActivationCost =
   | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }
   | { readonly kind: "reaction"; readonly trigger?: ReactionTrigger }
+  // Downtime study gate for tome/manual items: spend a fixed number of
+  // study hours within a bounded day window before the effect resolves.
+  | {
+      readonly kind: "study";
+      readonly hours: number;
+      readonly withinDays: number;
+    }
   | { readonly kind: "replace_attack" };
 
 // use_count cap — fixed amount, a threshold-tier schedule (Option B:
