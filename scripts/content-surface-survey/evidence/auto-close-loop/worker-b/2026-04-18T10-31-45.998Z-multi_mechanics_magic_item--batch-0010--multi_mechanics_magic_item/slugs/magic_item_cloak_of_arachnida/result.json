@@ -1,0 +1,31 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_speed",
+    "grant_spell_access",
+    "ignore_web_restrictions",
+    "magic_item_root",
+    "self",
+    "use_count",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "medium",
+  "notes": "Encoded as a composite magic item: one worn passive part for poison resistance, linked climb speed, and web traversal immunity; one worn activation part for a once-per-dawn Web cast with fixed DC 13 and a cube area override of 40 feet. The vertical-surface and ceiling-movement text follows the existing local Spider Climb / Slippers of Spider Climbing precedent rather than introducing a separate movement atom."
+}
