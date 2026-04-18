@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.spawned_creature",
+      "justification": "The item's core mechanic is an activated magic item that creates, commands, and dismisses a companion with explicit initiative, obedience, and disappearance rules. Companion-creation payloads exist only for spells today, so there is no honest magic-item family that can carry this behavior.",
+      "evidence": "While you are within 5 feet of this brazier, you can take a Magic action to summon a Fire Elemental."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not coerce this into grant_spell_access or a passive/activation placeholder. The item directly creates a Fire Elemental with fixed control and dismissal semantics, but magic items cannot currently use the spawned_creature family."
+}
