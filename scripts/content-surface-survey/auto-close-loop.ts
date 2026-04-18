@@ -1158,7 +1158,12 @@ function maybeCommitBatch(
   extraPaths: ReadonlyArray<string>,
 ): string | null {
   if (!args.autoCommit) return null;
-  const paths = [...new Set([...extraPaths, ...batchCommitPaths(report)])];
+  const paths = [...new Set([...extraPaths, ...batchCommitPaths(report)])].filter(
+    (rel) =>
+      !PERSISTENT_UNTRACKED_PREFIXES.some(
+        (prefix) => rel === prefix || rel.startsWith(`${prefix}/`),
+      ),
+  );
   if (paths.length === 0) return null;
 
   const add = git(["add", "--", ...paths]);
