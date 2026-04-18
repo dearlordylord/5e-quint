@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic-item activation effect for commanded item locomotion",
+      "justification": "The current magic-item activation family exists, and `Attachment.item` exists, but there is no honest effect shape for making an item hover/fly as a directed vehicle instead of granting a creature a speed or creating a companion.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word. It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "load-dependent speed modifier on item locomotion",
+      "justification": "The carpet's speed depends on whether its carried weight exceeds normal capacity, which is not expressible with the current surface's speed atoms or predicates.",
+      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A magic-item record kind and activation family already exist, so this is not structural widening. The four size entries could be represented as magic-item variants, and the GM's random selection of a size is item-generation metadata rather than the blocker. The blocker is the missing surface shape for a commanded flying item with control range and load-dependent speed."
+}
