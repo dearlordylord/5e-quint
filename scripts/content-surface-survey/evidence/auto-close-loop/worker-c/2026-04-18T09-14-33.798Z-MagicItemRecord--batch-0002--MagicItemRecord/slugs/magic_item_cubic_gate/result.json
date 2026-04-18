@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destinationOverride",
+      "justification": "The existing magic-item activation shape can grant access to named spells, but it cannot constrain or override the destination parameter of a granted spell cast. Cubic Gate's core mechanic is that the cast destination is the plane keyed to the pressed cube face, not an unrestricted spell choice.",
+      "evidence": "\"Gate. Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_cubic_gate.dhall. The item fits MagicItemRecord + activation mechanically, but omitting the keyed-plane destination would be dishonest because that constraint is the core of both Gate and Plane Shift on this item."
+}

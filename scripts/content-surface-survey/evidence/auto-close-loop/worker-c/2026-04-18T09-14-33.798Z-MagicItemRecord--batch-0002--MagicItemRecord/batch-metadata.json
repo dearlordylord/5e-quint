@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord",
+  "archivedAt": "2026-04-18T09:19:07.342Z",
+  "selectedSlugs": [
+    "magic_item_cube_of_force",
+    "magic_item_cubic_gate"
+  ]
+}
