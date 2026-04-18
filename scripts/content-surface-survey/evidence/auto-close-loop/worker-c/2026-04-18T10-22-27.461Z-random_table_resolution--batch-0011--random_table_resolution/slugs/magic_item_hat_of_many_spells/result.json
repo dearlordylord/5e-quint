@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "unknown_spell_cast_attempt",
+      "justification": "The item's core procedure is not a fixed granted spell. It lets the wielder choose any qualifying Wizard spell they do not know, spend a spell slot of that spell's level, make an Arcana check, and only on success actually cast that chosen spell using its normal casting time.",
+      "evidence": "\"While holding the hat, you can try to cast a level 1+ spell you don't know... Once you decide on the spell, you must expend a spell slot of the spell's level. Then, to determine whether you cast the spell, make an Intelligence (Arcana) check... On a successful check, you cast the spell using its normal casting time\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional_success_reset_resource",
+      "justification": "The current activated-ability header consumes its resource at activation time. Hat of Many Spells instead spends the spell slot before the check, but the short-rest lockout starts only on a successful check. That needs success-gated resource consumption/reset semantics.",
+      "evidence": "\"Once you decide on the spell, you must expend a spell slot of the spell's level... On a successful check, you cast the spell... and you can't use this property again until you finish a Short or Long Rest.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "effect_atom_create_companion_from_catalog",
+      "justification": "Several failure branches summon creatures chosen from a random table, with control and dismissal parameters, from inside a random-table outcome. The surface currently has spawned-creature as a top-level mechanics family, not as a branchable effect atom inside activation phases.",
+      "evidence": "\"A creature appears in an unoccupied space as close to you as possible... it disappears after 1 hour or when it drops to 0 Hit Points. Roll 1d4 to determine the creature\" and \"A Hostile Swarm of Bats flies out of the hat\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "effect_atom_create_object_or_temporary_magic_item",
+      "justification": "Failure branches create concrete nonmagical objects and a temporary magic item from random tables. The current surface has no object-creation effect atom in types.ts, and no way to express temporary created-item disappearance inside this item's random table.",
+      "evidence": "\"You pull a nonmagical object out of the hat\" and \"You pull a magic item out of the hat... The GM chooses the item, which disappears after 1 hour if it's not consumed or destroyed before then.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The core procedure cannot be represented honestly with current magic-item activation semantics. Secondary text such as Spellcasting Focus is also outside the current authored mechanics surface, but it is not the main blocker."
+}
