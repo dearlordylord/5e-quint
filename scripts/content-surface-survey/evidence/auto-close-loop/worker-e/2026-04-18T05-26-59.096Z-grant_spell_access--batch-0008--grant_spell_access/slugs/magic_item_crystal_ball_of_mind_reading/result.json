@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.requires_linked_spell_sensor",
+      "justification": "The existing grant_spell_access surface can restrict targeting relative to a spell sensor, but it cannot require that the granted cast be anchored to an active linked spell instance that provides that sensor.",
+      "evidence": "\"you can cast Detect Thoughts (save DC 17) targeting creatures you can see within 30 feet of the spell's sensor\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.ends_when_linked_spell_ends",
+      "justification": "The current surface cannot express that an item-granted spell instance terminates when another linked spell instance ends.",
+      "evidence": "\"it ends if the Scrying spell ends\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.ignore_concentration",
+      "justification": "The current surface cannot override a granted spell's printed concentration requirement for casts made through a specific magic item grant.",
+      "evidence": "\"You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item fits MagicItemRecord in principle, but encoding it today would falsely model Detect Thoughts as an independent normal spell grant instead of a Scrying-linked, concentration-overridden cast."
+}

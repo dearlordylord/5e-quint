@@ -460,8 +460,16 @@ export type SpellAccessMode =
 // Optional narrowing applied to the spell access grant itself rather than
 // the underlying spell record. Magic items like Ring of Jumping grant a
 // normally broader-target spell, but restrict casts made through the item
-// to the wearer only.
-export type GrantedSpellTargetRestriction = { readonly kind: "self_only" };
+// to the wearer only. Other items can also re-anchor targeting to an
+// existing remote origin (for example, a spell sensor) instead of the
+// granted spell's printed range header.
+export type GrantedSpellTargetRestriction =
+  | { readonly kind: "self_only" }
+  | {
+      readonly kind: "visible_target_within_feet";
+      readonly feet: number;
+      readonly origin: AttachmentRangeOrigin;
+    };
 
 // ---------- unified effect atoms (v4 taxonomy) ----------
 //
