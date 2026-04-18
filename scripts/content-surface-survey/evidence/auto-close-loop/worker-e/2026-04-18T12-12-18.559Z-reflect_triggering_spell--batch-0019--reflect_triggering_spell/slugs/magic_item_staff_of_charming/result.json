@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_charming",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "trigger-bound non-reaction magic-item ability family",
+      "justification": "The item combines ordinary charge-cast access and a reaction-shaped reflection with a third property that triggers on a failed save but does not spend a Reaction. No existing MagicItemMechanics family can encode a triggered, cooldown-bound resolution override that is not itself a reaction.",
+      "evidence": "\"If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one. You can't use this property of the staff again until the next dawn.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "replace_triggering_save_outcome",
+      "justification": "Even with a trigger-bound family, the current effect surface has no way to replace the outcome of the triggering saving throw after it has failed. This is not a bonus, reroll, or reflection; it is a direct failed-to-successful save conversion.",
+      "evidence": "\"you can turn your failed save into a successful one\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Cast Spell fits as charge-based spell access, and Reflect Enchantment fits the existing spell-save-outcome reaction plus reflect_triggering_spell. The blocker is Resist Enchantment: it is trigger-bound, not reaction-costed, and it replaces the triggering save result outright. No content/*.dhall or trace was authored to avoid a misleading encoding."
+}
