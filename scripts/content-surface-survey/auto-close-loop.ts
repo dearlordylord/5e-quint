@@ -158,13 +158,13 @@ const DEFAULT_LOCK_PATH = path.join(
   "auto-close-loop.lock.json",
 );
 const DEFAULT_HISTORY_PATH = path.join(
-  DEFAULT_REPO_ROOT,
+  DEFAULT_SHARED_ROOT,
   ".output",
   "content-surface-closure",
   "auto-close-loop.history.jsonl",
 );
 const DEFAULT_LATEST_PATH = path.join(
-  DEFAULT_REPO_ROOT,
+  DEFAULT_SHARED_ROOT,
   ".output",
   "content-surface-closure",
   "auto-close-loop.latest.json",
