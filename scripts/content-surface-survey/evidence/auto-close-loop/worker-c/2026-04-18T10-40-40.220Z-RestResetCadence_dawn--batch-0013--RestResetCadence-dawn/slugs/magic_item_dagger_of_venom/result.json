@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activated_ongoing_magic_item_rider",
+      "justification": "The item combines a bonus-action activation and dawn-reset resource cadence with a temporary on-hit rider that persists on the weapon for 1 minute or until spent. Existing magic-item families only support immediate activations, triggered reactions, summons, and passive grants.",
+      "evidence": "You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 weapon bonus fits current atoms, but omitting the poison-coating rider would produce a misleading partial encoding, so no content/tracer artifact was authored."
+}
