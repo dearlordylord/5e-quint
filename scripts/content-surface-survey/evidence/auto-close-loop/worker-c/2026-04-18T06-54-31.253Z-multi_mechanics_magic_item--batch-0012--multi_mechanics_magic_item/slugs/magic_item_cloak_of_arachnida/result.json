@@ -1,0 +1,35 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_speed",
+    "grant_spell_access",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "ignore_web_restrictions",
+      "justification": "The item grants deterministic immunity/traversal behavior for webs that is not modeled by resistance, condition immunity, speed grants, or any existing terrain-facing effect atom.",
+      "evidence": "You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored a composite magic-item encoding for Poison Resistance, climb speed equal to walk speed, and a once-per-dawn Web cast with fixed DC 13 and enlarged area. Omitted Spider Walk from the mechanics because encoding it with existing atoms would be misleading."
+}

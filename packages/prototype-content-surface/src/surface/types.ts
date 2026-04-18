@@ -783,6 +783,11 @@ export type EffectAtom =
       // using an item-defined fixed DC instead of the spell's normal
       // caster-derived DC.
       readonly dcOverride?: DcSource;
+      // Optional cast-time area override applied only to casts made
+      // through this grant. Needed for item-granted casts that reuse an
+      // existing spell but change its authored area, such as Cloak of
+      // Arachnida's Web filling twice the spell's normal area.
+      readonly areaOverride?: AreaShapeSpec;
       readonly targetRestriction?: GrantedSpellTargetRestriction;
     }
   // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from

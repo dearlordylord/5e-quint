@@ -388,6 +388,7 @@ function traceEffectAtom(
         label:
           `grant_spell_access\n${e.spellId}\n(${describeSpellAccessMode(e.mode)})` +
           describeGrantedSpellDcOverride(e.dcOverride) +
+          describeGrantedSpellAreaOverride(e.areaOverride) +
           describeGrantedSpellTargetRestriction(e.targetRestriction),
       });
       return id;
@@ -3700,6 +3701,14 @@ function describeGrantedSpellDcOverride(
   dcOverride: DcSource | undefined,
 ): string {
   return dcOverride === undefined ? "" : `\nDC override: ${describeDc(dcOverride)}`;
+}
+
+function describeGrantedSpellAreaOverride(
+  areaOverride: AreaShapeSpec | undefined,
+): string {
+  return areaOverride === undefined
+    ? ""
+    : `\narea override: ${describeAreaShape(areaOverride)}`;
 }
 
 function describeWeaponFilter(f: WeaponFilter | undefined): string {
