@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 10,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "composite_magic_item_mechanics",
+  "archivedAt": "2026-04-18T07:14:38.660Z",
+  "selectedSlugs": [
+    "magic_item_rod_of_alertness",
+    "magic_item_staff_of_fire"
+  ]
+}
