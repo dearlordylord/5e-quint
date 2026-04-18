@@ -1,0 +1,20 @@
+{
+  "unit_slug": "magic_item_headband_of_intellect",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "set_ability_score",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits existing magic_item passive surface honestly as an attunement-gated worn item that floors Intelligence at 19."
+}
