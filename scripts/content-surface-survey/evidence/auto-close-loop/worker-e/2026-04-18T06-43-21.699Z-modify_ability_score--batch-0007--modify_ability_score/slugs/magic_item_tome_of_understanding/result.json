@@ -1,0 +1,9 @@
+{
+  "unit_slug": "magic_item_tome_of_understanding",
+  "outcome": "refused",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The item fits the existing magic_item activation surface, but the worker protocol cannot complete it honestly: Dhall-to-JSON omits elapsed_days.regain when it is None, while the tracer requires an explicit null for the 'refill all' branch and crashes on the generated JSON. Hand-editing JSON or patching the tracer is forbidden by task rules."
+}

@@ -1,0 +1,36 @@
+{
+  "cluster": "modify_ability_score",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_tome_of_understanding",
+    "magic_item_headband_of_intellect"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_tome_of_understanding",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "refused",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_headband_of_intellect",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}
