@@ -2164,9 +2164,12 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // `always` is the sentinel for unconditional grants (darkvision,
 // some always-on item passives, etc.). `holding_item` covers held-item
 // gates on non-weapon equipment such as Sentinel Shield and wand-family
-// magic items. `wearing_item` covers worn-item gates on generic magic
-// items such as gauntlets, rings, cloaks, and orbiting Ioun Stones
-// (which the SRD explicitly treats as worn objects while orbiting).
+// magic items. `peering_through_item` is the narrower held-item gate
+// for optics-like items whose benefit applies only while the bearer is
+// actively looking through the item (Gem of Seeing). `wearing_item`
+// covers worn-item gates on generic magic items such as gauntlets,
+// rings, cloaks, and orbiting Ioun Stones (which the SRD explicitly
+// treats as worn objects while orbiting).
 // `unarmored` covers inverse armor gates on passive benefits such as
 // Robe of the Archmagi's AC formula while not wearing armor.
 // `wearing_armor` carries a category list because Defense's SRD text
@@ -2181,6 +2184,7 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // (for example, "while wearing this robe and not wearing armor").
 type NonAlwaysEquipmentPredicate =
   | { readonly kind: "holding_item" }
+  | { readonly kind: "peering_through_item" }
   | { readonly kind: "wearing_item" }
   | { readonly kind: "unarmored" }
   | {

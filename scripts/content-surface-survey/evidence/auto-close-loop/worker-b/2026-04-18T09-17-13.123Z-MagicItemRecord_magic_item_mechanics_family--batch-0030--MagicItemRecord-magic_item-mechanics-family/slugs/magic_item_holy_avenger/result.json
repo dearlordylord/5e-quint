@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_holy_avenger",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.on_hit_trigger",
+      "justification": "Holy Avenger has a passive weapon rider that adds extra damage only when this weapon hits a Fiend or an Undead. The current magic-item families cover passive grants, activations, triggered reactions, and spawned creatures, but not persistent on-hit riders.",
+      "evidence": "When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_aura_component_for_magic_items",
+      "justification": "The item continuously projects an emanation from the bearer that affects other creatures in an area. Current non-spell passive mechanics have no attachment-bearing aura form; area attachments only exist on spell families.",
+      "evidence": "While you hold the drawn weapon, it creates a 10-foot Emanation originating from you. You and all creatures Friendly to you in the Emanation have Advantage on saving throws..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.sourceFilter",
+      "justification": "The aura grants advantage only on saving throws against spells and other magical effects, not on all saving throws.",
+      "evidence": "have Advantage on saving throws against spells and other magical effects"
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_shape_scaling_by_named_class_level",
+      "justification": "The emanation's radius changes from 10 feet to 30 feet at Paladin level 17. The current surface does not let a non-spell area attachment scale by a named class-level threshold.",
+      "evidence": "If you have 17 or more levels in the Paladin class, the size of the Emanation increases to 30 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Attunement by class and the +3 attack/damage bonuses fit the existing magic-item surface, but two major mechanics do not: the Fiend/Undead-only on-hit radiant rider and the passive emanation aura. I did not author Dhall/JSON/trace files because any current encoding would require dropping or misrepresenting those mechanics."
+}

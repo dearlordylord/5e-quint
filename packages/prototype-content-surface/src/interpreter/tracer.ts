@@ -3076,6 +3076,16 @@ function traceEquipmentPredicate(
       });
       return [id];
     }
+    case "peering_through_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "peering_through_item",
+        label: "peering_through_item",
+      });
+      return [id];
+    }
     case "wearing_item": {
       const id = ids("pred");
       nodes.push({

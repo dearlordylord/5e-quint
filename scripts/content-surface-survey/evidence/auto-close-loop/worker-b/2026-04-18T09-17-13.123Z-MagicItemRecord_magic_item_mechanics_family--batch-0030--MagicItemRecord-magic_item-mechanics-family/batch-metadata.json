@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 30,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord + magic_item mechanics family",
+  "archivedAt": "2026-04-18T09:23:54.271Z",
+  "selectedSlugs": [
+    "magic_item_gem_of_seeing",
+    "magic_item_holy_avenger"
+  ]
+}
