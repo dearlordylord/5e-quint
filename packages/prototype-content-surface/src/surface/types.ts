@@ -539,6 +539,11 @@ export type EffectAtom =
       readonly kind: "modify_ac";
       readonly delta: DiceDelta;
     }
+  // Base-AC replacement used by always-on passives (Robe of the
+  // Archmagi) and ongoing spell effects (Mage Armor). Kept in the
+  // shared atom surface so passive and ongoing mechanics can reuse the
+  // same AC-formula primitive instead of carrying parallel shapes.
+  | ModifyAcSetBaseEffect
   // Prototype extension: persistent additive modifier to the wielder's
   // spell save DC. Distinct from `grant_spell_access.dcOverride`, which
   // only changes casts made through a specific granted spell access path.
@@ -1291,12 +1296,22 @@ export type OngoingPredicate = {
   readonly comparison: "lte" | "eq" | "gte";
 };
 
+export type ModifyAcSetBaseEffect = {
+  readonly kind: "modify_ac_set_base";
+  readonly const: number;
+  readonly abilityMod: Ability;
+};
+
+export type ModifyAcSetFloorEffect = {
+  readonly kind: "modify_ac_set_floor";
+  readonly const: number;
+};
+
 // What fires when the trigger+predicate hold. Most effects are plain
-// EffectAtoms. Two ongoing-specific variants remain because they
-// REPLACE AC (not additive like EffectAtom.modify_ac):
-// modify_ac_set_base (Mage Armor) and modify_ac_set_floor (Barkskin).
-// A save_gate variant absorbs §A9's damage-triggered repeat-save
-// pattern.
+// EffectAtoms. `modify_ac_set_floor` remains ongoing-specific because
+// the current surface pressure for AC-floor replacement is spell-only
+// (Barkskin). `modify_ac_set_base` is shared with passive mechanics.
+// A save_gate variant absorbs §A9's damage-triggered repeat-save pattern.
 export type OngoingEffect =
   | EffectAtom
   | {
@@ -1306,15 +1321,7 @@ export type OngoingEffect =
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
     }
-  | {
-      readonly kind: "modify_ac_set_base";
-      readonly const: number;
-      readonly abilityMod: Ability;
-    }
-  | {
-      readonly kind: "modify_ac_set_floor";
-      readonly const: number;
-    };
+  | ModifyAcSetFloorEffect;
 
 export type OngoingOperation = {
   readonly trigger: OngoingTrigger;

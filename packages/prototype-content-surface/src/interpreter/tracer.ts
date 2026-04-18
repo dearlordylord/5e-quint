@@ -198,6 +198,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_ac_set_base": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ac",
+        label: `modify_ac\nset base = ${e.const} + ${e.abilityMod.toUpperCase()} mod`,
+      });
+      return id;
+    }
     case "modify_save_dc": {
       const id = ids("eff");
       nodes.push({
@@ -670,6 +680,7 @@ function traceEffectAtomScaling(
       return;
     case "none":
     case "modify_ac":
+    case "modify_ac_set_base":
     case "modify_save_dc":
     case "apply_condition":
     case "remove_condition":
@@ -1260,18 +1271,6 @@ function traceOngoingOpEffect(
   ids: IdGen,
 ): void {
   switch (eff.kind) {
-    case "modify_ac_set_base": {
-      const id = ids("op");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_ac",
-        label: `modify_ac\nset base = ${eff.const} + ${eff.abilityMod.toUpperCase()} mod`,
-      });
-      edges.push({ from: hostId, to: id, relation: hostRelation });
-      edges.push({ from: id, to: attId, relation: "attaches_to" });
-      return;
-    }
     case "modify_ac_set_floor": {
       const id = ids("op");
       nodes.push({
