@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 19,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "linear_per_level",
+  "archivedAt": "2026-04-18T14:24:28.075Z",
+  "selectedSlugs": [
+    "wizard_arcane_recovery_l1",
+    "druid_spellcasting_l1"
+  ]
+}
