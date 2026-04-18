@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_container_item",
+      "justification": "The item's core mechanic is owning extradimensional stored contents with capacity, retrieval procedure, temporary disablement, and internal air supply. That is not a passive grant or an activated ability.",
+      "evidence": "The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. Retrieving an item from the bag requires a Utilize action."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "extradimensional_collision_gate",
+      "justification": "The item has a trigger driven by interaction with another extradimensional space that destroys items, opens a temporary gate, and exiles nearby creatures. No existing magic-item family expresses that event structure honestly.",
+      "evidence": "Placing a Bag of Holding inside an extradimensional space created by a Handy Haversack, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_destruction.physical_or_state_trigger",
+      "justification": "Current destruction policies only cover charge exhaustion. Bag of Holding is destroyed by overload, piercing, tearing, or the extradimensional collision event instead.",
+      "evidence": "If the bag is overloaded, pierced, or torn, it is destroyed, and its contents are scattered in the Astral Plane."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The current surface lacks an honest family for stateful container items and triggered cross-item extradimensional interactions."
+}
