@@ -1788,7 +1788,7 @@ export type CreatureDismissal = {
   readonly onZeroHp: "disappears";
   readonly onSpellEnd: "disappears";
   readonly caster0Hp?: "disappears";
-  readonly manualDismiss?: "magic_action" | "never";
+  readonly manualDismiss?: "magic_action" | "bonus_action" | "never";
   readonly leavesBehind?: "equipment" | "nothing";
 };
 
