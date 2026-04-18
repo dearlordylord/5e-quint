@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_instant_fortress",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.create_object",
+      "justification": "The item's core mechanic is deploying a persistent tower object with its own geometry, door, AC, HP, resistances, immunities, and damage state that survives reverting back to statuette form. The current surface has `alter_item_kind`, but no honest way to create or track a deployable structure object.",
+      "evidence": "As a Magic action, you can place this 1-inch adamantine statuette on the ground and, using a command word, cause it to grow rapidly into a square adamantine tower."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.direct.object_area_clear",
+      "justification": "Deployment deterministically clears the tower's occupied footprint by moving creatures and unattended objects to adjacent unoccupied spaces. The current surface can attach to creatures, objects, or a location, but it cannot express one location-born structure deployment that simultaneously displaces both creature and object occupants from the new footprint.",
+      "evidence": "Each creature in the area where the tower appears is pushed to an unoccupied space outside but next to the tower. Objects in the area that aren't being worn or carried are also pushed clear of the tower."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_deployed_object_toggle",
+      "justification": "Instant Fortress is a two-state deployed object with gated reversion (`only if the tower is empty`), separate bonus-action door control, and persistent damage across form changes. That requires stateful linkage between the statuette form and the deployed tower form, not just a one-shot transform effect.",
+      "evidence": "Repeating the command word causes the tower to revert to statuette form, which works only if the tower is empty... Shrinking the tower back down to statuette form doesn't repair damage to the tower."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic item + activation/composite family exists, so this is not a top-level structural gap. I did not author a placeholder Dhall/JSON because `alter_item_kind` would under-model the item's core persistent deployable-structure behavior."
+}

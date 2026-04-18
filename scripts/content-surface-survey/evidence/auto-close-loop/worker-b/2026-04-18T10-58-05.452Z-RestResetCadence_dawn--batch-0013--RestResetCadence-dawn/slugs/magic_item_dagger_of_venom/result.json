@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.ongoing_effect",
+      "justification": "The item's core activated mechanic is not an immediate effect. Activating it creates a temporary armed weapon state that persists for 1 minute or until the next hit with that specific weapon, then resolves a save-gated payload on that later hit. Existing magic-item families allow immediate activation, passive grants, triggered reactions, or summons, but not an activated timed state with later on-hit resolution.",
+      "evidence": "You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 bonus to attack rolls and damage rolls made with this weapon fits current passive/composite item mechanics. The activated poison coating does not fit honestly: it needs a bonus-action activation that grants a temporary specific-weapon on-hit rider, consumed on first hit or expiry, followed by a DC 15 Con save for 2d10 poison damage and the Poisoned condition for 1 minute, with next-dawn reuse. Forcing this into immediate activation or existing triggered_reaction would lie about timing and state."
+}

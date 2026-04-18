@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "automatic_item_hazard",
+      "justification": "The current magic-item surface only supports passive grants to the bearer, activations, and triggered reactions. This item also has an always-on harmful trigger tied to touching the item and ending a turn while holding or carrying it.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_variant",
+      "name": "equipment_predicate_any_of",
+      "justification": "The existing equipment predicates can express holding an item or wearing an item, but not the RAW disjunction used by this item for both its passive bonus and its activated ability gate.",
+      "evidence": "You gain a +2 bonus to spell attack rolls while you wear or hold it. While wearing or holding the talisman, you can take a Magic action..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate_target_type_disadvantage",
+      "justification": "The save-gate surface can express the save and its outcomes, but not a pre-save modifier that applies only when the target is one of a closed set of creature types.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "The failed-save outcome is not damage, condition, exile, or polymorph. It destroys the target outright and specifies that no remains are left behind.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The holy-symbol spell-attack bonus is close to an existing passive grant, but the item as a whole does not fit honestly because it includes an automatic contact/holding hazard plus a fissure activation whose failed-save outcome is target destruction rather than an existing effect atom."
+}

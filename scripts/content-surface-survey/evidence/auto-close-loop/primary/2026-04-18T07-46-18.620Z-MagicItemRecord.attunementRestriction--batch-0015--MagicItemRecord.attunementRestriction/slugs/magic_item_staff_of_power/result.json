@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_power",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.from_remaining_charge_pool",
+      "justification": "Retributive Strike damage scales from the current remaining charges in the item, not from charges spent or level scaling.",
+      "evidence": "you take Force damage equal to 16 times the number of charges in the staff"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.partial_property_loss_on_last_charge_roll",
+      "justification": "The staff does not get destroyed or become wholly nonmagical on a failed last-charge roll; it keeps only its quarterstaff +2 bonus and loses its other properties.",
+      "evidence": "On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level kind and composite magic-item family fit, and most passive/spellcasting mechanics already map to existing atoms. I stopped before authoring because Retributive Strike needs damage derived from remaining charge-pool state, and the last-charge failure needs a degraded-item lifecycle shape rather than destruction."
+}

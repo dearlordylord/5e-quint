@@ -18,6 +18,10 @@ export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 // ability discriminant.
 export type RollKind =
   | "attack_roll"
+  // Spell attacks need their own bucket for held-item and feature riders
+  // that apply to spell attacks but not weapon attacks. Staff of the
+  // Woodlands is the pressure case on the magic-item surface.
+  | "spell_attack_roll"
   | "saving_throw"
   | "ability_check"
   | "initiative"
@@ -29,18 +33,47 @@ export type RollKind =
 // Weapon filter for riders that only apply to certain weapons.
 // Archery Fighting Style scopes by category ("Ranged weapons only");
 // Staff of Power / Staff of the Magi scope by the concrete wielded
-// item ("damage rolls made with it"). Keep this as a reference to the
-// existing item id rather than duplicating weapon identity fields on
-// the effect atoms themselves.
+// item ("damage rolls made with it"). Gloves of Missile Snaring
+// needs property-level narrowing ("Ranged or Thrown weapon"), so the
+// shared filter vocabulary also admits closed weapon properties.
+// Keep this as a reference to the existing item id rather than
+// duplicating weapon identity fields on the effect atoms themselves.
+export type WeaponProperty = "thrown";
+
 export type WeaponFilter =
   | {
       readonly kind: "weapon_category";
       readonly category: "melee" | "ranged";
     }
   | {
+      readonly kind: "weapon_property";
+      readonly property: WeaponProperty;
+    }
+  | {
       readonly kind: "specific_item";
       readonly itemId: string;
     };
+
+// Optional source-side narrowing for resistance atoms that only apply
+// against damage from attacks with extra qualifiers. Pressure cases:
+// Shield of Missile Attraction ("from attacks made with Ranged
+// weapons") and Gaseous Form ("from Nonmagical Attacks"). Kept
+// attack-scoped rather than introducing a wider generic damage-source
+// taxonomy before another family needs it.
+export type ResistanceSourceFilter = {
+  readonly kind: "attack";
+  readonly weaponFilter?: WeaponFilter;
+  readonly magicality?: "magical" | "nonmagical";
+};
+
+// Optional narrowing for saving-throw riders that only apply when the
+// save is caused by a spell or other magical effect. Pressure case:
+// Robe of the Archmagi's "Advantage on saving throws against spells and
+// other magical effects." Kept distinct from saveAbilityFilter because
+// the SRD frequently scopes saving throws by cause, not by ability.
+export type SavingThrowSourceFilter = {
+  readonly kind: "spell_or_other_magical_effect";
+};
 
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
@@ -101,6 +134,21 @@ export type ExileDestination =
   | "plane_of_origin"
   | "different_plane";
 
+// Passive container / storage profile for magic items whose primary
+// mechanic is a persistent storage space rather than an activation.
+// Bag of Holding is the pressure case: extradimensional interior,
+// bounded carrying capacity, fixed external carried weight, and a
+// shared finite air supply for breathing occupants.
+export type ContainerStorageProfile = {
+  readonly maxWeightPounds: number;
+  readonly maxVolumeCubicFeet: number;
+  readonly weightOverridePounds?: number;
+  readonly airSupply?: {
+    readonly sharedMinutes: number;
+  };
+  readonly extradimensional?: true;
+};
+
 // SRD 5.2.1 Playing-the-Game — the 12 standard action kinds.
 export type StandardActionKind =
   | "attack"
@@ -132,6 +180,12 @@ export type ClassName =
 
 export type RestKind = "short" | "long";
 
+export type FeatCategory =
+  | "general"
+  | "fighting_style"
+  | "epic_boon"
+  | "origin";
+
 // DiceDelta is a signed numeric delta. v4 adds source variants so content
 // can express bonuses derived from character state — not just fixed dice.
 //
@@ -144,8 +198,10 @@ export type RestKind = "short" | "long";
 //   • ability_modifier — +/- a specific ability modifier. Covers Sacred
 //                        Weapon (+CHA mod to attack) and similar.
 //   • magic_item_rarity_bonus — derive a flat bonus from the enclosing
-//                               MagicItemRecord.rarity rather than hardcoding
-//                               one item per rarity variant. Covers
+//                               magic-item rarity (record-level for
+//                               single items, variant-level for
+//                               collection items) rather than
+//                               hardcoding one item per rarity variant. Covers
 //                               Ammunition, +1/+2/+3 and similar rarity-tiered
 //                               item lines.
 export type DiceDelta =
@@ -229,6 +285,36 @@ export type Skill = (typeof SKILLS)[number];
 export type SkillFilter =
   | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
   | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Skill> };
+
+export type WeaponProficiencyCategory = "simple" | "martial";
+
+export type ArmorTrainingCategory =
+  | "light"
+  | "medium"
+  | "heavy"
+  | "shield";
+
+export type ProficiencyGrantSubject =
+  | { readonly kind: "skill"; readonly skill: Skill }
+  | {
+      readonly kind: "weapon_category";
+      readonly category: WeaponProficiencyCategory;
+    }
+  | {
+      readonly kind: "armor_category";
+      readonly category: ArmorTrainingCategory;
+    };
+
+export type ProficiencyGrant =
+  | {
+      readonly kind: "fixed";
+      readonly proficiencies: ReadonlyNonEmptyArray<ProficiencyGrantSubject>;
+    }
+  | {
+      readonly kind: "choice";
+      readonly count: number;
+      readonly options: ReadonlyNonEmptyArray<ProficiencyGrantSubject>;
+    };
 
 // ---------- SRD 5.2.1 conditions (Rules-Glossary) ----------
 
@@ -343,18 +429,32 @@ export type SlotScaling<T> = {
 };
 
 // DiceExpr is the canonical "dice roll expression": N d M + flat +
-// (optional) caster's spellcasting ability modifier. Cure Wounds and
-// Healing Word read "2d8 plus your spellcasting ability modifier";
-// since the actual ability depends on caster context (Cleric=Wis,
-// Wizard=Int, Bard=Cha, …) the surface records only that the mod is
-// added, not which ability. The concrete ability is resolved at cast
-// time by the engine against the caster's class spellcasting ability.
-export type DiceExpr = {
+// (optional) one ability-derived modifier. Most spell healing uses the
+// caster's spellcasting ability modifier; some non-spell item/feature
+// riders instead name a specific ability (for example "1d10 + your
+// Dexterity modifier"). Keep the source explicit while making the
+// two cases mutually exclusive.
+type DiceExprBase = {
   readonly dice: number;
   readonly dieSize: number;
   readonly flat?: number;
-  readonly spellcastingMod?: true;
 };
+
+export type DiceExpr = DiceExprBase &
+  (
+    | {
+        readonly spellcastingMod?: undefined;
+        readonly abilityModifier?: undefined;
+      }
+    | {
+        readonly spellcastingMod: true;
+        readonly abilityModifier?: undefined;
+      }
+    | {
+        readonly spellcastingMod?: undefined;
+        readonly abilityModifier: Ability;
+      }
+  );
 
 // Partial override for tier entries and per-level increments — any of
 // dice/dieSize/flat may change per level (Shillelagh's die-size
@@ -391,6 +491,17 @@ export type DiceAmount =
   // remaining in the pool." Paired with a charge_pool resource on
   // the mechanics header.
   | { readonly kind: "resource_spent" }
+  // Affine resource-spend amount: base + (perResource × resource_spent),
+  // optionally capped. Necklace of Fireballs is the pressure case:
+  // 7d6 + (1d6 × beads spent), maximum 12d6. Kept distinct from the
+  // plain `resource_spent` variant so pure pool-equals-amount cases
+  // (Lay on Hands) stay simple and exact.
+  | {
+      readonly kind: "resource_spent_linear";
+      readonly base: DiceExpr;
+      readonly perResource: DiceExprDelta;
+      readonly maximum?: DiceExpr;
+    }
   // §A14: amount read from another atom resolved in the same phase —
   // specifically a damage instance's total. Harm: modify_max_hp.delta
   // = linked damage_taken (full) of the save-gate's damage atom.
@@ -436,6 +547,10 @@ export type LinkedDamage = {
 // SpellAccessMode — how the grantee may cast the named spell.
 //   • at_will / once_per_long_rest / prepared / known — simple modes
 //     tied to the character's own resource pools.
+//   • prepared_once_per_long_rest / known_once_per_long_rest — the
+//     common grant pattern where the spell is added to the grantee's
+//     normal prepared/known access AND also gets one free cast per
+//     long rest. Pressure case: Elven Lineage L3/L5 spell grants.
 //   • charge_cast — the magic-item charge idiom: each cast spends
 //     charges from the item's charge_pool. Cost of casting at level K
 //     is `baseCharges + perLevelCharges × (K - minLevel)`; level range
@@ -448,7 +563,9 @@ export type SpellAccessMode =
   | "at_will"
   | "once_per_long_rest"
   | "prepared"
+  | "prepared_once_per_long_rest"
   | "known"
+  | "known_once_per_long_rest"
   | {
       readonly kind: "charge_cast";
       readonly baseCharges: number;
@@ -470,6 +587,22 @@ export type GrantedSpellTargetRestriction =
       readonly feet: number;
       readonly origin: AttachmentRangeOrigin;
     };
+
+// Optional duration override applied only to casts made through a
+// specific spell grant. This is intentionally delta-shaped rather than
+// a full replacement Duration: the underlying spell still owns the base
+// time span, while the grant may remove concentration or add an extra
+// linked early-end condition.
+export type GrantedSpellDurationOverride = {
+  // Crystal Ball of Mind Reading: the item-granted Detect Thoughts cast
+  // keeps the spell's printed duration but explicitly removes the need
+  // to concentrate on it.
+  readonly removeConcentration?: true;
+  // Some grants tie the granted spell's persistence to another granted
+  // spell from the same unit without restating the granted spell's
+  // entire duration.
+  readonly endsWhenGrantedSpellEnds?: string;
+};
 
 // ---------- unified effect atoms (v4 taxonomy) ----------
 //
@@ -533,6 +666,20 @@ export type EffectAtom =
       readonly kind: "modify_ac";
       readonly delta: DiceDelta;
     }
+  // Base-AC replacement used by always-on passives (Robe of the
+  // Archmagi) and ongoing spell effects (Mage Armor). Kept in the
+  // shared atom surface so passive and ongoing mechanics can reuse the
+  // same AC-formula primitive instead of carrying parallel shapes.
+  | ModifyAcSetBaseEffect
+  // Prototype extension: persistent additive modifier to the wielder's
+  // spell save DC. Distinct from `grant_spell_access.dcOverride`, which
+  // only changes casts made through a specific granted spell access path.
+  // This atom models broad character-sheet riders such as Robe of the
+  // Archmagi's "+2 to your spell save DC".
+  | {
+      readonly kind: "modify_save_dc";
+      readonly delta: DiceDelta;
+    }
   // v4: apply_condition. `condition` is one of:
   //   • a bare Condition — unconditional application
   //   • a ReadonlyArray<Condition> — ALL listed conditions applied
@@ -573,6 +720,17 @@ export type EffectAtom =
   | {
       readonly kind: "grant_resistance";
       readonly damageType: DamageTypeRef;
+      readonly sourceFilter?: ResistanceSourceFilter;
+    }
+  // Prototype extension: subtract a rolled or fixed amount from an
+  // incoming damage instance before it is applied. Distinct from
+  // grant_resistance (halves damage) and modify_damage_numeric
+  // (changes outgoing damage rolls you make). Optional damageType
+  // narrows the reduction to qualifying incoming damage only.
+  | {
+      readonly kind: "reduce_damage_taken";
+      readonly amount: DiceAmount;
+      readonly damageType?: DamageTypeRef;
     }
   // v4: grant_extra_action
   | {
@@ -630,6 +788,13 @@ export type EffectAtom =
       readonly threshold: number;
       readonly weaponFilter?: WeaponFilter;
     }
+  // Incoming critical-hit suppression on the bearer. Adamantine Armor:
+  // while worn, any critical hit against you becomes a normal hit.
+  // Keep this as a first-class inbound effect rather than forcing a
+  // synthetic incoming-attack trigger family for a passive item.
+  | {
+      readonly kind: "suppress_incoming_critical_hit";
+    }
   // v4: modify_roll_advantage — advantage/disadvantage on roll kinds.
   // Optional attackerTypeFilter narrows the effect to rolls made BY a
   // creature of one of the listed types (Protection from Evil and
@@ -647,16 +812,26 @@ export type EffectAtom =
   //     Reuses the existing RiderExpiry union (target_uses_or_turn_start
   //     | end_of_next_turn). Absent = rider persists until the host
   //     effect's duration ends.
+  // `conditionFilter` narrows the rider to D20 tests made to avoid or
+  // end one of the listed conditions. Dwarven Resilience and Fey
+  // Ancestry are the pressure cases on species traits; the same shape
+  // also covers ability checks made to escape a condition such as
+  // Grappled.
   | {
       readonly kind: "modify_roll_advantage";
       readonly mode: "advantage" | "disadvantage";
       readonly on: ReadonlyNonEmptyArray<RollKind>;
       readonly attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>;
       readonly skillFilter?: SkillFilter;
+      readonly conditionFilter?: ReadonlyNonEmptyArray<Condition>;
       // Beacon of Hope "Advantage on Wisdom saving throws" — narrow
       // saving_throw riders to specific abilities. Only meaningful
       // when `on` contains "saving_throw".
       readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      // Robe of the Archmagi "Advantage on saving throws against spells
+      // and other magical effects" — narrow saving_throw riders to
+      // qualifying save causes rather than save abilities.
+      readonly saveSourceFilter?: SavingThrowSourceFilter;
       readonly count?: number;
       readonly expiresOn?: RiderExpiry;
     }
@@ -710,8 +885,20 @@ export type EffectAtom =
   // §C1 Counterspell: negate whatever spell triggered this reaction.
   // Distinct from negate_named_effect (targets a specific spellId):
   // the target here is the triggering spell, whatever it was.
+  // `maxSpellLevel` covers level-bounded cancellation on the same
+  // trigger shape, e.g. Ioun Stone of Absorption / Greater Absorption.
   | {
       readonly kind: "negate_triggering_spell";
+      readonly maxSpellLevel?: number;
+    }
+  // Reflection idiom for post-save magic-item reactions such as Ring
+  // of Spell Turning and Staff of Charming. Unlike
+  // `negate_triggering_spell`, this does not just cancel the trigger:
+  // it re-targets the triggering spell back at its caster and resolves
+  // it using the triggering spell's own save math, as if the reactor
+  // had cast it.
+  | {
+      readonly kind: "reflect_triggering_spell";
     }
   // Beacon of Hope: "when the target regains Hit Points, it regains
   // the maximum number possible." Dodges the normal dice roll.
@@ -765,10 +952,29 @@ export type EffectAtom =
     }
   // v4 (additive): grant_feat — Ability Score Improvement "you can take a
   // feat instead", Fighter bonus feats, etc. Records the eligibility
-  // gate; the actual feat pick is build-time.
-  | {
+  // gate; the actual feat pick is build-time. Some level-up grants
+  // allow a feat from a preferred category with an explicit open
+  // fallback to any feat the character qualifies for (for example,
+  // "Epic Boon feat or another feat of your choice for which you
+  // qualify"), so the payload supports both closed category lists and
+  // a category/category-list plus open-fallback form.
+  | ({
       readonly kind: "grant_feat";
-      readonly category: "general" | "fighting_style" | "epic_boon" | "origin";
+    } & (
+      | {
+          readonly category: FeatCategory;
+          readonly openFallback?: "any_qualifying_feat";
+        }
+      | {
+          readonly categories: ReadonlyNonEmptyArray<FeatCategory>;
+          readonly openFallback?: "any_qualifying_feat";
+        }
+    ))
+  // v4: grant_proficiency — permanent grants of skill / weapon / armor
+  // proficiency, including counted picks from a closed list.
+  | {
+      readonly kind: "grant_proficiency";
+      readonly proficiency: ProficiencyGrant;
     }
   // v4 grant_spell_access — class features, species traits, and magic
   // items that add specific spells to the known / always-prepared pool,
@@ -783,7 +989,13 @@ export type EffectAtom =
       // using an item-defined fixed DC instead of the spell's normal
       // caster-derived DC.
       readonly dcOverride?: DcSource;
+      // Optional cast-time area override applied only to casts made
+      // through this grant. Needed for item-granted casts that reuse an
+      // existing spell but change its authored area, such as Cloak of
+      // Arachnida's Web filling twice the spell's normal area.
+      readonly areaOverride?: AreaShapeSpec;
       readonly targetRestriction?: GrantedSpellTargetRestriction;
+      readonly durationOverride?: GrantedSpellDurationOverride;
     }
   // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from
   // Poison, Tiefling "Hellish Resistance" style. Survey evidence: 3 hits.
@@ -831,6 +1043,16 @@ export type EffectAtom =
       readonly minimum?: number;
       readonly maximum?: number;
     }
+  // v4-adjacent: persistent modifier to the creature's proficiency
+  // bonus itself. Distinct from DiceDelta.kind = proficiency_bonus,
+  // which references PB as an input when modifying some other number.
+  // Pressure case: Ioun Stone of Mastery.
+  | {
+      readonly kind: "modify_proficiency_bonus";
+      readonly delta: number;
+      readonly minimum?: number;
+      readonly maximum?: number;
+    }
   // v4: detect — divination utility. Senses the presence of a named
   // property within a radius around the caster for the spell's
   // duration (typically concentration). The property vocabulary is
@@ -862,6 +1084,13 @@ export type EffectAtom =
       readonly speedKind: "fly" | "swim" | "climb" | "burrow";
       readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
+    }
+  // Cloak of Arachnida: the bearer can't be caught in webs of any sort
+  // and treats webs as only Difficult Terrain while moving through them.
+  // Kept distinct from generic speed / condition atoms because the rule is
+  // environment-specific and does not imply broad restraint immunity.
+  | {
+      readonly kind: "ignore_web_restrictions";
     }
   // v4: alter_item_kind — the targeted item/object changes into a
   // different named form or rules kind. Folding Boat switches between
@@ -904,6 +1133,13 @@ export type EffectAtom =
   | {
       readonly kind: "transport_exile";
       readonly destination: ExileDestination;
+    }
+  // Passive item/container storage profile. Encodes persistent carrying
+  // capacity and related constraints without forcing passive magic items
+  // through an activation family. Pressure case: Bag of Holding.
+  | {
+      readonly kind: "container_storage";
+      readonly storage: ContainerStorageProfile;
     }
   // Composite: apply several effects as one bundle. Used to put
   // multiple atoms into a single slot (save_gate.onFail, attack
@@ -954,6 +1190,26 @@ export type ReactionTrigger =
   | {
       readonly kind: "creature_casts_spell";
       readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
+      // Some reaction riders narrow the generic spellcasting trigger to
+      // visible casters only and/or to triggering spells up to a stated
+      // level. Pressure case: Ioun Stone of Absorption / Greater
+      // Absorption ("cast by a creature you can see", "level 4 or lower"
+      // / "level 8 or lower"). Keep this on the shared trigger variant
+      // rather than inventing item-specific reaction families.
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly requiresVisibleCaster?: true;
+    }
+  // Post-save spell reflection / conversion window. The trigger fires
+  // only after the reacting creature finishes a saving throw against a
+  // spell, with optional predicates on the triggering spell's school,
+  // level, and targeting shape.
+  | {
+      readonly kind: "spell_save_outcome";
+      readonly outcome: "success" | "failure";
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly spellSchool?: SpellSchool;
+      readonly spellTargetsOnlySelf?: true;
+      readonly spellHasNoAreaOfEffect?: true;
     }
   | {
       readonly kind: "any_of";
@@ -1084,6 +1340,13 @@ export type RepeatSaveSpec = {
 // eligible targets. Omitted = no type restriction.
 export type TargetTypeFilter = ReadonlyNonEmptyArray<CreatureType>;
 
+// Area-occupant disposition filter for self-centered auras and similar
+// area effects whose footprint is geometric but whose affected
+// creatures are narrowed by relationship to the source.
+export type AreaOccupantDispositionFilter =
+  | "friendly_to_source"
+  | "hostile_to_source";
+
 export type TargetSelection =
   | { readonly mode: "one"; readonly typeFilter?: TargetTypeFilter }
   | {
@@ -1176,6 +1439,7 @@ export type Attachment =
       readonly kind: "area";
       readonly shape: AreaShapeSpec;
       readonly origin: AreaOrigin;
+      readonly occupantDispositionFilter?: AreaOccupantDispositionFilter;
       readonly rangeOrigin?: AttachmentRangeOrigin;
     }
   // v4 `mark` attachment — stateful binding on a creature that effects
@@ -1262,12 +1526,22 @@ export type OngoingPredicate = {
   readonly comparison: "lte" | "eq" | "gte";
 };
 
+export type ModifyAcSetBaseEffect = {
+  readonly kind: "modify_ac_set_base";
+  readonly const: number;
+  readonly abilityMod: Ability;
+};
+
+export type ModifyAcSetFloorEffect = {
+  readonly kind: "modify_ac_set_floor";
+  readonly const: number;
+};
+
 // What fires when the trigger+predicate hold. Most effects are plain
-// EffectAtoms. Two ongoing-specific variants remain because they
-// REPLACE AC (not additive like EffectAtom.modify_ac):
-// modify_ac_set_base (Mage Armor) and modify_ac_set_floor (Barkskin).
-// A save_gate variant absorbs §A9's damage-triggered repeat-save
-// pattern.
+// EffectAtoms. `modify_ac_set_floor` remains ongoing-specific because
+// the current surface pressure for AC-floor replacement is spell-only
+// (Barkskin). `modify_ac_set_base` is shared with passive mechanics.
+// A save_gate variant absorbs §A9's damage-triggered repeat-save pattern.
 export type OngoingEffect =
   | EffectAtom
   | {
@@ -1277,20 +1551,32 @@ export type OngoingEffect =
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
     }
-  | {
-      readonly kind: "modify_ac_set_base";
-      readonly const: number;
-      readonly abilityMod: Ability;
-    }
-  | {
-      readonly kind: "modify_ac_set_floor";
-      readonly const: number;
-    };
+  | ModifyAcSetFloorEffect;
 
 export type OngoingOperation = {
   readonly trigger: OngoingTrigger;
   readonly predicate?: OngoingPredicate;
   readonly effect: OngoingEffect;
+};
+
+// Passive / equipped recurring operation — bounded non-spell analogue of
+// spell ongoing operations for "while worn/orbiting, this repeats on a
+// fixed cadence" idioms. Pressure case: Ioun Stone (Regeneration)
+// "regain 15 Hit Points at the end of each hour if you have at least
+// 1 Hit Point while this stone orbits your head."
+//
+// Keep this separate from spell OngoingOperation rather than reusing the
+// spell trigger grammar wholesale: non-spell passives do not have caster /
+// attached-turn semantics or spell headers, and the only surfaced timing
+// pressure here is a fixed elapsed-time cadence.
+export type PassiveOperation = {
+  readonly trigger: {
+    readonly kind: "elapsed_time";
+    readonly unit: "hour" | "day";
+    readonly amount: number;
+  };
+  readonly predicate?: OngoingPredicate;
+  readonly effect: EffectAtom;
 };
 
 // ---------- activation phases (spells) ----------
@@ -1309,6 +1595,22 @@ export type ActionRestriction =
 // other effect on success, use a raw EffectAtom. `none` is modeled as
 // EffectAtom { kind: "none" }.
 export type SaveSuccessOutcome = { readonly kind: "half_damage" } | EffectAtom;
+
+// Closed roll-driven branch selection. Used for percentile / d20 tables
+// whose outcome is chosen nondeterministically at resolution time
+// rather than by player choice. Branches may recurse into further
+// activation phases for nested random rolls.
+export type RandomTableRoll = {
+  readonly die: number;
+  readonly modifier?: number;
+};
+
+export type RandomTableOutcome = {
+  readonly min: number;
+  readonly max: number;
+  readonly label: string;
+  readonly phases?: ReadonlyNonEmptyArray<ActivationPhase>;
+};
 
 export type ActivationPhase =
   | {
@@ -1359,6 +1661,14 @@ export type ActivationPhase =
       readonly onPass: EffectAtom;
       readonly onFail?: EffectAtom;
       readonly autoSuccessIfCasterSlotGte?: "target_spell_level";
+    }
+  // Mandatory roll on a closed outcome table. Used for effects such as
+  // percentile-driven magic-item mishaps and other nondeterministic
+  // branches that don't fit attack/save/check resolution shapes.
+  | {
+      readonly kind: "random_table";
+      readonly roll: RandomTableRoll;
+      readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
     }
   // Direct application — spells that just apply effects with no
   // resolution gate (no attack roll, no saving throw).
@@ -1652,8 +1962,13 @@ export type CreatureControl = {
     | { readonly kind: "no_action_required" }
     | { readonly kind: "bonus_action" }
     | { readonly kind: "action" };
-  readonly commandRangeFeet: number;
-  readonly defaultBehavior: "dodge_and_avoid" | "independent";
+  // Some SRD summon/control effects say only that the creature obeys
+  // your commands, without naming a command radius.
+  readonly commandRangeFeet?: number;
+  // Some SRD summon/control effects omit the fallback behavior when no
+  // command is issued; keep that absence representable rather than
+  // forcing invented "dodge" vs "independent" data.
+  readonly defaultBehavior?: "dodge_and_avoid" | "independent";
   readonly telepathy?: {
     readonly rangeFeet: number;
     readonly sharedSenses?: "bonus_action";
@@ -1665,7 +1980,7 @@ export type CreatureDismissal = {
   readonly onZeroHp: "disappears";
   readonly onSpellEnd: "disappears";
   readonly caster0Hp?: "disappears";
-  readonly manualDismiss?: "magic_action" | "never";
+  readonly manualDismiss?: "magic_action" | "bonus_action" | "never";
   readonly leavesBehind?: "equipment" | "nothing";
 };
 
@@ -1789,13 +2104,33 @@ export type ReanimatedCreatureMechanics = SpellMechanicsHeader & {
   readonly nightOnly?: true;
 };
 
-export type SpawnedCreatureMechanics = SpellMechanicsHeader & {
-  readonly family: "spawned_creature";
-  readonly statBlock: CreatureStatBlock;
+// Spawned-creature payloads are usually authored with an inline stat
+// block (Find Steed, Find Familiar), but some item lines summon a
+// named SRD creature by catalog identity instead of shipping a custom
+// derived block. Keep the reference grammar aligned with
+// reanimated-creature rather than inventing item-only summon fields.
+export type SpawnedCreatureStatBlock =
+  | {
+      readonly kind: "inline";
+      readonly statBlock: CreatureStatBlock;
+    }
+  | {
+      readonly kind: "catalog_ref";
+      readonly monsterId: string;
+      readonly displayName: string;
+    };
+
+export type SpawnedCreaturePayload = {
+  readonly creature: SpawnedCreatureStatBlock;
   readonly mode?: CreatureMode;
   readonly control: CreatureControl;
   readonly dismissal: CreatureDismissal;
 };
+
+export type SpawnedCreatureMechanics = SpellMechanicsHeader &
+  SpawnedCreaturePayload & {
+    readonly family: "spawned_creature";
+  };
 
 export type SpellMechanics =
   | OngoingEffectMechanics
@@ -1833,6 +2168,13 @@ export type ClassFeatureActivationCost =
   | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }
   | { readonly kind: "reaction"; readonly trigger?: ReactionTrigger }
+  // Downtime study gate for tome/manual items: spend a fixed number of
+  // study hours within a bounded day window before the effect resolves.
+  | {
+      readonly kind: "study";
+      readonly hours: number;
+      readonly withinDays: number;
+    }
   | { readonly kind: "replace_attack" };
 
 // use_count cap — fixed amount, a threshold-tier schedule (Option B:
@@ -1863,10 +2205,19 @@ export type UseCountResource = {
 // magic-item wand idiom: "expend 1-3 charges to cast Magic Missile,
 // 1 charge per spell level". `cap` is the pool size; the per-activation
 // cost schedule lives on the effect atom that spends them
-// (grant_spell_access.mode = charge_cast).
+// (grant_spell_access.mode = charge_cast). Some items also randomize
+// their initial stock when found/created ("has 1d6 + 3 beads hanging
+// from it"). Keep that separate from `cap`: `cap` remains the maximum
+// pool size, while `initialCount` captures the one-time starting roll.
+// Some absorption items also have a non-resetting lifetime intake cap:
+// they may currently store up to `cap`, but once they have absorbed
+// `lifetimeAbsorptionCap` total charges over the course of their
+// existence, they cannot take in more.
 export type ChargePoolResource = {
   readonly kind: "charge_pool";
   readonly cap: UseCountCap;
+  readonly initialCount?: DiceAmount;
+  readonly lifetimeAbsorptionCap?: number;
 };
 
 // Activated-ability resource — either a discrete use counter (each
@@ -1893,16 +2244,25 @@ export type RestResetCadence =
   // 4 magic-item proposals.
   | {
       readonly kind: "dawn";
-      // null = regains all; DiceAmount for e.g. "1d6 + 4" style partial.
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all; DiceAmount for e.g. "1d6 + 4" style
+      // partial. `dhall-to-json --omit-empty` drops `None`, so the JSON
+      // authoring flow naturally serializes the full-refill case by
+      // omitting the field.
+      readonly regain?: null | DiceAmount;
     }
+  // Tome/manual family idiom: the item loses its magic after use and
+  // regains it in a century. Keep this first-class rather than
+  // encoding a magic number day count at each call site.
+  | { readonly kind: "century" }
   // Relative calendar-time cooldown. Covers item text like "can't be
   // used again until 5 days have passed" and pool-based recharge that
   // starts only once the pool is empty.
   | {
       readonly kind: "elapsed_days";
       readonly days: number;
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all after the cooldown elapses. Omission is
+      // the stable JSON form produced by `dhall-to-json --omit-empty`.
+      readonly regain?: null | DiceAmount;
       readonly startsWhen: RelativeDayResetTrigger;
     }
   // Relative sub-day cooldown. Covers item text like "can't be used
@@ -1911,7 +2271,9 @@ export type RestResetCadence =
   | {
       readonly kind: "elapsed_hours";
       readonly hours: number;
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all after the cooldown elapses. Omission is
+      // the stable JSON form produced by `dhall-to-json --omit-empty`.
+      readonly regain?: null | DiceAmount;
     }
   // Single-shot or bounded-use items that never refill — Chime of
   // Opening "can be used 10 times. After the tenth time, it cracks
@@ -1928,6 +2290,12 @@ export type RestResetCadence =
 // item attuned / held).
 
 type ActivatedAbilityHeader = {
+  // Optional equipment-state gate for activation-shaped units. This
+  // covers held / worn / wielded item requirements on magic-item
+  // activations (for example, wand-family "While holding it, you can
+  // cast..." text) without inventing a parallel item-only predicate
+  // surface. When absent, the activation has no equipment gate.
+  readonly condition?: EquipmentPredicate;
   readonly activationCost: ClassFeatureActivationCost;
   readonly resource: ActivationResource;
   readonly resetCadence: RestResetCadence;
@@ -1953,8 +2321,49 @@ export type ActivatedAbilityMechanics = ActivatedAbilityHeader & {
   readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
+// Trigger-bound activated ability for non-spell units. This keeps the
+// richer respond/prepare/prompt/commit reaction structure available to
+// magic items without forcing them through spell-only header fields
+// like level/school/spell-slot consumption.
+export type TriggeredReactionAbilityMechanics = Omit<
+  ActivatedAbilityHeader,
+  "activationCost"
+> & {
+  readonly family: "triggered_reaction";
+  readonly activationCost: Extract<
+    ClassFeatureActivationCost,
+    { readonly kind: "reaction" }
+  >;
+  readonly range: Range;
+  readonly interruptsTrigger: boolean;
+  readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
+};
+
+// Magic-item companion summon — same controllable-creature payload as
+// spell summons, but gated by item activation cost/resource/reset
+// rather than spell-slot headers.
+export type MagicItemSpawnedCreatureMechanics = ActivatedAbilityHeader &
+  SpawnedCreaturePayload & {
+    readonly family: "spawned_creature";
+    readonly range: Range;
+  };
+
 // Back-compat alias: content files historically referenced this name.
 export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
+
+export type ClassFeatureComponentMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics;
+
+// Composite class-feature mechanics — a single SRD feature can combine
+// an always-on passive grant with a distinct activated ability while
+// remaining one authored unit. This mirrors the existing magic-item
+// composite shape, but stays bounded to the two class-feature families
+// the surface already supports.
+export type CompositeClassFeatureMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<ClassFeatureComponentMechanics>;
+};
 
 // EquipmentPredicate — gate for PassiveMechanics grants. When the
 // predicate doesn't hold, none of the grants apply. Survey evidence
@@ -1964,16 +2373,41 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // wearing Light, Medium, or Heavy armor".
 //
 // `always` is the sentinel for unconditional grants (darkvision,
-// Cloak of Protection, etc.). `wearing_armor` carries a category list
-// because Defense's SRD text enumerates three allowed categories.
-// `wielding_weapon` carries a coarse weapon-kind enum sufficient to
-// scope the Fighting Style pool; finer discrimination (specific
-// weapon types, versatile-used-two-handed, dual-wielding off-hand) can
-// be added as new Fighting-Style-adjacent units surface it.
-export type EquipmentPredicate =
-  | { readonly kind: "always" }
+// some always-on item passives, etc.). `holding_item` covers held-item
+// gates on non-weapon equipment such as Sentinel Shield and wand-family
+// magic items. `peering_through_item` is the narrower held-item gate
+// for optics-like items whose benefit applies only while the bearer is
+// actively looking through the item (Gem of Seeing). `wearing_item`
+// covers worn-item gates on generic magic items such as gauntlets,
+// rings, cloaks, and orbiting Ioun Stones (which the SRD explicitly
+// treats as worn objects while orbiting).
+// `unarmored` covers inverse armor gates on passive benefits such as
+// Robe of the Archmagi's AC formula while not wearing armor.
+// `wearing_armor` carries a category list because Defense's SRD text
+// enumerates three allowed categories. `not_wearing_armor` is the
+// bounded inverse for "while you aren't wearing Heavy armor"-style
+// clauses; it avoids inventing a general boolean predicate language
+// while still covering passive bonuses that remain active for
+// unarmored + allowed armor categories. `wielding_weapon` carries a
+// coarse weapon-kind enum sufficient to scope the Fighting Style pool;
+// finer discrimination (specific weapon types,
+// versatile-used-two-handed, dual-wielding off-hand) can be added as
+// new Fighting-Style-adjacent units surface it.
+//
+// `all_of` is the bounded composition form for passive / activation
+// equipment gates that require multiple simultaneous equipment states
+// (for example, "while wearing this robe and not wearing armor").
+type NonAlwaysEquipmentPredicate =
+  | { readonly kind: "holding_item" }
+  | { readonly kind: "peering_through_item" }
+  | { readonly kind: "wearing_item" }
+  | { readonly kind: "unarmored" }
   | {
       readonly kind: "wearing_armor";
+      readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;
+    }
+  | {
+      readonly kind: "not_wearing_armor";
       readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;
     }
   | {
@@ -1983,23 +2417,44 @@ export type EquipmentPredicate =
         | "melee_two_handed"
         | "melee_one_handed"
         | "two_weapons";
+    }
+  | {
+      readonly kind: "all_of";
+      readonly predicates: ReadonlyNonEmptyArray<NonAlwaysEquipmentPredicate>;
     };
+
+export type EquipmentPredicate =
+  | { readonly kind: "always" }
+  | NonAlwaysEquipmentPredicate;
+
+// Passive suppressor — bounded grammar for always-on benefits that turn
+// off while one or more named conditions are active on the bearer.
+// Pressure case: Danger Sense's advantage on Dexterity saving throws is
+// suppressed while the barbarian has the Incapacitated condition.
+export type PassiveSuppressor = {
+  readonly kind: "condition_active";
+  readonly conditions: ReadonlyNonEmptyArray<Condition>;
+};
 
 // PassiveMechanics — "always on" while the unit is in effect. Survey
 // evidence: 9+9+6 class_feature + 2 species + 2 magic_item proposals
 // converged on this shape as the dominant non-spell family. The
 // optional `condition` gate narrows when the grants apply (e.g.,
 // Fighting Style: Defense applies +1 AC only while wearing armor).
-// When absent, grants are unconditional.
+// When absent, grants are unconditional. `suppressedBy` models passive
+// benefits that remain in force except while a named condition is
+// active, without forcing them through an activation-shaped workaround.
 export type PassiveMechanics = {
   readonly family: "passive";
   readonly condition?: EquipmentPredicate;
+  readonly suppressedBy?: ReadonlyNonEmptyArray<PassiveSuppressor>;
   readonly grants: ReadonlyArray<EffectAtom>;
+  readonly operations?: ReadonlyNonEmptyArray<PassiveOperation>;
 };
 
 export type ClassFeatureMechanics =
-  | ActivatedAbilityMechanics
-  | PassiveMechanics;
+  | ClassFeatureComponentMechanics
+  | CompositeClassFeatureMechanics;
 
 // ---------- mastery (weapon mastery property) ----------
 
@@ -2125,7 +2580,7 @@ export type FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics;
 
 export type FeatRecord = UnitMetadata & {
   readonly kind: "feat";
-  readonly category: "general" | "fighting_style" | "epic_boon" | "origin";
+  readonly category: FeatCategory;
   readonly mechanics: FeatMechanics;
 };
 
@@ -2143,14 +2598,20 @@ export type SpeciesTraitRecord = UnitMetadata & {
 
 export type MagicItemComponentMechanics =
   | PassiveMechanics
-  | ActivatedAbilityMechanics;
+  | ActivatedAbilityMechanics
+  | TriggeredReactionAbilityMechanics
+  // Reuse the shared non-spell on-hit rider family for weapon items
+  // whose text fires on a qualifying weapon hit rather than on
+  // activation or reaction timing.
+  | OnHitTriggerMechanics
+  | MagicItemSpawnedCreatureMechanics;
 
 // Composite magic-item mechanics — a single SRD item can combine
 // always-on passive grants with a distinct activated ability while
 // remaining one authored unit. Keep this bounded to existing
-// magic-item families; reaction-triggered activated abilities reuse the
-// shared activation-cost trigger grammar rather than a magic-item-only
-// mechanics branch.
+// magic-item families, including trigger-bound reactions that still
+// spend item resources and on-hit riders that resolve off the wielded
+// weapon's hit window.
 export type CompositeMagicItemMechanics = {
   readonly family: "composite";
   readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;
@@ -2174,6 +2635,17 @@ export type MagicItemRarity =
   | "legendary"
   | "artifact";
 
+// Attunement eligibility gate on magic items. Keep this on the record,
+// not mechanics, because the restriction scopes who may attune to the
+// item regardless of whether the item is passive, activated, or
+// composite.
+export type MagicItemAttunementRestriction =
+  | { readonly kind: "spellcaster" }
+  | {
+      readonly kind: "class_list";
+      readonly classes: ReadonlyNonEmptyArray<ClassName>;
+    };
+
 // ItemDestructionPolicy — lifecycle trigger that removes the item from
 // play. SRD wand idiom: "If you expend the wand's last charge, roll
 // 1d20. On a 1, the wand crumbles into ashes and is destroyed." The
@@ -2195,13 +2667,48 @@ export type ItemDestructionPolicy =
   // SRD wands).
   | { readonly kind: "permanent_on_empty" };
 
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
+export type MagicItemAttunement =
+  | {
+      readonly requiresAttunement: false;
+    }
+  | {
+      readonly requiresAttunement: true;
+      readonly attunementRestriction?: MagicItemAttunementRestriction;
+    };
+
+// Some SRD magic-item slugs are collection records rather than a single
+// mechanical payload: one shared item header with several named
+// variants, each carrying its own rarity/mechanics/destruction. The
+// collection itself also carries the default attunement gate so
+// Ioun-Stone / Potion-of-Giant-Strength style records don't need to
+// duplicate identical attunement metadata on every variant while still
+// allowing a variant to override the default when a mixed collection
+// eventually surfaces.
+export type MagicItemVariant = {
+  readonly id: string;
+  readonly name: string;
+  // Collection records still need one shared top-level description for
+  // provenance, but many SRD variant lines also carry variant-specific
+  // rules text that doesn't belong on the collection wrapper.
+  readonly description?: string;
   readonly rarity: MagicItemRarity;
-  readonly requiresAttunement: boolean;
   readonly mechanics: MagicItemMechanics;
   readonly destruction: ItemDestructionPolicy;
+  readonly attunementOverride?: MagicItemAttunement;
 };
+
+export type MagicItemRecord = UnitMetadata &
+  { readonly kind: "magic_item" } & (
+    | ({
+        readonly rarity: MagicItemRarity;
+        readonly mechanics: MagicItemMechanics;
+        readonly destruction: ItemDestructionPolicy;
+      } & MagicItemAttunement)
+    | {
+        readonly defaultAttunement: MagicItemAttunement;
+        readonly variants: ReadonlyNonEmptyArray<MagicItemVariant>;
+      }
+  );
 
 export type UnitRecord =
   | SpellRecord

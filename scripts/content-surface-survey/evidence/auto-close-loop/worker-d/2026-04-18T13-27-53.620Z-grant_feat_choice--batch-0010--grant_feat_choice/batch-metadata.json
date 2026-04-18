@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 10,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_feat_choice",
+  "archivedAt": "2026-04-18T13:32:25.531Z",
+  "selectedSlugs": [
+    "barbarian_ability_score_improvement_l4",
+    "bard_ability_score_improvement_l4"
+  ]
+}

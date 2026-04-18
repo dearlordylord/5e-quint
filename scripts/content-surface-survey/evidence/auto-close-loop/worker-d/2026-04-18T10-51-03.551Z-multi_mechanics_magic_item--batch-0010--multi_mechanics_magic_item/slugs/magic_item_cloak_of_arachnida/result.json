@@ -1,0 +1,39 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "composite",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_speed",
+    "grant_spell_access",
+    "ignore_web_restrictions",
+    "magic_item_root",
+    "self",
+    "use_count",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.areaOverride.relative_area_multiplier",
+      "justification": "The item-granted Web cast modifies the referenced spell's existing area proportionally rather than replacing it with a concrete fixed shape.",
+      "evidence": "\"The web created by the spell fills twice its normal area.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a composite magic item with passive worn benefits plus a once-per-dawn Web activation at fixed DC 13. The larger-area rider is omitted because the current surface lacks a relative granted-spell area override."
+}

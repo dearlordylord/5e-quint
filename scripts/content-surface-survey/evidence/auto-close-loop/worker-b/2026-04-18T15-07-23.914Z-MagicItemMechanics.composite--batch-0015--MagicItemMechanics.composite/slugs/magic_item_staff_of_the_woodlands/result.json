@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item_or_object",
+      "justification": "Tree Form targets the staff itself, but activation phases cannot currently attach to an item/object target. `alter_item_kind` exists, but there is no honest way to point it at the staff.",
+      "evidence": "\"plant one end of the staff in earth ... to transform the staff into a healthy tree\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "fall_on_end",
+      "justification": "Reverting the tree to a staff causes creatures in it to fall. That deterministic rider is in the v4 taxonomy but is not exposed in the current surface/tracer.",
+      "evidence": "\"Any creature in the tree falls when the tree reverts to a staff.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.last_charge_becomes_nonmagical",
+      "justification": "The last-charge rider is a permanent shutdown into a nonmagical Quarterstaff, not destruction. Current item lifecycle variants cannot represent that distinction honestly.",
+      "evidence": "\"If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Passive held bonuses, druid-only attunement, charge-cast spells, and dawn recharge all fit. I stopped before authoring content because Tree Form and the non-destructive last-charge rider would require omissions or false modeling."
+}

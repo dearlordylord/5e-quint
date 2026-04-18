@@ -1,0 +1,69 @@
+{
+  "description": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage. Lightning Bolt. When you throw this weapon at a target no farther than 120 feet from you, you can forgo making a ranged attack roll and instead turn the weapon into a bolt of lightning. This bolt forms a 5-foot-wide Line between you and the target. The target and each other creature in the Line (excluding you) makes a DC 13 Dexterity saving throw, taking 4d6 Lightning damage on a failed save or half as much damage on a successful one. Immediately after dealing this damage, the weapon reappears in your hand. This authored subset encodes only the Lightning Bolt activation; the passive damage-type swap and return-to-hand rider are omitted and called out in proposal-magic_item_javelin_of_lightning.md.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_javelin_of_lightning",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "replace_attack"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "line",
+            "lengthFeet": 120,
+            "widthFeet": 5
+          }
+        },
+        "dc": {
+          "dc": 13,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "expr": {
+              "dice": 4,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          },
+          "damageType": "lightning",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Javelin of Lightning",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#JavelinOfLightning"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

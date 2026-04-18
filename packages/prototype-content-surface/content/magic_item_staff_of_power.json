@@ -1,0 +1,234 @@
+{
+  "attunementRestriction": {
+    "classes": [
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "kind": "class_list"
+  },
+  "description": "This staff has 20 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls. While holding the staff, you can cast Cone of Cold (5 charges), Fireball at level 5 (5 charges), Globe of Invulnerability (6 charges), Hold Monster (5 charges), Levitate (2 charges), Lightning Bolt at level 5 (5 charges), Magic Missile (1 charge), Ray of Enfeeblement (1 charge), or Wall of Force (5 charges) from it, using your spell save DC. The staff regains 2d8 + 4 expended charges daily at dawn. The special last-charge rider and Retributive Strike are omitted from this authored subset; see proposal-magic_item_staff_of_power.md.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_staff_of_power",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "attack_roll"
+            ],
+            "weaponFilter": {
+              "itemId": "magic_item_staff_of_power",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_damage_numeric",
+            "weaponFilter": {
+              "itemId": "magic_item_staff_of_power",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_ac"
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "saving_throw"
+            ]
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "spell_attack_roll"
+            ]
+          }
+        ]
+      },
+      {
+        "activationCost": {
+          "kind": "action"
+        },
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "cone_of_cold"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "fireball"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 6,
+                  "kind": "charge_cast",
+                  "maxLevel": 6,
+                  "minLevel": 6,
+                  "perLevelCharges": 0
+                },
+                "spellId": "globe_of_invulnerability"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "hold_monster"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 2,
+                  "kind": "charge_cast",
+                  "maxLevel": 2,
+                  "minLevel": 2,
+                  "perLevelCharges": 0
+                },
+                "spellId": "levitate"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "lightning_bolt"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "magic_missile"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 2,
+                  "minLevel": 2,
+                  "perLevelCharges": 0
+                },
+                "spellId": "ray_of_enfeeblement"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "wall_of_force"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "dawn",
+          "regain": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 8,
+              "flat": 4
+            },
+            "kind": "fixed"
+          }
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 20
+          },
+          "kind": "charge_pool"
+        }
+      }
+    ]
+  },
+  "name": "Staff of Power",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StaffOfPower"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": true
+}

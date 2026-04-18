@@ -199,20 +199,28 @@ export const STAGE_3_EXTENSIONS = [
   "half_damage", // Fireball-family "half on success" outcome.
   "set_ability_score", // Amulet of Health "Con becomes 19".
   "modify_ability_score", // Tome / Manual family "ability increases by N, to a maximum of M".
+  "modify_proficiency_bonus", // Ioun Stone of Mastery: persistent +N to the wearer's PB.
   // Lifecycle atom for magic-item destruction (Wand of Magic Missiles
   // last-charge d20 destruction, single-use wand expiration).
   "item_destruction",
   // Resolution-category predicate atoms emitted by the tracer's
   // EquipmentPredicate dispatch (Defense feat gates modify_ac on armor,
   // fighting-style feats gate bonuses on weapon category).
+  "holding_item",
+  "peering_through_item",
+  "wearing_item",
+  "unarmored",
   "wearing_armor",
+  "not_wearing_armor",
   "wielding_weapon",
   // Effect atoms for movement/senses/detection/crit-range modification —
   // first-class surface primitives beyond v4's modify_speed / grant_sense.
   "teleport", // Misty Step, Dimension Door (short-range positional).
   "grant_speed", // Fly (fly speed), Spider Climb (climb speed).
+  "ignore_web_restrictions", // Cloak of Arachnida spider-walk web immunity / traversal carveout.
   "detect", // Detect Magic, Detect Evil and Good (radius + property).
   "modify_crit_range", // Improved Critical (crit on 19-20).
+  "suppress_incoming_critical_hit", // Adamantine Armor: incoming critical hits against the bearer become normal hits.
   "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.
   "composite", // Bundle multiple effects in a single slot (Hypnotic Pattern).
   // Effect atoms that are first-class EffectAtom variants in types.ts
@@ -221,23 +229,32 @@ export const STAGE_3_EXTENSIONS = [
   // trip a false atom_widening verdict.
   "grant_temp_hp", // false_life, Aid alternative, Inspiring Leader.
   "modify_damage_numeric", // Magic weapons: persistent +N to damage rolls made with the weapon.
+  "reduce_damage_taken", // Ring of Warmth, Gloves of Missile Snaring: subtract from incoming damage taken.
+  "modify_save_dc", // Robe of the Archmagi: persistent +N to the wearer's spell save DC.
   "grant_condition_immunity", // Mind Blank, Heroism (frightened), Freedom of Movement, Protection from Poison.
   "grant_feat", // ASI "take a feat instead", Fighter bonus feats.
   "grant_damage_immunity", // §A16 — Mind Blank (Psychic), future Holy Aura.
   "block_max_hp_reduction", // §A16 — Aura of Life "HP maxes can't be reduced".
   "set_speed_ratio", // Spirit Guardians / Slow — halve speed inside area / on target.
   "negate_triggering_spell", // §C1 Counterspell — negate whatever spell fired the reaction.
+  "reflect_triggering_spell", // Ring of Spell Turning / Staff of Charming — turn the triggering spell back on its caster.
   "end_ongoing_spells", // §C3 Dispel Magic — end ongoing spells on target up to a level bound.
   "maximize_healing_received", // Beacon of Hope — take max on healing dice.
   "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.
   "natural_weapons", // §C4e Alter Self — replace default Unarmed Strike profile.
   "water_breathing", // §C4e Alter Self — breathe underwater while the mode persists.
+  "container_storage", // Passive magic-item/container storage profile: capacity, fixed carried weight, shared air, extradimensional interior.
+  // Random roll-driven branch selection and traced table-result nodes
+  // for percentile/d20 outcome tables authored as activation phases.
+  "random_table",
+  "table_result",
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.
 export const STAGE_3_RELATIONS = [
   "repeats_as", // repeat_save cadence edge.
   "lifecycle", // magic-item destruction edge from root → item_destruction.
+  "branches_on_roll", // random-table outcome edge from table → result.
 ] as const;
 
 export const ALL_KNOWN_ATOMS: ReadonlyArray<string> = [

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "species_trait lineage-choice bundle",
+      "justification": "The unit is one species trait whose payload is chosen from a closed table of mechanically distinct lineage bundles. The current species_trait surface only supports one passive or activation payload, not a build-time choice among bundles.",
+      "evidence": "\"Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "character-level gated trait grants",
+      "justification": "The chosen lineage grants additional mechanics later at character levels 3 and 5. Current passive species traits cannot attach level thresholds to individual grants.",
+      "evidence": "\"When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access spell-list choice with long-rest replacement",
+      "justification": "High Elf lineage grants a cantrip chosen from the Wizard spell list and allows replacing it after each Long Rest. Current grant_spell_access requires a fixed spellId and has no rest-based replacement/list-choice surface.",
+      "evidence": "\"Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "trait-scoped spellcasting ability choice",
+      "justification": "The lineage spells use a player-chosen spellcasting ability selected from a closed list. The current surface has no way to author a species-trait spell grant whose casting ability is chosen as Intelligence, Wisdom, or Charisma.",
+      "evidence": "\"Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage).\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest content/trace artifact was authored. The trait's core mechanic is a chosen lineage progression bundle; encoding any single branch as the whole trait would be misleading."
+}

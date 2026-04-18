@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_ongoing_field",
+      "justification": "The item fits MagicItemRecord and composite mechanics for its held passive benefits and granted spells, but Protective Aura is a temporary anchored field that continuously grants benefits to qualifying creatures in an area. Current magic-item mechanics only allow passive, activation, triggered_reaction, or composites of those; none can honestly express an activated ongoing area effect with entry/exit semantics.",
+      "evidence": "As a Magic action, you can plant the haft end of the rod in the ground ... While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
+    },
+    {
+      "kind": "new_variant",
+      "name": "attachment.area.selection_filter = allies_only",
+      "justification": "The aura's AC and saving throw bonus is not for every creature in the bright-light area; it is limited to the wielder and allies. Existing area attachments do not carry affiliation filters.",
+      "evidence": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.item_removed_from_anchor",
+      "justification": "The aura ends early when any creature uses a Magic action to pull the rod from the ground. Existing duration early-end triggers do not cover item-anchor removal by an explicit action.",
+      "evidence": "The rod's head stops glowing and the effect ends after 10 minutes or when a creature takes a Magic action to pull the rod from the ground."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The held Alertness rider cleanly matches passive held-item grants, and the spell list cleanly matches grant_spell_access. The blocker is Protective Aura: it is an activated, temporary, planted-area field. I did not author a partial content file because omitting that property would materially misrepresent the item."
+}

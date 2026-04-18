@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "passive_triggered_item_hazard",
+      "justification": "The item has an always-on deterministic hazard that damages qualifying creatures on touch and again at turn end while they hold or carry it. Existing magic-item families only cover passive grants, activated uses, and triggered reactions.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke's failed-save branch removes the target entirely rather than dealing damage or applying a condition.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.targetHasTypeDisadvantage",
+      "justification": "The activated save is modified by the target's creature type, which current save-gate shapes do not express.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because no honest existing magic-item family represents the talisman's automatic contact/holding hazard. The passive +2 spell attack rider would fit on its own."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "duration_end_trigger.target_drops_to_0_hp",
+      "justification": "The inherited spell ends early when the target drops to 0 Hit Points, but the current duration early-end grammar has no HP-threshold/end-on-0-HP trigger.",
+      "evidence": "The spell ends on the target if it drops to 0 Hit Points"
+    },
+    {
+      "kind": "new_variant",
+      "name": "duration_end_trigger.target_ends_effect_as_bonus_action",
+      "justification": "The potion overrides the spell's self-termination cost to a Bonus Action, and the duration grammar cannot represent self-ended effects tied to a specific action economy cost.",
+      "evidence": "or until you end the effect as a Bonus Action"
+    },
+    {
+      "kind": "new_atom",
+      "name": "phase_through_openings_or_occupied_spaces",
+      "justification": "Gaseous Form grants deterministic movement permissions that are not reducible to speed, force movement, teleportation, or existing attachment/range atoms.",
+      "evidence": "The target can enter and occupy the space of another creature. The target can pass through narrow openings"
+    },
+    {
+      "kind": "new_atom",
+      "name": "treat_liquids_as_solid_surfaces",
+      "justification": "This is a distinct movement/environment rule, not speed, travel blocking, or a condition, and no existing v4 atom covers it.",
+      "evidence": "it treats liquids as though they were solid surfaces"
+    },
+    {
+      "kind": "new_variant",
+      "name": "effect_atom.restrict_action_set",
+      "justification": "The target can't attack or cast spells while gaseous. v4 already names restrict_action_set, but the current surface does not admit it as a standalone effect atom for passive/timed spell effects.",
+      "evidence": "Finally, the target can't attack or cast spells."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a magic-item activation, but Potion of Gaseous Form inherits core Gaseous Form mechanics that cannot be represented honestly with the current surface. I did not author a lossy placeholder Dhall/JSON."
+}

@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 7,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "EquipmentPredicate.holding_item",
+  "archivedAt": "2026-04-18T06:21:14.414Z",
+  "selectedSlugs": [
+    "magic_item_sentinel_shield",
+    "magic_item_wand_of_fear"
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "generic_spell_slot_substitution_from_stored_energy",
+      "justification": "The rod does not grant a closed list of spells. It lets a spellcaster spend the rod's stored spell-energy levels in place of their own spell slots when casting any spell they have prepared or know, subject to slot-level caps. That is a different mechanic from existing charge-cast spell grants.",
+      "evidence": "\"you can convert energy stored in it into spell slots to cast spells you have prepared or know\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.targeted_by_spell",
+      "justification": "The current trigger grammar can react to a named spell, a creature casting a spell, or a post-save outcome, but not to an arbitrary spell that targets only you and has no area of effect.",
+      "evidence": "\"absorb a spell that is targeting only you and doesn't create an area of effect\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "charge_pool_refill_from_triggering_spell_level",
+      "justification": "The rod stores energy equal to the canceled spell's level. Existing resources can have an initial count and a lifetime absorption cap, but there is no way for a triggered reaction to add a variable amount derived from the triggering spell's level into the pool.",
+      "evidence": "\"The energy has the same level as the spell when it was cast.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because the item's core second mechanic is not an honest fit for existing magic-item families. The reaction-cancel half is close to triggered_reaction via negate_triggering_spell, but the generic slot-substitution and trigger-derived storage make the whole item non-encodable without widening."
+}

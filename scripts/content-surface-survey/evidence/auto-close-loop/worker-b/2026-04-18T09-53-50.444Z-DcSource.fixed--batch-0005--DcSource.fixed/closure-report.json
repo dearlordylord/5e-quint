@@ -1,0 +1,36 @@
+{
+  "cluster": "DcSource.fixed",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_wand_of_fireballs",
+    "magic_item_wand_of_lightning_bolts"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 2,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_wand_of_fireballs",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "magic_item_wand_of_lightning_bolts",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

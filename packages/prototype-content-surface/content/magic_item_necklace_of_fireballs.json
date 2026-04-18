@@ -1,0 +1,81 @@
+{
+  "description": "This necklace has 1d6 + 3 beads hanging from it. You can take a Magic action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a level 3 Fireball (save DC 15). You can hurl multiple beads, or even the whole necklace, at one time. When you do so, increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6).",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_necklace_of_fireballs",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 20
+          }
+        },
+        "dc": {
+          "dc": 15,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "base": {
+              "dice": 7,
+              "dieSize": 6
+            },
+            "kind": "resource_spent_linear",
+            "maximum": {
+              "dice": 12,
+              "dieSize": 6
+            },
+            "perResource": {
+              "dice": 1
+            }
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 9
+      },
+      "initialCount": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6,
+          "flat": 3
+        },
+        "kind": "fixed"
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Necklace of Fireballs",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#NecklaceOfFireballs"
+  },
+  "rarity": "rare",
+  "requiresAttunement": false
+}

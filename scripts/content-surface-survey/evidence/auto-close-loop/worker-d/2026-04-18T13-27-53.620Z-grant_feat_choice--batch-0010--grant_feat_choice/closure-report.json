@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_feat_choice",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "barbarian_ability_score_improvement_l4",
+    "bard_ability_score_improvement_l4"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 2,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "barbarian_ability_score_improvement_l4",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "bard_ability_score_improvement_l4",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

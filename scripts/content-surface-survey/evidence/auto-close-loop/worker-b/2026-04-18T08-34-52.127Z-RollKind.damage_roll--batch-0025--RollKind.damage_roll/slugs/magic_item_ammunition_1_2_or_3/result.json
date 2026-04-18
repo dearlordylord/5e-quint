@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_ammunition_1_2_or_3",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "grant",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item_lifecycle.becomes_nonmagical_on_hit",
+      "justification": "The existing magic-item surface can encode the passive attack and damage bonuses, but it cannot encode a successful-hit lifecycle that removes the item's magic while leaving the ammunition itself present.",
+      "evidence": "“Once it hits a target, the ammunition is no longer magical.”"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a three-variant passive magic-item collection for the rarity-based bonuses. The post-hit loss of magic is omitted from the authored subset and recorded as a surface gap."
+}

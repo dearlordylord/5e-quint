@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellOptionRestriction",
+      "justification": "The unit grants an existing spell through an existing magic-item activation shape, but the grant must be narrowed to only a closed subset of that spell's internal options. The current surface can override DC, area, targeting, and duration, but it cannot restrict the granted spell to specific allowed command words.",
+      "evidence": "\"Command\" (\"flee\" or \"grovel\" only)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The magic-item family fits otherwise: 7-charge pool, dawn recharge 1d6 + 1, fixed DC 15, and last-charge destruction all match the existing charged-wand pattern. Fear's 60-foot cone can be represented with areaOverride; Command's restricted options cannot."
+}

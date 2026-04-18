@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_damage_type",
+      "justification": "The item has an always-on weapon rider that lets each hit from this specific weapon deal Lightning damage instead of its normal Piercing damage. The current surface can scope a passive rider to a specific item, but it cannot substitute a weapon attack's damage type without inventing a false numeric or direct-damage effect.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author content for this unit. The Lightning Bolt property itself could fit an activated magic-item part using replace_attack, a fixed DC 13 save_gate over a 5-foot-wide line, return-to-hand as a currently unmodeled secondary lifecycle detail, and a once-per-dawn reset. The item still fails honest encoding because its baseline on-hit damage-type substitution lacks a v4/surface atom."
+}

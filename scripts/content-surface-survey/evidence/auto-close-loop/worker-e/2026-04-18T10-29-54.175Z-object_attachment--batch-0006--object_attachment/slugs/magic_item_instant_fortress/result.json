@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_instant_fortress",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.create_object",
+      "justification": "The existing magic-item activation family can host the item, but the surface has no honest way to create a persistent noncreature structure with authored dimensions and battlefield presence. `alter_item_kind` only renames form; it does not model a deployed structure entering play.",
+      "evidence": "cause it to grow rapidly into a square adamantine tower"
+    },
+    {
+      "kind": "new_variant",
+      "name": "created_object_stat_block",
+      "justification": "The deployed tower carries persistent object-side mechanics that matter after activation: AC, HP, damage immunities/resistances, anti-tip protection, and damage persistence across reverting. No existing object or item shape can author those runtime facts.",
+      "evidence": "The roof, the door, and the walls each have AC 20; HP 100; Immunity to Bludgeoning, Piercing, and Slashing damage except that which is dealt by siege equipment; and Resistance to all other damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "object_displacement_on_structure_creation",
+      "justification": "Deployment displaces both creatures and unattended objects out of the created footprint. The surface has `force_move` for creatures, but no parallel created-structure displacement shape for objects.",
+      "evidence": "Each creature in the area where the tower appears is pushed to an unoccupied space outside but next to the tower. Objects in the area that aren't being worn or carried are also pushed clear of the tower."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Existing top-level kind/family fits as a magic-item activation, but the authored surface cannot honestly represent the created durable tower, its object-side combat stats, or deployment displacement. No content file was authored."
+}

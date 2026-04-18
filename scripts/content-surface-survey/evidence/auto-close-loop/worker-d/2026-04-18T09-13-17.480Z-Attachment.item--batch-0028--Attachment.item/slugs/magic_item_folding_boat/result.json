@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less magic item activation",
+      "justification": "The existing activation family requires a consumable resource and reset cadence, but this item's command-word transformations are repeatable at will.",
+      "evidence": "This item also has three command words, each requiring a Magic action to use:"
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation precondition for item occupancy",
+      "justification": "The fold-back command is only legal when the transformed vessel has no creatures aboard, and there is no activation-side predicate for that condition.",
+      "evidence": "The Folding Boat folds back into a box if no creatures are aboard."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item destruction on transformed form reaching 0 hit points",
+      "justification": "Existing destruction policies only model charge-exhaustion breakage, not destruction caused by a transformed item's vessel form being reduced to 0 HP.",
+      "evidence": "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The core transform mechanic itself matches existing surface vocabulary via alter_item_kind on an item attachment, but the current activation and destruction shapes cannot represent this item honestly without inventing a fake resource model."
+}

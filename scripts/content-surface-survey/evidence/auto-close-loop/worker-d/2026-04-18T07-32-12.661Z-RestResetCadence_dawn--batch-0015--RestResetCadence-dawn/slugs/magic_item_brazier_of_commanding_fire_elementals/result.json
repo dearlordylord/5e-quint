@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_summoned_companion_family",
+      "justification": "The item's core mechanic is a reusable summoned companion with deterministic summon, control, initiative, duration, dismissal, and cooldown semantics, but MagicItemMechanics cannot carry spawned-creature payloads.",
+      "evidence": "While you are within 5 feet of this brazier, you can take a Magic action to summon a Fire Elemental."
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation_proximity_condition",
+      "justification": "Activated magic items currently gate activation only by equipment predicates. This item requires a spatial proximity gate to the item itself.",
+      "evidence": "While you are within 5 feet of this brazier"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current magic-item encoding would be misleading. The summon/companion payload exists only for spell families, and the item also needs a proximity-based activation gate."
+}

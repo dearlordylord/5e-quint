@@ -1,0 +1,36 @@
+{
+  "cluster": "ability_check in RollKind",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "species_goliath_large_form",
+    "species_goliath_powerful_build"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "species_goliath_large_form",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "species_goliath_powerful_build",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

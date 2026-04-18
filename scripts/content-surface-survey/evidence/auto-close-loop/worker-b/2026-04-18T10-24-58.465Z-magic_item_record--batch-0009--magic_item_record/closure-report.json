@@ -1,0 +1,36 @@
+{
+  "cluster": "magic_item_record",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_apparatus_of_the_crab",
+    "magic_item_bag_of_holding"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_apparatus_of_the_crab",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_bag_of_holding",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

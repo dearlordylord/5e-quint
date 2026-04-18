@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The item can change its own form as an activation, but activation phases currently cannot attach to or target the item itself. `alter_item_kind` exists, but the authored surface has no item/object attachment variant to apply it honestly.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_form",
+      "justification": "Several mechanics are conditional on the current form of the same held item. The current equipment predicate grammar can say holding/wearing/wielding, but not 'holding this item while it is in quarterstaff form' or 'quarterstaff and 10-foot pole forms only'.",
+      "evidence": "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only). ... Attack Deflection (Quarterstaff Form Only)."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_weapon_profile",
+      "justification": "The current surface can filter by existing weapon property or specific item, but it cannot grant a new weapon property/range profile to a specific form of an item. This rider changes the weapon's usable attack profile rather than dealing damage or granting a passive numeric bonus.",
+      "evidence": "Ranged Weapon (Quarterstaff Form Only). This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet."
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_weapon_after_ranged_attack",
+      "justification": "The quarterstaff's automatic return to hand after a ranged attack is a deterministic combat mechanic, but there is no current atom for a weapon returning to the wielder after an attack resolves.",
+      "evidence": "Immediately after you make a ranged attack with the weapon, it flies back to your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author a partial content file. The base +2 attack/damage bonus and the once-per-rest reaction are individually close to existing shapes, but the unit's identity is form-dependent and the current surface cannot represent item-form state or form-gated mechanics honestly. The dim-light toggle is secondary and would be caller-owned / separately widened if the form-state blocker were solved."
+}

@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 6,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "object_attachment",
+  "archivedAt": "2026-04-18T10:27:29.496Z",
+  "selectedSlugs": [
+    "magic_item_instant_fortress",
+    "magic_item_sovereign_glue"
+  ]
+}

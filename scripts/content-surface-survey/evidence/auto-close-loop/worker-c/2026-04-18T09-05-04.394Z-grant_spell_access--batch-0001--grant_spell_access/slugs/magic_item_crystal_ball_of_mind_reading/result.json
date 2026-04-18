@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.duration_override",
+      "justification": "The item grants Scrying and Detect Thoughts through an existing magic-item spell-access pattern, but the Detect Thoughts grant changes the spell's maintenance rules: it does not require concentration and its duration is cut short when the linked Scrying ends. The current surface can express fixed DC and spell-sensor targeting, but not a grant-scoped duration/lifecycle override.",
+      "evidence": "You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The unit fits magic_item + passive structurally, and existing surface shapes already cover grant_spell_access, fixed DC 17, and targeting creatures within 30 feet of the spell's sensor. The honest blocker is a missing grant-scoped duration/lifecycle override for the Detect Thoughts cast."
+}

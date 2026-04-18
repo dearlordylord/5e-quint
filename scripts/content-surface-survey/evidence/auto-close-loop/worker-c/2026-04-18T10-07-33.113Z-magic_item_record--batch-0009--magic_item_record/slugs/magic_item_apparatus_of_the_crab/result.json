@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_vehicle_control_surface",
+      "justification": "The item is a controllable vehicle/object with persistent internal state changed by lever inputs, rather than a passive grant or a single bounded activation. The current magic-item families have no honest way to encode mutable lever positions, pilot-operated controls, or object-state transitions that unlock movement, attacks, shutters, lighting, and hatch state.",
+      "evidence": "A creature in the compartment can take a Utilize action to move as many as two of the apparatus's levers up or down. After each use, a lever goes back to its neutral position."
+    },
+    {
+      "kind": "new_variant",
+      "name": "vehicle_or_object_stat_block_payload",
+      "justification": "The item carries its own AC, HP, movement modes, damage immunities, occupancy, air supply, depth limit, and pressure damage. Existing spawned-creature and passive item shapes do not honestly model a piloted object/vehicle with independent stats and environment-driven damage.",
+      "evidence": "The Apparatus of the Crab is a Large object with the following statistics: AC 20; HP 200; Speed 30 ft., Swim 30 ft. (or 0 ft. if the legs aren't extended); Immunity to Poison and Psychic damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item's core mechanic is a stateful vehicle control system, not an existing passive, activated, triggered-reaction, or summoned-companion family."
+}

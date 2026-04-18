@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 22,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "RestResetCadence.century",
+  "archivedAt": "2026-04-18T08:49:20.430Z",
+  "selectedSlugs": [
+    "magic_item_tome_of_clear_thought",
+    "magic_item_tome_of_understanding"
+  ]
+}

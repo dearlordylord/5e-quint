@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item_spawned_creature_mechanics",
+      "justification": "The item's primary mechanic is a controlled summoned companion with duration, command, turn-order, and dismissal semantics. Those semantics already exist only under the spell-only spawned_creature payload family and are unreachable from MagicItemMechanics.",
+      "evidence": "\"While gently swinging this censer, you can take a Magic action to summon an Air Elemental.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Structural gap only. Magic action activation and dawn reset already exist, but magic items cannot currently author the summoned-companion family needed for this unit without misencoding it."
+}

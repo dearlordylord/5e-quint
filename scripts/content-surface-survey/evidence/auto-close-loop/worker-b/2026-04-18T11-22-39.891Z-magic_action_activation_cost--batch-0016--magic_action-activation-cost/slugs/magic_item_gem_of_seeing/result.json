@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "conditional_activated_grant_during_duration",
+      "justification": "The item already fits the magic-item activation family except that its timed benefit is only active while the bearer is peering through the gem. The current surface can gate a whole passive or activation with `peering_through_item`, but it cannot express a 10-minute activated window whose carried effect is conditionally active only while that predicate holds.",
+      "evidence": "\"For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author Dhall or runtime JSON because the honest encoding gap is effect-level conditional activity within an activated timed window. Encoding as an unconditional 10-minute `grant_sense` would overstate the rule."
+}

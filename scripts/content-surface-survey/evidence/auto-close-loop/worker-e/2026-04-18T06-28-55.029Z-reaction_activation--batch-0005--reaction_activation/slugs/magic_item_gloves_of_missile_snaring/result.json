@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken",
+      "justification": "The item's primary mechanic is a reaction that subtracts a numeric amount from the damage of the triggering hit after the attack has already hit. Existing atoms model AC changes, resistances, or healing, but not one-shot damage reduction on a resolved hit.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon while wearing these gloves, you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "WeaponFilter.thrown_or_reaction_trigger_support_for_thrown_weapons",
+      "justification": "The existing reaction trigger shape points to WeaponFilter, but the closed filter vocabulary does not honestly encode the SRD trigger's \"Ranged or Thrown weapon\" scope.",
+      "evidence": "hit by an attack roll made with a Ranged or Thrown weapon"
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_triggering_ammunition_or_weapon",
+      "justification": "The rider that lets the wearer catch the ammunition or thrown weapon when the reduced damage reaches 0 is a distinct mechanics outcome involving the triggering object and hand-capacity predicates. It cannot be expressed with current effect atoms.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon if it is small enough for you to hold in that hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The top-level unit kind fits as a magic item with an activated reaction, but the core damage-reduction mechanic is missing from the effect vocabulary, so any authored JSON would be knowingly false."
+}

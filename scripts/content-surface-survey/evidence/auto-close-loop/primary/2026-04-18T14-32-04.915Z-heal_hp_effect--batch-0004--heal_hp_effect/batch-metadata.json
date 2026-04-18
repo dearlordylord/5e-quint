@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "heal_hp_effect",
+  "archivedAt": "2026-04-18T14:33:32.245Z",
+  "selectedSlugs": [
+    "mass_heal",
+    "power_word_heal"
+  ]
+}

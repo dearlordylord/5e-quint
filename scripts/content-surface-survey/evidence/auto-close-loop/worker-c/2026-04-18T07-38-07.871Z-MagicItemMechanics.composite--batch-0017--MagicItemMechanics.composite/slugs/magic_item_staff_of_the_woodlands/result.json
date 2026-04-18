@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.condition.touching_transformed_item",
+      "justification": "Tree Form's return action is only available while the staff is currently a tree and the user is touching that transformed item. The existing activation-side condition grammar only covers broad equipment predicates like holding or wearing an item.",
+      "evidence": "While touching the tree and using a Magic action, you return the staff to its normal form."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.fall_on_end",
+      "justification": "Reverting the tree to a staff forces creatures in the tree to fall. That deterministic cleanup rider is not representable in the current surface even though it is part of the item's mechanical resolution.",
+      "evidence": "Any creature in the tree falls when the tree reverts to a staff."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Passive held bonuses and the charge-cast spell list fit an honest composite MagicItemRecord, and the druid-only attunement restriction is already supported. I did not author content JSON because Tree Form cannot be fully encoded without a transformed-item touch gate for the revert action and a fall-on-revert effect."
+}

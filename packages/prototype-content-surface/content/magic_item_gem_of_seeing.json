@@ -1,0 +1,64 @@
+{
+  "description": "This gem has 3 charges. As a Magic action, you can expend 1 charge. For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem. The gem regains 1d3 expended charges daily at dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_gem_of_seeing",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "grant_sense",
+            "rangeFeet": 120,
+            "sense": "truesight"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 3
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 3
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Gem of Seeing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#GemOfSeeing"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

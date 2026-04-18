@@ -1,0 +1,38 @@
+{
+  "unit_slug": "magic_item_staff_of_fire",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord attunement restriction metadata",
+      "justification": "The current magic-item record only expresses attunement as a boolean, so it cannot encode class-gated eligibility on items that require attunement by specific classes.",
+      "evidence": "Staff, Very Rare (Requires Attunement by a Druid, Sorcerer, Warlock, or Wizard)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The item fits honestly as a composite magic item: passive held Fire resistance plus charge-cast spell access with dawn recharge and last-charge destruction. The encoded content omits only the druid/sorcerer/warlock/wizard attunement restriction because the surface has no record-level variant for it."
+}

@@ -1,0 +1,23 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "grant",
+    "modify_roll_advantage",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "The existing surface can encode the grappled-escape advantage rider, but it has no effect atom for counting as one size larger when determining carrying capacity.",
+      "evidence": "\"You also count as one size larger when determining your carrying capacity.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the supported passive grappled-escape advantage rider only. The carrying-capacity clause is omitted from mechanics and tracked as a widening."
+}

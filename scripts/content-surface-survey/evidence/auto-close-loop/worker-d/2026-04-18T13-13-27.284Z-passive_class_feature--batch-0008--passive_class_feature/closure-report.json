@@ -1,0 +1,36 @@
+{
+  "cluster": "passive_class_feature",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "monk_disciplined_survivor_l14",
+    "paladin_aura_expansion_l18"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "monk_disciplined_survivor_l14",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "paladin_aura_expansion_l18",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

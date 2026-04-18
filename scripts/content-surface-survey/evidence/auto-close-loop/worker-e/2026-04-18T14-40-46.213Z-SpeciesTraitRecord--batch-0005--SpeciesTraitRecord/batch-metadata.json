@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 5,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "SpeciesTraitRecord",
+  "archivedAt": "2026-04-18T14:45:49.815Z",
+  "selectedSlugs": [
+    "species_dwarf_dwarven_resilience",
+    "species_elf_elven_lineage"
+  ]
+}

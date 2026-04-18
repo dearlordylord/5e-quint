@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spell_option_restriction",
+      "justification": "The existing magic-item activation surface can represent the shared charge pool, fixed save DC, dawn recharge, last-charge destruction, and Fear's 60-foot cone via area override. It cannot honestly express that casts of Command granted by this item are restricted to only specific command-word branches of the underlying spell.",
+      "evidence": "\"Command (\\\"flee\\\" or \\\"grovel\\\" only) | 1\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. The item otherwise fits the existing magic-item activation pattern: holding-item gate, charge_pool 7, dawn regain 1d6+1, last_charge_roll destruction, fixed DC 15, and Fear areaOverride to a 60-foot cone."
+}

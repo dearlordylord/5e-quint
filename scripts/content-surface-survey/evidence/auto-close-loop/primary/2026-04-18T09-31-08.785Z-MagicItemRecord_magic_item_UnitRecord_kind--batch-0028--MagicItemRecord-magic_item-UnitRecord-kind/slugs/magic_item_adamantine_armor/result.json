@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_adamantine_armor",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "negate_incoming_critical_hit",
+      "justification": "The surface has outgoing crit-range modification for the wearer/attacker, but no honest way to express a passive defensive rule that converts critical hits against the wearer into normal hits.",
+      "evidence": "While you're wearing it, any Critical Hit against you becomes a normal hit."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a passive magic item, but the core mechanic is not representable with any existing EffectAtom in the current surface or v4 taxonomy. No Dhall/JSON/trace content file was authored."
+}

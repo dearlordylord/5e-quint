@@ -1,0 +1,36 @@
+{
+  "cluster": "SpeciesTraitRecord + species_trait family",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "species_goliath_large_form",
+    "species_orc_adrenaline_rush"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "species_goliath_large_form",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "species_orc_adrenaline_rush",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "surface_widening",
+  "atoms_used": ["container_storage", "grant", "magic_item_root"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ContainerStorageProfile.retrievalAction",
+      "justification": "The storage profile captures capacity, weight override, air, and extradimensionality, but it cannot encode the action cost to retrieve stored contents.",
+      "evidence": "Retrieving an item from the bag requires a Utilize action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.overloaded_or_damaged",
+      "justification": "The existing destruction policy surface only covers last-charge rolls and deterministic exhaustion. Bag of Holding needs a non-charge destruction trigger tied to overload or physical damage, with a destination for contents.",
+      "evidence": "If the bag is overloaded, pierced, or torn, it is destroyed, and its contents are scattered in the Astral Plane."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "extradimensional_space_collision",
+      "justification": "The passive storage family has no way to express a passive item-item interaction that destroys both items, opens a transient gate, and exiles nearby creatures in an area. This is a triggered composition gap, not a missing top-level unit kind.",
+      "evidence": "Placing a Bag of Holding inside an extradimensional space created by a Handy Haversack, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane. Any creature within a 10-foot-radius Sphere centered on the gate is sucked through it to a random location on the Astral Plane."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the honest core as a passive magic item with a container_storage grant. Typecheck passed and the tracer emitted a valid graph. The trace does not cover the Utilize retrieval requirement, overload/pierce/tear destruction, inside-out spill/disabled state, or the extradimensional collision gate."
+}

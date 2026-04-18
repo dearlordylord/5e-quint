@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_orc_adrenaline_rush",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "perform_standard_action",
+      "justification": "The current surface can spend a Bonus Action and grant temp HP, but it cannot encode that the activation itself performs a specific standard action. `grant_extra_action` is wrong because Adrenaline Rush does not grant an extra action; it lets the user take the Dash action as the bonus-action activation.",
+      "evidence": "You can take the Dash action as a Bonus Action. When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content JSON/Dhall. Species-trait activation fits structurally, but the closed atom vocabulary cannot honestly represent the Dash-as-bonus-action mechanic. Encoding only the temp HP rider would omit the trait's primary action-economy effect."
+}

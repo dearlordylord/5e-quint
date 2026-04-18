@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access parameter override for keyed planar destination",
+      "justification": "The existing magic-item activation shape can model charges, dawn recharge, and spell casting, but it cannot constrain a granted spell's destination parameter to the plane keyed to the chosen cube side.",
+      "evidence": "Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a magic_item activation with a charge_pool, but authoring unrestricted Gate/Plane Shift access would overstate the item because the keyed-side planar destination is mandatory and not representable in the current surface."
+}

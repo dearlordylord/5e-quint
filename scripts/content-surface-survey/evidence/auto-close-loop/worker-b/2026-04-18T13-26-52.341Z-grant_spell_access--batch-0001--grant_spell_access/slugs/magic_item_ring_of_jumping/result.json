@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_ring_of_jumping",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Honest fit as a passive magic item: while worn, the ring grants at-will access to Jump with a self-only target restriction on the grant."
+}

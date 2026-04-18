@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 21,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "reduce_damage_taken",
+  "archivedAt": "2026-04-18T11:56:01.326Z",
+  "selectedSlugs": [
+    "magic_item_gloves_of_missile_snaring",
+    "magic_item_ring_of_warmth"
+  ]
+}

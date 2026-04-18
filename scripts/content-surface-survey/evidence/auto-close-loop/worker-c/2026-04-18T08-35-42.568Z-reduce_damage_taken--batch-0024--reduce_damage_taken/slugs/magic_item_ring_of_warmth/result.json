@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_ring_of_warmth",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "reduce_damage_taken",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_environmental_temperature_immunity",
+      "justification": "The passive damage-reduction rider fits today, but the item also grants deterministic immunity to extreme cold exposure for the wearer and carried/worn gear. That mechanic is neither damage resistance nor damage immunity to a typed attack/source, and the current surface has no atom for environmental temperature protection.",
+      "evidence": "while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the supported subset as a passive magic item with a wearing-item gate and `reduce_damage_taken` vs cold. Typecheck and tracer both passed. The environmental-temperature rider is omitted from the authored content and recorded here as the widening."
+}

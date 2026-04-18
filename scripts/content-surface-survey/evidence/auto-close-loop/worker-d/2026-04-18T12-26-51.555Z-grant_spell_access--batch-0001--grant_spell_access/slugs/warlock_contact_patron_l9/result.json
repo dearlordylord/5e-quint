@@ -1,0 +1,23 @@
+{
+  "unit_slug": "warlock_contact_patron_l9",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_spell_access"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.saveOverride",
+      "justification": "The feature grants a special cast path for an existing spell and changes that granted cast's resolution by auto-succeeding on the spell's saving throw. The current surface can grant the spell and can model save-gate behavior on the spell itself, but it cannot attach a save override to only one grant path.",
+      "evidence": "With this feature, you can cast the spell without expending a spell slot to contact your patron, and you automatically succeed on the spell's saving throw."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Passive class-feature shape fits. The authored Dhall encodes the always-prepared and once-per-long-rest grants, but the grant-scoped automatic success rider is omitted because the current `grant_spell_access` surface has no honest save-override field."
+}

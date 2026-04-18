@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "activation-scoped equipment gate for timed benefits",
+      "justification": "The surface can represent charge-based activation, timed duration, grant_sense, and peering_through_item independently, but it cannot express that the granted Truesight is available only while peering through the gem during the 10-minute active window.",
+      "evidence": "\"For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_gem_of_seeing.dhall because the honest rule requires a duration-limited benefit gated by peering_through_item. Encoding plain timed grant_sense would overstate the item's effect."
+}

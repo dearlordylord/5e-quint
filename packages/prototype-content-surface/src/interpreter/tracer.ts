@@ -24,25 +24,32 @@ import type {
   DiceExprDelta,
   DiceDelta,
   LinkedSpeed,
+  ResistanceSourceFilter,
+  SavingThrowSourceFilter,
   WeaponFilter,
   TargetSelection,
   SlotScaling,
   SpellLevel,
   StandardActionKind,
+  ProficiencyGrant,
+  ProficiencyGrantSubject,
   ClassFeatureMechanics,
   ActivatedAbilityMechanics,
   PassiveMechanics,
   CompositeMagicItemMechanics,
+  MagicItemMechanics,
   EquipmentPredicate,
   FeatRecord,
   SpeciesTraitRecord,
   MagicItemRecord,
+  MagicItemAttunement,
   ClassFeatureActivationCost,
   ActivationResource,
   UseCountResource,
   RestResetCadence,
   ActionRestriction,
   TriggeredReactionMechanics,
+  TriggeredReactionAbilityMechanics,
   ReactionTrigger,
   MarkTransfer,
   MasteryMechanics,
@@ -56,13 +63,15 @@ import type {
   AnchoredFilter,
   AnchoredSignal,
   AreaOrigin,
+  AreaOccupantDispositionFilter,
   AreaShapeDescriptor,
   AreaShapeSpec,
   DamageTypeRef,
   ItemDestructionPolicy,
   SpellAccessMode,
+  GrantedSpellDurationOverride,
   SaveGateRiderResult,
-  SpawnedCreatureMechanics,
+  SpawnedCreaturePayload,
   CreatureStatBlock,
   CreatureActions,
   CreatureNamedAttackRoll,
@@ -74,6 +83,12 @@ import type {
   ReanimatedCreatureMechanics,
   TemplatedMultiSpawnMechanics,
   GrantedSpellTargetRestriction,
+  MagicItemAttunementRestriction,
+  MagicItemVariant,
+  PassiveOperation,
+  MagicItemSpawnedCreatureMechanics,
+  PassiveSuppressor,
+  SpawnedCreatureStatBlock,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -192,6 +207,26 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_ac_set_base": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ac",
+        label: `modify_ac\nset base = ${e.const} + ${e.abilityMod.toUpperCase()} mod`,
+      });
+      return id;
+    }
+    case "modify_save_dc": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_save_dc",
+        label: `modify_save_dc\n${describeDelta(e.delta)}`,
+      });
+      return id;
+    }
     case "apply_condition": {
       const id = ids("cond");
       const label = `apply_condition\n${describeConditionChoice(e.condition)}`;
@@ -220,7 +255,21 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "grant_resistance",
-        label: `grant_resistance\n${describeDamageTypeRef(e.damageType)}`,
+        label: `grant_resistance\n${describeDamageTypeRef(e.damageType)}${describeResistanceSourceFilter(e.sourceFilter)}`,
+      });
+      return id;
+    }
+    case "reduce_damage_taken": {
+      const id = ids("eff");
+      const scope =
+        e.damageType === undefined
+          ? ""
+          : `\nvs ${describeDamageTypeRef(e.damageType)}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reduce_damage_taken",
+        label: `reduce_damage_taken\n${describeDiceAmount(e.amount)}${scope}`,
       });
       return id;
     }
@@ -260,11 +309,16 @@ function traceEffectAtom(
         e.attackerTypeFilter !== undefined && e.attackerTypeFilter.length > 0
           ? `\nby: ${e.attackerTypeFilter.join("/")}`
           : "";
+      const condition =
+        e.conditionFilter !== undefined && e.conditionFilter.length > 0
+          ? `\ncondition: ${e.conditionFilter.join("/")}`
+          : "";
+      const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${saveSource}`,
       });
       return id;
     }
@@ -275,6 +329,16 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "modify_crit_range",
         label: `modify_crit_range\ncrits on ${e.threshold}-20${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
+    case "suppress_incoming_critical_hit": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_incoming_critical_hit",
+        label: "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
       });
       return id;
     }
@@ -370,11 +434,27 @@ function traceEffectAtom(
     }
     case "grant_feat": {
       const id = ids("eff");
+      const categories =
+        "category" in e ? e.category : e.categories.join(" | ");
+      const fallback =
+        e.openFallback === "any_qualifying_feat"
+          ? "\n+ any qualifying feat"
+          : "";
       nodes.push({
         id,
         category: "effect",
         atomKind: "grant_feat",
-        label: `grant_feat\n${e.category}`,
+        label: `grant_feat\n${categories}${fallback}`,
+      });
+      return id;
+    }
+    case "grant_proficiency": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_proficiency",
+        label: `grant_proficiency\n${describeProficiencyGrant(e.proficiency)}`,
       });
       return id;
     }
@@ -386,7 +466,10 @@ function traceEffectAtom(
         atomKind: "grant_spell_access",
         label:
           `grant_spell_access\n${e.spellId}\n(${describeSpellAccessMode(e.mode)})` +
-          describeGrantedSpellTargetRestriction(e.targetRestriction),
+          describeGrantedSpellDcOverride(e.dcOverride) +
+          describeGrantedSpellAreaOverride(e.areaOverride) +
+          describeGrantedSpellTargetRestriction(e.targetRestriction) +
+          describeGrantedSpellDurationOverride(e.durationOverride),
       });
       return id;
     }
@@ -440,6 +523,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_proficiency_bonus": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_proficiency_bonus",
+        label: `modify_proficiency_bonus\n${describeSignedNumber(e.delta)}${describeNumericBounds(e.minimum, e.maximum)}`,
+      });
+      return id;
+    }
     case "teleport": {
       const id = ids("eff");
       nodes.push({
@@ -457,6 +550,16 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "transport_exile",
         label: `transport_exile\ndest: ${e.destination}`,
+      });
+      return id;
+    }
+    case "container_storage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "container_storage",
+        label: describeContainerStorage(e.storage),
       });
       return id;
     }
@@ -515,6 +618,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "ignore_web_restrictions": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "ignore_web_restrictions",
+        label: "ignore_web_restrictions",
+      });
+      return id;
+    }
     case "alter_item_kind": {
       const id = ids("eff");
       nodes.push({
@@ -561,7 +674,20 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "negate_triggering_spell",
-        label: "negate_triggering_spell",
+        label:
+          e.maxSpellLevel === undefined
+            ? "negate_triggering_spell"
+            : `negate_triggering_spell\nmax level: ${e.maxSpellLevel}`,
+      });
+      return id;
+    }
+    case "reflect_triggering_spell": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reflect_triggering_spell",
+        label: "reflect_triggering_spell",
       });
       return id;
     }
@@ -637,11 +763,16 @@ function traceEffectAtomScaling(
     case "modify_max_hp":
       traceDiceAmountScaling(e.delta, effectId, slotId, nodes, edges, ids);
       return;
+    case "reduce_damage_taken":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
     case "grant_extra_action":
       traceActionRestriction(e.restriction, effectId, nodes, edges, ids);
       return;
     case "none":
     case "modify_ac":
+    case "modify_ac_set_base":
+    case "modify_save_dc":
     case "apply_condition":
     case "remove_condition":
     case "grant_resistance":
@@ -649,6 +780,7 @@ function traceEffectAtomScaling(
     case "modify_damage_numeric":
     case "modify_roll_advantage":
     case "modify_crit_range":
+    case "suppress_incoming_critical_hit":
     case "scale_attack_count":
     case "modify_speed":
     case "force_move":
@@ -658,6 +790,7 @@ function traceEffectAtomScaling(
     case "grant_sense":
     case "deny_opportunity_attack":
     case "grant_feat":
+    case "grant_proficiency":
     case "grant_spell_access":
     case "grant_condition_immunity":
     case "grant_damage_immunity":
@@ -665,13 +798,17 @@ function traceEffectAtomScaling(
     case "set_speed_ratio":
     case "set_ability_score":
     case "modify_ability_score":
+    case "modify_proficiency_bonus":
     case "teleport":
     case "transport_exile":
+    case "container_storage":
     case "grant_speed":
+    case "ignore_web_restrictions":
     case "alter_item_kind":
     case "detect":
     case "set_speed":
     case "negate_triggering_spell":
+    case "reflect_triggering_spell":
     case "end_ongoing_spells":
     case "maximize_healing_received":
     case "transform_target":
@@ -881,8 +1018,27 @@ function describeReactionTrigger(t: ReactionTrigger): string {
       return `hit by attack roll${describeWeaponFilter(t.weaponFilter)}`;
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
-    case "creature_casts_spell":
-      return `creature casts spell (${t.components.join("/")})`;
+    case "creature_casts_spell": {
+      const levelTag =
+        t.spellLevelAtMost === undefined
+          ? ""
+          : `, level <= ${t.spellLevelAtMost}`;
+      const visibilityTag =
+        t.requiresVisibleCaster === true ? ", visible caster" : "";
+      return `creature casts spell (${t.components.join("/")}${levelTag}${visibilityTag})`;
+    }
+    case "spell_save_outcome": {
+      const levelTag =
+        t.spellLevelAtMost === undefined
+          ? ""
+          : `, level <= ${t.spellLevelAtMost}`;
+      const schoolTag =
+        t.spellSchool === undefined ? "" : `, ${t.spellSchool}`;
+      const selfTag = t.spellTargetsOnlySelf === true ? ", self only" : "";
+      const areaTag =
+        t.spellHasNoAreaOfEffect === true ? ", no area of effect" : "";
+      return `${t.outcome} on spell save${levelTag}${schoolTag}${selfTag}${areaTag}`;
+    }
     case "any_of":
       return t.triggers.map(describeReactionTrigger).join(" OR ");
     default: {
@@ -1230,18 +1386,6 @@ function traceOngoingOpEffect(
   ids: IdGen,
 ): void {
   switch (eff.kind) {
-    case "modify_ac_set_base": {
-      const id = ids("op");
-      nodes.push({
-        id,
-        category: "effect",
-        atomKind: "modify_ac",
-        label: `modify_ac\nset base = ${eff.const} + ${eff.abilityMod.toUpperCase()} mod`,
-      });
-      edges.push({ from: hostId, to: id, relation: hostRelation });
-      edges.push({ from: id, to: attId, relation: "attaches_to" });
-      return;
-    }
     case "modify_ac_set_floor": {
       const id = ids("op");
       nodes.push({
@@ -1540,7 +1684,7 @@ type CreatureCtx = {
 };
 
 function traceSpawnedCreature(
-  m: SpawnedCreatureMechanics,
+  m: SpawnedCreaturePayload,
   ctx: SpellCtx,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -1551,7 +1695,7 @@ function traceSpawnedCreature(
     id: compId,
     category: "attachment",
     atomKind: "companion",
-    label: `companion\n${describeCreatureStatBlock(m.statBlock)}\nrange ${describeRange(ctx.range)}`,
+    label: `companion\n${describeSpawnedCreatureStatBlock(m.creature)}\nrange ${describeRange(ctx.range)}`,
   });
   edges.push({ from: ctx.procId, to: compId, relation: "attaches_to" });
 
@@ -1560,7 +1704,7 @@ function traceSpawnedCreature(
     id: createId,
     category: "effect",
     atomKind: "create_companion",
-    label: `create_companion\n${m.statBlock.displayName}`,
+    label: `create_companion\n${describeSpawnedCreatureDisplayName(m.creature)}`,
   });
   edges.push({ from: ctx.procId, to: createId, relation: "grants" });
   edges.push({ from: createId, to: compId, relation: "attaches_to" });
@@ -1582,29 +1726,31 @@ function traceSpawnedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
 
-  for (const [slot, kind] of [
-    [m.statBlock.actions, "action"],
-    [m.statBlock.bonusActions, "bonus_action"],
-    [m.statBlock.reactions, "reaction"],
-  ] as const) {
-    if (slot === undefined) continue;
-    traceCreatureActions(
-      {
-        procId: ctx.procId,
-        compId,
-        slotId: ctx.slotId,
-        kind,
-        nodes,
-        edges,
-        ids,
-      },
-      slot,
-    );
+  if (m.creature.kind === "inline") {
+    for (const [slot, kind] of [
+      [m.creature.statBlock.actions, "action"],
+      [m.creature.statBlock.bonusActions, "bonus_action"],
+      [m.creature.statBlock.reactions, "reaction"],
+    ] as const) {
+      if (slot === undefined) continue;
+      traceCreatureActions(
+        {
+          procId: ctx.procId,
+          compId,
+          slotId: ctx.slotId,
+          kind,
+          nodes,
+          edges,
+          ids,
+        },
+        slot,
+      );
+    }
   }
 }
 
@@ -1773,6 +1919,12 @@ function describeCommandCost(c: CreatureControl): string {
   }
 }
 
+function describeCommandRange(c: CreatureControl): string {
+  return c.commandRangeFeet === undefined
+    ? "range unspecified"
+    : `range ${c.commandRangeFeet} ft`;
+}
+
 function describeStatBlockValue(v: StatBlockValue): string {
   switch (v.kind) {
     case "literal":
@@ -1799,6 +1951,36 @@ function describeCreatureStatBlock(sb: CreatureStatBlock): string {
   parts.push(`AC ${describeStatBlockValue(sb.ac)}`);
   parts.push(`HP ${describeStatBlockValue(sb.hp)}`);
   return parts.join(" / ");
+}
+
+function describeSpawnedCreatureStatBlock(
+  creature: SpawnedCreatureStatBlock,
+): string {
+  switch (creature.kind) {
+    case "inline":
+      return describeCreatureStatBlock(creature.statBlock);
+    case "catalog_ref":
+      return `${creature.displayName} / catalog_ref(${creature.monsterId})`;
+    default: {
+      const _exhaustive: never = creature;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeSpawnedCreatureDisplayName(
+  creature: SpawnedCreatureStatBlock,
+): string {
+  switch (creature.kind) {
+    case "inline":
+      return creature.statBlock.displayName;
+    case "catalog_ref":
+      return creature.displayName;
+    default: {
+      const _exhaustive: never = creature;
+      return _exhaustive;
+    }
+  }
 }
 
 function traceActivation(
@@ -2057,6 +2239,53 @@ function tracePhase(
       }
       return resId;
     }
+    case "random_table": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "random_table",
+        label: `random_table [phase ${phaseNumber}]\nroll: ${describeRandomTableRoll(phase.roll)}`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+
+      for (const outcome of phase.outcomes) {
+        const branchId = ids("tbl");
+        nodes.push({
+          id: branchId,
+          category: "resolution",
+          atomKind: "table_result",
+          label:
+            `table_result\n${describeRandomTableOutcomeRange(outcome)}` +
+            `\n${outcome.label}`,
+        });
+        edges.push({ from: resId, to: branchId, relation: "branches_on_roll" });
+
+        if (outcome.phases === undefined) continue;
+
+        const branchCtx: SpellCtx = { ...ctx, procId: branchId };
+        let previousResolutionId: string | null = null;
+        outcome.phases.forEach((nestedPhase, idx) => {
+          const nestedResolutionId = tracePhase(
+            nestedPhase,
+            idx + 1,
+            branchCtx,
+            nodes,
+            edges,
+            ids,
+          );
+          if (previousResolutionId !== null) {
+            edges.push({
+              from: previousResolutionId,
+              to: nestedResolutionId,
+              relation: "branches_on_completion",
+            });
+          }
+          previousResolutionId = nestedResolutionId;
+        });
+      }
+      return resId;
+    }
     default: {
       const _exhaustive: never = phase;
       throw new Error(`unhandled phase: ${String(_exhaustive)}`);
@@ -2212,11 +2441,14 @@ function traceAttachment(
     }
     case "area": {
       const originLabel = describeAreaOrigin(a.origin, range, a.rangeOrigin);
+      const occupantLabel = describeAreaOccupantDispositionFilter(
+        a.occupantDispositionFilter,
+      );
       nodes.push({
         id,
         category: "attachment",
         atomKind: "area",
-        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}`,
+        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}`,
       });
       return id;
     }
@@ -2288,6 +2520,23 @@ function describeAttachmentRange(
 ): string {
   const base = describeRange(range);
   return (origin ?? "caster") === "caster" ? base : `${base} from spell sensor`;
+}
+
+function describeAreaOccupantDispositionFilter(
+  filter: AreaOccupantDispositionFilter | undefined,
+): string {
+  switch (filter) {
+    case undefined:
+      return "";
+    case "friendly_to_source":
+      return "\naffects: friendly creatures";
+    case "hostile_to_source":
+      return "\naffects: hostile creatures";
+    default: {
+      const _: never = filter;
+      throw new Error(`unhandled area occupant disposition filter: ${String(_)}`);
+    }
+  }
 }
 
 function describeAreaShape(s: AreaShapeSpec): string {
@@ -2417,6 +2666,23 @@ function traceDiceAmountScaling(
       // resource expenditure, not a character or slot axis. The
       // describe side renders the label "= resource spent".
       return;
+    case "resource_spent_linear": {
+      const scId = ids("sc");
+      const deltaText = describeDelta_(amt.perResource, amt.base);
+      const maxText =
+        amt.maximum === undefined ? "" : `\nmax ${describeExpr(amt.maximum)}`;
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label:
+          `${scalingAtomFor(amt)}\naxis=resource_spent\n` +
+          `base ${describeExpr(amt.base)}\n` +
+          `+${deltaText} per resource spent${maxText}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      return;
+    }
     case "linked":
       // §A14: no scaling node — the amount is derived from another
       // atom's resolved output in the same phase. Any slot/character
@@ -2447,6 +2713,11 @@ function scalingAtomFor(amt: DiceAmount): string {
   if (amt.kind === "linear_per_level") {
     if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
     if (amt.perLevel.dice !== undefined) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  if (amt.kind === "resource_spent_linear") {
+    if (amt.perResource.dieSize !== undefined) return "scale_die_size";
+    if (amt.perResource.dice !== undefined) return "scale_die_count";
     return "scale_numeric_bonus";
   }
   return "scale_numeric_bonus";
@@ -2486,13 +2757,15 @@ function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
     label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
   });
 
-  const procedureId = traceClassFeatureMechanics(
+  const procedureIds = traceClassFeatureMechanics(
     feat.mechanics,
     nodes,
     edges,
     ids,
   );
-  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+  for (const procedureId of procedureIds) {
+    edges.push({ from: rootId, to: procedureId, relation: "roots" });
+  }
 
   return {
     unitId: feat.id,
@@ -2526,7 +2799,13 @@ function tracePassiveOrActivated(
 }
 
 function traceMagicItemMechanics(
-  m: PassiveMechanics | ActivatedAbilityMechanics | CompositeMagicItemMechanics,
+  m:
+    | PassiveMechanics
+    | ActivatedAbilityMechanics
+    | TriggeredReactionAbilityMechanics
+    | MasteryMechanics
+    | MagicItemSpawnedCreatureMechanics
+    | CompositeMagicItemMechanics,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -2535,10 +2814,32 @@ function traceMagicItemMechanics(
     case "passive":
     case "activation":
       return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "on_hit_trigger":
+      return [traceMasteryMechanics(m, nodes, edges, ids)];
+    case "spawned_creature":
+      return [traceMagicItemSpawnedCreature(m, nodes, edges, ids)];
+    case "triggered_reaction":
+      return [traceTriggeredReactionAbility(m, nodes, edges, ids)];
     case "composite":
-      return m.parts.map((part) =>
-        tracePassiveOrActivated(part, nodes, edges, ids),
-      );
+      return m.parts.map((part) => {
+        switch (part.family) {
+          case "passive":
+          case "activation":
+            return tracePassiveOrActivated(part, nodes, edges, ids);
+          case "on_hit_trigger":
+            return traceMasteryMechanics(part, nodes, edges, ids);
+          case "spawned_creature":
+            return traceMagicItemSpawnedCreature(part, nodes, edges, ids);
+          case "triggered_reaction":
+            return traceTriggeredReactionAbility(part, nodes, edges, ids);
+          default: {
+            const _exhaustive: never = part;
+            throw new Error(
+              `unhandled magic-item component family: ${String((_exhaustive as { family: string }).family)}`,
+            );
+          }
+        }
+      });
     default: {
       const _exhaustive: never = m;
       throw new Error(
@@ -2616,14 +2917,73 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
   const ids = idGen();
 
   const rootId = ids("root");
-  const attun = item.requiresAttunement ? " [attunement]" : "";
   nodes.push({
     id: rootId,
     category: "source",
     atomKind: "magic_item_root",
-    label: `magic_item_root\n${item.name}\n(${item.rarity})${attun}`,
+    label:
+      "variants" in item
+        ? `magic_item_root\n${item.name}\n(${item.variants.length} variants)${describeMagicItemCollectionAttunement(item)}`
+        : `magic_item_root\n${item.name}\n(${item.rarity})${describeMagicItemAttunement(item)}`,
   });
 
+  if ("variants" in item) {
+    for (const variant of item.variants) {
+      traceMagicItemVariant(rootId, item, variant, nodes, edges, ids);
+    }
+  } else {
+    traceMagicItemPayload(rootId, item, nodes, edges, ids);
+  }
+
+  return {
+    unitId: item.id,
+    unitName: item.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
+}
+
+function traceMagicItemVariant(
+  parentRootId: string,
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  variant: MagicItemVariant,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const attunement = resolveMagicItemVariantAttunement(item, variant);
+  const variantRootId = ids("root");
+  nodes.push({
+    id: variantRootId,
+    category: "source",
+    atomKind: "magic_item_root",
+    label: `magic_item_root\n${variant.name}\n(${variant.rarity})${describeMagicItemPayloadAttunement(attunement)}`,
+  });
+  edges.push({ from: parentRootId, to: variantRootId, relation: "roots" });
+  traceMagicItemPayload(
+    variantRootId,
+    {
+      mechanics: variant.mechanics,
+      destruction: variant.destruction,
+      ...attunement,
+    },
+    nodes,
+    edges,
+    ids,
+  );
+}
+
+function traceMagicItemPayload(
+  rootId: string,
+  item: {
+    readonly mechanics: MagicItemMechanics;
+    readonly destruction: ItemDestructionPolicy;
+  } & MagicItemAttunement,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
   // Attunement slot is a v4 resource atom. Only emit when required.
   if (item.requiresAttunement) {
     const slotId = ids("attun");
@@ -2641,16 +3001,70 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     edges.push({ from: rootId, to: procId, relation: "roots" });
   }
 
-  // Item-level destruction lifecycle.
   traceItemDestruction(item.destruction, rootId, nodes, edges, ids);
+}
 
-  return {
-    unitId: item.id,
-    unitName: item.name,
-    nodes,
-    edges,
-    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
-  };
+function describeMagicItemAttunement(item: MagicItemRecord): string {
+  if ("variants" in item) return "";
+  return describeMagicItemPayloadAttunement(item);
+}
+
+function describeMagicItemCollectionAttunement(
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+): string {
+  return describeMagicItemPayloadAttunement(item.defaultAttunement);
+}
+
+function describeMagicItemPayloadAttunement(
+  item: {
+    readonly requiresAttunement: boolean;
+    readonly attunementRestriction?: MagicItemAttunementRestriction;
+  },
+): string {
+  if (!item.requiresAttunement) return "";
+  if (item.attunementRestriction === undefined) return " [attunement]";
+  return ` [attunement: ${describeMagicItemAttunementRestriction(item.attunementRestriction)}]`;
+}
+
+function resolveMagicItemVariantAttunement(
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  variant: MagicItemVariant,
+): MagicItemAttunement {
+  return variant.attunementOverride ?? item.defaultAttunement;
+}
+
+function describeMagicItemAttunementRestriction(
+  restriction: MagicItemAttunementRestriction,
+): string {
+  switch (restriction.kind) {
+    case "spellcaster":
+      return "spellcaster";
+    case "class_list":
+      return restriction.classes.join(", ");
+    default: {
+      const _exhaustive: never = restriction;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeRandomTableRoll(roll: { die: number; modifier?: number }): string {
+  const modifier =
+    roll.modifier === undefined || roll.modifier === 0
+      ? ""
+      : roll.modifier > 0
+        ? `+${roll.modifier}`
+        : `${roll.modifier}`;
+  return `d${roll.die}${modifier}`;
+}
+
+function describeRandomTableOutcomeRange(outcome: {
+  min: number;
+  max: number;
+}): string {
+  return outcome.min === outcome.max
+    ? `${outcome.min}`
+    : `${outcome.min}-${outcome.max}`;
 }
 
 function traceItemDestruction(
@@ -2699,12 +3113,27 @@ function traceClassFeatureMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): string[] {
   switch (m.family) {
     case "activation":
-      return traceActivatedAbility(m, nodes, edges, ids);
+      return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
-      return tracePassiveMechanics(m, nodes, edges, ids);
+      return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "composite":
+      return m.parts.map((part) => {
+        switch (part.family) {
+          case "activation":
+            return traceActivatedAbility(part, nodes, edges, ids);
+          case "passive":
+            return tracePassiveMechanics(part, nodes, edges, ids);
+          default: {
+            const _exhaustive: never = part;
+            throw new Error(
+              `unhandled class-feature component family: ${String((_exhaustive as { family: string }).family)}`,
+            );
+          }
+        }
+      });
     default: {
       const _exhaustive: never = m;
       throw new Error(
@@ -2731,8 +3160,13 @@ function tracePassiveMechanics(
     label: `grant (passive)\n${m.grants.length} effect(s)`,
   });
   if (m.condition !== undefined && m.condition.kind !== "always") {
-    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
-    edges.push({ from: procId, to: predId, relation: "requires" });
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
+  }
+  for (const suppressor of m.suppressedBy ?? []) {
+    const suppressId = tracePassiveSuppressor(suppressor, nodes, ids);
+    edges.push({ from: suppressId, to: procId, relation: "suppresses" });
   }
   for (const atom of m.grants) {
     const effId = traceEffectAtom(atom, nodes, ids, edges);
@@ -2740,15 +3174,129 @@ function tracePassiveMechanics(
       edges.push({ from: procId, to: effId, relation: "grants" });
     }
   }
+  for (const operation of m.operations ?? []) {
+    tracePassiveOperation(operation, procId, nodes, edges, ids);
+  }
   return procId;
+}
+
+function tracePassiveOperation(
+  operation: PassiveOperation,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: "duration_window",
+    label: describePassiveOperationWindow(operation),
+  });
+  edges.push({ from: procId, to: winId, relation: "opens_window" });
+
+  const effId = traceEffectAtom(operation.effect, nodes, ids, edges);
+  if (effId !== null) {
+    edges.push({ from: winId, to: effId, relation: "grants" });
+  }
+}
+
+function tracePassiveSuppressor(
+  suppressor: PassiveSuppressor,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("supp");
+  nodes.push({
+    id,
+    category: "procedure",
+    atomKind: "suppress",
+    label: `suppress\nwhile ${describeConditionList(suppressor.conditions)} active`,
+  });
+  return id;
+}
+
+function describePassiveOperationWindow(operation: PassiveOperation): string {
+  const predicate =
+    operation.predicate === undefined
+      ? ""
+      : `\nif ${describeOngoingPredicate(operation.predicate)}`;
+  const unitLabel =
+    operation.trigger.amount === 1
+      ? operation.trigger.unit
+      : `${operation.trigger.unit}s`;
+  return (
+    `duration_window\nevery ${operation.trigger.amount} ${unitLabel}` +
+    predicate
+  );
+}
+
+function describeContainerStorage(
+  storage: Extract<EffectAtom, { readonly kind: "container_storage" }>["storage"],
+): string {
+  const lines = [
+    "container_storage",
+    `capacity: ${storage.maxWeightPounds} lb / ${storage.maxVolumeCubicFeet} cu ft`,
+  ];
+  if (storage.weightOverridePounds !== undefined) {
+    lines.push(`carry weight: ${storage.weightOverridePounds} lb`);
+  }
+  if (storage.airSupply !== undefined) {
+    lines.push(`air: ${storage.airSupply.sharedMinutes} min shared`);
+  }
+  if (storage.extradimensional === true) {
+    lines.push("extradimensional");
+  }
+  return lines.join("\n");
 }
 
 function traceEquipmentPredicate(
   p: Exclude<EquipmentPredicate, { kind: "always" }>,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): string[] {
   switch (p.kind) {
+    case "holding_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "holding_item",
+        label: "holding_item",
+      });
+      return [id];
+    }
+    case "peering_through_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "peering_through_item",
+        label: "peering_through_item",
+      });
+      return [id];
+    }
+    case "wearing_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "wearing_item",
+        label: "wearing_item",
+      });
+      return [id];
+    }
+    case "unarmored": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "unarmored",
+        label: "unarmored",
+      });
+      return [id];
+    }
     case "wearing_armor": {
       const id = ids("pred");
       nodes.push({
@@ -2757,7 +3305,17 @@ function traceEquipmentPredicate(
         atomKind: "wearing_armor",
         label: `wearing_armor\n[${p.categories.join(", ")}]`,
       });
-      return id;
+      return [id];
+    }
+    case "not_wearing_armor": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "not_wearing_armor",
+        label: `not_wearing_armor\n[${p.categories.join(", ")}]`,
+      });
+      return [id];
     }
     case "wielding_weapon": {
       const id = ids("pred");
@@ -2767,8 +3325,12 @@ function traceEquipmentPredicate(
         atomKind: "wielding_weapon",
         label: `wielding_weapon\n${p.weaponKind}`,
       });
-      return id;
+      return [id];
     }
+    case "all_of":
+      return p.predicates.flatMap((predicate) =>
+        traceEquipmentPredicate(predicate, nodes, ids),
+      );
     default: {
       const _exhaustive: never = p;
       throw new Error(
@@ -2791,6 +3353,12 @@ function traceActivatedAbility(
     atomKind: "activate",
     label: "activate",
   });
+
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
+  }
 
   // Activation cost. `free` emits nothing — no quota consumed.
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
@@ -2828,6 +3396,152 @@ function traceActivatedAbility(
     previousResolutionId = thisResolutionId;
   });
 
+  return procId;
+}
+
+function traceTriggeredReactionAbility(
+  m: TriggeredReactionAbilityMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("rsp");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "respond",
+    label: "respond",
+  });
+
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
+  }
+
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  const resId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  if (m.usageLimit?.kind === "once_per_turn") {
+    const fenceId = ids("fence");
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+    edges.push({ from: procId, to: fenceId, relation: "consumes" });
+  }
+
+  if (m.duration !== undefined) {
+    traceDuration(m.duration, procId, nodes, edges, ids);
+  }
+
+  const prepId = ids("prep");
+  nodes.push({
+    id: prepId,
+    category: "procedure",
+    atomKind: "prepare",
+    label: "prepare",
+  });
+  edges.push({ from: procId, to: prepId, relation: "prepares" });
+
+  const promptId = ids("prompt");
+  nodes.push({
+    id: promptId,
+    category: "procedure",
+    atomKind: "prompt",
+    label: "prompt",
+  });
+  edges.push({ from: prepId, to: promptId, relation: "prompts" });
+
+  const commitId = ids("commit");
+  nodes.push({
+    id: commitId,
+    category: "procedure",
+    atomKind: "commit",
+    label: "commit",
+  });
+  edges.push({ from: promptId, to: commitId, relation: "commits" });
+
+  if (m.interruptsTrigger) {
+    const intId = ids("int");
+    nodes.push({
+      id: intId,
+      category: "resolution",
+      atomKind: "interrupt_resolution",
+      label: "interrupt_resolution",
+    });
+    edges.push({ from: commitId, to: intId, relation: "grants" });
+  }
+
+  const ctx: SpellCtx = {
+    procId: commitId,
+    slotId: null,
+    range: m.range,
+  };
+  let previousResolutionId: string | null = null;
+  m.phases.forEach((phase, idx) => {
+    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: thisResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = thisResolutionId;
+  });
+
+  return procId;
+}
+
+function traceMagicItemSpawnedCreature(
+  m: MagicItemSpawnedCreatureMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("act");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "activate",
+    label: "activate",
+  });
+
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
+  }
+
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  const resId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  if (m.usageLimit?.kind === "once_per_turn") {
+    const fenceId = ids("fence");
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+    edges.push({ from: procId, to: fenceId, relation: "consumes" });
+  }
+
+  if (m.duration !== undefined) {
+    traceDuration(m.duration, procId, nodes, edges, ids);
+  }
+
+  const ctx: SpellCtx = { procId, slotId: null, range: m.range };
+  traceSpawnedCreature(m, ctx, nodes, edges, ids);
   return procId;
 }
 
@@ -2916,6 +3630,21 @@ function traceActivationCost(
       }
       return;
     }
+    case "study": {
+      const id = ids("study");
+      const hourLabel = c.hours === 1 ? "hour" : "hours";
+      const dayLabel = c.withinDays === 1 ? "day" : "days";
+      nodes.push({
+        id,
+        category: "window",
+        atomKind: "duration_window",
+        label:
+          `duration_window\nstudy ${c.hours} ${hourLabel}\n` +
+          `within ${c.withinDays} ${dayLabel}`,
+      });
+      edges.push({ from: procId, to: id, relation: "requires" });
+      return;
+    }
     case "replace_attack": {
       const id = ids("q");
       nodes.push({
@@ -2947,11 +3676,19 @@ function traceActivationResource(
   const atomKind = r.kind === "use_count" ? "use_count" : "charge";
   const id = ids(r.kind === "use_count" ? "use" : "pool");
   const capLabel = describeUseCountCap(r.cap);
+  const initialLabel =
+    r.kind === "charge_pool" && r.initialCount !== undefined
+      ? `\ninitial ${describeDiceAmount(r.initialCount)}`
+      : "";
+  const lifetimeAbsorptionLabel =
+    r.kind === "charge_pool" && r.lifetimeAbsorptionCap !== undefined
+      ? `\nlifetime absorb <= ${r.lifetimeAbsorptionCap}`
+      : "";
   nodes.push({
     id,
     category: "resource",
     atomKind,
-    label: `${atomKind}\n${capLabel}`,
+    label: `${atomKind}\n${capLabel}${initialLabel}${lifetimeAbsorptionLabel}`,
   });
   // If the cap scales by level, emit a scaling node that modifies the pool/counter.
   if (r.cap.kind === "threshold_tiers") {
@@ -3009,6 +3746,38 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
   }
 }
 
+function describeProficiencyGrant(grant: ProficiencyGrant): string {
+  switch (grant.kind) {
+    case "fixed":
+      return grant.proficiencies.map(describeProficiencyGrantSubject).join(", ");
+    case "choice":
+      return `choose ${grant.count}: ${grant.options
+        .map(describeProficiencyGrantSubject)
+        .join(", ")}`;
+    default: {
+      const _exhaustive: never = grant;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeProficiencyGrantSubject(
+  subject: ProficiencyGrantSubject,
+): string {
+  switch (subject.kind) {
+    case "skill":
+      return `${subject.skill} skill`;
+    case "weapon_category":
+      return `${subject.category} weapons`;
+    case "armor_category":
+      return `${subject.category} armor`;
+    default: {
+      const _exhaustive: never = subject;
+      return _exhaustive;
+    }
+  }
+}
+
 function traceResetCadence(
   c: RestResetCadence,
   resId: string,
@@ -3045,7 +3814,7 @@ function traceResetCadence(
     case "dawn": {
       const did = ids("dawn");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       nodes.push({
@@ -3057,10 +3826,21 @@ function traceResetCadence(
       edges.push({ from: resId, to: did, relation: "persists_until" });
       return;
     }
+    case "century": {
+      const cid = ids("century");
+      nodes.push({
+        id: cid,
+        category: "window",
+        atomKind: "duration_window",
+        label: "duration_window\ncentury cooldown (refill all)\nafter spend",
+      });
+      edges.push({ from: resId, to: cid, relation: "persists_until" });
+      return;
+    }
     case "elapsed_days": {
       const did = ids("days");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       const trigger =
@@ -3079,7 +3859,7 @@ function traceResetCadence(
     case "elapsed_hours": {
       const hid = ids("hours");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       const hourLabel = c.hours === 1 ? "hour" : "hours";
@@ -3498,6 +4278,31 @@ function describeConditionChoice(
   return `${choose.from.join(" OR ")} (caster choice)`;
 }
 
+function describeConditionList(conditions: ReadonlyArray<string>): string {
+  return conditions.length === 1
+    ? conditions[0]
+    : `[${conditions.join(", ")}]`;
+}
+
+function describeOngoingPredicate(p: {
+  readonly kind: "at_hp_threshold";
+  readonly threshold: number;
+  readonly comparison: "lte" | "eq" | "gte";
+}): string {
+  switch (p.comparison) {
+    case "lte":
+      return `HP <= ${p.threshold}`;
+    case "eq":
+      return `HP = ${p.threshold}`;
+    case "gte":
+      return `HP >= ${p.threshold}`;
+    default: {
+      const _exhaustive: never = p.comparison;
+      throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);
+    }
+  }
+}
+
 function describeEarlyEnd(
   triggers: ReadonlyArray<DurationEndTrigger> | undefined,
 ): string {
@@ -3507,7 +4312,16 @@ function describeEarlyEnd(
 }
 
 function describeSpellAccessMode(m: SpellAccessMode): string {
-  if (typeof m === "string") return m;
+  if (typeof m === "string") {
+    switch (m) {
+      case "prepared_once_per_long_rest":
+        return "prepared + 1/long rest free cast";
+      case "known_once_per_long_rest":
+        return "known + 1/long rest free cast";
+      default:
+        return m;
+    }
+  }
   switch (m.kind) {
     case "charge_cast": {
       const chargesAt = (k: number): number =>
@@ -3547,11 +4361,43 @@ function describeGrantedSpellTargetRestriction(
   }
 }
 
+function describeGrantedSpellDurationOverride(
+  durationOverride: GrantedSpellDurationOverride | undefined,
+): string {
+  if (durationOverride === undefined) return "";
+  const lines: string[] = [];
+  if (durationOverride.removeConcentration === true) {
+    lines.push("duration override: no concentration");
+  }
+  if (durationOverride.endsWhenGrantedSpellEnds !== undefined) {
+    lines.push(
+      `duration override: ends when ${durationOverride.endsWhenGrantedSpellEnds} ends`,
+    );
+  }
+  return lines.length === 0 ? "" : `\n${lines.join("\n")}`;
+}
+
+function describeGrantedSpellDcOverride(
+  dcOverride: DcSource | undefined,
+): string {
+  return dcOverride === undefined ? "" : `\nDC override: ${describeDc(dcOverride)}`;
+}
+
+function describeGrantedSpellAreaOverride(
+  areaOverride: AreaShapeSpec | undefined,
+): string {
+  return areaOverride === undefined
+    ? ""
+    : `\narea override: ${describeAreaShape(areaOverride)}`;
+}
+
 function describeWeaponFilter(f: WeaponFilter | undefined): string {
   if (!f) return "";
   switch (f.kind) {
     case "weapon_category":
       return ` [${f.category} weapons only]`;
+    case "weapon_property":
+      return ` [${f.property} weapons only]`;
     case "specific_item":
       return ` [item only: ${f.itemId}]`;
     default: {
@@ -3559,6 +4405,23 @@ function describeWeaponFilter(f: WeaponFilter | undefined): string {
       return _exhaustive;
     }
   }
+}
+
+function describeResistanceSourceFilter(
+  f: ResistanceSourceFilter | undefined,
+): string {
+  if (!f) return "";
+  const magicality =
+    f.magicality === undefined ? "" : `, ${f.magicality} only`;
+  const weapon = describeWeaponFilter(f.weaponFilter);
+  return `\nfrom: attacks${weapon}${magicality}`;
+}
+
+function describeSavingThrowSourceFilter(
+  f: SavingThrowSourceFilter | undefined,
+): string {
+  if (!f) return "";
+  return "\nsource: spells or other magical effects";
 }
 
 function describeDelta(d: DiceDelta): string {
@@ -3594,6 +4457,13 @@ function describeAbilityScoreBounds(
   minimum: number | undefined,
   maximum: number | undefined,
 ): string {
+  return describeNumericBounds(minimum, maximum);
+}
+
+function describeNumericBounds(
+  minimum: number | undefined,
+  maximum: number | undefined,
+): string {
   const parts: string[] = [];
   if (minimum !== undefined) parts.push(`min ${minimum}`);
   if (maximum !== undefined) parts.push(`max ${maximum}`);
@@ -3610,6 +4480,14 @@ function describeDiceAmount(a: DiceAmount): string {
       return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
     case "resource_spent":
       return "= charges spent (player choice)";
+    case "resource_spent_linear": {
+      const maxText =
+        a.maximum === undefined ? "" : `, max ${describeExpr(a.maximum)}`;
+      return (
+        `${describeExpr(a.base)} + ` +
+        `${describeDelta_(a.perResource, a.base)} per resource spent${maxText}`
+      );
+    }
     case "linked": {
       const scale = a.link.scale === "half" ? "half " : "";
       const source =
@@ -3631,12 +4509,13 @@ function describeExpr(e: DiceExpr): string {
         ? `+${e.flat}`
         : `${e.flat}`
       : "";
-  const mod =
+  const modLabel =
     e.spellcastingMod === true
-      ? hasDice || flat
-        ? "+spellcasting mod"
-        : "spellcasting mod"
-      : "";
+      ? "spellcasting mod"
+      : e.abilityModifier !== undefined
+        ? `${e.abilityModifier.toUpperCase()} mod`
+        : "";
+  const mod = modLabel === "" ? "" : hasDice || flat ? `+${modLabel}` : modLabel;
   const diceStr = hasDice ? `${e.dice}d${e.dieSize}` : "";
   return `${diceStr}${flat}${mod}` || "0";
 }
@@ -3695,7 +4574,7 @@ function traceReanimatedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
@@ -3746,7 +4625,7 @@ function traceTemplatedMultiSpawn(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });

@@ -1,0 +1,49 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.kind = \"item\" | \"object\" on activation phases",
+      "justification": "Tree Form targets the staff itself, not the wielder, a creature, or an area.",
+      "evidence": "plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.kind = \"fall_on_end\" (or equivalent end-of-form fallout rider)",
+      "justification": "Reverting the transformed staff has a deterministic mechanical consequence for creatures occupying it. v4 already has this concept, but the surface does not.",
+      "evidence": "Any creature in the tree falls when the tree reverts to a staff"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy nondestructive last-charge shutdown",
+      "justification": "The last-charge rider removes the item's magic without destroying the underlying quarterstaff, which current destruction policies cannot represent honestly.",
+      "evidence": "If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored a composite subset for the held-item bonuses, spell list, charge pool, dawn recharge, and druid-only attunement. Omitted Tree Form and the special last-charge shutdown rider because encoding them would require surface widening."
+}

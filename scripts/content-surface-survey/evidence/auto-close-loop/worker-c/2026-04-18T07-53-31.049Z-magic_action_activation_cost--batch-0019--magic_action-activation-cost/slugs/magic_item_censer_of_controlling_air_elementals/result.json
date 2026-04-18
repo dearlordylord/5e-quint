@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item spawned_creature mechanics component",
+      "justification": "The item's primary deterministic mechanic is summoning and controlling a companion, but MagicItemMechanics cannot currently carry the existing spawned_creature family.",
+      "evidence": "While gently swinging this censer, you can take a Magic action to summon an Air Elemental."
+    },
+    {
+      "kind": "new_variant",
+      "name": "spawned_creature catalog-ref stat block source",
+      "justification": "The item names a published creature stat block rather than inlining a custom summoned-creature block, so an honest encoding needs a catalog reference instead of placeholder inline stats.",
+      "evidence": "summon an Air Elemental"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Existing magic-item families can model recharge and action cost, but not a summon-and-command companion payload; the named Air Elemental stat block is also external to the item text."
+}

@@ -1,0 +1,9 @@
+{
+  "unit_slug": "bard_ability_score_improvement_l4",
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits the existing class_feature passive family exactly, matching the already-authored Barbarian and Cleric level 4 Ability Score Improvement records."
+}

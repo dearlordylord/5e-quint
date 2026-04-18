@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_tome_of_understanding",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.elapsed_days full-refill branch without explicit DiceAmount",
+      "justification": "The existing magic-item activation family fits, but the authored surface cannot round-trip an honest century recharge because `elapsed_days.regain` must be `null` for full refill and the Dhall `--omit-empty` pipeline drops that field, causing the tracer to crash on `undefined`.",
+      "evidence": "The manual then loses its magic, but regains it in a century."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored `content/magic_item_tome_of_understanding.dhall` and generated JSON typecheck, but tracer failed before producing a trace because `resetCadence.elapsed_days.regain` was omitted from JSON instead of emitted as null. No honest workaround exists without inventing a false recharge amount."
+}

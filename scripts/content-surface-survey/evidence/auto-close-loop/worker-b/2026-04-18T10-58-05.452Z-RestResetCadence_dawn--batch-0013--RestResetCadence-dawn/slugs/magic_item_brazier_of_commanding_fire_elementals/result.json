@@ -1,0 +1,51 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "command_companion",
+    "companion",
+    "create_companion",
+    "duration_window",
+    "expire",
+    "magic_item_root",
+    "persist",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "activation proximity-to-item predicate",
+      "justification": "The current activation gate vocabulary can express holding/wearing states, but not being within a fixed distance of the source item.",
+      "evidence": "While you are within 5 feet of this brazier, you can take a Magic action..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "spawn placement rooted on source item",
+      "justification": "The current spawned-creature range header cannot express nearest-valid-space placement relative to the item instead of the caster.",
+      "evidence": "The elemental appears in an unoccupied space as close to the brazier as possible..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "catalog_ref summon overrides",
+      "justification": "Catalog-ref summons cannot currently attach bounded item-specific overrides like language comprehension to the referenced monster stat block.",
+      "evidence": "understands your languages"
+    },
+    {
+      "kind": "new_variant",
+      "name": "optional command metadata on CreatureControl",
+      "justification": "The surface currently forces command range and fallback behavior even when the text does not specify them, which led to conservative placeholders.",
+      "evidence": "obeys your commands, and takes its turn immediately after you on your Initiative count"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as magic_item + spawned_creature and the tracer passed. The summon lifecycle, dawn reset, and commandable companion all fit. The verdict stays surface_widening because the item-specific proximity gate, nearest-to-item placement, language-comprehension override, and unspecified command metadata are not representable without approximation."
+}

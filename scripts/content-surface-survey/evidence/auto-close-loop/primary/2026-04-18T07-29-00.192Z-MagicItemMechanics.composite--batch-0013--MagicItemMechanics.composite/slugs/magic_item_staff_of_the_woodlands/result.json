@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object",
+      "justification": "Tree Form changes the staff itself into another form. The current activation surface can only attach direct effects to self, target, area, or mark, so the existing alter_item_kind atom cannot be aimed at the staff as an object.",
+      "evidence": "\"You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.last_charge_roll_nonmagical",
+      "justification": "The last-charge failure does not destroy the item; it strips its magic and leaves behind an ordinary Quarterstaff. Existing destruction policies only cover destruction or permanent exhaustion.",
+      "evidence": "\"If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.fall_on_end",
+      "justification": "Reverting from tree form causes creatures in the tree to fall. That is a deterministic mechanical rider, but the current surface does not include the taxonomy's fall-on-end effect atom.",
+      "evidence": "\"Any creature in the tree falls when the tree reverts to a staff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "MagicItemRecord and composite passive+activation mechanics fit the item overall, but Tree Form and the non-destruction last-charge clause are substantial unsupported mechanics. I did not author a partial Dhall file to avoid a misleading trace."
+}

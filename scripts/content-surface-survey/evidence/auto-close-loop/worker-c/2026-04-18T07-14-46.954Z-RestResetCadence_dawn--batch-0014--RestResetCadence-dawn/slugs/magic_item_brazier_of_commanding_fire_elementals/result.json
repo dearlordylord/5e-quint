@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_brazier_of_commanding_fire_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.spawned_creature",
+      "justification": "The item's core deterministic effect is an activated summon with companion control, dismissal, and a dawn reset. That shape already exists as the spell-side spawned_creature family, but magic items cannot currently use it or compose with it honestly.",
+      "evidence": "you can take a Magic action to summon a Fire Elemental. The elemental appears in an unoccupied space as close to the brazier as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The brazier can't be used this way again until the next dawn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "MagicItemMechanics only permits passive, activation, triggered_reaction, or composite over those families. The required summon/control lifecycle is available only under spell family spawned_creature, and EffectAtom does not expose create_companion/command_companion for direct-phase reuse."
+}

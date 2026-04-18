@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "create_obscured_area",
+      "justification": "Several table rows are purely deterministic area-visibility effects. The current surface can model damage, conditions, movement, and travel, but it has no atom for creating a Lightly or Heavily Obscured area.",
+      "evidence": "Heavy rain falls for 1 minute ... During that time, the area of effect is Lightly Obscured."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object",
+      "justification": "One row targets an object rather than a creature, self, or area. The v4 taxonomy lists object attachment, but the authored TS surface does not expose it.",
+      "evidence": "An object of the GM's choice disappears into the Ethereal Plane. The object must be neither worn nor carried, within 120 feet of the chosen point of origin, and no larger than 10 feet in any dimension."
+    },
+    {
+      "kind": "new_variant",
+      "name": "TargetSelection.closest_to_point",
+      "justification": "Multiple rows resolve against the creature nearest the chosen point of origin. Current target selection can choose one, choose up to N, or any number, but cannot express nearest-creature targeting.",
+      "evidence": "The creature closest to the chosen point of origin is enlarged ..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.spawned_creature_outcome",
+      "justification": "The random table can branch into creature creation, but nested random-table outcomes only admit ActivationPhase variants. There is no way to express a one-off spawned creature result from a table branch without widening the phase surface.",
+      "evidence": "A magically formed creature appears in an unoccupied space as close to the chosen point of origin as possible."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The magic-item shell fits existing activation/charge/destruction shapes, but the effect table does not. In addition to the widenings above, the item also pressures random target selection among multiple possible subjects and line-origin overrides for Gust of Wind and Lightning Bolt."
+}

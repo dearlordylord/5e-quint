@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "The current passive surface can encode the Grappled-escape advantage, but it has no effect atom for deterministic carrying-capacity changes or for treating a creature as one size larger when resolving capacity.",
+      "evidence": "You also count as one size larger when determining your carrying capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Partial fit only. The first clause maps cleanly to a passive species trait grant: modify_roll_advantage on ability_check with conditionFilter [\"grappled\"]. I did not author a partial unit because the carrying-capacity clause would be silently lost."
+}

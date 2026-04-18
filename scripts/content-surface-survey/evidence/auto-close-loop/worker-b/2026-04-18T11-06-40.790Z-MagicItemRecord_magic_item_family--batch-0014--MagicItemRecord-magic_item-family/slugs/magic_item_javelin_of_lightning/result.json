@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_damage_type",
+      "justification": "The item has an always-on on-hit rider that changes the weapon's dealt damage type from its normal type to another type without adding damage, replacing damage, or granting spell access. The current surface has no honest effect atom for damage-type substitution on weapon hits.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_item_to_hand",
+      "justification": "The Lightning Bolt activation deterministically relocates the thrown weapon back to the wielder's hand after resolution. The current surface has no item-return effect; creature teleport and exile atoms are not honest substitutes.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Lightning Bolt half otherwise fits an activated magic-item shape with replace_attack economy, fixed-DC area save, half damage on success, and dawn reset. I did not author a partial item because omitting the passive damage-type substitution or the return-to-hand rider would misrepresent the unit."
+}

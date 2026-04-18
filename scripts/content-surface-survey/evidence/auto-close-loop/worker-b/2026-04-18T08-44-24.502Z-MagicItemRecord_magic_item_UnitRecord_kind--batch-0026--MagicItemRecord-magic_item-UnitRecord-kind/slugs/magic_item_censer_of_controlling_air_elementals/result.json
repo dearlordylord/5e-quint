@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "catalog_ref summon payload for magic-item spawned creature",
+      "justification": "The existing magic-item summon family only accepts an inline stat block, but this item summons a named existing monster and adds item-specific control and dismissal rules on top of that catalog creature.",
+      "evidence": "you can take a Magic action to summon an Air Elemental"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item fits the existing magic-item summon family at a high level, but not honestly with the current inline-only statBlock payload because the source text names an external monster stat block rather than providing one inline."
+}

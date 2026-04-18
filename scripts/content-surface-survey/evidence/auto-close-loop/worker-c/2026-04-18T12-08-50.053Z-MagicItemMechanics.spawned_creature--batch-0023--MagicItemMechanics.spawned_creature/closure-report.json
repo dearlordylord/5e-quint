@@ -1,0 +1,36 @@
+{
+  "cluster": "MagicItemMechanics.spawned_creature",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_figurine_of_wondrous_power",
+    "magic_item_stone_of_controlling_earth_elementals"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_figurine_of_wondrous_power",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_stone_of_controlling_earth_elementals",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

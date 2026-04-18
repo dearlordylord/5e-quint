@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellOverride.restricted_mode_options",
+      "justification": "A granted spell can currently override DC and target restriction, but not narrow the spell's internal cast-time choice space. This item only allows specific Command options.",
+      "evidence": "\"Command\" (\"flee\" or \"grovel\" only)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellOverride.area_shape",
+      "justification": "A granted spell can currently reference an existing spell record, but cannot override that spell's printed area dimensions when an item specifies a different template.",
+      "evidence": "\"Fear\" (60-foot Cone)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The item chassis fits the existing magic-item activation surface: 7-charge pool, held activation, fixed DC 15, dawn recharge of 1d6+1, and last-charge destruction roll. The blocker is item-scoped overrides on the granted spells, so no Dhall/JSON/trace was authored."
+}

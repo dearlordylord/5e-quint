@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "apply_condition_effect",
+  "archivedAt": "2026-04-18T13:32:55.033Z",
+  "selectedSlugs": [
+    "befuddlement",
+    "command"
+  ]
+}

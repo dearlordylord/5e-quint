@@ -1,0 +1,36 @@
+{
+  "unit_slug": "magic_item_wand_of_lightning_bolts",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "qualified_attunement_requirement",
+      "justification": "The current record can represent that an item requires attunement, but not who is eligible to attune. This wand's core mechanics fit; only the spellcaster-only attunement qualifier is lost.",
+      "evidence": "Rare (Requires Attunement by a Spellcaster)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored successfully as a magic_item activation using holding_item, charge_pool, charge_cast lightning_bolt at levels 3-5 with fixed DC 15, dawn recharge, and last-charge destruction. Remaining gap is attunement eligibility qualifier only."
+}

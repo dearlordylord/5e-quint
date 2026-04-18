@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_temp_hp",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "polymorph",
+    "true_polymorph"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "polymorph",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "true_polymorph",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

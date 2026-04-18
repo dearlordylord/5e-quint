@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_stone_of_controlling_earth_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_touching_ground",
+      "justification": "The item activation has a real grounded-use gate that cannot be represented by the existing holding/wearing predicates.",
+      "evidence": "\"While touching this 5-pound stone to the ground, you can take a Magic action to summon an Earth Elemental.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CreatureControl.commandRange.unspecified",
+      "justification": "The summon obeys commands, but the text gives no numeric command radius; the current required `commandRangeFeet` field forces invented data.",
+      "evidence": "\"The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CreatureControl.defaultBehavior.unspecified",
+      "justification": "The control surface currently requires a fallback behavior even when the source text does not define one.",
+      "evidence": "\"...obeys your commands...\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content files. The item fits the existing magic-item spawned-creature family in broad outline, but current surface fields force fabricated activation/control details."
+}

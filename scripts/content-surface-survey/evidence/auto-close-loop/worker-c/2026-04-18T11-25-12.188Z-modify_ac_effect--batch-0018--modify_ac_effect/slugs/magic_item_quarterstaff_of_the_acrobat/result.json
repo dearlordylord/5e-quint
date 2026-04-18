@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_form",
+      "justification": "The surface can express changing an item's form with `alter_item_kind`, but it cannot honestly gate passive or reaction mechanics on the item's current form.",
+      "evidence": "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only). Attack Deflection (Quarterstaff Form Only). Ranged Weapon (Quarterstaff Form Only)."
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item has a deterministic light-emission toggle, and no existing effect atom represents creating or extinguishing emitted light.",
+      "evidence": "While holding this weapon, you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light as a Bonus Action."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_weapon_property",
+      "justification": "The item temporarily gives the quarterstaff the Thrown property in one form, and the current authored surface has no runtime weapon-property grant effect.",
+      "evidence": "This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "return_item_after_ranged_attack",
+      "justification": "The weapon automatically returns to the wielder's hand after a specific attack event, which is neither a passive numeric modifier nor an existing activation/reaction effect.",
+      "evidence": "Immediately after you make a ranged attack with the weapon, it flies back to your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit would otherwise be a composite magic item, but the unit cannot be authored honestly without form-state gating plus new atoms for emitted light and the thrown/returning weapon rider. No content/tracer files were produced."
+}

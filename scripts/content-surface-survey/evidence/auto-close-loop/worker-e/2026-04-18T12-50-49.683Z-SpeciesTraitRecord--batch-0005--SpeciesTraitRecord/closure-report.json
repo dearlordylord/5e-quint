@@ -1,0 +1,36 @@
+{
+  "cluster": "SpeciesTraitRecord",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "species_dwarf_dwarven_resilience",
+    "species_elf_elven_lineage"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "species_dwarf_dwarven_resilience",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "species_elf_elven_lineage",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

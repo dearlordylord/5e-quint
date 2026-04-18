@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "modify_ability_score",
+  "archivedAt": "2026-04-18T09:52:45.670Z",
+  "selectedSlugs": [
+    "magic_item_tome_of_understanding",
+    "magic_item_headband_of_intellect"
+  ]
+}

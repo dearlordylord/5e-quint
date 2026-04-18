@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_necklace_of_fireballs",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityHeader.range",
+      "justification": "The item otherwise fits the existing magic_item activation family, save_gate payload, fixed DC, and resource_spent_linear damage scaling, but non-spell activated abilities currently have no authored range. Without a range field, the necklace's 60-foot throw cannot be represented honestly and the tracer would fall back to a false self-range context.",
+      "evidence": "You can take a Magic action to detach a bead and throw it up to 60 feet away."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The mechanics family is already present. Multi-bead scaling is already supported by DiceAmount.resource_spent_linear; the only blocking gap is non-spell activation range."
+}

@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "GrantedSpellAreaOverride.relative_to_granted_spell",
+      "justification": "The current surface can only override a granted spell with a concrete AreaShapeSpec. This item modifies Web by reference to the spell's printed area instead of naming a new fixed shape, so a relative multiplier is needed to encode it honestly.",
+      "evidence": "\"The web created by the spell fills twice its normal area.\""
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Composite magic-item structure exists for the poison resistance, linked climb speed, and once-per-dawn spell use. I did not author content because the doubled-area Web rider cannot be represented honestly with the current areaOverride shape. Spider Walk is also not surfaced cleanly: the current prototype treats web terrain / web-specific movement geometry as caller-owned, so that rider would remain omitted even after the spell-cast gap is addressed."
+}

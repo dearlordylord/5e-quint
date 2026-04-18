@@ -1,0 +1,36 @@
+{
+  "cluster": "cunning_strike_option",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "rogue_devious_strikes_l14",
+    "rogue_supreme_sneak_l9"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "rogue_devious_strikes_l14",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "rogue_supreme_sneak_l9",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

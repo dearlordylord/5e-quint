@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 25,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "passive_advancement",
+  "archivedAt": "2026-04-18T15:02:50.555Z",
+  "selectedSlugs": [
+    "cleric_ability_score_improvement_l4",
+    "paladin_epic_boon_l19"
+  ]
+}

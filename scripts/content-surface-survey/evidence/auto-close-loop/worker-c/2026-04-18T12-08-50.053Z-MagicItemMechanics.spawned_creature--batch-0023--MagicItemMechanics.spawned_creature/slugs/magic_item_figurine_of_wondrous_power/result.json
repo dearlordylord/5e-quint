@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_figurine_of_wondrous_power",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "companion_active_rider_scope",
+      "justification": "Magic-item summon variants need extra passive or ongoing mechanics that apply only while a spawned creature form exists, and sometimes only while the wielder rides that creature.",
+      "evidence": "\"While in raven form, the figurine grants you the ability to cast Animal Messenger on it.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "duration_linked_charge_drain_for_spawned_creature",
+      "justification": "The current item resource model spends charges on activation, but Goat of Traveling spends charges as time passes during the active creature duration and auto-reverts on exhaustion.",
+      "evidence": "\"It has 24 charges, and each hour or portion thereof it spends in goat form costs 1 charge.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "spawned_creature_control_randomization",
+      "justification": "Obsidian Steed needs a use-time random control state that can ignore commands and then trigger a transport effect when mounted under that state.",
+      "evidence": "\"The figurine has a 10 percent chance each time you use it to ignore your orders, including a command to revert to figurine form.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "temporary_item_creation_tied_to_companion_reversion",
+      "justification": "Goat of Terror creates temporary magic weapons from the active creature's horns and removes them automatically when the creature reverts.",
+      "evidence": "\"The weapons disappear and the horns return when the goat reverts to figurine form.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content JSON or a trace. The collection/variant wrapper exists, but several figurines require companion-scoped riders, time-driven charge drain, and randomized control behavior that the current magic-item spawned-creature surface cannot represent honestly."
+}

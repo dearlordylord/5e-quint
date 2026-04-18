@@ -1,0 +1,36 @@
+{
+  "cluster": "heal_hp_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "mass_heal",
+    "power_word_heal"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "mass_heal",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "power_word_heal",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

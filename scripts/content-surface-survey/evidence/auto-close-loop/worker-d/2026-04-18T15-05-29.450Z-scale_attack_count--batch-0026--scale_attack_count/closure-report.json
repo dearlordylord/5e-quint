@@ -1,0 +1,36 @@
+{
+  "cluster": "scale_attack_count",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "fighter_extra_attack",
+    "ranger_extra_attack_l5"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 2,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "fighter_extra_attack",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "ranger_extra_attack_l5",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

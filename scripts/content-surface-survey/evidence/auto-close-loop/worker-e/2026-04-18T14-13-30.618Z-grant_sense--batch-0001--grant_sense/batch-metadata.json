@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "grant_sense",
+  "archivedAt": "2026-04-18T14:18:17.709Z",
+  "selectedSlugs": [
+    "species_dragonborn_darkvision",
+    "species_elf_elven_lineage"
+  ]
+}

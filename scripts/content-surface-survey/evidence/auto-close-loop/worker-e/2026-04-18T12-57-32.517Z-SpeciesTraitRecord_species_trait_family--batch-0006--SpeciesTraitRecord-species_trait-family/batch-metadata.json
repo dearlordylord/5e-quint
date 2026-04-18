@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 6,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "SpeciesTraitRecord + species_trait family",
+  "archivedAt": "2026-04-18T13:02:01.959Z",
+  "selectedSlugs": [
+    "species_goliath_large_form",
+    "species_orc_adrenaline_rush"
+  ]
+}

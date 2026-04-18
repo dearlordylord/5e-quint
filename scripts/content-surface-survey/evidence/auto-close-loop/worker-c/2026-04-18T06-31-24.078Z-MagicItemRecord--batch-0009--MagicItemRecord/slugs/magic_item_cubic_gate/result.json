@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destination_override",
+      "justification": "The existing magic-item activation shape can model charges, dawn recharge, and charge-cast spell access, but it cannot constrain casts to the plane keyed to the pressed cube face. Omitting that would author a false item that can cast Gate or Plane Shift to arbitrary destinations.",
+      "evidence": "\"Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destination_override",
+      "justification": "Plane Shift from the cube is likewise parameterized by the selected face rather than chosen freely at cast time. The current surface has target restrictions only; it has no spell-parameter override for destination plane.",
+      "evidence": "\"Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic-item activation + charge_pool + dawn recharge fits. The blocker is destination-plane binding to the selected cube face. I did not author a placeholder Dhall/JSON because that would misstate the item's core mechanic."
+}

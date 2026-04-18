@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 7,
+  "source": "srd-5.2.1",
+  "kind": "species_trait",
+  "backend": "codex",
+  "cluster": "SpeciesTraitRecord + species_trait mechanics family",
+  "archivedAt": "2026-04-18T14:58:47.654Z",
+  "selectedSlugs": [
+    "species_gnome_gnomish_lineage",
+    "species_goliath_powerful_build"
+  ]
+}

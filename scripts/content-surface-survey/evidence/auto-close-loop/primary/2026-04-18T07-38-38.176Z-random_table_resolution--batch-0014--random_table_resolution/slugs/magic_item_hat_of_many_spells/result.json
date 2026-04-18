@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "delegated_open_list_spell_cast",
+      "justification": "The item's main property does not grant a named spell. It chooses an arbitrary eligible Wizard spell at use time, then on success delegates resolution to that spell's own authored procedure.",
+      "evidence": "While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation_cost.uses_delegated_spell_casting_time",
+      "justification": "The item's activation cost is not a fixed action/bonus action/reaction. It inherits the chosen spell's normal casting time, which the current magic-item activation surface cannot express.",
+      "evidence": "On a successful check, you cast the spell using its normal casting time..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation_resource.spell_slot_of_chosen_spell_level",
+      "justification": "The property consumes the user's own spell slot rather than an item use-count or charge pool.",
+      "evidence": "Once you decide on the spell, you must expend a spell slot of the spell's level."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_check_gate.dc_plus_chosen_spell_level",
+      "justification": "The Arcana check DC is dynamic and depends on the chosen spell's level; current ability_check_gate only carries a fixed numeric DC.",
+      "evidence": "make an Intelligence (Arcana) check (DC 10 plus the spell's level)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON because the primary Unknown Spell property cannot be represented honestly with the current magic-item activation surface. Secondary mishap-table results add more surface pressure, including random delegated spell casts, object creation, and uncontrolled creature appearance. The Spellcasting Focus text is non-core support text rather than the blocking issue."
+}

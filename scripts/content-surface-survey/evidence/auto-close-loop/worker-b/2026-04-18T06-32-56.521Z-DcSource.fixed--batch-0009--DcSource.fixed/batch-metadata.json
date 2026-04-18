@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 9,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "DcSource.fixed",
+  "archivedAt": "2026-04-18T06:38:52.273Z",
+  "selectedSlugs": [
+    "magic_item_wand_of_fireballs",
+    "magic_item_wand_of_lightning_bolts"
+  ]
+}

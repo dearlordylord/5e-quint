@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_container_item",
+      "justification": "The item's primary mechanic is persistent extradimensional storage with access and capacity rules, not a passive grant or an activated ability.",
+      "evidence": "The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. Retrieving an item from the bag requires a Utilize action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_destruction.non_charge_trigger",
+      "justification": "Current destruction models only cover charge depletion. This item is destroyed by overload, damage, and a specific cross-item interaction.",
+      "evidence": "If the bag is overloaded, pierced, or torn, it is destroyed... Placing a Bag of Holding inside an extradimensional space ... instantly destroys both items..."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "cross_item_extradimensional_collision",
+      "justification": "The current families cannot represent a deterministic item-inside-item collision that destroys both items and releases a hazardous gate effect at the placement location.",
+      "evidence": "opens a gate to the Astral Plane. The gate originates where the one item was placed inside the other."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest content/tracer artifact was authored. `transport_exile` exists, but the missing piece is the item-state and cross-item trigger structure needed to host the Bag of Holding's real behavior."
+}

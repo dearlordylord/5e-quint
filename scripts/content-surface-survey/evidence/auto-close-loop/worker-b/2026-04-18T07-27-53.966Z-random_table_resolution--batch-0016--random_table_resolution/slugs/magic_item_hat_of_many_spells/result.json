@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "delegated_spell_cast_from_catalog_choice",
+      "justification": "The item's primary procedure is not a fixed named-spell grant. It asks the user to choose an arbitrary Wizard spell subject to rule predicates, spend the matching slot, resolve an ability check, and on success cast that chosen spell using the chosen spell's own mechanics and casting time. No existing magic-item family or effect atom can delegate into an arbitrary catalog spell procedure this way.",
+      "evidence": "While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast... On a successful check, you cast the spell using its normal casting time."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.create_object_or_item",
+      "justification": "Several random-failure branches create mundane or magic objects/items that persist for a duration. The current surface has no authored effect atom for producing inventory-like objects or temporary magic items.",
+      "evidence": "You pull a nonmagical object out of the hat... You pull a magic item out of the hat... The GM chooses the item, which disappears after 1 hour if it's not consumed or destroyed before then."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Class-list attunement, short-or-long-rest cadence, the Arcana ability check, and several failure-table branches individually resemble existing shapes. The honest blocker is the success path: this item proxies an arbitrary Wizard spell choice and reuses that spell's own casting time/procedure, which the current magic-item surface cannot express. I therefore did not author content/magic_item_hat_of_many_spells.dhall."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_robe_of_the_archmagi",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "modify_roll_numeric",
+    "modify_save_dc",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.all_of",
+      "justification": "The robe's AC formula applies only when the item is being worn and the wearer is not wearing armor. The current equipment predicate surface can express each condition separately but not their conjunction.",
+      "evidence": "You gain these benefits while wearing the robe. Armor. If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.saveSourceFilter",
+      "justification": "The item grants advantage only on saving throws caused by spells or other magical effects. The current roll-advantage surface can narrow by save ability or attacker type, but not by the source of the save.",
+      "evidence": "Magic Resistance. You have Advantage on saving throws against spells and other magical effects."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored an honest partial subset in content/magic_item_robe_of_the_archmagi.dhall: the War Mage benefits (+2 spell save DC, +2 spell attack rolls) with wearing-item and attunement restrictions. The Armor and Magic Resistance clauses were omitted rather than over-applied."
+}

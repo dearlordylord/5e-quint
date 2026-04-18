@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.filtered_spell_list_cast",
+      "justification": "The current surface can only name fixed spell ids. This item attempts an immediate cast of any qualifying Wizard spell chosen at activation time, bounded by list membership, slot level, and material-cost constraints.",
+      "evidence": "\"While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can't have Material components costing more than 1,000 GP.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.spell_slot",
+      "justification": "The item's activation spends the user's spell slot rather than a use-count or charge pool. The current non-spell activation resource grammar cannot consume spell slots.",
+      "evidence": "\"Once you decide on the spell, you must expend a spell slot of the spell's level.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "branch_conditional_cooldown_on_success",
+      "justification": "The once-per-rest lockout applies only after a successful check. Current activation resources are consumed at activation time, not conditionally on one branch of an ability_check_gate.",
+      "evidence": "\"On a successful check, you cast the spell using its normal casting time, and you can't use this property again until you finish a Short or Long Rest.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "create_portal",
+      "justification": "The failure table can open a temporary two-way portal anchored in space. Existing exile/teleport atoms move creatures; they do not create a persistent portal object or window.",
+      "evidence": "\"A vertical, 10-foot-diameter, two-way portal to another plane of existence opens in an unoccupied space within 30 feet of you and remains open until the end of your next turn.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a composite magic item, but the unit cannot be authored honestly with the current surface. In addition to the blockers above, the Spellcasting Focus property and several random-table branches (object/item production, uncontrolled creature appearance) would need further follow-up widenings or explicit omissions."
+}

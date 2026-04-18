@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.ability_check_purpose_filter",
+      "justification": "The passive family fits, but the current roll-advantage surface cannot narrow an ability check to the specific purpose of ending Grappled. Skill-based narrowing would be dishonest.",
+      "evidence": "You have Advantage on any ability check you make to end the Grappled condition."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "The trait changes carrying-capacity math by treating the creature as one size larger. No existing effect atom or passive predicate captures that deterministic inventory/load-bearing rule.",
+      "evidence": "You also count as one size larger when determining your carrying capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because the unit cannot be encoded honestly with the current surface. The top-level kind and passive family exist, but one rider needs a new surface variant and the other needs a new atom."
+}

@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_proficiency",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "bard_bonus_proficiencies_l3",
+    "cleric_divine_order_l1"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "bard_bonus_proficiencies_l3",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "cleric_divine_order_l1",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

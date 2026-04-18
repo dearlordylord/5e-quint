@@ -1,0 +1,58 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "commit",
+    "direct_apply",
+    "grant",
+    "holding_item",
+    "interrupt_resolution",
+    "magic_item_root",
+    "modify_ac",
+    "modify_damage_numeric",
+    "modify_roll_numeric",
+    "prepare",
+    "prompt",
+    "reaction_quota",
+    "reaction_window",
+    "respond",
+    "rest_window",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "commits",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "prepares",
+    "prompts",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item has a deterministic, toggleable dim-light state with a fixed radius, but the current effect atoms cannot represent light emission or extinguishing.",
+      "evidence": "While holding this weapon, you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light as a Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The existing alter_item_kind atom can describe a form change, but the authored surface cannot target the held weapon itself because Attachment lacks an item/object branch.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_weapon_profile",
+      "justification": "The item grants the Thrown property with explicit ranges and then returns to the wielder's hand after a ranged attack. That is a weapon-profile change plus a deterministic post-attack return behavior not covered by existing atoms.",
+      "evidence": "This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet. Immediately after you make a ranged attack with the weapon, it flies back to your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Encoded supported subset only: held-item +2 attack/damage bonus and Attack Deflection. Typecheck and tracer both passed. Acrobatic Assist was omitted because its form restriction depends on the missing item-form surface."
+}

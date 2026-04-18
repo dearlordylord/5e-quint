@@ -1,0 +1,47 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_speed",
+    "grant_spell_access",
+    "magic_item_root",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "ignore_web_entrapment",
+      "justification": "The item grants immunity to being caught by webs specifically, not a blanket immunity to a core condition. Existing condition-immunity atoms are too broad.",
+      "evidence": "\"You can't be caught in webs of any sort\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "ignore_specific_terrain_cost",
+      "justification": "The surface cannot currently express moving through one named terrain or hazard with reduced movement cost while leaving all other terrain rules unchanged.",
+      "evidence": "\"can move through webs as if they were Difficult Terrain\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.areaOverride.relative_area_multiplier",
+      "justification": "The current area override only supports absolute replacement geometry. This rule is a relative multiplier on the granted spell's normal area.",
+      "evidence": "\"The web created by the spell fills twice its normal area\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored a partial composite encoding for poison resistance, climb speed, and once-per-dawn Web with fixed DC 13. Omitted Spider Walk and the Web area multiplier because encoding either with existing atoms would be misleading."
+}

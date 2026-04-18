@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 12,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemMechanics.composite",
+  "archivedAt": "2026-04-18T06:59:45.941Z",
+  "selectedSlugs": [
+    "magic_item_staff_of_the_woodlands",
+    "magic_item_talisman_of_pure_good"
+  ]
+}

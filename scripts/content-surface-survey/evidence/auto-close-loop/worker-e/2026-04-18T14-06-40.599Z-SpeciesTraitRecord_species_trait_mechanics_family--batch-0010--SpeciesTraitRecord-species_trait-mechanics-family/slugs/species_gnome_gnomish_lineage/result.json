@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_gnome_gnomish_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_lineage_choice",
+      "justification": "This trait is a build-time choose-one branch that selects one of multiple mutually exclusive mechanical payloads. The current SpeciesTraitRecord can only carry one PassiveMechanics or one ActivatedAbilityMechanics payload, not a lineage picker over distinct payloads.",
+      "evidence": "Choose one of the following options; whichever one you choose..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.mode = prepared_with_proficiency_bonus_free_casts",
+      "justification": "Forest Gnome grants a normally prepared spell, allows a number of free casts equal to Proficiency Bonus, refreshes on a Long Rest, and still permits slot-casting. Existing grant_spell_access modes only cover once-per-long-rest and do not carry a scalable free-cast pool.",
+      "evidence": "You also always have the Speak with Animals spell prepared. You can cast it without a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. You can also use any spell slots you have to cast the spell."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "stored_device_created_by_spell_option",
+      "justification": "Rock Gnome creates a persistent Tiny device keyed to one chosen Prestidigitation effect, later activated by touch with a Bonus Action, capped at three concurrent devices, and self-expiring after 8 hours or a Utilize-action dismantle. That is not an existing passive or single activation payload.",
+      "evidence": "you can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device ... the device produces that effect whenever you or another creature takes a Bonus Action to activate it with a touch ... You can have three such devices in existence at a time, and each falls apart 8 hours after its creation or when you dismantle it with a touch as a Utilize action."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Forest Gnome alone is close to existing spell-access machinery but still needs a PB-scaled free-cast mode and trait-scoped spellcasting-ability choice; Rock Gnome forces a larger structural expansion around created devices and lineage selection."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_on_hit_trigger_component",
+      "justification": "The item has a deterministic weapon-hit rider, but current magic-item mechanics only allow passive grants, activated abilities, triggered reactions, or composites over those families. There is no honest non-spell on-hit delivery family for an equipped item.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "replace_weapon_damage_type",
+      "justification": "The rider changes the damage type of the weapon's hit from piercing to lightning. Existing atoms can add damage, change numeric damage, or grant resistances, but none substitute the damage type of an existing weapon hit.",
+      "evidence": "you can have it deal Lightning damage instead of Piercing damage"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_return_after_thrown_activation",
+      "justification": "The Lightning Bolt activation deterministically returns the thrown weapon to the wielder immediately after resolution. The current attachment/lifecycle surface has no way to target the item itself and express that return behavior on a magic-item activation.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The Lightning Bolt half mostly resembles an activated magic-item ability: replace_attack cost, fixed DC 13 area save, 4d6 lightning damage, dawn reset. I did not author Dhall/JSON/trace because the item's first paragraph is a real mechanical rider that cannot be represented honestly, and the return-to-hand clause is also not currently modeled."
+}

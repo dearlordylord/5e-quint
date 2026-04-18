@@ -1,0 +1,201 @@
+{
+  "attunementRestriction": {
+    "classes": [
+      "druid"
+    ],
+    "kind": "class_list"
+  },
+  "description": "This staff has 6 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you have a +2 bonus to spell attack rolls. While holding the staff, you can cast Animal Friendship (1 charge), Awaken (5 charges), Barkskin (2 charges), Locate Animals or Plants (2 charges), Pass without Trace (2 charges), Speak with Animals (1 charge), Speak with Plants (3 charges), or Wall of Thorns (6 charges) from it, using your spell save DC. Tree Form: you can expend 1 charge to transform the staff into a healthy tree and later return it to staff form; any creature in the tree falls when it reverts. The staff regains 1d6 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_staff_of_the_woodlands",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "attack_roll"
+            ],
+            "weaponFilter": {
+              "itemId": "magic_item_staff_of_the_woodlands",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_damage_numeric",
+            "weaponFilter": {
+              "itemId": "magic_item_staff_of_the_woodlands",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "spell_attack_roll"
+            ]
+          }
+        ]
+      },
+      {
+        "activationCost": {
+          "kind": "action"
+        },
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "animal_friendship"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 5,
+                  "kind": "charge_cast",
+                  "maxLevel": 5,
+                  "minLevel": 5,
+                  "perLevelCharges": 0
+                },
+                "spellId": "awaken"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 2,
+                  "kind": "charge_cast",
+                  "maxLevel": 2,
+                  "minLevel": 2,
+                  "perLevelCharges": 0
+                },
+                "spellId": "barkskin"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 2,
+                  "kind": "charge_cast",
+                  "maxLevel": 2,
+                  "minLevel": 2,
+                  "perLevelCharges": 0
+                },
+                "spellId": "locate_animals_or_plants"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 2,
+                  "kind": "charge_cast",
+                  "maxLevel": 2,
+                  "minLevel": 2,
+                  "perLevelCharges": 0
+                },
+                "spellId": "pass_without_trace"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "speak_with_animals"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 3,
+                  "kind": "charge_cast",
+                  "maxLevel": 3,
+                  "minLevel": 3,
+                  "perLevelCharges": 0
+                },
+                "spellId": "speak_with_plants"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 6,
+                  "kind": "charge_cast",
+                  "maxLevel": 6,
+                  "minLevel": 6,
+                  "perLevelCharges": 0
+                },
+                "spellId": "wall_of_thorns"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "dawn",
+          "regain": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "kind": "fixed"
+          }
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 6
+          },
+          "kind": "charge_pool"
+        }
+      }
+    ]
+  },
+  "name": "Staff of the Woodlands",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StaffOfTheWoodlands"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destinationOverride",
+      "justification": "The existing magic-item activation + charge-cast surface can express casting a named spell, but it cannot express that the item's chosen face fixes the spell's destination plane for that cast.",
+      "evidence": "Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.keyed_plane_choice",
+      "justification": "The item chooses among pre-keyed cube faces, and the selected face must propagate into the granted spell cast as a constrained destination rather than an unconstrained spell parameter.",
+      "evidence": "Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_cubic_gate.dhall. Top-level fit exists as a magic-item activation with a charge pool and dawn recharge, but the current surface cannot honestly encode the keyed-plane destination parameter on Gate and Plane Shift casts."
+}

@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_spell_access",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_crystal_ball_of_mind_reading",
+    "magic_item_ring_of_jumping"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 1,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_crystal_ball_of_mind_reading",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_ring_of_jumping",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_charming",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "triggered non-reaction magic-item ability",
+      "justification": "The item has a trigger-bound property that does not consume a Reaction, but the current magic-item triggered ability surface only models reaction-cost abilities.",
+      "evidence": "If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one."
+    },
+    {
+      "kind": "new_variant",
+      "name": "triggering save outcome override",
+      "justification": "The current effect surface can negate or reflect a triggering spell, but it cannot convert the triggering failed saving throw into a success.",
+      "evidence": "you can turn your failed save into a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Cast Spell and Reflect Enchantment fit the existing composite magic-item surface, but Resist Enchantment does not. Per protocol, no content or trace files were authored."
+}

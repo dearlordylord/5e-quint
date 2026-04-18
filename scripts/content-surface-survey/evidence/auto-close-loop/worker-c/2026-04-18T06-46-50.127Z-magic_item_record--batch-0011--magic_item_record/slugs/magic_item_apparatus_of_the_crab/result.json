@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_vehicle_magic_item",
+      "justification": "The item is not an always-on grant or a one-shot activation. It is a persistent controllable object/vehicle with its own statistics, occupancy, sealed-compartment state, movement/attack affordances gated by lever positions, and environmental rules. The current magic-item surface has no family for a stateful vehicle or object that remains in play and is operated through repeated control inputs.",
+      "evidence": "The Apparatus of the Crab is a Large object with the following statistics: AC 20; HP 200; Speed 30 ft., Swim 30 ft. (or 0 ft. if the legs aren't extended); Immunity to Poison and Psychic damage."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Honest encoding would need a new persistent vehicle/object family with crew/occupancy state, lever-controlled mode changes, and onboard movement/attack procedures. Treating the levers as ordinary activation phases would lose the item's persistent state and produce a misleading trace."
+}

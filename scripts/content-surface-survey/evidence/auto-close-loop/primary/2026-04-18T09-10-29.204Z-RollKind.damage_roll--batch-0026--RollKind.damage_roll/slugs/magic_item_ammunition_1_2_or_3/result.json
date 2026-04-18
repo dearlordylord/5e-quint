@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_ammunition_1_2_or_3",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "grant",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.on_hit_becomes_nonmagical",
+      "justification": "The item's main passive bonus fits the current magic-item surface, but the authored surface cannot express a passive item losing its magic when a hit lands.",
+      "evidence": "\"Once it hits a target, the ammunition is no longer magical.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a magic-item variant collection using existing rarity-scaled attack and damage bonus support. The per-hit loss of magic is omitted. Quantity/value text about bundles of ten or twenty pieces is non-core inventory/economy detail and was not modeled."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_lineage_progression_choice",
+      "justification": "The trait is a build-time choice over lineage packages with level-gated grants at character levels 1, 3, and 5. The current species-trait families only support a flat passive grant list or a single activated ability.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage. When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellcastingAbilityChoice",
+      "justification": "The lineage-granted spells use a build-time choice of Intelligence, Wisdom, or Charisma as their spellcasting ability, and the current spell-access grant shape has no way to carry that binding.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.mutable_cantrip_list",
+      "justification": "High Elf pressure requires a granted cantrip that can be replaced on each Long Rest from a named spell list, which the current spell-access modes do not model.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content/species_elf_elven_lineage.dhall because any current-shape encoding would either collapse the lineage choice, omit the level-3/5 progression, or lie about the High Elf cantrip replacement and chosen spellcasting ability."
+}

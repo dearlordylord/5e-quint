@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "substitute_damage_type",
+      "justification": "The item changes the damage type of a weapon hit from its normal type to Lightning without replacing the hit or adding extra damage.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_thrown_item",
+      "justification": "The activated bolt property returns the same thrown weapon to the wielder's hand immediately after resolving damage, which is not expressible as destruction, dismissal, or existing transport.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The once-per-dawn Lightning Bolt activation mostly matches the existing magic-item activation family, but the item's baseline damage-type substitution is a core mechanical rider with no current atom. Per protocol, I did not keep a partial authored unit that omits that rule."
+}

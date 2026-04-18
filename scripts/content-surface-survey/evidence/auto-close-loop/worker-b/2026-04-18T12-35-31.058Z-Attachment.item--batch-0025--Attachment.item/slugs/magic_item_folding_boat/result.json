@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less activated magic-item command",
+      "justification": "The existing magic-item activation family requires an ActivationResource and RestResetCadence, but Folding Boat's command words are repeatable Magic actions with no use-count, charges, or recharge cadence.",
+      "evidence": "This item also has three command words, each requiring a Magic action to use:"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item destruction on transformed-form HP reaching 0",
+      "justification": "The current ItemDestructionPolicy only models charge depletion. Folding Boat is destroyed when one of its vessel forms is reduced to 0 Hit Points, which is a different trigger tied to transformed object state.",
+      "evidence": "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
+    },
+    {
+      "kind": "new_variant",
+      "name": "container storage with unspecified capacity",
+      "justification": "The current container_storage profile requires explicit weight and volume caps. Folding Boat can store items in box form, but the quoted rules text in this unit does not provide a numeric storage capacity to author honestly.",
+      "evidence": "It can be opened to store items inside."
+    }
+  ],
+  "confidence": "high",
+  "notes": "alter_item_kind already covers box/rowboat/keelboat form changes, so this is not an atom gap. The honest blocker is surface shape: no unlimited command-word activation without a tracked resource, plus no destruction trigger keyed to vessel HP."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.variant_bundle",
+      "justification": "The SRD entry is one heading that expands into multiple mutually exclusive magic items, each with its own rarity and mechanics. A single MagicItemRecord cannot represent that honestly without inventing an impossible state where one stone grants every listed benefit at once.",
+      "evidence": "Many types of Ioun Stones exist, each type a distinct combination of shape and color."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_proficiency_bonus",
+      "justification": "The Mastery stone changes Proficiency Bonus directly. The current effect vocabulary can modify rolls and ability scores, but it has no effect atom for PB itself.",
+      "evidence": "Mastery (Legendary). Your Proficiency Bonus increases by 1 while this pale green prism orbits your head."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_elapsed_hours",
+      "justification": "The Regeneration stone grants periodic healing on an hourly cadence while orbiting. Existing ongoing triggers cover passive, turn-based, damage, and movement windows, but not elapsed time.",
+      "evidence": "Regeneration (Legendary). You regain 15 Hit Points at the end of each hour if you have at least 1 Hit Point while this white spindle orbits your head."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reservoir_item",
+      "justification": "The Reserve stone accepts spells cast into it, tracks remaining capacity by total spell levels stored, preserves original caster parameters, and later releases those stored spells. That is more than grant_spell_access or a charge pool.",
+      "evidence": "Reserve (Rare). This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because the umbrella Ioun Stone entry does not fit one honest MagicItemRecord. Some individual variants would fit current atoms if split into separate items (for example Protection, Agility, Intellect), but the assigned unit is the grouped SRD entry."
+}

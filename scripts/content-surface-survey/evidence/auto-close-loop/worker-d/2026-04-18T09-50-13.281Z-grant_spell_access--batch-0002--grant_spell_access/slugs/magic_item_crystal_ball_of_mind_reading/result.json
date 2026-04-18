@@ -1,0 +1,20 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded honestly as an attunement-gated passive magic item with two granted at-will spells. The existing grant_spell_access target and duration overrides covered the Detect Thoughts rider from the Scrying sensor without any surface changes."
+}

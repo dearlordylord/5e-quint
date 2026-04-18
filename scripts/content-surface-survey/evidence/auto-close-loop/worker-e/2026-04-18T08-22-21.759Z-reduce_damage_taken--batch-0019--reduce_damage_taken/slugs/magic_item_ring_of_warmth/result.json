@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_ring_of_warmth",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "reduce_damage_taken",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_environmental_temperature_protection",
+      "justification": "The current surface can encode the cold-damage reduction rider, but it has no effect atom for ongoing protection from ambient extreme temperature exposure while worn.",
+      "evidence": "while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit fits MagicItemRecord plus PassiveMechanics for its cold-damage reduction rider. The trace is clean for that subset. The environmental-temperature protection clause is omitted and tracked as missing atom support."
+}

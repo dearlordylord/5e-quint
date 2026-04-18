@@ -1,0 +1,16 @@
+{
+  "unit_slug": "cleric_ability_score_improvement_l4",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_feat"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded honestly as a cleric class feature with passive grant_feat(category=general). The later Cleric ASI levels are separate feature instances, not additional mechanics on the level-4 unit."
+}

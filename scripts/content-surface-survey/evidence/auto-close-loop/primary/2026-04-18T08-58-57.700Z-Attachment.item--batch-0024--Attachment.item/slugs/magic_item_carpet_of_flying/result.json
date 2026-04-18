@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item_or_object for non-spell activations",
+      "justification": "The carpet's mechanical subject is the existing magic item itself, not the user or a spawned creature. Current non-spell activations only reach self/target/area/mark creature-style attachments.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "command_existing_item_movement",
+      "justification": "The surface has command semantics only for spawned companions. Carpet of Flying needs a reusable way to direct an already-existing item's movement within a control radius, with speed depending on load.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "load_threshold predicate for movement modifiers",
+      "justification": "The item's speed changes when carried weight exceeds normal capacity but stays within double capacity. Existing predicates only cover HP thresholds, not carried-load thresholds.",
+      "evidence": "its Fly Speed is halved if it carries more than its normal capacity"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. The size table could fit existing magic-item variants, but the core mechanic still needs item/object attachment plus commandable-item movement and load-gated speed changes."
+}

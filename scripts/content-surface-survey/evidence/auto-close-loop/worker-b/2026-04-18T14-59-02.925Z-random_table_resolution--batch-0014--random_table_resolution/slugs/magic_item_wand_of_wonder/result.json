@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "activation_phase.embedded_spell_cast",
+      "justification": "Several random-table branches cast an existing spell immediately from the item while overriding how that cast resolves: fixed DC 15, chosen point of origin, and range extension to 120 feet when the spell's normal maximum range is shorter. The current surface can grant spell access persistently, but it cannot model an immediate one-shot embedded cast with per-cast overrides inside a magic-item activation branch.",
+      "evidence": "You cast a spell originating from the chosen point... Spells cast from the wand have a save DC of 15. If a spell's maximum range is normally less than 120 feet, it becomes 120 feet when cast from the wand."
+    },
+    {
+      "kind": "new_atom",
+      "name": "obscure_area",
+      "justification": "Two deterministic branches create temporary areas that become Lightly Obscured or Heavily Obscured. The current effect vocabulary has conditions, senses, targeting blocks, and movement modifiers, but no area-obscuration effect.",
+      "evidence": "During that time, the area of effect is Lightly Obscured... the area of effect is Heavily Obscured."
+    },
+    {
+      "kind": "new_variant",
+      "name": "attachment.object",
+      "justification": "One branch targets a non-carried object near the chosen point of origin and exiles it to the Ethereal Plane. The surface has no general object attachment in authored units, so there is no honest way to apply an exile effect to an object rather than a creature or area.",
+      "evidence": "An object of the GM's choice disappears into the Ethereal Plane. The object must be neither worn nor carried, within 120 feet of the chosen point of origin, and no larger than 10 feet in any dimension."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content/magic_item_wand_of_wonder.dhall/json/trace.md. The outer shell fits an existing magic-item activation with charge_pool, dawn recharge, and last-charge destruction, and the current surface already has random_table. The honest blockers are branch-local: embedded spell casts with overrides, obscured-area outcomes, and object targeting. Additional secondary pressure remains for uncontrolled temporary creature appearance and GM-random subject selection."
+}

@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SavingThrowSourceFilter.spell",
+      "justification": "The unit's passive benefit is narrower than the existing saving-throw source filter. The current surface can encode advantage against spells and other magical effects, but not spells only.",
+      "evidence": "\"While wearing this ring, you have Advantage on saving throws against spells.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The magic-item kind and composite passive + triggered-reaction family fit overall, and the reaction half matches existing trigger/effect shapes. I did not author content because the passive rider cannot be encoded honestly without broadening it beyond the SRD text."
+}

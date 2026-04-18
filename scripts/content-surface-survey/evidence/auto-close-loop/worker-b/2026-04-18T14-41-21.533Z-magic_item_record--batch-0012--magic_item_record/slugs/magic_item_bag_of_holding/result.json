@@ -1,0 +1,41 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "container_storage",
+    "grant",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "container_interaction",
+      "justification": "The current passive container shape records capacity and air supply but cannot express that retrieving an item from the container consumes a specific action quota.",
+      "evidence": "Retrieving an item from the bag requires a Utilize action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.overloaded_or_damaged",
+      "justification": "Magic-item destruction is currently modeled only for charge exhaustion or a none case. Bag of Holding needs destruction triggered by overload or physical damage instead.",
+      "evidence": "If the bag is overloaded, pierced, or torn, it is destroyed..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PassiveOperation.trigger.extradimensional_collision",
+      "justification": "The item has a deterministic triggered clause caused by being placed inside another extradimensional space, but non-spell passive operations only support elapsed-time cadence today.",
+      "evidence": "Placing a Bag of Holding inside an extradimensional space created by a Handy Haversack, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PassiveContainerState.inside_out_until_put_right",
+      "justification": "The bag can enter a reversible unusable state after being turned inside out, which is a passive item/container state transition not representable in the current surface.",
+      "evidence": "If the bag is turned inside out, its contents spill forth unharmed, but the bag must be put right before it can be used again."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the honest subset as a passive magic item with a container_storage grant. Typecheck and tracer both passed, but the trace only covers the storage profile; retrieval cost, destruction triggers, inside-out state, and extradimensional collision effects are omitted and recorded as surface gaps."
+}

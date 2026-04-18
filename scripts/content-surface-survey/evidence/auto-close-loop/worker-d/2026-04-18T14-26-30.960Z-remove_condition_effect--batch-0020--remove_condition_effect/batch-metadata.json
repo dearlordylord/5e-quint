@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 20,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "remove_condition_effect",
+  "archivedAt": "2026-04-18T14:31:06.641Z",
+  "selectedSlugs": [
+    "paladin_restoring_touch_l14",
+    "ranger_tireless_l10"
+  ]
+}

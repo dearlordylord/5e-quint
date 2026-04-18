@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cube_of_force",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_shared_charge_spell_menu",
+      "justification": "The current magic-item surface can model a charge pool with one activation family, or a triggered reaction with its own resource, but it cannot honestly model one item-level charge pool and recharge cadence shared across multiple spell options with different casting-time families.",
+      "evidence": "\"You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it\" plus the table including both \"Shield\" and non-reaction spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "per_option_activation_cost_on_item_spell_access",
+      "justification": "A single magic item needs spell options that resolve under different activation costs without duplicating the underlying charge resource. Today activation cost lives on the component mechanics, not on each spell option.",
+      "evidence": "\"Shield\" appears in the same face table as \"Mage Armor,\" \"Tiny Hut,\" \"Private Sanctum,\" \"Resilient Sphere,\" and \"Wall of Force.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content/magic_item_cube_of_force.dhall because encoding all faces under one activation family would mis-model Shield, while splitting into activation and triggered_reaction parts would duplicate the cube's single 10-charge pool and dawn recharge."
+}

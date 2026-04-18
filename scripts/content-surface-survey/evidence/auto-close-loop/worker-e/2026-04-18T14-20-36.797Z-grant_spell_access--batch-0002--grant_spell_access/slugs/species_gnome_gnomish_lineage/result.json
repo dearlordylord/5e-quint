@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_gnome_gnomish_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.lineage_choice",
+      "justification": "The trait is one build-time choice among mutually exclusive lineage payloads. The current species-trait surface only allows one passive payload or one activated payload, so it cannot represent a required branch selection without lying about which lineage was chosen.",
+      "evidence": "\"Choose one of the following options; whichever one you choose...\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellAccessMode.prepared_with_use_count",
+      "justification": "Forest Gnome grants a prepared spell that also has multiple free casts per long rest equal to Proficiency Bonus while remaining castable with spell slots. Existing spell-access modes cover once-per-long-rest or charge-based casts, but not a prepared grant with PB-scaled free uses.",
+      "evidence": "\"You also always have the Speak with Animals spell prepared. You can cast it without a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. You can also use any spell slots you have to cast the spell.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "create_object_with_stored_spell_effect",
+      "justification": "Rock Gnome creates a bounded-duration device that stores one chosen Prestidigitation effect, can be activated later by touch with a Bonus Action, is capped at three extant devices, and can be dismantled with a Utilize action. That is not expressible as the current passive or activated species-trait payloads.",
+      "evidence": "\"you can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device ... the device produces that effect whenever you or another creature takes a Bonus Action to activate it with a touch. You can have three such devices in existence at a time, and each falls apart 8 hours after its creation or when you dismantle it with a touch as a Utilize action.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The current surface cannot honestly encode a species trait whose top-level mechanic is a mandatory lineage branch with materially different downstream mechanics."
+}

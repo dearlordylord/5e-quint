@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 13,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "apply_condition_effect",
+  "archivedAt": "2026-04-18T13:50:19.575Z",
+  "selectedSlugs": [
+    "ranger_natures_veil_l14",
+    "cleric_channel_divinity"
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "description": "This cube is about an inch across. Each face has a distinct marking on it. You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17), as shown in the Cube of Force Faces table. The cube starts with 10 charges, and it regains 1d6 expended charges daily at dawn. Faces: Mage Armor (1 charge), Shield (1 charge), Tiny Hut (3 charges), Private Sanctum (4 charges), Resilient Sphere (4 charges), Wall of Force (5 charges).",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_cube_of_force",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 1,
+              "minLevel": 1,
+              "perLevelCharges": 0
+            },
+            "spellId": "mage_armor"
+          },
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 1,
+              "minLevel": 1,
+              "perLevelCharges": 0
+            },
+            "spellId": "shield"
+          },
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 3,
+              "kind": "charge_cast",
+              "maxLevel": 3,
+              "minLevel": 3,
+              "perLevelCharges": 0
+            },
+            "spellId": "tiny_hut"
+          },
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 4,
+              "kind": "charge_cast",
+              "maxLevel": 4,
+              "minLevel": 4,
+              "perLevelCharges": 0
+            },
+            "spellId": "private_sanctum"
+          },
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 4,
+              "kind": "charge_cast",
+              "maxLevel": 4,
+              "minLevel": 4,
+              "perLevelCharges": 0
+            },
+            "spellId": "resilient_sphere"
+          },
+          {
+            "dcOverride": {
+              "dc": 17,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 5,
+              "kind": "charge_cast",
+              "maxLevel": 5,
+              "minLevel": 5,
+              "perLevelCharges": 0
+            },
+            "spellId": "wall_of_force"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 10
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Cube of Force",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#CubeOfForce"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

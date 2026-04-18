@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "species_trait branching progression mechanics",
+      "justification": "The trait requires a build-time choice among mutually exclusive lineage branches, and each chosen branch carries its own later benefits. Existing species traits only support one passive bundle or one activation.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "character-level gated non-spell grants",
+      "justification": "The chosen lineage grants additional content specifically at character levels 3 and 5, which current species-trait mechanics cannot stage over progression.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "rest-replaceable spell-list cantrip selection",
+      "justification": "High Elf does not grant one fixed spell id; it grants a Wizard cantrip choice that can be replaced whenever the character finishes a Long Rest.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content/*.dhall was authored because any current encoding would be misleading. The trait needs non-spell branch selection plus progression-gated grants; High Elf also needs replaceable spell-list selection."
+}

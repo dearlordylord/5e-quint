@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The existing magic-item triggered-reaction family fits the damage-reduction mechanic, but the activation cannot currently express the explicit requirement that the wearer have a free hand when using the reaction.",
+      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier if you have a free hand"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because omitting the free-hand gate would produce a misleading trace. The catch-on-zero rider is a secondary unsupported effect and is described in the proposal."
+}

@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_tome_of_clear_thought",
+  "outcome": "refused",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The unit fits the existing magic_item activation family honestly: study-gated activation, one use, century recharge, and permanent Intelligence +2 capped at 30. `content/magic_item_tome_of_clear_thought.json` generated successfully and the tracer emitted a valid graph. I did not mark this clean because `pnpm typecheck` fails on a pre-existing unrelated error in src/interpreter/tracer.ts:3274 (`traceEquipmentPredicate` returns string[] but is used as string in `traceMagicItemSpawnedCreature`). Editing that file is outside the allowed write scope for this task."
+}

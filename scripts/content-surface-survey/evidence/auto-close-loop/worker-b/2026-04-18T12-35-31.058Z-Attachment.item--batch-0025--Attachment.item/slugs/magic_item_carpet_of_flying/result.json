@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource_less_nonspell_activation",
+      "justification": "The current non-spell activation family requires a resource and reset cadence, but this item is activated at will by spending only a Magic action.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "commanded_flying_item_platform",
+      "justification": "The controlled thing is the item itself, which enters a persistent hover/fly state and obeys directions within a control radius. Existing shapes cover creature flight or commanded companions, not commanded item-platform motion.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "load_dependent_item_speed_profile",
+      "justification": "The carpet's speed depends on carried load, with one threshold for normal capacity and another for maximum carry capacity. Existing item shapes do not couple item load to movement speed.",
+      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The four carpet sizes fit the existing magic-item variant pattern, but the core mechanic does not fit any current authored family without lying. No Dhall/JSON/trace was produced."
+}

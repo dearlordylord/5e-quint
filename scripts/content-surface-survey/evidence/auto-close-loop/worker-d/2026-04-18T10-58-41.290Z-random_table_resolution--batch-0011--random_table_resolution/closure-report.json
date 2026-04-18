@@ -1,0 +1,36 @@
+{
+  "cluster": "random_table_resolution",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_hat_of_many_spells",
+    "magic_item_wand_of_wonder"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_hat_of_many_spells",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_wand_of_wonder",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "structural_widening",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "cluster": "composite_magic_item_mechanics",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_rod_of_alertness",
+    "magic_item_staff_of_fire"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_rod_of_alertness",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_staff_of_fire",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

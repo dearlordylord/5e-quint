@@ -1,0 +1,22 @@
+{
+  "unit_slug": "rogue_supreme_sneak_l9",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_cunning_strike_option",
+      "justification": "The feature is passive at acquisition time, but its actual mechanics are to unlock a new named option inside the existing Cunning Strike system. The current passive grants list has no atom for granting an attack-rider option with an embedded cost and rider text.",
+      "evidence": "You gain the following Cunning Strike option."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "conditional_hide_invisibility_retention",
+      "justification": "The option does not apply a fresh condition. It conditionally suppresses the normal attack-based break of the Hide action's Invisible condition, then checks a post-attack end-of-turn board state predicate based on cover. The current surface has early-end triggers on durations, but no way to override another source's early-end rule with a deferred cover-gated exception.",
+      "evidence": "If you have the Hide action's Invisible condition, this attack doesn't end that condition on you if you end the turn behind Three-Quarters Cover or Total Cover."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest authored UnitRecord fits without widening. I did not create content/rogue_supreme_sneak_l9.dhall or derived JSON/trace because any current encoding would misrepresent either the Cunning Strike option grant or the Hide-based invisibility retention rider."
+}

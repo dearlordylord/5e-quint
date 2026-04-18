@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_staff_of_power",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.resource_remaining_linear",
+      "justification": "Retributive Strike damage scales from the current remaining charges in the staff, not from slot level, fixed dice, or charges spent on a spell cast.",
+      "evidence": "\"you take Force damage equal to 16 times the number of charges in the staff\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.area exclude_source filter",
+      "justification": "The explosion affects other creatures in the area while the bearer resolves through a separate avoidance branch and self-damage rule.",
+      "evidence": "\"Each other creature in the area makes a DC 17 Dexterity saving throw.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "last_charge_roll_outcomes",
+      "justification": "The current destruction policy only handles destruction on last-charge roll. Staff of Power instead needs branching outcomes that can partially suppress item properties or restore charges.",
+      "evidence": "\"On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a composite magic item, but the current surface cannot encode remaining-charge-based damage, area exclusion of the bearer, or the partial-depower / recharge last-charge branch honestly. No content or trace file was authored."
+}

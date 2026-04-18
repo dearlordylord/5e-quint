@@ -1,0 +1,36 @@
+{
+  "cluster": "modify_speed_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "barbarian_brutal_strike_l9",
+    "barbarian_fast_movement_l5"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 1,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "barbarian_brutal_strike_l9",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "barbarian_fast_movement_l5",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

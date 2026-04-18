@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_shield_of_missile_attraction",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_resistance",
+    "holding_item",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "retarget_incoming_attack",
+      "justification": "The curse deterministically changes the defender of an already-targeted ranged-weapon attack. The current surface can grant resistance, block targeting, or negate effects, but it cannot redirect an incoming attack from one creature to another.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored subset captures only the held-shield resistance. The curse retargeting rider is omitted and proposed as an atom widening. `pnpm typecheck` failed due a pre-existing tracer bug at src/interpreter/tracer.ts:3274 (string[] passed where a string edge target is expected), but the new item JSON compiled and the tracer ran successfully."
+}

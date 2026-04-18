@@ -1,0 +1,49 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.attachment.item_or_object",
+      "justification": "Tree Form changes the staff itself into a planted tree and later reverts that same object. The current activation surface has alter_item_kind but no honest item/object attachment target for direct activations.",
+      "evidence": "\"You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree. While touching the tree and using a Magic action, you return the staff to its normal form.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "fall_on_end",
+      "justification": "Reverting the tree back into a staff forces creatures in the tree to fall. The v4 taxonomy names this concept, but the current TS surface does not expose it.",
+      "evidence": "\"Any creature in the tree falls when the tree reverts to a staff.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.depower_on_last_charge",
+      "justification": "The staff is not destroyed when the last-charge mishap triggers; it remains as a nonmagical Quarterstaff. Existing destruction policies only cover destruction or exhaustion, not partial shutdown into a mundane remnant.",
+      "evidence": "\"If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored subset includes the passive held bonuses, charge-cast spell table, druid-only attunement, and dawn recharge. Tree Form and the non-destructive last-charge rider are intentionally omitted and documented in the proposal."
+}

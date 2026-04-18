@@ -1,0 +1,36 @@
+{
+  "cluster": "passive_grant family for ClassFeatureMechanics",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "barbarian_weapon_mastery_l1",
+    "cleric_epic_boon_l19"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "barbarian_weapon_mastery_l1",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "cleric_epic_boon_l19",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

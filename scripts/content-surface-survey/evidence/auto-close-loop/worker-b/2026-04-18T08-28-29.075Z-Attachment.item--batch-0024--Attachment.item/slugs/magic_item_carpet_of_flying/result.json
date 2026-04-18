@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "item-attached flight with controller range and load-conditioned speed",
+      "justification": "The existing magic-item activation family can target an item, but it cannot honestly express that the carpet itself becomes a flying subject, obeys directions only while its user is within 30 feet, and changes speed based on carried weight.",
+      "evidence": "\"You can make this carpet hover and fly by taking a Magic action ... It moves according to your directions if you are within 30 feet of it.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional speed tier keyed by carried load",
+      "justification": "The current surface can grant a fixed speed, but it has no way to encode that the carpet's Fly Speed is halved when load exceeds normal capacity while remaining within the doubled maximum load.",
+      "evidence": "\"A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "MagicItemRecord plus activation family is the right top-level fit, and the four carpet sizes could be modeled as record variants if the movement payload existed. I did not author content files because any current encoding would misstate the moving subject or omit the core remote-control/load mechanics."
+}

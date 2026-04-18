@@ -1,0 +1,18 @@
+{
+  "unit_slug": "barbarian_fast_movement_l5",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "modify_speed",
+    "not_wearing_armor"
+  ],
+  "relations_used": [
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as a passive barbarian class feature: existing not_wearing_armor gate scoped to heavy armor plus an existing modify_speed grant."
+}

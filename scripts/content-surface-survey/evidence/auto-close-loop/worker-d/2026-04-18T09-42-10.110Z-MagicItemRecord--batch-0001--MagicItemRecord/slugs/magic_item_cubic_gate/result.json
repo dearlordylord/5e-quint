@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destination_override:item_keyed_plane",
+      "justification": "The current grant_spell_access surface can grant a named spell and override DC, area, or target restriction, but it cannot bind the granted spell's destination to an item-local keyed plane selected from the cube's pressed face.",
+      "evidence": "Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_cubic_gate.dhall. The item fits MagicItemRecord + activation + charge_pool structurally, but generic grant_spell_access would be dishonest because it would lose the cube-face-to-destination-plane binding that defines both activations."
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reservoir",
+      "justification": "The Reserve variant needs a two-stage workflow: a creature casts an arbitrary spell into the stone with no immediate effect, the stone tracks remaining capacity by total stored spell levels, and a later wearer casts one of the stored spells using the original caster's slot level, save DC, spell attack bonus, and spellcasting ability.",
+      "evidence": "This vibrant purple prism stores spells cast into it, holding them until you use them."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "orbiting_ioun_state",
+      "justification": "The collection's shared wrapper is not just passive wearing. A Magic action starts orbiting, a Utilize action seizes and stows orbiting stones, attunement ending while orbiting makes the stone fall, and the wrapper imposes a shared cap of three orbiting stones.",
+      "evidence": "When you take a Magic action to toss an Ioun Stone into the air, the stone orbits your head ... You can have up to three Ioun Stones orbiting your head at the same time."
+    },
+    {
+      "kind": "new_variant",
+      "name": "trigger_level_resource_spend",
+      "justification": "Absorption and Greater Absorption consume lifetime capacity equal to the canceled spell's level. Current reaction mechanics can negate the triggering spell, but they cannot spend a variable amount from a pool based on trigger metadata.",
+      "evidence": "Once the stone has canceled 20 levels of spells, it burns out, turns dull gray, and loses its magic."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_basic_needs",
+      "justification": "Sustenance's benefit is deterministic and persistent, but there is no existing atom for removing the need to eat or drink.",
+      "evidence": "You don't need to eat or drink while this clear spindle orbits your head."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Several individual variants fit existing passive or triggered-reaction shapes, but the collection cannot be authored honestly without the shared orbiting-state wrapper, and the Reserve variant does not fit any existing magic-item family."
+}

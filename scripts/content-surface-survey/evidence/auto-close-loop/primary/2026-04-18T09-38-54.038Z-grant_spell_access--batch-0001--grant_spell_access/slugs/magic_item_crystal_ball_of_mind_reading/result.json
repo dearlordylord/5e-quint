@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.lifecycle_override",
+      "justification": "The item can already grant Scrying, fixed-DC Detect Thoughts, and sensor-origin targeting, but it cannot override Detect Thoughts to require no concentration while making that granted cast end when the linked Scrying ends.",
+      "evidence": "\"You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because a plain grant_spell_access encoding would be dishonest: it would incorrectly require concentration on Detect Thoughts and let it persist independently of Scrying."
+}

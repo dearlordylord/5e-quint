@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_kind_state",
+      "justification": "The item already has an authored form-changing activation via alter_item_kind, but the current surface cannot scope passive or reaction parts to the current form. Without that gate, Acrobatic Assist and Attack Deflection would be over-granted in the wrong forms.",
+      "evidence": "\"Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only).\" / \"Attack Deflection (Quarterstaff Form Only).\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_weapon_property_or_returning_weapon",
+      "justification": "The current atoms can modify attack and damage rolls with a specific item, but they cannot temporarily give the weapon the Thrown property, assign its thrown ranges, or encode its immediate return to hand after the ranged attack.",
+      "evidence": "\"This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet. Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content. Composite magic-item families exist, but form-scoped gating is missing and is central to the unit. The dim-light clause looks non-core relative to the larger gating problem."
+}

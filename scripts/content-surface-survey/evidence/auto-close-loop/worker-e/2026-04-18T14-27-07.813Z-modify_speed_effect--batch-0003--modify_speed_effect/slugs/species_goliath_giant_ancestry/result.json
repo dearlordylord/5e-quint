@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_goliath_giant_ancestry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.build_choice",
+      "justification": "The trait is a single authored unit whose first rule is a permanent character-build choice among six ancestry boons. The current species-trait surface only admits passive or activation mechanics directly; it cannot encode a build-time choice over multiple branches honestly.",
+      "evidence": "Choose one of the following benefits-a supernatural boon from your ancestry"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.triggered_reaction",
+      "justification": "Two ancestry branches are reaction-shaped and consume the shared Giant Ancestry use pool. Species traits cannot currently author triggered reactions even though the shared non-spell surface already has that family for magic items.",
+      "evidence": "Stone's Endurance (Stone Giant). When you take damage, you can take a Reaction..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.on_hit_trigger",
+      "justification": "Three ancestry branches are hit riders that trigger when the bearer hits with an attack roll and deals damage. Species traits cannot currently author on-hit trigger mechanics.",
+      "evidence": "Fire's Burn (Fire Giant). When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content JSON. The blocker is structural: one species trait must model a build-time choose-one wrapper over mixed non-spell families sharing a PB-per-long-rest resource. Secondary subshape gaps may exist inside individual branches, but they are not the first blocker."
+}

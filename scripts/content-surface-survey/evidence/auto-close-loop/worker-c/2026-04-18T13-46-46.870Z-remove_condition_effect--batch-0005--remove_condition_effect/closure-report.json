@@ -1,0 +1,36 @@
+{
+  "cluster": "remove_condition_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "greater_restoration",
+    "mass_heal"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "greater_restoration",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "mass_heal",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

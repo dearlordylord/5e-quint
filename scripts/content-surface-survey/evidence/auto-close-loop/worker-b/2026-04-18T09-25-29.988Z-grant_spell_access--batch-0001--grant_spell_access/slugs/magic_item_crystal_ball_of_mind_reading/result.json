@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.touching_item",
+      "justification": "The item is enabled by physical contact with the orb, which is narrower than the current held/worn predicates and should be authorable without lying about the gate.",
+      "evidence": "While touching this crystal orb, you can cast Scrying (save DC 17) with it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access lifecycle override tied to another granted spell",
+      "justification": "The Detect Thoughts rider needs two linked behaviors the current surface cannot express: waiving concentration for that cast, and ending that cast when the paired Scrying cast ends.",
+      "evidence": "You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON or trace. The item fits the existing magic-item kind, and spell-sensor target restriction already exists, but the touch gate and cross-spell lifecycle override are missing from the surface."
+}

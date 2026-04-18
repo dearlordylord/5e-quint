@@ -1,0 +1,34 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "build_time_species_lineage_choice",
+      "justification": "The unit is one species trait whose payload is a persistent choose-one branch, not a flat passive grant list or an activation. The current surface only has cast-time choice inside activation phases, not build-time choice for non-spell traits.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "level_gated_species_trait_grants",
+      "justification": "The chosen lineage keeps granting additional benefits at character levels 3 and 5. Current SpeciesTraitMechanics has passive or activation families only, with no way to attach later character-level grants inside the same trait.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "granted_spell_access_with_chosen_spellcasting_ability",
+      "justification": "The spell grants are not just prepared/free-cast grants; they also carry a chosen casting ability from a closed list. Existing grant_spell_access can describe access mode, but not which ability powers the granted casts.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "replace_granted_cantrip_on_long_rest",
+      "justification": "The High Elf branch includes a recurring long-rest replacement rule for the granted cantrip. That is not representable as passive grants or grant_spell_access today.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A few branch payloads fit existing atoms in isolation: Drow/Wood L3-L5 spells fit grant_spell_access with prepared_once_per_long_rest, Drow's darkvision increase fits grant_sense, and Wood Elf's speed boost fits modify_speed. The full trait does not fit honestly as one authored unit because the lineage choice, per-lineage progression, chosen spellcasting ability, and High Elf cantrip replacement are not representable."
+}

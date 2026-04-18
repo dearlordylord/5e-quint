@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 21,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "reflect_triggering_spell",
+  "archivedAt": "2026-04-18T08:41:18.607Z",
+  "selectedSlugs": [
+    "magic_item_ring_of_spell_turning",
+    "magic_item_staff_of_charming"
+  ]
+}

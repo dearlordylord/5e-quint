@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_movement_through_openings",
+      "justification": "The inherited Gaseous Form effect grants a persistent movement capability that is not speed, teleportation, or forced movement.",
+      "evidence": "the target can move through a space as small as 1 inch wide without squeezing"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.restrict_action_set",
+      "justification": "The surface has no standalone effect atom for an ongoing prohibition on attacking/casting; action restriction currently exists only inside grant_extra_action, which would be a false encoding here.",
+      "evidence": "The target can't attack or cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_ends_effect_as_bonus_action",
+      "justification": "Timed effects can end on passive triggers today, but not on a voluntary self-dismiss that spends action economy.",
+      "evidence": "or until you end the effect as a Bonus Action"
+    }
+  ],
+  "confidence": "medium",
+  "notes": "The item fits MagicItemRecord with activation/timed/single-use structure, but the delegated Gaseous Form effect cannot be authored honestly with the current atom surface. No content .dhall/.json/.trace was written."
+}

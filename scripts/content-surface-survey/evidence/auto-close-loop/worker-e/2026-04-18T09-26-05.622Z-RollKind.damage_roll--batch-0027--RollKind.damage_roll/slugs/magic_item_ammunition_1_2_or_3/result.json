@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_ammunition_1_2_or_3",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "grant",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.on_hit_becomes_nonmagical",
+      "justification": "The unit fits the existing magic-item passive family, but the current destruction/lifecycle surface cannot represent a passive ammunition item whose magical property ends specifically when it hits a target.",
+      "evidence": "Once it hits a target, the ammunition is no longer magical."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a magic-item collection with +1/+2/+3 passive variants. Dhall compiled, `pnpm typecheck` passed, and the tracer emitted a valid graph. The trace honestly omits the hit-triggered loss-of-magic rider because the current surface has no destruction variant for that lifecycle."
+}

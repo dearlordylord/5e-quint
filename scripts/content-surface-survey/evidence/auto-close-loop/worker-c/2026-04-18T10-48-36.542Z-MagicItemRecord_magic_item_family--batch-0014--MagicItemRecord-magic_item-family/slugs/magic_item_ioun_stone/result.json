@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reservoir_magic_item",
+      "justification": "The Reserve variant stores externally cast spells up to a slot-level capacity, preserves original caster parameters, and later releases those stored spells from the item. No existing magic-item family models spell intake plus later release from inventory-backed storage.",
+      "evidence": "This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.creature_casts_spell level/visibility filter",
+      "justification": "The Absorption variants react only to spells up to a stated level and only from a creature you can see. The existing trigger can match spellcasting generally, but it cannot express the level cap or visibility gate.",
+      "evidence": "you can take a Reaction to cancel a spell of level 4 or lower cast by a creature you can see"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource variable spend from triggering spell level",
+      "justification": "Absorption and Greater Absorption track a pool measured in cumulative spell levels canceled, not in fixed uses or a caller-chosen charge spend schedule. The current resource surface has no way for a triggered reaction to consume an amount derived from the triggering spell's level.",
+      "evidence": "Once the stone has canceled 20 levels of spells, it burns out"
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_basic_needs",
+      "justification": "Sustenance deterministically removes food and drink requirements while the stone orbits. No existing passive effect atom models suppression of basic needs.",
+      "evidence": "You don't need to eat or drink while this clear spindle orbits your head."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Several variants fit the existing collection surface, but the unit is not an honest whole-record fit because Reserve requires a spell-storage/release mechanic that no current magic-item family can express. Absorption and Greater Absorption add additional surface pressure beyond that primary structural gap."
+}

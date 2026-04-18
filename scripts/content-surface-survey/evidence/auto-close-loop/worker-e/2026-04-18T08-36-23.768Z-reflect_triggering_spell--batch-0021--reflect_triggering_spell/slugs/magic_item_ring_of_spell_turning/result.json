@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.spell_source_filter",
+      "justification": "The passive rider needs to grant advantage only on saving throws caused by spells, not on all saving throws.",
+      "evidence": "While wearing this ring, you have Advantage on saving throws against spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "passive_operation.trigger.spell_save_outcome",
+      "justification": "The ring has an automatic post-save effect that cancels a qualifying spell on a successful save without spending a reaction. Existing passive operations only support elapsed-time cadence, so there is no honest way to encode this deterministic trigger in the passive half of the item.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author a placeholder content file. The optional reflection rider itself fits existing triggered-reaction surface pieces, but the item's passive half is incomplete without spell-only save filtering and automatic post-save spell negation."
+}

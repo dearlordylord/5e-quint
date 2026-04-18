@@ -1,0 +1,58 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "direct_apply",
+    "grant_condition_immunity",
+    "grant_resistance",
+    "grant_speed",
+    "item_destruction",
+    "magic_item_root",
+    "modify_roll_advantage",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.restrict_action_set",
+      "justification": "Gaseous Form forbids attacking and spellcasting while active, but the authored surface only exposes action restriction inside grant_extra_action rather than as a standalone effect.",
+      "evidence": "Finally, the target can't attack or cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_uses_bonus_action_to_end_effect",
+      "justification": "The potion adds a bonus-action self-end clause that cannot be expressed with the current closed early-end trigger vocabulary.",
+      "evidence": "or until you end the effect as a Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_drops_to_0_hp",
+      "justification": "The imported spell ends on the target at 0 Hit Points, but the current duration trigger set has no HP-threshold end condition.",
+      "evidence": "The spell ends on the target if it drops to 0 Hit Points..."
+    },
+    {
+      "kind": "new_atom",
+      "name": "bypass_space_and_barrier_constraints",
+      "justification": "Gaseous Form grants deterministic movement and occupancy exceptions that are not modeled by any current atom or attachment/window relation.",
+      "evidence": "The target can enter and occupy the space of another creature. The target can pass through narrow openings, but it treats liquids as though they were solid surfaces."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_speech_and_object_interaction",
+      "justification": "The form prevents speaking, manipulating objects, and interacting with carried items; this is broader than standard-action denial and is not in the current atom inventory.",
+      "evidence": "The target can't talk or manipulate objects, and any objects it was carrying or holding can't be dropped, used, or otherwise interacted with."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored and traced the supported subset only: fly speed 10 ft with hover, B/P/S resistance, prone immunity, and advantage on Str/Dex/Con saves. Final classification is atom_widening because the movement/interaction riders require new atoms, not just surface variants."
+}

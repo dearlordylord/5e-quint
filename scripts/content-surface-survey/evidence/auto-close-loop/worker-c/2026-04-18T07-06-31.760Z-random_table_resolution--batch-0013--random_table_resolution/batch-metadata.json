@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 13,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "random_table_resolution",
+  "archivedAt": "2026-04-18T07:12:10.602Z",
+  "selectedSlugs": [
+    "magic_item_hat_of_many_spells",
+    "magic_item_wand_of_wonder"
+  ]
+}

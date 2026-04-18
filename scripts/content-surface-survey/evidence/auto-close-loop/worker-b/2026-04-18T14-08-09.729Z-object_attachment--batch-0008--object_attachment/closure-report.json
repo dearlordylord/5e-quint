@@ -1,0 +1,36 @@
+{
+  "cluster": "object_attachment",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_instant_fortress",
+    "magic_item_sovereign_glue"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_instant_fortress",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_sovereign_glue",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

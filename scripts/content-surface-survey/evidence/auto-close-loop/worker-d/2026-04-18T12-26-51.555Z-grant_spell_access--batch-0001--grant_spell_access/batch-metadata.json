@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_spell_access",
+  "archivedAt": "2026-04-18T12:32:32.720Z",
+  "selectedSlugs": [
+    "paladin_paladins_smite_l2",
+    "warlock_contact_patron_l9"
+  ]
+}

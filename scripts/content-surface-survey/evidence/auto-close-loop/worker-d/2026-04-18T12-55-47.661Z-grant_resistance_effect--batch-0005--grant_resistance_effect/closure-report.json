@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_resistance_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "monk_superior_defense_l18",
+    "ranger_superior_hunters_defense_l15"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "monk_superior_defense_l18",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "ranger_superior_hunters_defense_l15",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

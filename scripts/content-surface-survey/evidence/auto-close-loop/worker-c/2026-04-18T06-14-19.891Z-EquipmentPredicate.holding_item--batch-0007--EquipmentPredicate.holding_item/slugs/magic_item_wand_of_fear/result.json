@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.choice_restriction",
+      "justification": "The existing granted-spell surface can name a spell and its cast mode, but it cannot narrow the spell's own internal command/option vocabulary for casts made through the item.",
+      "evidence": "\"Command\" (\"flee\" or \"grovel\" only)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spell_shape_override",
+      "justification": "The existing granted-spell surface cannot override a granted spell's printed attachment/area header for item-specific casts such as a fixed cone size.",
+      "evidence": "\"Fear\" (60-foot Cone)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The charge pool, fixed DC 15, dawn recharge, and last-charge destruction all fit the existing magic-item surface. I did not author a content record because the spell restrictions cannot be represented honestly with the current grant_spell_access shape."
+}

@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 3,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "reaction_activation",
+  "archivedAt": "2026-04-18T09:44:59.836Z",
+  "selectedSlugs": [
+    "magic_item_gloves_of_missile_snaring",
+    "magic_item_quarterstaff_of_the_acrobat"
+  ]
+}

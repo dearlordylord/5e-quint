@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken",
+      "justification": "The item's core mechanic is a reaction that subtracts a rolled amount plus an ability modifier from one incoming weapon hit's damage. That is neither resistance, immunity, temporary hit points, nor a roll modifier, so any current encoding would misstate the rule.",
+      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier"
+    }
+  ],
+  "confidence": "high",
+  "notes": "ReactionTrigger.hit_by_attack_roll already supports the Ranged/Thrown weapon trigger for this item, but no existing effect atom can honestly encode one-shot damage reduction. The catch-the-missile rider is contingent on reducing the damage to 0 and is secondary to the missing core reduction effect."
+}

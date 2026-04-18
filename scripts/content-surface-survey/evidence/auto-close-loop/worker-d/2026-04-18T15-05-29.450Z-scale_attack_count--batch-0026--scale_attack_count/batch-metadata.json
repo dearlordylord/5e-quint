@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 26,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "scale_attack_count",
+  "archivedAt": "2026-04-18T15:09:48.408Z",
+  "selectedSlugs": [
+    "fighter_extra_attack",
+    "ranger_extra_attack_l5"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive lineage-choice bundle",
+      "justification": "The trait is one species-trait record that requires a build-time choice among three heterogeneous option bundles, not three separate always-on singleton grants.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "character-level-gated passive grants",
+      "justification": "The chosen lineage passively unlocks additional grants at character levels 3 and 5, but PassiveMechanics has no threshold-gated grant wrapper.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access casting-ability override",
+      "justification": "The granted lineage spells use a chosen ability score specific to this trait, but grant_spell_access cannot currently say which ability governs those casts.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access spell-list cantrip choice with long-rest replacement",
+      "justification": "High Elf's level-1 benefit is not a fixed spellId; it is a cantrip chosen from the Wizard spell list and replaceable after each Long Rest.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/species_elf_elven_lineage.dhall because any current encoding would be misleading. Drow and Wood Elf sub-bundles mostly reuse existing atoms, but the trait as written requires build-time lineage selection plus character-level progression, and High Elf additionally needs spell-list cantrip choice/replacement."
+}

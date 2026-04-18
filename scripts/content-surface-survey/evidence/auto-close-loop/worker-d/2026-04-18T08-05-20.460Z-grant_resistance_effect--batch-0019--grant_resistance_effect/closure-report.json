@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_resistance_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_potion_of_gaseous_form",
+    "magic_item_shield_of_missile_attraction"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_potion_of_gaseous_form",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_shield_of_missile_attraction",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "structural_widening",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

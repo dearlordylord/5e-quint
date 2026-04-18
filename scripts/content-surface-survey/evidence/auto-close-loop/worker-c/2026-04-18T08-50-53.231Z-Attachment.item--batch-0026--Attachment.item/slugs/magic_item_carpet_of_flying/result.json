@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The activation targets and persists on the carpet itself, not on the wielder or a creature. The current surface can attach direct effects to self, target, area, mark, or companion only.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "controlled_item_movement",
+      "justification": "The carpet is a persistent non-creature object that gains flight and then moves repeatedly according to a controller's directions while within a control radius. The current surface only has controllable-creature support via companion payloads, which would be a false trace here.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_capacity_speed_modifier",
+      "justification": "The item's speed depends on carried load relative to its normal capacity. Existing speed atoms are creature-scoped and do not express load-threshold halving on an attached item/object.",
+      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic item kind and activation family exist, and the four size lines could be represented as item variants, so this is not a structural widening. The blocking gap is an honest surface for a commanded flying object/item with load-sensitive speed; using spawned_creature or self-targeted grant_speed would misrepresent the rule."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The item's core deterministic effect is creating a persistent adhesive bond between two objects. The current effect vocabulary can target an object, but it cannot author a cross-object bonded state with removal constraints.",
+      "evidence": "\"This viscous, milky-white substance can form a permanent adhesive bond between any two objects.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "dual_object_attachment",
+      "justification": "The existing attachment grammar can point at one object, target, or area. Sovereign Glue requires selecting two object endpoints for one activation, not one.",
+      "evidence": "\"between any two objects\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic-item activation family fits the ounce pool and Utilize action cost, but the surface cannot honestly express a permanent two-object adhesive bond that can be broken only by specific counter-agents. I therefore did not author a placeholder Dhall/JSON content file."
+}

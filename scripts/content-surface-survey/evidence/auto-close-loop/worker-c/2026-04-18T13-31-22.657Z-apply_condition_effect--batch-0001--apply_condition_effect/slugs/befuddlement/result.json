@@ -1,0 +1,34 @@
+{
+  "unit_slug": "befuddlement",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition variant of Effect (spell)",
+      "justification": "The on-fail branch imposes a persistent condition alongside damage. The spell Effect union only has 'damage' and 'none'. apply_condition already exists in mastery SaveGateRiderResult but has never been lifted into the spell Effect type.",
+      "evidence": "On a failed save, the target takes 10d12 Psychic damage and can't cast spells or take the Magic action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Condition: no_spellcasting (or equivalent named condition)",
+      "justification": "The debuff is 'can't cast spells or take the Magic action'. The Condition type currently only contains 'prone'. A new Condition value is required to represent any spellcasting-suppression effect.",
+      "evidence": "can't cast spells or take the Magic action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "compound/sequence Effect variant",
+      "justification": "The on-fail branch delivers BOTH 10d12 Psychic damage AND the no-spellcasting condition simultaneously. onFail: Effect is a single Effect; there is no compound or sequence variant that lets one branch fire multiple effects. This requires either a new compound Effect kind or a redesigned branch structure.",
+      "evidence": "the target takes 10d12 Psychic damage and can't cast spells or take the Magic action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "repeat_save with non-combat cadence (30-day interval)",
+      "justification": "The on-fail debuff persists until the target passes a saving throw at the end of every 30 days. The repeat_save atom exists in v4 taxonomy but is absent from types.ts. Even if added, the cadence shape currently has no way to express intervals measured in days rather than rounds/turns.",
+      "evidence": "At the end of every 30 days, the target repeats the save, ending the effect on a success. The effect can also be ended by the Greater Restoration, Heal, or Wish spell."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation/save_gate family is the correct structural fit. All four gaps are variants of existing or v4-taxonomy surface shapes — no wholly new atom is required. The primary blockers are: (1) apply_condition is absent from spell Effect, (2) Condition enum covers only 'prone', (3) a single onFail branch cannot deliver compound effects, (4) repeat_save and its cadence grammar are not in types.ts. No Dhall or trace produced."
+}

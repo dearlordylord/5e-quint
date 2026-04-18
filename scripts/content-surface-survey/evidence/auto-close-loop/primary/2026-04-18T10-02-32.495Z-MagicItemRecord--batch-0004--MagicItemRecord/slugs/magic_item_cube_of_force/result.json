@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cube_of_force",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item mechanics variant with shared charge pool for granted spells",
+      "justification": "The item needs one shared 10-charge pool and one dawn recharge cadence governing several granted spells with different native casting times, including a reaction spell. Existing passive, activation, triggered_reaction, and composite item families cannot express that without either fixing the wrong activation cost or duplicating the shared pool.",
+      "evidence": "\"You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17), as shown in the Cube of Force Faces table.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "shared resource/reset header across composite magic-item parts",
+      "justification": "A composite item could otherwise separate reaction-shaped and non-reaction spell access, but the current composite shape forces resource state onto each part instead of allowing one shared pool across all parts.",
+      "evidence": "\"The cube starts with 10 charges, and it regains 1d6 expended charges daily at dawn.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring Dhall/JSON. The blocker is family-level fit: one shared charge pool must govern both Shield's reaction cast and the other listed spells' non-reaction cast timings."
+}

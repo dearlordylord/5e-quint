@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stored_spell_reservoir_magic_item",
+      "justification": "Reserve needs a persistent spell-storage payload with capacity by spell level, ingestion of third-party casts into the item, and later release using the original caster's DC/attack/ability. No existing magic-item family can represent storing and later casting arbitrary spells from item state.",
+      "evidence": "This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_periodic_trigger_for_magic_items",
+      "justification": "Regeneration is a passive item benefit with a repeating time trigger and HP-threshold predicate. PassiveMechanics only grants always-on atoms, and magic items have no non-spell ongoing-effect family.",
+      "evidence": "You regain 15 Hit Points at the end of each hour if you have at least 1 Hit Point while this white spindle orbits your head."
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_proficiency_bonus",
+      "justification": "Mastery changes the wearer's Proficiency Bonus directly. No existing effect atom modifies PB.",
+      "evidence": "Your Proficiency Bonus increases by 1 while this pale green prism orbits your head."
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction_trigger_visible_creature_casts_spell_with_max_level",
+      "justification": "Absorption and Greater Absorption are reaction items keyed to a visible caster and bounded by triggering spell level. Current ReactionTrigger can express only generic creature_casts_spell by components, not visibility or level caps.",
+      "evidence": "you can take a Reaction to cancel a spell of level 4 or lower cast by a creature you can see"
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_food_and_drink_need",
+      "justification": "Sustenance removes biological upkeep requirements. The current effect vocabulary has no nourishment/survival-maintenance atom.",
+      "evidence": "You don't need to eat or drink while this clear spindle orbits your head."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Several variants fit today's surface cleanly in isolation (Agility/Fortitude/Insight/Intellect/Leadership/Strength via modify_ability_score, Awareness via modify_roll_advantage, Protection via modify_ac). But the unit to encode is the full Ioun Stone collection, and Reserve plus Regeneration force new mechanics families, so authoring a partial variants record would be misleading."
+}

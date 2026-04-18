@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_helm_of_teleportation",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "magic_item_root",
+    "self",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as an attunement-gated magic-item activation with a wearing predicate, 3-charge pool, fixed-cost Teleport cast, and dawn recharge by 1d3."
+}

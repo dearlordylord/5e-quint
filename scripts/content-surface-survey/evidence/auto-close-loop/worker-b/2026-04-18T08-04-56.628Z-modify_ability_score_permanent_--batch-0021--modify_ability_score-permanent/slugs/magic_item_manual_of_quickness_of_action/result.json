@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_manual_of_quickness_of_action",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly as a non-attunement magic item with activation mechanics: study-gated use, century cooldown, and a permanent Dexterity increase capped at 30."
+}

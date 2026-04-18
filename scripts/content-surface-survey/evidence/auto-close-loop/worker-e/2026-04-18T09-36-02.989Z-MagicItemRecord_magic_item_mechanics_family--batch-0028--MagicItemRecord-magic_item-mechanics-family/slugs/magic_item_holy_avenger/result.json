@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_holy_avenger",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_on_hit_trigger",
+      "justification": "Magic items currently cannot compose a mastery-style on-hit rider alongside passive grants, so the Holy Avenger's fiend/undead hit rider has no honest host family.",
+      "evidence": "When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_hit_target_creature_type_filter",
+      "justification": "The extra-damage rider is narrowed to a closed set of target creature types rather than applying on every hit.",
+      "evidence": "When you hit a Fiend or an Undead with it..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.magical_save_filter",
+      "justification": "The aura grants advantage only on saving throws against spells and other magical effects; the current surface cannot scope saving-throw advantage by cause.",
+      "evidence": "have Advantage on saving throws against spells and other magical effects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_shape.class_level_threshold_radius",
+      "justification": "The emanation radius scales by Paladin class level, but area attachments currently have fixed geometry only.",
+      "evidence": "If you have 17 or more levels in the Paladin class, the size of the Emanation increases to 30 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_holy_avenger.dhall because the item's full mechanics do not fit current MagicItemMechanics honestly. The structural blocker is the missing non-mastery on-hit rider family for magic items; the aura also needs additional surface narrowing."
+}

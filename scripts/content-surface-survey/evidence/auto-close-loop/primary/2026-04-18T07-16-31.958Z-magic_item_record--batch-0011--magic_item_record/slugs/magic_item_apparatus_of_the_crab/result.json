@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.vehicle",
+      "justification": "The item's core behavior is not a passive grant, one-shot activation, triggered reaction, or simple composite. It is a persistent controllable vehicle/object with its own stat block, occupancy, sealed compartment, and action-driven control surface.",
+      "evidence": "To be used as a vehicle, the apparatus requires one pilot."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "lever_control_surface",
+      "justification": "The item exposes ten temporary controls whose up/down settings cause state changes, attacks, movement, lighting, vertical movement, and hatch state. Existing activation phases do not model a reusable multi-control dispatch surface over persistent object state.",
+      "evidence": "A creature in the compartment can take a Utilize action to move as many as two of the apparatus's levers up or down."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON. Encoding this as passive/composite would omit the item's primary mechanics: vehicle stat block, lever-state transitions, pilot/occupant rules, and object movement/attacks."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "absorbed_spell_energy_reservoir",
+      "justification": "The rod needs shared item-owned mutable state for current stored levels plus a separate lifetime absorbed-total cap of 50. Existing charge_pool resources do not model reaction-filled, cross-part, permanent-cap reservoirs.",
+      "evidence": "The rod can absorb and store up to 50 levels of energy over the course of its existence."
+    },
+    {
+      "kind": "new_atom",
+      "name": "absorb_triggering_spell_energy",
+      "justification": "Current negate_triggering_spell can cancel a spell, but nothing stores energy equal to the triggering spell's cast level into the item while wasting the incoming cast's resources.",
+      "evidence": "The absorbed spell's effect is canceled, and the spell's energy-not the spell itself-is stored in the rod. The energy has the same level as the spell when it was cast."
+    },
+    {
+      "kind": "new_atom",
+      "name": "substitute_stored_energy_for_spell_slot",
+      "justification": "grant_spell_access only grants named spells. Rod of Absorption instead lets the wielder spend stored energy as substitute spell slots for any spells they already know or prepared, capped by their own slot ceiling and level 5.",
+      "evidence": "you can convert energy stored in it into spell slots to cast spells you have prepared or know."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.targeted_by_spell_with_self_only_no_area_filter",
+      "justification": "The item reacts to arbitrary qualifying spells, not a named spell and not any spell cast in range. The trigger must express 'targeting only you' and 'doesn't create an area of effect'.",
+      "evidence": "absorb a spell that is targeting only you and doesn't create an area of effect"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "becomes_nonmagical_when_saturated_and_empty",
+      "justification": "The rod has a non-destruction lifecycle state change after reaching its lifetime absorption limit and later running out of stored energy.",
+      "evidence": "A rod that can no longer absorb spell energy and has no energy remaining becomes nonmagical."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The existing magic_item/composite families exist, but the missing mechanics are not just a small shape tweak: the item needs a new absorbed-energy reservoir model plus arbitrary spell-slot substitution for the wielder's own spells."
+}

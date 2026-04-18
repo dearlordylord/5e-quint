@@ -1,0 +1,36 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.grantedSpellOptionRestriction",
+      "justification": "The current spell-grant override surface can change DC, area, targeting, and duration, but it cannot narrow a granted spell to only a subset of its allowed cast-time options. The wand's Command cast is restricted to two command words, so unrestricted grant_spell_access would mis-state the item.",
+      "evidence": "Command (\"flee\" or \"grovel\" only)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored and traced the honest subset only: Fear at fixed DC 15 with a 60-foot cone override. The restricted Command grant is intentionally omitted until the grant surface can encode spell-option narrowing."
+}

@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_sentinel_shield",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "holding_item",
+    "magic_item_root",
+    "modify_roll_advantage"
+  ],
+  "relations_used": [
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive magic item gated by holding_item, with separate advantage riders for initiative and Wisdom (Perception) checks. Tracer output succeeds but its node label omits the Perception skillFilter on the second rider."
+}

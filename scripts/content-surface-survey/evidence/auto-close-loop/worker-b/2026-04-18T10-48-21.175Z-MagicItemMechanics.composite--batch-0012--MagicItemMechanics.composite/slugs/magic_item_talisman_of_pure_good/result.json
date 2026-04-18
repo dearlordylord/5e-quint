@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "EffectAtom.kind = \"destroy_target\"",
+      "justification": "Pure Rebuke's failed-save branch deterministically removes the creature from play rather than damaging, exiling, or transforming it. No existing effect atom captures outright destruction with no remains.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "event-driven magic-item contact/possession damage",
+      "justification": "The talisman deals damage when a qualifying creature touches it and again at the end of each of that creature's turns while it keeps holding or carrying it. The current passive surface only supports always-on grants and elapsed-time passive operations, not item-contact triggers plus repeated holder-turn damage.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.any_of(wearing_item, holding_item)",
+      "justification": "Both the passive spell-attack bonus and the activated rebuke are gated by wearing OR holding the item. The current equipment predicates can express conjunction via all_of, but not this disjunction.",
+      "evidence": "You gain a +2 bonus to spell attack rolls while you wear or hold it. While wearing or holding the talisman, you can take a Magic action..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate conditional disadvantage for qualifying target types",
+      "justification": "Pure Rebuke alters the saving-throw mode only for Fiends and Undead. Existing save_gate payloads do not have a target-type-conditional disadvantage hook.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    },
+    {
+      "kind": "new_variant",
+      "name": "target selection predicate = on_ground",
+      "justification": "Pure Rebuke can only target a creature on the ground. Current target selection supports counts and creature-type filters, but not positional predicates like grounded-only targeting.",
+      "evidence": "target one creature you can see on the ground within 120 feet of yourself"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/traces. The item fits the existing magic_item top-level kind, but its core mechanics require both new surface variants and a new effect atom, so any current JSON would be materially misleading."
+}

@@ -1,0 +1,28 @@
+{
+  "unit_slug": "monk_superior_defense_l18",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.activationWindow = start_of_self_turn",
+      "justification": "The feature is only activatable in a specific turn window, not as a generic free activation on the monk's turn.",
+      "evidence": "\"At the start of your turn, you can expend 3 Focus Points\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.external_pool_spend",
+      "justification": "The feature spends 3 points from the monk's shared Focus Point pool. Current resources model only feature-owned use counts or charge pools with their own caps and reset cadence, which would duplicate or misstate the underlying resource.",
+      "evidence": "\"you can expend 3 Focus Points\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_has_condition",
+      "justification": "The effect ends early when the beneficiary gains a specific condition. Current early-end triggers cover damage, attack, spellcasting, and donning armor, but not condition-gain termination.",
+      "evidence": "\"for 1 minute or until you have the Incapacitated condition\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level fit is still class_feature + activation, not structural widening. The resistance payload itself is expressible as a bundle of grant_resistance atoms covering every damage type except force; the blockers are timing, external-resource spending, and condition-based early end."
+}

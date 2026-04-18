@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 23,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "feature_augmentation",
+  "archivedAt": "2026-04-18T14:48:54.011Z",
+  "selectedSlugs": [
+    "paladin_restoring_touch_l14",
+    "warlock_eldritch_master_l20"
+  ]
+}

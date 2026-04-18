@@ -1,0 +1,34 @@
+{
+  "unit_slug": "scrying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Effect.grant_sense",
+      "justification": "The on-fail effect of the save gate creates an invisible intangible sensor granting remote sight and hearing. The v4 taxonomy has grant_sense as an atom, but the Effect union only has damage and none — no sensing/creation variant exists in the surface types.",
+      "evidence": "On a failed save, the spell creates an Invisible, intangible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DcSource.contextual_save_modifier",
+      "justification": "Scrying's Wisdom save is modified by two independent contextual tables: the caster's knowledge of the target (Secondhand +5, Firsthand +0, Extensive −5) and the caster's physical connection to the target (picture −2, garment −4, body part −10). DcSource has only caster_spell_save_dc and weapon_attack_dc with no facility for additive modifiers to the target's roll or effective DC.",
+      "evidence": "The target makes a Wisdom saving throw, which is modified (see the tables below) by how well you know the target and the sort of physical connection you have to it. [Secondhand +5, Firsthand +0, Extensive −5; picture −2, garment −4, body part −10]"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SaveSuccessEffect.reuse_lock",
+      "justification": "On a successful save the caster cannot target that creature with this spell again for 24 hours. No existing surface type represents a per-target temporal reuse restriction gated on a save outcome.",
+      "evidence": "On a successful save, the target isn't affected, and you can't use this spell on it again for 24 hours."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.location_or_target",
+      "justification": "Scrying allows the caster to target either a creature (via the save_gate path) or a seen location (no save, sensor placed at location). No existing Attachment or ActivationPhase variant supports a mutually exclusive creature-vs-location targeting choice at cast time.",
+      "evidence": "Instead of targeting a creature, you can target a location you have seen. When you do so, the sensor appears at that location and doesn't move."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family with a save_gate phase is the right structural fit. CastingTime.minutes (10 min) is already in the surface. Concentration duration is supported. The primary blocker is the on-fail effect: grant_sense (remote sensor) is not a valid Effect variant — only damage and none exist in the surface Effect union. grant_sense IS in v4 taxonomy, so this is surface_widening not atom_widening. Secondary gaps: contextual save modifiers from knowledge/connection tables (novel DcSource shape), 24-hour per-target reuse lock on success, and the alternative location targeting mode. All four gaps are new variants of existing surface types."
+}

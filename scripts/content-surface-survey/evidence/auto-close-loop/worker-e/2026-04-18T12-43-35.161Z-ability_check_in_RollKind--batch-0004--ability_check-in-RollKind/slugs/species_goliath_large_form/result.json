@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_goliath_large_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "set_size",
+      "justification": "Large Form's core effect is a temporary self-size change to Large. Existing atoms can modify speed, checks, and ability scores, but none can represent becoming Large without overclaiming with polymorph-style replacement.",
+      "evidence": "you can change your size to Large as a Bonus Action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "species_trait_level_gate",
+      "justification": "The unit is a species trait that only unlocks starting at character level 5. SpeciesTraitRecord has no acquired-at level field or mechanics-side eligibility gate, so the authored surface cannot represent when the trait becomes available.",
+      "evidence": "Starting at character level 5"
+    },
+    {
+      "kind": "new_variant",
+      "name": "duration_end_manual_no_action",
+      "justification": "The effect has a timed duration that can also end early at the user's option with no action. Current activated-ability duration supports timed windows but not an explicit owner-driven early end.",
+      "evidence": "This transformation lasts for 10 minutes or until you end it (no action required)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/species_goliath_large_form.dhall because omitting the temporary Large size change would produce a misleading trace. The secondary riders (+10 Speed, Advantage on Strength checks) fit existing atoms, but the primary mechanic does not."
+}

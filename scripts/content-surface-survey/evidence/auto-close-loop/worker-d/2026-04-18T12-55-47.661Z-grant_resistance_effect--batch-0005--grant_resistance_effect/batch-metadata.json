@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 5,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_resistance_effect",
+  "archivedAt": "2026-04-18T12:59:57.509Z",
+  "selectedSlugs": [
+    "monk_superior_defense_l18",
+    "ranger_superior_hunters_defense_l15"
+  ]
+}

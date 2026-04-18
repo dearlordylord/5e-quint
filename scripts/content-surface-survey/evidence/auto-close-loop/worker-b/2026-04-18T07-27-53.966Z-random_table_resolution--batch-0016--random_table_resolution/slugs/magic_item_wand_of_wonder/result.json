@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "apply_obscurement",
+      "justification": "The table creates persistent lightly/heavily obscured areas, and the current effect surface has no obscuration atom.",
+      "evidence": "\"the area of effect is Lightly Obscured\" / \"the area of effect is Heavily Obscured\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.rangeOverride",
+      "justification": "The item changes a reused spell's maximum range when cast through the wand.",
+      "evidence": "\"If a spell's maximum range is normally less than 120 feet, it becomes 120 feet when cast from the wand.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.originOverride",
+      "justification": "The item re-anchors spell origin to a chosen point instead of the caster.",
+      "evidence": "\"That location becomes the point of origin of a spell or other magical effect ...\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "uncontrolled_random_spawn",
+      "justification": "One branch creates a creature that is explicitly not under the wielder's control, which the current summon surface does not express.",
+      "evidence": "\"The creature isn't under your control, acts as it normally would, and disappears after 1 hour or when it drops to 0 Hit Points.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a magic_item activation with charge_pool and random_table, but the full unit cannot be authored honestly with the current surface. No content/*.dhall, compiled JSON, or trace file was produced."
+}

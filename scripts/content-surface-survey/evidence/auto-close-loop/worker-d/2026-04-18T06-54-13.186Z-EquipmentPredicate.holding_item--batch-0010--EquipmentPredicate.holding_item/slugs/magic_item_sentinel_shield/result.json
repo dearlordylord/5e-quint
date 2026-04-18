@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_sentinel_shield",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "holding_item",
+    "magic_item_root",
+    "modify_roll_advantage"
+  ],
+  "relations_used": [
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as a passive magic item with a holding_item gate and two modify_roll_advantage grants. Minor trace-display discrepancy: the mermaid label for the Perception rider renders only 'ability_check' and omits the skillFilter=perception narrowing, but the compiled JSON preserves the skill filter."
+}

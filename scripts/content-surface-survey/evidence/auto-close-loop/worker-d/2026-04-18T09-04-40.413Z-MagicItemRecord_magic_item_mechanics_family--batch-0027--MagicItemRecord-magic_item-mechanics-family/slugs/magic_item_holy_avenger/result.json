@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_holy_avenger",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_passive_aura",
+      "justification": "The item has a held, always-on emanation that grants an ongoing benefit to the wielder and friendly creatures in the area. Current MagicItemMechanics can express owner-only passives, activations, reactions, and summons, but not a non-spell persistent aura with area attachment and ongoing operations.",
+      "evidence": "While you hold the drawn weapon, it creates a 10-foot Emanation originating from you. You and all creatures Friendly to you in the Emanation have Advantage on saving throws against spells and other magical effects."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_on_hit_trigger",
+      "justification": "The item has a conditional extra-damage rider that resolves when a hit lands with this specific weapon. The current surface only has on-hit rider machinery for mastery records, not reusable magic-item mechanics.",
+      "evidence": "When you hit a Fiend or an Undead with it, that creature takes an extra 2d10 Radiant damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.sourceFilter = spell_or_magical_effect",
+      "justification": "If the aura family existed, the granted advantage would still need save-source narrowing to magical effects. Current modify_roll_advantage can target saving throws broadly, but not saving throws against spells and other magical effects only.",
+      "evidence": "You and all creatures Friendly to you in the Emanation have Advantage on saving throws against spells and other magical effects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "area.shape.threshold_tiers(axis=class)",
+      "justification": "The aura radius scales from 10 feet to 30 feet at paladin level 17. Current area geometry is fixed and cannot encode class-level threshold scaling on attachment size.",
+      "evidence": "If you have 17 or more levels in the Paladin class, the size of the Emanation increases to 30 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current encoding would be dishonest. The +3 attack and damage bonuses do fit as passive held-item grants scoped to the specific weapon, but the unit as a whole is blocked by the missing passive-aura and magic-item on-hit-rider structures."
+}

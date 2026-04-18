@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.two_objects",
+      "justification": "The current surface can target one object, but Sovereign Glue creates a bond between two objects at once. Modeling only one side would be false.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The rule's core payload is a persistent adhesive bond between objects. No existing effect atom represents joining two objects into a bonded state.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.sets_after_duration",
+      "justification": "The glue does not take effect immediately; it sets after 1 minute. The current activation family has ongoing duration, but no honest delayed-resolution/set timer for non-spell item activations.",
+      "evidence": "Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set."
+    }
+  ],
+  "confidence": "high",
+  "notes": "MagicItemRecord and activation economics already exist, and ounce stock could likely map to a nonrecharging charge pool with random initialCount. The blockers are the pairwise object attachment, the missing adhesive-bond effect, and the delayed set timing. I did not author content/magic_item_sovereign_glue.dhall because any valid JSON would omit the item's core mechanic."
+}

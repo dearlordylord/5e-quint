@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 20,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "grant_resistance_effect",
+  "archivedAt": "2026-04-18T11:48:46.933Z",
+  "selectedSlugs": [
+    "magic_item_potion_of_gaseous_form",
+    "magic_item_shield_of_missile_attraction"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_tome_of_understanding",
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as an activated magic item with study-gated activation, one use, century recharge via elapsed_days=36500, and a permanent Wisdom +2 increase capped at 30. content JSON compiled and tracer succeeded. pnpm typecheck is currently blocked by a pre-existing unrelated error in src/interpreter/tracer.ts:3274 where traceEquipmentPredicate returns string[] but the caller treats it as string."
+}

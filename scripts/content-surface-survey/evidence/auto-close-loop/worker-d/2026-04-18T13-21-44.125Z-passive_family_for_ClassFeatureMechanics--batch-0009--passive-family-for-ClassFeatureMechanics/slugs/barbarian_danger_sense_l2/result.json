@@ -1,0 +1,18 @@
+{
+  "unit_slug": "barbarian_danger_sense_l2",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "modify_roll_advantage",
+    "suppress"
+  ],
+  "relations_used": [
+    "grants",
+    "roots",
+    "suppresses"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive class feature with a Dex-only saving-throw advantage grant, suppressed while Incapacitated."
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_robe_of_the_archmagi",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.modify_ac_set_base",
+      "justification": "Passive magic items still cannot express a base AC replacement formula in PassiveMechanics.grants, even though the same rule shape exists for ongoing spells.",
+      "evidence": "If you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.sourceFilter",
+      "justification": "The robe grants advantage only on saving throws against spells and other magical effects, not on all saving throws.",
+      "evidence": "You have Advantage on saving throws against spells and other magical effects."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. The item kind and passive family fit, and attunement restriction, modify_save_dc, spell_attack_roll, and unarmored already exist, but the passive AC-formula replacement and magical-source save filter do not."
+}

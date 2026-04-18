@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceExpr.abilityModifierAddend",
+      "justification": "The item reduces incoming damage by a rolled amount plus Dexterity modifier, but DiceExpr only supports flat addends and spellcastingMod.",
+      "evidence": "reduce the damage by 1d10 plus your Dexterity modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The reaction is gated on having a free hand, and the existing equipment predicate vocabulary cannot express that requirement.",
+      "evidence": "if you have a free hand"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "catch_projectile_on_zero_damage",
+      "justification": "The item has a conditional follow-up rider when the reduction drops the triggering damage to 0, but the current surface has no honest item/object catch-transfer representation for that case.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon if it is small enough for you to hold in that hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Family fit is magic_item triggered_reaction, but authoring would be dishonest without a non-spell ability-modifier addend and a free-hand gate. No content/tracer files were written."
+}

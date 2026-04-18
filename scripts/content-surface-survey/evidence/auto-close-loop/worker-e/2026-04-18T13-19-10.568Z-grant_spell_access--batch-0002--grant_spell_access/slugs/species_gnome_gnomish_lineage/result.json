@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_gnome_gnomish_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.choice",
+      "justification": "The trait is a build-time pick among mutually exclusive lineage branches, and the branches do not share one honest mechanics family. The current surface only allows species traits to be either passive or activation, with no species-trait-level choice/composite wrapper.",
+      "evidence": "Choose one of the following options; whichever one you choose..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellAccessMode.prepared_with_proficiency_bonus_free_casts",
+      "justification": "Forest Gnome grants a spell that is always prepared, can be cast for free a number of times equal to Proficiency Bonus per Long Rest, and can also still use spell slots. Existing grant_spell_access modes cover once-per-long-rest, prepared, and prepared-once-per-long-rest, but not PB-counted free casts layered onto prepared access.",
+      "evidence": "You also always have the Speak with Animals spell prepared. You can cast it without a spell slot a number of times equal to your Proficiency Bonus... You can also use any spell slots you have to cast the spell."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "create_object_with_stored_spell_effect_and_concurrent_cap",
+      "justification": "Rock Gnome creates a persistent Tiny device with its own AC/HP, a stored Prestidigitation option chosen at creation, touch-triggered Bonus Action activation by any creature, a max-three-in-existence cap, timed expiry, and dismantle-via-Utilize cleanup. That exceeds the current species-trait and effect surface.",
+      "evidence": "You can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device (AC 5, 1 HP)... You can have three such devices in existence at a time, and each falls apart 8 hours after its creation or when you dismantle it with a touch as a Utilize action."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content/species_gnome_gnomish_lineage.dhall was authored. A partial Forest-only or Rock-only encoding would misrepresent the trait, and even the Forest branch alone needs a new spell-access mode."
+}

@@ -22,6 +22,7 @@ let gauntlets =
           "Your Strength score is 19 while you wear these gauntlets. They have no effect on you if your Strength without them is already 19 or higher."
       , mechanics =
           { family = "passive"
+          , condition = { kind = "wearing_item" }
           , grants =
               [ { kind = "set_ability_score"
                 , ability = "str"

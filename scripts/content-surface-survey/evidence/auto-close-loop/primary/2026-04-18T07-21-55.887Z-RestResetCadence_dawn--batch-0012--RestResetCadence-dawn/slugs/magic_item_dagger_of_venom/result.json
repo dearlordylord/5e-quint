@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "non-spell ongoing activated ability for magic items",
+      "justification": "The item combines an honest passive weapon bonus with a second ability that creates a temporary weapon-bound state, waits for a later hit by that same weapon, then resolves a save-gated rider and expires on first hit or after a timed window. Existing magic-item mechanics admit passive, immediate activation, triggered reaction, or composites of those, but not an activated ongoing rider.",
+      "evidence": "The poison remains for 1 minute or until an attack using this weapon hits a creature. That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 to attack rolls and damage rolls made with this specific weapon fits today via passive grants plus a specific_item weapon filter. The blocking gap is the coated-blade subgraph, not the underlying save, damage, condition, bonus action cost, or dawn reset."
+}

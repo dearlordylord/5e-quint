@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.targeted_by_spell",
+      "justification": "The existing reaction trigger surface can target named spells or post-save spell outcomes, but not an arbitrary spell that targets only the reactor and has no area.",
+      "evidence": "you can take a Reaction to absorb a spell that is targeting only you and doesn't create an area of effect"
+    },
+    {
+      "kind": "new_variant",
+      "name": "magic-item absorbed spell-energy reservoir resource",
+      "justification": "The rod stores spell levels from canceled spells, has a current stored amount, a lifetime absorption ceiling of 50, and an initial stored amount when found. Existing charge_pool semantics do not cover this.",
+      "evidence": "The rod can absorb and store up to 50 levels of energy over the course of its existence."
+    },
+    {
+      "kind": "new_variant",
+      "name": "wielder spell-slot substitution using stored item energy",
+      "justification": "The rod does not grant named spells; it lets the wielder spend stored energy in place of their own spell slots when casting spells they already know or have prepared.",
+      "evidence": "you can convert energy stored in it into spell slots to cast spells you have prepared or know"
+    },
+    {
+      "kind": "new_variant",
+      "name": "conditional nonmagical lifecycle after reservoir exhaustion",
+      "justification": "The rod becomes nonmagical only after it has reached its lifetime absorption limit and then has no stored energy remaining. Existing permanent_on_empty is too broad.",
+      "evidence": "A rod that can no longer absorb spell energy and has no energy remaining becomes nonmagical."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item fits the existing magic_item/composite family structurally, but it needs missing trigger and resource variants to encode honestly."
+}

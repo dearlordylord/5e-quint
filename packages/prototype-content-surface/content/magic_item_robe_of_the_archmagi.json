@@ -1,0 +1,88 @@
+{
+  "attunementRestriction": {
+    "classes": [
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "kind": "class_list"
+  },
+  "description": "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_robe_of_the_archmagi",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
+          "kind": "wearing_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "saving_throw"
+            ],
+            "saveSourceFilter": {
+              "kind": "spell_or_other_magical_effect"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_save_dc"
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "spell_attack_roll"
+            ]
+          }
+        ]
+      },
+      {
+        "condition": {
+          "kind": "all_of",
+          "predicates": [
+            {
+              "kind": "wearing_item"
+            },
+            {
+              "kind": "unarmored"
+            }
+          ]
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "abilityMod": "dex",
+            "const": 15,
+            "kind": "modify_ac_set_base"
+          }
+        ]
+      }
+    ]
+  },
+  "name": "Robe of the Archmagi",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RobeOfTheArchmagi"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": true
+}

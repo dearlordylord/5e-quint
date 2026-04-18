@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.rangeOverride / originOverride",
+      "justification": "Several outcomes cast existing spells from the chosen point, or force a line to run from the wielder to that point. The current magic-item spell grant can override DC, area, target restriction, and duration only; it cannot override spell range or re-anchor the spell's point of origin honestly.",
+      "evidence": "If a spell's maximum range is normally less than 120 feet, it becomes 120 feet when cast from the wand. ... You cast Gust of Wind. The Line created by the spell extends from you to the chosen point of origin."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object / noncreature target selection",
+      "justification": "One branch exiles an unattended object, but the authored surface only allows self, target, area, and mark attachments. There is no honest way to target a noncreature object in an activation phase.",
+      "evidence": "An object of the GM's choice disappears into the Ethereal Plane. The object must be neither worn nor carried, within 120 feet of the chosen point of origin, and no larger than 10 feet in any dimension."
+    },
+    {
+      "kind": "new_variant",
+      "name": "uncontrolled_spawned_creature payload",
+      "justification": "The existing spawned-creature surfaces always encode a controllable companion and emit command semantics. This branch explicitly creates a creature that is not under the wielder's control and behaves independently.",
+      "evidence": "The creature isn't under your control, acts as it normally would, and disappears after 1 hour or when it drops to 0 Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "branch-local persistent effect window for random-table outcomes",
+      "justification": "Multiple non-spell outcomes apply timed or repeating conditions directly from a table branch. Activated magic-item mechanics only carry one optional top-level duration, not per-outcome persistence for random direct effects.",
+      "evidence": "you have the Stunned condition until the start of your next turn ... you shrink ... and remain in that state for 1 minute ... Each creature in the area must succeed on a DC 15 Constitution saving throw or have the Blinded condition for 1 minute."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "split_damage_among_targets",
+      "justification": "One outcome rolls a total damage pool, then divides that total equally among all creatures in a line. The current surface can model dealing damage to each target, but not rolling one shared pool and distributing it across all affected creatures.",
+      "evidence": "Each gem deals 1 Bludgeoning damage, and the total damage of the gems is divided equally among all creatures in the Line."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content files. The top-level kind and activation+random_table family exist, but the table mixes cast-from-point spell overrides, unattended-object targeting, uncontrolled creature spawning, branch-local timed effects, and shared-pool damage distribution. Lightly/Heavily Obscured, grass overgrowth, and leaf growth look caller-owned or secondary and are not the main blockers."
+}

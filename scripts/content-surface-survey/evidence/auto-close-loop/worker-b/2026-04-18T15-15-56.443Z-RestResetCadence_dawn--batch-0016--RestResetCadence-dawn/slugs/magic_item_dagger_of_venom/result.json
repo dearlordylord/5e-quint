@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activation_armed_on_hit_rider",
+      "justification": "The item activates with a Bonus Action, creates a temporary armed state for 1 minute, listens for a later hit with this specific weapon, then resolves a one-shot save-gated poison rider and ends. Existing non-spell families cannot combine activation, persistence, later weapon-hit triggering, and one-shot consumption honestly.",
+      "evidence": "\"You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 attack and damage bonuses fit the current surface, but the core activated poison-coating mechanic does not. No content/tracer files were authored to avoid a misleading trace."
+}

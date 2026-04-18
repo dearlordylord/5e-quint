@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.areaOverride relative-area multiplier",
+      "justification": "The item grants an existing spell with a modified area stated relative to that spell's normal area. The current surface only supports absolute replacement shapes, not relative scaling from the granted spell's authored area.",
+      "evidence": "\"The web created by the spell fills twice its normal area.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Composite magic-item shape already fits the passive benefits and the once-per-dawn Web cast with fixed DC 13. The only blocking gap is the relative area rider; authoring an absolute area override would be misleading, so no content file was produced."
+}

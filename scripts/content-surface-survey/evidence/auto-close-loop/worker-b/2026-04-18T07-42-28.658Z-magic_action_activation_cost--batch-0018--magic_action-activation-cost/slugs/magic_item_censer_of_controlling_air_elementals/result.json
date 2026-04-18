@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "magic_item summoned-creature mechanics family",
+      "justification": "The item's core mechanic is summoning and controlling a creature with deterministic command, initiative, dismissal, and expiry behavior. The current surface only exposes companion-creation families for spells (`spawned_creature`, `reanimated_creature`, `templated_multi_spawn`). Magic items are limited to passive, activation, triggered_reaction, or composite-over-those, none of which can honestly produce a companion.",
+      "evidence": "While gently swinging this censer, you can take a Magic action to summon an Air Elemental. The elemental appears in an unoccupied space as close to the censer as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/*.dhall or run typecheck/tracer. A fake activation-family encoding would omit the summoned creature lifecycle and command semantics that are the item's primary rule text."
+}

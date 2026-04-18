@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke destroys the target outright on a failed save. Transport or damage atoms are not honest substitutes for unconditional destruction with no remains.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PassiveOperation.trigger.on_touch_or_hold_item",
+      "justification": "The talisman deals damage automatically to qualifying creatures that touch it and repeatedly at turn end while they keep holding or carrying it. Passive operations currently only support elapsed-time cadence.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.any_of",
+      "justification": "Two mechanics are gated by wearing-or-holding the item. The current predicate grammar can express AND via all_of, but not OR.",
+      "evidence": "You gain a +2 bonus to spell attack rolls while you wear or hold it. While wearing or holding the talisman, you can take a Magic action..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.target_type_disadvantage",
+      "justification": "Pure Rebuke modifies the target's saving throw only when the target is a Fiend or Undead. The current save-gate surface has no place for target-type-conditioned save disadvantage.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. Composite magic-item shape exists, but the core deterministic payload needs a destruction atom, and secondary surface gaps remain for passive touch/hold damage, wear-or-hold gating, and typed save disadvantage."
+}

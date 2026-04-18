@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 22,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "cunning_strike_option",
+  "archivedAt": "2026-04-18T14:42:27.437Z",
+  "selectedSlugs": [
+    "rogue_devious_strikes_l14",
+    "rogue_supreme_sneak_l9"
+  ]
+}

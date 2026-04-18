@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_movement_through_openings",
+      "justification": "Gaseous Form grants a persistent movement capability that is not reducible to speed, teleportation, or forced movement.",
+      "evidence": "the target can move through a space as small as 1 inch wide without squeezing"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.restrict_action_set",
+      "justification": "The surface only carries action restriction nested under grant_extra_action, but Gaseous Form imposes an ongoing prohibition rather than granting an extra action with exclusions.",
+      "evidence": "The target can't attack or cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_ends_effect_as_bonus_action",
+      "justification": "The potion adds a voluntary early-end rider that consumes action economy; existing duration end triggers are passive events only.",
+      "evidence": "until you end the effect as a Bonus Action"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit fits magic_item + activation structurally, but I did not author content because the inherited Gaseous Form effect would require omitting core mechanics. No trace was generated."
+}

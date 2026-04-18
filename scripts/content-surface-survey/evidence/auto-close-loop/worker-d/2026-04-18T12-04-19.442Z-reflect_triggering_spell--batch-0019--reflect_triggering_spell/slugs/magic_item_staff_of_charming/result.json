@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_staff_of_charming",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "non_reaction_triggered_item_ability",
+      "justification": "Resist Enchantment is a trigger-bound item property, but the existing non-spell triggered family requires consuming a Reaction and would misencode the rule.",
+      "evidence": "If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one."
+    },
+    {
+      "kind": "new_atom",
+      "name": "replace_triggering_save_outcome",
+      "justification": "The surface can reflect or negate a triggering spell, but it cannot change the triggering saving throw's outcome from failure to success.",
+      "evidence": "you can turn your failed save into a successful one"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Cast Spell, Reflect Enchantment, class-list attunement, charge_pool recharge, and last-charge destruction all fit. Resist Enchantment blocks an honest full-unit encoding, so no content or trace files were authored."
+}

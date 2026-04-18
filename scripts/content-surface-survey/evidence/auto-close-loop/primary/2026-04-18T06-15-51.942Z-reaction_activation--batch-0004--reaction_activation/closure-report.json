@@ -1,0 +1,36 @@
+{
+  "cluster": "reaction_activation",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_gloves_of_missile_snaring",
+    "magic_item_quarterstaff_of_the_acrobat"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_gloves_of_missile_snaring",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_quarterstaff_of_the_acrobat",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}

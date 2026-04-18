@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 27,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemMechanics.spawned_creature",
+  "archivedAt": "2026-04-18T09:29:38.906Z",
+  "selectedSlugs": [
+    "magic_item_figurine_of_wondrous_power",
+    "magic_item_stone_of_controlling_earth_elementals"
+  ]
+}

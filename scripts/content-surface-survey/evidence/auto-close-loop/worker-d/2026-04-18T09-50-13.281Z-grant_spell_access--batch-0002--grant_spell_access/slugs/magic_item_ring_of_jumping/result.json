@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_ring_of_jumping",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "magic_item_root"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Honest fit as an attunement-gated passive magic item that grants at-will access to Jump with the existing self_only target restriction."
+}

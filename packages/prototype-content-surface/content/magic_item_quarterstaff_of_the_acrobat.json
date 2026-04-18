@@ -1,0 +1,52 @@
+{
+  "description": "You have a +2 bonus to attack rolls and damage rolls made with this magic weapon. While holding this weapon, you can cause it to emit green Dim Light out to 10 feet, either as a Bonus Action or after you roll Initiative, or you can extinguish the light as a Bonus Action. While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod, a 10-foot pole, or reverting it to a Quarterstaff. Additional properties are form-gated: Acrobatic Assist (Quarterstaff and 10-Foot Pole forms), Attack Deflection (Quarterstaff form), and a thrown-property return rider (Quarterstaff form). This authored subset keeps only the unconditional +2 weapon bonus; omitted riders are recorded in proposal-magic_item_quarterstaff_of_the_acrobat.md.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_quarterstaff_of_the_acrobat",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 2,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "attack_roll"
+        ],
+        "weaponFilter": {
+          "itemId": "magic_item_quarterstaff_of_the_acrobat",
+          "kind": "specific_item"
+        }
+      },
+      {
+        "delta": {
+          "dice": 2,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_damage_numeric",
+        "weaponFilter": {
+          "itemId": "magic_item_quarterstaff_of_the_acrobat",
+          "kind": "specific_item"
+        }
+      }
+    ]
+  },
+  "name": "Quarterstaff of the Acrobat",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#QuarterstaffOfTheAcrobat"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": true
+}

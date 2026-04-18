@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destination_plane_binding",
+      "justification": "The existing activated magic-item + charge-pool family fits the recharge and spellcasting shell, but it cannot express that each cast of Gate or Plane Shift is constrained to the plane keyed to the pressed side of the cube. Omitting that field would broaden the item into unrestricted casts of those spells and produce a misleading trace.",
+      "evidence": "\"Gate. Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\" / \"Plane Shift. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_cubic_gate.dhall. The item otherwise matches an activated magic-item with a shared charge_pool (3 charges) and dawn recharge (1d3), but the side-keyed destination-plane override is a core rule and is not representable on grant_spell_access today. The GM-determined non-Material planes are not the blocker; the missing surface is the cast-time binding from pressed side to spell destination."
+}

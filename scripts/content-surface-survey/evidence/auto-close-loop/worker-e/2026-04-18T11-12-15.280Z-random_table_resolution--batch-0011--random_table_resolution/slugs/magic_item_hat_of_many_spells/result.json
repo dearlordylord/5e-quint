@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.spell_slot",
+      "justification": "The magic-item activation spends the wielder's own spell slot instead of an item use counter or charge pool.",
+      "evidence": "\"you must expend a spell slot of the spell's level\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.class_list_choice",
+      "justification": "The item does not grant one named spell; it opens a filtered choice over Wizard-list spells the wielder does not know, bounded by castable level and material-cost ceiling.",
+      "evidence": "\"you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can't have Material components costing more than 1,000 GP.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.inherit_granted_spell_casting_time",
+      "justification": "On success, the item casts the chosen spell using that spell's own casting time, so the activation does not have one fixed action cost expressible in the current non-spell activation header.",
+      "evidence": "\"On a successful check, you cast the spell using its normal casting time\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content files. The top-level magic-item/composite family exists, but the Unknown Spell property cannot be encoded honestly with current activation-resource and spell-access shapes. The failure table has additional partial-fit issues, but they are secondary to the main activation blocker."
+}

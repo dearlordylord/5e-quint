@@ -1,0 +1,34 @@
+{
+  "description": "If you take Cold damage while wearing this ring, the ring reduces the damage you take by 2d8. In addition, while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_ring_of_warmth",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "amount": {
+          "expr": {
+            "dice": 2,
+            "dieSize": 8
+          },
+          "kind": "fixed"
+        },
+        "damageType": "cold",
+        "kind": "reduce_damage_taken"
+      }
+    ]
+  },
+  "name": "Ring of Warmth",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RingOfWarmth"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}

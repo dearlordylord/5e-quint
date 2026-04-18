@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 24,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_condition_immunity",
+  "archivedAt": "2026-04-18T14:55:16.204Z",
+  "selectedSlugs": [
+    "druid_natures_ward_l10",
+    "paladin_aura_of_courage_l10"
+  ]
+}

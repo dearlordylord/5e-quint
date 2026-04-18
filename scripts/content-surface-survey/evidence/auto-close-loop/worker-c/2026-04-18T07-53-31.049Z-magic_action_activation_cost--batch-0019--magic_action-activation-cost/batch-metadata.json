@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 19,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "magic_action activation cost",
+  "archivedAt": "2026-04-18T07:58:07.241Z",
+  "selectedSlugs": [
+    "magic_item_censer_of_controlling_air_elementals",
+    "magic_item_gem_of_seeing"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "attunement_slot",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root",
+    "modify_ac",
+    "modify_roll_advantage",
+    "modify_roll_numeric",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_sense: locate_invisible_creatures_in_shared_bright_light",
+      "justification": "The existing sense surface only supports broad sense kinds like truesight. This rider is narrower: it lets beneficiaries locate Invisible creatures only when both are inside the aura's bright-light area.",
+      "evidence": "While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a composite magic item and traced successfully. The invisible-creature-location aura rider was intentionally omitted because grant_sense.truesight would overstate it. The JSON includes a 10-minute activation duration, but the current tracer did not surface that duration for this magic-item activation."
+}

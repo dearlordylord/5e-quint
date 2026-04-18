@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 24,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord + magic_item UnitRecord kind",
+  "archivedAt": "2026-04-18T09:05:59.342Z",
+  "selectedSlugs": [
+    "magic_item_adamantine_armor",
+    "magic_item_censer_of_controlling_air_elementals"
+  ]
+}

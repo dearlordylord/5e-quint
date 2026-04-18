@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_ioun_stone",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_item_stored_spell_reservoir",
+      "justification": "The collection includes the Reserve variant, which must accept arbitrary spells cast into the item by any creature, preserve the original cast metadata, track bounded stored slot-level capacity, and later release one stored spell through the wearer. No existing magic-item mechanics family can model third-party storage plus later release of preserved spell payloads.",
+      "evidence": "This vibrant purple prism stores spells cast into it, holding them until you use them. The stone can store up to 4 levels of spells at a time."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_food_and_drink_need",
+      "justification": "Sustenance is a deterministic passive benefit, but the current effect surface has no atom for removing food and drink requirements.",
+      "evidence": "You don't need to eat or drink while this clear spindle orbits your head."
+    },
+    {
+      "kind": "new_variant",
+      "name": "trigger_derived_resource_spend",
+      "justification": "Absorption and Greater Absorption consume burnout capacity equal to the triggering spell's level, not a fixed use and not a player-chosen charge cost. Current item reaction resources cannot spend an amount derived from trigger context.",
+      "evidence": "Once the stone has canceled 20 levels of spells, it burns out, turns dull gray, and loses its magic."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content because the collection cannot be represented honestly. Several variants fit the existing passive surface, but Reserve forces a missing magic-item family and Sustenance forces a new atom."
+}

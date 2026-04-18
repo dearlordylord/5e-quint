@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cube_of_force",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "shared_resource_mixed_casting_time_spell_menu",
+      "justification": "The item grants several different spells from one shared charge pool, but those spells do not share one activation shape: Shield must remain a reaction while the other faces are normal casts. Current magic-item families cannot preserve both the shared pool and the heterogeneous casting times without duplicating state or falsifying one face.",
+      "evidence": "\"You can press one of those faces, expend the number of charges required for it, and thereby cast the spell associated with it (save DC 17)...\" plus the face table includes \"Shield\" alongside non-reaction spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "composite_shared_resource_header",
+      "justification": "If composite magic items are the intended carrier, they need a way for multiple parts to reference one shared charge pool and one shared dawn recharge cadence. Today each part owns its own resource/reset fields, which would duplicate the cube's single pool of 10 charges.",
+      "evidence": "\"The cube starts with 10 charges, and it regains 1d6 expended charges daily at dawn.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content/magic_item_cube_of_force.dhall because any valid current encoding would either model Shield with the wrong casting-time family or duplicate the cube's single charge pool across multiple parts."
+}

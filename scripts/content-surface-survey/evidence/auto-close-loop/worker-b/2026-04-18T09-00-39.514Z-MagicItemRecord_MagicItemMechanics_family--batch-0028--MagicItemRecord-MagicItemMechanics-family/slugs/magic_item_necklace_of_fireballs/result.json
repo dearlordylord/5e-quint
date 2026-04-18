@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_necklace_of_fireballs",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.rangeOverride",
+      "justification": "The item reuses Fireball but changes the cast range to a 60-foot throw. The current surface can override DC and area, but not spell range, so reusing the Fireball record would produce a false 150-foot trace.",
+      "evidence": "You can take a Magic action to detach a bead and throw it up to 60 feet away. When it reaches the end of its trajectory, the bead detonates as a level 3 Fireball (save DC 15)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellAccessMode.charge_cast separate spend cap from effect cap",
+      "justification": "The current charge_cast shape assumes the number of charges spent and the spell's effective upcast level advance together. Necklace of Fireballs allows spending more beads than the effect's scaling cap when you hurl the whole necklace, so spend and scaling need separate bounds.",
+      "evidence": "You can hurl multiple beads, or even the whole necklace, at one time. When you do so, increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring because any current encoding would either misstate Fireball's range or fail to model whole-necklace overspend consuming extra beads past the 12d6 cap."
+}

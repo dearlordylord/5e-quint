@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.ongoing_effect",
+      "justification": "The item combines held passives with an activated planted aura that persists for 10 minutes and applies conditional benefits within an area. Current magic-item mechanics only allow passive, activation, triggered_reaction, or composites of those families.",
+      "evidence": "As a Magic action, you can plant the haft end of the rod in the ground... While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Held passive alertness and held spell access both fit existing surface shapes, but the planted Protective Aura is not an honest one-shot activation. I did not author Dhall/JSON content or run the tracer to avoid a false trace."
+}

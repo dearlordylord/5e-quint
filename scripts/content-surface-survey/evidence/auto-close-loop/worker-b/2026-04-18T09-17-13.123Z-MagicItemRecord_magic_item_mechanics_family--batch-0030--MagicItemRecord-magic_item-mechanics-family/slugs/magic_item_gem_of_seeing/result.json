@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "duration_scoped_equipment_predicate",
+      "justification": "The existing magic-item activation family can model the charges, action cost, duration, recharge, and truesight grant, but it cannot honestly express that the granted sense only applies while the bearer is peering through the gem during the 10-minute window.",
+      "evidence": "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I tested a candidate activation encoding, but it would have misrepresented the rule by treating peering through the gem as an activation prerequisite instead of a duration-scoped gate on the sense. I deleted the authored content files rather than keep a misleading trace."
+}

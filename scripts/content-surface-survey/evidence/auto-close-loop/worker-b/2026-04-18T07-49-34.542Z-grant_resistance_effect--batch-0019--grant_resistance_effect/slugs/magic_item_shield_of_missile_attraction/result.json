@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_shield_of_missile_attraction",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_resistance.source_filter_all_damage",
+      "justification": "The existing resistance surface only models resistance keyed by damage type. This item grants resistance to any damage that comes from attacks made with ranged weapons.",
+      "evidence": "While holding this Shield, you have Resistance to damage from attacks made with Ranged weapons."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "redirect_attack_target",
+      "justification": "The curse automatically intercepts a qualifying ranged-weapon attack aimed at a nearby creature and replaces that creature with the cursed bearer before attack resolution.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
+    },
+    {
+      "kind": "new_variant",
+      "name": "magic_item.attunement_curse",
+      "justification": "The curse is acquired when you attune and persists even after the shield is removed, ending only via Remove Curse or similar magic. Current magic-item mechanics only model passive/activated behavior while the item is in play; they do not model a detached ongoing curse bestowed by attunement.",
+      "evidence": "Attuning to it curses you until you are targeted by a Remove Curse spell or similar magic. Removing the Shield fails to end the curse on you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The held resistance rider is already a pressure case on grant_resistance, but the attunement-persistent curse means the unit does not fit an existing magic-item mechanics family honestly."
+}

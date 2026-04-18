@@ -1,0 +1,23 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "grant",
+    "modify_roll_advantage",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "The trait changes carrying-capacity math by treating the bearer as one size larger, but the current surface has no carrying-capacity or effective-size-for-capacity effect.",
+      "evidence": "\"You also count as one size larger when determining your carrying capacity.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Typecheck and tracer both passed for the Grappled-escape advantage. The carrying-capacity rider is omitted from the authored content and recorded as a widening."
+}

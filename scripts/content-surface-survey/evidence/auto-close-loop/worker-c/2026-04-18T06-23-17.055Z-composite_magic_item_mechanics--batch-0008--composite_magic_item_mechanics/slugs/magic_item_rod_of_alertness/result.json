@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activated_magic_item_ongoing_aura",
+      "justification": "The item combines existing passive held mechanics with an activated, time-bounded, location-anchored aura that continuously grants benefits to creatures in an illuminated area. Magic items currently admit only passive, activation, or composite(passive|activation), and activation phases are one-shot rather than persistent ongoing area states.",
+      "evidence": "As a Magic action, you can plant the haft end of the rod in the ground ... While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws ... The rod's head stops glowing and the effect ends after 10 minutes or when a creature takes a Magic action to pull the rod from the ground."
+    },
+    {
+      "kind": "new_variant",
+      "name": "non_spell_location_anchor_for_activated_effects",
+      "justification": "The aura is centered on the planted rod, not on the wielder, and ends when the rod is pulled from the ground. Existing activated abilities do not have a non-spell location/object anchor or an early-end trigger for removing that anchor.",
+      "evidence": "you can plant the haft end of the rod in the ground ... when a creature takes a Magic action to pull the rod from the ground"
+    },
+    {
+      "kind": "new_variant",
+      "name": "visibility_limited_invisible_sense",
+      "justification": "Existing senses can model seeing invisible creatures broadly, but this rider is narrower: creatures in the aura can sense the location of invisible creatures only while both are in the bright-light area. That conditional area-scoped detection is not an existing authored shape.",
+      "evidence": "While in that Bright Light, you and your allies ... can sense the location of any Invisible creature that is also in the Bright Light."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The held Alertness bonus and held spell list both fit existing surface pieces (`holding_item`, `modify_roll_advantage`, `grant_spell_access`). The blocker is the planted Protective Aura, which would require a persistent non-spell aura family rather than a one-shot activation placeholder."
+}

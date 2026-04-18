@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 21,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "modify_ac_effect",
+  "archivedAt": "2026-04-18T08:15:46.260Z",
+  "selectedSlugs": [
+    "magic_item_robe_of_the_archmagi",
+    "magic_item_quarterstaff_of_the_acrobat"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "PassiveOperation.trigger.post_save_spell_outcome",
+      "justification": "The ring has an automatic rider after a successful saving throw against a qualifying spell, but passive magic-item operations currently only support elapsed-time triggers.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "TriggeredReactionAbilityMechanics without required item resource/resetCadence",
+      "justification": "The ring's deflection rider spends only the wearer's Reaction and has no charge pool or recharge cadence, so the current triggered-reaction magic-item shape would force a fake resource.",
+      "evidence": "you can take a Reaction to deflect the spell back at the spell's caster"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive save-advantage grant fits existing atoms, and the deflection concept matches existing trigger/effect atoms, but the current magic-item surface cannot honestly encode the automatic post-save negation plus unlimited reaction deflection without widening."
+}

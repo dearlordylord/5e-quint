@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger / WeaponFilter support for ranged_or_thrown weapon attack and free-hand gating",
+      "justification": "The existing triggered-reaction family fits, but the current trigger grammar cannot represent a hit from either a ranged weapon or a thrown weapon, and it cannot require that the reactor has a free hand before the reaction is available.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon ... if you have a free hand."
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_projectile_or_weapon",
+      "justification": "The item has a second deterministic rider beyond damage reduction: if the prevented damage is reduced to 0, the defender can catch the ammunition or weapon. No current effect atom represents conditional item capture after damage prevention.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon if it is small enough for you to hold in that hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The unit's primary family is a magic-item triggered reaction, but current surface support is missing both trigger-side expressivity and the conditional catch rider."
+}

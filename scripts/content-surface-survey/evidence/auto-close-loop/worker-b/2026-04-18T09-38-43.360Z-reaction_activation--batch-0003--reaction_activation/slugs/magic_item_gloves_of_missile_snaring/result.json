@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceExpr generic ability-modifier addend",
+      "justification": "The main reduce-damage effect exists, but its amount grammar cannot express dice plus a non-spellcasting ability modifier.",
+      "evidence": "reduce the damage by 1d10 plus your Dexterity modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The reaction is only legal when the wearer has a free hand, and the current equipment-gate vocabulary cannot encode that prerequisite.",
+      "evidence": "if you have a free hand"
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_incoming_weapon_or_ammunition",
+      "justification": "The current effect surface can reduce damage, but it cannot model the deterministic follow-on rider that lets the reactor catch the incoming projectile or thrown weapon on a full reduction.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit is existing magic_item + triggered_reaction, so this is not structural. I left content/ untouched because encoding the main reaction without the Dex-mod amount and free-hand gate would be knowingly false."
+}
