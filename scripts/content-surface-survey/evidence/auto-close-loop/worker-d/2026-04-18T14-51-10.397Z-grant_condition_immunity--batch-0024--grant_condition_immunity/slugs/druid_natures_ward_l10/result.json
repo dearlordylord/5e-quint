@@ -1,0 +1,16 @@
+{
+  "unit_slug": "druid_natures_ward_l10",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive grant_resistance projected from referenced feature state",
+      "justification": "The passive class-feature family exists, and both poison immunity and damage resistance atoms exist, but the resistance payload cannot currently point at another feature's current selection. The surface only supports fixed damage types or closed author/cast-time choices, not a runtime projection from class-feature state.",
+      "evidence": "you have Resistance to a damage type associated with your current land choice in the Circle Spells feature"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Nature's Ward is mostly a passive class feature. 'Immune to the Poisoned condition' fits grant_condition_immunity, but the land-linked resistance cannot be authored honestly without a new surface variant that reads the current Circle Spells land choice at runtime. No content/traces were generated to avoid a misleading fixed-choice encoding."
+}
