@@ -417,6 +417,17 @@ export type DiceAmount =
   // remaining in the pool." Paired with a charge_pool resource on
   // the mechanics header.
   | { readonly kind: "resource_spent" }
+  // Affine resource-spend amount: base + (perResource × resource_spent),
+  // optionally capped. Necklace of Fireballs is the pressure case:
+  // 7d6 + (1d6 × beads spent), maximum 12d6. Kept distinct from the
+  // plain `resource_spent` variant so pure pool-equals-amount cases
+  // (Lay on Hands) stay simple and exact.
+  | {
+      readonly kind: "resource_spent_linear";
+      readonly base: DiceExpr;
+      readonly perResource: DiceExprDelta;
+      readonly maximum?: DiceExpr;
+    }
   // §A14: amount read from another atom resolved in the same phase —
   // specifically a damage instance's total. Harm: modify_max_hp.delta
   // = linked damage_taken (full) of the save-gate's damage atom.

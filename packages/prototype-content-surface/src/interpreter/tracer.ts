@@ -2557,6 +2557,23 @@ function traceDiceAmountScaling(
       // resource expenditure, not a character or slot axis. The
       // describe side renders the label "= resource spent".
       return;
+    case "resource_spent_linear": {
+      const scId = ids("sc");
+      const deltaText = describeDelta_(amt.perResource, amt.base);
+      const maxText =
+        amt.maximum === undefined ? "" : `\nmax ${describeExpr(amt.maximum)}`;
+      nodes.push({
+        id: scId,
+        category: "scaling",
+        atomKind: scalingAtomFor(amt),
+        label:
+          `${scalingAtomFor(amt)}\naxis=resource_spent\n` +
+          `base ${describeExpr(amt.base)}\n` +
+          `+${deltaText} per resource spent${maxText}`,
+      });
+      edges.push({ from: scId, to: effectId, relation: "modifies" });
+      return;
+    }
     case "linked":
       // §A14: no scaling node — the amount is derived from another
       // atom's resolved output in the same phase. Any slot/character
@@ -2587,6 +2604,11 @@ function scalingAtomFor(amt: DiceAmount): string {
   if (amt.kind === "linear_per_level") {
     if (amt.perLevel.dieSize !== undefined) return "scale_die_size";
     if (amt.perLevel.dice !== undefined) return "scale_die_count";
+    return "scale_numeric_bonus";
+  }
+  if (amt.kind === "resource_spent_linear") {
+    if (amt.perResource.dieSize !== undefined) return "scale_die_size";
+    if (amt.perResource.dice !== undefined) return "scale_die_count";
     return "scale_numeric_bonus";
   }
   return "scale_numeric_bonus";
@@ -4198,6 +4220,14 @@ function describeDiceAmount(a: DiceAmount): string {
       return `${describeExpr(a.base)} (linear per ${a.axis} level)`;
     case "resource_spent":
       return "= charges spent (player choice)";
+    case "resource_spent_linear": {
+      const maxText =
+        a.maximum === undefined ? "" : `, max ${describeExpr(a.maximum)}`;
+      return (
+        `${describeExpr(a.base)} + ` +
+        `${describeDelta_(a.perResource, a.base)} per resource spent${maxText}`
+      );
+    }
     case "linked": {
       const scale = a.link.scale === "half" ? "half " : "";
       const source =
