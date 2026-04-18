@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "grant_temp_hp",
+  "archivedAt": "2026-04-18T15:28:01.388Z",
+  "selectedSlugs": [
+    "polymorph",
+    "true_polymorph"
+  ]
+}
