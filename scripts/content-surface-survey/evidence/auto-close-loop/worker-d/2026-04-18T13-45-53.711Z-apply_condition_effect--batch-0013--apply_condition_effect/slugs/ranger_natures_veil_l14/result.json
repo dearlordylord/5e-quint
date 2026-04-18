@@ -1,0 +1,16 @@
+{
+  "unit_slug": "ranger_natures_veil_l14",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.ability_modifier.minimum",
+      "justification": "The existing ability-modifier use-count cap cannot express the RAW floor of at least one use, so encoding the feature today would produce false 0-or-fewer-use states for low-Wisdom rangers.",
+      "evidence": "You can use this feature a number of times equal to your Wisdom modifier (minimum of once)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Nature's Veil otherwise fits the existing class_feature activation surface: bonus action, self-target, apply Invisible, long-rest reset. I did not author content JSON because the resource cap cannot be encoded honestly without a minimum floor."
+}

@@ -1,0 +1,36 @@
+{
+  "cluster": "apply_condition_effect",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "ranger_natures_veil_l14",
+    "cleric_channel_divinity"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "ranger_natures_veil_l14",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "cleric_channel_divinity",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}
