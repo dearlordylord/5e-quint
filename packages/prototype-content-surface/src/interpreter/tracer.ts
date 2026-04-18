@@ -2749,6 +2749,16 @@ function traceEquipmentPredicate(
   ids: IdGen,
 ): string {
   switch (p.kind) {
+    case "holding_item": {
+      const id = ids("pred");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "holding_item",
+        label: "holding_item",
+      });
+      return id;
+    }
     case "wearing_armor": {
       const id = ids("pred");
       nodes.push({

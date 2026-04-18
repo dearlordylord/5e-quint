@@ -205,6 +205,7 @@ export const STAGE_3_EXTENSIONS = [
   // Resolution-category predicate atoms emitted by the tracer's
   // EquipmentPredicate dispatch (Defense feat gates modify_ac on armor,
   // fighting-style feats gate bonuses on weapon category).
+  "holding_item",
   "wearing_armor",
   "wielding_weapon",
   // Effect atoms for movement/senses/detection/crit-range modification —

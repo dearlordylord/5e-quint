@@ -1971,14 +1971,17 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // wearing Light, Medium, or Heavy armor".
 //
 // `always` is the sentinel for unconditional grants (darkvision,
-// Cloak of Protection, etc.). `wearing_armor` carries a category list
-// because Defense's SRD text enumerates three allowed categories.
-// `wielding_weapon` carries a coarse weapon-kind enum sufficient to
-// scope the Fighting Style pool; finer discrimination (specific
-// weapon types, versatile-used-two-handed, dual-wielding off-hand) can
-// be added as new Fighting-Style-adjacent units surface it.
+// Cloak of Protection, etc.). `holding_item` covers held-item gates on
+// non-weapon equipment such as Sentinel Shield and wand-family magic
+// items. `wearing_armor` carries a category list because Defense's SRD
+// text enumerates three allowed categories. `wielding_weapon` carries
+// a coarse weapon-kind enum sufficient to scope the Fighting Style
+// pool; finer discrimination (specific weapon types,
+// versatile-used-two-handed, dual-wielding off-hand) can be added as
+// new Fighting-Style-adjacent units surface it.
 export type EquipmentPredicate =
   | { readonly kind: "always" }
+  | { readonly kind: "holding_item" }
   | {
       readonly kind: "wearing_armor";
       readonly categories: ReadonlyArray<"light" | "medium" | "heavy">;
