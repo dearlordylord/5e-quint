@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_shield_of_missile_attraction",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "composite_magic_item_mechanics (held passive + attunement-triggered persistent curse)",
+      "justification": "The item combines a normal held passive with a curse that begins on attunement and persists on the bearer even after the shield is removed. The current magic-item families do not model that split honestly.",
+      "evidence": "While holding this Shield, you have Resistance to damage from attacks made with Ranged weapons. ... Attuning to it curses you until you are targeted by a Remove Curse spell or similar magic. Removing the Shield fails to end the curse on you."
+    },
+    {
+      "kind": "new_atom",
+      "name": "redirect_target_to_cursed_bearer",
+      "justification": "The curse deterministically rewrites attack targeting so the cursed bearer becomes the target of a ranged-weapon attack aimed at a nearby creature. Existing atoms cover mitigation, negation, and roll modification, but not automatic target substitution.",
+      "evidence": "Whenever an attack with a Ranged weapon targets a creature within 10 feet of you, the curse causes you to become the target instead."
+    },
+    {
+      "kind": "new_variant",
+      "name": "curse_lifecycle (begins on attunement, persists after item removal, ends on remove_curse-like cleanup)",
+      "justification": "The curse is not a simple while-held or while-attuned passive. It starts on attunement, survives removing the shield, and ends only through curse-removal magic. That lifecycle is not represented by the existing magic-item mechanics families.",
+      "evidence": "Attuning to it curses you until you are targeted by a Remove Curse spell or similar magic. Removing the Shield fails to end the curse on you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content files. The resistance clause fits existing passive magic-item modeling with a holding-item gate, but the unit as a whole is not honestly representable because its curse both retargets attacks and persists independently of holding the shield."
+}
