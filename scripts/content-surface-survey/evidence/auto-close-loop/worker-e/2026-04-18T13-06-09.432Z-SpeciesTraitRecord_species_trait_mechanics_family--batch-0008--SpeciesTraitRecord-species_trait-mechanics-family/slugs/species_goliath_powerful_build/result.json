@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "The existing species_trait/passive family can encode the Grappled-escape advantage rider, but the carrying-capacity rider changes encumbrance math without changing the creature's actual size. No current effect atom or surface variant models effective larger size for carrying capacity only.",
+      "evidence": "\"You also count as one size larger when determining your carrying capacity.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/species_goliath_powerful_build.dhall because a partial encoding would omit the carrying-capacity mechanic. The first sentence would fit existing passive mechanics via modify_roll_advantage on ability_check with conditionFilter=[\"grappled\"]."
+}
