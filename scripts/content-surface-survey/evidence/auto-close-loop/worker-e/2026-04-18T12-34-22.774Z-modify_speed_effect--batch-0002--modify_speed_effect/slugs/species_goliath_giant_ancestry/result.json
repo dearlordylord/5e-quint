@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_goliath_giant_ancestry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_trait_choice_over_mixed_mechanics_families",
+      "justification": "The trait is one authored unit whose core rule is choosing exactly one ancestry boon at build time, but the options span incompatible mechanics families: activation, triggered reaction, and on-hit rider. The current species_trait surface only allows passive or activation, with no top-level choice/composite over heterogeneous mechanics.",
+      "evidence": "Choose one of the following benefits ... you can use the chosen benefit a number of times equal to your Proficiency Bonus"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.triggered_reaction",
+      "justification": "Two Giant Ancestry options are reaction-shaped species benefits with PB-based uses and long-rest reset, but species traits cannot currently reuse TriggeredReactionAbilityMechanics.",
+      "evidence": "Stone's Endurance ... when you take damage, you can take a Reaction ...; Storm's Thunder ... when you take damage from a creature within 60 feet of you, you can take a Reaction"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.on_hit_trigger",
+      "justification": "Three Giant Ancestry options are attack-hit riders, but the on-hit trigger family is currently reserved to mastery records and cannot be attached to a species trait resource/reset scaffold.",
+      "evidence": "When you hit a target with an attack roll and deal damage to it, you can also ..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/species_goliath_giant_ancestry.dhall because encoding any single boon would misrepresent the unit, and collapsing the build-time choice into one mechanics family would be false."
+}
