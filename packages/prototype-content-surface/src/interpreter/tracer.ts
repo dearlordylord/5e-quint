@@ -978,8 +978,15 @@ function describeReactionTrigger(t: ReactionTrigger): string {
       return `hit by attack roll${describeWeaponFilter(t.weaponFilter)}`;
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
-    case "creature_casts_spell":
-      return `creature casts spell (${t.components.join("/")})`;
+    case "creature_casts_spell": {
+      const levelTag =
+        t.spellLevelAtMost === undefined
+          ? ""
+          : `, level <= ${t.spellLevelAtMost}`;
+      const visibilityTag =
+        t.requiresVisibleCaster === true ? ", visible caster" : "";
+      return `creature casts spell (${t.components.join("/")}${levelTag}${visibilityTag})`;
+    }
     case "spell_save_outcome": {
       const levelTag =
         t.spellLevelAtMost === undefined

@@ -1086,6 +1086,14 @@ export type ReactionTrigger =
   | {
       readonly kind: "creature_casts_spell";
       readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
+      // Some reaction riders narrow the generic spellcasting trigger to
+      // visible casters only and/or to triggering spells up to a stated
+      // level. Pressure case: Ioun Stone of Absorption / Greater
+      // Absorption ("cast by a creature you can see", "level 4 or lower"
+      // / "level 8 or lower"). Keep this on the shared trigger variant
+      // rather than inventing item-specific reaction families.
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly requiresVisibleCaster?: true;
     }
   // Post-save spell reflection / conversion window. The trigger fires
   // only after the reacting creature finishes a saving throw against a
