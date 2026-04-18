@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_goliath_large_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_size",
+      "justification": "The trait's headline mechanic is a temporary self size increase to Large. The current surface has speed, senses, AC, conditions, and full polymorph-style transformation, but no bounded size-change atom for a creature that remains itself.",
+      "evidence": "you can change your size to Large as a Bonus Action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.abilityCheckAbilityFilter",
+      "justification": "The trait grants advantage on all Strength checks, not only named skills and not only checks to end a condition. Existing narrowing supports skillFilter and conditionFilter, plus saveAbilityFilter for saves, but no ability-axis filter for generic ability checks.",
+      "evidence": "For that duration, you have Advantage on Strength checks"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration.manualEnd = no_action",
+      "justification": "The timed self-buff can end early at the user's discretion without spending an action. Current timed durations only support specific early-end triggers, not voluntary dismissal for non-summon effects.",
+      "evidence": "This transformation lasts for 10 minutes or until you end it (no action required)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The unit fits the existing species_trait activation family structurally, but its primary effect requires a missing size-change atom, so a partial encoding would be misleading."
+}

@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_orc_adrenaline_rush",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "take_standard_action_as_bonus_action",
+      "justification": "The trait's core mechanic is an action-economy remap: spending a bonus action to perform the Dash action itself. The current surface can encode the bonus-action activation, PB-scaled use count, short-or-long-rest reset, and the temporary HP rider, but it cannot represent the Dash action payload honestly. `grant_extra_action` is not equivalent because it grants an additional action, not a bonus-action Dash.",
+      "evidence": "\"You can take the Dash action as a Bonus Action. When you do so, you gain a number of Temporary Hit Points equal to your Proficiency Bonus.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/species_orc_adrenaline_rush.dhall because the current surface lacks an honest encoding for the Dash-as-bonus-action mechanic. The temp HP rider alone would be an incomplete and misleading trace."
+}
