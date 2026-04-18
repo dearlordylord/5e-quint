@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_headband_of_intellect",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "set_ability_score"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits the existing magic_item + passive family directly. Encoded as set_ability_score with mode=\"floor\", matching the existing Amulet of Health and Gauntlets of Ogre Power pattern."
+}

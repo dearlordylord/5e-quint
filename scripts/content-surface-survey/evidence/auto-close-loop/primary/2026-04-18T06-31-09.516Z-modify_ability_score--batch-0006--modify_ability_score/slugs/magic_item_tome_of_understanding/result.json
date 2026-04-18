@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_tome_of_understanding",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.elapsed_days.regain omitted/null round-trip",
+      "justification": "The existing elapsed_days family fits this item, but the Dhall worker emits an omitted field for None while the tracer only accepts null for the full-refill case. The surface needs one stable representation for 'full refill after N days' that survives Dhall-to-JSON and tracer consumption.",
+      "evidence": "The manual then loses its magic, but regains it in a century."
+    }
+  ],
+  "confidence": "high",
+  "notes": "content/magic_item_tome_of_understanding.dhall and .json were authored successfully, and pnpm typecheck passed. Tracing failed because resetCadence.elapsed_days with full refill compiled to an omitted regain field, which the tracer treated as a DiceAmount instead of the existing full-refill sentinel."
+}
