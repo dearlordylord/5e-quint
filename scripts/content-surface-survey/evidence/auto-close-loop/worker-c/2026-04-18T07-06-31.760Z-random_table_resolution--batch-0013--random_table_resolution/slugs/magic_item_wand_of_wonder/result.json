@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "random_table_outcome_subgraph",
+      "justification": "Random-table outcomes currently accept only EffectAtom bundles. This item needs some rows to resolve as full spell casts, save-gated timed effects, or creature-spawn procedures rather than immediate effect atoms.",
+      "evidence": "“Roll 1d10 to determine the spell … Darkness; Faerie Fire; Fireball; Slow; Stinking Cloud.”"
+    },
+    {
+      "kind": "new_atom",
+      "name": "apply_obscurement",
+      "justification": "Two deterministic rows create temporary Lightly Obscured or Heavily Obscured areas. No existing effect atom models obscured-area state.",
+      "evidence": "“During that time, the area of effect is Lightly Obscured.” / “during which time the area of effect is Heavily Obscured.”"
+    },
+    {
+      "kind": "new_variant",
+      "name": "proximity_target_selection",
+      "justification": "Several rows target the creature closest or nearest to the chosen point of origin. Current attachments support chosen targets and areas, but not deterministic nearest-subject selection.",
+      "evidence": "“The creature closest to the chosen point of origin is enlarged …”"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content JSON/Dhall. The charge-pool activation shell fits, but the effect table mixes spell casts, timed non-spell states, obscuration fields, nearest-creature targeting, and an uncontrolled temporary creature spawn. Encoding a partial table would be misleading."
+}

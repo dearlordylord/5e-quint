@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "attempt_selected_spell_cast",
+      "justification": "The item's core property attempts to cast an arbitrary eligible Wizard spell chosen at use time, gates that cast behind an Arcana check, consumes the chosen spell slot, then delegates to that chosen spell's normal casting time and mechanics on success. The current surface only grants named spells and cannot delegate into an open-ended selected spell payload.",
+      "evidence": "While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list ... On a successful check, you cast the spell using its normal casting time"
+    },
+    {
+      "kind": "new_variant",
+      "name": "RandomTableOutcome.mechanics",
+      "justification": "The failure table needs outcome payloads richer than EffectAtom bundles. Several branches create creatures, portals, objects, or temporary items, which cannot be expressed as the current RandomTableSpec outcome shape.",
+      "evidence": "On a failed check, you fail to cast the spell and a random effect occurs instead, determined by rolling on the following table."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. A fake encoding would misrepresent the unit's main mechanic as named-spell access or as a simple random-table effect bundle."
+}
