@@ -1,0 +1,16 @@
+{
+  "unit_slug": "druid_natures_ward_l10",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DamageTypeRef.current_land_choice_resistance",
+      "justification": "The class-feature family and passive grants already fit, but the resistance payload cannot honestly express a damage type projected from another active class-feature choice. The current surface only supports fixed damage types or explicit cast/build-time choices, not a runtime-derived lookup keyed by the druid's current land choice.",
+      "evidence": "\"you have Resistance to a damage type associated with your current land choice in the Circle Spells feature\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Poisoned immunity fits existing passive grants via grant_condition_immunity. The resistance rider does not: encoding a fixed type or ordinary choice would be false because the granted resistance tracks the druid's current Circle Spells land choice."
+}

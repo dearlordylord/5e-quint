@@ -2415,15 +2415,27 @@ export type EquipmentPredicate =
   | { readonly kind: "always" }
   | NonAlwaysEquipmentPredicate;
 
+// Passive suppressor — bounded grammar for always-on benefits that turn
+// off while one or more named conditions are active on the bearer.
+// Pressure case: Danger Sense's advantage on Dexterity saving throws is
+// suppressed while the barbarian has the Incapacitated condition.
+export type PassiveSuppressor = {
+  readonly kind: "condition_active";
+  readonly conditions: ReadonlyNonEmptyArray<Condition>;
+};
+
 // PassiveMechanics — "always on" while the unit is in effect. Survey
 // evidence: 9+9+6 class_feature + 2 species + 2 magic_item proposals
 // converged on this shape as the dominant non-spell family. The
 // optional `condition` gate narrows when the grants apply (e.g.,
 // Fighting Style: Defense applies +1 AC only while wearing armor).
-// When absent, grants are unconditional.
+// When absent, grants are unconditional. `suppressedBy` models passive
+// benefits that remain in force except while a named condition is
+// active, without forcing them through an activation-shaped workaround.
 export type PassiveMechanics = {
   readonly family: "passive";
   readonly condition?: EquipmentPredicate;
+  readonly suppressedBy?: ReadonlyNonEmptyArray<PassiveSuppressor>;
   readonly grants: ReadonlyArray<EffectAtom>;
   readonly operations?: ReadonlyNonEmptyArray<PassiveOperation>;
 };

@@ -87,6 +87,7 @@ import type {
   MagicItemVariant,
   PassiveOperation,
   MagicItemSpawnedCreatureMechanics,
+  PassiveSuppressor,
   SpawnedCreatureStatBlock,
 } from "../surface/types.ts";
 
@@ -3159,6 +3160,10 @@ function tracePassiveMechanics(
       edges.push({ from: procId, to: predId, relation: "requires" });
     }
   }
+  for (const suppressor of m.suppressedBy ?? []) {
+    const suppressId = tracePassiveSuppressor(suppressor, nodes, ids);
+    edges.push({ from: suppressId, to: procId, relation: "suppresses" });
+  }
   for (const atom of m.grants) {
     const effId = traceEffectAtom(atom, nodes, ids, edges);
     if (effId !== null) {
@@ -3191,6 +3196,21 @@ function tracePassiveOperation(
   if (effId !== null) {
     edges.push({ from: winId, to: effId, relation: "grants" });
   }
+}
+
+function tracePassiveSuppressor(
+  suppressor: PassiveSuppressor,
+  nodes: TraceNode[],
+  ids: IdGen,
+): string {
+  const id = ids("supp");
+  nodes.push({
+    id,
+    category: "procedure",
+    atomKind: "suppress",
+    label: `suppress\nwhile ${describeConditionList(suppressor.conditions)} active`,
+  });
+  return id;
 }
 
 function describePassiveOperationWindow(operation: PassiveOperation): string {
@@ -4242,6 +4262,12 @@ function describeConditionChoice(
   if (Array.isArray(c)) return `${c.join(", ")} (all)`;
   const choose = c as { kind: "choose"; from: ReadonlyArray<string> };
   return `${choose.from.join(" OR ")} (caster choice)`;
+}
+
+function describeConditionList(conditions: ReadonlyArray<string>): string {
+  return conditions.length === 1
+    ? conditions[0]
+    : `[${conditions.join(", ")}]`;
 }
 
 function describeOngoingPredicate(p: {

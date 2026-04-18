@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 9,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "passive family for ClassFeatureMechanics",
+  "archivedAt": "2026-04-18T13:26:16.608Z",
+  "selectedSlugs": [
+    "barbarian_danger_sense_l2",
+    "druid_natures_ward_l10"
+  ]
+}
