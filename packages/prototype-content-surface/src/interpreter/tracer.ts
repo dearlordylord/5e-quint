@@ -563,6 +563,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "ignore_web_restrictions": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "ignore_web_restrictions",
+        label: "ignore_web_restrictions",
+      });
+      return id;
+    }
     case "alter_item_kind": {
       const id = ids("eff");
       nodes.push({
@@ -731,6 +741,7 @@ function traceEffectAtomScaling(
     case "teleport":
     case "transport_exile":
     case "grant_speed":
+    case "ignore_web_restrictions":
     case "alter_item_kind":
     case "detect":
     case "set_speed":

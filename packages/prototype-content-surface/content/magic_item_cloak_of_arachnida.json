@@ -21,6 +21,9 @@
             },
             "kind": "grant_speed",
             "speedKind": "climb"
+          },
+          {
+            "kind": "ignore_web_restrictions"
           }
         ]
       },

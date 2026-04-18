@@ -6,10 +6,8 @@
 --   • Activated benefit: cast Web with fixed DC 13, once per dawn.
 --
 -- Known gaps NOT encoded here:
---   • "Spider Walk" ("can't be caught in webs ... move through webs as if
---     they were Difficult Terrain") remains caller-/surface-owned.
---   • The granted Web's "fills twice its normal area" rider has no current
---     granted-spell override field.
+--   • The granted Web's "fills twice its normal area" rider still has no
+--     honest fixed-geometry encoding in this authored file.
 --   • "while wearing it" has no generic worn-item predicate on magic items.
 
 let FixedDc = { kind : Text, dc : Natural }
@@ -84,6 +82,11 @@ let cloak =
                         , damageType = None Text
                         , speedKind = Some "climb"
                         , feet = Some { kind = "walk_speed" }
+                        }
+                      , { kind = "ignore_web_restrictions"
+                        , damageType = None Text
+                        , speedKind = None Text
+                        , feet = None { kind : Text }
                         }
                       ]
                 , activationCost = None ActivationCost

@@ -215,6 +215,7 @@ export const STAGE_3_EXTENSIONS = [
   // first-class surface primitives beyond v4's modify_speed / grant_sense.
   "teleport", // Misty Step, Dimension Door (short-range positional).
   "grant_speed", // Fly (fly speed), Spider Climb (climb speed).
+  "ignore_web_restrictions", // Cloak of Arachnida spider-walk web immunity / traversal carveout.
   "detect", // Detect Magic, Detect Evil and Good (radius + property).
   "modify_crit_range", // Improved Critical (crit on 19-20).
   "set_speed", // Hypnotic Pattern ("Speed of 0"). Distinct from modify_speed.

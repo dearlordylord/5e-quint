@@ -956,6 +956,13 @@ export type EffectAtom =
       readonly feet: number | LinkedSpeed;
       readonly hover?: boolean;
     }
+  // Cloak of Arachnida: the bearer can't be caught in webs of any sort
+  // and treats webs as only Difficult Terrain while moving through them.
+  // Kept distinct from generic speed / condition atoms because the rule is
+  // environment-specific and does not imply broad restraint immunity.
+  | {
+      readonly kind: "ignore_web_restrictions";
+    }
   // v4: alter_item_kind — the targeted item/object changes into a
   // different named form or rules kind. Folding Boat switches between
   // box / rowboat / keelboat forms; glamoured armor uses the same atom
