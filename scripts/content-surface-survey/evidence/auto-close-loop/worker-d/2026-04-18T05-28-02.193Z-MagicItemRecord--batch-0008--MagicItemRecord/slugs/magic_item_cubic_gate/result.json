@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destinationRestriction",
+      "justification": "The existing magic-item activation + charge_pool + grant_spell_access shape can represent charge-based casting of named spells, but it cannot constrain spell parameters to the plane keyed to the selected face of the cube. Encoding Gate or Plane Shift without that restriction would overstate the item's capabilities and produce a misleading trace.",
+      "evidence": "Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit otherwise fits MagicItemRecord + activation mechanics with a charge_pool and dawn recharge. I did not author content/magic_item_cubic_gate.dhall because the surface cannot honestly express the keyed-plane restriction on the granted casts."
+}

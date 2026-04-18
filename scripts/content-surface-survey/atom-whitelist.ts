@@ -192,7 +192,6 @@ export const STAGE_1_2_EXTENSIONS = [
 export const STAGE_3_EXTENSIONS = [
   // Resource atoms beyond v4's {spell_slot, charge, use_count, attunement_slot}.
   "attack_slot", // Activation: consumes one of the attacker's attacks (Breath Weapon, Extra Attack).
-  "charge_pool", // Magic-item charge aggregate (Wand of Magic Missiles, Ring of the Ram).
   // Procedure atom for direct phases (no D20 test) — tracer emits this
   // instead of resolution atoms when ActivationPhase.kind === "direct".
   "direct_apply",

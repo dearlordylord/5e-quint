@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "form-gated magic-item component condition",
+      "justification": "The item can already change form with alter_item_kind, but passive and activated mechanics cannot currently be gated on the item's current form. Existing predicates only cover armor/weapon equipment states, not item-mode state.",
+      "evidence": "\"In certain forms, the weapon has the following additional properties.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "triggering-attack-scoped modify_ac reaction rider",
+      "justification": "The surface can express a reaction trigger and modify_ac, but not a +5 AC bonus that applies only against the triggering attack and then ends immediately.",
+      "evidence": "\"...gaining a +5 bonus to your Armor Class against the triggering attack, potentially causing the attack to miss you.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "return-thrown-weapon-to-wielder",
+      "justification": "The current surface has no honest way to represent a weapon that gains Thrown ranges and then automatically returns to the wielder immediately after the ranged attack resolves.",
+      "evidence": "\"Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Did not author content JSON/Dhall. The +2 attack and damage bonuses fit today, and the dim-light rider can be treated as caller-owned per existing repo practice, but the form-dependent mechanics and returning-thrown behavior do not."
+}

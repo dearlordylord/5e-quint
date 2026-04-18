@@ -2904,6 +2904,16 @@ function traceActivationCost(
         label: "reaction_quota\n(Activation: Reaction)",
       });
       edges.push({ from: procId, to: id, relation: "consumes" });
+      if (c.trigger !== undefined) {
+        const winId = ids("win");
+        nodes.push({
+          id: winId,
+          category: "window",
+          atomKind: "reaction_window",
+          label: `reaction_window\ntrigger: ${describeReactionTrigger(c.trigger)}`,
+        });
+        edges.push({ from: procId, to: winId, relation: "opens_window" });
+      }
       return;
     }
     case "replace_attack": {
@@ -2934,7 +2944,7 @@ function traceActivationResource(
   edges: TraceEdge[],
   ids: IdGen,
 ): string {
-  const atomKind = r.kind === "use_count" ? "use_count" : "charge_pool";
+  const atomKind = r.kind === "use_count" ? "use_count" : "charge";
   const id = ids(r.kind === "use_count" ? "use" : "pool");
   const capLabel = describeUseCountCap(r.cap);
   nodes.push({
@@ -3525,7 +3535,16 @@ function describeGrantedSpellTargetRestriction(
   restriction: GrantedSpellTargetRestriction | undefined,
 ): string {
   if (restriction === undefined) return "";
-  return restriction.kind === "self_only" ? "\ntarget: self only" : "";
+  switch (restriction.kind) {
+    case "self_only":
+      return "\ntarget: self only";
+    case "visible_target_within_feet":
+      return `\ntarget: visible target within ${restriction.feet} ft of ${restriction.origin === "caster" ? "caster" : "spell sensor"}`;
+    default: {
+      const _exhaustive: never = restriction;
+      return _exhaustive;
+    }
+  }
 }
 
 function describeWeaponFilter(f: WeaponFilter | undefined): string {

@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_headband_of_intellect",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "set_ability_score"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean passive magic-item fit. Encoded as an attunement-gated set_ability_score floor on Intelligence 19, matching the existing Amulet of Health and Gauntlets of Ogre Power pattern."
+}

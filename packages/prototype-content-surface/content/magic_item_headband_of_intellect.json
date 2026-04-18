@@ -1,0 +1,26 @@
+{
+  "description": "Your Intelligence is 19 while you wear this headband. It has no effect on you if your Intelligence is 19 or higher without it.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_headband_of_intellect",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "ability": "int",
+        "kind": "set_ability_score",
+        "mode": "floor",
+        "value": 19
+      }
+    ]
+  },
+  "name": "Headband of Intellect",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#HeadbandOfIntellect"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}
