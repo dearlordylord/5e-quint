@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can be toggled to emit or extinguish green Dim Light while held, and no current effect atom models light emission.",
+      "evidence": "\"you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_form_gating_on_current_form",
+      "justification": "The item's passive, reaction, and ranged-weapon riders are available only in specific current forms, but the surface cannot persist item form state or gate mechanics by that state.",
+      "evidence": "\"turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff\" and \"Quarterstaff Form Only\" / \"Quarterstaff and 10-Foot Pole Forms Only\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_to_hand_after_ranged_attack",
+      "justification": "The quarterstaff-form ranged rider includes an immediate return-to-hand effect after a ranged attack, which is not modeled by existing atoms.",
+      "evidence": "\"Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Baseline +2 attack/damage and the reactive +5 AC rider fit in isolation, but the item's central form-state and light-toggle mechanics do not fit honestly on the current surface."
+}
