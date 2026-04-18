@@ -1,0 +1,37 @@
+{
+  "unit_slug": "magic_item_cloak_of_arachnida",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_speed",
+    "grant_spell_access",
+    "magic_item_root",
+    "self",
+    "use_count",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "ignore_hindering_surface",
+      "justification": "The cloak's remaining omitted rider is a web-specific immunity/bypass. Existing condition, speed, and spell-access atoms do not express immunity to a named hindering surface or movement through that surface under altered movement-cost rules.",
+      "evidence": "\"You can't be caught in webs of any sort and can move through webs as if they were Difficult Terrain.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a composite magic item. Poison Resistance, Climb Speed equal to walk Speed, and the fixed-DC doubled-area Web cast all fit. Spider Walk is omitted and recorded as the widening. The once-per-dawn recharge was encoded as refill 1d1 on a max-1 use pool because the tracer path does not tolerate omitted dawn regain fields from Dhall."
+}
