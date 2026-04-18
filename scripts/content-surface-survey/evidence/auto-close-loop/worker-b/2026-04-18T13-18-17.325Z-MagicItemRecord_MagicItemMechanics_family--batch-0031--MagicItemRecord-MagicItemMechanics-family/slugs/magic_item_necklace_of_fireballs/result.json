@@ -1,0 +1,26 @@
+{
+  "unit_slug": "magic_item_necklace_of_fireballs",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "charge",
+    "damage",
+    "half_damage",
+    "magic_item_root",
+    "save_gate",
+    "scale_die_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a magic-item activation with a finite bead pool (initial 1d6+3, cap 9), explicit Magic action cost, fixed DC 15, 60-foot point-anchored sphere, and resource-spent-linear fire damage capped at 12d6. The Fireball flammable-objects rider remains omitted as DM-agenda, matching the existing Fireball encoding."
+}
