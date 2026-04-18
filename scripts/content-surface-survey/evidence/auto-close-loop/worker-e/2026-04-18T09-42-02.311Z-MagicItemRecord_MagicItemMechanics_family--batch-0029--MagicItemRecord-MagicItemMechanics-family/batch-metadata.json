@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-e",
+  "batch": 29,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord + MagicItemMechanics family",
+  "archivedAt": "2026-04-18T09:48:59.408Z",
+  "selectedSlugs": [
+    "magic_item_helm_of_teleportation",
+    "magic_item_necklace_of_fireballs"
+  ]
+}

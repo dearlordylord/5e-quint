@@ -1,0 +1,35 @@
+{
+  "unit_slug": "magic_item_necklace_of_fireballs",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "charge",
+    "damage",
+    "half_damage",
+    "magic_item_root",
+    "save_gate",
+    "scale_die_count",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.range",
+      "justification": "Non-spell activation units can already target areas via point_within_range, but the family has no authored range field, so ranged item activations collapse to an incorrect self-range trace.",
+      "evidence": "\"You can take a Magic action to detach a bead and throw it up to 60 feet away.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "An attempted encoding typechecked and traced, but the tracer rendered the explosion as `origin: point within Self` because ordinary activation mechanics do not carry a range. The content files were removed rather than keep a misleading trace."
+}
