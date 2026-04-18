@@ -1,0 +1,141 @@
+{
+  "defaultAttunement": {
+    "requiresAttunement": false
+  },
+  "description": "You have a bonus to attack rolls and damage rolls made with this piece of magic ammunition. The bonus is determined by the rarity of the ammunition. Once it hits a target, the ammunition is no longer magical. This authored subset captures the attack and damage bonuses only; the on-hit loss of magic is omitted pending a passive-item lifecycle hook.",
+  "id": "magic_item_ammunition_1_2_or_3",
+  "kind": "magic_item",
+  "name": "Ammunition, +1, +2, or +3",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Ammunition+1+2or+3"
+  },
+  "variants": [
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_ammunition_plus_1",
+      "mechanics": {
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 1,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "attack_roll"
+            ],
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_1",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 1,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_damage_numeric",
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_1",
+              "kind": "specific_item"
+            }
+          }
+        ]
+      },
+      "name": "Ammunition, +1",
+      "rarity": "uncommon"
+    },
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_ammunition_plus_2",
+      "mechanics": {
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "attack_roll"
+            ],
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_2",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_damage_numeric",
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_2",
+              "kind": "specific_item"
+            }
+          }
+        ]
+      },
+      "name": "Ammunition, +2",
+      "rarity": "rare"
+    },
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_ammunition_plus_3",
+      "mechanics": {
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 3,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "attack_roll"
+            ],
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_3",
+              "kind": "specific_item"
+            }
+          },
+          {
+            "delta": {
+              "dice": 3,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_damage_numeric",
+            "weaponFilter": {
+              "itemId": "magic_item_ammunition_plus_3",
+              "kind": "specific_item"
+            }
+          }
+        ]
+      },
+      "name": "Ammunition, +3",
+      "rarity": "very_rare"
+    }
+  ]
+}

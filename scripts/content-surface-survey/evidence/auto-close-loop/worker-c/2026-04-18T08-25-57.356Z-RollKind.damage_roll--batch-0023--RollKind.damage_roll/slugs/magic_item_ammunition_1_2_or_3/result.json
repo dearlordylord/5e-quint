@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_ammunition_1_2_or_3",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "grant",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "passive item lifecycle end condition on hit",
+      "justification": "The current magic-item passive surface can encode the attack and damage bonuses, but it cannot end the item's magical state after a successful hit.",
+      "evidence": "\"Once it hits a target, the ammunition is no longer magical.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a rarity-variant magic-item collection with passive +N attack and damage bonuses on the specific ammunition piece. Typecheck and tracer passed. The on-hit loss of magic is omitted and recorded as the surface gap; the bundle-size/value text is catalog metadata, not core mechanics."
+}

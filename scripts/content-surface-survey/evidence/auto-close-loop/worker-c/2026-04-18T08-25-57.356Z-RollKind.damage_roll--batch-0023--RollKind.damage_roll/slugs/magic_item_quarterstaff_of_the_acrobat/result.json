@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can be toggled to emit a bounded dim-light aura. The current surface has no effect atom for producing or suppressing light.",
+      "evidence": "\"you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "runtime item-form predicate",
+      "justification": "Several riders apply only while the same item is currently in Quarterstaff form or in Quarterstaff and 10-Foot Pole forms. The surface can alter item kind, but it cannot predicate passive or triggered mechanics on the item's current authored form.",
+      "evidence": "\"Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only)\" and \"Attack Deflection (Quarterstaff Form Only)\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_weapon_property_with_return",
+      "justification": "The item temporarily gains the Thrown property with explicit normal/long range values, and after a ranged attack it deterministically returns to the wielder's hand. The current surface has no atom for granting weapon properties or for this immediate return rider on a weapon attack.",
+      "evidence": "\"This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet. Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level kind does fit: this is a magic item and its overall shape wants a composite of passive, activation, and triggered_reaction parts. I did not author content because the emitted-light toggle, runtime form-conditional gating, and thrown-and-return weapon behavior cannot be represented honestly in the current surface."
+}
