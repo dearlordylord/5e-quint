@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "dice_expr_ability_modifier_addend",
+      "justification": "The item's core reduction amount is a rolled value plus a specific ability modifier, but DiceAmount/DiceExpr cannot express non-spell ability-modifier addends.",
+      "evidence": "reduce the damage by 1d10 plus your Dexterity modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "equipment_predicate_free_hand",
+      "justification": "The reaction is only available when the wearer has a free hand, and EquipmentPredicate has no way to encode that gate.",
+      "evidence": "if you have a free hand"
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_incoming_weapon_or_ammunition",
+      "justification": "The item can convert a fully-negated hit into catching the incoming ammunition or weapon, which requires an item-transfer/catch effect not present in the current atom inventory.",
+      "evidence": "If you reduce the damage to 0, you can catch the ammunition or weapon"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level fit is magic_item + triggered_reaction, using the existing hit_by_attack_roll trigger and reduce_damage_taken atom. No content file was authored because the primary reduction clause is not representable honestly without a generic ability-modifier addend."
+}

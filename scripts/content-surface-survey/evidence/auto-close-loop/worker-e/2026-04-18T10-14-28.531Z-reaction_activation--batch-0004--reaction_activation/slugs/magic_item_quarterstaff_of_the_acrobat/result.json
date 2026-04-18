@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_form",
+      "justification": "The item's passive, reaction, and weapon-rule riders depend on the staff's current form, but the current predicate surface can only say that the item is being held.",
+      "evidence": "\"Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only).\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_weapon_profile",
+      "justification": "The current effect atoms cannot grant the Thrown property or author a weapon's normal and long ranges in one form only.",
+      "evidence": "\"This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_weapon_to_hand",
+      "justification": "The item has a deterministic post-ranged-attack return rider, and there is no current atom or relation for a thrown weapon automatically returning to the wielder's hand.",
+      "evidence": "\"Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Composite magic-item family fits in principle, but I did not author content because the required form-gated weapon-profile changes and automatic return rider are not honestly representable. The illumination rider was not used as the deciding blocker."
+}
