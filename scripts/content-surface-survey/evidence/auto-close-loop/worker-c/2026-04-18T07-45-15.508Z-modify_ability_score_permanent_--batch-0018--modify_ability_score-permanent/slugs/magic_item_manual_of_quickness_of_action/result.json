@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_manual_of_quickness_of_action",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "elapsed_days_full_regain",
+      "justification": "The existing elapsed-days reset shape cannot survive the required Dhall-to-JSON flow when the item regains all uses after the cooldown; `dhall-to-json --omit-empty` drops `regain = null`, and the tracer then crashes instead of emitting a graph.",
+      "evidence": "The manual then loses its magic but regains it in a century."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit fits the existing magic_item activation family honestly: study 48 hours within 6 days, one use, century recharge, and modify_ability_score +2 Dex to max 30. `pnpm typecheck` passed, but `pnpm exec tsx src/run.ts content/magic_item_manual_of_quickness_of_action.json --out ...` crashed in `traceResetCadence` because `resetCadence.elapsed_days` omitted `regain` in the generated JSON. No trace file was produced."
+}

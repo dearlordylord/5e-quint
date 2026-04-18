@@ -1,0 +1,51 @@
+{
+  "description": "This book describes fitness exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Strength increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_manual_of_gainful_exercise",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "hours": 48,
+      "kind": "study",
+      "withinDays": 6
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "ability": "str",
+            "delta": 2,
+            "kind": "modify_ability_score",
+            "maximum": 30
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "days": 36500,
+      "kind": "elapsed_days",
+      "startsWhen": "resource_spent"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Manual of Gainful Exercise",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#ManualOfGainfulExercise"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": false
+}

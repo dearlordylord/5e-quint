@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_manual_of_gainful_exercise",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RestResetCadence.elapsed_days.regain_all",
+      "justification": "The current surface models 'regain all after N days' as null, but the required Dhall-to-JSON pipeline omits null fields and the tracer crashes when `regain` is absent. This item fits the existing magic-item activation family honestly; the gap is in the concrete reset-cadence surface/runtime shape.",
+      "evidence": "\"The manual then loses its magic but regains it in a century.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored Dhall and compiled JSON fit the existing surface cleanly, and `pnpm typecheck` passes. The tracer crashes before producing a trace because `elapsed_days.regain = None` is omitted by `dhall-to-json --omit-empty`, but the tracer assumes a concrete DiceAmount when the field is missing."
+}
