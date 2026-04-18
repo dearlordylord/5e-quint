@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_ring_of_warmth",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_environmental_temperature_immunity",
+      "justification": "The item prevents harm from a bounded environmental temperature condition, including protection for the wearer and carried/worn gear. That is neither damage resistance nor incoming-damage reduction, and no existing passive atom models environmental cold immunity.",
+      "evidence": "while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit exists as a magic_item with passive mechanics and attunement. The first clause is encodable today as a wearing-gated reduce_damage_taken effect against cold damage, but authoring only that clause would be incomplete and therefore dishonest. I did not author content/tracer files."
+}
