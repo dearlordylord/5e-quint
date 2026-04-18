@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 13,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "multi_mechanics_magic_item",
+  "archivedAt": "2026-04-18T14:56:48.377Z",
+  "selectedSlugs": [
+    "magic_item_cloak_of_arachnida",
+    "magic_item_rod_of_absorption"
+  ]
+}
