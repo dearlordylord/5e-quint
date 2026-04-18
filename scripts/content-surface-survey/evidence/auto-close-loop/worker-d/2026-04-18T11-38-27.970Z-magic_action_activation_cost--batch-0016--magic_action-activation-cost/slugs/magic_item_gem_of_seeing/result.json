@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_sense",
+    "magic_item_root",
+    "peering_through_item",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "medium",
+  "notes": "Encoded as an attunement-gated magic-item activation with a 3-charge pool, dawn recharge, timed 10-minute duration, and a peering_through_item predicate. Typecheck passed and the tracer emitted a graph. The tracer renders peering_through_item as a requires-edge on the activation procedure rather than an effect-side gate during the active duration."
+}
