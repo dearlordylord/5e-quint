@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The item's core effect is already modeled by `alter_item_kind`, but activation phases cannot honestly target the magic item itself.",
+      "evidence": "\"The box unfolds into a Rowboat.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.none",
+      "justification": "The command words require a Magic action but do not spend charges, uses, or a rest-resetting pool.",
+      "evidence": "\"This item also has three command words, each requiring a Magic action to use:\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationPredicate.no_creatures_aboard",
+      "justification": "One command word is only legal when the current vessel form is unoccupied; the surface has no activation- or phase-level guard for that state predicate.",
+      "evidence": "\"The Folding Boat folds back into a box if no creatures are aboard.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.zero_hp",
+      "justification": "The item's destruction trigger is tied to the vessel form being reduced to 0 HP, not to charge exhaustion.",
+      "evidence": "\"If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file authored. The existing `magic_item` + `activation` family is close, but it needs item attachment, zero-resource activation, an occupancy guard, and HP-based destruction to encode Folding Boat without a misleading trace."
+}
