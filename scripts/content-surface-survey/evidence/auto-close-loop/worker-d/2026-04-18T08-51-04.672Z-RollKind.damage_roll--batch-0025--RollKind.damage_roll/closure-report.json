@@ -1,0 +1,36 @@
+{
+  "cluster": "RollKind.damage_roll",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_ammunition_1_2_or_3",
+    "magic_item_quarterstaff_of_the_acrobat"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_ammunition_1_2_or_3",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "invalid",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_quarterstaff_of_the_acrobat",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "invalid",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

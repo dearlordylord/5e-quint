@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 25,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "RollKind.damage_roll",
+  "archivedAt": "2026-04-18T08:57:52.217Z",
+  "selectedSlugs": [
+    "magic_item_ammunition_1_2_or_3",
+    "magic_item_quarterstaff_of_the_acrobat"
+  ]
+}

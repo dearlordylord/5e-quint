@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_form",
+      "justification": "The existing magic-item families fit, but multiple passive and reactive properties are gated by the weapon's current altered form rather than merely by holding or attunement.",
+      "evidence": "\"Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only).\" / \"Attack Deflection (Quarterstaff Form Only).\" / \"Ranged Weapon (Quarterstaff Form Only).\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can be toggled to create a persistent dim-light radius. No current surface atom models authored light emission.",
+      "evidence": "\"you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "modify_weapon_profile",
+      "justification": "The quarterstaff gains the Thrown property and a specific normal/long range only in one form. The current surface has no honest way to add weapon properties or swap attack profile data on an item.",
+      "evidence": "\"This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_item_after_attack",
+      "justification": "The weapon automatically flies back to the wielder's hand after a ranged attack, which is a deterministic combat effect not represented by any current effect atom.",
+      "evidence": "\"Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item fits the existing magic-item/composite family in principle, and its +2 attack/damage bonus, Acrobatic Assist, Attack Deflection, and alter-form activation each resemble existing shapes, but the unit cannot be encoded honestly because the current surface cannot represent form-scoped item state plus the missing light-emission and thrown/return weapon-profile mechanics."
+}
