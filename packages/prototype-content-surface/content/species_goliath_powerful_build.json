@@ -1,0 +1,26 @@
+{
+  "description": "You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity.",
+  "id": "species_goliath_powerful_build",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "conditionFilter": [
+          "grappled"
+        ],
+        "kind": "modify_roll_advantage",
+        "mode": "advantage",
+        "on": [
+          "ability_check"
+        ]
+      }
+    ]
+  },
+  "name": "Powerful Build",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Character-Origins/Goliath#Powerful Build"
+  },
+  "species": "goliath"
+}

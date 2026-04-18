@@ -1,0 +1,36 @@
+{
+  "cluster": "SpeciesTraitRecord + species_trait mechanics family",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "species_gnome_gnomish_lineage",
+    "species_goliath_powerful_build"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "species_gnome_gnomish_lineage",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "species_goliath_powerful_build",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "atom_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}
