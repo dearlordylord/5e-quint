@@ -1,46 +1,95 @@
-# Proposal: Fabricate surface gaps
+# Proposal: Fabricate — surface_widening
 
-Fabricate encodes cleanly as `activation` / `direct` / `create_object`. Typecheck passes and the tracer emits a valid graph. The following secondary gaps remain.
+## Unit
 
-## Gap 1: Material-conditional size cap on `create_object`
+**Fabricate** — SRD 5.2.1 Level-4 Transmutation spell.
 
-**Evidence:** "If you're working with metal, stone, or another mineral substance, however, the fabricated object can be no larger than Medium (contained within a 5-foot Cube)."
+## Outcome summary
 
-The current `create_object` atom has one `maxSize: Size` field. Fabricate defines two distinct size caps:
-- General materials: Large or smaller (10-foot Cube)
-- Metal / stone / mineral: Medium or smaller (5-foot Cube)
+The core mechanic encodes honestly as `activation` / `direct` / `create_object`. Typecheck passes; tracer emits a valid graph. Three RAW constraints cannot be expressed in the current surface; all are `surface_widening` gaps (the v4 atom `create_object` exists, but it lacks the needed predicate/variant expressiveness).
 
-**Proposed widening:** Add a `materialMaxSize` map or a conditional variant to `create_object`:
+---
+
+## Gap 1 — Material-conditional size cap
+
+### RAW text
+
+> "If you're working with metal, stone, or another mineral substance, however, the fabricated object can be no larger than Medium (contained within a 5-foot Cube)."
+
+### Problem
+
+`create_object` has a single `maxSize` field. There is no mechanism to express a conditional: "maxSize = large **unless** the target material is mineral, in which case maxSize = medium."
+
+Two `direct` phases cannot solve this because there is no phase-level predicate gating on the attached object's material composition.
+
+### Proposed widening
+
+Add a `conditionalMaxSize` field to `create_object`:
 
 ```typescript
-| {
-    readonly kind: "create_object";
-    readonly maxSize: Size;
-    readonly shape?: AreaShapeSpec;
-    readonly consumable?: true;
-    readonly durability?: CreatedObjectDurability;
-    // NEW: override maxSize for specific material categories
-    readonly materialSizeCaps?: ReadonlyArray<{
-      readonly material: "metal" | "stone" | "mineral";
-      readonly maxSize: Size;
-    }>;
-  }
+conditionalMaxSize?: ReadonlyNonEmptyArray<{
+  readonly if: { readonly material: ObjectMaterial };
+  readonly maxSize: Size;
+}>;
 ```
 
-Alternative: express as a single `maxSizeByMaterial` map. The current encoding uses `maxSize = "large"` and omits the mineral cap.
+This lets the authored unit express: "base maxSize = large; if material is mineral, maxSize = medium." The runtime resolves which constraint applies after the caster selects the target materials.
 
-## Gap 2: Proficiency gate for high-skill items
+---
 
-**Evidence:** "You also can't use it to create items that require a high degree of skill—such as weapons and armor—unless you have proficiency with the type of Artisan's Tools used to craft such objects."
+## Gap 2 — `ObjectMaterial` vocabulary missing stone/mineral
 
-No proficiency-check gate exists on `create_object` or on the `direct` activation phase. This is a constraint that prevents the spell from fabricating weapons/armor without tool proficiency. It would require either:
-- A `proficiencyGate` field on `create_object` referencing the relevant `ArtiansTools` proficiency, or
-- A new `proficiency_check_gate` activation phase variant (heavier).
+### RAW text
 
-The constraint is partially DM-resolved (what counts as "high degree of skill" is judgment), so a simple flag or annotation may suffice.
+> "…metal, stone, or another mineral substance…"
 
-## Gap 3: Raw-material targeting in ObjectFilter
+### Problem
 
-**Evidence:** "Choose raw materials that you can see within range."
+`ObjectMaterial` is `"metal" | "flammable"`. Stone and other minerals have no representation. Gap 1's conditional cannot even be authored for stone without this vocabulary.
 
-`ObjectFilter.material` only supports `"metal" | "flammable"`. There is no way to express "raw/unprocessed material" as an attachment filter. The encoding omits the filter entirely, which is functionally equivalent to "any object" rather than "raw material only". A `"raw"` or `"unprocessed"` material category — or a `manufactured: false` filter — would address this. Note: `ObjectFilter.manufactured` already exists; setting it to `false` would partially capture "unprocessed material" semantics.
+### Proposed widening
+
+Add `"stone_or_mineral"` to `OBJECT_MATERIALS`:
+
+```typescript
+export const OBJECT_MATERIALS = [
+  "metal",
+  "flammable",
+  "stone_or_mineral",
+] as const satisfies ReadonlyArray<string>;
+```
+
+---
+
+## Gap 3 — Artisan's Tools proficiency gate on high-skill fabrications
+
+### RAW text
+
+> "You also can't use it to create items that require a high degree of skill—such as weapons and armor—unless you have proficiency with the type of Artisan's Tools used to craft such objects."
+
+### Problem
+
+`create_object` has no predicate gate on caster proficiency. The spell's restriction "can't create weapons/armor without relevant tool proficiency" is an activation-time check on the caster's character state, not expressible as any current `ObjectFilter` or `EffectAtom` field.
+
+### Proposed widening
+
+Add an optional `casterProficiencyGate` to `create_object`:
+
+```typescript
+casterProficiencyGate?: {
+  readonly kind: "artisan_tools";
+  readonly description: string;
+};
+```
+
+This records that certain output categories require caster proficiency, without prescribing which specific tools (that mapping is item-type-dependent and partly DM-resolved).
+
+---
+
+## Encoded shape (for reference)
+
+```
+activation → direct → object (count=1, range 120 ft) → create_object (maxSize=large)
+```
+
+The mineral size restriction (gap 1), the stone/mineral material vocabulary (gap 2), and the proficiency gate (gap 3) are all omitted. The encoded `create_object` with `maxSize = "large"` captures the general case.

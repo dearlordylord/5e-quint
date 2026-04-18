@@ -1,127 +1,183 @@
-# Proposal: Delayed Blast Fireball — Structural Widening
+# Proposal: Delayed Blast Fireball — Surface Widenings
 
-**Slug:** `delayed_blast_fireball`  
-**Outcome:** `structural_widening`  
-**Closest existing family:** `anchored_trigger`
+## Outcome
 
----
+`surface_widening` — The payload family (`ongoing_effect`) and all resolution shapes
+(save\_gate, sphere area, dex save, half\_damage on success) already exist. The encoding
+fails on four missing variants of existing surface types.
 
-## Why anchored_trigger is right but not enough
-
-Delayed Blast Fireball is structurally analogous to Alarm: the caster arms a trigger (the bead) at a chosen point, and it fires later when an event occurs. The `anchored_trigger` family is conceptually correct. But four structural gaps prevent honest encoding.
-
----
-
-## Gap 1 — AnchoredSignal has no damage payload
-
-**Source text:** *"each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw. A creature takes Fire damage equal to the total accumulated damage on a failed save or half as much damage on a successful one."*
-
-The explosion is a **save-gated area damage effect** — the core mechanical payload. `AnchoredSignal` only supports `audible` and `mental` notification signals (caller-owned, non-core per `ARCHITECTURE.md`). The tracer's `traceAnchoredTrigger` function folds signal content into label strings rather than wiring to `save_gate` + `damage` atoms.
-
-**Proposed widening:** Either (a) add `{ kind: "damage_area"; saveAbility: Ability; dc: DcSource; damageType: DamageType; amount: DiceAmount; onSuccess: "half" | "none" }` to `AnchoredSignal`, and restructure the tracer to wire it into actual `save_gate` + `damage` atoms; or (b) restructure the `anchored_trigger` release to carry a `phases: ReadonlyArray<ActivationPhase>` payload (reusing the existing activation machinery).
-
-Option (b) is cleaner and avoids a new signal kind, but requires the `release` procedure to connect into the activation subgraph.
+No `content/delayed_blast_fireball.dhall` is authored because all four gaps are load-bearing:
+omitting or misrepresenting them would produce a misleading trace.
 
 ---
 
-## Gap 2 — DiceAmount has no turn-accumulation kind
+## Mechanic 1: Damage Accumulation Counter
 
-**Source text:** *"The spell's base damage is 12d6, and the damage increases by 1d6 whenever your turn ends and the spell hasn't ended."*
+### SRD text
 
-The damage is **runtime-accumulating**: it starts at 12d6 and gains +1d6 each time a specific in-combat event fires (caster's turn end). This is not level-based scaling:
+> The spell's base damage is 12d6, and the damage increases by 1d6 whenever your turn ends
+> and the spell hasn't ended.
 
-- `fixed`: No — the amount isn't known at cast time.
-- `threshold_tiers` with axis `character`/`class`/`slot`/`subclass`/`proficiency_bonus`: No — the axis needed is "turns elapsed while concentrating," which is none of the five `LevelAxis` values.
-- `linear_per_level`: Same problem — the growth axis is a combat-time event counter, not a character progression axis.
+### Surface gap
 
-**Proposed widening:** New `DiceAmount` variant:
-```typescript
-{
-  readonly kind: "accumulating_per_event";
-  readonly base: DiceExpr;
-  readonly perEvent: DiceExprDelta;
-  readonly triggerEvent: "caster_turn_end";  // closed enum, widen as needed
-}
-```
+`DiceAmount` has no variant for a runtime accumulator. Existing variants fix the value
+at cast time or derive it from a static axis (character / class / slot / subclass / PB
+level). Delayed Blast Fireball's damage is a stateful counter: it starts at 12d6 and grows
+by exactly 1d6 each time the caster's turn ends while the spell persists. The total is not
+knowable at cast time.
 
-The tracer would emit a new `scale_die_count` scaling node (since dice count grows) linked to the `post_action_window` (turn-end window) of the caster.
+### Proposed widening
 
-Higher-level casting (+1d6 base per slot above 7) is a separate, standard `SlotScaling<DiceExpr>` on the base — representable once the accumulation kind exists.
-
----
-
-## Gap 3 — Touch/throw/reposition has no surface representation
-
-**Source text:** *"If a creature touches the glowing bead before the spell ends, that creature makes a Dexterity saving throw. On a failed save, the spell ends, causing the bead to explode. On a successful save, the creature can throw the bead up to 40 feet. If the thrown bead enters a creature's space or collides with a solid object, the spell ends, and the bead explodes."*
-
-This is a compound event chain with no existing analog:
-
-1. `physical_contact` event fires on the bead anchor.
-2. Opens a `save_gate` (Dex, caster spell save DC).
-3. **On fail:** Terminates concentration immediately → bead explodes (release fires).
-4. **On success:** Grants the touching creature an ability to **throw** the bead ≤40 ft, **repositioning the anchor point**. If the thrown bead enters a creature's space or collides with a solid object, the release fires at the new location.
-
-The existing `physical_contact` kind is a simple trigger — it has no save gate, no branching, and no mechanism to reposition the anchor. The anchor repositioning particularly breaks the `anchored_trigger` family's implicit invariant that the anchor location is fixed at cast time.
-
-**Proposed widening:** A `touch_interaction` composite event on `AnchoredTriggerMechanics` — a save-gated event where the fail branch fires the release and the success branch allows the creature to reposition the anchor (up to a specified distance) with a secondary trigger condition (enters creature's space / collides with solid object). This is a new subgraph, not just a new variant of `AnchoredEvent`.
-
----
-
-## Gap 4 — "Spell ends" is not an AnchoredEvent kind
-
-**Source text:** *"When the spell ends, the bead explodes."*
-
-The **primary** detonation trigger is the spell's own termination — either concentration breaks or the 1-minute duration elapses. This maps to the lifecycle atom `expire`, but `AnchoredEvent` only has:
-- `physical_contact`
-- `enters_area`
-
-Neither represents "the spell's own concentration ending." A new kind like `{ kind: "spell_expires" }` is needed as the default/normal-case detonation trigger.
-
----
-
-## Secondary effect (out-of-core)
-
-*"flammable objects in the explosion that aren't being worn or carried start burning"*
-
-Environmental ignition is caller-owned per `ARCHITECTURE.md`. Not a core-mechanics atom. No widening needed for this.
-
----
-
-## Recommended schema direction
+Add a new `DiceAmount` variant:
 
 ```typescript
-// New DiceAmount variant
 | {
-    readonly kind: "accumulating_per_event";
+    readonly kind: "accumulated";
     readonly base: DiceExpr;
-    readonly perEvent: DiceExprDelta;
-    readonly triggerEvent: "caster_turn_end";
+    readonly perTrigger: DiceExprDelta;
+    readonly trigger: "on_caster_turn_end";  // or a shared OngoingTrigger reference
   }
-
-// New AnchoredEvent kind
-| { readonly kind: "spell_expires" }
-
-// New AnchoredSignal kind (or restructure release to use ActivationPhase[])
-| {
-    readonly kind: "damage_area";
-    readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
-    readonly saveAbility: Ability;
-    readonly dc: DcSource;
-    readonly damageType: DamageType;
-    readonly amount: DiceAmount;
-    readonly onSuccess: "half";
-  }
-
-// New anchored_trigger field (touch/throw interaction)
-readonly touchInteraction?: {
-  readonly save: { readonly ability: Ability; readonly dc: DcSource };
-  readonly onFail: "detonate";
-  readonly onSuccess: {
-    readonly kind: "throw_to_reposition";
-    readonly maxFeet: number;
-    readonly detonateOn: ReadonlyArray<"enters_creature_space" | "collides_with_solid_object">;
-  };
-};
 ```
 
-This keeps the `anchored_trigger` family as the home for Delayed Blast Fireball and wires the release to actual `save_gate` + `damage` atoms through the tracer.
+The runtime engine tracks how many times the trigger has fired since cast, multiplies
+`perTrigger` by that count, and adds it to `base` at explosion time. The upcast widening
+(base increases by 1d6 per slot above 7) composes on top of `base` via existing slot
+scaling.
+
+---
+
+## Mechanic 2: `on_caster_turn_end` Trigger
+
+### SRD text
+
+> …increases by 1d6 **whenever your turn ends** and the spell hasn't ended.
+
+### Surface gap
+
+`OngoingTrigger` has `on_caster_turn_start` but not `on_caster_turn_end`. These are
+mechanically distinct: start-of-turn fires before any actions resolve; end-of-turn fires
+after all actions, bonus actions, and movement have resolved. Conflating them would
+misrepresent when the damage accrues.
+
+### Proposed widening
+
+```typescript
+| { readonly kind: "on_caster_turn_end" }
+```
+
+Added to the `OngoingTrigger` union alongside the existing `on_caster_turn_start`.
+The tracer would emit a `turn_end_window` (already in the v4 window inventory) for this
+trigger kind.
+
+---
+
+## Mechanic 3: `on_spell_end` Explosion Trigger
+
+### SRD text
+
+> When the spell ends, the bead explodes, and each creature in a 20-foot-radius Sphere
+> centered on that point makes a Dexterity saving throw.
+
+### Surface gap
+
+The explosion fires **when the spell terminates** regardless of cause — natural expiry,
+dropped concentration, bead-touch save failure, or thrown-bead collision. No `OngoingTrigger`
+variant fires on host-effect termination. Existing triggers fire on recurring schedules
+(`on_caster_turn_start`, `on_attached_turn_start`) or creature events (`on_creature_enters_area`),
+not on spell end.
+
+### Proposed widening
+
+```typescript
+| { readonly kind: "on_spell_end" }
+```
+
+This trigger is semantically distinct from both per-turn triggers and the duration's `expire`
+lifecycle node: the explosion is an effect that fires exactly once at termination, not a
+recurring operation. The tracer would connect it to a new `spell_end_window` atom or reuse
+`post_action_window` with an appropriate label.
+
+---
+
+## Mechanic 4: Bead-Touch Interaction
+
+### SRD text
+
+> If a creature touches the glowing bead before the spell ends, that creature makes a
+> Dexterity saving throw. On a failed save, the spell ends, causing the bead to explode.
+> On a successful save, the creature can throw the bead up to 40 feet. If the thrown bead
+> enters a creature's space or collides with a solid object, the spell ends, and the bead
+> explodes.
+
+### Surface gaps (two)
+
+**4a. Trigger: `on_creature_touches_object`**
+
+`OngoingTrigger` has `on_creature_enters_area` and `on_creature_moves` but no physical-contact
+event for a spell-attached object. The bead is a created object at a fixed point; any creature
+that makes physical contact with it opens the save-gate window.
+
+```typescript
+| { readonly kind: "on_creature_touches_object" }
+```
+
+**4b. Success outcome: throw object**
+
+On a successful save the creature may throw the bead up to 40 feet. This is a player-chosen
+repositioning action on the spell's object attachment with a capped distance and
+termination-on-collision semantics (the thrown bead ending the spell if it collides). No
+`SaveSuccessOutcome` variant or `EffectAtom` covers granting the target an ad-hoc throw
+action on an active spell object. This likely needs either:
+
+- A new `EffectAtom.throw_object` variant with `{ maxFeet: number }`, paired with the
+  `on_spell_end` trigger for the collision-triggered explosion; or
+- A new `SaveSuccessOutcome` sentinel analogous to `half_damage` that encodes the
+  throw-object grant idiom without duplicating the full object lifecycle.
+
+The collision sub-rule ("if the thrown bead enters a creature's space or collides with a
+solid object, the spell ends") also needs the `on_spell_end` trigger from Mechanic 3 to
+be wired into the bead's repositioning logic.
+
+---
+
+## Mechanic 5: Flammable Objects (omitted — DM agenda)
+
+> When the bead explodes, flammable objects in the explosion that aren't being worn or
+> carried start burning.
+
+Per `ARCHITECTURE.md`, setting objects on fire is DM agenda (environmental state the DM
+tracks). This mechanic has no deterministic mechanical resolution in the core rules engine
+and is legitimately omitted.
+
+---
+
+## Upcast Scaling (would be clean once base is encodable)
+
+> The base damage increases by 1d6 for each spell slot level above 7.
+
+This is standard slot scaling on `base` within the `accumulated` DiceAmount variant.
+Once Mechanic 1's new variant exists, the upcast composes cleanly via:
+
+```typescript
+// on base DiceExpr, slot-linear scaling:
+// base: { dice: 12 + (slot - 7), dieSize: 6, flat: 0 }
+// OR explicit slot tiers on the base field
+```
+
+No additional widening needed for the upcast once the accumulation primitive exists.
+
+---
+
+## Summary Table
+
+| # | Gap | Kind | Blocking? |
+|---|-----|------|-----------|
+| 1 | `DiceAmount.accumulated` | `new_variant` | Yes — core damage cannot be expressed |
+| 2 | `OngoingTrigger.on_caster_turn_end` | `new_variant` | Yes — accumulation cadence wrong without it |
+| 3 | `OngoingTrigger.on_spell_end` | `new_variant` | Yes — explosion timing cannot be expressed |
+| 4a | `OngoingTrigger.on_creature_touches_object` | `new_variant` | Yes — bead-touch mechanic unaddressable |
+| 4b | Throw-object success outcome | `new_variant` | Yes — success branch has no honest atom |
+| 5 | Flammable objects | DM agenda | No — legitimately omitted |
+
+All five blocking gaps are new variants of existing surface types, not new v4 atoms or new
+payload families. Classification: **`surface_widening`**.

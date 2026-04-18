@@ -1,0 +1,44 @@
+{
+  "unit_slug": "daylight",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "direct_apply",
+    "emit_light",
+    "expire",
+    "persist",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.choice",
+      "justification": "Daylight allows casting on either a point in space (area sphere) or an object not worn/carried (object emanation). This is a cast-time choice between two fundamentally different attachment kinds, not just different effect atoms. The surface has no Attachment.choice variant; each phase fixes one attachment kind.",
+      "evidence": "Alternatively, you cast the spell on an object that isn't being worn or carried, causing the sunlight to fill a 60-foot Emanation originating from that object."
+    },
+    {
+      "kind": "new_variant",
+      "name": "end_ongoing_spells spatial+type filter",
+      "justification": "The auto-dispel fires automatically (no player action) and only dispels spells that (a) created darkness and (b) have overlapping areas with Daylight's area. The existing end_ongoing_spells atom has no spatial-overlap predicate and no spell-effect-type filter (darkness category). Both constraints are needed to encode this honestly.",
+      "evidence": "If any of this spell's area overlaps with an area of Darkness created by a spell of level 3 or lower, that other spell is dispelled."
+    },
+    {
+      "kind": "new_variant",
+      "name": "emit_light.lightKind",
+      "justification": "The spell explicitly produces sunlight, which is mechanically distinct from ordinary bright light: creatures with Sunlight Sensitivity suffer disadvantage while in it; undead and other creatures sensitive to sunlight are affected. The current emit_light atom has no lightKind field to distinguish sunlight from regular bright light.",
+      "evidence": "For the duration, sunlight spreads from a point within range and fills a 60-foot-radius Sphere."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The emit_light mechanic for the primary area-sphere mode encodes cleanly. JSON typechecks and tracer succeeds. Three surface widenings prevent full encode: (1) cast-time attachment kind choice (area vs object), (2) spatial-overlap + darkness-type filter on end_ongoing_spells, (3) sunlight quality on emit_light. The encoded portion is an honest partial trace of the primary cast mode only."
+}

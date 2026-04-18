@@ -1,22 +1,22 @@
 {
   "unit_slug": "stone_shape",
-  "outcome": "surface_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "alter_object_shape",
-      "justification": "Stone Shape permanently reshapes a stone object into an arbitrary form. The existing Effect union (DamageEffect | NoneEffect) has no variant for object-alteration. The v4 atom inventory includes alter_item_kind and create_object, but neither is exposed as an Effect variant in types.ts. A new Effect variant is needed to represent: 'permanently transform an object of a given material/size constraint into a caster-specified shape, instantaneously.'",
-      "evidence": "You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape you like."
+      "name": "ObjectMaterial.stone",
+      "justification": "Stone Shape targets a stone object or section of stone. The ObjectFilter.material field only accepts 'metal' | 'flammable'; 'stone' is absent from OBJECT_MATERIALS.",
+      "evidence": "You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension"
     },
     {
-      "kind": "new_variant",
-      "name": "object_attachment",
-      "justification": "Stone Shape targets a stone object, not a creature. The current Attachment variants (self, target, area, mark) are all creature- or point-oriented. An object-targeted attachment variant is needed to represent 'a stone object you touch'.",
-      "evidence": "You touch a stone object of Medium size or smaller..."
+      "kind": "new_atom",
+      "name": "reshape_object",
+      "justification": "Stone Shape transforms an existing stone object into an arbitrary player-defined form at cast time. alter_item_kind requires a fixed authored newKind string (a pre-specified destination form like 'rowboat'). Stone Shape's destination is open-ended — the player chooses any shape — so no closed newKind value can be authored. A new atom is needed for open-ended material reshaping of an existing object, distinct from alter_item_kind (fixed destination) and create_object (creates new matter from nothing).",
+      "evidence": "form it into any shape you like. For example, you could shape a large rock into a weapon, statue, or coffer, or you could make a small passage through a wall that is 5 feet thick. You could also shape a stone door or its frame to seal the door shut."
     }
   ],
   "confidence": "high",
-  "notes": "The activation family (instantaneous, single-phase, action cost) is the right structural fit. The gap is entirely in the Effect union and in the Attachment vocabulary — there is no way to honestly represent 'target a specific object and permanently alter its shape' without new surface variants. The ActivationPhase union (attack_roll | save_gate) is also insufficient since Stone Shape has no resolution gate — the effect is unconditional on a successful touch. This would require either a new ActivationPhase variant (unconditional_effect) or a rethink of how instantaneous non-gated spells are modeled."
+  "notes": "Two independent gaps block encoding. First: ObjectMaterial needs 'stone' added (surface_widening). Second and primary: no atom exists for open-ended object reshaping where the destination form is player-defined at cast time rather than pre-authored. alter_item_kind is semantically wrong (it encodes a fixed known destination, e.g., Folding Boat's box/rowboat/keelboat states); create_object creates new matter rather than reshaping existing stone. The proposed reshape_object atom would carry the existing attachment (Attachment.object) and accept an open-ended player-described target shape, with mechanical constraints (maxHinges, noFinerDetail) as optional metadata. The spell's secondary mechanical effects (passage through wall, sealed door) are DM-adjudicated consequences of the physical change, not additional atoms."
 }

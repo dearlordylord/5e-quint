@@ -1,34 +1,9 @@
 {
   "unit_slug": "magic_item_adamantine_armor",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item UnitRecord kind",
-      "justification": "types.ts UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord. There is no magic_item kind. The v4 TAXONOMY has magic_item_root as a source atom but the surface has no corresponding record type. No family can be coerced to represent a magic item honestly.",
-      "evidence": "Armor (Any Medium or Heavy, Except Hide Armor), Uncommon — this is a magic item, not a spell, class feature, or mastery."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "passive_persistent mechanics family",
-      "justification": "Adamantine Armor is an always-on passive modifier that fires while the item is worn, with no activation cost, no use count, and no rest reset. None of the three existing families (ongoing_effect, activation, on_hit_trigger) model a worn-item passive. A new family is needed for items whose mechanics are simply 'while wearing this, X is always true'.",
-      "evidence": "While you're wearing it, any Critical Hit against you becomes a normal hit."
-    },
-    {
-      "kind": "new_atom",
-      "name": "suppress_crit (or promote deferred crit_window)",
-      "justification": "The effect converts an incoming critical hit to a normal hit. No v4 atom covers this. The TAXONOMY §12 explicitly defers crit_window as 'single-feat pressure, not promoted'. Adamantine Armor is a second independent pressure point (magic item stream, separate from the feat stream). The atom would need to attach to an incoming-attack resolution and downgrade the roll outcome from 'critical' to 'normal hit'.",
-      "evidence": "any Critical Hit against you becomes a normal hit"
-    },
-    {
-      "kind": "new_variant",
-      "name": "incoming attack_roll trigger (worn-item scope)",
-      "justification": "All existing attack_roll resolution atoms trace outgoing attacks (attacker's roll). Adamantine Armor fires on incoming attack rolls against the wearer. The surface has no trigger variant scoped to 'attack roll targeting the item bearer'. A new trigger variant or a new MasteryTrigger-equivalent for items would be needed to express 'when a critical hit is scored against the wearer'.",
-      "evidence": "any Critical Hit against you"
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["grant", "magic_item_root", "suppress_incoming_critical_hit", "wearing_item"],
+  "relations_used": ["grants", "requires", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Two orthogonal gaps stack here. (1) Structural: no magic_item UnitRecord kind exists in types.ts at all — this alone would block encoding regardless of the mechanic. (2) Atom/surface: even if the kind existed, the crit-suppression mechanic has no vocabulary — crit_window is explicitly deferred in v4, there is no incoming-attack trigger, and there is no 'passive while worn' mechanics family. Both gaps must be resolved before Adamantine Armor can be encoded honestly."
+  "notes": "Encodes cleanly as passive magic_item with wearing_item equipment predicate and suppress_incoming_critical_hit effect atom, which was added to types.ts specifically for this item. No widenings needed."
 }

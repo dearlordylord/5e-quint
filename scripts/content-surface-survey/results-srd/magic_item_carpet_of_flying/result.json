@@ -1,28 +1,34 @@
 {
   "unit_slug": "magic_item_carpet_of_flying",
-  "outcome": "surface_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "Attachment.item",
-      "justification": "The activation targets and changes the carpet itself, not the wielder, a creature target, or an area. The current activation surface cannot attach phases to an item/object subject.",
-      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word. It moves according to your directions if you are within 30 feet of it."
+      "name": "UseCountCap.unlimited",
+      "justification": "ActivatedAbilityMechanics requires a resource, but the Carpet of Flying has no per-use cost — it can be activated with a Magic action any number of times with no resource consumption. UseCountCap has no 'unlimited' sentinel.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word."
+    },
+    {
+      "kind": "new_atom",
+      "name": "grant_vehicle_fly (or item-targeted grant_speed variant)",
+      "justification": "The carpet is a flying vehicle — the ITEM has fly speed and carries passengers. grant_speed targets a creature (the activator). The carpet can be directed from 30 feet away without riding it, and multiple passengers benefit simultaneously. A single-creature grant_speed does not capture this semantics.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it. A carpet can carry up to twice the weight shown on the table."
     },
     {
       "kind": "new_variant",
-      "name": "MagicItem size/speed/capacity mode selection",
-      "justification": "A single Carpet of Flying can exist in one of four GM-chosen size profiles with distinct capacity and Fly Speed values. The current magic-item surface has no honest way to encode one item record with closed variant profiles.",
-      "evidence": "Four sizes of Carpet of Flying exist. The GM chooses the size of a given carpet or determines it randomly by rolling on the following table."
+      "name": "set_speed_ratio with load predicate",
+      "justification": "The carpet's fly speed is conditionally halved based on carried weight exceeding normal capacity. No existing atom supports a predicate-gated speed modifier. set_speed_ratio exists but has no conditional/predicate field.",
+      "evidence": "its Fly Speed is halved if it carries more than its normal capacity"
     },
     {
       "kind": "new_variant",
-      "name": "load-conditioned speed modifier",
-      "justification": "The item's speed changes as a deterministic function of carried weight. The current surface has speed-setting atoms, but no way to express a persistent threshold rule like 'halve Fly Speed above normal capacity up to twice capacity.'",
-      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+      "name": "ActivatedAbilityMechanics control range",
+      "justification": "The carpet responds to directions from within 30 feet. This is a control radius on an activated item, not expressible in any current surface field on ActivatedAbilityMechanics or PassiveMechanics.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
     }
   ],
   "confidence": "high",
-  "notes": "Stopped before authoring per protocol. `magic_item` is the correct top-level kind, but the existing authored surface cannot honestly represent an independently moving item with GM-chosen size variants and load-based speed changes."
+  "notes": "The 4-size variant collection is straightforwardly expressible using MagicItemRecord.variants (d100 determination is GM/structural, not a player mechanic). The blocking gaps are: (1) no 'unlimited' UseCountCap prevents honest ActivatedAbilityMechanics encoding; (2) grant_speed is creature-targeted but the carpet is a flying vehicle with multi-rider semantics; (3) load-conditional speed halving has no surface analog. Not authored as Dhall — each gap individually prevents an honest trace."
 }

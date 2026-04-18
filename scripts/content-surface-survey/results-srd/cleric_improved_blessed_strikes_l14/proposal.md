@@ -1,139 +1,71 @@
 # Proposal: Improved Blessed Strikes (Cleric L14)
 
-## Outcome: `structural_widening`
+**Outcome**: `structural_widening`
 
 ## Unit Summary
 
-Improved Blessed Strikes upgrades whichever of the two Blessed Strikes options the cleric selected at level 7:
+Level 14 upgrade to the Blessed Strikes feature. Grants one of two improvements depending on which path the character chose earlier:
 
-- **Divine Strike branch**: Extra weapon-hit damage increases to 2d8.
-- **Potent Spellcasting branch**: After dealing damage with a Cleric cantrip, the cleric may optionally grant Temporary Hit Points equal to 2 × Wisdom modifier to themselves or an ally within 60 feet.
+- **Divine Strike** path: extra weapon-hit damage increases from 1d8 to 2d8.
+- **Potent Spellcasting** path: after dealing damage with a cleric cantrip, the caster may grant Temporary Hit Points equal to twice their Wisdom modifier to themselves or a creature within 60 feet.
 
-Neither branch fits an existing `ClassFeatureMechanics` family without fabricating mechanics that don't exist in the rule text. No content files were authored.
+## Why the Unit Does Not Fit
 
----
+### 1. `on_hit_trigger` absent from `ClassFeatureComponentMechanics`
 
-## Gap 1: No passive rider family in ClassFeatureMechanics
+Divine Strike is an on-weapon-hit rider — when the cleric hits with a weapon, they deal extra damage. `OnHitTriggerMechanics` already exists on the surface (used by masteries and magic items), but `ClassFeatureComponentMechanics` is constrained to `PassiveMechanics | ActivatedAbilityMechanics`. Neither can express "when you hit with a weapon attack, also deal Nd8 damage." Admitting `OnHitTriggerMechanics` to `ClassFeatureComponentMechanics` (and by extension `ClassFeatureMechanics`) would resolve this.
 
-`ClassFeatureMechanics` currently has a single family: `activation`. It requires:
+### 2. Missing `OngoingTrigger` variant: cantrip-deals-damage
 
-```
-activationCost + resource (use_count) + resetCadence + effect
-```
+Potent Spellcasting's upgrade fires when the caster casts a cleric cantrip and deals damage. The existing trigger vocabulary covers `on_caster_attack_hit`, `on_caster_turn_start`, `on_caster_spends_action`, etc. — but not "caster's cantrip resolved and dealt damage to a creature." Many cantrips (Toll the Dead, Sacred Flame, Word of Radiance) deal damage without an attack roll, so `on_caster_attack_hit` would be a misrepresentation.
 
-Divine Strike is a **passive always-on on-hit damage rider** — it fires automatically on every qualifying weapon attack hit. There is no activation, no quota consumed, and no reset cadence. Encoding it under `activation` would require inventing fields the rule doesn't support.
-
-The closest existing surface analog is `OnHitTriggerMechanics` (the mastery family), but `MasteryRecord` is a separate unit kind. A mastery is not a class feature.
-
-**Proposed widening**: Add a `passive_on_hit_rider` family to `ClassFeatureMechanics`:
-
+**Proposed variant**:
 ```typescript
-export type ClassFeaturePassiveOnHitRiderMechanics = {
-  readonly family: "passive_on_hit_rider";
-  readonly trigger: MasteryTrigger;             // or a class-feature-specific trigger type
-  readonly damageType: DamageType;
-  readonly amount: DiceAmount;
-};
+| { readonly kind: "on_caster_cantrip_deals_damage" }
 ```
 
-All atoms needed (`attack_roll`, `on_hit_window`, `damage`, `scale_die_count`) already exist in v4. Only the new subgraph shape is required.
+This trigger fires once per cantrip cast that results in damage to at least one creature.
 
----
+### 3. Missing coefficient on ability modifier in `DiceExpr`
 
-## Gap 2: No cantrip-damage-triggered rider family
+The temp HP amount is "twice your Wisdom modifier." `DiceExpr` supports:
+- `spellcastingMod: true` — adds the spellcasting ability modifier (×1)
+- `abilityModifier: Ability` — adds a named ability modifier (×1)
 
-Potent Spellcasting fires an **optional rider** when the cleric casts a Cleric cantrip **and** deals damage. This is a composite trigger:
+There is no multiplier/coefficient field. "2 × WIS mod" requires either:
 
-1. `spell_cast_window` (scoped to Cleric cantrips)
-2. Damage is confirmed to have been dealt
-3. Caster **may** (optional) apply the effect
-
-This is structurally closer to a reaction or a post-damage window than to an activation. No existing family covers it. The `activation` family is player-initiated; this fires off an event the player already took (casting a cantrip).
-
-**Proposed widening**: Add a `triggered_spell_cast_rider` family to `ClassFeatureMechanics`:
-
+**Option A**: Add an optional `abilityModifierCoefficient` field to `DiceExpr`:
 ```typescript
-export type ClassFeatureSpellCastRiderMechanics = {
-  readonly family: "triggered_spell_cast_rider";
-  readonly trigger: { readonly kind: "cantrip_damage"; readonly classRestriction: ClassName };
-  readonly optional: boolean;
-  readonly effect: ClassFeatureEffect;
-};
+type DiceExprBase = { dice: number; dieSize: number; flat?: number };
+type DiceExpr = DiceExprBase & (
+  | { ... }
+  | { abilityModifier: Ability; abilityModifierCoefficient?: number; ... }
+);
 ```
 
-This maps to a `spell_cast_window` atom (with filter) in the tracer, followed by an optional `on_hit_window`-like branching.
-
----
-
-## Gap 3: Missing `grant_temp_hp` ClassFeatureEffect variant
-
-The Potent Spellcasting rider grants **Temporary Hit Points**, not regular healing. Temp HP is mechanically distinct:
-
-- Does not stack with other temp HP (only the higher pool survives)
-- Forms a separate HP buffer that absorbs damage before regular HP
-- Is not equivalent to healing for purposes of effects that reference healing
-
-The existing `HealHpEffect` (`kind: "heal_hp"`) covers regular HP restoration only.
-
-**Proposed widening**: Add a `GrantTempHpEffect` variant to `ClassFeatureEffect`:
-
+**Option B**: Encode as `DiceDelta` with a new `kind: "ability_modifier_scaled"` variant:
 ```typescript
-export type GrantTempHpEffect = {
-  readonly kind: "grant_temp_hp";
-  readonly amount: TempHpAmount;     // see Gap 4
-  readonly target: "self_or_ally";
-  readonly rangeFeet: number;
-};
+| { readonly kind: "ability_modifier_scaled"; readonly ability: Ability; readonly coefficient: number; readonly sign: "+" | "-" }
 ```
 
-A `grant_temp_hp` atom would also need to be added to the v4 taxonomy (currently only `heal` exists in the effect category).
+Option A is narrower and keeps the existing DiceExpr shape intact; Option B is more general. The coefficient is always a small positive integer in SRD (1, 2, 5 observed).
 
----
+### 4. No encoding for prior-choice-conditional class feature upgrades
 
-## Gap 4: Missing ability-modifier-scalar amount type
+The feature's entire premise is "whichever option you chose for Blessed Strikes now upgrades." The surface has no way to express "this mechanic is active only if the character previously selected path X from an earlier feature." This is a structural gap that would require either:
 
-The Temp HP amount is `2 × Wisdom modifier`. This is a **character-stat-derived flat amount** — not a dice expression, not a threshold tier, not a linear-per-level increment. `DiceAmount` supports:
+- A `condition` variant on class feature mechanics referencing a prior feature choice, or
+- Encoding the two upgrade paths as two distinct class feature records, each authored independently, with the link to the prior choice recorded only in provenance/description.
 
-- `fixed` — a constant dice expression with optional flat
-- `threshold_tiers` — jumps at level thresholds
-- `linear_per_level` — grows linearly per level
+The second approach (two separate records) is the lower-cost encoding and avoids inventing a cross-feature reference mechanism. The tracer would simply emit two separate graphs; the relation to Blessed Strikes would be prose-level only.
 
-None can express "multiply an ability score modifier by a constant." The modifier is a runtime character projection, not a formula with a compile-time base.
+## Minimum Widenings Required
 
-**Proposed widening**: Add a new amount variant (either to `DiceAmount` or as a separate `TempHpAmount` type):
+| # | Change | Scope |
+|---|--------|-------|
+| 1 | Admit `OnHitTriggerMechanics` to `ClassFeatureComponentMechanics` | `types.ts` |
+| 2 | Add `on_caster_cantrip_deals_damage` variant to `OngoingTrigger` | `types.ts` |
+| 3 | Add `abilityModifierCoefficient?: number` to `DiceExpr` (or new `DiceDelta` variant) | `types.ts` |
+| 4 | Split unit into two conditional records OR add prior-choice condition encoding | authoring convention or `types.ts` |
 
-```typescript
-export type AbilityModifierScaled = {
-  readonly kind: "ability_modifier_times";
-  readonly ability: Ability;
-  readonly multiplier: number;
-};
-```
-
----
-
-## Gap 5: Missing branch-choice meta-structure
-
-Improved Blessed Strikes is semantically bound to the L7 Blessed Strikes choice. The L14 record is not a standalone feature — it upgrades one of two possible prior states. The surface has no way to express:
-
-> "This feature record upgrades whichever of {A, B} the character previously acquired."
-
-**Possible mitigations (not yet proposed as concrete schema changes)**:
-
-1. Encode two separate `ClassFeatureRecord` entries (one for each branch) linked by a shared `parentFeatureId` field — but `parentFeatureId` doesn't exist on `ClassFeatureRecord`.
-2. Add a `conditional_upgrade` wrapper family at the record level.
-3. Treat the two branches as independent features (separate records for `cleric_improved_divine_strike_l14` and `cleric_improved_potent_spellcasting_l14`) and handle the branching at the character sheet / advancement layer, not the content surface.
-
-Option 3 is probably the lowest-cost workaround once the other gaps are resolved, but it requires the schema to allow optional precondition metadata so the surface can describe "this record is only applicable if the character has feature X."
-
----
-
-## Minimum Widening Path
-
-| Branch | Gaps forced |
-|---|---|
-| Divine Strike only | Gap 1 (passive_on_hit_rider family) + v4 atom for passive class feature on-hit rider |
-| Potent Spellcasting only | Gap 2 (cantrip_damage_trigger family) + Gap 3 (grant_temp_hp) + Gap 4 (ability_modifier_times) |
-| Both (full unit) | Gaps 1–5 |
-
-**Divine Strike is the smaller widening** — all required v4 atoms already exist (`attack_roll`, `on_hit_window`, `damage`, `scale_die_count`). Only the new subgraph shape is required. Potent Spellcasting forces three additional widenings including a new effect atom.
+Items 1–3 together unblock encoding both paths independently. Item 4 is needed only if the feature must remain a single authored unit.

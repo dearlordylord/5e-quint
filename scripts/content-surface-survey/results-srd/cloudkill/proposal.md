@@ -1,126 +1,65 @@
-# Proposal: Cloudkill — surface_widening
+# Cloudkill — Surface Widening Proposal
 
 ## Unit
 
-**Name:** Cloudkill  
-**Kind:** spell (level 5, Conjuration, SRD 5.2.1)  
-**Slug:** cloudkill
+- **Slug**: `cloudkill`
+- **Kind**: spell
+- **Level**: 5 (Conjuration, Concentration up to 10 min)
+- **Provenance**: SRD 5.2.1
 
-## Outcome
+## What Fits
 
-`surface_widening` — the `ongoing_effect` family is the correct outer shape, but `OngoingOperation` lacks a save-gate-on-presence variant.
+- `ongoing_effect` family — correct shape for a persistent area spell.
+- `area` attachment with `sphere radiusFeet=20` — exists.
+- `initialPhase` → `save_gate` (Con, caster spell save DC, onFail: 5d8 poison, onSuccess: half_damage) — covers the cast-time save on all creatures already in the sphere.
+- `on_creature_enters_area` operation → `save_gate` — covers creatures who walk into the sphere mid-duration.
+- `damage` atom (poison, `linear_per_level` for +1d8/slot above 5) — fully expressible.
+- `concentration` duration with 10-minute `upTo` — fits.
 
-## What the spell does
+## Gaps
 
-Cloudkill creates a 20-ft-radius Sphere of poisonous fog at a point within 120 ft:
+### 1. `on_creature_ends_turn_in_area` (primary gap)
 
-- **Duration:** Concentration, up to 10 minutes.
-- **Save trigger:** Each creature in the Sphere makes a CON save on initial placement; also when the Sphere moves into its space, when it enters the Sphere, or when it ends its turn there.
-- **Damage:** 5d8 Poison on a failed save, half on a success.
-- **Once-per-turn cap:** A creature makes this save only once per turn regardless of how many triggers fire.
-- **Area movement:** The Sphere moves 10 feet away from the caster at the start of each of the caster's turns.
-- **Environment:** The area is Heavily Obscured (caller-owned, not modeled in core).
-- **Upcast:** +1d8 Poison per slot level above 5.
+**SRD text**: "A creature must also make this save when… it ends its turn there."
 
-## Why it doesn't fit honestly
+The `OngoingTrigger` union has `on_attached_turn_start` (fires at the *start* of the attached creature's turn) but nothing for end-of-turn. Cloudkill's core ongoing threat is creatures stuck in the cloud who take damage at the *end* of each of their turns, not the start. These are mechanically distinct — a creature who enters and immediately moves out before their turn ends would take the enter-save but not the end-of-turn save.
 
-### Primary gap: no save-gate operation in `OngoingOperation`
-
-`OngoingOperation` has two variants:
-
-| Variant | Trigger | Resolution |
-|---|---|---|
-| `roll_modifier` | Any attack roll or save the target makes | Adds dice bonus (Bless) |
-| `damage_on_hit` | Caster makes an attack roll and hits a creature in the attachment scope | Deals damage (Hunter's Mark) |
-
-Cloudkill needs a third variant: damage triggered by **area presence** (not by the caster's attack roll), resolved via a **saving throw** with full/half damage. This is mechanically distinct from both existing variants.
-
-Using `damage_on_hit` would be a lie — Cloudkill never involves the caster making an attack roll against the creatures taking damage.
-
-### Secondary gap: area movement
-
-The `area` attachment supports a static origin (`point_within_range` or `on_primary_target`). Cloudkill's area relocates 10 ft each round. There is no property or variant to express this. This is a first-class mechanic — it determines which creatures are in range for the presence trigger each round.
-
-### Tertiary gap: per-creature-per-turn save frequency cap
-
-"A creature makes this save only once per turn." The surface has no mechanism for this. The mastery `usageLimit: once_per_turn` is a per-activation cap on the wielder, not a per-creature guard on a spell's ongoing save trigger. A new property on the proposed operation variant would be needed.
-
-### Not a gap: Heavily Obscured
-
-The area is Heavily Obscured. Per ARCHITECTURE.md, environmental and notification effects are caller-owned and not core-mechanics atoms. No widening proposed for this.
-
-## Proposed surface additions
-
-### 1. New `OngoingOperation` variant: `save_gate_on_presence`
-
+**Proposed addition** to `OngoingTrigger`:
 ```typescript
-export type AreaPresenceSaveOperation = {
-  readonly kind: "save_gate_on_presence";
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onFail: Effect;      // full damage
-  readonly onSuccess: Effect;   // half damage (or none)
-  readonly oncePer?: "turn";    // optional per-creature frequency cap
-};
+| { readonly kind: "on_creature_ends_turn_in_area" }
 ```
 
-This maps the Cloudkill/Incendiary Cloud/Insect Plague pattern: concentration area spell, presence triggers a save, save determines full vs. half damage. The existing `save_gate` resolution atom is reused downstream.
+This parallels `on_attached_turn_start` but fires at the *end* of each affected creature's turn. Other spells that use "ends its turn in the area" semantics (e.g., Wall of Fire, Spirit Guardians variants) would benefit from the same variant.
 
-### 2. Area attachment movement property
+### 2. Automatic directional sphere movement
 
-```typescript
-// In area Attachment variant, optional movement rider:
-export type AreaMovement = {
-  readonly direction: "away_from_caster";
-  readonly feetPerTurn: number;
-  readonly timing: "start_of_casters_turn";
-};
-```
+**SRD text**: "The Sphere moves 10 feet away from you at the start of each of your turns."
 
-Or alternatively, a new `Attachment` variant `moving_area` that wraps the existing `area` shape with a `movement` field.
+The existing `reposition_attachment` atom is described as a caster-initiated action (e.g., Silent Image: "spend a Magic action to relocate"). Cloudkill's movement is:
+- Automatic (no caster action required)
+- Directional (always away from caster, not a free-choice repositioning)
+- Fixed distance (exactly 10 ft)
 
-### 3. Save frequency cap (bundled into variant 1 above)
+A clean encoding would need either:
+- A new `OngoingEffect` variant for automatic attachment movement (e.g., `auto_move_attachment` with `distanceFeet` and `direction: "away_from_caster"`), or
+- Enrichment of `reposition_attachment` with `automatic: true` and a `direction` field.
 
-The `oncePer?: "turn"` field on `save_gate_on_presence` handles the once-per-turn guard without introducing a new type. The Cloudkill text makes this a per-creature cap: each creature can only be asked to save once per turn regardless of how many presence-trigger conditions fire in that turn.
+This is lower priority than gap 1 — the movement changes the *footprint* of the sphere over time but doesn't affect the core save-gate resolution logic.
 
-## What a clean encoding would look like (sketch)
+### 3. Once-per-turn save deduplication
 
-Once the surface is widened, Cloudkill would encode as `ongoing_effect` with:
+**SRD text**: "A creature makes this save only once per turn."
 
-```
-family: "ongoing_effect"
-level: 5
-school: "conjuration"
-castingTime: { kind: "action" }
-range: { kind: "point", feet: 120 }
-components: { v: true, s: true, m: false }
-duration: { kind: "concentration", upTo: { unit: "minute", amount: 10 } }
-attachment: {
-  kind: "area",
-  shape: { kind: "sphere", radiusFeet: 20 },
-  origin: { kind: "point_within_range" },
-  movement: { direction: "away_from_caster", feetPerTurn: 10, timing: "start_of_casters_turn" }
-}
-operation: {
-  kind: "save_gate_on_presence",
-  ability: "con",
-  dc: { kind: "caster_spell_save_dc" },
-  onFail: { kind: "damage", damageType: "poison", amount: {
-    kind: "linear_per_level", axis: "slot",
-    base: { dice: 5, dieSize: 8 }, perLevel: { dice: 1 }, startingAtLevel: 5
-  }},
-  onSuccess: { kind: "damage", damageType: "poison", amount: { ... half ... } },
-  oncePer: "turn"
-}
-```
+Cloudkill fires saves on three triggers: initial cast, creature enters, creature ends turn. If multiple triggers fire in one turn (e.g., the sphere moves into a creature's space on the caster's turn, and the creature entered on its own turn), the spell caps the creature at one save per turn. The surface has no mechanism to express cross-operation deduplication within a turn boundary.
 
-The `onSuccess` half-damage case is also currently unrepresentable in `Effect` — `DamageEffect` doesn't carry a `halfOnSuccess` flag. This is another surface gap that would need addressing when the operation variant is added.
+This is a narrower constraint than the others — it would require either:
+- A `maxPerTurn: 1` field on `OngoingOperation`, or
+- A shared `trigger_group` mechanism that deduplicates saves across operations.
 
-## Other pressure cases for the same widening
+## Encoding Decision
 
-- **Incendiary Cloud** (level 8) — same pattern: concentration Sphere, save for fire damage each turn
-- **Insect Plague** (level 5) — concentration Sphere, save for piercing damage each turn  
-- **Moonbeam** (level 2) — concentration Cylinder, save for radiant each turn (with shape variant)
-- **Spirit Guardians** (level 3) — concentration area centered on caster, CON save for radiant/necrotic
+No `.dhall` authored. The "ends its turn there" save is Cloudkill's primary damage vector (most encounters involve creatures who enter, can't escape, and take damage each turn they remain). Encoding only the enter-save would produce a trace that looks correct but silently drops the dominant mechanic. Per the guardrails, a misleading trace is worse than no trace.
 
-All of these share the `save_gate_on_presence` pattern and would benefit from the same widening.
+## Classification
+
+`surface_widening` — the `ongoing_effect` family and all effect atoms are correct; the missing piece is a trigger variant (`on_creature_ends_turn_in_area`) on the existing `OngoingTrigger` union.

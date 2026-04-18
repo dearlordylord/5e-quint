@@ -1,71 +1,67 @@
-# Proposal: Widenings required for Stone Shape
+# Proposal: Stone Shape — atom_widening
 
 ## Unit
 
-**Stone Shape** — SRD 5.2.1, Level 4 Transmutation spell, instantaneous, touch range.
+**Stone Shape** · Level 4 Transmutation · SRD 5.2.1 · `Spells/Descriptions-Q-Z#Stone Shape`
 
-> "You touch a stone object of Medium size or smaller or a section of stone no more than 5 feet in any dimension and form it into any shape you like."
+Instantaneous, Touch range, Action cast. Touch a stone object (≤ Medium, or ≤ 5 ft section) and reshape it into any form the caster chooses.
 
-## Why it doesn't fit
+---
 
-Stone Shape is a clean instantaneous transmutation with no attack roll and no saving throw. Its casting cost is 1 action, it consumes a level-4 spell slot, and it has V/S/M components. The structural shape is `activation` family. However, three things are missing from the current surface:
+## Gap 1 — `ObjectMaterial` missing `"stone"` (surface_widening)
 
-### 1. No `Effect` variant for object alteration
+`ObjectFilter.material` is typed as `ObjectMaterial = "metal" | "flammable"`.
 
-The `Effect` union in `types.ts` is:
+Stone Shape's target predicate is "a stone object or section of stone." There is no way to express this filter with the current closed enum.
 
-```typescript
-export type Effect = DamageEffect | NoneEffect;
-```
+**Proposed fix:** add `"stone"` to `OBJECT_MATERIALS` and `ObjectMaterial`.
 
-Stone Shape's core mechanic — permanently reshaping a stone object into an arbitrary form — maps to the v4 atom `alter_item_kind` (object changes its kind/form) or `create_object` (a shaped passage or new object is created). Neither is an available `Effect` variant. A new variant is needed:
+---
 
-```typescript
-export type AlterObjectShapeEffect = {
-  readonly kind: "alter_object_shape";
-  readonly materialConstraint: "stone";
-  readonly sizeConstraint: "medium_or_smaller";  // or max-dimension formulation
-};
-```
+## Gap 2 — No atom for open-ended object reshaping (atom_widening, primary)
 
-This is the primary blocker.
+Stone Shape's effect is "reshape this object into any form you like." The only existing atom with adjacent semantics is:
 
-### 2. No `Attachment` variant for objects
+- **`alter_item_kind { newKind: string }`** — changes an item to a *specific pre-authored destination form* (Folding Boat: box → rowboat → keelboat). The `newKind` field is a fixed authored string, not a player-defined open value.
+- **`create_object`** — creates new matter from nothing; Stone Shape reshapes *existing* stone.
 
-The current `Attachment` union covers `self`, `target` (creature), `area`, and `mark` (creature). Stone Shape targets a **stone object**, not a creature. The v4 atom inventory includes `object` as an attachment atom, but it is not in the surface `Attachment` type.
+Neither is honest. Stone Shape's destination is entirely open-ended (weapon, statue, coffer, passage, sealed door frame, etc.) and is described by the player at cast time. A closed authored `newKind` string cannot capture this.
 
-A new attachment variant for objects is needed:
+### Proposed atom: `reshape_object`
 
 ```typescript
 | {
-    readonly kind: "object";
-    readonly materialConstraint: "stone";
-    readonly sizeConstraint: "medium_or_smaller";
+    readonly kind: "reshape_object";
+    // Optional mechanical constraints from RAW text; omitted = unconstrained
+    readonly maxHinges?: number;       // "up to two hinges"
+    readonly finerDetailPossible?: false; // "finer mechanical detail isn't possible"
   }
 ```
 
-### 3. No `ActivationPhase` variant for unconditional effects
+**Semantics:** The object targeted by the host `Attachment.object` is transformed into a new physical form chosen by the caster at cast time. The new form is player/DM-described narrative; no closed option set is representable. Mechanical consequences of the new form (passage through a wall, sealed door, etc.) are DM-adjudicated from the physical change.
 
-The `ActivationPhase` union only has `attack_roll` and `save_gate`. Both are gated — the effect depends on a die roll. Stone Shape has **no resolution gate**: if the caster successfully touches the stone (range: touch, no attack roll required for touch-targeted object spells in SRD 5.2.1), the reshaping occurs unconditionally.
+**Relationship to `alter_item_kind`:** `alter_item_kind` carries a fixed authored `newKind` string — it models items with a known finite set of forms (Folding Boat, glamoured armor). `reshape_object` models open-ended material transformation where the destination form is free at cast time. These are distinct semantic families.
 
-A third phase variant is needed for spells that apply their effect immediately without a gate:
+**Relationship to `create_object`:** `create_object` generates new matter (Fabricate, Instant Fortress, Wall of Stone panels). `reshape_object` transforms existing matter in-place with no net mass change.
 
-```typescript
-| {
-    readonly kind: "unconditional";
-    readonly attachment: Attachment;
-    readonly effect: Effect;
-  }
+---
+
+## Encoding plan (once widenings land)
+
+```
+family: activation
+phases:
+  - kind: direct
+    attachment:
+      kind: object
+      count: 1
+      filter:
+        material: stone          # Gap 1
+        maxSize: medium
+    effects:
+      - kind: reshape_object     # Gap 2
+        maxHinges: 2
+        finerDetailPossible: false
 ```
 
-## Classification
-
-**`surface_widening`** — the `activation` family is structurally correct. All atoms referenced exist in v4 (`alter_item_kind`, `object` attachment, `activate` procedure, `spell_slot`, `action_quota`). What is missing is the surface encoding of those atoms as types.ts variants.
-
-## Proposed widening scope
-
-1. Add `AlterObjectShapeEffect` (or generalize as `AlterObjectEffect`) to the `Effect` union.
-2. Add `object` kind to the `Attachment` union.
-3. Add `unconditional` kind to the `ActivationPhase` union.
-
-These three changes together would allow Stone Shape (and similar instantaneous transmutation spells like Fabricate, Move Earth) to be honestly encoded.
+Level, school, castingTime, range, components, duration all encode cleanly with existing surface types.

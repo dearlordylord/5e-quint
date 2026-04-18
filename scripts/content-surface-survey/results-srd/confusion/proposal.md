@@ -1,115 +1,116 @@
-# Proposal: Widenings Required for Confusion
+# Proposal: Confusion widening gaps
 
-**Unit:** Confusion (spell, level 4, enchantment, srd-5.2.1)
-**Outcome:** `atom_widening`
+## Unit
 
----
+**Confusion** — Level 4 Enchantment spell (SRD 5.2.1)
 
-## Why Confusion Cannot Be Encoded Honestly
+## Family fit
 
-The closest payload family is `ongoing_effect` (area attachment, concentration 1 minute, initial WIS save per creature in the sphere). However, five blocking gaps prevent honest encoding.
+The spell fits `ongoing_effect` structurally:
+- Area attachment (sphere, 10-ft radius, origin point within 90 ft)
+- `save_gate` initial phase (Wis save), per creature in area
+- `repeatSave` with `cadence: "end_of_target_turn"`, `onSuccess: "ends_on_target"`
+- Concentration, up to 1 minute
 
----
-
-## Blocking Gap 1 — Missing Atom: `random_behavior_table` (primary)
-
-**Evidence:** "must roll 1d10 at the start of each of its turns to determine its behavior for that turn, consulting the table below"
-
-Confusion's defining mechanic is a per-turn stochastic dispatch. At the start of each affected creature's turn, it rolls 1d10 and consults a 4-row table:
-
-| Roll | Behavior |
-|------|----------|
-| 1    | Use all movement in a random direction; no action |
-| 2–6  | No movement, no action |
-| 7–8  | No movement; Attack action against a random creature within reach (if any) |
-| 9–10 | Act normally |
-
-No v4 atom covers "roll a die and pick a behavior from a probability table." This is not `modify_roll_advantage`, not `apply_condition`, not `restrict_action_set` — it is a fundamentally different operational shape: a weighted stochastic behavior selector that replaces the creature's autonomous decision with a random draw.
-
-**Proposed atom:** `random_behavior_table` (new v4 Effect atom)
-- Carries a table of `(range: [min, max], behavior: BehaviorOutcome)` entries
-- `BehaviorOutcome` would itself need a small closed enum: `random_movement | do_nothing | random_melee_attack | normal`
-
-**Classification:** `atom_widening` — this atom does not exist in v4.
+All scaffolding exists. The blockers are in the `onFail` effect and the ongoing per-turn operation.
 
 ---
 
-## Blocking Gap 2 — Missing Surface Variant: `OngoingOperation.random_behavior_table`
+## Gap 1 — `random_table` missing from `OngoingEffect` (primary blocker)
 
-**Evidence:** same as Gap 1
+**SRD text**: "must roll 1d10 at the start of each of its turns to determine its behavior for that turn"
 
-The surface type `OngoingOperation = RollModifierOperation | DamageOnHitOperation` has two variants. A third variant is needed to carry the random behavior table as an ongoing per-target operation.
+The 1d10 behavior roll is the central mechanic. It fires on `on_attached_turn_start` and dispatches to one of four outcome branches. This requires `random_table` as a valid `OngoingEffect` variant.
 
-**Proposed variant:**
+Currently `OngoingEffect` is:
 ```typescript
-export type RandomBehaviorTableOperation = {
-  readonly kind: "random_behavior_table";
-  readonly dieSize: number;            // 10 for Confusion
-  readonly rows: ReadonlyArray<{
-    readonly min: number;
-    readonly max: number;
-    readonly behavior: BehaviorOutcome;
-  }>;
-};
+export type OngoingEffect =
+  | EffectAtom
+  | { kind: "save_gate"; ... }
+  | { kind: "ability_check_gate"; ... }
+  | { kind: "attack_roll"; ... }
+  | ModifyAcSetFloorEffect;
 ```
 
-**Classification:** `surface_widening` (depends on new atom from Gap 1).
+`random_table` exists in `ActivationPhase` but not here. The proposed addition:
 
----
-
-## Blocking Gap 3 — `repeat_save` Not Surfaced in `types.ts`
-
-**Evidence:** "At the end of each of its turns, an affected target repeats the save, ending the spell on itself on a success."
-
-The v4 taxonomy (§5 Resolution Atoms) lists `repeat_save` as an existing atom. However, `types.ts` has no type that expresses a per-turn repeat save attached to an ongoing_effect. The `Duration` type only encodes global spell expiry; there is no per-attachment or per-target repeat-save mechanism.
-
-**Proposed surface addition:** A new optional field on `OngoingEffectMechanics` (or a new lifecycle atom reference):
 ```typescript
-repeatSave?: {
-  readonly timing: "end_of_affected_turn";
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onSuccess: "remove_from_self";
-};
+| {
+    readonly kind: "random_table";
+    readonly roll: RandomTableRoll;
+    readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
+  }
 ```
 
-**Classification:** `surface_widening` (v4 atom exists; surface representation missing).
+`RandomTableRoll` and `RandomTableOutcome` already exist in the spell types. `RandomTableOutcome.phases` would need to allow `EffectAtom[]` as well as nested `ActivationPhase[]` — or `OngoingEffect[]` — for the sub-effects within each outcome branch.
 
 ---
 
-## Blocking Gap 4 — `StandardActionKind` Missing `bonus_action` and `reaction`
+## Gap 2 — No atom to deny Bonus Actions and Reactions from target
 
-**Evidence:** "the target can't take Bonus Actions or Reactions"
+**SRD text**: "that target can't take Bonus Actions or Reactions"
 
-`ActionRestriction.exclude` references `StandardActionKind`, which covers the 12 standard action types. Neither `bonus_action` nor `reaction` appear in that enum. Without them, `restrict_action_set` cannot express the Bonus Action / Reaction denial that Confusion imposes on failing creatures.
+The initial save failure denies two action-economy slots from the affected creature for the duration. The existing `ActionRestriction` type only appears as a field on `grant_extra_action` (scoping what kind of extra action is granted), not as a standalone effect on the target's own economy.
 
-**Proposed surface change:** Extend `StandardActionKind` (or create a parallel `ActionResourceKind`) to include `bonus_action` and `reaction`.
+Proposed new `EffectAtom` variant:
 
-**Classification:** `surface_widening`.
-
----
-
-## Blocking Gap 5 — Area Attachment Has No Slot-Scaling for Radius
-
-**Evidence:** "The Sphere's radius increases by 5 feet for each spell slot level above 4."
-
-The `area` Attachment variant carries a fixed `radiusFeet`. There is no slot-scaling mechanism on area dimensions analogous to the `SlotScaling<number>` used for target counts. This is a surface gap independent of the other blockers.
-
-**Proposed surface change:** Add an optional `radiusScaling` field to the area attachment:
 ```typescript
-radiusScaling?: SlotScaling<number>;  // feet added per slot above baseLevel
+| {
+    readonly kind: "deny_action_types";
+    readonly deny: ReadonlyNonEmptyArray<"bonus_action" | "reaction">;
+  }
 ```
 
-**Classification:** `surface_widening`.
+This is distinct from `apply_condition` (no SRD condition maps to this exactly) and from `grant_extra_action.restriction` (different direction — this removes existing slots, not restricts a new grant).
 
 ---
 
-## Encoding Path (Once Gaps Are Closed)
+## Gap 3 — No atom for random-direction movement (behavior outcome 1)
 
-Family: `ongoing_effect`
-- Area attachment: sphere, 10 ft radius (+ 5 ft/slot above 4)
-- Initial per-creature WIS save gate (on fail → enter confused state)
-- Operation: `random_behavior_table` (1d10 at turn start)
-- Ongoing state also: `restrict_action_set` (bonus_action, reaction) on failing creatures
-- Repeat save: end-of-affected-turn WIS save, on success remove from self
-- Duration: concentration, up to 1 minute
+**SRD text**: "it uses all its movement to move. Roll 1d4 for the direction: 1, north; 2, east; 3, south; or 4, west."
+
+`force_move` has a closed `direction` enum (`"push" | "pull" | "slide"`) — all caster-relative directions, not compass directions or nondeterministic directions. Behavior 1 requires moving the full movement allowance in a randomly-chosen cardinal direction.
+
+This could be expressed as a nested `random_table` (1d4, four compass-direction branches), but only once Gap 1 is resolved and random_table is available in OngoingEffect. The direction vocabulary (cardinal compass points) is not currently representable in any movement atom.
+
+---
+
+## Gap 4 — No atom for forced attack against random creature in reach
+
+**SRD text**: "it takes the Attack action to make one melee attack against a random creature within reach. If none are within reach, the target takes no action."
+
+Behavior outcome 7-8 forces the affected creature to make a melee attack, with the target selected randomly from all creatures within reach. No existing atom supports this:
+- `attack_roll` in `ActivationPhase`/`OngoingEffect` always has a determined `attachment` — there is no "random creature within reach" target selection mode.
+- `TargetSelection` has `one`, `choose_up_to`, and `any_number` modes, none of which express random selection.
+
+Proposed: a new `TargetSelection` mode or a new `EffectAtom` variant that expresses "make an attack against a randomly-selected creature matching a filter (within reach)."
+
+---
+
+## Gap 5 — No slot-scaled area radius
+
+**SRD text**: "The Sphere's radius increases by 5 feet for each spell slot level above 4."
+
+`AreaShapeDescriptor` carries `radiusFeet: number` — a fixed value. The slot-scaling surface (`DiceAmount`, `SlotScaling<T>`) handles dice counts and target counts, but not area dimensions.
+
+Proposed: widen `AreaShapeDescriptor.radiusFeet` (and equivalent dimension fields on other shapes) to accept a slot-scaling variant:
+
+```typescript
+radiusFeet: number | { kind: "slot_scaled"; base: number; perSlotAbove: number; baseSlot: number }
+```
+
+This is a lower-priority gap (the spell can't be encoded anyway due to Gap 1), but it will recur for any area spell with radius upcast.
+
+---
+
+## Summary
+
+| Gap | Kind | Priority |
+|-----|------|----------|
+| `random_table` in `OngoingEffect` | `new_variant` | Blocking |
+| Deny bonus action / reaction from target | `new_atom` | Blocking |
+| Random-direction forced movement | `new_atom` | Needed for full fidelity |
+| Forced attack on random target in reach | `new_atom` | Needed for full fidelity |
+| Slot-scaled area radius | `new_variant` | Recurring pattern |
+
+The `random_table`-in-`OngoingEffect` widening is the most impactful: Confusion, Wand of Wonder, and any future per-turn nondeterministic dispatch spells all hit this gap.

@@ -1,112 +1,134 @@
-# Tsunami — Widening Proposal
+# Proposal: Tsunami widening gaps
 
-**Outcome:** `structural_widening`
-
-No `content/tsunami.dhall`, `content/tsunami.json`, or `content/tsunami.trace.md` were produced. Encoding Tsunami honestly requires surface shapes that do not exist.
-
----
-
-## Spell summary
-
-Tsunami (level 8 conjuration, Concentration ≤ 6 rounds, 1-minute cast, 1-mile range) creates a massive wall of water with three distinct mechanical phases:
-
-1. **Appearance burst** — area save gate (STR, spell save DC): 6d10 bludgeoning on fail, half on success.
-2. **Turn-start recurring damage** — at the start of each caster turn: wall moves 50 ft; Huge-or-smaller creatures inside make a STR save for 5d10 bludgeoning (decreasing by 1d10 each round); wall height decreases 50 ft/round; spell ends at height 0.
-3. **Movement gate** — creatures inside the wall must pass a STR (Athletics) ability check vs spell save DC to move; failure means no movement.
-4. **Exit effect** — creatures leaving the wall fall to the ground.
+**Unit:** Tsunami (spell, level 8, conjuration)
+**Outcome:** `atom_widening`
+**SRD section:** Spells/Descriptions-S-Z#Tsunami
 
 ---
 
-## Why no existing family fits
+## Summary
 
-### 1. `ongoing_effect` — wrong operation grammar
+Tsunami's mechanics fit the `ongoing_effect` family structurally: it has an initial save_gate phase (6d10 bludgeoning when wall appears) and per-turn operations on `on_caster_turn_start`. However, two core mechanics — the wall auto-moving each turn and the per-round damage decay — have no representation in the current surface. Five additional surface gaps prevent full encoding of the spell's secondary mechanics.
 
-`OngoingOperation` is `roll_modifier | damage_on_hit`. Neither is a save gate. There is no mechanism in `ongoing_effect` for a turn-start trigger that prompts a conditional resolution. The operation model is for passive, always-active riders (Bless) or attack-hit riders (Hunter's Mark) — not for periodic gated damage.
-
-### 2. `activation` — one-shot only
-
-`ActivationMechanics` holds a `phases: ReadonlyArray<ActivationPhase>` that fires once at cast time. Phase kinds are `attack_roll` and `save_gate`. There is no way to express "re-fire this phase at the start of each caster turn for the duration." The appearance burst alone could fit activation, but the recurring subsequent saves cannot.
-
-### 3. `triggered_reaction` / `anchored_trigger` — structurally wrong
-
-Both are wrong families. `triggered_reaction` is for reaction-cast spells. `anchored_trigger` is for plant-then-release on a discrete event.
+No honest partial encoding is possible: omitting the wall movement and damage decay would produce a fundamentally different spell (a static wall with constant damage), not a faithful trace.
 
 ---
 
-## Proposed widenings
+## Gap 1 — Auto-moving area attachment (atom_widening)
 
-### W-1: New family or subgraph — `ongoing_activation`
+**RAW:** "at the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you."
 
-A concentration spell that re-fires one or more save gate (or attack roll) phases at the start of each caster turn. Shape sketch:
+The wall moves autonomously each caster turn — 50 feet, always away from the caster, with no action cost. This is distinct from `reposition_attachment`, which models the caster spending an action to voluntarily relocate the attachment origin (Silent Image, Dancing Lights). Tsunami's movement is:
+- Triggered by the caster's turn starting (not a caster action)
+- Fixed direction (away from caster) 
+- Fixed distance (50 ft)
+- Carries creatures inside it
 
-```typescript
-export type OngoingActivationMechanics = SpellMechanicsHeader & {
-  readonly family: "ongoing_activation";
-  readonly onAppearance?: ReadonlyArray<ActivationPhase>;   // fires once at cast
-  readonly onTurnStart: ReadonlyArray<ActivationPhase>;     // fires each caster turn start
-};
-```
+**Proposed atom:** `move_area_attachment` (or an extension of `OngoingTrigger` to carry a directional auto-move payload alongside the existing `on_caster_turn_start` trigger). The atom needs: direction (`away_from_caster` | `toward_caster` | `fixed_bearing`), distance in feet, and whether creatures inside are carried.
 
-This would require `turn_start_window` to be wired into the tracer for spell families (it currently only appears in mastery rider expiry).
+---
 
-### W-2: New `LevelAxis` variant — `'round'`
+## Gap 2 — Round-elapsed LevelAxis (surface_widening)
 
-Tsunami's recurring damage decreases linearly per round elapsed: 5d10 at round 1, 4d10 at round 2, …, 1d10 at round 5. The current `LevelAxis` union is:
+**RAW:** "the damage the wall deals on later rounds is reduced by 1d10"
 
-```typescript
-type LevelAxis = "character" | "class" | "slot" | "subclass" | "proficiency_bonus";
-```
-
-Adding `"round"` and allowing negative `perLevel` on `LinearPerLevel<T>` would cover this and similar decrement patterns (e.g., Delayed Blast Fireball's accumulation could use a positive round axis).
+Per-turn damage starts at 5d10 and decreases by 1d10 each round. Rounds elapsed since spell start is the scaling axis. `LevelAxis` currently supports: `character`, `class`, `slot`, `subclass`, `proficiency_bonus`. A `"round"` axis would allow expressing per-round increments/decrements of dice amounts inside an ongoing spell:
 
 ```typescript
-// Extended:
-type LevelAxis = ... | "round";
-
-// Usage:
-const damage: DiceAmount = {
+// DiceAmount linear_per_level with axis = "round"
+{
   kind: "linear_per_level",
-  axis: "round",
+  axis: "round",         // <-- new
   base: { dice: 5, dieSize: 10 },
-  perLevel: { dice: -1 },   // negative = decrement
-  startingAtLevel: 1,
-};
+  perLevel: { dice: -1 },
+  startingAtLevel: 1
+}
 ```
 
-### W-3: New `ActivationPhase` / `OngoingOperation` variant — `ability_check_gate`
-
-Creatures inside the wall must succeed on a STR (Athletics) check against the caster's spell save DC to move. This is an `ability_check` (v4 taxonomy atom exists) gating movement — distinct from both `saving_throw` and `attack_roll`. Neither `ActivationPhase` nor `OngoingOperation` has this variant.
-
-Minimal shape:
-
-```typescript
-export type AbilityCheckGate = {
-  readonly kind: "ability_check_gate";
-  readonly skill?: string;        // e.g. "athletics"
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onFail: Effect;        // e.g., block_movement (new effect atom needed)
-  readonly onSuccess: Effect;
-};
-```
-
-This also exposes a missing `Effect` kind: `block_movement` or `restrict_movement` (not in v4 effect inventory).
-
-### W-4: New `Attachment` variant or lifecycle atom — `moving_area`
-
-The wall moves 50 ft away from the caster at the start of each turn. The current `area` attachment is fixed at cast time. Options:
-
-- New attachment variant `moving_area` with a `displacement` field (direction + feet per trigger).
-- Or a new lifecycle atom `translate` that modifies an area's origin on each `turn_start_window`.
-
-The v4 taxonomy's `force_move` effect applies to creatures, not to the spell's own area — so it doesn't cover wall movement.
-
-### W-5: `fall_on_exit` area boundary effect
-
-Creatures leaving the wall fall to the ground. The v4 taxonomy has `fall_on_end` (fires when the spell ends), but not "fall when a creature voluntarily exits the spell's area." This is an on-exit trigger on the area boundary.
+The negative `perLevel` convention (decreasing) is already implied by `DiceExprDelta` supporting negative dice counts; only the axis name is new.
 
 ---
 
-## Encoding scope
+## Gap 3 — Creature size filter (surface_widening)
 
-The **appearance burst** (single save gate, area, 6d10 bludgeoning) fits the existing `activation` family cleanly and could be encoded now. It is only the recurring phase + diminishing damage + movement gate + moving area that require widening. If the survey allows partial-fit annotation, the appearance burst counts as `surface_widening`; the full spell is `structural_widening`.
+**RAW:** "Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw."
+
+`TargetTypeFilter` (a `ReadonlyNonEmptyArray<CreatureType>`) narrows save_gate targets by creature type. A parallel `TargetSizeFilter` is needed to narrow by creature size. Proposed shape:
+
+```typescript
+export type TargetSizeFilter = {
+  readonly maxSize: Size;  // "huge" = Huge or smaller; "large" = Large or smaller; etc.
+};
+```
+
+This would be an optional field on `save_gate` phases and ongoing save_gate operations, analogous to `typeFilter` on `TargetSelection`.
+
+---
+
+## Gap 4 — Movement gate trigger (surface_widening)
+
+**RAW:** "the creature must succeed on a Strength (Athletics) check against your spell save DC to move at all. If it fails the check, it can't move."
+
+`on_creature_moves` fires after movement occurs; it cannot gate movement. A new trigger variant is needed:
+
+```typescript
+| { readonly kind: "on_creature_attempts_move" }
+```
+
+Paired with an `ability_check_gate` ongoing effect, this would express: when a creature in the area attempts to move, it must pass an Athletics check vs the spell DC or its movement speed becomes 0 for that movement instance.
+
+---
+
+## Gap 5 — Once-per-round damage cap (surface_widening)
+
+**RAW:** "A creature can take this damage only once per round."
+
+The moving wall can notionally pass through the same creature's space multiple times in an unusual round (e.g., if the creature is also moving). There is no per-creature-per-round damage cap on ongoing operations. A new optional field on `OngoingOperation`:
+
+```typescript
+readonly maxTimesPerRoundPerCreature?: number;
+```
+
+---
+
+## Gap 6 — Rectangular cuboid area shape (surface_widening)
+
+**RAW:** "You can make the wall up to 300 feet long, 300 feet high, and 50 feet thick."
+
+The wall is a 3-dimensional rectangular cuboid (distinct from a cube by having three independent dimensions). `AreaShapeDescriptor` has cube (equal sides), line (length × width, no height), cylinder (radius × height). A new descriptor is needed:
+
+```typescript
+| { readonly kind: "rect_cuboid"; readonly lengthFeet: number; readonly heightFeet: number; readonly thicknessFeet: number }
+```
+
+The existing `line` shape is closest but lacks a height axis, making it a 2D ribbon rather than a 3D wall.
+
+---
+
+## Gap 7 — Area-dimension-reaches-zero duration end trigger (surface_widening)
+
+**RAW:** "When the wall reaches 0 feet in height, the spell ends."
+
+The spell ends when the wall's tracked height dimension reaches zero — an autonomous condition driven by the spell's own state, not by any target action. The current `DurationEndTrigger` variants are all target-action-based. A new variant:
+
+```typescript
+| { readonly kind: "tracked_dimension_reaches_zero" }
+```
+
+This pairs with the round-elapsed decay (Gap 2) so the engine knows the spell is permanently over once the height hits zero.
+
+---
+
+## What does fit
+
+For reference, the parts of Tsunami that *do* fit the current surface:
+
+- `ongoing_effect` family ✓
+- `castingTime: { kind: "minutes", amount: 1, ritual: false }` ✓
+- `range: { kind: "point", feet: 5280 }` (1 mile ≈ 5280 ft) ✓
+- `duration: { kind: "concentration", upTo: { unit: "round", amount: 6 } }` ✓
+- `components: { v: true, s: true, m: false }` ✓
+- `initialPhase: { kind: "save_gate", ability: "str", ... onFail: { kind: "damage", damageType: "bludgeoning", amount: { kind: "fixed", expr: { dice: 6, dieSize: 10 } } }, onSuccess: { kind: "half_damage" } }` ✓
+- `operations: [{ trigger: { kind: "on_caster_turn_start" }, effect: { kind: "save_gate", ... } }]` ✓ (for the per-turn save shape, not the damage amount)
+
+The spell is about 40% expressible; the core wave-movement mechanic and damage decay are the blockers.

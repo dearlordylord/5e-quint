@@ -1,73 +1,79 @@
-# Proposal: Rope Trick widening
+# Widening Proposal: Rope Trick
 
 **Unit:** Rope Trick (spell, level 2, transmutation)
-**Outcome:** `structural_widening`
-**Confidence:** high
+**Outcome:** `atom_widening`
 
-## Why the unit does not fit
+## What the spell does
 
-Rope Trick creates a persistent extradimensional space that creatures can voluntarily enter, inhabit, and exit for the spell's duration (1 hour, no concentration). Its mechanical cluster is:
+Rope Trick (SRD 5.2.1) creates a temporary extradimensional refuge:
 
-1. Touch the rope → an invisible portal opens at the rope's upper end
-2. Creatures climb in → enter a bounded extradimensional space (capacity: 8 Medium or smaller)
-3. Barrier: attacks, spells, and effects cannot pass into or out of the space
-4. Creatures inside can see through the portal
-5. When the spell ends, all contents drop out (`fall_on_end`)
+1. The caster touches a rope; one end hovers up until perpendicular to the ground or hitting a ceiling.
+2. At the top end, an invisible 3×5 ft portal opens to an extradimensional space for the spell's duration (1 hour, **no concentration**).
+3. The space is entered by climbing the rope; the rope can be pulled inside.
+4. Capacity: up to 8 Medium or smaller creatures.
+5. Bidirectional barrier: attacks, spells, and other effects cannot pass in or out.
+6. Creatures inside can see out through the portal.
+7. When the spell ends, everything inside drops out.
 
-None of the four existing spell payload families can model this:
+## Why it doesn't fit
 
-| Family | Why it fails |
+The spell's entire purpose is creating a temporary extradimensional refuge — a spatial construct that:
+- exists in an extradimensional pocket (not on the current plane)
+- has a physical entry point anchored to an object (the rope top)
+- accepts creatures voluntarily (climb in/out freely)
+- has a creature capacity
+- blocks effects bidirectionally
+- persists for a fixed duration without concentration
+
+No v4 atom or current surface shape covers this concept:
+
+| Candidate atom | Why it doesn't fit |
 |---|---|
-| `ongoing_effect` | `OngoingOperation` is `roll_modifier \| damage_on_hit`. "Create a habitable pocket dimension" is not a roll modifier or a damage rider. |
-| `activation` | Phases are `attack_roll \| save_gate`. No phase type for "open a spatial pocket." |
-| `triggered_reaction` | Reaction-shaped; fires on an external trigger. Does not apply. |
-| `anchored_trigger` | Plants a trigger that fires a signal on event. The space IS the ongoing effect, not a future signal. |
+| `transport_exile` | Involuntary, one-way, no capacity, no entry-point anchor; moves *to* a plane rather than *creating* one |
+| `container_storage` | Passive item mechanic (Bag of Holding); carries objects, not inhabited by creatures; no blocking semantics |
+| `block_travel` / `block_targeting` | Would need to attach to the space itself, which has no representation |
+| `grant_speed` / movement atoms | Don't model dimensional access |
 
-This is structural: the concept of "a spell that creates a persistent bounded space creatures can inhabit" has no home in the family type hierarchy.
+The family is fine (`activation` spell, `direct` phase, `object` attachment on the rope). The blocker is the missing atom.
 
-## Gap 1 — Missing payload family: `create_space`
+## Proposed widening
 
-A new family is needed for spells that create persistent extradimensional or conjured spaces. Candidate name: `create_space`. Its shape would need to model:
+### Primary: `create_extradimensional_space` (new EffectAtom)
 
-- **Anchor**: the object or location at which the space opens (the rope / portal)
-- **Capacity**: maximum number of creatures / size constraint
-- **Barrier**: blocking rules for what can/cannot cross the boundary (inbound and outbound separately)
-- **Duration**: timed (1 hour); expiry ejects contents
-- **Ejection**: `fall_on_end` on all contained creatures/objects
+A new effect atom representing a spell-created temporary extradimensional refuge.
 
-This family generalizes to:
-- Rope Trick (extradimensional pocket via rope portal)
-- Leomund's Tiny Hut (hemisphere, blocks weather and some effects)
-- Mordenkainen's Magnificent Mansion (extradimensional dwelling)
-- Demiplane (door to a custom planar pocket)
-- Forcecage (inverted — keeps creatures IN rather than providing shelter)
-
-The family is wide enough to justify promotion from a single-spell ad hoc encoding.
-
-## Gap 2 — Missing surface variant: `object` in `Attachment`
-
-The v4 taxonomy lists `object` as an attachment atom, but `types.ts` does not include it in the `Attachment` union. Rope Trick needs it: the caster touches a rope, and the portal opens at the rope's upper end. The rope is the attachment target, not a point within range or a creature.
-
-Proposed addition to `Attachment`:
+Minimum required fields:
 ```typescript
-| { readonly kind: "object"; readonly description: string }
+{
+  readonly kind: "create_extradimensional_space";
+  // Entry point description (portal shape or size)
+  readonly entrySize?: { widthFeet: number; heightFeet: number };
+  // Maximum creature capacity
+  readonly capacityCreatures?: number;
+  readonly capacityCreatureSize?: Size;
+  // Bidirectional effect barrier
+  readonly blocksEffects?: true;
+  // Whether inhabitants can perceive out
+  readonly inhabitantsCanSeeOut?: true;
+  // What happens to contents when the spell ends
+  readonly onExpiry: "drop_out";
+}
 ```
 
-This would also unblock: Flame Tongue (attaches to a weapon), Continual Flame (attaches to an object), and others.
+This atom attaches to the `object` attachment (the rope) anchoring the entry point.
 
-## Gap 3 — Missing spell Effect variants
+### Secondary: bidirectional blocking on a created space
 
-The spell `Effect` union is `DamageEffect | NoneEffect`. The blocking + transport + ejection mechanics require four additional effect atom shapes, all present in v4 taxonomy:
+`block_travel` and `block_targeting` currently scope to an attachment serving as the barrier boundary. Once the extradimensional space is a first-class entity, these atoms could extend to it with a new scope reference. Alternatively, the `create_extradimensional_space` atom could carry its own `blocksEffects: true` flag (as above) rather than requiring separate atoms.
 
-| Atom | Role in Rope Trick |
-|---|---|
-| `block_targeting` | Attacks and spells cannot target across the portal boundary |
-| `block_travel` | Physical effects cannot pass through |
-| `transport_exile` | Creatures entering the space are transported into the pocket |
-| `fall_on_end` | All contents drop to the ground when the spell expires |
+## Secondary omissions
 
-These would need to be added to the spell `Effect` union (or a new `SpaceEffect` union scoped to the `create_space` family).
+Even with the primary atom, two sub-mechanics remain without surface representation:
+- **"creatures inside can see through the portal"** — no atom for selective one-way perception through a barrier.
+- **Rope interaction** (rope can be pulled into the space, dropped back out) — a narrative/DM-resolved interaction rather than a discrete mechanical atom.
 
-## Summary
+Both are secondary to the main gap.
 
-The primary blocker is structural: no payload family exists for "creates a persistent habitable bounded space." The secondary blockers (missing `object` attachment, missing effect variants) would also need to be resolved to produce an honest encoding. All gaps are coherent with the v4 atom inventory — the atoms exist; the surface family and variant shapes to host them do not.
+## Classification rationale
+
+`atom_widening` (not `structural_widening`): the spell's mechanics family (`activation`, `direct`, `object` attachment, `timed` duration) all exist and are unambiguous. The gap is entirely at the effect-atom level — the concept of creating a temporary extradimensional space is simply absent from the v4 taxonomy and the current surface.

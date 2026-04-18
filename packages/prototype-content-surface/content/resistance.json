@@ -1,0 +1,73 @@
+{
+  "description": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder. When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn.",
+  "id": "resistance",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "target",
+      "selection": {
+        "mode": "one"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 0,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 4
+            },
+            "kind": "fixed"
+          },
+          "damageType": {
+            "kind": "choice",
+            "label": "damage type",
+            "options": [
+              "acid",
+              "bludgeoning",
+              "cold",
+              "fire",
+              "lightning",
+              "necrotic",
+              "piercing",
+              "poison",
+              "radiant",
+              "slashing",
+              "thunder"
+            ]
+          },
+          "kind": "reduce_damage_taken"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Resistance",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-P-R#Resistance"
+  }
+}

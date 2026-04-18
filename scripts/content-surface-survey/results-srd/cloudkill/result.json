@@ -6,23 +6,23 @@
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "save_gate_on_presence (new OngoingOperation variant)",
-      "justification": "Cloudkill deals damage via a Constitution save whenever a creature is present in the area — on initial placement, when the sphere moves into a creature's space, when a creature enters the sphere, and when a creature ends its turn there. No existing OngoingOperation variant covers this: roll_modifier adds dice to existing rolls, and damage_on_hit requires the caster to hit a creature with an attack roll. A new OngoingOperation variant is needed for area-presence-triggered save gates that deal full or half damage.",
-      "evidence": "Each creature in the Sphere makes a Constitution saving throw, taking 5d8 Poison damage on a failed save or half as much damage on a successful one. A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there."
+      "name": "on_creature_ends_turn_in_area",
+      "justification": "Cloudkill's primary damage mechanic fires when a creature ends its turn inside the sphere. The surface has on_attached_turn_start but no on_attached_turn_end or on_creature_ends_turn_in_area trigger variant on OngoingTrigger.",
+      "evidence": "A creature must also make this save when the Sphere moves into its space and when it enters the Sphere or ends its turn there."
     },
     {
       "kind": "new_variant",
-      "name": "moving_area (new Attachment property or variant)",
-      "justification": "The sphere relocates 10 feet away from the caster at the start of each of the caster's turns. The current area attachment has a fixed origin (point_within_range or on_primary_target) with no movement property. Area movement is a first-class mechanic here — it drives which creatures are hit by the presence trigger each round.",
+      "name": "automatic_directional_reposition",
+      "justification": "The sphere moves 10 feet away from the caster automatically at the start of each caster turn. The existing reposition_attachment atom models caster-controlled repositioning (spending an action to move the illusion), not autonomous directional drift. A new variant or trigger+effect pairing is needed to express 'at turn start, attachment moves N feet in direction D automatically'.",
       "evidence": "The Sphere moves 10 feet away from you at the start of each of your turns."
     },
     {
       "kind": "new_variant",
-      "name": "once_per_turn_save_guard (per-creature trigger frequency cap)",
-      "justification": "The save is capped at once per turn per creature. The surface has no mechanism to express a per-creature-per-turn frequency cap on an ongoing operation's save trigger. The mastery usageLimit is a per-activation wielder cap, not a per-creature guard on a spell's ongoing trigger.",
+      "name": "once_per_turn_save_gate",
+      "justification": "The spell fires saves on three distinct triggers (cast, enter, end-of-turn) but enforces that a single creature makes the save at most once per turn regardless of how many triggers fire. No surface mechanism exists to express per-turn deduplication across multiple OngoingOperations.",
       "evidence": "A creature makes this save only once per turn."
     }
   ],
   "confidence": "high",
-  "notes": "The outer structure fits ongoing_effect (concentration area spell, level 5, slot-scaled damage, no material components). The sole blocker is OngoingOperation — no save-gate-on-presence variant exists. Area movement is a secondary surface gap. The Heavily Obscured environmental effect is dm_agenda (caller-owned notification per ARCHITECTURE.md) and is not proposed as a core atom. The +1d8/slot upcast scaling is representable with linear_per_level (axis=slot, perLevel={dice:1, dieSize:8}) once the operation variant exists."
+  "notes": "The ongoing_effect family fits well: area attachment (sphere 20 ft), initialPhase save_gate covers the cast-time save, on_creature_enters_area covers entry saves, and the damage atom (5d8 poison + half on success + linear_per_level slot scaling) is fully expressible. The blocking gap is on_creature_ends_turn_in_area: this is Cloudkill's core ongoing threat and has no honest surface expression. Sphere auto-movement is secondary but also unrepresentable as authored. A partial encoding using only on_creature_enters_area would silently drop the end-of-turn damage loop and produce a misleading trace, so no dhall was authored. The 'heavily obscured' area property and 'dispersed by strong wind' end condition are environmental/DM-agenda and out of core scope regardless."
 }

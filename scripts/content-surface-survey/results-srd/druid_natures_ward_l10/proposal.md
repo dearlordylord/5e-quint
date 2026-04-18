@@ -1,89 +1,86 @@
-# Widening Proposal: Nature's Ward (druid L10)
+# Proposal: Nature's Ward (Druid L10) — Surface Widening
 
-**Outcome:** `structural_widening`
+## Unit
 
-## Unit text
+- **Slug**: `druid_natures_ward_l10`
+- **Kind**: `class_feature` — Circle of the Land, level 10
+- **SRD section**: Classes/Druid#Nature's Ward
 
-> You are immune to the Poisoned condition, and you have Resistance to a damage type associated
-> with your current land choice in the Circle Spells feature, as shown in the Nature's Ward table.
+## RAW text
 
-## Why the unit does not fit the current surface
+> You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice in the Circle Spells feature, as shown in the Nature's Ward table.
+>
+> | Land Type | Resistance |
+> |---|---|
+> | Arid | Fire |
+> | Polar | Cold |
+> | Temperate | Lightning |
+> | Tropical | Poison |
 
-`ClassFeatureMechanics` is currently defined as a single union member:
+## What encodes cleanly
 
-```typescript
-export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
-```
+- `grant_condition_immunity: "poisoned"` — fully expressible with the existing atom and passive family. Encoded in the dhall; traces correctly.
 
-`ClassFeatureActivationMechanics` inherits from `ClassFeatureMechanicsHeader`, which mandates:
+## What requires a widening
 
-```typescript
-type ClassFeatureMechanicsHeader = {
-  readonly activationCost: ClassFeatureActivationCost;
-  readonly resource: UseCountResource;
-  readonly resetCadence: RestResetCadence;
-};
-```
+### `grant_resistance` with a land-state-derived damage type
 
-Nature's Ward has **none of these**. It is:
+The feature's resistance is **not freely chosen**. The damage type is **determined** by the druid's current Circle of the Land choice (Arid/Polar/Temperate/Tropical). There is a fixed mapping:
 
-- **Not activated** — there is no cost, no decision point, no timing; it is always active.
-- **Not resource-gated** — there is no use count, no charge pool, no quota.
-- **Not reset-cadenced** — it never expires or resets; it is permanent for as long as the druid is level 10+ in the Circle of the Land subclass.
+| Land type | Resistance |
+|---|---|
+| Arid | Fire |
+| Polar | Cold |
+| Temperate | Lightning |
+| Tropical | Poison |
 
-Encoding it as `activation` with `activationCost: { kind: "free" }` and a fabricated `use_count` resource would produce a demonstrably false trace (the tracer would emit `activate`, `use_count`, and `rest_window` nodes that have no grounding in the SRD text).
+No existing `DamageTypeRef` variant expresses this:
 
-## Required widenings
+- `DamageType` (plain string) — wrong; the type varies by land choice, not fixed.
+- `CastTimeChoice<DamageType>` — **dishonest**; this implies the player picks from the options at cast or build time. Nature's Ward does not allow that — the resistance is constrained to the land type already chosen for the subclass. Using `CastTimeChoice<DamageType>` with `options: ["fire", "cold", "lightning", "poison"]` would imply freedom of choice that does not exist RAW.
 
-### 1. New `passive` family in `ClassFeatureMechanics` (structural)
+## Proposed widening: `DamageTypeRef.subclass_state_table`
 
-A new family covering always-on features that grant permanent effects without activation:
-
-```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effect: ClassFeaturePassiveEffect;  // see below
-};
-
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveMechanics;
-```
-
-Other candidate members for the same family in the SRD corpus: Unarmored Defense (monk), Evasion (rogue, monk), Feral Instinct (barbarian), Aura of Protection (paladin), Proficiency Bonus scaling features.
-
-### 2. `grant_resistance` in `ClassFeatureEffect` / new `ClassFeaturePassiveEffect` (surface widening)
-
-`grant_resistance` is present as a v4 atom but is not reachable from any class feature effect type. A passive effect union needs to include it:
+Add a new variant to `DamageTypeRef`:
 
 ```typescript
-export type GrantResistanceEffect = {
-  readonly kind: "grant_resistance";
-  readonly damageType: DamageType | FeatureLinkedResistance;
-};
+| {
+    readonly kind: "subclass_state_table";
+    // The character-state variable that acts as the lookup key.
+    // For Circle of the Land: "circle_land_type".
+    readonly key: string;
+    // Closed key→DamageType mapping. The resistance applied is
+    // the DamageType whose key matches the current value of the
+    // character-state variable at runtime.
+    readonly table: Readonly<Record<string, DamageType>>;
+  }
 ```
 
-### 3. New atom: `grant_condition_immunity` (atom widening)
-
-`remove_condition` ends an active condition. Condition immunity prevents the condition from being applied in the first place — a distinct runtime state. v4 does not have this atom. Proposed addition to the Effect Atoms section:
-
-- `grant_condition_immunity` — the bearer cannot acquire the named condition. Distinct from `remove_condition` (reactive removal) and from `apply_condition` (the inverse).
-
-Evidence: _"You are immune to the Poisoned condition"_ — the SRD uses "immune" as a categorical prevention, not a repeated removal.
-
-### 4. Feature-linked resistance selection (surface widening)
-
-The resistance type is not fixed at authoring time — it is bound to the druid's current land choice from Circle Spells. This requires a new surface variant (or a projection mechanism) that can express "the resistance type is determined by another feature's runtime selection":
-
+**Usage**:
 ```typescript
-export type FeatureLinkedResistance = {
-  readonly kind: "feature_linked";
-  readonly featureId: string;  // e.g. "druid_circle_of_the_land_spells_l3"
-};
+{
+  kind: "grant_resistance",
+  damageType: {
+    kind: "subclass_state_table",
+    key: "circle_land_type",
+    table: {
+      arid: "fire",
+      polar: "cold",
+      temperate: "lightning",
+      tropical: "poison"
+    }
+  }
+}
 ```
 
-This is analogous to how a spell slot level parameterizes upcasting, but the parameter source is a character-build selection rather than a cast-time decision. Whether this is a surface shape or a deeper architecture question (projection vs. authoring) should be resolved before closing this widening.
+**Justification**: The druid's land choice is a persistent character-state variable set at Circle of the Land subclass selection. It determines the resistance type for Nature's Ward without player re-selection. This is a distinct semantic from both a fixed damage type and a cast/build-time free choice. The `subclass_state_table` variant models exactly one pattern: a closed table lookup keyed by a named character-state variable.
 
-## What was NOT attempted
+**Alternative considered**: A more general `character_state_derived` variant with a reference to a named character-state slot. The `subclass_state_table` form is preferred because it keeps the table explicit in the content unit (visible to tracer, readable offline) rather than requiring the runtime to maintain a separate lookup.
 
-No `.dhall` source and no `.json` artifact were written. There is no surface family that can honestly contain this unit, so creating a placeholder record would produce a misleading trace with fabricated activation atoms.
+**Pressure**: Single unit (Nature's Ward). Not yet promoted to v4 taxonomy. Record as open surface widening pressure.
+
+## Classification
+
+- **Outcome**: `surface_widening`
+- **Confidence**: high
+- **Partial encoding note**: The dhall and JSON encode only the `grant_condition_immunity: "poisoned"` grant. The `grant_resistance` grant is omitted to avoid a misleading trace.

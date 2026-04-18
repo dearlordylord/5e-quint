@@ -6,29 +6,29 @@
   "proposed_widenings": [
     {
       "kind": "new_subgraph",
-      "name": "SpeciesTraitRecord + species_trait mechanics family",
-      "justification": "UnitRecord only has SpellRecord | ClassFeatureRecord | MasteryRecord. There is no species_trait kind and no mechanics family to hold species-trait payloads. This is a top-level structural gap.",
-      "evidence": "Gnomish Lineage is a species_trait. types.ts exports no SpeciesTraitRecord and no mechanics family for species traits."
+      "name": "build_time_lineage_choice",
+      "justification": "Gnomish Lineage requires choosing one of two distinct feature bundles (Forest/Rock) at character creation. SpeciesTraitMechanics = PassiveMechanics | ActivatedAbilityMechanics — neither family models a permanent build-time selection between bundles of different effect sets. No composite family exists for species traits (only class_feature has CompositeClassFeatureMechanics).",
+      "evidence": "Choose one of the following options; whichever one you choose, Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellAccessMode: prepared_proficiency_bonus_per_long_rest",
+      "justification": "Forest Gnome Speak with Animals grants: always prepared + PB free casts per LR + can use spell slots. Current prepared_once_per_long_rest covers exactly 1 free cast. There is no mode for 'prepared + UseCountCap.proficiency_bonus uses/LR'.",
+      "evidence": "You can cast it without a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. You can also use any spell slots you have to cast the spell."
     },
     {
       "kind": "new_subgraph",
-      "name": "lineage_choice subgraph (choose between Forest Gnome and Rock Gnome at character creation)",
-      "justification": "The trait presents a mutually exclusive choice made once at character creation. The v4 atom `choose` exists but there is no surface family or mechanics header that models a character-creation choice between two distinct spell/feature bundles.",
-      "evidence": "\"Choose one of the following options\" — Forest Gnome (Minor Illusion + Speak with Animals innate) vs Rock Gnome (Mending + Prestidigitation + clockwork device creation)."
+      "name": "clockwork_device_creation",
+      "justification": "Rock Gnome's clockwork device is a persistent interactive physical object (AC 5, 1 HP, Tiny) with: (1) a 10-minute Prestidigitation-cast creation cost, (2) a Bonus Action activation trigger openable by any creature via touch, (3) a 3-device concurrent pool cap, (4) per-device 8-hour duration. No existing atom or family covers interactive-object-with-foreign-trigger creation. create_object carries durability but not a foreign-triggerable bonus-action activation window or pool semantics.",
+      "evidence": "you can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device (AC 5, 1 HP)... whenever you or another creature takes a Bonus Action to activate it with a touch... You can have three such devices in existence at a time, and each falls apart 8 hours after its creation"
     },
     {
-      "kind": "new_subgraph",
-      "name": "innate_spellcasting family (grant_spell_access + PB-keyed use_count + long_rest reset + optional spell-slot override)",
-      "justification": "Forest Gnome grants Speak with Animals as an always-prepared innate spell with PB uses, Long Rest refill, and an 'or use your own spell slots' fallback. No existing surface family models innate spellcasting from a species trait. The LevelAxis already includes 'proficiency_bonus' so PB-keyed use count could be expressed once the family exists.",
-      "evidence": "\"You can cast it without a spell slot a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest. You can also use any spell slots you have to cast the spell.\""
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "create_object subgraph for Rock Gnome clockwork device (create_object atom + duration + activation + cap)",
-      "justification": "Rock Gnome can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device with AC 5, 1 HP, 8-hour duration, Bonus Action activation, max 3 in existence, Utilize to dismantle. The v4 atom create_object exists, but no surface family or mechanics header can carry this shape.",
-      "evidence": "\"you can spend 10 minutes casting Prestidigitation to create a Tiny clockwork device... You can have three such devices in existence at a time, and each falls apart 8 hours after its creation or when you dismantle it with a touch as a Utilize action.\""
+      "kind": "new_variant",
+      "name": "spellcasting_ability_choice at lineage selection",
+      "justification": "The trait requires the character to choose Int, Wis, or Cha as the spellcasting ability for all spells granted by this lineage. This is a build-time ability-selector that scopes to a specific trait's granted spells — no surface field exists on grant_spell_access or species_trait mechanics to model this.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)"
     }
   ],
   "confidence": "high",
-  "notes": "The blocking gap is the absence of SpeciesTraitRecord in UnitRecord and any corresponding mechanics family. The elven lineage survey (result-species_elf_elven_lineage.json) in the same repo likely reached the same conclusion. Both Forest and Rock Gnome sub-lineages compound the structural gap with novel mechanics (innate spellcasting with PB scaling, character-creation lineage choice, clockwork device creation), all of which need surface widening once the top-level kind is added. No dhall/json/trace files written per protocol."
+  "notes": "Gnomish Cunning (Advantage on Int/Wis/Cha saving throws) would encode cleanly as a passive modify_roll_advantage with saveAbilityFilter. The lineage-selection mechanic is the blocker: SpeciesTraitMechanics has no 'choose one of N bundles at character creation' pattern. Even if that were solved, Forest Gnome's 'PB uses per LR' spell access mode and Rock Gnome's clockwork device subgraph each require independent surface widenings. Three distinct widenings must all land before this unit can be encoded honestly. No content files authored."
 }

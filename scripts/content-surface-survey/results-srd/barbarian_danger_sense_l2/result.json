@@ -1,28 +1,18 @@
 {
   "unit_slug": "barbarian_danger_sense_l2",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive family for ClassFeatureMechanics",
-      "justification": "Danger Sense is always-on with no activation cost, no resource, and no reset cadence. The only current ClassFeatureMechanics family is 'activation', which mandates all three. A 'passive' family is needed for features that apply continuously as a property of the creature's state.",
-      "evidence": "You have Advantage on Dexterity saving throws unless you have the Incapacitated condition."
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_roll_advantage variant for ClassFeatureEffect",
-      "justification": "The current ClassFeatureEffect union is GrantExtraActionEffect | HealHpEffect. Danger Sense requires a 'modify_roll_advantage' effect scoped to a specific ability's saving throws. The v4 atom 'modify_roll_advantage' exists in the taxonomy but has no surface encoding in ClassFeatureEffect.",
-      "evidence": "You have Advantage on Dexterity saving throws"
-    },
-    {
-      "kind": "new_variant",
-      "name": "condition_suppressor on passive effects",
-      "justification": "The advantage is suppressed when the creature has the Incapacitated condition. There is no surface type for condition-gated suppression of a passive effect. The v4 atom 'suppress' exists but no surface grammar for 'this effect is suppressed while condition X is active' on class features.",
-      "evidence": "unless you have the Incapacitated condition"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "modify_roll_advantage",
+    "suppress"
   ],
+  "relations_used": [
+    "grants",
+    "roots",
+    "suppresses"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Primary blocker is structural: no 'passive' family exists for ClassFeatureMechanics. The 'activation' family requires activationCost + resource + resetCadence, none of which apply to a permanent passive benefit. Secondary gaps: ClassFeatureEffect has no modify_roll_advantage variant, and there is no surface grammar for condition-based suppression of a passive effect. All three gaps would need to be resolved together to encode this unit honestly."
+  "notes": "Clean fit. PassiveMechanics with modify_roll_advantage (saving_throw, saveAbilityFilter=[dex]) plus suppressedBy condition_active(incapacitated). All atoms and surface types already present in types.ts."
 }

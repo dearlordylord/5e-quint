@@ -1,92 +1,79 @@
-# Proposal: Major Image surface gaps
+# Proposal: Major Image — surface_widening
 
-## Encoded core
+## Unit
 
-`major_image.json` encodes the spell's primary mechanic honestly:
+Major Image — SRD 5.2.1, Level 3 Illusion spell.
 
-- Family: `ongoing_effect`
-- Attachment: `area { kind: "cube", sideFeet: 20 }` at `point_within_range`
-- Single passive operation: `create_illusion { maxSize: "gargantuan", channels: ["visual","sound","smell","temperature"] }`
-- Duration: `concentration` up to 10 minutes
+## Status after Apr 18 widening
 
-Typecheck passes; tracer emits a clean graph with `create_illusion` attached to the cube area.
+Three of four distinct mechanics now encode cleanly:
 
----
+| Mechanic | Encoding | Status |
+|---|---|---|
+| Persistent multi-sensory illusion (visual/sound/smell/temperature) | `passive` → `create_illusion { maxSize: "gargantuan", channels: [...] }` | ✅ clean |
+| Caster spends Magic action to reposition illusion within range | `on_caster_spends_action { cost: standard_action "magic" }` → `reposition_attachment` | ✅ clean |
+| Creature Study action: Int (Investigation) vs spell save DC → disbelief | `on_creature_studies` → `ability_check_gate { ability: int, dc: caster_spell_save_dc, onPass: none }` | ✅ clean |
+| Slot 4+ upcast: removes concentration, lasts until dispelled | — | ❌ surface_widening |
 
-## Gap 1 — Missing atom: `reposition_attachment`
+## Remaining gap: duration-kind upcast
 
-### RAW text
+**SRD text:** *"Using a Higher-Level Spell Slot (4+): The spell lasts until dispelled, without requiring Concentration."*
 
-> If you are within range of the illusion, you can take a Magic action to cause the image to move to any other spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image.
+At base level the spell is `concentration, up to 10 minutes`. At slot 4+ it becomes `permanent { endsOn: ["dispel"] }` — the duration KIND changes, not merely the amount.
 
-### Why it is not encodable
-
-The `on_caster_spends_action { cost: { kind: "standard_action", action: "magic" } }` trigger exists and fits perfectly. The problem is the *effect*: there is no atom that moves the spatial anchor of an ongoing effect to a new point within range.
-
-- `force_move` — applies to creatures only (push/pull/slide).
-- `teleport` — applies to the caster or a target creature.
-- `alter_item_kind` — changes an item's rules form, not an effect's location.
-- `set_speed` / `modify_speed` / `grant_speed` — all creature-facing.
-
-This gap is identical to **Dancing Lights** (`reposition_attachment` new_atom, same widening), confirming it is a systematic v4 gap rather than a one-off.
-
-### Proposed widening
-
-```
-new_atom: reposition_attachment
-category: effect
-semantics: moves the host effect's spatial anchor (area or location
-           attachment origin) to a new point within range. Parameters:
-             • maxFeet: number | "within_spell_range"  (distance the
-               anchor may move per invocation)
-             • destination: "any_visible_point_within_range" | ...
-```
-
----
-
-## Gap 2 — Missing surface variant: upcast changes duration kind
-
-### RAW text
-
-> Using a Higher-Level Spell Slot: The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot.
-
-### Why it is not encodable
-
-`DurationUpcastTier` supports amount changes only:
+**Current surface:** `DurationUpcastTier` only allows changing the numeric `amount` within the same duration family:
 
 ```typescript
 export type DurationUpcastTier = {
   readonly atSlot: number;
-  readonly amount: number;  // ← changes the amount within the same unit
+  readonly amount: number;
 };
 ```
 
-At slot 4+, Major Image does not change the *amount* — it changes the duration *kind* from `concentration` to `permanent { endsOn: ["dispel"] }`. No existing field or tier variant expresses "at slot N, strip concentration and make permanent."
+This can express "1 hour at slot 3, 8 hours at slot 5" (Hunter's Mark) but cannot express "concentration at slot 3, permanent at slot 4" because the shape of the Duration discriminant would need to change.
 
-The `permanentIfMaintainedFull` flag on concentration duration is the closest existing shape, but semantically distinct: it promotes to permanent only after holding concentration for the *full* base duration. Major Image at 4+ is permanent *immediately* from cast, with no concentration requirement at all.
+## Proposed widening
 
-### Proposed widening
-
-Add an optional field to the `concentration` duration variant:
+Add a `DurationKindUpcastTier` variant alongside `DurationUpcastTier`:
 
 ```typescript
-// Existing concentration duration variant — add one optional field:
-{
-  readonly kind: "concentration";
+export type DurationKindUpcastTier = {
+  readonly atSlot: number;
+  readonly kind: Duration; // full Duration replacement at this slot
+};
+```
+
+Then extend `DurationValue` or `Duration` to accept an optional array of kind-upgrade tiers:
+
+```typescript
+// Option A — on the concentration variant:
+{ readonly kind: "concentration";
   readonly upTo: DurationValue;
   readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
   readonly permanentIfMaintainedFull?: true;
-  // NEW: at this slot level and above, concentration is removed and the
-  // spell persists permanently (until dispelled). The base duration
-  // becomes the fallback for lower-slot casts.
-  readonly permanentAtSlot?: number;
+  readonly upgradesTo?: ReadonlyNonEmptyArray<DurationKindUpcastTier>; // NEW
 }
 ```
 
-SRD units where this pattern appears: Major Image (slot 4), Hypnotic Pattern (no such upcast — this is Major-Image-specific so far). Keep the field narrow and slot-scoped to avoid over-generalizing.
+**Usage (Major Image):**
 
----
+```typescript
+duration: {
+  kind: "concentration",
+  upTo: { unit: "minute", amount: 10 },
+  upgradesTo: [
+    { atSlot: 4, kind: { kind: "permanent", endsOn: ["dispel"] } }
+  ]
+}
+```
 
-## Classification
+## Other spells with this pattern
 
-`atom_widening` — the reposition mechanic requires a new v4 atom (`reposition_attachment`) not present in the taxonomy. The upcast duration-kind change is a `surface_widening` (new variant of an existing type), but the atom gap is the binding constraint since atoms are the harder requirement.
+- **Silent Image** (L1 → L3 slot is same, but similar illusion family; no upcast in RAW)
+- **Phantasmal Force** (similar investigate-disbelief; no duration-kind upcast)
+- **Minor Illusion** (cantrip, no slots)
+- Future: any spell that "lasts until dispelled at higher level" without the SRD's `permanentIfMaintainedFull` pattern (which requires concentration for the full window)
+
+## Confidence
+
+High — the three encoded mechanics round-trip cleanly through typecheck and tracer. The gap is precisely scoped to one missing `DurationUpcastTier` variant.

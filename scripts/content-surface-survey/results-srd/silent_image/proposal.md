@@ -1,55 +1,43 @@
-# Proposal: Silent Image widenings
+# Proposal: Silent Image widening
 
-## Status: atom_widening
+## Outcome: `atom_widening`
 
-The core mechanic encodes cleanly. Two secondary mechanics require widenings.
+Three of the four core mechanics encode cleanly with atoms added since the previous survey pass:
 
----
+| Mechanic | Encoding |
+|---|---|
+| Creates visual illusion (15-ft Cube, concentration) | `ongoing_effect` + `passive` → `create_illusion { maxSize: "huge", channels: ["visual"] }` |
+| Magic action to reposition | `on_caster_spends_action { kind: "standard_action", action: "magic" }` → `reposition_attachment` |
+| Study action investigation check | `on_creature_studies` → `ability_check_gate { ability: "int", dc: caster_spell_save_dc }` |
+| **Disbelief outcome** | ❌ **No atom** — `{ kind: "none" }` placeholder on `onPass` |
 
-## 1. `reposition_attachment` atom (new_atom)
+## Missing atom: illusion disbelief state
 
-**Evidence:** "As a Magic action, you can cause the image to move to any spot within range."
+**SRD text:** "If a creature discerns the illusion for what it is, the creature can see through the image."
 
-**Gap:** The `on_caster_spends_action` trigger with `{ kind: "standard_action", action: "magic" }` exists and fits perfectly. But the resulting effect — moving the illusion's spatial anchor to a new point within range — has no atom. `force_move` and `teleport` apply to creatures; `alter_item_kind` applies to item forms. No atom repositions a non-creature effect attachment.
+**Problem:** When a creature passes the Intelligence (Investigation) check, it enters a persistent per-creature state — it can now see through the illusion for the duration. This is not:
+- `remove_condition` (no condition was applied)
+- `apply_condition` (no standard condition names this)
+- `grant_sense` (the creature already has its senses; this is a *knowledge* state)
+- `none` (something real happens)
 
-**Precedents:** Same gap in Dancing Lights (`reposition_attachment`) and Major Image.
+**Proposed atom:**
 
-**Proposed shape:**
 ```typescript
 | {
-    readonly kind: "reposition_attachment";
-    readonly destination: "any_spot_within_range";
+    readonly kind: "grant_illusion_awareness";
+    // No fields needed: the illusion is the host effect's own attachment.
+    // The creature that passes the check becomes aware of THAT illusion.
   }
 ```
 
-Used as the `effect` of an `OngoingOperation` with `on_caster_spends_action` trigger.
+**Semantics:** The target creature (the one that passed the check) gains awareness of the specific illusion they examined. While the host spell persists, the creature can see through the illusion. This is scoped to the specific illusion instance (each concentration-tracked effect would carry its own awareness set).
 
----
+**Pressure:** Silent Image, Major Image, Minor Illusion, Phantasmal Force, and every other Investigation-gated illusion spell shares this pattern. One atom serves all of them.
 
-## 2. `OngoingTrigger.on_creature_studies` (new_variant)
+**Note:** The `create_illusion` atom comment already acknowledges this gap: "Investigation-vs-spell-DC disbelief, mid-duration reposition, and per-instance linkage rules belong to separate surfaces, not this atom." The `reposition_attachment` atom (added recently) resolved the reposition gap. `grant_illusion_awareness` would resolve the disbelief gap.
 
-**Evidence:** "A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC."
+## Other notes
 
-**Gap:** No `OngoingTrigger` variant covers "a creature spends a Study action examining the attachment." The closest existing triggers (`on_attached_turn_start`, `on_creature_enters_area`) are unconditional. This trigger is volitional — a creature actively chooses to study the illusion.
-
-**Proposed shape:**
-```typescript
-| { readonly kind: "on_creature_studies_attachment" }
-```
-
-The `effect` would be a `save_gate` (or `ability_check_gate`) with `ability: "int"` and `dc: { kind: "caster_spell_save_dc" }`, `onFail: { kind: "none" }`, `onPass: <see_through_illusion atom or dm_agenda>`.
-
-Note: the "see through" outcome may itself be DM-agenda (the illusion becomes transparent to the discerning creature — a rendering/visibility concern beyond core mechanics).
-
----
-
-## What encodes cleanly
-
-```
-ongoing_effect
-  attachment: area { cube 15ft, origin: point_within_range }
-  operations:
-    - passive → create_illusion { maxSize: "huge", channels: ["visual"] }
-```
-
-Duration: concentration, up to 10 minutes. Typecheck passes; tracer output is valid.
+- `caster_recasts_spell` earlyEnd: the types.ts `DurationEndTrigger` comment lists Silent Image as a spell with this trigger. The provided source text entries do not include this clause explicitly. Omitted from encoding pending confirmation against `.references/srd-5.2.1/Spells/`.
+- The Dhall superset homogeneity trick (Optional fields, `--omit-empty`) was necessary for the three structurally distinct operation shapes. This is the same pattern used by `produce_flame.dhall` and `dancing_lights.dhall`.

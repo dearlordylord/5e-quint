@@ -1,109 +1,103 @@
-# Proposal: Aura of Courage (paladin L10)
+# Proposal: Widening Required for `paladin_aura_of_courage_l10`
 
-## Outcome: `structural_widening`
+## Outcome: `surface_widening`
 
-## Why the unit does not fit
+The `passive` family and `grant_condition_immunity` atom both exist in the current surface (gaps identified in the earlier `paladin_aura_of_devotion_l7` proposal have since been closed). One gap remains: `PassiveMechanics` has no area/aura scope concept, so the feature's central mechanic — immunity extending to allies within the Aura of Protection — cannot be expressed without producing a false trace.
 
-Aura of Courage is a **passive, always-on aura**. The paladin gains it at level 10 and it is permanently active — no action, no bonus action, no trigger, no use count, no rest reset. The entire mechanic is:
+---
 
-> You and your allies have Immunity to the Frightened condition while in your Aura of Protection.
+## Gap: No aura scope on `PassiveMechanics`
 
-The current `ClassFeatureMechanics` union has exactly one family:
+**RAW text:**
+> You and your allies have Immunity to the Frightened condition while in your Aura of Protection. If a Frightened ally enters the aura, that condition has no effect on that ally while there.
+
+The immunity applies to:
+1. The paladin themselves.
+2. **All allies within the 10-ft Aura of Protection** (expanding to 30 ft at L18 via Aura Expansion).
+
+The current `PassiveMechanics` shape:
 
 ```typescript
-export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
-  readonly family: "activation";
-  readonly effect: ClassFeatureEffect;
+export type PassiveMechanics = {
+  readonly family: "passive";
+  readonly condition?: EquipmentPredicate;   // equipment gate on the bearer
+  readonly suppressedBy?: ReadonlyNonEmptyArray<PassiveSuppressor>;
+  readonly grants: ReadonlyArray<EffectAtom>;
+  readonly operations?: ReadonlyNonEmptyArray<PassiveOperation>;
 };
 ```
 
-`ClassFeatureMechanicsHeader` mandates:
-- `activationCost` — there is no activation cost; the aura is always on
-- `resource: UseCountResource` — there is no use count
-- `resetCadence: RestResetCadence` — there is no rest reset
+`grants` are implicitly bearer-scoped. There is no `attachment` or `auraScope` field. The surface cannot distinguish "this passive applies only to me" from "this passive applies to me and all friendly creatures within N feet."
 
-Forcing this unit into `"activation"` with `{ kind: "free" }` cost and a fake `{ kind: "fixed", uses: 0 }` cap would be dishonest: it implies the feature can be turned off and exhausted, which is false.
-
-## Proposed widenings (narrowest honest classification)
-
-### 1. New class-feature family: `passive_aura`
-
-A new mechanics family for class features that are spatially scoped and always active:
-
-```
-ClassFeaturePassiveAuraMechanics = {
-  family: "passive_aura";
-  auraRef: string;          // id of the named aura (e.g. "paladin_aura_of_protection")
-  radiusFeet: number;       // or inherited from the named aura
-  effect: PassiveAuraEffect;
-}
-```
-
-The radius is specified in the Aura of Protection entry (10 ft at L6, expands at L18 via Aura Expansion). Aura of Courage and Aura of Devotion both piggyback on the same spatial zone, so the `auraRef` field threads them correctly without duplicating the radius.
-
-### 2. New v4 atom: `grant_condition_immunity`
-
-The v4 taxonomy has `grant_resistance` as a distinct atom from `apply_condition` / `remove_condition`. Immunity is a distinct rule tier in SRD 5.2.1: a creature with Immunity to a condition is never affected by it at all (the condition has "no effect"). `grant_resistance` cannot honestly carry this.
-
-Candidate surface shape for `ClassFeatureEffect` union member:
-
-```typescript
-export type GrantConditionImmunityEffect = {
-  readonly kind: "grant_condition_immunity";
-  readonly condition: Condition;        // widening needed: "frightened" not in Condition union
-  readonly target: "self_and_allies_in_aura" | "self" | "target_creature";
-}
-```
-
-### 3. `Condition` union widening (surface_widening, secondary)
-
-The current `Condition` type is:
-
-```typescript
-export type Condition = "prone";
-```
-
-`frightened` must be added. This is a `surface_widening` within the broader `structural_widening`.
-
-### 4. Aura-scope attachment variant (surface_widening, secondary)
-
-The effect targets "allies in the aura" — a spatial membership predicate, not a one-time spell targeting event. The existing `Attachment` union is cast-time. For the passive aura family, a new attachment variant or a target specifier is needed:
-
-```
-{ kind: "aura_members"; auraRef: string }
-```
-
-or represented inline on the `passive_aura` family header (the simpler approach).
-
-## Encoding sketch (not authorable yet)
-
-Once the surface is widened, the unit would encode as:
+A bearer-only encoding:
 
 ```dhall
-{ kind = "class_feature"
-, id = "paladin_aura_of_courage_l10"
-, name = "Aura of Courage"
-, className = "paladin"
-, acquiredAtLevel = 10
-, provenance = { kind = "srd-5.2.1", section = "Classes/Paladin#Level 10: Aura of Courage" }
-, description = "..."
-, mechanics =
-    { family = "passive_aura"
-    , auraRef = "paladin_aura_of_protection"
-    , effect =
-        { kind = "grant_condition_immunity"
-        , condition = "frightened"
-        , target = "self_and_allies_in_aura"
-        }
-    }
+{ family = "passive"
+, grants = [ { kind = "grant_condition_immunity", condition = "frightened" } ]
 }
 ```
 
-## Summary of required widenings
+would claim only the paladin gets the immunity — completely omitting the ally aura, which is the primary purpose of the feature. Per the guardrails: a misleading trace is worse than no trace.
 
-| Kind | Name | Priority |
-|---|---|---|
-| new family | `passive_aura` (ClassFeatureMechanics) | blocking |
-| new atom | `grant_condition_immunity` | blocking |
-| new variant | `Condition = "frightened"` | blocking |
-| new variant | aura-scope target specifier | blocking |
+---
+
+## Proposed Widening
+
+Add an optional `auraScope` field to `PassiveMechanics`:
+
+```typescript
+export type PassiveAuraScope = {
+  readonly kind: "emanation";
+  readonly radiusFeet: number;
+  readonly occupants: "self_and_friendly" | "friendly_only";
+};
+
+export type PassiveMechanics = {
+  readonly family: "passive";
+  readonly condition?: EquipmentPredicate;
+  readonly auraScope?: PassiveAuraScope;   // NEW — area scope for aura features
+  readonly suppressedBy?: ReadonlyNonEmptyArray<PassiveSuppressor>;
+  readonly grants: ReadonlyArray<EffectAtom>;
+  readonly operations?: ReadonlyNonEmptyArray<PassiveOperation>;
+};
+```
+
+The Aura of Courage encoding would then read:
+
+```dhall
+{ family = "passive"
+, auraScope =
+    { kind = "emanation"
+    , radiusFeet = 10        -- expands to 30 at L18 via Aura Expansion
+    , occupants = "self_and_friendly"
+    }
+, grants =
+    [ { kind = "grant_condition_immunity", condition = "frightened" } ]
+}
+```
+
+The tracer would emit an `area` attachment node (emanation 10 ft, friendly_to_source) rooted at the `grant` procedure, parallel to how `ongoing_effect` spells with area attachments are traced.
+
+---
+
+## Scope and Pressure Cases
+
+This widening directly covers the entire paladin aura family:
+
+| Feature | Radius | Effect |
+|---------|--------|--------|
+| Aura of Protection (L6) | 10 ft | +CHA mod to saves for self + allies |
+| Aura of Courage (L10) | 10 ft | Frightened immunity for self + allies |
+| Aura Expansion (L18) | 30 ft | Expands both auras above |
+| Subclass auras (Oath of Devotion L7, etc.) | 10 ft | Various condition immunities |
+
+The `Aura of Protection` feature additionally requires a `DiceDelta.ability_modifier` grant on saving throws scoped to the aura, which is a separate encoding concern, but would use the same `auraScope` field.
+
+---
+
+## Classification
+
+- **Family**: `passive` ✓ exists  
+- **Atom**: `grant_condition_immunity` ✓ exists  
+- **Missing**: optional `auraScope` on `PassiveMechanics` — a new variant of an existing surface type  
+- **Outcome**: `surface_widening`

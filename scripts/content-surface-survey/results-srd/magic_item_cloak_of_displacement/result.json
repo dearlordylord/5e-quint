@@ -1,34 +1,22 @@
 {
   "unit_slug": "magic_item_cloak_of_displacement",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + passive_property family",
-      "justification": "No magic_item kind exists in UnitRecord. The cloak is a worn item with an always-active passive property (not a spell, class feature, or mastery). A new top-level record kind and a mechanics family for passive worn/attuned effects are both required.",
-      "evidence": "While you wear this cloak, it magically projects an illusion that makes you appear to be standing in a place near your actual location, causing any creature to have Disadvantage on attack rolls against you."
-    },
-    {
-      "kind": "new_atom",
-      "name": "on_damage_taken_window",
-      "justification": "The suppression of the displacement property is triggered by the wearer taking damage. The v4 window inventory has on_hit_window (attacker side) but no window that opens when the bearer of an effect receives damage. The cloak's temporary-disable mechanic requires this trigger.",
+      "kind": "new_variant",
+      "name": "PassiveSuppressor.on_damage_taken_until_caster_turn_start",
+      "justification": "The cloak's displacement property is disabled from the instant damage is received until the start of the wearer's next turn. This is a damage-event-triggered temporary suppression with a fixed expiry (caster_turn_start), not a condition-active gate. The existing PassiveSuppressor union only supports { kind: 'condition_active', conditions: [...] }.",
       "evidence": "If you take damage, the property ceases to function until the start of your next turn."
     },
     {
       "kind": "new_variant",
-      "name": "condition_gate (Speed = 0 suppression)",
-      "justification": "The cloak is suppressed whenever the wearer's Speed is 0. This is a continuous runtime-state predicate, not a windowed event. The current atom vocabulary has no gate or suppress condition tied to a numeric movement-speed check.",
+      "name": "PassiveSuppressor.speed_is_zero",
+      "justification": "The cloak's property is suppressed while the bearer's Speed is 0. Speed = 0 is a runtime numeric state, not a named condition — it can arise from Restrained, Grappled, a set_speed effect, or other sources independently of any specific condition being active. The existing PassiveSuppressor.condition_active cannot represent this accurately.",
       "evidence": "This property is suppressed while your Speed is 0."
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_roll_advantage on incoming attacks (attachment direction: self as target)",
-      "justification": "The existing modify_roll_advantage atom applies to rolls made by the bearer. The cloak's effect must apply disadvantage to rolls made by OTHER creatures targeting the bearer. The current surface schema's attachment grammar has no way to express 'attack rolls whose target is self'.",
-      "evidence": "causing any creature to have Disadvantage on attack rolls against you"
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: magic_item is not a member of UnitRecord. Secondary blockers are (a) no passive-wear mechanics family — items don't have casting times, spell slots, or activation costs; (b) no on_damage_taken_window for the suppression interrupt; (c) no condition-gate atom for Speed=0. All four widenings would be needed to encode this unit cleanly."
+  "notes": "The core mechanic (all attackers have Disadvantage on attack rolls against the wearer) maps cleanly to a passive modify_roll_advantage atom. Both suppression clauses require new PassiveSuppressor variants not present in the current surface. Omitting them would encode a substantially stronger item than RAW — permanent, uninterruptible disadvantage with no conditions — so no dhall/json is authored."
 }

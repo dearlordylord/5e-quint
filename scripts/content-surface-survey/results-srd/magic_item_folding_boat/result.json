@@ -6,29 +6,17 @@
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "Attachment.item",
-      "justification": "The item's transform effect applies to the Folding Boat itself, not to a creature-facing self/target/area attachment.",
-      "evidence": "\"The box unfolds into a Rowboat.\""
+      "name": "UseCountCap.unlimited",
+      "justification": "The three command words have no stated usage limit or cooldown. ActivatedAbilityMechanics requires a resource: ActivationResource, and UseCountCap has no 'unlimited' variant. Inventing a large fixed number or a 'never' cadence would be dishonest about what the SRD says.",
+      "evidence": "This item also has three command words, each requiring a Magic action to use"
     },
     {
       "kind": "new_variant",
-      "name": "resource_free_activation",
-      "justification": "The item has repeatable command-word activations with no charges, uses, or reset cadence, which the current activation surface cannot express honestly.",
-      "evidence": "\"This item also has three command words, each requiring a Magic action to use\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "activation_precondition",
-      "justification": "One command word is conditionally available only when no creatures are aboard, but activation phases have no branch-level precondition slot.",
-      "evidence": "\"The Folding Boat folds back into a box if no creatures are aboard.\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "ItemDestructionPolicy.form_zero_hp",
-      "justification": "The item is destroyed when either transformed vessel reaches 0 HP, which is a different lifecycle trigger from the existing charge-depletion destruction policies.",
-      "evidence": "\"If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed.\""
+      "name": "EquipmentPredicate.no_occupants (or ActivationPredicate.no_occupants)",
+      "justification": "The third command word can only be invoked 'if no creatures are aboard.' EquipmentPredicate covers only equipment wearing/wielding/holding gates; there is no variant for item-occupancy state. This requires either a new EquipmentPredicate variant or a broader ActivationPredicate union that includes item-state conditions.",
+      "evidence": "The Folding Boat folds back into a box if no creatures are aboard."
     }
   ],
   "confidence": "high",
-  "notes": "Did not author content/magic_item_folding_boat.dhall or generate JSON/trace. The existing magic-item activation family is close, but using it now would require lying about the target attachment and inventing a fake limited-use resource."
+  "notes": "The alter_item_kind atom was added precisely for Folding Boat-style form-transformation items and is sufficient. The activation family and composite mechanics shape both exist. Encoding is blocked by two UseCountCap/EquipmentPredicate surface gaps only. The box's passive storage capability (container_storage atom) would also apply to the default box form but is secondary to the transformation mechanics."
 }

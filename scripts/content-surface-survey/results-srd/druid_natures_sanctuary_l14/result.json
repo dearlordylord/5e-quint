@@ -5,42 +5,30 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "ClassFeatureActivationCost { kind: \"action\" }",
-      "justification": "Nature's Sanctuary is activated with a Magic action, which is a standard action kind. ClassFeatureActivationCost only has `free` and `bonus_action`. Action-cost class features are a common pattern (compare Channel Divinity, Wild Shape itself) and require a new variant.",
-      "evidence": "As a Magic action, you can expend a use of your Wild Shape..."
-    },
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureMechanicsHeader.duration (timed with condition expiry)",
-      "justification": "The feature creates a persistent zone that lasts 1 minute or until a condition (Incapacitated) or death. ClassFeatureMechanicsHeader has no duration field at all — it models only instantaneous activations. A timed class feature zone requires a duration shape analogous to spell Duration, extended with condition-based expiry triggers.",
-      "evidence": "They last there for 1 minute or until you have the Incapacitated condition or die."
-    },
-    {
       "kind": "new_subgraph",
-      "name": "multi_activation class feature (primary + secondary repositioning activation)",
-      "justification": "The feature has two distinct activation clauses: (1) the primary Magic action that creates the area, and (2) a Bonus Action on subsequent turns to reposition the Cube. The current activation family supports exactly one activation cost and one effect — no secondary activation subgraph exists.",
-      "evidence": "As a Bonus Action, you can move the Cube up to 60 feet to ground within 120 feet of yourself."
+      "name": "ongoing_effect_class_feature",
+      "justification": "ActivatedAbilityMechanics has phases but no operations field. Nature's Sanctuary creates a persistent area with per-turn ongoing effects (Half Cover while in area, resistance while in area), which requires OngoingOperation semantics (trigger + effect) attached to the area. That pattern only exists on SpellMechanics.ongoing_effect. Class features need an analogous family or an extended ActivatedAbilityMechanics with optional operations.",
+      "evidence": "spectral trees and vines to appear in a 15-foot Cube... You and your allies have Half Cover while in that area, and your allies gain the current Resistance of your Nature's Ward while there."
     },
     {
       "kind": "new_variant",
-      "name": "UseCountResource: cross-feature resource reference (consumes Wild Shape use)",
-      "justification": "The feature does not have its own use-count pool; it consumes a use from Wild Shape, which is a separate class feature with its own resource. The surface has no mechanism to express consumption of another feature's `use_count` pool. A cross-feature resource reference variant is needed.",
-      "evidence": "...you can expend a use of your Wild Shape..."
+      "name": "ActivationResource.cross_feature_pool",
+      "justification": "The activation cost includes expending a use from Wild Shape's own use-count pool, not from Nature's Sanctuary's pool. ActivationResource only models the activating feature's own pool. A cross-feature pool reference variant is needed.",
+      "evidence": "you can expend a use of your Wild Shape"
     },
     {
       "kind": "new_atom",
-      "name": "grant_cover (Half Cover to area occupants)",
-      "justification": "The zone grants Half Cover (+2 AC, +2 DEX saves) to creatures within it. v4 has `modify_ac` as a reaction effect atom, but no `grant_cover` atom expressing a persistent zone-conditional AC/save modifier keyed to area occupancy. Half Cover is a distinct SRD mechanic from a flat AC delta.",
-      "evidence": "You and your allies have Half Cover while in that area..."
+      "name": "grant_resistance_from_feature",
+      "justification": "grant_resistance requires a fixed DamageTypeRef. Nature's Ward grants a resistance that changes with terrain type at runtime. The ally benefit here is 'the current Resistance of your Nature's Ward' — a runtime cross-feature state reference with no fixed damage type at authoring time.",
+      "evidence": "your allies gain the current Resistance of your Nature's Ward while there"
     },
     {
       "kind": "new_variant",
-      "name": "ClassFeatureEffect: grant_resistance_from_feature (cross-feature state projection)",
-      "justification": "The zone propagates the *current* Resistance type granted by Nature's Ward (a separate L10 class feature) to allies in the area. This requires projecting runtime state from another feature into the effect. v4 has `grant_resistance` but no mechanism for a resistance whose type is resolved at runtime from another feature's live state.",
-      "evidence": "...your allies gain the current Resistance of your Nature's Ward while there."
+      "name": "modify_roll_numeric.saveAbilityFilter",
+      "justification": "Half Cover grants +2 to AC and +2 to Dexterity saving throws specifically. modify_roll_numeric can express +2 to saving_throw rolls but has no saveAbilityFilter to restrict to Dex saves only. (modify_roll_advantage has saveAbilityFilter; modify_roll_numeric does not.)",
+      "evidence": "You and your allies have Half Cover while in that area"
     }
   ],
   "confidence": "high",
-  "notes": "All six gaps are independently blocking. The structural gaps (no duration on class features, no multi-activation family, no cross-feature resource reference, no cross-feature state projection) prevent honest encoding in any existing family. The unit is a persistent mobile zone with two simultaneous conditional effects — a shape the surface has no vocabulary for. Do not attempt to force into `activation` family; the trace would be fundamentally false."
+  "notes": "Primary blocker is structural: ActivatedAbilityMechanics has no operations field, so there is no honest way to express 'while creatures are in this area, apply persistent effects.' The ongoing_effect family has this but is spell-only. The bonus-action repositioning (reposition_attachment atom exists) also requires on_caster_spends_action inside an OngoingOperation, compounding the structural gap. Even if the structural gap were resolved, the cross-feature Wild Shape resource expenditure and the Nature's Ward runtime resistance cross-reference would each require additional surface widenings."
 }

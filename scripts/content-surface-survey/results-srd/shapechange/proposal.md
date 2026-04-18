@@ -1,99 +1,161 @@
-# Proposal: Widenings Required for Shapechange
+# Proposal: Shapechange surface widenings
 
-## Outcome: `structural_widening`
+## Unit
+- **Slug**: shapechange
+- **Kind**: spell (level 9, transmutation, concentration 1h)
+- **Outcome**: `surface_widening`
 
-Shapechange (level 9 transmutation) cannot be honestly encoded in the current content surface. Its core mechanic — adopting another creature's entire stat block while selectively retaining personal attributes — has no analog in any existing spell family or operation type.
+## Summary
+
+Shapechange is a polymorph-family spell targeting the caster (`self`). The correct payload family is `ongoing_effect` with a `direct` phase applying `transform_target` on a `self` attachment, with `tempHpFromForm: true`. The tracer path is sound. However, three variants of existing surface types are missing.
 
 ---
 
-## Gap 1: No `form_transformation` family (or equivalent operation)
+## Widening 1: `PolymorphFormSource` — open creature type with exclusions
 
-### What the spell does
+### RAW text
+> "it can't be a Construct or an Undead"
 
-> *"Your game statistics are replaced by the stat block of the chosen form, but you retain your creature type; alignment; personality; Intelligence, Wisdom, and Charisma scores; Hit Points; Hit Point Dice; proficiencies; and ability to communicate. If you have the Spellcasting feature, you retain it too."*
-
-The operative mechanic is **stat-block adoption with attribute retention**. The caster's attack statistics, AC, speed, senses, special actions, and ability scores (except Int/Wis/Cha) are replaced wholesale by the new creature's stat block. A specific closed list of personal attributes is preserved.
-
-### Why the current surface cannot express this
-
-- `ongoing_effect` requires an `OngoingOperation` of kind `roll_modifier` or `damage_on_hit`. Neither covers stat-block replacement.
-- `activation` handles instant/phased resolution — it does not express persistent state that replaces the acting creature's capabilities.
-- No existing effect atom covers stat-block adoption. The closest existing atom, `alter_item_kind`, applies to items, not creature forms.
-
-### Proposed widening
-
-A new spell family: `form_transformation`. Shape:
-
+### Current surface
+```typescript
+export type PolymorphFormSource = {
+  readonly kind: "catalog_ref";
+  readonly creatureType: CreatureType;       // single type only
+  readonly crBound: ...;
+};
 ```
-FormTransformationMechanics = SpellMechanicsHeader & {
-  family: "form_transformation";
-  attachment: Attachment;                  // self
-  constraints: FormConstraints;            // CR cap, type exclusions, familiarity requirement
-  retainedAttributes: RetainedAttributes;  // closed enum of preserved personal stats
-  onAdopt: FormAdoptionEffect;             // what fires when a form is adopted
+
+### Problem
+`creatureType: CreatureType` forces authoring to name exactly one creature type. Shapechange allows transformation into **any** creature type except Construct and Undead — an open set with two exclusions. There is no way to express this without picking an arbitrary single type (which would be dishonest).
+
+### Proposed extension
+Add a second variant to `PolymorphFormSource`:
+
+```typescript
+export type PolymorphFormSource =
+  | {
+      readonly kind: "catalog_ref";
+      readonly creatureType: CreatureType;
+      readonly crBound: ...;
+    }
+  | {
+      readonly kind: "catalog_ref_any_except";
+      readonly excludedTypes: ReadonlyNonEmptyArray<CreatureType>;
+      readonly crBound: ...;
+    };
+```
+
+Shapechange would use `catalog_ref_any_except` with `excludedTypes: ["construct", "undead"]`.
+
+---
+
+## Widening 2: `PolymorphRetainedField` — `"proficiencies"` and `"spellcasting_feature"`
+
+### RAW text
+> "you retain your…proficiencies…If you have the Spellcasting feature, you retain it too."
+
+### Current surface
+```typescript
+export type PolymorphRetainedField =
+  | "alignment" | "personality" | "creature_type"
+  | "hit_points" | "hit_point_dice"
+  | "intelligence" | "wisdom" | "charisma"
+  | "skill_proficiencies" | "languages";
+```
+
+### Problem
+- `"skill_proficiencies"` covers only skill proficiencies. Shapechange retains **all** proficiencies: weapon, armor, saving throw, and skill. A broader `"proficiencies"` variant is needed.
+- `"spellcasting_feature"` does not exist. Shapechange uniquely retains the ability to use spells in the new form — a key distinguishing mechanic vs. Polymorph.
+
+### Proposed extension
+Add two variants to `PolymorphRetainedField`:
+
+```typescript
+| "proficiencies"          // all proficiencies (weapon, armor, saving throw, skill)
+| "spellcasting_feature"   // retain spellcasting even in new form
+```
+
+---
+
+## Widening 3: `transform_target` — `midDurationSwitchAs` for open-catalog re-form
+
+### RAW text
+> "until you take a Magic action to shape-shift into a different eligible form"
+
+### Current surface
+`CastTimeEffectModeChoice` has `allowsMidDurationSwitchAs?: "magic_action"` but this only models switching among **predefined authored options** (e.g., Alter Self's three named modes). It cannot express open-catalog re-selection.
+
+`transform_target` has no mid-duration switch field at all.
+
+### Proposed extension
+Add an optional field to `transform_target`:
+
+```typescript
+| {
+    readonly kind: "transform_target";
+    readonly newForm: PolymorphFormSource;
+    readonly retainedFields: ReadonlyNonEmptyArray<PolymorphRetainedField>;
+    readonly tempHpFromForm?: true;
+    readonly actionRestriction?: PolymorphActionRestriction;
+    readonly revertTriggers: ReadonlyNonEmptyArray<PolymorphRevertTrigger>;
+    readonly midDurationSwitchAs?: "magic_action";  // NEW: open-catalog re-form
+  }
+```
+
+When present, the bearer may spend a Magic action to re-invoke the full form-selection from the same `PolymorphFormSource` constraints, replacing the current form.
+
+**Note**: This is distinct from `CastTimeEffectModeChoice.allowsMidDurationSwitchAs` because it is not switching among predefined authored branches — it is re-running the open-catalog selection.
+
+---
+
+## DM-agenda items (not modeled, correctly omitted)
+
+- **"must have seen the creature before"** — eligibility tracking is DM context; no deterministic mechanical resolution.
+- **Equipment handling** — "drops to the ground or changes in size and shape to fit" is a player/DM choice at shift time; not a mechanical atom.
+- **THP from first form only** — the `tempHpFromForm: true` flag fires at initial cast; subsequent re-forms per the mid-duration switch do not re-grant THP (SRD text: "equal to the Hit Points of the **first** form"). This nuance may need a `tempHpFromFormOnce?: true` clarification if re-form THP confusion becomes a problem in future content.
+
+---
+
+## What a clean encoding would look like (after widenings applied)
+
+```dhall
+{ kind = "spell"
+, id = "shapechange"
+, name = "Shapechange"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-S#Shapechange" }
+, description = "..."
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 9
+    , school = "transmutation"
+    , castingTime = { kind = "action" }
+    , range = { kind = "self" }
+    , components = { v = True, s = True, m = Some "a jade circlet worth 1,500+ GP", materialCostGp = Some 1500 }
+    , duration = { kind = "concentration", upTo = { unit = "hour", amount = 1 } }
+    , attachment = { kind = "self" }
+    , operations =
+        [ { trigger = { kind = "passive" }
+          , effect =
+              { kind = "transform_target"
+              , newForm =
+                  { kind = "catalog_ref_any_except"         -- WIDENING 1
+                  , excludedTypes = [ "construct", "undead" ]
+                  , crBound = { kind = "caster_level" }
+                  }
+              , retainedFields =
+                  [ "creature_type", "alignment", "personality"
+                  , "intelligence", "wisdom", "charisma"
+                  , "hit_points", "hit_point_dice"
+                  , "proficiencies"                         -- WIDENING 2a
+                  , "languages"
+                  , "spellcasting_feature"                  -- WIDENING 2b
+                  ]
+              , tempHpFromForm = True
+              , revertTriggers = [ { kind = "spell_ends" }, { kind = "zero_hp" } ]
+              , midDurationSwitchAs = Some "magic_action"   -- WIDENING 3
+              }
+          }
+        ]
+    }
 }
 ```
-
-Where `FormAdoptionEffect` would include at minimum:
-- `replace_stat_block` — adopt the chosen creature's stat block under the retention constraints
-- `grant_temp_hp` — (see Gap 2 below)
-
-This family is also needed for **Polymorph** (level 4, targets a willing creature/unwilling via save) and **True Polymorph** (level 9, permanent option). All three share the stat-block-adoption pattern.
-
----
-
-## Gap 2: No `grant_temp_hp` effect atom
-
-### What the spell does
-
-> *"When you cast the spell, you gain a number of Temporary Hit Points equal to the Hit Points of the first form into which you shape-shift. These Temporary Hit Points vanish if any remain when the spell ends."*
-
-Temporary Hit Points are mechanically distinct from regular HP:
-- They form a separate pool and are tracked independently.
-- They do not stack with other temp HP (a creature takes the higher value).
-- They vanish at spell end.
-
-### Why `heal_hp` is insufficient
-
-The current `HealHpEffect` restores lost HP from a dice expression. It does not model temp HP because temp HP is a separate buffer, not a restoration of the HP pool. The amount is also not a fixed DiceExpr — it equals the chosen form's actual HP value (a creature-database lookup), which itself is a new surface concern.
-
-### Proposed widening
-
-New effect atom: `grant_temp_hp`. Distinct from `heal` in that:
-- It populates the temp HP pool rather than restoring HP.
-- Its amount source may be `form_hp` (a reference to the adopted form's HP total) rather than a static DiceAmount.
-
----
-
-## Gap 3: No mid-spell form-change activation
-
-### What the spell does
-
-> *"You shape-shift into another creature for the duration or until you take a Magic action to shape-shift into a different eligible form."*
-
-During the spell's concentration window, the caster can spend their Magic action to swap into a new eligible form. Each form swap re-applies the stat-block replacement.
-
-### Why the current surface cannot express this
-
-The current surface has no mechanism for ongoing spells that expose a repeatable sub-activation within the duration window. The existing families (`ongoing_effect`, `activation`, `triggered_reaction`, `anchored_trigger`) all model a single resolution at cast time. A mid-spell re-activation with a standard action cost is a new structural pattern.
-
-### Proposed widening
-
-A new variant on `ClassFeatureActivationCost` (or a new surface type `SpellSubActivation`) that models:
-- Cost: Magic action (while the parent concentration is held)
-- Effect: re-apply form_transformation to a new eligible target
-- Guard: same constraints as the original cast
-
-This pattern may generalize to other spells (Animate Objects allows commanding objects as a Bonus Action mid-spell, Spiritual Weapon allows commanding the weapon, etc.).
-
----
-
-## Summary table
-
-| Gap | Kind | Name | Classification |
-|-----|------|------|----------------|
-| Stat-block replacement | `new_subgraph` | `form_transformation` | structural — no existing family |
-| Temporary HP grant | `new_atom` | `grant_temp_hp` | atom — distinct from `heal` |
-| Mid-spell form change | `new_variant` | `mid_spell_form_change_activation` | surface — new sub-activation pattern |
-
-All three gaps must be addressed together for an honest encoding of Shapechange. The `form_transformation` family is the highest-priority widening as it is shared across three SRD spells.

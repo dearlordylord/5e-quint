@@ -1,90 +1,79 @@
-# Proposal: True Polymorph widening gaps
+# Proposal: True Polymorph surface widenings
 
-**Outcome:** `atom_widening`  
-**Unit:** True Polymorph (9th-level transmutation, SRD 5.2.1)
+## Classification: `atom_widening`
 
----
+True Polymorph (Level 9 Transmutation, SRD 5.2.1) was explicitly anticipated by the surface designers — `saveAppliesIf: "unwilling_target"` and `Duration.permanentIfMaintainedFull` were both added with True Polymorph as the named pressure case, and the `transform_target` atom comment lists it alongside Shapechange and Wild Shape. Despite this, three of four mechanical gaps block honest encoding.
 
-## Why no encoding was produced
+## What fits
 
-True Polymorph cannot be honestly encoded in any existing `SpellMechanics` family. The `activation` family with a `save_gate` phase is the closest structural fit (unwilling creature makes a Wisdom save), but the `Effect` union consumed by `onFail`/`onSuccess` is `DamageEffect | NoneEffect`. The actual effect on failure is stat-block replacement — a transformation, not damage.
+- `activation` family with a `save_gate` phase ✓
+- `saveAppliesIf: "unwilling_target"` ✓ (designed for this spell)
+- `Duration.concentration` with `permanentIfMaintainedFull: true` ✓ (designed for this spell)
+- `transform_target` atom shape (retained fields, tempHpFromForm, actionRestriction, revertTriggers) ✓
+- `no_speech_no_spells` action restriction ✓
+- `revertTriggers: [zero_hp, spell_ends, temp_hp_depleted]` ✓
 
-Forcing this into a `NoneEffect` would produce a tracer that lies about the spell. Forcing it into a `DamageEffect` with arbitrary values would be worse. Neither is acceptable per the guardrails.
+## Gap 1: `PolymorphFormSource.creatureType = "any"` (surface_widening)
 
----
+**RAW**: "the new form can be any kind you choose that has a Challenge Rating equal to or less than the target's Challenge Rating or level."
 
-## Gap 1 — Missing atom: `alter_creature_kind`
+`PolymorphFormSource.creatureType` is typed as `CreatureType`, a closed 14-member enum. Polymorph constrains the form to `"beast"`. True Polymorph imposes no creature-type constraint. There is no `"any"` sentinel or union variant.
 
-**Severity:** Atom widening (concept absent from v4 taxonomy)
+**Proposed fix**: Widen `PolymorphFormSource.creatureType` to `CreatureType | "any"`. The `"any"` sentinel means the caster may choose any creature type at cast time; no runtime narrowing is applied.
 
-True Polymorph has three mutually exclusive transformation modes, all requiring the same underlying concept: replacing or converting a creature's or object's type at the stat-block level.
+## Gap 2: `transform_object_to_creature` (atom_widening)
 
-| Mode | Input | Output |
-|---|---|---|
-| Creature → Creature | creature | different creature (stat block swapped, HP/alignment/personality retained) |
-| Object → Creature | nonmagical object | creature (Friendly, obeys commands) |
-| Creature → Object | creature | nonmagical object (creature stats become object stats) |
+**RAW**: "the object shape-shifts into a creature (the object must be neither worn nor carried) ... You can turn an object into any kind of creature, as long as the creature's size is no larger than the object's size and the creature has a Challenge Rating of 9 or lower. The creature is Friendly to you and your allies. In combat, it takes its turns immediately after yours, and it obeys your commands."
 
-The v4 taxonomy has `alter_item_kind` (for item kind changes) but no parallel atom for creature/cross-type polymorphism. A new atom `alter_creature_kind` is required, carrying at minimum:
-- the target type class (creature or object) as input and output
-- CR/level constraints as authoring metadata (not runtime — the constraint is checked at cast time by the caster)
+This mode transforms an `object` attachment into a creature with a bounded CR. No existing atom covers object-as-source transformation. `transform_target` is creature→creature. The `spawned_creature` family creates creatures from nothing (or a catalog ref); it does not consume an existing object as source.
 
-**Evidence:** *"The creature shape-shifts into a different creature or a nonmagical object... The target's game statistics are replaced by the stat block of the new form"*
-
----
-
-## Gap 2 — Missing atom: `grant_temp_hp`
-
-**Severity:** Atom widening (concept absent from v4 taxonomy)
-
-The Creature→Creature mode grants Temporary Hit Points equal to the new form's HP maximum:
-
-> *"The target gains a number of Temporary Hit Points equal to the Hit Points of the new form. These Temporary Hit Points vanish if any remain when the spell ends."*
-
-The current `Effect` union has `heal_hp` (for ClassFeatureEffect) and `damage`, but no THP grant. The v4 taxonomy lists `modify_max_hp` (a different operation) but not `grant_temp_hp`. Temporary HP that expire on spell-end is semantically distinct from both healing and max-HP modification. A new atom is needed.
-
----
-
-## Gap 3 — Missing `Duration` variant: `concentration_then_permanent`
-
-**Severity:** Surface widening (new variant of existing type)
-
-True Polymorph's duration escalates:
-> *"The transformation lasts for the duration or until the target dies or is destroyed, but if you maintain Concentration on this spell for the full duration, the spell lasts until dispelled."*
-
-No existing `Duration` variant can express this. The current variants are:
-- `instantaneous`
-- `concentration { upTo: DurationValue }` — ends on concentration break OR timer
-- `timed { value: DurationValue }` — fixed duration, no concentration
-
-A new variant is needed, e.g.:
+**Proposed atom**:
 ```typescript
-| {
-    readonly kind: "concentration_then_permanent";
-    readonly upTo: DurationValue;
-  }
+{
+  readonly kind: "transform_object_to_creature";
+  readonly newForm: PolymorphFormSource;   // reuses existing type; crBound = { kind: "fixed", cr: 9 }
+  readonly sizeConstraint: "no_larger_than_object";
+  readonly control: {
+    readonly disposition: "friendly";
+    readonly turnOrder: "immediately_after_caster";
+    readonly commandCost: { kind: "no_action_required" };
+    readonly controlDuration?: DurationValue;  // "more than 1 hour → no longer controlled"
+  };
+  readonly revertTriggers: ReadonlyNonEmptyArray<PolymorphRevertTrigger>;
+}
 ```
-This models: concentration maintained for `upTo` → becomes permanent until dispelled; concentration broken before `upTo` → spell ends immediately.
 
----
+The `controlDuration` field handles the "after 1 hour you no longer control the creature" clause — a timed control window inside the spell's broader concentration/permanent window.
 
-## Gap 4 — `create_companion` surface gap (v4 atom, not in `types.ts`)
+## Gap 3: `transform_creature_to_object` (atom_widening)
 
-**Severity:** Surface widening (v4 atom exists, not yet implemented in surface)
+**RAW**: "If you turn a creature into an object, it transforms along with whatever it is wearing and carrying into that form, as long as the object's size is no larger than the creature's size. The creature's statistics become those of the object, and the creature has no memory of time spent in this form after the spell ends and it returns to normal."
 
-The Object→Creature mode produces a controlled companion:
-> *"The creature is Friendly to you and your allies. In combat, it takes its turns immediately after yours, and it obeys your commands."*
+This is an entirely new transformation direction. The target creature becomes an object; its game statistics are replaced by the object's; the creature has no awareness during the transformation. Upon spell end, it reverts. No existing atom models this:
+- `transform_target` is creature→creature.
+- `apply_condition` (incapacitated, etc.) does not replace statistics with an object's stat block.
+- `block_targeting` / `block_travel` are narrow scope restrictions, not full stat replacement.
 
-`create_companion` appears in the v4 atom inventory (§9 Effect Atoms) but is absent from `types.ts`. This is separate from the primary `atom_widening` gaps — it could be added without touching the v4 taxonomy.
+**Proposed atom**:
+```typescript
+{
+  readonly kind: "transform_creature_to_object";
+  readonly sizeConstraint: "object_no_larger_than_creature";
+  readonly revertTriggers: ReadonlyNonEmptyArray<PolymorphRevertTrigger>;
+  readonly memoryBlocked: true;   // RAW: "has no memory of time spent in this form"
+}
+```
 
----
+The form the object takes is a player-narrated choice (the spell text says "that form" but leaves the specific object to the caster); no catalog-ref is needed.
 
-## Structural note
+## Gap 4: Multi-type target attachment (surface_widening)
 
-Once the above gaps are filled, True Polymorph would fit the `activation` family with:
-- A `save_gate` phase (Wisdom save, DC: caster spell save DC, for unwilling creatures)
-- `onFail` → `alter_creature_kind` effect
-- `onSuccess` → `none`
-- Secondary `grant_temp_hp` effect hanging off the `alter_creature_kind` (Creature→Creature mode only)
+**RAW**: "Choose one creature or nonmagical object that you can see within range."
 
-The three transformation modes would likely need a `choose` or branching mechanism at the attachment level — the caster declares the mode at cast time. This is a DM/caster-choice branch, not a random resolution, so it may require a new `TargetSelection` or casting-time-branch shape.
+The three operational modes branch on whether the target is a creature or nonmagical object. The current `Attachment` union has `kind: "target"` (creatures) and `kind: "object"` (objects) as separate variants. There is no combined "creature or object" variant. The three modes also can't be expressed as phases in sequence — they are mutually exclusive paths chosen at cast time based on target type.
+
+One option: introduce a new `kind: "creature_or_object"` attachment variant that resolves to whichever the caster selects, and model the three operational branches as a `CastTimeEffectModeChoice`-like structure on the `save_gate` onFail. This would require both an attachment widening and a new branch mechanism on `ActivationPhase.save_gate.onFail` (currently `onFail: EffectAtom`, which cannot carry the three-way branch natively).
+
+## Encoding decision
+
+No `content/true_polymorph.dhall` is produced. A partial encoding covering only the creature→creature mode would omit two of three core operational modes of the spell, producing a misleading trace. The surface already shows explicit design intent for this spell; the remaining gaps are concrete and should be widened rather than worked around.

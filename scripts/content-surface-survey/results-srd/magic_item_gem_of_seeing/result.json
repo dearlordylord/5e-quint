@@ -1,34 +1,27 @@
 {
   "unit_slug": "magic_item_gem_of_seeing",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item mechanics family",
-      "justification": "UnitRecord in types.ts has no 'magic_item' kind. The tracer's exhaustive switch on unit.kind covers only spell | class_feature | mastery. A MagicItemRecord type and at least one magic-item mechanics family (charge-based activation) must be added before any magic item can be encoded.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "daily_at_dawn recharge cadence (dice-based)",
-      "justification": "The gem regains 1d3 charges daily at dawn. RestResetCadence only models short-rest and long-rest refills; no variant covers time-of-day recharge with a random dice amount.",
-      "evidence": "The gem regains 1d3 expended charges daily at dawn."
-    },
-    {
-      "kind": "new_variant",
-      "name": "magic_action activation cost",
-      "justification": "Activation costs a Magic action (one of the 12 StandardActionKind values). ClassFeatureActivationCost only has 'free' and 'bonus_action'; a 'magic_action' variant is needed for magic items that consume the Magic action.",
-      "evidence": "As a Magic action, you can expend 1 charge."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_sense effect (Truesight)",
-      "justification": "The primary effect is Truesight out to 120 ft for 10 minutes. The v4 atom 'grant_sense' exists in TAXONOMY_atoms_graph.md but no corresponding TypeScript surface type exists in any Effect union (ClassFeatureEffect, Effect, ReactionEffect). A grant_sense variant with a sense kind, range, and timed duration is needed.",
-      "evidence": "you have Truesight out to 120 feet when you peer through the gem"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_sense",
+    "magic_item_root",
+    "peering_through_item",
+    "self"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Primary blocker is structural: 'magic_item' is entirely absent from UnitRecord. Even if that gap were closed, three surface-level variants are also missing: (1) a daily-at-dawn dice recharge cadence, (2) a magic_action activation cost, and (3) a grant_sense effect shape. The 'charge' resource atom is listed in v4 taxonomy but has no TypeScript surface representation; use_count with RestResetCadence cannot honestly model a dice-based time-of-day recharge. No honest coercion into SpellRecord or ClassFeatureRecord is possible."
+  "notes": "Fits cleanly as activation-family magic_item. peering_through_item condition is explicitly cited in types.ts as the Gem of Seeing pressure case. truesight is already in SenseKind. dawn reset with 1d3 partial regain encodes via DiceAmount. The 10-minute timed duration is on the ActivatedAbilityHeader but not reflected in the tracer mermaid output (tracer only emits persist/expire lifecycle nodes for spell durations, not activated-ability durations — tracer limitation, not a schema gap)."
 }

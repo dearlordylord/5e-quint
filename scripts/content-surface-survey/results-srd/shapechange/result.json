@@ -1,28 +1,28 @@
 {
   "unit_slug": "shapechange",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "form_transformation",
-      "justification": "Shapechange replaces the caster's entire stat block with another creature's stat block while retaining a specific set of personal attributes. No existing spell family or OngoingOperation variant can express this — ongoing_effect only supports roll_modifier and damage_on_hit operations. A new family (or new operation kind) is needed for the stat-block-adoption + attribute-retention pattern shared by Shapechange, Polymorph, and True Polymorph.",
-      "evidence": "Your game statistics are replaced by the stat block of the chosen form, but you retain your creature type; alignment; personality; Intelligence, Wisdom, and Charisma scores; Hit Points; Hit Point Dice; proficiencies; and ability to communicate."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_temp_hp",
-      "justification": "Shapechange grants Temporary Hit Points equal to the first form's HP on cast. Temp HP is mechanically distinct from regular HP healing — they form a separate pool, do not stack, and vanish at spell end. The current heal_hp effect atom covers HP restoration only. A separate grant_temp_hp atom is needed.",
-      "evidence": "When you cast the spell, you gain a number of Temporary Hit Points equal to the Hit Points of the first form into which you shape-shift. These Temporary Hit Points vanish if any remain when the spell ends."
+      "kind": "new_variant",
+      "name": "PolymorphFormSource — open creature type with exclusions",
+      "justification": "Shapechange allows any creature type (except Construct and Undead). The current PolymorphFormSource.creatureType accepts a single CreatureType value. There is no variant for 'any creature type' or 'any except [list]'. A new variant such as { kind: 'any_except'; excludedTypes: ReadonlyNonEmptyArray<CreatureType> } is needed.",
+      "evidence": "The new form must be of a creature that has a Challenge Rating no higher than your level or Challenge Rating. You must have seen the sort of creature before, and it can't be a Construct or an Undead."
     },
     {
       "kind": "new_variant",
-      "name": "mid_spell_form_change_activation",
-      "justification": "The caster can use the Magic action during the spell's duration to adopt a different eligible form. This is a repeatable, mid-spell re-activation that costs a Magic action and re-applies the stat-block replacement. The current surface has no mechanism for ongoing spells that allow repeated activation of a sub-effect via a standard action cost while the parent concentration is held.",
+      "name": "PolymorphRetainedField — 'proficiencies' and 'spellcasting_feature'",
+      "justification": "Shapechange retains all proficiencies (weapon, armor, saving throw, skill) and the Spellcasting feature. The existing field 'skill_proficiencies' covers only skill proficiencies, not the full set. 'spellcasting_feature' does not exist at all. Both variants are needed.",
+      "evidence": "you retain your creature type; alignment; personality; Intelligence, Wisdom, and Charisma scores; Hit Points; Hit Point Dice; proficiencies; and ability to communicate. If you have the Spellcasting feature, you retain it too."
+    },
+    {
+      "kind": "new_variant",
+      "name": "transform_target — midDurationSwitchAs field for open-catalog re-form",
+      "justification": "Shapechange allows re-forming into a different eligible creature mid-duration using a Magic action, choosing freely from the open creature catalog each time. CastTimeEffectModeChoice.allowsMidDurationSwitchAs exists but only applies to switching among predefined authored mode options, not to an open catalog re-selection. transform_target needs a parallel field (e.g. midDurationSwitchAs?: 'magic_action') that signals open-catalog re-form at the action cost.",
       "evidence": "You shape-shift into another creature for the duration or until you take a Magic action to shape-shift into a different eligible form."
     }
   ],
   "confidence": "high",
-  "notes": "Shapechange's core mechanic — adopting another creature's stat block while selectively retaining personal attributes — has no honest home in the current four spell families. forcing it into ongoing_effect would require inventing an operation kind not in the closed OngoingOperation union. The temp HP on cast and the repeatable mid-spell form change are additional gaps. All three widenings are required together for an honest encoding. This pattern is shared with Polymorph (level 4) and True Polymorph (level 9), suggesting a form_transformation family is worth formalizing."
+  "notes": "The overall payload family is correct: ongoing_effect (concentration, 1h) with a direct phase applying transform_target to a self attachment, plus tempHpFromForm: true. The transform_target atom and its surrounding types exist; all three gaps are variants/fields missing from existing types. The 'must have seen the creature' constraint is DM-tracked eligibility context (not modeled). Equipment handling (drop vs resize) is DM-agenda."
 }

@@ -1,44 +1,114 @@
-# Carpet of Flying
+# Proposal: Carpet of Flying — surface widenings
 
-Outcome: `surface_widening`
+## Unit
 
-## Why it does not fit cleanly
+**Carpet of Flying** — Wondrous Item, Very Rare (SRD 5.2.1)
 
-`Carpet of Flying` is still a `magic_item`, but the current authored surface cannot represent its core mechanic honestly:
+## Outcome: `atom_widening`
 
-- The activation affects the carpet itself, not the bearer. `ActivationPhase.attachment` only allows `self`, `target`, `area`, or `mark`; there is no item/object attachment.
-- The item has four closed size profiles with different capacities and Fly Speeds, but `MagicItemRecord` has no variant/mode surface comparable to spell mode choice or creature mode choice.
-- The carpet's Fly Speed changes deterministically based on carried load, and the current surface has no thresholded load predicate for persistent item movement.
+The MagicItemRecord kind and variant-collection structure are clean fits. The activation family (Magic action, no attunement) exists. Four gaps prevent honest encoding:
 
-Because of those gaps, any authored JSON would have to lie by treating the carpet as:
+---
 
-- a self-buff on the user,
-- a creature companion,
-- or a single arbitrary size.
+## Gap 1 — `UseCountCap` lacks an "unlimited" variant
 
-All three would misstate the rule text.
+**RAW**: "You can make this carpet hover and fly by taking a Magic action."
 
-## Narrowest honest widenings
+`ActivatedAbilityMechanics` requires `resource: ActivationResource`, which requires a `UseCountCap`. The carpet has no per-use resource cost — it can be activated indefinitely. No existing `UseCountCap` variant expresses this:
 
-1. Add an item/object attachment variant for activation phases.
-   Evidence: "You can make this carpet hover and fly ... It moves according to your directions if you are within 30 feet of it."
+| Variant | Problem |
+|---|---|
+| `{ kind: "fixed", uses: N }` | Dishonest — there is no N |
+| `{ kind: "proficiency_bonus" }` | Unrelated to carpet mechanics |
+| `{ kind: "ability_modifier" }` | Unrelated |
 
-2. Add a closed variant/profile surface for magic items.
-   Evidence: "Four sizes of Carpet of Flying exist."
+**Proposed widening**: Add `{ kind: "unlimited" }` to `UseCountCap`. Paired with `resetCadence: { kind: "never" }` (nothing to reset). This pattern would also serve other always-activatable items (Flying Broom, similar vehicles) that have no per-activation resource.
 
-3. Add a load-conditioned movement rule for items.
-   Evidence: "its Fly Speed is halved if it carries more than its normal capacity."
+---
 
-## Why this is not `structural_widening`
+## Gap 2 — `grant_speed` is creature-targeted; the carpet is a vehicle
 
-The top-level unit still belongs under the existing `magic_item` kind. The failure is in missing surface variants for item-targeted movement and item profile data, not in the absence of a magic-item family altogether.
+**RAW**: "It moves according to your directions if you are within 30 feet of it. A carpet can carry up to twice the weight shown on the table."
 
-## Files intentionally not authored
+`grant_speed` grants a new speed mode to the effect's *creature* target. The carpet's primary mechanic is different:
+- The **item itself** has fly speed — it is the vehicle
+- Multiple passengers ride simultaneously and all travel at the carpet's speed
+- The carpet can be directed from 30 feet away without the commander riding it
 
-Per protocol, I did not create:
+Modeling this as `grant_speed` to `{ kind: "self" }` would capture a single-rider approximation but misrepresents:
+- Multi-passenger simultaneous benefit
+- Remote direction without occupancy
+- The carpet-as-vehicle (vs. caster-gains-wings) semantic
 
-- `content/magic_item_carpet_of_flying.dhall`
-- `content/magic_item_carpet_of_flying.json`
-- `content/magic_item_carpet_of_flying.trace.md`
+**Proposed widening**: A new `grant_vehicle_fly` effect atom (or a `grant_speed` variant with `target: "item"` + `passengerCapacity` field):
 
-Producing them would require a knowingly false encoding.
+```typescript
+| {
+    readonly kind: "grant_vehicle_fly";
+    readonly speedFeet: number;
+    readonly controlRangeFeet: number;
+  }
+```
+
+Alternatively, a new `ItemVehicleMechanics` family (analogous to `SpawnedCreatureMechanics`) if other magic vehicles surface sufficient pressure for a dedicated shape.
+
+---
+
+## Gap 3 — No conditional (load-predicated) speed modifier
+
+**RAW**: "its Fly Speed is halved if it carries more than its normal capacity"
+
+`set_speed_ratio` exists (`{ numerator: 1, denominator: 2 }` would express halving) but has no predicate field. There is no mechanism in the current surface to express "apply this speed ratio only when the item's load exceeds its capacity."
+
+**Proposed widening**: Add an optional `condition` field to `set_speed_ratio` (and potentially to `modify_speed`):
+
+```typescript
+| {
+    readonly kind: "set_speed_ratio";
+    readonly numerator: number;
+    readonly denominator: number;
+    readonly condition?: SpeedCondition;  // new
+  }
+```
+
+Where `SpeedCondition` would initially include:
+```typescript
+type SpeedCondition = { readonly kind: "overloaded" };
+```
+
+This concept is narrow enough to introduce on demand. Alternative: model the halved-speed variant as a separate authored entry on the vehicle mechanics with an "if overloaded" flag.
+
+---
+
+## Gap 4 — No control range on activated items
+
+**RAW**: "It moves according to your directions if you are within 30 feet of it."
+
+The 30-foot direction range governs whether the carpet responds to the activator's commands. There is no field on `ActivatedAbilityMechanics` or any effect atom for "control range" — a distance within which ongoing direction of an item effect remains active.
+
+This is lower priority (primarily narrative for adjudication) but does have a mechanical consequence: if you leave 30 feet, the carpet stops moving.
+
+**Proposed widening**: Add an optional `controlRangeFeet?: number` to `ActivatedAbilityMechanics` (or carry it on the new `grant_vehicle_fly` atom from Gap 2).
+
+---
+
+## Encoding plan once widenings land
+
+The 4 size variants map cleanly to `MagicItemRecord.variants`:
+
+| Variant | Speed | Normal Capacity |
+|---|---|---|
+| `carpet_of_flying_3x5` | 80 ft | 200 lb |
+| `carpet_of_flying_4x6` | 60 ft | 400 lb |
+| `carpet_of_flying_5x7` | 40 ft | 600 lb |
+| `carpet_of_flying_6x9` | 30 ft | 800 lb |
+
+The d100 determination is GM/structural (which carpet the party finds) and lives as prose, not as a mechanic. Each variant would use `ActivatedAbilityMechanics` with:
+- `activationCost: { kind: "standard_action", action: "magic" }`
+- `resource: { kind: "use_count", cap: { kind: "unlimited" } }` (Gap 1)
+- `resetCadence: { kind: "never" }`
+- `phases: [{ kind: "direct", attachment: { kind: "self" }, effects: [{ kind: "grant_vehicle_fly", speedFeet: X, controlRangeFeet: 30 }] }]` (Gap 2 + 4)
+
+The load-conditional halving (Gap 3) would add a second effect in each variant's effects list.
+
+No attunement. `destruction: { kind: "none" }`.

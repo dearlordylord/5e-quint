@@ -13,11 +13,11 @@
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "EquipmentPredicate / per-grant class-level threshold",
-      "justification": "The Fiend Spells table grants different spells at warlock levels 3, 5, 7, and 9. PassiveMechanics.grants is a flat unconditional list — there is no mechanism to gate individual grants on reaching a minimum class level. The L5/7/9 rows (Fireball, Stinking Cloud; Fire Shield, Wall of Fire; Geas, Insect Plague) cannot be represented without a per-grant level predicate.",
-      "evidence": "when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared"
+      "name": "level_gated_grant",
+      "justification": "The Fiend Spells feature grants spells in four tiers keyed to warlock level (3, 5, 7, 9) within a single class feature record. PassiveMechanics.grants is a flat EffectAtom array with no per-grant class-level predicate. There is no existing EquipmentPredicate or other gate that expresses 'this grant activates only when class level >= N'.",
+      "evidence": "| Warlock Level | Spells |\n|---|---|\n| 3 | Burning Hands, Command, Scorching Ray, Suggestion |\n| 5 | Fireball, Stinking Cloud |\n| 7 | Fire Shield, Wall of Fire |\n| 9 | Geas, Insect Plague |"
     }
   ],
   "confidence": "high",
-  "notes": "The L3 row (Burning Hands, Command, Scorching Ray, Suggestion) encodes cleanly as passive grant_spell_access(prepared). The full feature spans levels 3/5/7/9; encoding only L3 is honest for this slug but incomplete for the feature as a whole. The gap is in PassiveMechanics: grants have no per-entry class-level threshold variant — EquipmentPredicate covers equipment state only, not character/class level advancement."
+  "notes": "The L3 tier (Burning Hands, Command, Scorching Ray, Suggestion) encodes cleanly as four grant_spell_access atoms with mode='prepared' in a passive mechanic, and the trace is clean. The L5/L7/L9 spell tiers are intentionally omitted: the surface has no mechanism to express per-grant class-level gates within a single PassiveMechanics record. The widening needed is a class-level predicate on individual grants (or a new ThresholdTiers-style grant-list scaling variant). This is a common 5e 2024 pattern for subclass spell lists."
 }

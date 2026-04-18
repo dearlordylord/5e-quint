@@ -1,34 +1,34 @@
 {
   "unit_slug": "scrying",
-  "outcome": "surface_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "Effect.grant_sense",
-      "justification": "The on-fail effect of the save gate creates an invisible intangible sensor granting remote sight and hearing. The v4 taxonomy has grant_sense as an atom, but the Effect union only has damage and none — no sensing/creation variant exists in the surface types.",
+      "kind": "new_atom",
+      "name": "scrying_sensor",
+      "justification": "Scrying creates an invisible, intangible sensor near the target through which the caster can see and hear. This is fundamentally distinct from the 'detect' atom (radial presence-scanning) — it is a persistent remote-viewing link that follows the subject creature for the concentration duration. No existing v4 atom covers creating and perceiving through a projected mobile sensor.",
       "evidence": "On a failed save, the spell creates an Invisible, intangible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration."
     },
     {
       "kind": "new_variant",
-      "name": "DcSource.contextual_save_modifier",
-      "justification": "Scrying's Wisdom save is modified by two independent contextual tables: the caster's knowledge of the target (Secondhand +5, Firsthand +0, Extensive −5) and the caster's physical connection to the target (picture −2, garment −4, body part −10). DcSource has only caster_spell_save_dc and weapon_attack_dc with no facility for additive modifiers to the target's roll or effective DC.",
-      "evidence": "The target makes a Wisdom saving throw, which is modified (see the tables below) by how well you know the target and the sort of physical connection you have to it. [Secondhand +5, Firsthand +0, Extensive −5; picture −2, garment −4, body part −10]"
+      "name": "DcSource: save_dc_with_cast_time_modifier",
+      "justification": "Scrying's Wisdom save DC is the caster's spell save DC adjusted by two independent cast-time choices from tables (familiarity: +5/+0/-5; connection: -2/-4/-10). Current DcSource variants (caster_spell_save_dc, fixed, weapon_attack_dc, innate_dc) have no mechanism for a base DC plus additive cast-time-chosen modifiers. A new variant such as { kind: 'caster_spell_save_dc_with_modifier', modifier: number } or a cast-time choice of modifiers is required.",
+      "evidence": "The target makes a Wisdom saving throw, which is modified (see the tables below) by how well you know the target and the sort of physical connection you have to it."
     },
     {
       "kind": "new_variant",
-      "name": "SaveSuccessEffect.reuse_lock",
-      "justification": "On a successful save the caster cannot target that creature with this spell again for 24 hours. No existing surface type represents a per-target temporal reuse restriction gated on a save outcome.",
-      "evidence": "On a successful save, the target isn't affected, and you can't use this spell on it again for 24 hours."
-    },
-    {
-      "kind": "new_variant",
-      "name": "Attachment.location_or_target",
-      "justification": "Scrying allows the caster to target either a creature (via the save_gate path) or a seen location (no save, sensor placed at location). No existing Attachment or ActivationPhase variant supports a mutually exclusive creature-vs-location targeting choice at cast time.",
+      "name": "Attachment: location (general, not AnchorTarget)",
+      "justification": "Scrying can alternatively target a visible location instead of a creature. The Attachment union has no 'location' kind for activation/ongoing contexts ('location' exists only on AnchorTarget for the anchored_trigger family). A general-purpose 'location' Attachment variant is needed for divination spells that plant sensors at known places.",
       "evidence": "Instead of targeting a creature, you can target a location you have seen. When you do so, the sensor appears at that location and doesn't move."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SaveSuccessOutcome: timed_reuse_ban",
+      "justification": "On a successful save the caster is barred from casting Scrying on the same target for 24 hours. No existing save success outcome covers a time-gated reuse restriction. This is distinct from 'none' (which just means no effect) — the restriction is a secondary consequence of a successful defense.",
+      "evidence": "On a successful save, the target isn't affected, and you can't use this spell on it again for 24 hours."
     }
   ],
   "confidence": "high",
-  "notes": "The activation family with a save_gate phase is the right structural fit. CastingTime.minutes (10 min) is already in the surface. Concentration duration is supported. The primary blocker is the on-fail effect: grant_sense (remote sensor) is not a valid Effect variant — only damage and none exist in the surface Effect union. grant_sense IS in v4 taxonomy, so this is surface_widening not atom_widening. Secondary gaps: contextual save modifiers from knowledge/connection tables (novel DcSource shape), 24-hour per-target reuse lock on success, and the alternative location targeting mode. All four gaps are new variants of existing surface types."
+  "notes": "Scrying is not authored as dhall because its core on-fail effect — creating a remote perception sensor that follows the target — has no honest encoding. The 'detect' atom covers presence-scanning; Scrying is a persistent, mobile, two-way sensory link. The variable DC (spell save DC + cast-time table modifiers) is also not expressible in DcSource. Three additional widenings (variable DC, location attachment, timed reuse ban on success) are secondary but also genuine gaps. All four are surface-widening or atom-widening in scope; none requires a new top-level payload family."
 }

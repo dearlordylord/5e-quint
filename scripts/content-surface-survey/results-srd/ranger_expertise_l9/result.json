@@ -1,22 +1,22 @@
 {
   "unit_slug": "ranger_expertise_l9",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive family for ClassFeatureMechanics",
-      "justification": "Expertise is a permanent, one-time proficiency upgrade with no activation cost, no use-count resource, and no rest reset. The only existing ClassFeatureMechanics family is 'activation', which requires all three of those fields. Forcing this into 'activation' would produce a dishonest trace (no quota consumed, no resource pool, no rest window).",
-      "evidence": "Choose two of your skill proficiencies with which you lack Expertise. You gain Expertise in those skills."
+      "kind": "new_variant",
+      "name": "ProficiencyGrantSubject.expertise",
+      "justification": "Expertise (double PB on skill checks) is mechanically distinct from regular proficiency (single PB). The current ProficiencyGrantSubject union only has 'skill' (proficiency), 'weapon_category', and 'armor_category'. There is no way to express 'expertise in a skill' versus 'proficiency in a skill'. A new variant { kind: 'skill_expertise'; skill: Skill } (or a level field on the existing skill variant) is needed to honestly encode this.",
+      "evidence": "You gain Expertise in those skills."
     },
     {
       "kind": "new_variant",
-      "name": "grant_proficiency variant of ClassFeatureEffect",
-      "justification": "The v4 atom 'grant_proficiency' exists in the taxonomy but is absent from the ClassFeatureEffect union (which only has grant_extra_action and heal_hp). Expertise specifically grants double-proficiency (Expertise) on chosen skills, which maps to grant_proficiency with a subtype or modifier indicating expertise-level.",
-      "evidence": "You gain Expertise in those skills. [Expertise = proficiency bonus doubled on those skill checks]"
+      "name": "ProficiencyGrant.from_existing_proficiencies",
+      "justification": "The Expertise grant requires the player to choose from skills they are already proficient in. The current ProficiencyGrant.choice variant requires a static options list authored at content-creation time. A new choice mode that expresses 'choose N from your currently proficient skills' is needed to honestly encode the character-state-dependent selection.",
+      "evidence": "Choose two of your skill proficiencies with which you lack Expertise."
     }
   ],
   "confidence": "high",
-  "notes": "Expertise is structurally analogous to Rogue L1 Expertise and Bard L2 Expertise — all are permanent passive proficiency upgrades acquired at character progression milestones. A new 'passive' (or 'permanent_grant') family is needed for ClassFeatureMechanics to handle features that neither activate nor consume resources. The secondary gap (grant_proficiency not in ClassFeatureEffect) would need to be addressed alongside the new family. Both are needed together before a clean encoding is possible."
+  "notes": "The passive family and class_feature kind both fit. The only gaps are in the proficiency surface: (1) no expertise tier in ProficiencyGrantSubject, and (2) no character-state-dependent choice mode for proficiency grants. Both are variants of existing shapes, not new v4 atoms. No Dhall/JSON authored because the surface cannot honestly encode the expertise grant."
 }

@@ -1,28 +1,22 @@
 {
   "unit_slug": "monk_unarmored_defense_l1",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive family for ClassFeatureMechanics",
-      "justification": "Unarmored Defense is always-on with no activation step, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires activationCost/resource/resetCadence — none of which apply here. A 'passive' (or 'inherent') family is needed to represent features that apply persistently without being used.",
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.not_wielding_shield",
+      "justification": "Monk Unarmored Defense is conditioned on 'not wearing armor OR wielding a Shield'. The current EquipmentPredicate has 'unarmored' (covers no armor) but no predicate for 'not wielding a shield'. Shield is not a weapon, so wielding_weapon doesn't apply. Barbarian Unarmored Defense has no shield restriction, so this cannot fold into the existing 'unarmored' sentinel without changing its semantics.",
       "evidence": "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
     },
     {
       "kind": "new_variant",
-      "name": "set_base_ac_formula effect for ClassFeatureEffect",
-      "justification": "The feature replaces the creature's base AC with a formula referencing two named ability modifiers (DEX + WIS) rather than applying a flat delta. No existing ClassFeatureEffect (grant_extra_action, heal_hp) or ReactionEffect (modify_ac with flat delta) can express this. A new effect variant is needed that takes a base integer and a list of ability modifiers to sum.",
+      "name": "modify_ac_set_base with two ability modifiers",
+      "justification": "ModifyAcSetBaseEffect is { const: number, abilityMod: Ability } — a single ability modifier. Monk Unarmored Defense requires base AC = 10 + DEX mod + WIS mod, which is two modifiers in a unified base formula. Composing modify_ac_set_base (10 + DEX) + modify_ac (+WIS) is numerically equivalent but semantically wrong: it represents 'base is 10+DEX, plus an additive WIS bonus' rather than 'base is 10+DEX+WIS', which interacts differently with mechanics that replace or read the base AC. The type needs either a second optional abilityMod field or a new two-modifier variant.",
       "evidence": "your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers"
-    },
-    {
-      "kind": "new_variant",
-      "name": "equipment_condition predicate for passive features",
-      "justification": "The AC formula only applies when the monk is not wearing armor and not wielding a Shield. This 'while not equipped with X' conditional has no surface representation. A predicate type is needed to gate passive effects on equipment state.",
-      "evidence": "While you aren't wearing armor or wielding a Shield"
     }
   ],
   "confidence": "high",
-  "notes": "The fundamental blocker is the missing passive family — no variant of the existing 'activation' family can honestly represent a feature with no activation step. The AC formula and equipment condition widening are secondary but required. Compare Barbarian Unarmored Defense (same shape: 10 + CON + DEX) — both units will need this widening."
+  "notes": "The unit is structurally a passive class_feature — family 'passive' with an EquipmentPredicate condition and a modify_ac_set_base grant. Both mechanics families exist. Two surface variants are missing: (1) a not_wielding_shield predicate, and (2) two-ability-modifier support in modify_ac_set_base. The Barbarian's Unarmored Defense (10 + DEX + CON) faces the same second gap. Neither gap can be worked around without producing a misleading trace."
 }

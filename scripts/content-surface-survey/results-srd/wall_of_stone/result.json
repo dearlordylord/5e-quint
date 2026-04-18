@@ -1,40 +1,35 @@
 {
   "unit_slug": "wall_of_stone",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "composite",
+    "concentrate",
+    "concentration_lock",
+    "create_object",
+    "direct_apply",
+    "expire",
+    "force_move",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "create_object — OngoingOperation variant",
-      "justification": "The spell's primary mechanic is spawning a persistent physical object (the stone wall) with AC, HP, and damage immunities. OngoingOperation only covers roll_modifier and damage_on_hit; there is no operation for object creation.",
-      "evidence": "A nonmagical wall of solid stone springs into existence at a point you choose within range."
-    },
-    {
-      "kind": "new_variant",
-      "name": "object_stats — new surface shape for created objects",
-      "justification": "Created objects need AC, HP formula (HP per inch of thickness), and damage type immunities recorded as part of the record. None of these fields exist in any current Effect or Attachment shape.",
-      "evidence": "Each panel has AC 15 and 30 Hit Points per inch of thickness, and it has Immunity to Poison and Psychic damage."
-    },
-    {
-      "kind": "new_variant",
-      "name": "placement_displacement — automatic force_move without save or roll",
-      "justification": "When the wall appears, any creature in the intersected space is pushed automatically to one side — no save, no attack roll, caster chooses which side. This is a geometric displacement keyed on object placement, not expressible as an on_hit_window or save_gate effect. The v4 force_move atom exists but the surface has no shape for placement-triggered automatic displacement.",
-      "evidence": "If the wall cuts through a creature's space when it appears, the creature is pushed to one side of the wall (you choose which side)."
-    },
-    {
-      "kind": "new_variant",
-      "name": "target_reaction_escape — save_gate where on-success grants target a Reaction move",
-      "justification": "The enclosure DEX save grants the surrounded creature the option to spend its own Reaction to move up to its Speed. Existing save_gate mechanics are caster-rooted; there is no surface shape for a save outcome that grants the target a Reaction-cost action.",
-      "evidence": "If a creature would be surrounded on all sides by the wall... that creature can make a Dexterity saving throw. On a success, it can use its Reaction to move up to its Speed so that it is no longer enclosed by the wall."
-    },
-    {
-      "kind": "new_variant",
-      "name": "concentrate_to_permanent — Duration variant for conditional permanence",
-      "justification": "Maintaining concentration for the full 10-minute duration causes the wall to become permanent and non-dispellable. The current Duration union (instantaneous / concentration-upTo / timed) has no variant that expresses 'if concentration completes without breaking, the object persists permanently.' This is a distinct lifecycle transition with no current representation.",
-      "evidence": "If you maintain your Concentration on this spell for its full duration, the wall becomes permanent and can't be dispelled. Otherwise, the wall disappears when the spell ends."
+      "kind": "new_atom",
+      "name": "grant_reaction_move",
+      "justification": "The surrounded-creature mechanic requires granting the target permission to use their Reaction to move up to their Speed to escape enclosure. No existing EffectAtom covers (a) consuming the target's Reaction resource and (b) granting movement up to the target's Speed. force_move is involuntary (caster-driven); this is player-optional and Reaction-costed. A new atom is needed to represent 'target may use their Reaction to move up to their Speed' as the onSuccess result of the save_gate.",
+      "evidence": "On a success, it can use its Reaction to move up to its Speed so that it is no longer enclosed by the wall."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker: no create_object operation exists in OngoingOperation, and no object-stats shape exists in Effect or any existing surface type. The v4 taxonomy lists create_object as an effect atom but the surface schema has not been widened to expose it. Secondary blockers are all real and independent: automatic placement-displacement (no save), a conditional permanence lifecycle (concentration-to-permanent), and a target-owned Reaction escape on save success. All four gaps require new surface variants; none can be coerced into the existing schema without producing a false trace."
+  "notes": "Core mechanics encode cleanly: create_object (AC 15, 30 HP/inch, poison+psychic immunity) + force_move push for creatures in the wall's path + concentration with permanentIfMaintainedFull. The surrounded-creature save_gate is omitted because the onSuccess result ('use Reaction to move up to Speed') has no matching EffectAtom; using none for onSuccess would be dishonest. The wall's arbitrary geometry is approximated as a line 100×10 ft (10 panels of 10×10 ft default configuration)."
 }

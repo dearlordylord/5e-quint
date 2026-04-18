@@ -1,28 +1,16 @@
 {
   "unit_slug": "paladin_aura_of_courage_l10",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_aura (class-feature family)",
-      "justification": "Aura of Courage is always-on: no activation cost, no use count, no reset cadence. The single existing class-feature family ('activation') requires all three, making any encoding dishonest. A 'passive_aura' family is needed whose mechanics header carries only an aura scope (radius + reference to the named aura) and a persistent effect.",
-      "evidence": "You and your allies have Immunity to the Frightened condition while in your Aura of Protection."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_condition_immunity",
-      "justification": "The feature grants Immunity (not resistance) to the Frightened condition. The v4 atom inventory has 'grant_resistance' and 'apply_condition'/'remove_condition', but Immunity is a distinct game concept in SRD 5.2.1 (separate rule tier from resistance). No existing v4 effect atom covers it.",
-      "evidence": "You and your allies have Immunity to the Frightened condition while in your Aura of Protection."
-    },
-    {
       "kind": "new_variant",
-      "name": "aura_scope attachment for class features",
-      "justification": "The aura's spatial scope ('while in your Aura of Protection') is a named, always-active radius around the paladin. The current Attachment union (self / target / area / mark) is designed for spells with cast-time targeting. Class feature auras need a distinct attachment variant that references a named aura by id and a radius, without a one-time selection.",
-      "evidence": "while in your Aura of Protection / If a Frightened ally enters the aura"
+      "name": "PassiveMechanics.auraScope",
+      "justification": "The Aura of Courage grants frightened immunity to the paladin AND all allies within a 10-ft emanation. PassiveMechanics has no attachment or area scope concept — its grants are implicitly bearer-only. Encoding just the bearer's immunity produces a provably false trace that omits the defining mechanic of the feature.",
+      "evidence": "You and your allies have Immunity to the Frightened condition while in your Aura of Protection. If a Frightened ally enters the aura, that condition has no effect on that ally while there."
     }
   ],
   "confidence": "high",
-  "notes": "All three gaps are required simultaneously — the missing family is the primary blocker, but a clean encoding also requires the immunity effect atom and the aura-scope attachment variant. The unit is otherwise structurally simple (no activation, no resources, no scaling). The 'If a Frightened ally enters the aura' clause is a clarification of the always-on suppression, not a separate trigger, so it does not add further widening pressure beyond the aura-scope attachment."
+  "notes": "PassiveMechanics and grant_condition_immunity both now exist (gaps from the older aura_of_devotion proposal were since closed). The sole remaining gap is that PassiveMechanics has no optional area/aura attachment to express 'grants apply to friendly creatures within N-ft emanation of the bearer'. An analogous concept exists for spells (ongoing_effect with area attachment + occupantDispositionFilter: friendly_to_source), but is unavailable to class features. A new optional field on PassiveMechanics — e.g. auraScope: { kind: 'emanation', radiusFeet: number, occupants: 'friendly_to_source' } — would close this gap and cover all paladin aura features (Aura of Protection L6, Aura of Courage L10, Aura Expansion L18, subclass auras)."
 }

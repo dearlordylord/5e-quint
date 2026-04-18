@@ -1,0 +1,52 @@
+{
+  "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. The first time you attack with the weapon on each of your turns, you can transfer some or all of the weapon's bonus to your Armor Class. For example, you could reduce the bonus to your attack rolls and damage rolls to +1 and gain a +2 bonus to Armor Class. The adjusted bonuses remain in effect until the start of your next turn, although you must hold the weapon to gain a bonus to AC from it.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_defender",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 3,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_roll_numeric",
+        "on": [
+          "attack_roll"
+        ],
+        "weaponFilter": {
+          "itemId": "magic_item_defender",
+          "kind": "specific_item"
+        }
+      },
+      {
+        "delta": {
+          "dice": 3,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_damage_numeric",
+        "weaponFilter": {
+          "itemId": "magic_item_defender",
+          "kind": "specific_item"
+        }
+      }
+    ]
+  },
+  "name": "Defender",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Defender"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": true
+}

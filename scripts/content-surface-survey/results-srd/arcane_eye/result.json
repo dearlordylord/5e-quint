@@ -1,28 +1,22 @@
 {
   "unit_slug": "arcane_eye",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "conjure_sensor (new spell family)",
-      "justification": "Arcane Eye creates a persistent, movable conjured sensor object that continuously delivers sensory information to the caster. No existing spell family covers this pattern: ongoing_effect is for roll-modifying or damage-on-hit effects on creature attachments; activation requires attack/save phases; triggered_reaction and anchored_trigger have wrong trigger/release structures. A new family (or substantially extended operation vocabulary) is needed to represent the create-object + grant-sense + command-object lifecycle.",
-      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction."
+      "kind": "new_atom",
+      "name": "grant_remote_vision",
+      "justification": "The spell's core mechanic is that the caster mentally receives continuous visual information from the created sensor eye. No existing atom covers this: `detect` scans for named properties (magic, evil, poison, thoughts) within a radius — it is not a vision relay. `grant_sense` grants a sense (darkvision, blindsight, etc.) to a creature, not to a conjured sensor, and does not model the caster-receives-from-sensor direction. A new atom is needed to express 'caster perceives through attached sensor as if present at its location', including the sensor's own sense capabilities.",
+      "evidence": "You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet."
     },
     {
       "kind": "new_variant",
-      "name": "create_sensor_object — new OngoingOperation kind backed by v4 create_object + grant_sense",
-      "justification": "OngoingOperation supports only roll_modifier and damage_on_hit. Neither represents 'conjure a persistent sensor object at a location that relays sensory information to the caster'. A new operation kind is needed; v4 already names create_object and grant_sense as atoms, but types.ts exposes neither in any Effect or OngoingOperation variant.",
-      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet."
-    },
-    {
-      "kind": "new_variant",
-      "name": "command_object — recurring Bonus Action cost to move the conjured object",
-      "justification": "The caster spends a Bonus Action on each turn to move the eye up to 30 ft. No existing spell mechanics structure captures a recurring action-cost substructure for commanding a conjured object. Class features have activationCost but spell families have no such recurring-command representation.",
-      "evidence": "As a Bonus Action, you can move the eye up to 30 feet in any direction."
+      "name": "sensor attachment variant for Attachment",
+      "justification": "The eye is a conjured point-sensor: a created, mobile, invisible object that exists at a specific location in the world. None of the existing Attachment variants fit cleanly — `area` with radiusFeet=0 is semantically wrong (not a region), `object` targets existing objects rather than created ones, `self` is the caster, and `companion` is for creatures. A `sensor` or `location` (zero-dimensional) attachment variant is needed for spells that plant a mobile conjured probe at a world point. Note: `AnchorTarget` already has a `location` kind for anchored_trigger, but it is not available in the main `Attachment` union.",
+      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration."
     }
   ],
   "confidence": "high",
-  "notes": "The shared content pool in worker 1119861-eldritch_blast already contains an arcane_eye.json that force-fits this spell into ongoing_effect using a vacuous roll_modifier (on: [], dice: 0). That is a known-dishonest placeholder and this worker declines to reproduce it. The unit requires a new structural pattern for conjured-sensor spells."
+  "notes": "Prior run (structural_widening) was based on an older surface that lacked `reposition_attachment` and `on_caster_spends_action`. Those atoms now exist, so the `ongoing_effect` family can structurally host the spell. The Bonus Action movement mechanic — `on_caster_spends_action` (bonus_action) + `reposition_attachment` (maxMoveFeet: 30) — fits cleanly. The remaining blocker is the missing remote-vision atom: a trace without it would show only movement with nothing about the spell's actual purpose. No Dhall authored per guardrails (core mechanic cannot be honestly expressed)."
 }

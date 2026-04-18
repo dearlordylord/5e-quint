@@ -1,28 +1,31 @@
 {
   "unit_slug": "resistance",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "reduce_damage_taken",
+    "spell_root",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_atom",
-      "name": "reduce_damage_taken",
-      "justification": "Resistance reduces incoming damage of a chosen type by a rolled 1d4. This is distinct from grant_resistance (which halves damage) and from any existing ongoing operation. It requires a new atom for incoming-damage interception via a dice expression, triggered when the affected creature receives damage of a specific type.",
-      "evidence": "When the creature takes damage of the chosen type before the spell ends, the creature reduces the total damage taken by 1d4."
-    },
-    {
       "kind": "new_variant",
-      "name": "reduce_damage_on_receive (new OngoingOperation variant)",
-      "justification": "The OngoingOperation union (RollModifierOperation | DamageOnHitOperation) has no variant for 'when target receives damage of type X, reduce it by dice amount'. A new variant is needed that specifies: a damage type filter (chosen at cast), a reduction amount (DiceAmount), and a per-turn limit.",
-      "evidence": "You touch a willing creature and choose a damage type... the creature reduces the total damage taken by 1d4. A creature can benefit from this spell only once per turn."
-    },
-    {
-      "kind": "new_variant",
-      "name": "cast_time_choice (damage type chosen at cast)",
-      "justification": "The spell requires the caster to choose a damage type at cast time, which then gates the trigger. The surface has no mechanism to represent a caster-selected filter parameter on an ongoing operation. This is a narrower surface gap than the atom gap but co-required.",
-      "evidence": "You touch a willing creature and choose a damage type: Acid, Bludgeoning, Cold, Fire, Lightning, Necrotic, Piercing, Poison, Radiant, Slashing, or Thunder."
+      "name": "reduce_damage_taken.count",
+      "justification": "The spell text says 'A creature can benefit from this spell only once per turn.' This per-turn cap on activations of the damage reduction is not expressible on the current reduce_damage_taken atom. The parallel field on modify_roll_numeric (count: number) directly covers this pattern.",
+      "evidence": "A creature can benefit from this spell only once per turn."
     }
   ],
   "confidence": "high",
-  "notes": "The ongoing_effect family, target attachment (touch, one creature), concentration duration, and spell header all map cleanly. The sole blocker is the operation: no OngoingOperation variant models incoming-damage reduction by a dice expression. The v4 taxonomy acknowledges reduce_damage_taken as a deferred candidate (§12 known weak spots) that was not promoted. The once-per-turn limit is a secondary gap but also unrepresentable in the current surface."
+  "notes": "The primary mechanic (reduce damage taken by 1d4 for a cast-time chosen damage type, concentration 1 min, touch) encodes cleanly with the existing reduce_damage_taken atom and CastTimeChoice<DamageType>. The only gap is the once-per-turn limiter: reduce_damage_taken has no count field, unlike modify_roll_numeric which already has one. The JSON typechecks and the tracer produces a valid graph; the encoding is honest about what it expresses and omits only the per-turn cap."
 }

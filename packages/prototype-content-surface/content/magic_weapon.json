@@ -1,0 +1,75 @@
+{
+  "description": "You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls. The spell ends early if you cast it again. Using a Higher-Level Spell Slot: The bonus increases to +2 with a level 3-5 spell slot. The bonus increases to +3 with a level 6+ spell slot.",
+  "id": "magic_weapon",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "count": 1,
+      "kind": "object"
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_recasts_spell"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "delta": {
+            "dice": 1,
+            "dieSize": 1,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_roll_numeric",
+          "on": [
+            "attack_roll"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "delta": {
+            "dice": 1,
+            "dieSize": 1,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_damage_numeric"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "transmutation"
+  },
+  "name": "Magic Weapon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-R#Magic Weapon"
+  }
+}

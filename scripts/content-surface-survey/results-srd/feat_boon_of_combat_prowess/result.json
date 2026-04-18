@@ -5,30 +5,24 @@
   "relations_used": [],
   "proposed_widenings": [
     {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.bearer_misses_attack_roll",
+      "justification": "Peerless Aim fires when the feat holder misses with an attack roll they made. No existing ReactionTrigger variant covers an outgoing miss by the bearer — the current vocabulary only covers incoming events (hit_by_attack_roll, targeted_by_named_spell, creature_casts_spell, spell_save_outcome).",
+      "evidence": "When you miss with an attack roll, you can hit instead."
+    },
+    {
       "kind": "new_atom",
       "name": "convert_miss_to_hit",
-      "justification": "Peerless Aim lets the bearer retroactively declare that a missed attack roll hits instead. No existing EffectAtom models post-roll outcome substitution — this is distinct from modify_roll_numeric (pre-roll delta), modify_roll_advantage (advantage/disadvantage), and modify_crit_range (crit threshold). It is a retroactive roll-outcome override, a new concept not present in v4.",
+      "justification": "Peerless Aim retroactively changes the outcome of the triggering attack roll from a miss to a hit. No existing EffectAtom models outcome override of a resolved attack roll. This is distinct from modify_roll_numeric (adds a bonus before resolution), modify_roll_advantage (changes the roll method), and reroll idioms — it unconditionally flips the binary hit/miss result after the fact.",
       "evidence": "When you miss with an attack roll, you can hit instead."
     },
     {
       "kind": "new_variant",
-      "name": "ReactionTrigger.caster_misses_attack_roll",
-      "justification": "Peerless Aim fires when the bearer misses with their own attack roll. ReactionTrigger currently covers: hit_by_attack_roll (incoming), targeted_by_named_spell, creature_casts_spell, spell_save_outcome, any_of — none covers the bearer's own outgoing attack missing.",
-      "evidence": "When you miss with an attack roll, you can hit instead."
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_ability_score.ability: Ability | CastTimeChoice<Ability>",
-      "justification": "The ASI on this feat says 'one ability score of your choice' — a build-time open selection over all six abilities. modify_ability_score.ability is typed as Ability (fixed). Needs widening to Ability | CastTimeChoice<Ability> to represent player-picks-any-ability grants.",
+      "name": "modify_ability_score with ability: Ability | CastTimeChoice<Ability>",
+      "justification": "The Ability Score Increase sub-feature grants +1 to an ability score of the player's choice (max 30). The current modify_ability_score atom requires a fixed Ability value; it does not support a player-chosen ability. A CastTimeChoice<Ability> extension (paralleling DamageTypeRef = DamageType | CastTimeChoice<DamageType>) would cover this pattern, which recurs across all Epic Boon feats.",
       "evidence": "Increase one ability score of your choice by 1, to a maximum of 30."
-    },
-    {
-      "kind": "new_variant",
-      "name": "CompositeFeatMechanics",
-      "justification": "The feat has both a passive grant (ASI) and an activated ability (Peerless Aim). FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics — no composite form. CompositeClassFeatureMechanics exists for class features; the same pattern is needed for feats.",
-      "evidence": "Ability Score Increase [...] Peerless Aim. When you miss with an attack roll, you can hit instead."
     }
   ],
   "confidence": "high",
-  "notes": "The blocking gap is the convert_miss_to_hit atom — a retroactive post-roll outcome override with no analog in v4. The Peerless Aim trigger (caster misses own attack) is also absent from ReactionTrigger. Additionally: the ASI part needs CastTimeChoice<Ability> in modify_ability_score, and the dual-mechanic structure (passive ASI + activated Peerless Aim) needs a CompositeFeatMechanics parallel to the existing CompositeClassFeatureMechanics. The once-per-turn reset cadence for Peerless Aim (usageLimit: once_per_turn) would fit the existing UsageLimit shape once the other gaps are filled."
+  "notes": "Peerless Aim is the primary blocker: both its trigger (bearer-outgoing miss) and its effect (flip miss to hit) are absent from the surface. The ASI sub-feature is a secondary surface_widening that recurs across all Epic Boon feats. No dhall/json/trace authored because no honest encoding exists."
 }

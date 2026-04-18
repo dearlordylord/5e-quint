@@ -1,88 +1,115 @@
-# Proposal: Widenings required for Prestidigitation
+# Proposal: surface widenings for Prestidigitation
 
-**Unit:** Prestidigitation (cantrip, Transmutation)
-**Outcome:** `structural_widening`
-**No dhall/JSON authored.** No existing payload family can honestly encode this spell.
+## Unit
 
----
+- Slug: `prestidigitation`
+- Kind: `spell` (cantrip, level 0, transmutation)
+- Outcome: `surface_widening`
 
-## Why no existing family fits
+## Why honest encoding is blocked
 
-Prestidigitation's structure is: *"At cast time, choose one of six distinct options."* Each option has its own effect type, attachment target, and duration. This is a **menu-dispatch spell** — structurally different from all four current families:
+Prestidigitation is a cast-time-choice spell: each cast picks one of 6 named effect modes. The surface can represent this structure via `activation → direct → CastTimeEffectModeChoice`. Five of the six options are purely narrative (no mechanical atoms); these map cleanly to options with `effects` omitted as caller/DM-owned narrative — explicitly supported by the surface.
 
-| Family | Problem |
-|---|---|
-| `ongoing_effect` | Requires a single operation (roll_modifier or damage_on_hit); Prestidigitation has neither |
-| `activation` | Phases must be `attack_roll` or `save_gate`; Prestidigitation has no rolls or saves |
-| `triggered_reaction` | Requires a reaction trigger; Prestidigitation is a standard Action |
-| `anchored_trigger` | Plants a deferred release; Prestidigitation options are not event-gated |
+The sixth option (Minor Creation) partially fits `create_object` (trinket) or `create_illusion` (illusory image), but two surface gaps prevent an honest encoding.
 
 ---
 
-## Required widenings
+## Gap 1 — Per-option duration in `CastTimeEffectModeChoice`
 
-### 1. New spell payload family: `choice_spell` (structural)
+### Rule text
 
-A family for "choose one of N options at cast time." Shape sketch:
+> Minor Creation: "It lasts until the end of your next turn."
+
+The spell's header duration is `timed: 1 hour`. Minor Sensation and Magic Mark are also timed but last the full 1 hour. Minor Creation specifically expires at the end of the caster's next turn — a much shorter window.
+
+### Current surface
+
+`CastTimeEffectModeChoice.options[]` has this shape:
 
 ```typescript
-export type ChoiceSpellMechanics = SpellMechanicsHeader & {
-  readonly family: "choice_spell";
-  readonly maxActiveNonInstantaneous?: number; // Prestidigitation: 3
-  readonly options: ReadonlyArray<ChoiceSpellOption>;
-};
+readonly options: ReadonlyNonEmptyArray<{
+  readonly id: string;
+  readonly displayName: string;
+  readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+}>;
+```
 
-export type ChoiceSpellOption = {
-  readonly name: string;
-  readonly attachment: Attachment;
-  readonly duration: Duration;        // per-option, may differ from header
-  readonly effect: ChoiceSpellEffect; // new effect union (see below)
+There is no `duration` field on each option. The host spell's `duration` applies uniformly to all operations/effects; individual options cannot declare a shorter expiry.
+
+Encoding `create_illusion` or `create_object` under the Minor Creation option without a per-option duration would make the tracer show a 1-hour lifecycle, which is factually wrong — the illusion/trinket lasts at most one full turn.
+
+### Proposed widening
+
+Add an optional `duration` field to `CastTimeEffectModeChoice` option entries:
+
+```typescript
+readonly options: ReadonlyNonEmptyArray<{
+  readonly id: string;
+  readonly displayName: string;
+  readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+  readonly duration?: Duration;   // NEW: expires earlier than host spell's duration
+}>;
+```
+
+Semantics: if present, the effects of this option expire when this duration elapses, even if the host spell is still active. Absent = governed by host spell's duration (existing behavior, unchanged).
+
+This also addresses Alter Self's mid-duration switch (`allowsMidDurationSwitchAs: "magic_action"`) for future options where switching modes creates a new effect window over an existing one.
+
+---
+
+## Gap 2 — Multi-instance concurrent active cap
+
+### Rule text
+
+> "If you cast this spell multiple times, you can have up to three of its non-instantaneous effects active at a time."
+
+Each cast of Prestidigitation is a separate activation. Non-instantaneous effects (Minor Sensation, Magic Mark, Minor Creation) from prior casts remain active alongside the new one. The cap of 3 simultaneous non-instantaneous instances is enforced across casts, not within a single cast.
+
+### Current surface
+
+No field on `ActivationMechanics`, `SpellMechanics`, or `OngoingEffectMechanics` expresses a per-spell-identity concurrent-instance limit. The surface tracks single-cast lifecycle; multi-cast stacking is outside its scope.
+
+### Proposed widening
+
+Add an optional `maxConcurrentInstances` field (or `maxConcurrentNonInstantaneousInstances`) to the relevant mechanics header:
+
+```typescript
+type SpellMechanicsHeader = {
+  ...
+  readonly maxConcurrentInstances?: {
+    readonly count: number;
+    readonly scope: "non_instantaneous";  // closed: only value in SRD so far
+  };
 };
 ```
 
-The `maxActiveNonInstantaneous: 3` field captures the "up to three non-instantaneous effects active at a time" constraint.
+Semantics: if the caster activates a new instance that would exceed this cap, the oldest qualifying instance ends. The tracer would emit a lifecycle node (e.g., `replace_on_recast` extended for the N-instance case).
 
 ---
 
-### 2. New Effect variants (or new `ChoiceSpellEffect` union)
+## Gap 3 (minor) — Nested choice within Minor Creation
 
-The existing `Effect = DamageEffect | NoneEffect` union has no coverage for cosmetic/environmental effects. Required additions (or a parallel union for choice_spell):
+Minor Creation offers "a nonmagical trinket or an illusory image" — a use-time fork between `create_object` and `create_illusion`. The surface `CastTimeEffectModeChoice` explicitly supports only shallow options (no nested choice-of-choice). Even after Gap 1 is resolved, this fork would need either:
 
-| Effect kind | Prestidigitation option | Description |
-|---|---|---|
-| `create_sensory_effect` | Sensory Effect | Instantaneous harmless phenomenon (sparks, wind, sound, odor) |
-| `toggle_fire` | Fire Play | Light or extinguish a small fire source |
-| `alter_object_state` | Clean or Soil | Toggle object between two states (clean ↔ soiled) |
-| `modify_material_property` | Minor Sensation | Change temperature or flavor of nonliving material |
-| `apply_visual_mark` | Magic Mark | Place a color/mark/symbol on an object or surface |
-| `create_object` | Minor Creation | Create a physical object or illusory image (v4 atom exists but absent from surface) |
+- A second level of `CastTimeEffectModeChoice` nesting (not supported), or
+- Both atoms listed as `effects` with `create_object` and `create_illusion` in parallel (ambiguous — not how parallel effects work), or
+- A new `CastTimeChoice<EffectAtom>` concept within an option's effects list.
 
-All of these are **deterministic** (not DM-adjudicated). They just operate outside the combat-engine scope (no HP, conditions, or roll modifiers).
+This is a narrower pressure (single unit, single option) and could be deferred by representing Minor Creation as narrative-only until nested choices are supported.
 
 ---
 
-### 3. New Attachment kinds: `object` and `surface`
+## Encoding path once gaps are resolved
 
-Several options target objects or surfaces, not creatures:
+```
+spell_root → activate → direct_apply [phase 1]
+  → choose (6 options):
+      Sensory Effect     → (narrative, no mechanical payload)
+      Fire Play          → (narrative, no mechanical payload)
+      Clean or Soil      → (narrative, no mechanical payload)
+      Minor Sensation    → (narrative, no mechanical payload, duration: 1h)
+      Magic Mark         → (narrative, no mechanical payload, duration: 1h)
+      Minor Creation     → create_object | create_illusion, duration: end_of_next_turn
+```
 
-- `Clean or Soil` → object (≤ 1 cubic foot)
-- `Minor Sensation` → material (nonliving, ≤ 1 cubic foot)
-- `Magic Mark` → object or surface
-
-The v4 taxonomy has `object` and `location` attachment atoms, but `Attachment` in the surface type only covers `self`, `target`, `area`, `mark`.
-
----
-
-## Scope note
-
-`create_object` is already in the v4 atom taxonomy but absent from `surface/types.ts`. The other effect kinds are genuinely new and may require new v4 atom additions. Minimum promotion to surface vocabulary before Prestidigitation can be encoded:
-
-1. `choice_spell` family (structural)
-2. At least the cosmetic effect variants needed (surface_widening × 5–6)
-3. `object` attachment kind (surface_widening)
-
----
-
-## Effects that might qualify as `dm_agenda` in a narrower model
-
-If a future design chose to model only a subset (e.g., `Minor Creation`'s trinket constraints are deterministic; `Minor Sensation`'s duration is deterministic), the sensory/narrative effects (Sensory Effect, Fire Play, Clean or Soil) could be `dm_agenda` within a partial encoding. However, forcing a partial encoding while omitting options would misrepresent the spell's structure, so the whole unit is correctly `structural_widening`.
+The `maxConcurrentInstances: { count: 3, scope: "non_instantaneous" }` header field would emit a `replace_on_recast` (extended) lifecycle node.

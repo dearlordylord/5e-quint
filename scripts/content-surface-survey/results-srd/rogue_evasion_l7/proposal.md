@@ -1,98 +1,99 @@
-# Proposal: Evasion (rogue L7) — structural_widening
+# Proposal: `upgrade_save_damage_outcome` atom
 
 ## Unit
 
-- **Slug:** `rogue_evasion_l7`
-- **Kind:** `class_feature`
-- **Source:** SRD 5.2.1, Classes/Rogue — Level 7: Evasion
+**Rogue — Evasion (L7)** · `class_feature` · SRD 5.2.1
 
-## Why it does not fit
+## RAW text
 
-Evasion is a **passive class feature**: it fires automatically whenever the rogue is subjected to a Dexterity saving throw that would deal half damage on a success. It has no activation cost, no use count, and no reset cadence.
+> When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can't use this feature if you have the Incapacitated condition.
 
-The current surface defines:
+## Fit assessment
 
-```typescript
-export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
-```
+| Layer | Fit |
+|---|---|
+| `class_feature` kind | ✓ exists |
+| `passive` family | ✓ exists |
+| `suppressedBy: [{kind: "condition_active", conditions: ["incapacitated"]}]` | ✓ exists |
+| Core mechanic atom | ✗ **missing** |
 
-`ClassFeatureActivationMechanics` structurally requires all three of:
-- `activationCost` — free or bonus_action
-- `resource: UseCountResource` — a use count cap
-- `resetCadence: RestResetCadence`
+The `passive` family with `suppressedBy` handles all structural and lifecycle aspects of this feature. The sole blocker is the effect atom.
 
-None of these apply to Evasion. Encoding Evasion as an `activation` feature with `activationCost: free` and a fabricated use count would be a false trace — it would misrepresent a passive always-on feature as an expended activated ability.
+## Missing atom: `upgrade_save_damage_outcome`
 
-Additionally, the effect (negate damage on save success) is not in the closed `ClassFeatureEffect` union, which only contains `grant_extra_action` and `heal_hp`.
+### What it models
 
-## Gap 1 (structural): Missing `passive` family for `ClassFeatureMechanics`
+Evasion remaps the two damage tiers of a Dexterity-save-for-half-damage effect:
 
-Evasion is representative of an entire class of passive class features that:
-- fire automatically when a trigger condition is met
-- have no activation cost
-- have no use count or reset cadence
-- always-on unless gated by a condition (here: Incapacitated)
+| Save result | Without Evasion | With Evasion |
+|---|---|---|
+| Success | ½ damage | **0 damage** |
+| Failure | Full damage | **½ damage** |
 
-A new family — `passive` or `triggered_passive` — is needed:
+This is a passive, always-on (while not Incapacitated) remap of save outcome tiers.
 
-```typescript
-// Sketch:
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly trigger: ClassFeaturePassiveTrigger;
-  readonly conditionBlock?: ReadonlyArray<Condition>;  // optional gate
-  readonly effect: ClassFeaturePassiveEffect;
-};
+### Why no existing atom covers it
 
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveMechanics;
-```
+- **`grant_resistance`** — halves all incoming damage of a type unconditionally. Does not preserve the save-gated structure; it would halve damage on both success and failure, which is wrong.
+- **`modify_roll_advantage`** — changes the d20 roll, not the outcome mapping. Would give advantage on the save, not remap what the outcomes mean.
+- **`reduce_damage_taken`** — subtracts a fixed amount from incoming damage regardless of save outcome. Cannot represent "success = zero" without knowing the damage total at authoring time.
+- **`modify_roll_numeric`** — adds a bonus to the roll, not to the outcome tiers.
 
-The trigger grammar would need at minimum one variant:
+None of these express "for qualifying effects, shift both outcome tiers one level toward zero."
+
+### Proposed shape
 
 ```typescript
-export type ClassFeaturePassiveTrigger = {
-  readonly kind: "on_dex_save_half_damage";
-  // ... other triggers as pressure cases land
-};
+| {
+    readonly kind: "upgrade_save_damage_outcome";
+    // Narrows to saves of a specific ability. SRD Evasion is Dex only.
+    readonly saveAbility: Ability;
+    // Qualifier: only applies when the triggering effect's success
+    // outcome would normally be half damage. This scopes the atom to
+    // the "Dex save for half" family and avoids accidentally applying
+    // to e.g. a Dex save that deals full damage on success.
+    readonly qualifier: "half_damage_on_success";
+    // Result mapping (both are implied by the qualifier + atom semantics
+    // but made explicit for the tracer):
+    //   success: no_damage  (was: half)
+    //   failure: half_damage (was: full)
+  }
 ```
 
-## Gap 2 (atom): Missing `reduce_damage_taken` in v4 atom inventory
+### Encoding (if atom existed)
 
-Evasion's core effect on save success is: take **no damage** instead of half. This is mechanically distinct from `grant_resistance` (which halves damage). The effect is specifically:
-
-- On save **success**: take 0× damage (instead of ½×)
-- On save **failure**: take ½× damage (unchanged from default)
-
-The v4 taxonomy §12 already records this gap:
-
-> `reduce_damage_taken` distinct from `grant_resistance` — single-group pressure from class-feature reactions
-
-Evasion is exactly that pressure case — specifically the "negate damage on successful DEX save" shape. The proposed atom:
-
-```typescript
-export type ReduceDamageTakenEffect = {
-  readonly kind: "reduce_damage_taken";
-  readonly trigger: "dex_save_success" | ...;
-  readonly reduction: "full" | "half";
-};
+```dhall
+{ kind = "class_feature"
+, id = "rogue_evasion_l7"
+, name = "Evasion"
+, className = "rogue"
+, acquiredAtLevel = 7
+, provenance = { kind = "srd-5.2.1", section = "Classes/Rogue#Evasion" }
+, description = "..."
+, mechanics =
+    { family = "passive"
+    , suppressedBy =
+        [ { kind = "condition_active", conditions = [ "incapacitated" ] } ]
+    , grants =
+        [ { kind = "upgrade_save_damage_outcome"
+          , saveAbility = "dex"
+          , qualifier = "half_damage_on_success"
+          }
+        ]
+    }
+}
 ```
 
-Where `full` means take 0× (Evasion) and `half` means the normal resistance result.
+### Reuse surface
 
-## Gap 3 (surface variant, secondary): Condition use-block
+The same atom shape covers every SRD "Evasion-parity" feature:
 
-The feature text includes: "You can't use this feature if you have the Incapacitated condition."
+- **Rogue Evasion (L7)** — the primary case.
+- **Monk Evasion (L13)** — identical text, different class/level.
+- Future subclass features that grant the same tier-remap (e.g. certain Ranger subclass abilities).
 
-This is a condition-gating guard on the passive trigger — if the rogue is Incapacitated, Evasion doesn't fire. The current `ClassFeatureActivationMechanics` and any proposed passive family have no field for this. A `conditionBlock` array on the feature or trigger would be needed.
+All three share `saveAbility = "dex"` and `qualifier = "half_damage_on_success"`. The atom is not Rogue-specific.
 
-This is a secondary gap — the first two gaps must be resolved before this can be expressed.
+## Classification
 
-## Recommended path forward
-
-1. Add a `passive` family to `ClassFeatureMechanics` with a closed trigger grammar.
-2. Promote `reduce_damage_taken` from v4 residue to v4 atom (the taxonomy already anticipated this).
-3. Add a `conditionBlock` field to the passive family header (or the trigger variant).
-
-Evasion (monk L7) shares the identical text and would resolve with the same widening. Both should be encoded together once the passive family is added.
+`atom_widening` — the `passive` family and `class_feature` kind are fully adequate; the missing concept is a new effect atom not present in the v4 taxonomy.

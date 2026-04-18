@@ -1,138 +1,92 @@
-# Proposal: Surface Widenings for Magic Weapon
+# Proposal: Magic Weapon — surface_widening
 
-**Unit:** Magic Weapon (spell, SRD 5.2.1, L2 Transmutation)
-**Outcome:** `surface_widening`
-**Confidence:** high
+## Unit
 
-## Why this unit cannot be honestly encoded
+**Magic Weapon** — SRD 5.2.1, Level 2 Transmutation spell.
 
-Magic Weapon is an ongoing-effect spell that touches a nonmagical weapon and imbues it with a scaling flat bonus to both attack rolls and damage rolls for 1 hour. It does not fit the current surface for four independent reasons, each of which alone would block honest encoding.
+Bonus action. Touch. Duration: 1 hour (timed). No concentration. Components: V, S.
 
----
+> "You touch a nonmagical weapon. Until the spell ends, that weapon becomes a magic weapon with a +1 bonus to attack rolls and damage rolls. The spell ends early if you cast it again."
+>
+> **Upcast:** The bonus increases to +2 with a level 3–5 spell slot. The bonus increases to +3 with a level 6+ spell slot.
 
-## Gap 1 — Missing `weapon` attachment variant
+## What fits
 
-**Type affected:** `Attachment`
+The base case (slot 2, +1 bonus) encodes cleanly as `ongoing_effect`:
 
-The spell's target is a touched weapon (an object), not a creature. The current `Attachment` union only supports `self`, `target`, `area`, and `mark`. No object- or item-typed attachment variant exists in the surface.
+- `object` attachment (count: 1) — the touched weapon
+- `timed` 1-hour duration with `earlyEnd: [{ kind: "caster_recasts_spell" }]`
+- Two passive operations:
+  - `modify_roll_numeric` on `["attack_roll"]`, delta `+1 (fixed_dice)`
+  - `modify_damage_numeric`, delta `+1 (fixed_dice)`
+- `castingTime: { kind: "bonus_action" }`
 
-V4 taxonomy (`TAXONOMY_atoms_graph.md §3. Attachment Atoms`) already lists `weapon` and `object` as valid attachment atoms. The surface needs to expose at least one of them.
+TypeScript typecheck passes. Tracer produces a valid mermaid graph.
 
-**Proposed addition:**
-```typescript
-| { readonly kind: "weapon" }
-| { readonly kind: "object" }  // more general; weapon is a subcase
-```
+## What does NOT fit
 
-**Evidence:** "You touch a nonmagical weapon."
+### Upcast scaling of the numeric bonus
 
----
+**Gap:** `DiceDelta` (the type used by `modify_roll_numeric.delta` and `modify_damage_numeric.delta`) has no slot-level scaling mechanism. Its variants are:
 
-## Gap 2 — `RollKind` missing `"damage_roll"`
+| variant | description |
+|---|---|
+| `fixed_dice` | static N×dM (+1 collapses to flat) |
+| `proficiency_bonus` | scales with PB |
+| `ability_modifier` | fixed ability mod |
+| `magic_item_rarity_bonus` | scales with item rarity |
 
-**Type affected:** `RollKind`
+None of these express "the value is +1 at slot 2, +2 at slots 3–5, +3 at slot 6+."
 
-Magic Weapon grants the bonus to *both* attack rolls and damage rolls. The current `RollKind = "attack_roll" | "saving_throw"` has no `"damage_roll"` variant, so the damage-roll half of the bonus cannot be expressed in `RollModifierOperation.on`.
-
-**Proposed addition:**
-```typescript
-export type RollKind = "attack_roll" | "saving_throw" | "damage_roll";
-```
-
-**Evidence:** "...a +1 bonus to attack rolls and damage rolls."
-
----
-
-## Gap 3 — `DiceDelta` cannot express flat numeric bonuses
-
-**Type affected:** `DiceDelta`, `RollModifierOperation`
+By contrast, `DiceAmount` does have `threshold_tiers`:
 
 ```typescript
-export type DiceDelta = {
-  readonly dice: number;
-  readonly dieSize: number;
-  readonly sign: "+" | "-";
-};
+| {
+    readonly kind: "threshold_tiers";
+    readonly axis: LevelAxis;
+    readonly base: DiceExpr;
+    readonly tiers: ReadonlyNonEmptyArray<{ readonly atLevel: number; readonly override: DiceExprDelta }>;
+  }
 ```
 
-`DiceDelta` requires a `dieSize`, making it dice-only (1d4, 1d6, etc.). Magic Weapon gives a flat integer bonus (+1/+2/+3), which has no die. Using `{ dice: 1, dieSize: 1 }` as a proxy for "+1 flat" would be dishonest.
+But `DiceAmount` is only used for HP / damage quantities (dice expressions), not for flat numeric bonuses applied to d20 rolls.
 
-A companion type is needed:
+## Proposed widening
+
+**New variant: `DiceDelta.slot_threshold_tiers`**
 
 ```typescript
-export type FlatDelta = {
-  readonly flat: number;
-  readonly sign: "+" | "-";
-};
-
-export type RollDelta = DiceDelta | FlatDelta;
+| {
+    readonly kind: "slot_threshold_tiers";
+    readonly sign: "+" | "-";
+    readonly base: number;
+    readonly tiers: ReadonlyNonEmptyArray<{
+      readonly atSlot: number;
+      readonly value: number;
+    }>;
+  }
 ```
 
-And `RollModifierOperation.delta` would use `RollDelta`.
+Magic Weapon would encode as:
 
-**Evidence:** "...+1 bonus to attack rolls and damage rolls."
-
----
-
-## Gap 4 — No scaling variant on `RollModifierOperation.delta`
-
-**Type affected:** `RollModifierOperation`
-
-The bonus scales by slot tier: L2=+1, L3-5=+2, L6+=+3. This is a `threshold_tiers` pattern over the `slot` axis. However, `RollModifierOperation.delta` is a fixed single value — there is no mechanism to express a scaling delta on a roll modifier.
-
-For comparison, `DiceAmount` supports `threshold_tiers` and `linear_per_level` scaling but only on damage/heal effects. An analogous type is needed for roll-modifier bonuses:
-
-```typescript
-export type ScalableRollDelta =
-  | { readonly kind: "fixed"; readonly value: RollDelta }
-  | {
-      readonly kind: "threshold_tiers";
-      readonly axis: LevelAxis;
-      readonly base: RollDelta;
-      readonly tiers: ReadonlyArray<{
-        readonly atLevel: number;
-        readonly value: RollDelta;
-      }>;
-    };
+```json
+{
+  "kind": "slot_threshold_tiers",
+  "sign": "+",
+  "base": 1,
+  "tiers": [
+    { "atSlot": 3, "value": 2 },
+    { "atSlot": 6, "value": 3 }
+  ]
+}
 ```
 
-**Evidence:** "Using a Higher-Level Spell Slot: The bonus increases to +2 with a level 3-5 spell slot. The bonus increases to +3 with a level 6+ spell slot."
+### Dhall authoring note
 
----
+The `on` field of `modify_roll_numeric` and absence of `on` on `modify_damage_numeric` creates a Dhall homogeneous-list constraint when both appear in the same `operations` list. The workaround used here is to make `on: Optional (List Text)` in the local type alias — the same pattern used in `spirit_guardians.dhall` and `magic_item_staff_of_power.dhall`. This is a Dhall surface friction point, not a types.ts issue.
 
-## Gap 5 — `replace_on_recast` not in Duration (secondary)
+## Additional notes
 
-**Type affected:** `Duration`
-
-The spell ends early if the caster casts it again. V4 lists `replace_on_recast` as a lifecycle atom (`§6. Lifecycle Atoms`), but the surface `Duration` type only exposes `instantaneous`, `concentration`, and `timed` — no early-termination-on-recast condition.
-
-This gap is secondary: the spell's primary 1-hour timed duration encodes correctly under `{ kind: "timed", value: { unit: "hour", amount: 1 } }`. The recast-termination is an additional lifecycle constraint that cannot currently be expressed.
-
-**Evidence:** "The spell ends early if you cast it again."
-
----
-
-## What the encoding would look like after widening
-
-Once all gaps are resolved, the unit would fit the `ongoing_effect` family:
-
-- `family = "ongoing_effect"`
-- `castingTime = { kind: "bonus_action" }`
-- `range = { kind: "touch" }`
-- `duration = { kind: "timed", value: { unit: "hour", amount: 1 } }` (+ recast-end condition if Gap 5 is resolved)
-- `attachment = { kind: "weapon" }` (Gap 1)
-- `operation = { kind: "roll_modifier", on: ["attack_roll", "damage_roll"], delta: { kind: "threshold_tiers", axis: "slot", base: { flat: 1, sign: "+" }, tiers: [{ atLevel: 3, value: { flat: 2, sign: "+" } }, { atLevel: 6, value: { flat: 3, sign: "+" } }] } }` (Gaps 2, 3, 4)
-
-Atoms that would be emitted after widening: `spell_root`, `activate`, `bonus_action_quota`, `spell_slot`, `persist`, `expire`, `weapon` (attachment), `modify_roll_numeric`, `scale_numeric_bonus`.
-
----
-
-## Priority
-
-Gaps 1–4 are all required for honest encoding of this unit and likely affect other spells:
-- **Gap 2** (`damage_roll`) is blocked by nearly every weapon-enhancing spell (Divine Favor, Elemental Weapon, etc.)
-- **Gap 3** (flat delta) is blocked by any spell granting a flat numeric bonus vs. a dice roll bonus
-- **Gap 1** (weapon attachment) is blocked by any spell that targets a weapon object
-- **Gap 4** (scalable roll delta) is blocked by any slot-scaled weapon enhancement
-
-Gap 5 is low priority — it refines lifecycle semantics without blocking the core mechanic.
+- `ObjectFilter` has no `nonmagical` or weapon-kind predicate. The "nonmagical weapon" constraint is authoring intent only — no surface field encodes it.
+- The atom `modify_damage_numeric` with `weaponFilter` could theoretically scope the damage bonus to attack rolls made with the specific enchanted weapon. Since the spell attaches to the weapon object itself, the attachment relationship provides the scoping context at runtime; no `weaponFilter: specific_item` is needed in the encoding.
+- Pressure on `DiceDelta.slot_threshold_tiers` is confirmed by at least one other SRD spell using the same +N/+2N/+3N upcast pattern (e.g., `+1/+2/+3 bonus items` share the rarity-tier idiom, but the slot-based delta variant is novel).

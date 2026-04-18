@@ -1,104 +1,64 @@
-# Proposal: Wall of Stone — structural_widening
+# Proposal: Wall of Stone
 
-## Outcome
+## Outcome: `atom_widening`
 
-`structural_widening` — No honest encoding is possible in the current surface schema.
+The spell's primary mechanics encode cleanly. One secondary mechanic — the saving throw for surrounded creatures — requires a new EffectAtom for its success branch.
 
-## Why no encoding was attempted
+---
 
-Wall of Stone's core mechanic is **creating a persistent physical object** (the stone wall) with combat-relevant stats (AC, HP per inch, damage immunities). The current surface only supports:
+## What fits
 
-- `OngoingOperation`: `roll_modifier` | `damage_on_hit`
-- `Effect`: `damage` | `none`
-- `SpellMechanics` families: `ongoing_effect` | `activation` | `triggered_reaction` | `anchored_trigger`
+| Mechanic | Surface coverage |
+|---|---|
+| Create nonmagical stone wall (AC 15, 30 HP/inch, poison + psychic immunity) | `create_object` with `durability { acValue, hpPerSection, damageImmunities }` |
+| Concentration 10 min, becomes permanent if maintained full duration | `duration.kind = "concentration"`, `upTo = 10 min`, `permanentIfMaintainedFull = true` |
+| Creatures in wall's path at creation are pushed to one side | `force_move { direction: "push", distanceFeet: 5 }` on `area` attachment |
 
-None of these can honestly represent "place a statted object in the world." Forcing this into any existing family would require lying about the mechanic (e.g., encoding as `damage_on_hit` or `grant_extra_action`), producing a false trace that obscures what the spell actually does.
+The encoded trace covers the wall's creation lifecycle (concentration lock → permanence promotion) and the displacement of creatures in the footprint.
 
-## Blocking gaps (in priority order)
+---
 
-### 1. `create_object` — missing OngoingOperation variant (primary blocker)
+## What doesn't fit
 
-**What the SRD says:**
-> A nonmagical wall of solid stone springs into existence at a point you choose within range.
+### `save_gate` for surrounded creatures — onSuccess has no atom
 
-The v4 atom inventory includes `create_object` as an effect atom, but `types.ts` does not expose it in `OngoingOperation` or `Effect`. Until this variant exists, Wall of Stone cannot be encoded in any spell family.
+**SRD text:** "If a creature would be surrounded on all sides by the wall (or the wall and another solid surface), that creature can make a Dexterity saving throw. On a success, it can use its Reaction to move up to its Speed so that it is no longer enclosed by the wall."
 
-**Proposed shape sketch:**
-```typescript
-export type CreateObjectOperation = {
-  readonly kind: "create_object";
-  readonly objectKind: "wall" | "structure" | "barrier"; // closed enum, widen per pressure
-  readonly stats: ObjectStats;
-  readonly placement: ObjectPlacement;
-};
-```
+The save itself fits `save_gate { ability: "dex", dc: { kind: "caster_spell_save_dc" } }`.
 
-### 2. `object_stats` — missing surface shape for created-object properties
+The `onFail` is a geometric consequence with no explicit mechanic: `{ kind: "none" }` is reasonable (the enclosure is enforced by the wall, not a further effect atom).
 
-**What the SRD says:**
-> Each panel has AC 15 and 30 Hit Points per inch of thickness, and it has Immunity to Poison and Psychic damage.
+The `onSuccess` is the blocking gap: **the creature consumes its Reaction and moves up to its Speed**. This is structurally:
+1. **Reaction consumption** — costs the target's Reaction resource.
+2. **Player-optional movement up to Speed** — a granted escape move, not a caster-driven push.
 
-No existing surface shape carries AC, HP formula (HP per structural unit), or damage type immunities for a created object. This is distinct from creature stats and from existing `modify_ac` or `grant_resistance` effects (which modify a creature, not define a new object).
+Neither `force_move` (involuntary, caster-driven) nor any existing EffectAtom captures "target may use its Reaction to move up to its Speed." Using `{ kind: "none" }` for onSuccess would falsely suggest no effect on save success, which is wrong — the creature CAN escape. The entire save_gate is therefore omitted.
 
-**Proposed shape sketch:**
-```typescript
-export type ObjectStats = {
-  readonly ac: number;
-  readonly hpFormula: { readonly perInchThickness: number } | { readonly fixed: number };
-  readonly immunities: ReadonlyArray<DamageType>;
-};
-```
+---
 
-### 3. `placement_displacement` — automatic force_move without save or roll
+## Proposed widening
 
-**What the SRD says:**
-> If the wall cuts through a creature's space when it appears, the creature is pushed to one side of the wall (you choose which side).
+### New atom: `grant_reaction_move`
 
-This displacement is automatic — no attack roll, no saving throw, no window. It fires purely from the geometric fact that the object's placement intersects a creature's space. The caster chooses which side. The v4 `force_move` atom exists but the surface has no shape for placement-triggered automatic displacement.
-
-This is categorically different from a save_gate or an on_hit_window; mapping it to either would misrepresent the trigger and the lack of player agency on the creature's part.
-
-**Proposed shape sketch:**
-```typescript
-export type PlacementDisplacement = {
-  readonly kind: "placement_displacement";
-  readonly casterChoosesSide: boolean;
-};
-```
-
-### 4. `concentrate_to_permanent` — missing Duration variant
-
-**What the SRD says:**
-> If you maintain your Concentration on this spell for its full duration, the wall becomes permanent and can't be dispelled.
-
-The current `Duration` union covers `instantaneous`, `concentration` (upTo), and `timed`. There is no variant expressing "concentration that converts to permanent persistence if not broken before the duration elapses." This is a meaningful lifecycle distinction: a broken-concentration outcome produces a different world state than a fully-maintained one.
-
-**Proposed shape sketch:**
 ```typescript
 | {
-    readonly kind: "concentration_to_permanent";
-    readonly upTo: DurationValue;
-    readonly onFullDuration: "permanent";
+    readonly kind: "grant_reaction_move";
+    // Movement granted (always up to the target's full Speed in current RAW).
+    readonly upTo: "speed";
   }
 ```
 
-### 5. `target_reaction_escape` — missing save_gate outcome for target-Reaction-cost move
+**Purpose:** Grants the target the option to immediately spend their Reaction to move up to their Speed. Distinct from `force_move` (which is involuntary) and `grant_extra_action` (which grants an Action, not a Reaction-triggered escape movement).
 
-**What the SRD says:**
-> On a success, it can use its Reaction to move up to its Speed so that it is no longer enclosed by the wall.
+**Use site:** `save_gate.onSuccess` in Wall of Stone. Potentially reusable for any future spell or feature that grants a reactive escape movement (analogous to Cutting Words, Silvery Barbs, or similar player-option-on-save mechanics).
 
-Existing `save_gate` mechanics produce caster-driven effects (`apply_condition`, `damage`, etc.). Here the on-success outcome is the **target** optionally spending its own Reaction to move — a player-facing optional action cost that originates from the target, not the caster. This requires a new outcome variant.
+**v4 taxonomy classification:** New effect atom — not in the v4 inventory. The closest existing atom is `deny_opportunity_attack` (also a movement-adjacent effect), but that gates an *outgoing* event rather than granting an *ingoing* option.
 
-This gap is secondary to (1)–(4); it cannot be addressed until the broader object-creation machinery exists.
+---
 
-## Recommended widening order
+## Additional surface gaps (non-blocking)
 
-1. Add `create_object` to `OngoingOperation` (gates everything else)
-2. Add `ObjectStats` surface shape
-3. Add `placement_displacement` sub-effect on `create_object`
-4. Add `concentrate_to_permanent` to `Duration`
-5. Add target-Reaction-cost outcome to save_gate (lower priority; affects enclosure edge case only)
-
-## Other wall spells likely blocked by the same gap
-
-Wall of Fire, Wall of Force, Wall of Ice, Wall of Thorns all create persistent area objects. All are blocked by gap (1). Wall of Stone is a good pressure-case to design against because it exercises the most variants simultaneously (displacement, enclosure save, permanence).
+- **Arbitrary wall geometry:** The wall can take "any shape you desire." The encoding uses a `line { lengthFeet: 100, widthFeet: 10 }` shape as the default-configuration approximation (10 panels × 10 ft). A fully general geometry surface is out of scope.
+- **Panel thickness variants:** The 3-inch thick 10×20 ft panel variant ("Alternatively, you can create 10-foot-by-20-foot panels that are only 3 inches thick") is not expressible — `create_object` has no cast-time thickness/size-choice field. Surface widening needed for a cast-time dimensional trade-off.
+- **Architectural constraints:** "Must merge with and be solidly supported by existing stone" — DM-resolved, not a mechanic atom.
+- **Panel collapse on destruction:** "Might cause connected panels to collapse at the DM's discretion" — DM agenda per ARCHITECTURE.md.

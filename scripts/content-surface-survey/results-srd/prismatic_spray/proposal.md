@@ -1,110 +1,163 @@
-# Proposal: Prismatic Spray — structural_widening
+# Proposal: Prismatic Spray surface widenings
 
-## Unit
-
-**Prismatic Spray** — Level 7 Evocation spell, SRD 5.2.1  
-Slug: `prismatic_spray`
-
-## Why the unit does not fit
-
-Prismatic Spray cannot be encoded in any existing payload family. The dominant blocker is structural: the spell's core mechanic is a **per-target random dispatch table** — for each creature in the cone, the caster rolls 1d8 and the result selects one of 8 mutually exclusive effect outcomes. No existing family models this shape.
+**Unit:** `prismatic_spray` (Spell, Level 7, Evocation, SRD 5.2.1)  
+**Outcome:** `surface_widening`  
+**Blockers:** 4 (all new variants of existing surface types; no new v4 atoms required)
 
 ---
 
-## Gap 1 — Missing subgraph: random dispatch table (structural_widening)
+## Spell overview
 
-**Text:** *"For each target, roll 1d8 to determine which color ray affects it, consulting the Prismatic Rays table."*
+Prismatic Spray fires eight simultaneous rays from the caster into a 60-foot Cone. Every creature in the Cone makes a single Dexterity saving throw, and then **per creature** the DM rolls 1d8 to determine which of eight rays hits that creature. The ray then applies its specific effect, most of which also use the initial Dex save result.
 
-The `activation` family's `phases` array is ordered and sequential — all phases execute in sequence for all targets. The `save_gate` phase has fixed `onFail`/`onSuccess` branches. Neither expresses **stochastic branch selection** where the active effect is chosen by a die roll at resolution time.
+The ray table:
 
-A new subgraph is needed: something like a `random_dispatch` phase or family that carries:
-- a die expression (1d8)
-- a table of `(result_range, effect_subgraph)` entries
-- possibly a reroll predicate (see Gap 5)
-
-This is the minimum structural addition. Without it, any encoding of Prismatic Spray would be a lie about what branch fires.
+| d8 | Ray | Fail | Success |
+|----|-----|------|---------|
+| 1 | Red | 12d6 Fire | Half damage |
+| 2 | Orange | 12d6 Acid | Half damage |
+| 3 | Yellow | 12d6 Lightning | Half damage |
+| 4 | Green | 12d6 Poison | Half damage |
+| 5 | Blue | 12d6 Cold | Half damage |
+| 6 | Indigo | Restrained + counted Con saves (3 fail → Petrified) | — |
+| 7 | Violet | Blinded + one Wis save at start of caster's next turn (fail → different plane) | — |
+| 8 | Special | Roll twice, rerolling 8s | — |
 
 ---
 
-## Gap 2 — Missing area shape: cone (surface_widening)
+## Blocker 1: Per-target random table (primary blocker)
 
-**Text:** *"Eight rays of light flash from you in a 60-foot Cone."*
+**What the spell requires:** "For each target, roll 1d8 to determine which color ray affects it." Each creature in the 60-foot Cone is independently assigned a ray via a separate die roll.
 
-`Attachment.area` currently only supports `shape: { kind: "sphere"; radiusFeet: number }`. A cone shape is needed:
+**What the surface provides:** The `random_table` `ActivationPhase` has no `attachment` field:
 
 ```typescript
-| { readonly kind: "cone"; readonly lengthFeet: number }
+| {
+    readonly kind: "random_table";
+    readonly roll: RandomTableRoll;
+    readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
+  }
 ```
 
-This is a `surface_widening` — the attachment category and area atom both exist; only the shape variant is missing.
+Without an attachment, this is a single global roll whose single outcome applies to a single unscoped resolution context. There is no way to express "repeat this roll independently for each creature in the area."
 
----
-
-## Gap 3 — Missing surface shape: repeat_save with condition progression (surface_widening + atom_widening)
-
-**Text (Indigo ray):** *"The target has the Restrained condition and makes a Constitution saving throw at the end of each of its turns. If it successfully saves three times, the condition ends. If it fails three times, it has the Petrified condition until it is freed by an effect like the Greater Restoration spell. The successes and failures needn't be consecutive; keep track of both until the target collects three of a kind."*
-
-The v4 atom `condition_progression` exists and is the right atom for this. However, the surface has no `ActivationPhase` variant or effect shape that exposes it. The current `save_gate` phase is a one-shot binary: `onFail`/`onSuccess`. It cannot model:
-- a repeating save (fires at end of each of the target's turns)
-- non-consecutive counting of successes and failures toward independent thresholds
-- a state machine with two terminal outcomes (Restrained ends vs. Petrified applies)
-
-A new phase variant or embedded lifecycle subgraph is needed. Proposed shape sketch:
+**Proposed widening:** Add an optional `attachment` field to `random_table` ActivationPhase, mirroring `save_gate` and `attack_roll`:
 
 ```typescript
-{
-  readonly kind: "repeat_save";
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly successThreshold: number;       // 3
-  readonly failureThreshold: number;       // 3
-  readonly consecutiveRequired: boolean;   // false
-  readonly onSuccessThresholdMet: Effect;  // none (condition ends naturally)
-  readonly onFailureThresholdMet: Effect;  // apply_condition: petrified
-  readonly initialCondition: Condition;   // restrained (applied before tracking begins)
-}
+| {
+    readonly kind: "random_table";
+    readonly attachment: Attachment;   // NEW
+    readonly roll: RandomTableRoll;
+    readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
+  }
 ```
 
+When `attachment` is an area, the tracer would emit one `random_table` resolution node per creature in the area at resolution time. This is the same scoping model already used by `save_gate` with area attachments (e.g. Fireball, Cone of Cold).
+
 ---
 
-## Gap 4 — Missing surface effect: transport_exile (surface_widening)
+## Blocker 2: Indigo ray — counted-outcome repeat save
 
-**Text (Violet ray):** *"On a failed save, the condition ends, and the creature teleports to another plane of existence (DM's choice)."*
+**What the spell requires:** The target makes a Con save at the end of each of its turns. The results are tracked independently in two counters:
+- 3 cumulative successes → Restrained condition ends (freed)
+- 3 cumulative failures → Petrified permanently (until Greater Restoration or similar)
+- Counters are non-consecutive (e.g. S, F, S, F, S = freed on the fifth save)
 
-The v4 atom `transport_exile` exists but there is no `Effect` variant on the surface that maps to it. This is a `surface_widening` — add:
+**What the surface provides:** `RepeatSaveSpec`:
 
 ```typescript
-export type TransportExileEffect = {
-  readonly kind: "transport_exile";
-  readonly destination: "dm_choice" | { readonly kind: "named_plane"; readonly planeName: string };
+export type RepeatSaveSpec = {
+  readonly cadence: "end_of_target_turn" | "on_target_takes_damage";
+  readonly onSuccess: "ends_on_target";
+  readonly onFailAgain?: EffectAtom;
 };
 ```
 
-Note: `dm_choice` as a destination is itself a DM-agenda element. The plane selection is not deterministic. This edge case may warrant a note in `ARCHITECTURE.md` on whether transport_exile with `dm_choice` destination counts as a core mechanic or caller-owned.
+`onSuccess: "ends_on_target"` is a single-success terminal — it ends the effect the first time the target succeeds. The Indigo ray requires 3 successes. There is no counter field, no separate failure counter, and no per-threshold effect on either side.
+
+**Proposed widening:** New `RepeatSaveSpec` variant for counted-threshold outcomes:
+
+```typescript
+| {
+    readonly cadence: "end_of_target_turn" | "on_target_takes_damage";
+    readonly onSuccess: {
+      readonly kind: "counted";
+      readonly threshold: number;      // 3 for Indigo
+      readonly effect: EffectAtom;     // remove_condition restrained
+    };
+    readonly onFail: {
+      readonly kind: "counted";
+      readonly threshold: number;      // 3 for Indigo
+      readonly effect: EffectAtom;     // apply_condition petrified (permanent)
+    };
+  }
+```
+
+The counters accumulate independently; whichever reaches its threshold first resolves its effect and ends the repeat-save window.
 
 ---
 
-## Gap 5 — Missing subgraph: recursive table dispatch with reroll filter (structural_widening)
+## Blocker 3: Violet ray — one-shot deferred save at start of caster's next turn
 
-**Text (Ray 8):** *"The target is struck by two rays. Roll twice, rerolling any 8."*
+**What the spell requires:** On a failed initial Dex save, the target gains the Blinded condition and then makes a **one-shot** Wisdom saving throw at the **start of the caster's next turn**. On failure, Blinded ends AND the creature is transported to another plane (DM's choice).
 
-Ray 8 is a meta-outcome that: (a) invokes the dispatch table twice, (b) filters out result 8 from subsequent rolls, and (c) applies both selected effects. This is a recursive/compound dispatch with a reroll predicate that cannot be expressed even with Gaps 1–4 solved. It requires:
+**Two sub-issues:**
 
-- A way for one table entry to be "invoke this table N times with a reroll predicate"
-- Composition of independently-selected effects on the same target
+### 3a: Cadence = start of caster's next turn (one-shot)
 
-This may be the hardest gap to close cleanly. One option: make result 8 a special `compound_dispatch` result kind with `count: 2, rerollOn: [8]`.
+`RepeatSaveSpec.cadence` options are `"end_of_target_turn"` and `"on_target_takes_damage"`. The Violet ray fires at the **start of the caster's** (not target's) next turn.
+
+`OngoingTrigger` already has `on_caster_turn_start`, but that belongs to the `ongoing_effect` spell family. Prismatic Spray is instantaneous — switching to `ongoing_effect` family would be dishonest.
+
+The deferred one-shot save on the caster's turn also has no analog in `RepeatSaveSpec` (which implies indefinite repetition until a terminal condition).
+
+**Proposed widening:** Add `start_of_caster_next_turn` to `RepeatSaveSpec.cadence` plus a `oneShotOnly: true` flag (or a dedicated variant) to express "fire exactly once on the named trigger":
+
+```typescript
+readonly cadence:
+  | "end_of_target_turn"
+  | "on_target_takes_damage"
+  | { readonly kind: "start_of_caster_next_turn"; readonly oneShotOnly: true };  // NEW
+```
+
+### 3b: On failure — transport to another plane (DM's choice)
+
+`ExileDestination` includes `"different_plane"` which covers "another plane of existence." The DM's-choice framing is DM agenda, not core mechanics — the surface can record the destination as `"different_plane"` without needing to express which plane. This sub-issue resolves cleanly against the existing surface once the cadence blocker is addressed.
 
 ---
 
-## Summary table
+## Blocker 4: Outcome 8 — roll-twice meta-outcome
 
-| Gap | Classification | Blocking? |
-|-----|---------------|-----------|
-| Random dispatch table (1d8 → N effects) | structural_widening | Yes — dominant blocker |
-| Cone area shape | surface_widening | Yes — needed for any honest AoE encoding |
-| Repeat save with condition progression | surface_widening (+ atom_widening for surface exposure) | Yes — for Indigo ray |
-| transport_exile effect | surface_widening | Yes — for Violet ray |
-| Recursive dispatch with reroll filter | structural_widening | Yes — for Ray 8 |
+**What the spell requires:** "The target is struck by two rays. Roll twice, rerolling any 8." Outcome 8 is not itself an effect — it is a directive to resolve the table twice more for the same target, excluding this meta-entry, and apply both results.
 
-All five gaps must be resolved before Prismatic Spray can receive a clean trace. The random dispatch table (Gap 1) and the recursive meta-outcome (Gap 5) are the hardest — they require new structural concepts with no existing analogue in the surface vocabulary.
+**What the surface provides:** `RandomTableOutcome.phases` is `ReadonlyNonEmptyArray<ActivationPhase> | undefined`. A nested `random_table` phase would be an independent new roll on a new table definition — it cannot reference the enclosing table, cannot enforce "reroll 8", and cannot compose two results together for a single target.
+
+**Proposed widening:** New `RandomTableOutcome` variant for meta-roll directives:
+
+```typescript
+| {
+    readonly min: number;
+    readonly max: number;
+    readonly label: string;
+    readonly rollAgain: {
+      readonly kind: "same_table";
+      readonly count: number;         // 2 for Prismatic Spray
+      readonly rerollValues: ReadonlyNonEmptyArray<number>;  // [8]
+    };
+  }
+```
+
+The tracer emits this as a self-referential `random_table` node rather than spawning new independent table definitions.
+
+---
+
+## Summary
+
+All four widenings are new variants of existing surface types. The v4 atom inventory (damage, apply_condition, transport_exile, repeat_save, random_table) already covers the underlying mechanics of every ray; the gaps are in the surface-level grammar for composing those atoms in this spell's specific structure.
+
+| Blocker | Classification | Surface type |
+|---------|---------------|--------------|
+| Per-target random table | `surface_widening` | `ActivationPhase` (random_table) |
+| Indigo counted save | `surface_widening` | `RepeatSaveSpec` |
+| Violet one-shot caster-turn save | `surface_widening` | `RepeatSaveSpec.cadence` |
+| Roll-twice meta-outcome | `surface_widening` | `RandomTableOutcome` |

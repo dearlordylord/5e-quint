@@ -1,34 +1,28 @@
 {
   "unit_slug": "magic_item_giant_slayer",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item kind in UnitRecord",
-      "justification": "UnitRecord has no 'magic_item' kind. types.ts only defines SpellRecord | ClassFeatureRecord | MasteryRecord. The TAXONOMY lists magic_item_root as a v4 source atom but the surface has never been extended to include it. All magic items are blocked at this level.",
-      "evidence": "Weapon (Any Simple or Martial), Rare — the item is a magic item, a category absent from UnitRecord"
-    },
-    {
       "kind": "new_variant",
-      "name": "passive_weapon_bonus family (always-on +N to attack and damage rolls)",
-      "justification": "The +1 bonus to attack rolls and damage rolls is always-on while wielding; no existing family (activation, on_hit_trigger, ongoing_effect) models a passive item property that requires no activation, no quota, and no concentration. A new family is needed.",
-      "evidence": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon."
-    },
-    {
-      "kind": "new_variant",
-      "name": "creature_type_filter on on-hit trigger (Giant-only rider)",
-      "justification": "MasteryTrigger only gates on weapon_hit / weapon_hit_melee_only with no creature-type predicate. Giant Slayer's rider fires only against creatures of type Giant. Encoding this without a filter would dishonestly apply the rider to all weapon hits.",
-      "evidence": "When you hit a Giant with this weapon, the Giant takes an extra 2d6 damage..."
-    },
-    {
-      "kind": "new_variant",
-      "name": "weapon_damage_type as a DamageType variant or special alias",
-      "justification": "DamageType is a closed enum of specific damage types (slashing, piercing, etc.). Giant Slayer deals 'damage of the weapon's type', which is resolved at runtime from the weapon. There is no 'weapon_damage_type' or 'inherited' variant in DamageType.",
+      "name": "DamageTypeRef.wielded_weapon_type",
+      "justification": "The extra 2d6 damage is 'of the weapon's type' — it mirrors whatever damage type the wielded weapon deals. This is neither a fixed DamageType nor a CastTimeChoice<DamageType>. A new variant { kind: 'wielded_weapon_type' } is needed so the damage atom can defer the type to the wielded weapon's profile at resolution time.",
       "evidence": "the Giant takes an extra 2d6 damage of the weapon's type"
+    },
+    {
+      "kind": "new_variant",
+      "name": "MasteryTrigger.typeFilter (creature type filter on on-hit trigger)",
+      "justification": "The on-hit rider fires only when the target is a Giant. OnHitTriggerMechanics / MasteryTrigger has no typeFilter field to narrow the trigger to one or more CreatureType values. Without it the trigger cannot be scoped to Giants; any encoding omitting the filter would fire against all targets, which is incorrect.",
+      "evidence": "When you hit a Giant with this weapon"
+    },
+    {
+      "kind": "new_variant",
+      "name": "MagicItemOnHitEffect: composite damage + save_gate",
+      "justification": "The on-hit effect is a two-part outcome: (a) 2d6 damage and (b) a DC 15 Str save-or-Prone. MasteryEffect only supports SaveGateRider | ModifyRollAdvantageRider | GrantWeaponAttackRider. SaveGateRider.onFail is SaveGateRiderResult (apply_condition | none) and cannot include a separate damage instance. There is no way to express 'damage plus save_gate' as a single MasteryEffect. A composite on-hit effect shape (e.g., a new variant that wraps ReadonlyNonEmptyArray<MasteryEffect>, or widening SaveGateRider to optionally include a pre-save damage atom) is needed.",
+      "evidence": "the Giant takes an extra 2d6 damage of the weapon's type and must succeed on a DC 15 Strength saving throw or have the Prone condition"
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: no magic_item kind in UnitRecord. Even with the kind added, three additional surface widenings are required: a passive_weapon_bonus family, a creature-type filter on on-hit triggers, and a runtime-resolved 'weapon's damage type' alias. No Dhall or JSON authored — the unit does not fit the current surface."
+  "notes": "The passive +1 to attack rolls and damage rolls (Mechanic 1) fits cleanly as PassiveMechanics with modify_roll_numeric and modify_damage_numeric both scoped via weaponFilter: specific_item. The on-hit rider (Mechanic 2) requires three surface widenings and cannot be honestly encoded without them. No dhall/json/trace files are produced."
 }

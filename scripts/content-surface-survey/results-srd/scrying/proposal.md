@@ -1,140 +1,125 @@
-# Proposal: Scrying surface widenings
+# Proposal: Scrying (atom_widening)
 
-## Unit
+## Summary
 
-**Scrying** — Level 5 Divination, Concentration (10 min), SRD 5.2.1
+Scrying is a level-5 concentration divination that creates a remote sensing sensor the caster perceives through. The spell fits the `ongoing_effect` family (concentration, Wis save gate, persistent effect on fail), but four distinct gaps prevent honest encoding:
 
-## Outcome
+1. **Missing atom** — no atom for a remote scrying sensor
+2. **Missing DcSource variant** — DC has cast-time table modifiers
+3. **Missing Attachment variant** — location target in non-anchored contexts
+4. **Missing SaveSuccessOutcome variant** — timed reuse ban on successful save
 
-`surface_widening` — The activation/save_gate family is the right structural fit, but
-four surface types need new variants before the unit can be encoded honestly.
+---
 
-## Structural fit
+## Gap 1 — `scrying_sensor` atom (primary blocker)
 
-The spell maps cleanly to `ActivationMechanics` with a `save_gate` phase:
+**RAW:** "On a failed save, the spell creates an Invisible, intangible sensor within 10 feet of the target. You can see and hear through the sensor as if you were there. The sensor moves with the target, remaining within 10 feet of it for the duration."
 
+**Why no existing atom fits:**  
+The `detect` atom (`{ kind: "detect", property: ..., radiusFeet: ... }`) is a caster-centered presence-scan for a named property (magic, evil/good, poison, thoughts). Scrying is categorically different:
+- The sensor is a physical object created in the world (visible as a luminous orb if seen).
+- The sensor is attached to and moves with a target creature.
+- The caster receives full visual + auditory perception through it — not just a boolean "present/absent" signal.
+- The sensor is the attachment point for the effect, not the caster's location.
+
+A new atom is needed, something like:
+```typescript
+| {
+    readonly kind: "scrying_sensor";
+    readonly rangeFeet: number;         // distance sensor may be from target (10 ft)
+    readonly movesWithTarget: boolean;  // true for creature target
+  }
 ```
-activate (10-min cast)
-  → consumes action_quota (CastingTime.minutes, 10 min)
-  → consumes spell_slot ≥ 5
-  → consumes concentration_lock
-  → save_gate (Wis save, DC: caster spell save DC + contextual modifiers)
-      on fail → ??? (sensor: grant_sense, remote view/hear, follows target)
-      on success → none + reuse_lock(24h, per-target)
-```
 
-The alternative location mode is a second cast path:
+This atom would naturally pair with an `OngoingTrigger.passive` and a `target` attachment in the `ongoing_effect` family.
 
-```
-activate (10-min cast)
-  → attachment: location (seen by caster)
-  → grants sensor (grant_sense, fixed, no save)
-```
+---
 
-## Gap 1 — `Effect.grant_sense` (blocking)
+## Gap 2 — Variable DC via cast-time modifier tables
 
-**What's missing:** The `Effect` union is `DamageEffect | NoneEffect`. Scrying's
-on-fail effect creates an invisible intangible sensor through which the caster
-sees and hears at the target's location. This is a `grant_sense` effect in v4
-taxonomy, but the surface `Effect` type does not expose it.
+**RAW:** "The target makes a Wisdom saving throw, which is modified... by how well you know the target and the sort of physical connection you have to it." (Tables: familiarity +5/+0/−5; connection −2/−4/−10.)
 
-**Evidence:** "On a failed save, the spell creates an Invisible, intangible sensor
-within 10 feet of the target. You can see and hear through the sensor as if you
-were there."
+**Why no existing variant fits:**  
+`DcSource` covers `caster_spell_save_dc` (fixed base, runtime-derived), `fixed` (constant), `weapon_attack_dc` (8 + mod + PB), `innate_dc` (base + ability + PB). None models "spell save DC ± player-chosen cast-time modifier selected from a closed table."
 
 **Proposed variant:**
 ```typescript
-export type GrantSenseEffect = {
-  readonly kind: "grant_sense";
-  readonly senses: ReadonlyArray<"sight" | "hearing">;
-  readonly through: "sensor";        // caster perceives via a remote sensor
-  readonly sensorFollowsTarget: boolean;
-};
-```
-
-This directly maps to the v4 `grant_sense` atom and `persist` lifecycle (sensor
-persists for spell duration). The sensor's visibility ("luminous orb") is a
-narrative/DM-caller concern, consistent with ARCHITECTURE.md.
-
-## Gap 2 — `DcSource.contextual_save_modifier` (blocking)
-
-**What's missing:** Scrying applies additive modifiers to the Wis saving throw
-based on two independent contextual axes at cast time. `DcSource` has only
-`caster_spell_save_dc` (flat) and `weapon_attack_dc` (base + attack ability +
-PB). Neither supports contextual modifiers.
-
-**Evidence:**
-
-| Caster's knowledge | Save modifier |
-|--------------------|--------------|
-| Secondhand (heard of target) | +5 |
-| Firsthand (met target) | +0 |
-| Extensive (know target well) | −5 |
-
-| Physical connection | Save modifier |
-|--------------------|--------------|
-| Picture or likeness | −2 |
-| Garment or possession | −4 |
-| Body part, hair, or nail | −10 |
-
-**Proposed variant:**
-```typescript
-export type ContextualSaveDc = {
-  readonly kind: "caster_spell_save_dc_with_modifiers";
-  readonly modifierAxes: ReadonlyArray<{
-    readonly axis: string;          // e.g. "caster_knowledge", "physical_connection"
-    readonly chosenAtCast: true;    // player selects the applicable row at cast time
-    readonly tiers: ReadonlyArray<{
-      readonly description: string;
-      readonly saveModifier: number; // positive = harder for caster (target rolls higher)
+| {
+    readonly kind: "caster_spell_save_dc_with_choices";
+    readonly modifiers: ReadonlyNonEmptyArray<{
+      readonly label: string;
+      readonly options: ReadonlyNonEmptyArray<{
+        readonly label: string;
+        readonly modifier: number;
+      }>;
     }>;
-  }>;
-};
+  }
 ```
 
-The modifier is applied to the **target's roll** (positive = advantage for the
-target). This is distinct from changing the DC itself.
+This generalizes to any "DC adjusted by cast-time contextual choices" pattern. Scrying has two independent modifier axes; the modifier resolution is additive.
 
-## Gap 3 — `SaveSuccessEffect.reuse_lock` (secondary)
+---
 
-**What's missing:** On a successful save the caster cannot target that creature
-with Scrying again for 24 hours. No surface type represents a temporal per-target
-reuse restriction as a save-outcome side-effect.
+## Gap 3 — `Attachment` location variant (non-anchored context)
 
-**Evidence:** "On a successful save, the target isn't affected, and you can't use
-this spell on it again for 24 hours."
+**RAW:** "Instead of targeting a creature, you can target a location you have seen. When you do so, the sensor appears at that location and doesn't move."
+
+**Why no existing variant fits:**  
+`Attachment` has `self`, `target`, `area`, `mark`, `object`. A `location` kind exists on `AnchorTarget` (used by `anchored_trigger` only), but not as a general `Attachment` variant for `ongoing_effect` or `activation` families.
+
+Scrying needs an `Attachment` that is a "named, visible location in the world, no creature selected, no save." This is different from `area` (geometric region) and `object` (a specific held/worn item).
 
 **Proposed variant:**
 ```typescript
-export type ReuseLockEffect = {
-  readonly kind: "reuse_lock";
-  readonly target: "save_target";
-  readonly durationHours: number;   // 24
+| {
+    readonly kind: "location";
+    readonly description: string;   // "a location the caster has seen"
+    readonly rangeOrigin?: AttachmentRangeOrigin;
+  }
+```
+
+---
+
+## Gap 4 — Timed reuse ban on successful save
+
+**RAW:** "On a successful save, the target isn't affected, and you can't use this spell on it again for 24 hours."
+
+**Why no existing shape fits:**  
+The current `SaveSuccessOutcome` is `{ kind: "half_damage" } | EffectAtom`. None of the `EffectAtom` variants encode "caster cannot retarget this specific creature with spell X for N hours." This is a resource-lockout on the caster scoped to a specific target, which has no analog in the current surface.
+
+This could be modeled as a future atom or a property of the save_gate phase:
+```typescript
+// On save_gate phase:
+readonly onSuccessLockout?: {
+  readonly hours: number;
+  readonly scope: "this_target";
 };
 ```
 
-This would be an additional item in the `onSuccess` branch of the save_gate phase,
-alongside `NoneEffect`.
+This is a lower-priority gap — it affects reacharound DM tracking but not the core per-cast resolution.
 
-## Gap 4 — Location alternative targeting (secondary)
+---
 
-**What's missing:** Scrying can target a seen location instead of a creature.
-When used this way the sensor appears at the location (no save, no movement).
-No current `Attachment` or `ActivationPhase` variant represents a mutually
-exclusive creature-vs-location choice at cast time.
+## Encoding plan (when widenings land)
 
-**Evidence:** "Instead of targeting a creature, you can target a location you have
-seen. When you do so, the sensor appears at that location and doesn't move."
+Once these gaps are filled, Scrying encodes as `ongoing_effect`:
 
-**Proposed approach:** A new `CastingMode` discriminator or a second `ActivationPhase`
-variant with an optional `target_creature | target_location` union. This is
-secondary — the creature-targeting path is the main mechanic.
+```
+family: ongoing_effect
+level: 5, school: divination
+castingTime: { kind: "minutes", amount: 10, ritual: false }
+range: { kind: "self" }
+duration: concentration up to 10 minutes
+attachment: { kind: "target", selection: { mode: "one" } }
+initialPhase: save_gate (wis vs caster_spell_save_dc_with_choices, on fail: scrying_sensor)
+operations:
+  - { trigger: passive, effect: scrying_sensor (ongoing perception) }
+```
 
-## What does NOT need widening
+The location-target alternative would be a second encoding variant or an `attachment: { kind: "choice" }` extension.
 
-- `CastingTime.minutes` — already in the surface (`{ kind: "minutes", amount: 10, ritual: false }`)
-- `Duration.concentration` — already in the surface
-- `SpellLevel` 5 — already in the surface
-- `SpellSchool` "divination" — already in the surface
-- `save_gate` phase structure — already in the surface
-- `grant_sense` atom — already in v4 taxonomy (Gap 1 is surface_widening, not atom_widening)
+---
+
+## Classification
+
+`atom_widening` — the `scrying_sensor` atom is the primary blocker. All other gaps are variants of existing surface types (`surface_widening`). The `ongoing_effect` family is otherwise the correct fit for this spell.

@@ -1,40 +1,52 @@
 {
   "unit_slug": "tsunami",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "turn_start_repeating_save_gate",
-      "justification": "Tsunami fires a save gate at the start of each caster turn for the spell's duration (6 rounds). No existing spell family models a save gate that recurs on a turn-start trigger. ongoing_effect operations are limited to roll_modifier and damage_on_hit; activation is one-shot. A new subgraph or family is needed: a persistent spell that opens a turn_start_window, which prompts a save_gate each turn.",
-      "evidence": "At the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you. Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw or take 5d10 Bludgeoning damage."
+      "kind": "new_atom",
+      "name": "auto_move_area_attachment",
+      "justification": "The wall moves 50 feet away from the caster at the start of each caster turn, autonomously and directionally. reposition_attachment requires a caster-spent action; this movement is triggered by the passage of the caster's turn with no action cost and a fixed direction. No v4 atom covers area attachments that translate themselves each turn.",
+      "evidence": "at the start of each of your turns after the wall appears, the wall, along with any creatures in it, moves 50 feet away from you"
     },
     {
       "kind": "new_variant",
-      "name": "linear_per_round (LevelAxis: 'round')",
-      "justification": "Tsunami's recurring damage decreases by 1d10 per round elapsed: 5d10 → 4d10 → 3d10 → 2d10 → 1d10 → 0. The existing LevelAxis enum ('character' | 'class' | 'slot' | 'subclass' | 'proficiency_bonus') has no 'round' axis. LinearPerLevel<T> with a perLevel decrement could model this, but the axis is missing. Adding axis: 'round' to LevelAxis and supporting negative perLevel on DiceAmount would cover this pattern.",
-      "evidence": "the damage the wall deals on later rounds is reduced by 1d10. When the wall reaches 0 feet in height, the spell ends."
+      "name": "LevelAxis.round",
+      "justification": "The spell's per-turn damage decreases by 1d10 each round from 5d10 down to 0. This is a linear decay indexed by rounds elapsed within the duration. The current LevelAxis union (character | class | slot | subclass | proficiency_bonus) has no 'round' variant, making it impossible to express per-round decreasing or increasing dice amounts.",
+      "evidence": "the damage the wall deals on later rounds is reduced by 1d10"
     },
     {
       "kind": "new_variant",
-      "name": "ability_check phase / operation",
-      "justification": "Creatures inside the wall must succeed on a Strength (Athletics) check against the caster's spell save DC in order to move. This is an ability_check (v4 atom exists in taxonomy) gating movement, not a saving throw and not an attack roll. Neither ActivationPhase nor OngoingOperation has an ability_check variant. The surface needs either a new ActivationPhase kind or a new OngoingOperation kind for 'ability_check_gate'.",
-      "evidence": "the creature must succeed on a Strength (Athletics) check against your spell save DC to move at all. If it fails the check, it can't move."
+      "name": "TargetSizeFilter",
+      "justification": "The ongoing save_gate applies only to 'Huge or smaller' creatures. TargetTypeFilter narrows by creature type (humanoid, beast, etc.); no parallel filter exists for creature size. A TargetSizeFilter with a threshold ('huge_or_smaller', 'large_or_smaller', etc.) is needed.",
+      "evidence": "Any Huge or smaller creature inside the wall or whose space the wall enters when it moves must succeed on a Strength saving throw"
     },
     {
       "kind": "new_variant",
-      "name": "moving_area attachment or lifecycle atom",
-      "justification": "The wall moves 50 feet away from the caster at the start of each caster turn. No existing Attachment type (self, target, area, mark) models a spatially-moving area. The area's position is dynamic, not fixed at cast time. This requires either a new Attachment variant (moving_area with a per-turn displacement) or a new lifecycle atom (e.g., translate or drift) that modifies an area's origin on each turn.",
-      "evidence": "the wall, along with any creatures in it, moves 50 feet away from you."
+      "name": "OngoingTrigger.on_creature_attempts_move",
+      "justification": "Creatures caught in the wall must succeed on a Strength (Athletics) check vs spell save DC to move at all; failure means no movement. The existing on_creature_moves trigger fires after movement occurs, not as a gate before it. An ability_check_gate on 'creature attempts to move' is a distinct trigger shape needed to model conditional movement restraint.",
+      "evidence": "the creature must succeed on a Strength (Athletics) check against your spell save DC to move at all. If it fails the check, it can't move"
     },
     {
       "kind": "new_variant",
-      "name": "fall_on_exit lifecycle / forced_move effect",
-      "justification": "Creatures that exit the wall fall to the ground. The v4 taxonomy has fall_on_end (lifecycle) and force_move (effect), but neither maps cleanly to 'fall when a creature moves out of an area voluntarily.' This is an on-exit trigger tied to the area boundary, not to spell end.",
-      "evidence": "A creature that moves out of the wall falls to the ground."
+      "name": "OngoingDamageCapPerRound",
+      "justification": "The spell specifies a creature can take the moving-wall damage only once per round, even if the wall passes through its space multiple times. There is no 'max once per round per creature' cap mechanism on ongoing save_gate operations.",
+      "evidence": "A creature can take this damage only once per round"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaShapeDescriptor.rect_cuboid",
+      "justification": "The wall is 300 ft long × 300 ft high × 50 ft thick — a rectangular cuboid. The current area shapes (sphere, cone, cube, cylinder, emanation, line) cannot represent this. A cube requires equal sides; a line has length and width but no height axis.",
+      "evidence": "You can make the wall up to 300 feet long, 300 feet high, and 50 feet thick"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.area_dimension_reaches_zero",
+      "justification": "The spell ends when the wall's height reaches 0 feet — an autonomous self-termination condition based on the area's own geometry decrementing each turn, not a target action. The current DurationEndTrigger vocabulary covers target actions (attacks, casts, takes damage, dons armor) but has no 'tracked dimension reaches threshold' trigger.",
+      "evidence": "When the wall reaches 0 feet in height, the spell ends"
     }
   ],
   "confidence": "high",
-  "notes": "Tsunami is a structurally novel spell that combines: (1) an area save gate on appearance, (2) a recurring turn-start save gate with per-round diminishing damage, (3) an ability check gating creature movement within the area, (4) a spatially-moving area, and (5) fall-on-exit. None of the four existing spell families (ongoing_effect, activation, triggered_reaction, anchored_trigger) can honestly encode this. The closest is a hypothetical 'ongoing_activation' family — a concentration spell that fires save_gate phases at the start of each caster turn — combined with a new 'round' LevelAxis for the decrement. The initial appearance blast (6d10 on save) is a standard activation save_gate that could be modeled cleanly; it is only the recurring, diminishing, turn-start save gate and the moving area that require new surface shapes."
+  "notes": "Tsunami cannot be honestly encoded. The two structural blockers are (1) the wall auto-moves each caster turn with no action cost — a new concept entirely since reposition_attachment requires a caster-spent action — and (2) the per-round damage decay requires a 'round' LevelAxis variant. Additional surface widenings are needed for creature size filtering, movement gating, once-per-round damage caps, a rectangular-cuboid area shape, and a dimension-based duration end trigger. The ongoing_effect family is otherwise the correct family; the spell header, initial save_gate phase (6d10 bludgeoning), and the per-turn save_gate structure (on_caster_turn_start) all fit. Only the novel area-movement mechanic and the round-decay axis require genuinely new concepts."
 }

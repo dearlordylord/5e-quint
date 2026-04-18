@@ -1,118 +1,124 @@
-# Proposal: Monk Martial Arts L1
+# Proposal: Monk Martial Arts L1 — atom_widening
 
-**Outcome**: `atom_widening`  
-**Unit**: `monk_martial_arts_l1` (class_feature, Monk L1, SRD 5.2.1)
+## Unit
+
+**Monk Martial Arts (Level 1)** — `class_feature`, `monk`, `srd-5.2.1`
 
 ## Summary
 
-Martial Arts is a `passive` family feature — always active while the monk meets the equipment gate. The gate and all three sub-features require atoms or surface variants not present in `types.ts`. No honest encoding is possible without the additions described below.
-
----
-
-## Equipment Gate
-
-> "You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
-
-The gate is a conjunction of three conditions:
-
-1. **Unarmed OR wielding only Monk weapons** — no existing `EquipmentPredicate` variant covers this disjunction. The `wielding_weapon` predicate selects a single weapon-kind with no "unarmed" mode and no "only" restriction.
-2. **Not wearing armor** — covered by `unarmored` or `not_wearing_armor`.
-3. **Not wielding a Shield** — no predicate exists. Shields are wielded off-hand; the existing `not_wearing_armor` covers armor categories only.
-
-### Proposed surface additions
-
-```typescript
-// New variant in NonAlwaysEquipmentPredicate:
-| { readonly kind: "unarmed_or_monk_weapons_only" }
-// — active when the character is bare-handed OR all held melee weapons are
-//   Simple Melee or Light Martial Melee. Monk-weapons definition is class-level
-//   configuration; the surface just names the predicate.
-
-| { readonly kind: "not_wielding_shield" }
-// — active when the character is not holding a Shield in any hand.
-```
-
-The full gate would be expressed with `all_of`:
-```
-all_of([unarmed_or_monk_weapons_only, not_wielding_shield])
-```
-(`unarmored` or `not_wearing_armor` can be reused for the armor clause once the other two are added.)
+All three sub-features require new atoms not present in the v4 taxonomy. No coercion into existing shapes is honest. No `.dhall` or `.json` authored.
 
 ---
 
 ## Sub-feature 1: Bonus Unarmed Strike
 
-> "Bonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action."
+> "You can make an Unarmed Strike as a Bonus Action."
 
-This grants a recurring bonus-action attack of a specific strike type. It is **not** an extra standard action (`grant_extra_action` covers action-economy surplus, not bonus-action attack grants). There is no current atom for "while this feature is active, you may make one Unarmed Strike as a Bonus Action."
+**Gap:** No atom expresses "grant the ability to make a specific attack type (Unarmed Strike) as a Bonus Action."
 
-### Proposed atom
+- `grant_extra_action` grants an extra full Action (not a Bonus Action slot for a specific attack).
+- Nothing in `EffectAtom` or `PassiveMechanics` covers the bonus-action economy scoped to one attack type.
 
-```typescript
-// New effect atom:
-| {
-    readonly kind: "grant_bonus_action_attack";
-    readonly strikeKind: "unarmed_strike";
-  }
+**Proposed atom:**
+
+```ts
+{
+  readonly kind: "grant_bonus_action_attack";
+  readonly attackType: "unarmed_strike" | "monk_weapon";
+  // closed set — widen per unit
+}
 ```
 
-This is a persistent unlock that adds the Unarmed Strike to the bonus action menu, not a one-shot grant. It should be modeled as an always-available option (no use-count, no reset cadence beyond the gate itself).
+This is a passive grant: while the predicate holds, the creature may spend their Bonus Action on the named attack type. It maps to a new `grant_bonus_action_attack` effect atom, delivered through `PassiveMechanics.grants`.
 
 ---
 
 ## Sub-feature 2: Martial Arts Die
 
-> "Martial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels."
+> "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table."
 
-This substitutes a minimum damage die for the normal die of the attack. It is **not** an additive bonus (`modify_damage_numeric`), not a scaling of an existing die (`scale_die_size`), and not a complete stat-block replacement (`natural_weapons`, which is spell-specific). It is a die-floor replacement on specific strike/weapon types, optionally overriding whatever die the attack would normally use.
+**Gap:** No atom replaces the base damage die of a class of weapons/attacks with a scaling die.
 
-The level-scaling (d6 at L1 → d8 at L5 → d10 at L11 → d12 at L17) could reuse `scale_die_size` with `axis: "class"` once the base atom exists.
+- `natural_weapons` is the closest relative but it:
+  1. applies only to Unarmed Strike, not Monk weapons
+  2. uses a bare `damageDie: number`, not a `DiceAmount` (no scaling)
+  3. overrides the damage **type** as well — wrong for Martial Arts Die which leaves the type unchanged
 
-### Proposed atom
+The scaling is class-level-tiered: d6 (L1–4), d8 (L5–10), d10 (L11–16), d12 (L17–20) per the Monk Features table.
 
-```typescript
-// New effect atom:
-| {
-    readonly kind: "set_minimum_damage_die";
-    readonly dieSize: number;                    // 6 at L1
-    readonly applicableTo: "unarmed_strike_and_monk_weapons";
-    // Level scaling lives on this atom via the existing DiceAmount threshold_tiers
-    // or a new DiceExprDelta progression once the base atom is established.
-  }
+**Proposed atom:**
+
+```ts
+{
+  readonly kind: "replace_damage_die";
+  // The new die, supporting threshold_tiers scaling over class axis
+  readonly die: DiceAmount;
+  // What attacks/weapons this applies to
+  readonly weaponScope: "unarmed_strike" | "monk_weapon" | "unarmed_or_monk_weapon";
+}
 ```
+
+The die is expressed as a `DiceAmount` with `threshold_tiers` and `axis: "class"` to capture the Monk Features table progression. This maps to a `scale_die_size` scaling atom in v4.
 
 ---
 
 ## Sub-feature 3: Dexterous Attacks
 
-> "Dexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+> "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
 
-This is an ability-modifier substitution on two roll contexts:
-- Attack rolls and damage rolls → Dex instead of Str.
-- Grapple/Shove save DC derivation → Dex instead of Str.
+**Gap:** No atom substitutes one ability modifier for another on attack, damage, or DC rolls.
 
-The v4 taxonomy includes `modify_roll_substitute` (§9 Effect Atoms) but it is **absent from `types.ts`**. Adding it to the surface would cover the attack/damage roll side. The save DC substitution is an additional shape — the save DC is not a roll kind in the current `RollKind` union, so it may require a further `DcSource` variant or a new sub-field on `modify_roll_substitute`.
+- `modify_roll_numeric` adds a fixed or PB-derived delta — cannot express "use DEX instead of STR."
+- The Grapple/Shove DC substitution is the same operation applied to a save DC context.
 
-### Proposed surface addition
+**Proposed atom:**
 
-```typescript
-// Add to EffectAtom:
-| {
-    readonly kind: "modify_roll_substitute";
-    readonly on: ReadonlyNonEmptyArray<RollKind>;
-    readonly substituteAbility: Ability;
-    readonly replaces: Ability;
-    readonly weaponFilter?: WeaponFilter;
-    // narrows to specific strike/weapon types
-  }
+```ts
+{
+  readonly kind: "substitute_ability_for_rolls";
+  // The ability to use instead of the default
+  readonly use: Ability;
+  // What it replaces (in 5e this is always STR → DEX for finesse/monk patterns)
+  readonly replaces: Ability;
+  // What kind of rolls this applies to
+  readonly on: ReadonlyNonEmptyArray<"attack_roll" | "damage_roll" | "ability_check_dc">;
+  // Optional scope narrowing
+  readonly weaponScope?: "unarmed_or_monk_weapon";
+}
 ```
 
-For the Grapple/Shove DC case, either:
-- extend the atom with a `dcContext?: "grapple_or_shove"` field, or
-- add a separate `modify_dc_ability_substitute` atom if the save DC substitution proves to be a distinct pressure point.
+For Grapple/Shove DC: `on: ["ability_check_dc"]` with `weaponScope: "unarmed_or_monk_weapon"`.
 
 ---
 
-## Classification
+## Equipment Gate Gaps
 
-All three sub-features are blocked by missing atoms. Two EquipmentPredicate variants are also needed for the gate. This is `atom_widening` — the v4 taxonomy partially covers the feature (`modify_roll_substitute` is named but unimplemented; `scale_die_size` covers level scaling but not the base substitution), while `grant_bonus_action_attack` and `set_minimum_damage_die` are genuinely new atom pressure.
+The feature applies: *"while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."*
+
+Two `EquipmentPredicate` variants are missing:
+
+### 4a. `not_wielding_shield`
+
+The existing `not_wearing_armor` covers the armor half. The shield half has no predicate.
+
+```ts
+| { readonly kind: "not_wielding_shield" }
+```
+
+### 4b. `unarmed_or_monk_weapons_only`
+
+`wielding_weapon` offers coarse categories (ranged / melee_two_handed / melee_one_handed / two_weapons). "Unarmed, or holding only Simple Melee or Light Martial Melee weapons" is not expressible.
+
+```ts
+| { readonly kind: "unarmed_or_monk_weapons_only" }
+```
+
+The full predicate would compose as `all_of` over `unarmed_or_monk_weapons_only`, `not_wearing_armor { categories: ["light","medium","heavy"] }`, and `not_wielding_shield`.
+
+---
+
+## Overall Classification: `atom_widening`
+
+All three sub-features require new atoms absent from v4. The equipment gate requires two new `EquipmentPredicate` variants (surface widening). Since the dominant pressure is missing atoms, the outcome is `atom_widening`.
+
+None of the three mechanics can be coerced into an existing atom without producing a dishonest trace. No `.dhall` or content `.json` was authored for this unit.

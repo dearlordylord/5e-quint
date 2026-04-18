@@ -1,101 +1,151 @@
-# Proposal: Storm of Vengeance
+# Proposal: Storm of Vengeance — atom_widening
 
-**Outcome:** `structural_widening`
-**Slug:** `storm_of_vengeance`
-**Level:** 9 Conjuration, Concentration up to 1 minute
+## Unit
 
----
+- Slug: `storm_of_vengeance`
+- Kind: spell
+- Level: 9 / School: Conjuration
+- Duration: Concentration, up to 1 minute
+- Family: `ongoing_effect` (structurally correct, but under-powered surface)
 
-## Why this unit does not fit any existing family
+## Summary
 
-Storm of Vengeance is a **turn-indexed effect-schedule spell**: each caster turn during the concentration duration fires a completely different mechanical resolution. The entire spell description is a lookup table:
+Storm of Vengeance cannot be honestly encoded. Two independent blockers prevent a valid trace:
 
-| Turn | Mechanic | Type |
-|------|----------|------|
-| 1 (cast) | CON save → 2d6 Thunder + Deafened (duration) | save_gate + apply_condition |
-| 2 | Auto 4d6 Acid to area | unconditional area damage |
-| 3 | 6 bolts → 6 DEX saves, 10d6 Lightning (half on success) | multi-target save_gate |
-| 4 | Auto 2d6 Bludgeoning to area | unconditional area damage |
-| 5–10 | 1d6 Cold + difficult terrain + heavily obscured + block ranged weapons + wind | recurring area damage + environmental effects |
-
-No existing payload family can represent this honestly:
-
-- **`activation`**: Phases fire at cast time. They sequence immediately on the casting turn; there is no mechanism to schedule phase N for "the start of caster turn N."
-- **`ongoing_effect`**: Holds a single persistent operation (e.g., Bless's roll modifier). It has no mechanism for a rotating schedule of distinct resolutions.
-- **`triggered_reaction`**: Reaction-shaped spells only — wrong axis.
-- **`anchored_trigger`**: Planted-location triggers waiting for external events — wrong axis.
-
-The turn-start trigger is internal (tied to the caster's turn cycle), not an external event the anchor waits for. Even if we tried to force this into `anchored_trigger`, the multi-resolution schedule (different effect each turn) has no honest encoding.
+1. **Phased turn-sequenced operations** — the spell fires a different effect on each turn of concentration. The current `OngoingTrigger` vocabulary has no mechanism to express "fire only on caster turn N."
+2. **Missing area-environmental effect atoms** — Turns 5-10 impose Difficult Terrain, Heavily Obscured, ranged weapon prohibition, and Strong Wind on the area. None of these have corresponding EffectAtom variants.
 
 ---
 
-## Widenings required
+## Blocker 1 — Phased Turn-Sequenced Operations
 
-### 1. New subgraph: `turn_scheduled_effect_sequence` (structural)
+### What the SRD says
 
-A new family or subgraph for spells that register a turn-indexed schedule of effects, each firing automatically at the start of the caster's turn. Graph shape sketch:
+> At the start of each of your later turns, the storm produces different effects, as detailed below.
+> - **Turn 2:** 4d6 Acid damage to all creatures/objects under cloud (no save)
+> - **Turn 3:** Six Dex saves → 10d6 Lightning or half (6 distinct targets)
+> - **Turn 4:** 2d6 Bludgeoning to all under cloud (no save)
+> - **Turns 5–10:** 1d6 Cold to all + environmental effects (for remainder of duration)
 
+### What the surface can express
+
+`OngoingEffectMechanics.operations` is `ReadonlyNonEmptyArray<OngoingOperation>`. Each `OngoingOperation` has a `trigger: OngoingTrigger`. The only per-caster-turn trigger is:
+
+```typescript
+{ readonly kind: "on_caster_turn_start" }
 ```
-spell_root → activate → area(300ft sphere, range 1 mile)
-           → turn_schedule
-               → turn_1_window → save_gate(CON) → damage(2d6 thunder) + apply_condition(deafened)
-               → turn_2_window → unconditional_damage(4d6 acid, area)
-               → turn_3_window → multi_target(6) → save_gate(DEX) → damage(10d6 lightning, half on success)
-               → turn_4_window → unconditional_damage(2d6 bludgeoning, area)
-               → turns_5_10_window → unconditional_damage(1d6 cold, area) + modify_terrain(difficult) + heavily_obscured_zone + block_ranged_weapons
-```
 
-The `turn_start_window` atom exists in v4 but only as an expiry terminus (persists_until). It would need to serve as a recurring trigger node within the schedule.
+This fires on **every** caster turn for the spell's lifetime. There is no way to say "fire this operation only on turn 2" or "fire this operation on turns 5 through 10."
 
-### 2. New `ActivationPhase` variant: `unconditional_damage` (surface widening)
+### Proposed widening
 
-Turns 2 and 4 deal damage to all creatures in the area with no save and no attack roll. Current `ActivationPhase` only has `attack_roll` and `save_gate`. A third variant is needed:
+**New `OngoingTrigger` variant** (surface_widening):
 
 ```typescript
 | {
-    readonly kind: "unconditional_damage";
-    readonly attachment: Attachment;
-    readonly onApply: Effect;
+    readonly kind: "on_caster_turn_n";
+    readonly turnMin: number;   // inclusive; 1-indexed from cast
+    readonly turnMax?: number;  // inclusive; absent = fire every turn >= turnMin
   }
 ```
 
-### 3. New `Condition` variant: `"deafened"` (surface widening)
+This would allow:
 
-The spell applies Deafened on a failed Turn 1 CON save. `Condition` currently only has `"prone"`. This is a minimal extension; Deafened is a standard SRD condition.
-
-### 4. New `TargetSelection` variant: `fixed_n_distinct` (surface widening)
-
-Turn 3 targets 6 **different** creatures with independent saves. Current selections: `{ mode: "one" }` and `{ mode: "choose_up_to", count: SlotScaling<number> }`. Neither captures "choose exactly 6 distinct targets, each resolved separately."
-
-```typescript
-| { readonly mode: "choose_n_distinct"; readonly count: number }
+```
+{ kind: "on_caster_turn_n", turnMin: 2, turnMax: 2 }   // Turn 2 acid
+{ kind: "on_caster_turn_n", turnMin: 3, turnMax: 3 }   // Turn 3 lightning
+{ kind: "on_caster_turn_n", turnMin: 4, turnMax: 4 }   // Turn 4 hail
+{ kind: "on_caster_turn_n", turnMin: 5 }               // Turns 5-10 cold+env
 ```
 
-### 5. New atom: `modify_terrain` (atom widening)
-
-Turns 5-10 make the area Difficult Terrain. No v4 atom covers terrain modification. `block_travel` models a barrier/wall, not area-wide movement cost doubling.
-
-Proposed atom: `modify_terrain` (effect category), carrying a terrain kind (e.g., `"difficult"`).
-
-### 6. New atom: `heavily_obscured_zone` or `modify_visibility` (atom widening)
-
-Turns 5-10 make the area Heavily Obscured. This is mechanically distinct from `block_targeting` (which concerns targeting legality, not vision). A dedicated vision-obscurement area atom is needed.
+Tracer extension needed: a new `turn_start_window` node labeled with the turn range, emitted from the procedure via `opens_window`.
 
 ---
 
-## What fits cleanly
+## Blocker 2 — Missing Area-Environmental Effect Atoms
 
-- **Kind**: `spell` — no issue.
-- **CastingTime**: `{ kind: "action" }` — fits.
-- **Range**: `{ kind: "point", feet: 5280 }` (1 mile) — representable.
-- **Components**: `{ v: true, s: true, m: false }` — fits.
-- **Duration**: `{ kind: "concentration", upTo: { unit: "minute", amount: 1 } }` — fits.
-- **School**: `"conjuration"` — fits.
-- **Level**: `9` — fits.
-- **Area shape**: `{ kind: "sphere", radiusFeet: 300 }` — fits.
+### 2a. `difficult_terrain`
+
+**SRD text:** "Until the spell ends, the area is Difficult Terrain"
+
+Difficult Terrain halves movement speed for creatures moving through it (SRD 5.2.1 Playing-the-Game). This is a **zone-level property**, not a per-creature speed modification. The existing `set_speed_ratio` and `modify_speed` atoms apply to creatures, not to zones.
+
+**Proposed atom:**
+```typescript
+| {
+    readonly kind: "difficult_terrain";
+    // No additional fields needed — the zone is set by the Attachment.
+  }
+```
+
+### 2b. `heavily_obscured`
+
+**SRD text:** "the area is ... Heavily Obscured"
+
+Per SRD 5.2.1 Rules Glossary, a Heavily Obscured area causes creatures inside to effectively have the Blinded condition for sight-dependent tasks. This is a zone-level visibility state distinct from the Blinded condition applied to a creature. `apply_condition { kind: "blinded" }` would be wrong (it would flag the creature as having the Blinded condition, which is a different mechanical state from being in a heavily obscured zone — other creatures outside the zone are not affected by the creature's condition).
+
+**Proposed atom:**
+```typescript
+| {
+    readonly kind: "area_heavily_obscured";
+  }
+```
+
+### 2c. Ranged Weapon Attack Prohibition
+
+**SRD text:** "ranged attacks with weapons are impossible there"
+
+This is a zone-level prohibition on one category of attack. `block_targeting` per its SRD pressure cases (Globe of Invulnerability, Sanctuary) targets magical ability targeting, not physical weapon attacks. Using `block_targeting { scope: "ranged weapon attacks in area" }` would be a false trace — the tracer emits a node labeled with scope as a string, but the semantic family is wrong.
+
+**Proposed atom:**
+```typescript
+| {
+    readonly kind: "block_ranged_weapon_attacks";
+    // Scoped to the Attachment's area; no additional fields needed.
+  }
+```
+
+Alternatively this could be modeled as a `modify_roll_advantage { mode: "disadvantage", ... }` with no roll target — but RAW says "impossible", not "disadvantage", so that would also be dishonest.
+
+### 2d. `strong_wind`
+
+**SRD text:** "strong wind blows through the area"
+
+Per SRD 5.2.1 Rules Glossary, Strong Wind imposes disadvantage on ranged attack rolls made with weapons AND on Perception checks relying on hearing, and extinguishes unprotected open flames. This is a named environmental state with multiple downstream mechanical effects. It partially overlaps with 2c (ranged attack prohibition when combined with the gusts mechanic), but per RAW both appear explicitly in Turns 5-10.
+
+**Proposed atom:**
+```typescript
+| {
+    readonly kind: "strong_wind";
+  }
+```
+
+The downstream effects (disadvantage on ranged weapon attacks, disadvantage on hearing-based Perception, extinguish flames) flow from the SRD environmental rule and do not need to be separately listed on the atom — the atom names the state, and the rules engine applies the consequences.
 
 ---
 
-## Recommendation
+## Secondary Note — Turn 3 Six-Target Lightning
 
-Do not encode until the `turn_scheduled_effect_sequence` subgraph (or equivalent family) is designed. The turn-schedule pattern is load-bearing — everything else follows from it. Once the scheduling subgraph exists, the secondary gaps (deafened condition, unconditional-damage phase, multi-target selection, terrain/vision atoms) are individually small and can be addressed in a single widening pass alongside other pressure cases (Sleet Storm, Incendiary Cloud, and similar turn-recurring area spells likely share this pattern).
+Turn 3 ("six bolts of lightning to strike six different creatures or objects") uses a fixed count of 6 distinct targets. This could be approximated with:
+
+```dhall
+{ kind = "target"
+, selection = { mode = "choose_up_to", count = 6, typeFilter = None }
+}
+```
+
+with a `save_gate` phase. This is not a blocker in isolation — the selection shape is serviceable — but it cannot be correctly encoded until Blocker 1 (turn-sequenced triggers) is resolved.
+
+---
+
+## Classification
+
+| Gap | Kind | Priority |
+|-----|------|----------|
+| Turn-sequenced OngoingTrigger | `new_variant` (surface_widening) | Required |
+| `difficult_terrain` area atom | `new_atom` (atom_widening) | Required |
+| `area_heavily_obscured` atom | `new_atom` (atom_widening) | Required |
+| `block_ranged_weapon_attacks` atom | `new_atom` (atom_widening) | Required |
+| `strong_wind` atom | `new_atom` (atom_widening) | Required |
+
+All five gaps must be addressed before Storm of Vengeance can be honestly encoded. The dominant gap category is `atom_widening` (four missing atoms), with a secondary `surface_widening` for the phased trigger variant.

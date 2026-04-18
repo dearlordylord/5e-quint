@@ -4,136 +4,103 @@
 
 ## Unit
 
-Epic Boon Feat (Level 19+). Two mechanics:
-1. **Ability Score Increase** — increase one ability score of your choice by 1, max 30.
-2. **Peerless Aim** — when you miss with an attack roll, you can hit instead (once per turn reset at turn start).
+*Epic Boon Feat (Prerequisite: Level 19+)*
+
+> **Ability Score Increase.** Increase one ability score of your choice by 1, to a maximum of 30.
+>
+> **Peerless Aim.** When you miss with an attack roll, you can hit instead. Once you use this benefit, you can't use it again until the start of your next turn.
 
 ---
 
-## Gap 1 — `convert_miss_to_hit` (atom_widening, blocking)
+## Gap 1 — Missing reaction trigger: bearer's outgoing miss
 
-**SRD text:** "When you miss with an attack roll, you can hit instead."
-
-Peerless Aim is a retroactive roll-outcome override: after the attack roll resolves as a miss, the bearer may declare it a hit instead. This is distinct from all existing EffectAtoms:
-
-- `modify_roll_numeric` — applies a numeric delta *before* resolution (e.g. +1d4 to the roll). Cannot retroactively change a miss to a hit.
-- `modify_roll_advantage` — grants advantage/disadvantage at roll time. Not retroactive.
-- `modify_crit_range` — lowers the critical-hit threshold. Not a miss-to-hit conversion.
-
-The concept is a **post-resolution outcome substitute**: after the d20 resolves as a miss, the outcome is overridden to "hit." The v4 taxonomy has no atom for this.
-
-**Proposed atom:**
-
-```
-convert_miss_to_hit
-  category: effect
-  semantics: after the bearer's attack roll resolves as a miss, override
-             the outcome to a hit. The attack hits for full weapon damage
-             (no additional effects from the conversion itself).
-```
-
-This atom would be the `effect` payload of a triggered-reaction-style activation whose trigger is `caster_misses_attack_roll` (see Gap 2).
-
----
-
-## Gap 2 — `ReactionTrigger.caster_misses_attack_roll` (surface_widening)
-
-**SRD text:** "When you miss with an attack roll…"
-
-The bearer's reaction window opens on their own outgoing attack missing. `ReactionTrigger` currently models:
-
-- `hit_by_attack_roll` — an *incoming* attack hits the bearer.
-- `targeted_by_named_spell` — the bearer is targeted by a specific spell.
-- `creature_casts_spell` — a creature within range casts a spell.
-- `spell_save_outcome` — the bearer finishes a saving throw against a spell.
-
-None covers "the bearer just made an attack roll that missed." A new variant is needed:
+**Proposed widening:** new `ReactionTrigger` variant
 
 ```typescript
-| { readonly kind: "caster_misses_attack_roll" }
+| { readonly kind: "bearer_misses_attack_roll" }
 ```
+
+Peerless Aim is a once-per-turn activated ability that fires when **the feat holder misses** with an attack roll. The existing `ReactionTrigger` vocabulary covers only inbound events:
+
+- `hit_by_attack_roll` — someone hits the bearer
+- `targeted_by_named_spell` — bearer is targeted
+- `creature_casts_spell` — some creature casts
+- `spell_save_outcome` — bearer finishes a save
+
+None of these represent an outgoing attack by the bearer that resolved as a miss. The new variant names that specific event boundary so the Peerless Aim activation window can be declared.
+
+**Evidence:** "When you miss with an attack roll, you can hit instead."
 
 ---
 
-## Gap 3 — `modify_ability_score.ability: Ability | CastTimeChoice<Ability>` (surface_widening)
+## Gap 2 — Missing effect atom: convert miss to hit
 
-**SRD text:** "Increase one ability score of your choice by 1, to a maximum of 30."
-
-`modify_ability_score` currently takes `ability: Ability` — a fixed ability set at authoring time. This feat lets the player pick any of the six abilities at feat-acquisition (build) time.
-
-`CastTimeChoice<T>` is already defined in the surface as a build-time or cast-time selection. The fix is widening the `ability` field:
+**Proposed widening:** new `EffectAtom` variant
 
 ```typescript
-// before
-readonly ability: Ability;
-
-// after
-readonly ability: Ability | CastTimeChoice<Ability>;
+| { readonly kind: "convert_miss_to_hit" }
 ```
 
-This same widening would apply to any future feat or feature that grants "+1 to a stat of your choice."
+The Peerless Aim effect retroactively changes the resolved outcome of the triggering attack roll from miss → hit. This is categorically different from every existing modifier:
 
----
+- `modify_roll_numeric` — adds a delta before the roll resolves
+- `modify_roll_advantage` — changes dice method before the roll
+- any reroll idiom — re-executes the roll
 
-## Gap 4 — `CompositeFeatMechanics` (surface_widening)
+Peerless Aim acts **after** the roll has already resolved as a miss and unconditionally flips the binary outcome. The effect has no numeric or probabilistic component; it is a deterministic state override. No existing atom expresses this.
 
-The feat contains both a passive grant (ASI) and an activated ability (Peerless Aim). `FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics` does not admit composite mechanics.
+**Evidence:** "When you miss with an attack roll, you can hit instead."
 
-`CompositeClassFeatureMechanics` already exists for class features with the same structural need:
+**Mechanics shape:**
 
 ```typescript
-export type CompositeClassFeatureMechanics = {
-  readonly family: "composite";
-  readonly parts: ReadonlyNonEmptyArray<ClassFeatureComponentMechanics>;
-};
-```
-
-The parallel for feats would be:
-
-```typescript
-export type CompositeFeatMechanics = {
-  readonly family: "composite";
-  readonly parts: ReadonlyNonEmptyArray<FeatComponentMechanics>; // PassiveMechanics | ActivatedAbilityMechanics
-};
-
-export type FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics | CompositeFeatMechanics;
-```
-
----
-
-## Encoding once gaps are resolved
-
-After all four gaps are addressed, the encoding would be:
-
-```
-FeatRecord {
-  kind: "feat",
-  category: "epic_boon",
-  mechanics: {
-    family: "composite",
-    parts: [
-      // Part 1: ASI
-      {
-        family: "passive",
-        grants: [{
-          kind: "modify_ability_score",
-          ability: { kind: "choice", label: "Ability Score", options: ["str","dex","con","int","wis","cha"] },
-          delta: 1,
-          maximum: 30
-        }]
-      },
-      // Part 2: Peerless Aim
-      {
-        family: "activation",
-        activationCost: { kind: "reaction", trigger: { kind: "caster_misses_attack_roll" } },
-        resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } },
-        resetCadence: ??? // "start of your next turn" — not a rest reset, not a dawn reset
-                         // needs a "turn_start" reset cadence (another gap, lesser priority)
-        phases: [{ kind: "direct", attachment: { kind: "self" }, effects: [{ kind: "convert_miss_to_hit" }] }]
-      }
-    ]
-  }
+// Activation family, reaction cost:
+{
+  family: "activation",
+  activationCost: {
+    kind: "reaction",
+    trigger: { kind: "bearer_misses_attack_roll" }
+  },
+  resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } },
+  resetCadence: { kind: "caster_turn_start" },  // "start of your next turn"
+  phases: [
+    {
+      kind: "direct",
+      attachment: { kind: "self" },
+      effects: [{ kind: "convert_miss_to_hit" }]
+    }
+  ]
 }
 ```
 
-Note a fifth minor gap: the reset cadence for Peerless Aim ("until the start of your next turn") is per-turn, not rest-based or dawn-based. The existing `usageLimit: { kind: "once_per_turn" }` on the `ActivatedAbilityMechanics` header covers this exactly — the feature is usable once per turn and the fence resets at turn start. So this gap may already be covered by the `usageLimit` field combined with an appropriate resource cap.
+Note: `resetCadence` would also need a `caster_turn_start` variant (currently `ResetCadence` covers rest-based and calendar-time cadences, not turn-start). Alternatively this maps to the existing `RiderExpiry.caster_turn_start` expiry shape; the reset surface may need a parallel `turn_start` cadence entry.
+
+---
+
+## Gap 3 — Surface widening: choice-of-ability for modify_ability_score
+
+**Proposed widening:** extend `modify_ability_score.ability` to accept a choice
+
+```typescript
+| {
+    readonly kind: "modify_ability_score";
+    readonly ability: Ability | CastTimeChoice<Ability>;  // was: just Ability
+    readonly delta: number;
+    readonly minimum?: number;
+    readonly maximum?: number;
+  }
+```
+
+The Ability Score Increase sub-feature grants +1 to **a player-chosen ability score**. The current atom requires a fixed `Ability`. This same pattern recurs across every Epic Boon feat ("Increase one ability score of your choice by 1, to a maximum of 30"), so the widening has broad applicability beyond this unit.
+
+The `CastTimeChoice<Ability>` form parallels the existing `DamageTypeRef = DamageType | CastTimeChoice<DamageType>` pattern.
+
+**Evidence:** "Increase one ability score of your choice by 1, to a maximum of 30."
+
+---
+
+## Why no encoding was authored
+
+The Peerless Aim trigger and effect (Gaps 1 and 2) are both absent from the surface. Authoring a dhall file would require inventing atom kinds that the tracer would reject with `unhandled effect atom` or `unhandled reaction trigger`. No honest placeholder exists.
+
+The ASI sub-feature (Gap 3) is secondary: even if that gap were resolved, the Peerless Aim atom gaps would still block the encoding.

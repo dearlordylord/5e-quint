@@ -1,95 +1,86 @@
-# Proposal: Improved Brutal Strike (barbarian L17)
+# Proposal: Improved Brutal Strike (Barbarian L17)
 
-## Outcome
+**Outcome:** `atom_widening`
 
-**`structural_widening`** — No honest encoding is possible with the current surface.
-
-## Unit text
+## Feature text
 
 > The extra damage of your Brutal Strike increases to 2d10. In addition, you can use two different Brutal Strike effects whenever you use your Brutal Strike feature.
 
-## Why it doesn't fit
+## Why this does not fit the current surface
 
-### 1. Wrong family shape — only `activation` exists
+The feature consists of two distinct clauses, both of which are **cross-feature upgrades** that modify the mechanics of the sibling Brutal Strike (L9) unit rather than granting standalone effects.
 
-`ClassFeatureMechanics` has exactly one family: `activation`. That family mandates:
-- an `activationCost` (`free` or `bonus_action`)
-- a `UseCountResource` with a `UseCountCap`
-- a `RestResetCadence`
-- a `ClassFeatureEffect` limited to `grant_extra_action` or `heal_hp`
+### Clause 1 — Damage upgrade ("increases to 2d10")
 
-Improved Brutal Strike (L17) is **passive** — it applies unconditionally whenever Brutal Strike is used, costs nothing extra, consumes no separate resource, and resets on no cadence of its own. Forcing it into `activation` with `activationCost: free` and an artificial `use_count: unlimited` would produce a false trace that implies a resource-and-activation loop that doesn't exist in the rules.
+The extra damage of Brutal Strike is being **replaced** (set to 2d10), not supplemented additively.
 
-### 2. Both sub-effects target another feature, not a creature or area
+The closest existing atom is `modify_damage_numeric`:
 
-The two effects of this unit both operate **on parameters of `barbarian_brutal_strike_l9`**, not on a creature, area, or the activating barbarian:
-
-- "extra damage increases to 2d10" → rewrites the `DiceAmount` on Brutal Strike's on-hit damage
-- "use two effects" → increments the effect-multiplicity cap on Brutal Strike's effect-selection list
-
-The surface has no cross-feature reference mechanism. All existing `ClassFeatureEffect` variants (`grant_extra_action`, `heal_hp`) target the activating creature or an adjacent target, not a sibling feature record.
-
-### 3. "Two effects" has no existing atom or relation
-
-The multi-select upgrade ("you can use two different Brutal Strike effects") cannot be expressed as any current atom. It is not:
-- `grant_extra_action` (that's an additional *Action* in the Action economy sense)
-- `modify_roll_advantage`, `modify_roll_numeric`, or any roll modifier
-- `apply_condition`
-- Any scaling atom (`scale_die_count`, `scale_die_size`, etc.)
-
-It is a change to the **selection arity** of an effect menu on a sibling feature. No such concept exists in v4.
-
-## Required widenings
-
-### W1: `passive_upgrade` family for `ClassFeatureMechanics`
-
-A new mechanics family — tentatively `passive_upgrade` — is needed for class features that are:
-- always-on (no activation cost, no use-count resource, no reset cadence)
-- expressed as modifications to parameters of one or more named sibling features
-
-This family would need at minimum:
-```
-type ClassFeaturePassiveUpgradeMechanics = {
-  readonly family: "passive_upgrade";
-  readonly targetFeatureId: string;          // id of the feature being upgraded
-  readonly upgrades: ReadonlyArray<FeatureUpgrade>;
-};
+```typescript
+| {
+    readonly kind: "modify_damage_numeric";
+    readonly delta: DiceDelta;
+    readonly weaponFilter?: WeaponFilter;
+  }
 ```
 
-### W2: Cross-feature parameter reference
+This atom is **additive**: it adds a fixed delta on top of existing damage rolls. It cannot express "replace the dice in the extra-damage component of a named feature." Using it would encode "+2d10 on all weapon damage rolls" — both semantically wrong (general instead of Brutal Strike-scoped) and numerically wrong (stacks on top rather than replacing the prior value).
 
-A mechanism to name a target feature and identify which parameter slot is being upgraded. For damage scaling:
+No atom in the surface expresses "set the extra damage of feature X to Y dice." A new atom concept is needed.
 
+### Clause 2 — Two effects ("use two different Brutal Strike effects")
+
+The Brutal Strike feature permits the barbarian to select one on-hit rider effect per use. The L17 improvement increases that count to two.
+
+No atom in the surface models **a count modifier on the rider-selection choices of a named sibling feature**. The candidate atoms all fail:
+
+| Atom | Why it fails |
+|---|---|
+| `grant_extra_action` | Grants an additional action in the action-economy sense; Brutal Strike effects are on-hit riders, not actions |
+| `scale_attack_count` | Increases weapon attacks per Attack action; not related |
+| `modify_roll_numeric` | Additive bonus to d20 rolls; not related |
+| Any `EffectAtom` | None expresses "when you use feature X, you may select N options instead of 1" |
+
+This is a meta-count upgrade to another feature's activation options — a concept not present anywhere in the v4 atom vocabulary or the current TS surface types.
+
+## Proposed widenings
+
+### 1. `upgrade_feature_damage` (new atom or new variant)
+
+A mechanism to express that a named feature's extra-damage dice are replaced by a specific die expression for the owning creature. This is distinct from general additive damage bonuses.
+
+Possible shape sketch (for discussion; not a final proposal):
+
+```typescript
+| {
+    readonly kind: "upgrade_feature_damage";
+    readonly featureId: string;        // e.g. "barbarian_brutal_strike"
+    readonly newAmount: DiceAmount;    // e.g. fixed 2d10
+  }
 ```
-type ScaleFeatureParameter = {
-  readonly kind: "scale_feature_parameter";
-  readonly parameter: "extra_damage";    // named slot on the target feature
-  readonly value: DiceAmount;            // the new expression (override, not delta)
-};
+
+**Evidence:** "The extra damage of your Brutal Strike increases to 2d10."
+
+### 2. `extend_feature_rider_count` (new atom)
+
+A mechanism to increase the number of on-hit rider options a creature may select from a named feature in a single use.
+
+Possible shape sketch (for discussion; not a final proposal):
+
+```typescript
+| {
+    readonly kind: "extend_feature_rider_count";
+    readonly featureId: string;    // e.g. "barbarian_brutal_strike"
+    readonly additionalCount: number;  // 1 → allows 2 total
+  }
 ```
 
-### W3: `multi_effect_selection` — effect arity upgrade
+**Evidence:** "you can use two different Brutal Strike effects whenever you use your Brutal Strike feature."
 
-A new upgrade shape for "the wielder may choose N effects from a list" where N increases from 1 to 2:
+## Surface family fit
 
-```
-type UpgradeEffectArity = {
-  readonly kind: "upgrade_effect_arity";
-  readonly newCount: number;             // 2 at L17
-};
-```
+The `passive` family is syntactically available for a barbarian class feature. The problem is not the family — it's that no honest `EffectAtom` can carry either clause. A `passive` unit with the above atoms would be clean once those atoms are widened into the surface.
 
-This maps to an atom that could be named `expand_effect_selection` or handled as a parameter of the effect-menu subgraph on the Brutal Strike chain.
+## No authored content
 
-## Relation to the Brutal Strike chain
-
-The three Brutal Strike levels form a natural **upgrade chain**:
-- L9 `barbarian_brutal_strike_l9`: base feature — on-hit, forgo Reckless Attack advantage → 1d10 extra + choose 1 effect
-- L13 `barbarian_improved_brutal_strike_l13`: upgrade chain entry 1 — extra damage → 1d10 (same, per SRD text review needed) or confirms 1d10, select remains 1
-- L17 `barbarian_improved_brutal_strike_l17`: upgrade chain entry 2 — extra damage → 2d10, select → 2 effects
-
-The `passive_upgrade` family would model L13 and L17 as references back to the L9 base. Without a cross-feature reference mechanism, neither L13 nor L17 can be honestly encoded.
-
-## Confidence
-
-**High.** The gap is not a missing atom within an existing subgraph — it is a missing family shape. The current surface can only model self-contained activated features with use-count resources. Passive, parameter-mutating upgrades to existing features require a new structural layer.
+No `barbarian_improved_brutal_strike_l17.dhall` or corresponding `.json` is produced. Forcing either clause into an existing atom would yield a dishonest trace.

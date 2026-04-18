@@ -1,34 +1,23 @@
 {
   "unit_slug": "druid_natures_ward_l10",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_condition_immunity"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive family for ClassFeatureMechanics",
-      "justification": "Nature's Ward is always-on with no activation, no use-count resource, and no reset cadence. The surface only supports the 'activation' family, which mandates activationCost + resource + resetCadence. A new 'passive' family is required for permanent always-on features.",
-      "evidence": "You are immune to the Poisoned condition, and you have Resistance to a damage type associated with your current land choice"
-    },
-    {
       "kind": "new_variant",
-      "name": "grant_resistance effect in ClassFeatureEffect",
-      "justification": "The v4 atom 'grant_resistance' exists but is not reachable from ClassFeatureEffect. ClassFeatureEffect only offers GrantExtraActionEffect and HealHpEffect. Damage resistance needs to be expressible as a class feature effect.",
-      "evidence": "you have Resistance to a damage type associated with your current land choice"
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_condition_immunity",
-      "justification": "Condition immunity (immune to Poisoned) is mechanically distinct from remove_condition (which ends an active condition) and from apply_condition. v4 has no atom for permanently preventing a condition from being applied. This is a new runtime state: the creature is immune, not just unaffected once.",
-      "evidence": "You are immune to the Poisoned condition"
-    },
-    {
-      "kind": "new_variant",
-      "name": "feature_linked resistance selection (resistance type bound to another feature's choice)",
-      "justification": "The resistance type is not fixed — it depends on the druid's current land choice from Circle Spells. Encoding this requires a surface shape that can reference another feature's selection as the resistance type parameter, which is absent from both the current ClassFeatureEffect and from the v4 grant_resistance atom's parameterization.",
-      "evidence": "Resistance to a damage type associated with your current land choice in the Circle Spells feature, as shown in the Nature's Ward table"
+      "name": "DamageTypeRef.subclass_state_table",
+      "justification": "The resistance granted by Nature's Ward is not a free player choice from a list — it is determined by the druid's current land choice (a character-state variable set by the Circle of the Land subclass selection). No existing DamageTypeRef variant expresses this: DamageType is a fixed type, CastTimeChoice implies free selection at cast/build time. A new variant is needed to express 'damage type derived from a named character-state variable via a closed key→type table'.",
+      "evidence": "you have Resistance to a damage type associated with your current land choice in the Circle Spells feature — Arid: Fire, Polar: Cold, Temperate: Lightning, Tropical: Poison"
     }
   ],
   "confidence": "high",
-  "notes": "Nature's Ward has no activation mechanism, no use-count, and no reset — the three fields mandated by ClassFeatureMechanics's only family ('activation'). This is a structural gap, not a surface shape gap. Attempting to encode it as activation with 'free' cost and a dummy use_count resource would produce a categorically false trace. Two additional non-trivial widenings are needed even after the structural gap is closed: (1) ClassFeatureEffect must be extended with grant_resistance; (2) condition immunity requires a new v4 atom (grant_condition_immunity). The feature-linked resistance selection is an additional surface concern."
+  "notes": "Partial encoding. The grant_condition_immunity for 'poisoned' is clean and fully traced. The grant_resistance part is omitted because CastTimeChoice<DamageType> would be semantically wrong (the druid does not freely pick from {fire, cold, lightning, poison}; the choice is constrained to match the active land type). The surface needs a DamageTypeRef variant that encodes a table lookup keyed by a named character-state variable (the current Circle of the Land choice)."
 }

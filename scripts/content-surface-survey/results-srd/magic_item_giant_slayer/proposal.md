@@ -1,175 +1,110 @@
-# Proposal: Giant Slayer — Structural Widening
+# Proposal: Giant Slayer — surface_widening
 
 ## Unit
 
-**Name:** Giant Slayer  
-**Kind:** magic_item  
-**Provenance:** srd-5.2.1, Equipment/Magic-Items/Items-A-H.md §Giant Slayer  
-**Rarity:** Rare  
-**Outcome:** `structural_widening`
+**Giant Slayer** — Weapon (Any Simple or Martial), Rare  
+SRD 5.2.1 magic item.
 
----
+## What Fits
 
-## Why encoding is blocked
+**Passive +1 bonus (Mechanic 1)** encodes cleanly as `CompositeMagicItemMechanics` (or directly as `PassiveMechanics`) with:
 
-### Blocker 1 — No `magic_item` kind in `UnitRecord` (structural)
-
-`types.ts` defines:
-
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+```dhall
+{ kind = "passive"
+, grants =
+    [ { kind = "modify_roll_numeric"
+      , on = [ "attack_roll" ]
+      , delta = { kind = "fixed_dice", dice = 1, dieSize = 1, sign = "+" }
+      , weaponFilter = { kind = "specific_item", itemId = "magic_item_giant_slayer" }
+      }
+    , { kind = "modify_damage_numeric"
+      , delta = { kind = "fixed_dice", dice = 1, dieSize = 1, sign = "+" }
+      , weaponFilter = { kind = "specific_item", itemId = "magic_item_giant_slayer" }
+      }
+    ]
+}
 ```
 
-There is no `MagicItemRecord` and no `magic_item` kind. The v4 taxonomy lists `magic_item_root` as a source atom but the surface has never been extended. Every magic item in the survey corpus is blocked at this level. This is the primary structural gap.
+Both atoms exist in the surface and their `weaponFilter` correctly scopes to this weapon.
 
-### Blocker 2 — No passive weapon bonus family (structural / surface)
+## What Does Not Fit (Three Surface Widenings)
 
-Giant Slayer's first mechanic is:
+### 1. `DamageTypeRef` — missing `wielded_weapon_type` variant
 
-> "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon."
+**RAW:** "the Giant takes an extra 2d6 damage **of the weapon's type**"
 
-This is an **always-on passive property** of the item — no activation, no quota, no concentration, no reaction trigger. The existing families are:
+The extra damage inherits the damage type from the wielded weapon's own damage profile. `DamageTypeRef` currently supports:
+- `DamageType` (literal: `"slashing"`, `"piercing"`, etc.)
+- `CastTimeChoice<DamageType>` (player picks at cast time)
 
-| Family | Requires | Giant Slayer fit? |
-|--------|----------|-------------------|
-| `activation` (class feature) | explicit activation cost + use_count | No — passive |
-| `on_hit_trigger` (mastery) | weapon hit event | No — fires on every attack, not just hits |
-| `ongoing_effect` (spell) | spell slot + duration | No — persistent while attuned/wielded |
-| `activation` (spell) | spell slot + casting time | No |
+Neither covers "whatever the wielded weapon deals." A new variant is needed:
 
-No existing family models a static passive bonus granted by an equipped item. A new family such as `passive_item_property` or `attunement_passive` is needed.
+```typescript
+| { readonly kind: "wielded_weapon_type" }
+```
 
-### Blocker 3 — No creature-type filter on on-hit triggers (surface)
+Resolution: at hit-resolution time, substitute the weapon's damage type for this reference.
 
-Giant Slayer's second mechanic fires only against Giants:
+### 2. `MasteryTrigger` / `OnHitTriggerMechanics` — missing creature type filter
 
-> "When you hit a Giant with this weapon, the Giant takes an extra 2d6 damage..."
+**RAW:** "**When you hit a Giant** with this weapon…"
 
-`MasteryTrigger` in `types.ts` is:
+The on-hit rider fires only against creatures with creature type `"giant"`. `MasteryTrigger` has two variants:
+- `{ kind: "weapon_hit" }` — any hit
+- `{ kind: "weapon_hit_melee_only" }` — melee hit
+
+Neither supports a creature type predicate. The trigger needs an optional filter:
 
 ```typescript
 export type MasteryTrigger =
-  | { readonly kind: "weapon_hit" }
-  | { readonly kind: "weapon_hit_melee_only" };
+  | { readonly kind: "weapon_hit"; readonly typeFilter?: ReadonlyNonEmptyArray<CreatureType> }
+  | { readonly kind: "weapon_hit_melee_only"; readonly typeFilter?: ReadonlyNonEmptyArray<CreatureType> };
 ```
 
-Neither variant carries a creature-type predicate. Without a filter, any encoding using `on_hit_trigger` would dishonestly apply the rider to all weapon hits. A new variant is needed:
+Without this, any encoding would fire the on-hit rider on all targets — a dishonest trace.
+
+### 3. On-hit effect — missing composite damage + save_gate shape
+
+**RAW:** "the Giant takes an extra 2d6 damage … **and** must succeed on a DC 15 Strength saving throw or have the Prone condition"
+
+The on-hit effect is two sequential outcomes:
+1. A `damage` atom (2d6 of the weapon's type)
+2. A `save_gate` (DC 15 Str; on fail → Prone; on success → none)
+
+`MasteryEffect` supports three shapes:
+- `ModifyRollAdvantageRider` — advantage/disadvantage rider
+- `SaveGateRider` — save gate with `SaveGateRiderResult` on each branch (`apply_condition | none`)
+- `GrantWeaponAttackRider` — nested weapon attack
+
+`SaveGateRider.onFail` is `SaveGateRiderResult`, not `EffectAtom`, so it cannot carry a damage payload. There is no shape that expresses "deal damage, then open a save gate."
+
+**Proposed fix (Option A — widen SaveGateRider):**
 
 ```typescript
-| { readonly kind: "weapon_hit_target_type"; readonly creatureType: CreatureType }
-```
-
-…where `CreatureType` includes at minimum `"giant"`.
-
-### Blocker 4 — No "weapon's own damage type" as a `DamageType` (surface)
-
-The extra damage is:
-
-> "2d6 damage **of the weapon's type**"
-
-`DamageType` is a closed enum of 13 fixed types (acid, bludgeoning, cold, …). There is no `"weapon_type"` or runtime-resolved alias. The correct modelling requires either:
-
-- A special `DamageType` variant `"weapon_own"` that resolves to the weapon's physical damage type at runtime, or
-- A new top-level concept `InheritedDamageType` for damage expressions that delegate their type to the bearing weapon.
-
----
-
-## Proposed surface extensions
-
-### 1. `MagicItemRecord` + `magic_item` in `UnitRecord`
-
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly rarity: MagicItemRarity;
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
+export type SaveGateRider = {
+  readonly kind: "save_gate";
+  readonly ability: Ability;
+  readonly dc: DcSource;
+  readonly preGateDamage?: DiceAmount;  // damage resolved before the save
+  readonly onFail: SaveGateRiderResult;
+  readonly onSuccess: SaveGateRiderResult;
 };
-
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord | MagicItemRecord;
 ```
 
-### 2. `passive_item_property` family
+**Proposed fix (Option B — composite MasteryEffect):**
+
+Allow `MasteryEffect` to be an array, or add a `composite` variant:
 
 ```typescript
-export type PassiveItemPropertyMechanics = {
-  readonly family: "passive_item_property";
-  readonly effects: ReadonlyArray<PassiveItemEffect>;
-};
-
-export type PassiveItemEffect =
-  | { readonly kind: "modify_roll_numeric"; readonly on: ReadonlyArray<RollKind>; readonly delta: DiceDelta }
-  // ... other passive effects
+| { readonly kind: "composite"; readonly effects: ReadonlyNonEmptyArray<Exclude<MasteryEffect, { kind: "composite" }>> }
 ```
 
-The +1 to attack and damage rolls encodes as a `modify_roll_numeric` passive effect on `["attack_roll"]` and an additive damage bonus.
+Option A is narrower and fits the single SRD pressure case exactly; Option B is more general but may be over-engineered for the current evidence base.
 
-### 3. Creature-type filter on on-hit riders
+## Encoding Blocked By
 
-```typescript
-export type CreatureType =
-  | "giant"
-  | "undead"
-  | "dragon"
-  // ... other SRD creature types as pressure demands
+All three widenings are required simultaneously to encode the on-hit rider honestly. Mechanic 1 (passive +1) could be encoded standalone, but the composite unit cannot be written without Mechanic 2.
 
-export type MasteryTrigger =
-  | { readonly kind: "weapon_hit" }
-  | { readonly kind: "weapon_hit_melee_only" }
-  | { readonly kind: "weapon_hit_target_type"; readonly creatureType: CreatureType };
-```
+## Classification
 
-### 4. Runtime-resolved damage type
-
-```typescript
-export type DamageType =
-  | "acid" | "bludgeoning" | ... | "thunder"
-  | "weapon_own";  // resolves to the weapon's physical damage type at runtime
-```
-
-Or a union type:
-
-```typescript
-export type EffectDamageType = DamageType | { readonly kind: "weapon_own" };
-```
-
----
-
-## Proposed tracer subgraph for Giant Slayer
-
-Once the surface is widened, the expected graph shape:
-
-```
-magic_item_root (Giant Slayer)
-  ├── roots → passive_item_property
-  │     └── grants → modify_roll_numeric (+1, attack_roll + damage)
-  │           └── attaches_to → weapon (self)
-  └── roots → on_hit_trigger (weapon_hit_target_type: giant)
-        └── opens_window → on_hit_window
-              ├── grants → damage (2d6 weapon_own)
-              │     └── attaches_to → target
-              └── grants → save_gate (STR, DC 15, weapon_attack_dc base=8... wait)
-```
-
-Note: The DC is fixed at 15, not derived from the weapon attack formula (DC 8 + ability + PB). This is a fixed DC, which fits the existing `DcSource` as a new variant:
-
-```typescript
-export type DcSource =
-  | { readonly kind: "caster_spell_save_dc" }
-  | { readonly kind: "weapon_attack_dc"; readonly base: number }
-  | { readonly kind: "fixed"; readonly value: number };  // needed for Giant Slayer's DC 15
-```
-
----
-
-## Summary of gaps
-
-| Gap | Kind | Narrowest classification |
-|-----|------|--------------------------|
-| No `magic_item` in `UnitRecord` | new_subgraph | structural_widening |
-| No passive item property family | new_subgraph | structural_widening |
-| No creature-type filter on on-hit triggers | new_variant | surface_widening |
-| No `weapon_own` damage type | new_variant | surface_widening |
-| No fixed-DC `DcSource` variant | new_variant | surface_widening |
-
-Primary classification: **`structural_widening`** (the top-level kind is absent).
+`surface_widening` — all three missing pieces are new variants of existing surface types. No new v4 taxonomy atoms are required.

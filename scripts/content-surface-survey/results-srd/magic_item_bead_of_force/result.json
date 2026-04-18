@@ -1,46 +1,28 @@
 {
   "unit_slug": "magic_item_bead_of_force",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + magic_item_root family",
-      "justification": "UnitRecord has no 'magic_item' kind. traceUnit() has no case for it. The v4 taxonomy lists magic_item_root as a source atom, but types.ts never defines MagicItemRecord or any magic-item mechanics family.",
-      "evidence": "export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord; (no MagicItemRecord)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ChargeResource (consumable single-use item)",
-      "justification": "The bead is destroyed on activation — a single-charge consumable. The v4 atom 'charge' exists but types.ts has no ChargeResource or item-level use-count that maps to an item being consumed.",
-      "evidence": "The bead explodes in a 10-foot-radius Sphere on impact and is destroyed."
-    },
-    {
       "kind": "new_atom",
-      "name": "barrier (or block_travel + block_targeting area)",
-      "justification": "The item creates an impenetrable transparent force sphere that blocks attacks, effects, and egress. v4 lists block_travel and block_targeting as effect atoms, but neither is in the current Effect union in types.ts, and a persistent barrier enclosing an area is not representable.",
-      "evidence": "Only breathable air can pass through the sphere's wall. No attack or other effect can pass through."
-    },
-    {
-      "kind": "new_atom",
-      "name": "apply_condition / trap (containment)",
-      "justification": "Creatures that fail the save and are completely within the area are trapped inside. This is not a named SRD condition; it is a movement-blocking containment state tied to the barrier object. Not representable as apply_condition (no matching Condition variant) nor as any current effect.",
+      "name": "imprison_in_area",
+      "justification": "Creatures that failed the save and are completely within the sphere are trapped inside — they cannot exit through the sphere wall. The existing block_travel atom is a property of an area boundary (Wall of Force / Forcecage semantics), not a per-creature constraint applied to individuals on a failed save. There is no directional variant ('can't exit') vs ('can't enter'), and no per-creature application path that would distinguish the trapped creatures from the ones that are merely outside. A new atom is needed for 'bearer/subject cannot leave the enclosing area.'",
       "evidence": "Any creature that failed the save and is completely within the area is trapped inside this sphere."
     },
     {
-      "kind": "new_atom",
-      "name": "force_move (push away)",
-      "justification": "Creatures that succeed the save or are partially inside are pushed away from the sphere's center. v4 lists force_move, but it is absent from the current Effect union in types.ts.",
-      "evidence": "Creatures that succeeded on the save or are partially within the area are pushed away from the center of the sphere until they are no longer inside it."
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_enclosed_creature_spends_action",
+      "justification": "An enclosed creature spending a Utilize action causes the sphere to move up to half that creature's Speed. The existing trigger vocabulary has on_caster_spends_action (the caster, not a trapped creature) and no trigger for 'a creature enclosed by the area attachment spends a specific action type.' This is a novel subject-relative trigger needed to model the moveable sphere mechanic.",
+      "evidence": "An enclosed creature can take a Utilize action to push against the sphere's wall, moving the sphere up to half the creature's Speed."
     },
     {
       "kind": "new_variant",
-      "name": "mobile area attachment (sphere moveable by occupants)",
-      "justification": "An enclosed creature can use a Utilize action to push the sphere up to half its Speed. The current Attachment area shape is a static origin; there is no grammar for an area that moves as a result of occupant actions.",
-      "evidence": "An enclosed creature can take a Utilize action to push against the sphere's wall, moving the sphere up to half the creature's Speed."
+      "name": "ActivatedAbilityMechanics.range",
+      "justification": "The bead is thrown up to 60 feet and the explosion/sphere originate at the point of impact (area origin: point_within_range). ActivatedAbilityMechanics has no range field; the tracer hardcodes range: { kind: 'self' } for all activated abilities, causing any area attachment to print 'origin: point within Self' instead of 'within 60 ft'. MagicItemSpawnedCreatureMechanics and TriggeredReactionAbilityMechanics already carry range: Range — ActivatedAbilityMechanics should gain the same field.",
+      "evidence": "You can take a Magic action to throw the bead up to 60 feet."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: UnitRecord has no magic_item kind and the tracer has no handler for it. Secondary blockers (consumable resource, barrier/containment effects, force_move, mobile area) would each individually require surface or atom widening even after the structural gap is closed. The item's mechanics are fully deterministic and in-scope for core — this is not a dm_agenda case."
+  "notes": "Three blockers prevent honest encoding: (1) no atom for spatial imprisonment ('creature inside cannot exit sphere boundary') — the core on-fail effect; (2) no trigger type for 'enclosed creature spends Utilize action moves sphere' — the sphere interaction mechanic; (3) ActivatedAbilityMechanics lacks a range field, so the 60-ft throw would appear as 'Self' in the trace, violating the no-misleading-trace guardrail. The explosion damage (5d4 Force) and push-out on success (force_move push) are encodeable, but the sphere's trapping effect is the primary mechanic — omitting it from onFail would misrepresent what the item does. Item destruction on use is cleanly expressible via use_count cap=1 + resetCadence=never + destruction=permanent_on_empty."
 }

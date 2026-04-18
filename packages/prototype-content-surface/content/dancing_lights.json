@@ -1,0 +1,80 @@
+{
+  "description": "You create up to four torch-size lights within range, making them appear as torches, lanterns, or glowing orbs that hover for the duration. Alternatively, you combine the four lights into one glowing Medium form that is vaguely humanlike. Whichever form you choose, each light sheds Dim Light in a 10-foot radius. As a Bonus Action, you can move the lights up to 60 feet to a space within range. A light must be within 20 feet of another light created by this spell, and a light vanishes if it exceeds the spell's range.",
+  "id": "dancing_lights",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "point_within_range"
+      },
+      "shape": {
+        "kind": "sphere",
+        "radiusFeet": 10
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of phosphorus",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 0,
+    "operations": [
+      {
+        "effect": {
+          "channels": [
+            "visual"
+          ],
+          "kind": "create_illusion",
+          "maxSize": "medium"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "brightRadiusFeet": 0,
+          "dimAdditionalFeet": 10,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 60
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Dancing Lights",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Dancing Lights"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "description": "A nonmagical wall of solid stone springs into existence at a point you choose within range. The wall is 6 inches thick and is composed of ten 10-foot-by-10-foot panels. Each panel must be contiguous with another panel. Alternatively, you can create 10-foot-by-20-foot panels that are only 3 inches thick. If the wall cuts through a creature's space when it appears, the creature is pushed to one side of the wall (you choose which side). If a creature would be surrounded on all sides by the wall (or the wall and another solid surface), that creature can make a Dexterity saving throw. On a success, it can use its Reaction to move up to its Speed so that it is no longer enclosed by the wall. The wall can have any shape you desire, though it can't occupy the same space as a creature or object. The wall doesn't need to be vertical or rest on a firm foundation. It must, however, merge with and be solidly supported by existing stone. Each panel has AC 15 and 30 Hit Points per inch of thickness, and it has Immunity to Poison and Psychic damage. Reducing a panel to 0 Hit Points destroys it and might cause connected panels to collapse at the DM's discretion. If you maintain your Concentration on this spell for its full duration, the wall becomes permanent and can't be dispelled. Otherwise, the wall disappears when the spell ends.",
+  "id": "wall_of_stone",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a cube of granite",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "permanentIfMaintainedFull": true,
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 5,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "line",
+            "lengthFeet": 100,
+            "widthFeet": 10
+          }
+        },
+        "effects": [
+          {
+            "effects": [
+              {
+                "durability": {
+                  "acValue": 15,
+                  "damageImmunities": [
+                    "poison",
+                    "psychic"
+                  ],
+                  "hpPerSection": 30
+                },
+                "kind": "create_object",
+                "maxSize": "gargantuan",
+                "shape": {
+                  "kind": "line",
+                  "lengthFeet": 100,
+                  "widthFeet": 10
+                }
+              },
+              {
+                "direction": "push",
+                "distanceFeet": 5,
+                "kind": "force_move"
+              }
+            ],
+            "kind": "composite"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Wall of Stone",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-W#Wall of Stone"
+  }
+}

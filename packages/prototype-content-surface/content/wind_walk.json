@@ -1,0 +1,77 @@
+{
+  "description": "You and up to ten willing creatures of your choice within range assume gaseous forms for the duration, appearing as wisps of cloud. While in this cloud form, a target has a Fly Speed of 300 feet and can hover; it has Immunity to the Prone condition; and it has Resistance to Bludgeoning, Piercing, and Slashing damage. The only actions a target can take in this form are the Dash action or a Magic action to begin reverting to its normal form. Reverting takes 1 minute, during which the target has the Stunned condition. Until the spell ends, the target can revert to cloud form, which also requires a Magic action followed by a 1-minute transformation. If a target is in cloud form and flying when the effect ends, the target descends 60 feet per round for 1 minute until it lands, which it does safely. If it can't land after 1 minute, it falls the remaining distance.",
+  "id": "wind_walk",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "a candle",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 11,
+            "mode": "choose_up_to"
+          }
+        },
+        "effects": [
+          {
+            "effects": [
+              {
+                "feet": 300,
+                "hover": true,
+                "kind": "grant_speed",
+                "speedKind": "fly"
+              },
+              {
+                "condition": "prone",
+                "kind": "grant_condition_immunity"
+              },
+              {
+                "damageType": "bludgeoning",
+                "kind": "grant_resistance"
+              },
+              {
+                "damageType": "piercing",
+                "kind": "grant_resistance"
+              },
+              {
+                "damageType": "slashing",
+                "kind": "grant_resistance"
+              }
+            ],
+            "kind": "composite"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Wind Walk",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Wind Walk"
+  }
+}

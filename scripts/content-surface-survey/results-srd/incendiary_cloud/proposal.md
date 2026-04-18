@@ -1,81 +1,61 @@
-# Proposal: surface_widening for Incendiary Cloud
+# Proposal: surface_widening — Incendiary Cloud
 
-## Unit
+## Summary
 
-- **Name**: Incendiary Cloud
-- **Slug**: `incendiary_cloud`
-- **Kind**: spell (Level 8 Conjuration, concentration)
+Incendiary Cloud is mechanically identical to Cloudkill (also classified `surface_widening`): a concentration sphere with three save triggers (appearance, entry, end-of-turn), a once-per-turn deduplication rule, and directional auto-movement at caster turn start. No Dhall was authored because the primary ongoing threat (end-of-turn save) has no honest surface expression.
 
-## Why no honest encoding is possible today
+## Spell mechanics (SRD 5.2.1)
 
-Incendiary Cloud is a concentration spell that plants a 20-ft-radius sphere area. The area's core mechanic is a **repeating save gate**: any creature that enters the area, has the area move into its space, or ends its turn in the area must make a Dexterity saving throw (taking 10d8 Fire on failure, half on success). A creature can be made to save at most once per turn across all three triggers.
+- **Level 8, Conjuration, Action cast, VS, Concentration 1 min, Range 150 ft**
+- Area: 20-ft-radius Sphere centered on a point within range
+- Area property: Heavily Obscured (environmental, out of core scope)
+- **Save trigger 1 — appearance**: each creature in area makes Dex save → 10d8 Fire (fail) or half (success)
+- **Save trigger 2 — entry**: creature entering the sphere or the sphere moving into its space → same save
+- **Save trigger 3 — end of turn**: creature ending its turn in the sphere → same save
+- **Deduplication**: a creature makes this save at most once per turn
+- **Movement**: sphere moves 10 ft away from caster in caster-chosen direction at start of each caster turn
+- **Early end**: dispersed by strong wind (DM agenda)
 
-The existing surface families and operation types cannot encode this honestly:
+## What fits the current surface
 
-| Gap | Why it blocks encoding |
-|---|---|
-| `OngoingOperation` has no save-gate variant | The only operation kinds are `roll_modifier` (modifies dice on rolls) and `damage_on_hit` (damage on attack-roll hit). Neither applies here — Incendiary Cloud damages through a save gate on area-interaction, not via attack rolls. |
-| No "once per turn" guard on area saves | The per-creature, per-turn deduplication is a first-class rule. No surface type or operation field supports this. |
-| No area self-movement | The area moves 10 ft at the start of the caster's turns (caster chooses direction). The v4 `move`/`force_move` atoms apply to creatures, not to spell areas. No `Attachment` variant carries a per-turn displacement. |
-| No Heavily Obscured operation | The area applies the Heavily Obscured condition to its space. No `OngoingOperation` variant covers visibility-zone effects. |
+- `ongoing_effect` family — correct
+- `area` attachment, `sphere` shape, `point_within_range` origin — all present
+- `initialPhase` save_gate for the appearance save — present
+- `on_creature_enters_area` trigger for the entry save — present
+- `save_gate` ongoing effect with `{ kind: "damage", damageType: "fire", amount: { kind: "fixed", expr: { dice: 10, dieSize: 8 } } }` and `{ kind: "half_damage" }` on success — all present
+- VS components, level 8, concentration, 1-minute duration — all present
 
-## What widening would suffice
+## Blocking gaps
 
-### 1. `OngoingOperation` — new variant: `area_save_gate`
+### 1. `on_creature_ends_turn_in_area` — missing `OngoingTrigger` variant
 
-```typescript
-export type AreaSaveGateOperation = {
-  readonly kind: "area_save_gate";
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onFail: Effect;
-  readonly onSuccess: Effect;
-  // What triggers the save (all three for Incendiary Cloud):
-  readonly triggers: ReadonlyArray<"on_enter" | "on_area_enters" | "on_turn_end">;
-  // Optional per-turn deduplication:
-  readonly oncePerTurn?: true;
-};
-```
+`OngoingTrigger` has `on_attached_turn_start` (fires at start of a creature's turn) but no end-of-turn equivalent. "Ends its turn there" fires at the END of the creature's turn — a different combat phase. Using `on_attached_turn_start` would be factually wrong and produce a misleading trace.
 
-This variant would encode the full repeating-damage loop. The initial burst (when cloud appears) uses the same save/damage as the ongoing loop; both map to `on_enter`/`on_area_enters` without needing a separate `activation` phase.
+**Proposed widening**: Add `{ readonly kind: "on_attached_turn_end" }` (or equivalently `on_creature_ends_turn_in_area`) to the `OngoingTrigger` union. This variant fires at the end of each attached creature's turn (for area attachments: each creature inside the area at the end of that creature's turn).
 
-### 2. `Attachment.area` extension — `selfMovePerTurn`
+### 2. `once_per_turn_save_gate` — no per-turn deduplication mechanism
 
-The area attachment needs an optional field describing how the area moves each turn:
+The spell fires saves from three independent triggers, but RAW specifies a creature takes the save at most once per turn. There is no field on `OngoingOperation`, `save_gate`, or `OngoingTrigger` to express "skip if already resolved this turn for this creature."
 
-```typescript
-// Added to the area Attachment variant:
-readonly selfMove?: {
-  readonly feetPerTurn: number;
-  readonly directionChosenBy: "caster";
-  readonly onTurn: "caster_turn_start";
-};
-```
+**Proposed widening**: Add an optional `atMostOncePerTurn?: true` flag on `OngoingOperation` (or on the `save_gate` variant of `OngoingEffect`) that marks the operation as deduplicating across a single creature's turn.
 
-This is a new shape on an existing attachment kind — minimal surface change.
+### 3. `automatic_directional_reposition` — `reposition_attachment` semantics don't match
 
-### 3. `OngoingOperation` — new variant: `apply_zone_effect`
+`reposition_attachment` models a caster spending an action to freely reposition an illusion within the spell's range. Incendiary Cloud's movement is:
+- **Automatic** (not a caster action choice)
+- **Triggered** by `on_caster_turn_start`
+- **Directional** (10 ft away from caster in a caster-chosen direction, not free within range)
+- **Bounded distance** (exactly 10 ft, not maxMoveFeet-from-current-position)
 
-For Heavily Obscured (and future vision/zone effects):
+No existing combination of trigger + effect atom captures this. `reposition_attachment` with `on_caster_turn_start` would imply the caster spends an action and can move it anywhere within range.
 
-```typescript
-export type ApplyZoneEffectOperation = {
-  readonly kind: "apply_zone_effect";
-  readonly effect: "heavily_obscured"; // closed enum, widen as needed
-};
-```
+**Proposed widening**: Either (a) add a new `OngoingTrigger` + effect variant for `drift_attachment { distanceFeet, directionSource: "away_from_caster" | "caster_choice" }`, or (b) generalize `reposition_attachment` with `automatic?: true` and `distanceFeet` instead of `maxMoveFeet` to cover the fixed-distance automatic drift pattern.
 
-## Classification
+## Out-of-core items (no widening needed)
 
-- **Outcome**: `surface_widening`
-- **Rationale**: The `ongoing_effect` family + `area` attachment is structurally correct. No new top-level kind or family is needed. The entire gap lives in `OngoingOperation` (missing save-gate and zone-effect variants) and in the `Attachment.area` shape (missing self-movement). All four gaps are variants of existing surface types, not missing v4 atoms (`save_gate`, `repeat_save`, `area`, `move` all exist in v4).
+- **"Heavily Obscured"** — environmental visibility property of the area. Caller-owned per ARCHITECTURE.md §1; no atom needed in core.
+- **"Dispersed by strong wind (Gust of Wind)"** — early-end condition requiring DM-adjudicated weather state. DM agenda.
 
-## Comparable spells with the same pattern
+## Precedent
 
-Several SRD spells share the "persistent concentration area, save each turn / on enter" pattern:
-- Cloudkill (Poison, save each turn / on enter)
-- Insect Plague (Piercing, save each turn / on enter)
-- Spirit Guardians (Radiant/Necrotic, save when entering area)
-- Moonbeam (Radiant, save when entering/starting turn)
-
-All would require `area_save_gate` once it lands. This is a high-frequency pattern — not narrow pressure.
+Cloudkill (`result.json`: `surface_widening`) has identical gaps. The same three widenings apply to both spells. Resolving them for either spell resolves both.

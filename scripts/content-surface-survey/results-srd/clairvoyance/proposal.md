@@ -1,78 +1,101 @@
-# Proposal: Surface Widenings for Clairvoyance
+# Proposal: Clairvoyance widening
 
-## Unit
+## Outcome: `atom_widening`
 
-**Clairvoyance** — SRD 5.2.1, 3rd-level Divination spell, Concentration 10 min, Range 1 mile.
+Clairvoyance cannot be encoded honestly. Two gaps block it.
 
-## Outcome
+---
 
-`surface_widening` — The `ongoing_effect` family is the right family. Two variants of existing surface types are missing. All required v4 atoms already exist.
+## Gap 1 (primary blocker): `grant_remote_perception` atom
 
-## Why `ongoing_effect`
+**SRD text:**
+> You create an Invisible sensor within range in a location familiar to you… You can use the chosen sense through the sensor as if you were in its space.
 
-Clairvoyance plants a persistent sensor at a remote location and maintains it while the caster concentrates. The sensor enables continuous remote perception. This matches the `ongoing_effect` family shape (persistent state during concentration/timed duration with an ongoing operation).
+**What the mechanic is:**  
+The caster projects a sensor to a remote location and then uses their sight or hearing *through that sensor* — effectively borrowing the sensor's spatial position for the purpose of one sensory channel.
 
-It is **not** `anchored_trigger`: that family models "arm a trap that fires when a trigger event occurs, then releases a signal." Clairvoyance's sensor has no trigger event and no release — it is continuously and actively used by the caster.
+**Why no existing atom covers it:**
 
-## Gap 1: `Attachment { kind: "location" }`
+- `grant_sense` — grants a new sense type (darkvision 60 ft, blindsight, etc.) *to the creature*. It does not place a remote observation point.
+- `detect` — scans for a closed set of properties (magic, evil_and_good, poison_and_disease, thoughts) within a radius around the caster. It is not general remote vision or hearing.
+- `create_object` — creates tangible, potentially destructible matter. The sensor is intangible and invulnerable — not an object in the SRD sense.
 
-**What's missing:** The `Attachment` union in `types.ts` covers `self`, `target`, `area`, and `mark`. Clairvoyance's sensor is placed at a chosen remote **location** — up to 1 mile away, either a familiar place or an obvious unfamiliar one. None of the existing attachment kinds model this.
+**Proposed atom:**
 
-**Evidence:**
-> "You create an Invisible sensor within range in a location familiar to you (a place you have visited or seen before) or in an obvious location that is unfamiliar to you."
-
-**Proposed shape:**
 ```typescript
 | {
-    readonly kind: "location";
-    readonly chosenAt: "cast_time";
-    readonly constraint: "familiar_or_obvious_unfamiliar";
+    readonly kind: "grant_remote_perception";
+    readonly channels: ReadonlyNonEmptyArray<"sight" | "hearing">;
+    // Perceive through the spell's attachment anchor (sensor location)
+    // as if occupying that space.
   }
 ```
 
-**Why not `AnchorTarget.location`?** `AnchorTarget` exists but it only applies inside the `anchored_trigger` family. It also has a domain-specific `description: "door_or_window"`. Clairvoyance's location is a general chosen point, not a door or window. The `Attachment` union needs its own `location` variant.
+The two-channel `channels` field parallels `create_illusion`'s `IllusionSensoryChannel`. Only `sight` and `hearing` are pressured by Clairvoyance; future units (e.g. a scrying variant) may add others.
 
-**v4 atom used:** `location` (already in taxonomy §3 Attachment Atoms).
+The attachment anchor for the sensor is the existing `area` or `object` attachment at `rangeOrigin: "spell_sensor"` — the `spell_sensor` AttachmentRangeOrigin concept already exists on the surface for exactly this remote-measurement pattern.
 
-## Gap 2: `OngoingOperation { kind: "remote_sense" }`
+---
 
-**What's missing:** `OngoingOperation` currently has two variants: `roll_modifier` and `damage_on_hit`. Clairvoyance's ongoing operation is routing the caster's perception through the sensor — the caster sees or hears as if present in the sensor's space. This is neither a roll modifier nor damage.
+## Gap 2 (secondary): `allowsMidDurationSwitchAs: "bonus_action"` variant
 
-**Evidence:**
-> "When you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space."
+**SRD text:**
+> As a Bonus Action, you can switch between seeing and hearing.
 
-**Proposed shape:**
+**Current surface:**
 ```typescript
-| {
-    readonly kind: "remote_sense";
-    readonly senses: ReadonlyArray<"sight" | "hearing">;
-    readonly choiceAt: "cast_time";
-  }
+export type CastTimeEffectModeChoice = {
+  readonly label: string;
+  readonly options: ReadonlyNonEmptyArray<{...}>;
+  readonly allowsMidDurationSwitchAs?: "magic_action";
+};
 ```
 
-**v4 atom used:** `grant_sense` (already in taxonomy §9 Effect Atoms). The distinction from Darkvision-style `grant_sense` is directional: it routes an existing sense to a remote attachment, rather than granting a new sense type to the creature.
+The only supported mid-duration switch cost is `"magic_action"`. Clairvoyance's switch costs a **Bonus Action**.
 
-## Gap 3 (secondary): Bonus Action mode-switch rider
+**Proposed widening:**
+```typescript
+readonly allowsMidDurationSwitchAs?: "magic_action" | "bonus_action";
+```
 
-**What's missing:** During concentration, the caster can spend a Bonus Action to switch the active sense. No existing `OngoingOperation` variant models active mid-concentration player choice with a resource cost.
+This is a closed enum extension with no semantic complexity — the tracer already emits an `action_quota` / `bonus_action_quota` resource node for the switch; adding the variant lets the tracer branch correctly.
 
-**Evidence:**
-> "As a Bonus Action, you can switch between seeing and hearing."
+---
 
-**Proposed shape:** An optional `activeControl` field on the `remote_sense` operation, specifying the cost (`bonus_action`) and the switchable set (`senses`). Alternatively, a new `ongoing_bonus_action` rider type. This is secondary — the `remote_sense` gap above must be resolved first.
+## Sketch of what a clean encoding would look like
 
-**v4 atom used:** `bonus_action_quota` (already a resource atom). The switch action would consume it.
+```dhall
+{ kind = "spell"
+, id = "clairvoyance"
+, name = "Clairvoyance"
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 3
+    , school = "divination"
+    , castingTime = { kind = "minutes", amount = 10, ritual = False }
+    , range = { kind = "point", feet = 5280 }   -- 1 mile
+    , components = { v = True, s = True, m = Some "a focus worth 100+ GP..." }
+    , duration = { kind = "concentration", upTo = { unit = "minute", amount = 10 } }
+    , attachment = { kind = "area", shape = ..., origin = { kind = "point_within_range" }, rangeOrigin = "spell_sensor" }
+    , operations =
+        [ { trigger = { kind = "passive" }
+          , effect =
+              { kind = "grant_remote_perception"     -- MISSING
+              , channels = [ "sight", "hearing" ]
+              }
+          }
+        ]
+    }
+}
+```
 
-## Non-gap: Range
+The `CastTimeEffectModeChoice` (choose sight vs. hearing at cast, switch via Bonus Action) would layer on top once both gaps are resolved.
 
-The 1-mile range can be encoded as `{ kind: "point", feet: 5280 }` without any surface change. The `Range` type's `feet` field is not constrained to short values.
+---
 
-## Summary
+## Classification
 
-| Gap | Type of widening | v4 atoms needed | New atoms? |
-|-----|-----------------|-----------------|------------|
-| `Attachment.location` | New variant of `Attachment` | `location` | No |
-| `OngoingOperation.remote_sense` | New variant of `OngoingOperation` | `grant_sense` | No |
-| Bonus action mode-switch rider | New variant (secondary) | `bonus_action_quota` | No |
-
-All three gaps are surface variants. No new v4 atoms are required.
+| Gap | Kind | Blocking? |
+|-----|------|-----------|
+| `grant_remote_perception` atom | `atom_widening` | Yes — no honest substitute |
+| `allowsMidDurationSwitchAs: "bonus_action"` | `surface_widening` | Yes (secondary) |

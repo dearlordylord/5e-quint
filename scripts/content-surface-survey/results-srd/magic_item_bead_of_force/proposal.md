@@ -1,92 +1,98 @@
-# Proposal: Bead of Force — structural_widening
+# Proposal: magic_item_bead_of_force
 
-## Outcome
+**Outcome**: `atom_widening`  
+**Confidence**: high
 
-`structural_widening` — the `magic_item` kind does not exist in `UnitRecord` or the tracer.
+## Why this unit cannot be honestly encoded
 
-No `.dhall`, `.json`, or `.trace.md` were authored.
+The Bead of Force throws a bead up to 60 feet, which explodes into a 10-ft-radius sphere of transparent force lasting 1 minute. Three gaps block honest encoding:
+
+### Gap 1 — No atom for spatial imprisonment (core mechanic)
+
+> "Any creature that failed the save and is completely within the area is trapped inside this sphere."
+
+Creatures that fail the DC 15 Dex save AND are fully enclosed are **imprisoned** — they cannot pass through the sphere wall. This is the item's primary effect. The existing surface has no atom for "bearer cannot exit the enclosing area boundary."
+
+**Why existing atoms don't cover it:**
+
+- `block_travel` (Wall of Force / Forcecage semantics) is an area-boundary property, not a per-creature constraint. It blocks things from passing *through* the wall from either direction and is applied to an area attachment — not to individual creatures on a failed save. There is no directional variant ("outward only") and no per-creature application path.
+- `apply_condition` has no SRD condition for "imprisoned in a sphere." Applying `restrained` would be incorrect (restrained means speed 0 + disadvantage on attacks, not spatial confinement).
+- `set_speed 0` would prevent movement but not capture the spatial semantics (a creature with 0 speed can teleport; a sphere of force actually blocks teleportation-equivalent effects).
+
+**Proposed widening:**  
+New `EffectAtom` variant `imprison_in_area` — marks the subject as unable to exit the host attachment's boundary for the duration. Applied in an `onFail` composite alongside damage. Distinct from `block_travel` (area property vs. creature property) and from `apply_condition` (not a named SRD condition).
 
 ---
 
-## Primary gap: `MagicItemRecord` + `magic_item` tracer branch
+### Gap 2 — No trigger type for enclosed-creature action → sphere moves (secondary mechanic)
 
-`types.ts` defines:
+> "An enclosed creature can take a Utilize action to push against the sphere's wall, moving the sphere up to half the creature's Speed."
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+The sphere is moveable by the creatures trapped inside it. This requires an `OngoingTrigger` variant for "a creature enclosed by the area attachment spends a specific action." The existing vocabulary:
+
+| Existing trigger | Why it doesn't fit |
+|---|---|
+| `on_caster_spends_action` | The caster is not the actor; the enclosed creature is |
+| `on_attached_turn_start` | Fires on turn start, not on action spend |
+| `on_creature_studies` | Study action only; not generalizable to Utilize |
+
+**Proposed widening:**  
+New `OngoingTrigger` variant `on_enclosed_creature_spends_action` with a cost field (e.g. `{ kind: "standard_action", action: "utilize" }`). The trigger fires when any creature that satisfies the `imprison_in_area` constraint spends the specified action. This pairs with the new `imprison_in_area` atom as the "subject" of the trigger.
+
+---
+
+### Gap 3 — `ActivatedAbilityMechanics` lacks a `range` field (surface widening)
+
+> "You can take a Magic action to throw the bead up to 60 feet."
+
+The bead is thrown to a point 60 ft away; the explosion's area attachment origin is `point_within_range`. In the tracer, all activated abilities use `ctx.range = { kind: "self" }`, so any area attachment prints `"origin: point within Self"` regardless of the actual throw distance. The trace would misrepresent the item's range as melee/self when it is ranged (60 ft).
+
+`MagicItemSpawnedCreatureMechanics` and `TriggeredReactionAbilityMechanics` already have `range: Range`. `ActivatedAbilityMechanics` should receive the same field.
+
+**Proposed widening:**  
+Add `readonly range?: Range` to `ActivatedAbilityHeader` (or `ActivatedAbilityMechanics` specifically). The tracer should prefer this over the hardcoded `self` when present.
+
+---
+
+## What WOULD encode cleanly (if gaps were filled)
+
+With the three widenings above, the item would fit `activation` mechanics:
+
+```
+magic_item activation
+  activationCost: { kind: "standard_action", action: "magic" }
+  range: { kind: "point", feet: 60 }
+  resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } }
+  resetCadence: { kind: "never" }
+  duration: { kind: "timed", value: { unit: "minute", amount: 1 } }
+  phases:
+    Phase 1: save_gate
+      attachment: area, sphere r=10ft, origin: point_within_range
+      DC: { kind: "fixed", dc: 15 }
+      ability: "dex"
+      onFail: composite
+        - damage 5d4 force
+        - imprison_in_area  ← NEW
+        - (creatures partially within: force_move push 10ft via success branch or separate direct)
+      onSuccess: force_move push 10ft
+    Phase 2: direct
+      attachment: area, sphere r=10ft, origin: point_within_range
+      effects:
+        - block_travel { scope: "through_sphere_wall" }
+        - block_targeting { scope: "through_sphere_wall" }
+      operations:
+        - trigger: on_enclosed_creature_spends_action  ← NEW
+                   cost: { kind: "standard_action", action: "utilize" }
+          effect: force_move (sphere repositions half creature's speed)
+destruction: { kind: "permanent_on_empty" }
 ```
 
-There is no `MagicItemRecord`. The tracer's `traceUnit()` exhaustive switch only handles
-`"spell"`, `"class_feature"`, and `"mastery"` — it would throw on `"magic_item"`. The v4
-taxonomy lists `magic_item_root` as a source atom, but the surface type and tracer branch
-that would consume it do not exist yet.
+**Minor gap not blocking encoding:** The 1-pound weight of the sphere and the "can be picked up" mechanic have no weight atom. This is cosmetic for combat modeling purposes.
 
-**Required additions at this layer:**
-- `MagicItemRecord` type in `types.ts` (metadata + `kind: "magic_item"` + `mechanics`)
-- A `MagicItemMechanics` family (or families)
-- A `traceMagicItemUnit()` branch in `tracer.ts`
+## Summary of proposed widenings
 
----
-
-## Secondary gaps (all block honest encoding even after the structural fix)
-
-### 1. Consumable resource (`charge`)
-
-The bead is destroyed on activation — a single-charge consumable. The v4 taxonomy lists
-`charge` as a resource atom, but `types.ts` has no `ChargeResource` type and no item-level
-resource grammar. The class-feature `UseCountResource` is conceptually close but is
-class-feature–scoped; magic items need a parallel `charge`-based resource that maps to the
-item being consumed or expended.
-
-> *"The bead explodes in a 10-foot-radius Sphere on impact and is destroyed."*
-
-### 2. Barrier / containment effect (`block_travel`, `block_targeting`)
-
-The item creates a 1-minute impenetrable sphere that prevents attacks, spells, and egress.
-v4 lists `block_travel` and `block_targeting` as effect atoms, but neither appears in the
-current `Effect` union in `types.ts`. A barrier area that persists for a duration and blocks
-both movement out and effects through its wall is not representable with the current surface.
-
-> *"Only breathable air can pass through the sphere's wall. No attack or other effect can pass through."*
-
-### 3. Creature containment (non-condition trap state)
-
-Creatures that fail the save and are fully within the area are trapped. This is not a named
-SRD condition (`Condition` in `types.ts` is currently `"prone"` only) and not a standard
-`apply_condition` result. It is a movement-blocking state tied to the barrier object's
-spatial boundary — closer to a positional constraint than a creature condition.
-
-> *"Any creature that failed the save and is completely within the area is trapped inside this sphere."*
-
-### 4. Force-push effect (`force_move`)
-
-Creatures that succeed the save or are partially inside are pushed outward until fully
-outside the sphere. v4 lists `force_move` as an effect atom, but it is absent from the
-current `Effect` union in `types.ts`.
-
-> *"Creatures that succeeded on the save or are partially within the area are pushed away from the center of the sphere until they are no longer inside it."*
-
-### 5. Mobile area attachment
-
-The sphere can be physically moved by an enclosed creature using a Utilize action. The
-current `Attachment` `area` shape assumes a static origin; there is no grammar for an area
-that translates as a result of occupant actions. This is a new `surface_widening` on
-attachment mobility.
-
-> *"An enclosed creature can take a Utilize action to push against the sphere's wall, moving the sphere up to half the creature's Speed."*
-
----
-
-## Recommended widening order
-
-1. **Structural**: Add `MagicItemRecord`, `MagicItemMechanics` family, and tracer branch.
-2. **Surface**: Add `ChargeResource` (consumable item resource).
-3. **Effect surface**: Add `block_travel` and `block_targeting` to the `Effect` union.
-4. **Effect surface**: Add `force_move` to the `Effect` union.
-5. **Surface or atom**: Model creature containment — either as a new `Condition` variant or
-   as a positional-constraint effect distinct from named conditions.
-6. **Attachment surface**: Consider mobility annotation on `area` attachments, or a new
-   `mobile_area` attachment kind.
-
-Items 3–6 are genuinely independent of each other and could be widened in any order once
-the structural layer (1) exists.
+| # | Kind | Name | Pressure |
+|---|---|---|---|
+| 1 | `new_atom` | `imprison_in_area` | Core on-fail mechanic; no existing atom covers per-creature exit constraint |
+| 2 | `new_variant` | `OngoingTrigger.on_enclosed_creature_spends_action` | Sphere movement via enclosed creature's Utilize action |
+| 3 | `new_variant` | `ActivatedAbilityMechanics.range` | 60-ft throw range; trace would misprint as "Self" without this |

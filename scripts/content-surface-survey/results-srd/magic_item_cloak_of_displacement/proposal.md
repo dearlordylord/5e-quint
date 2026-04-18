@@ -1,74 +1,84 @@
-# Proposal: Cloak of Displacement — structural_widening
+# Proposal: surface_widening — Cloak of Displacement
 
 ## Unit
 
-**Cloak of Displacement** — Wondrous Item, Rare (Requires Attunement)  
-Provenance: SRD 5.2.1, Magic-Items/Items-A-H § Cloak of Displacement
+**Name**: Cloak of Displacement  
+**Kind**: magic_item  
+**Rarity**: Rare (requires attunement)  
+**Provenance**: srd-5.2.1
 
-## Rule text
+## RAW Text
 
 > While you wear this cloak, it magically projects an illusion that makes you appear to be standing in a place near your actual location, causing any creature to have Disadvantage on attack rolls against you. If you take damage, the property ceases to function until the start of your next turn. This property is suppressed while your Speed is 0.
 
-## Why this unit cannot be encoded
+## What Fits
 
-### Gap 1 — No `magic_item` kind in `UnitRecord` (structural)
+The primary mechanic encodes cleanly with existing atoms:
 
-`UnitRecord` is currently:
+```
+passive family
+  condition: wearing_item
+  grants:
+    - modify_roll_advantage
+        mode: "disadvantage"
+        on: ["attack_roll"]
+```
+
+`modify_roll_advantage` correctly models "any creature has Disadvantage on attack rolls against you" — the bearer is the target of the roll, so attacker-side disadvantage applies unconditionally to all attack rolls made against the bearer.
+
+## What Does Not Fit
+
+### Gap 1 — Damage-triggered suppression until caster turn start
+
+**RAW**: "If you take damage, the property ceases to function until the start of your next turn."
+
+**Problem**: `PassiveSuppressor` currently has one variant:
 
 ```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+export type PassiveSuppressor = {
+  readonly kind: "condition_active";
+  readonly conditions: ReadonlyNonEmptyArray<Condition>;
+};
 ```
 
-There is no `MagicItemRecord`. The taxonomy has a `magic_item_root` source atom and an `attune` procedure atom, but neither the record type nor any mechanics family for magic items is defined in `types.ts`. This is the primary blocker: the unit cannot be expressed in the authored surface at all.
+The Cloak's suppression fires on a **damage event** (not on a condition becoming active) and expires at a **future time boundary** (start of wearer's next turn). This is structurally different from a condition gate — it is a stateful one-shot toggle with bounded expiry.
 
-### Gap 2 — No passive-wear mechanics family (structural)
+**Proposed variant**:
 
-The cloak's effect is always active while worn and attuned. It has no casting time, no spell slot, no activation cost, and no use-count resource. The existing mechanics families are:
-
-| Family | Fits? |
-|---|---|
-| `ongoing_effect` (spell) | No — requires `SpellMechanicsHeader` (level, school, castingTime, …) |
-| `activation` (spell) | No — same header requirement |
-| `triggered_reaction` (spell) | No |
-| `anchored_trigger` (spell) | No |
-| `activation` (class feature) | No — requires `ClassFeatureMechanicsHeader` (activationCost, resource, resetCadence) |
-| `on_hit_trigger` (mastery) | No — weapon-mastery rider only |
-
-A `passive_property` family (or equivalent) is needed for items whose effect is always active while equipped. Candidate header fields: attunement requirement (boolean), item type, suppression conditions.
-
-### Gap 3 — No `on_damage_taken_window` atom (atom widening)
-
-The displacement property is suppressed until the bearer's next turn start if they take damage. This requires a window that opens when the bearer receives damage. The v4 window inventory provides `on_hit_window` (the attacker's side) but nothing that fires on the defender's side when they take damage. A new `on_damage_taken_window` atom is needed to drive the `suppress` → `restore` subgraph.
-
-Proposed subgraph shape:
-
-```
-passive_property
-  --grants--> modify_roll_advantage (disadvantage, incoming attack rolls)
-  --suppressed_by--> on_damage_taken_window
-    --grants--> suppress (property)
-      --persists_until--> turn_start_window (bearer)
-        --grants--> restore (property)
+```typescript
+| {
+    readonly kind: "on_damage_taken_until_caster_turn_start";
+  }
 ```
 
-### Gap 4 — No condition-gate atom for Speed = 0 (surface widening)
+No parameters needed: the trigger (any damage taken) and the expiry (caster turn start) are both fixed in RAW for this unit. Future units with similar shapes (e.g., a feature that disables on hit until short rest) would likely need a richer grammar, but a closed variant is sufficient for this pressure case.
 
-The cloak is additionally suppressed whenever the bearer's Speed is 0. This is a continuous runtime-state predicate (not an event trigger). None of the existing window or resource atoms represent "currently in state where Speed = 0." A `condition_gate` or `state_predicate` variant is needed to model this suppression condition.
+### Gap 2 — Speed-is-zero suppression
 
-### Gap 5 — Attachment direction for incoming-attack disadvantage (surface widening)
+**RAW**: "This property is suppressed while your Speed is 0."
 
-The `modify_roll_advantage` effect in the current schema applies advantage/disadvantage to rolls made *by* the bearer (outgoing). The cloak's effect targets rolls made *against* the bearer (incoming — i.e., every attacker's attack roll has disadvantage while targeting the cloaked creature). The attachment grammar has no "self as target" direction. The surface would need either:
+**Problem**: Speed = 0 is a runtime numeric state, not a named SRD condition. It can arise from multiple sources:
+- Restrained condition ("Speed is 0")
+- Grappled condition ("Speed is 0, unless the speed is 0")
+- `set_speed` effect atom (e.g., Hypnotic Pattern)
+- Other mechanics
 
-- A new attachment variant `self_as_target` (the effect modifies rolls against self), or
-- A separate surface type for incoming-roll modifiers.
+Mapping this to `condition_active: [restrained, grappled]` would be incorrect — it would miss `set_speed`-induced zero speed and any other future source. A dedicated speed-state variant is required.
 
-## Required widenings (prioritized)
+**Proposed variant**:
 
-| Priority | Kind | Name | Blocking? |
-|---|---|---|---|
-| 1 | `new_subgraph` | `MagicItemRecord` + `passive_property` family | Yes — primary structural gap |
-| 2 | `new_atom` | `on_damage_taken_window` | Yes — suppression trigger |
-| 3 | `new_variant` | Condition-gate for Speed = 0 | Yes — suppression gate |
-| 4 | `new_variant` | `modify_roll_advantage` on incoming attacks | Yes — core effect direction |
+```typescript
+| {
+    readonly kind: "speed_is_zero";
+  }
+```
 
-All four are needed before this unit can be encoded honestly. Gap 1 alone is sufficient to block encoding.
+## Why the Unit Cannot Be Honestly Encoded Without These Variants
+
+Encoding only the `modify_roll_advantage` passive without the suppressors would describe a significantly stronger item than RAW: permanent, unconditional disadvantage on every attack roll against the bearer with no interruption on damage and no speed gate. That misrepresentation is worse than a gap — it would produce a false trace.
+
+## Downstream Impact
+
+Both new `PassiveSuppressor` variants are additive changes to the discriminated union. No existing encoded units use `suppressedBy` with these shapes (none exist yet in the corpus), so there is no migration burden. The tracer's `tracePassiveSuppressor` function would need two new `case` branches.
+
+`speed_is_zero` may also be useful for future units that grant benefits "while your Speed is greater than 0" or suppress effects "while Restrained or otherwise immobilized." It is worth introducing as a first-class surface concept rather than redirecting to condition lists.

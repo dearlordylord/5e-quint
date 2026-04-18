@@ -1,79 +1,104 @@
-# Proposal: Widening for Monk Unarmored Defense (L1)
+# Proposal: surface_widening for Monk Unarmored Defense (L1)
 
 ## Unit
 
-**Name:** Unarmored Defense (Monk L1)  
-**Slug:** `monk_unarmored_defense_l1`  
-**Kind:** `class_feature`  
-**Source:** SRD 5.2.1, Classes/Monk#Level 1: Unarmored Defense
+**Monk Unarmored Defense (L1)** — `class_feature`, `srd-5.2.1`
 
 > While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers.
 
-## Why it does not fit
+## Family fit
 
-### 1. No passive family for class features
+The unit is clearly `family: "passive"` with:
+- An `EquipmentPredicate` condition (the "while you aren't wearing armor or wielding a Shield" gate)
+- A `modify_ac_set_base`-style effect (10 + DEX + WIS)
 
-`ClassFeatureMechanics` currently has exactly one family: `activation`. That family requires:
-- `activationCost` — how the feature is triggered (bonus action, free, etc.)
-- `resource` — a `UseCountResource` (how many uses remain)
-- `resetCadence` — when uses refill (rest, long rest, etc.)
-- `effect` — what happens when activated
+Both the `passive` family and the `class_feature` kind exist. Neither is missing. The gaps are in the surface types used within that family.
 
-Unarmored Defense has **none of these**. It is not activated. It has no use count. It has no reset cadence. It is a persistent passive modifier that applies continuously under a condition. Encoding it as `activation` with `activationCost: free` and `resource: { cap: { kind: "fixed", uses: 1 } }` would be dishonest — it would imply the monk chooses to activate the feature once per rest, which is false.
+## Gap 1: Missing `not_wielding_shield` EquipmentPredicate variant
 
-**Required widening:** A new `ClassFeatureMechanics` family — tentatively `passive` or `inherent` — that takes only a condition predicate and an effect, with no activation/resource/reset fields.
+**RAW:** "while you aren't wearing armor **or wielding a Shield**"
 
-### 2. No formula-based base AC effect
+The condition has two requirements:
+1. Not wearing armor — covered by `{ kind: "unarmored" }`
+2. Not wielding a Shield — **no predicate exists**
 
-The existing effect types in `ClassFeatureEffect` are:
-- `grant_extra_action` — grants an extra standard action
-- `heal_hp` — restores hit points
+A shield is not a weapon, so `wielding_weapon` doesn't apply. The `all_of` combinator exists but needs both parts. The `unarmored` sentinel cannot be widened to include shield-avoidance without breaking Barbarian Unarmored Defense, which reads "while you aren't wearing any armor" — no shield restriction.
 
-Neither applies. The closest related atom in the surface is `modify_ac` in `ReactionEffect`, but that takes a flat integer delta (e.g., `+5` for Shield). Unarmored Defense does not modify an existing AC by a delta — it **replaces the base AC formula** with `10 + DEX mod + WIS mod`.
+### Proposed widening
 
-The distinction matters mechanically:
-- A delta stacks with the base AC; a formula replacement sets it absolutely.
-- The formula references two named ability modifiers, not a constant.
-- Different class features use different modifiers (Barbarian uses CON + DEX; Monk uses WIS + DEX).
-
-**Required widening:** A new `ClassFeatureEffect` variant — tentatively `set_base_ac_formula` — that takes:
-- A base integer (10 for both Monk and Barbarian variants)
-- A list of `Ability` references to sum as modifiers
-
-### 3. No equipment-state condition predicate
-
-The passive AC formula only applies "while you aren't wearing armor or wielding a Shield." This condition needs to be expressible in the surface so the engine knows when to apply it.
-
-No existing surface type represents equipment-state predicates. `ReactionTrigger` is the closest grammar, but it covers event-driven triggers (being hit, being targeted), not persistent equipment states.
-
-**Required widening:** A new predicate type — tentatively `EquipmentCondition` — for passive features that gate on whether the creature is wearing/not wearing armor or wielding/not wielding specific item categories. Minimum vocabulary:
-- `not_wearing_armor`
-- `not_wielding_shield`
-- Combinable with `all_of` for conjunction
-
-## Proposed schema sketch
+Add to `NonAlwaysEquipmentPredicate`:
 
 ```typescript
-// New family
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly condition?: PassiveCondition;   // optional — some passives are unconditional
-  readonly effect: ClassFeaturePassiveEffect;
-};
-
-// New condition predicate
-export type PassiveCondition =
-  | { readonly kind: "not_wearing_armor" }
-  | { readonly kind: "not_wielding_shield" }
-  | { readonly kind: "all_of"; readonly conditions: ReadonlyArray<PassiveCondition> };
-
-// New passive effect (separate from ClassFeatureEffect which is activation-scoped)
-export type ClassFeaturePassiveEffect =
-  | { readonly kind: "set_base_ac_formula"; readonly base: number; readonly addModifiers: ReadonlyArray<Ability> }
-  | /* future: grant_resistance, modify_speed, etc. */;
+| { readonly kind: "not_wielding_shield" }
 ```
 
-### Example encoding (sketch)
+The condition for Monk Unarmored Defense would then be:
+
+```typescript
+condition: {
+  kind: "all_of",
+  predicates: [
+    { kind: "unarmored" },
+    { kind: "not_wielding_shield" }
+  ]
+}
+```
+
+This widening also covers any future feature gated on not holding a shield specifically.
+
+## Gap 2: `modify_ac_set_base` supports only one ability modifier
+
+**RAW:** "base Armor Class equals 10 plus your **Dexterity and Wisdom** modifiers"
+
+The current type:
+
+```typescript
+export type ModifyAcSetBaseEffect = {
+  readonly kind: "modify_ac_set_base";
+  readonly const: number;
+  readonly abilityMod: Ability;  // singular
+};
+```
+
+Monk needs 10 + DEX + WIS — two ability modifiers in the base formula.
+
+### Why composition doesn't work
+
+Composing `modify_ac_set_base { const: 10, abilityMod: "dex" }` plus `modify_ac { delta: +WIS mod }` is numerically equivalent but semantically incorrect. The two atoms express different things:
+
+- `modify_ac_set_base` replaces the base AC formula entirely
+- `modify_ac` adds an additive bonus on top of whatever the base is
+
+If a spell or feature later reads or replaces the base AC (e.g., Mage Armor would say "your base AC is 13 + DEX, regardless"), the composition gives the wrong result. The monk's formula is a unified replacement of the base; the WIS bonus is not a floating addend.
+
+### Proposed widening
+
+Option A — add a second optional ability modifier field:
+
+```typescript
+export type ModifyAcSetBaseEffect = {
+  readonly kind: "modify_ac_set_base";
+  readonly const: number;
+  readonly abilityMod: Ability;
+  readonly abilityMod2?: Ability;  // new: second optional modifier
+};
+```
+
+Option B — generalize to a list (more flexible but changes existing call sites):
+
+```typescript
+export type ModifyAcSetBaseEffect = {
+  readonly kind: "modify_ac_set_base";
+  readonly const: number;
+  readonly abilityMods: ReadonlyNonEmptyArray<Ability>;
+};
+```
+
+Option A is the minimal widening consistent with the "widen on demand" principle. Option B would unify Barbarian (CON) and Monk (DEX + WIS) cases under the same shape and eliminate the implicit "always includes DEX" assumption baked into the current single-modifier design.
+
+**Note:** Barbarian Unarmored Defense ("10 + DEX + CON") faces the identical gap and would benefit from the same widening.
+
+## Encoding once both gaps are filled
 
 ```dhall
 { kind = "class_feature"
@@ -81,34 +106,28 @@ export type ClassFeaturePassiveEffect =
 , name = "Unarmored Defense"
 , className = "monk"
 , acquiredAtLevel = 1
-, provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Level 1: Unarmored Defense" }
+, provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Unarmored Defense" }
 , description = "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
 , mechanics =
     { family = "passive"
     , condition =
         { kind = "all_of"
-        , conditions =
-            [ { kind = "not_wearing_armor" }
-            , { kind = "not_wielding_shield" }
+        , predicates =
+            [ { kind = "unarmored" }
+            , { kind = "not_wielding_shield" }   -- Gap 1
             ]
         }
-    , effect =
-        { kind = "set_base_ac_formula"
-        , base = 10
-        , addModifiers = [ "dex", "wis" ]
-        }
+    , grants =
+        [ { kind = "modify_ac_set_base"
+          , const = 10
+          , abilityMod = "dex"
+          , abilityMod2 = "wis"                  -- Gap 2
+          }
+        ]
     }
 }
 ```
 
-## Cross-unit pressure
+## Classification
 
-This pattern recurs immediately:
-- **Barbarian Unarmored Defense (L1):** same shape, different modifiers (`10 + DEX + CON`)
-- Any future unarmored-specialist passive AC feature
-
-Both units block on the same widening. The `passive` family and `set_base_ac_formula` effect should be designed together with both in mind to avoid a third widening pass when Barbarian is encoded.
-
-## v4 atom impact
-
-The tracer would need a new atom or reuse of `modify_ac` with a subkind. Per the TAXONOMY, `modify_ac` is already in the v4 effect inventory. The question is whether `set_base_ac_formula` is a variant of `modify_ac` or a distinct atom. Given that the mathematical operation is different (set vs. delta), and that the inputs differ (ability references vs. flat integer), this is more honestly a new atom — tentatively `set_base_ac` or `define_ac_formula`.
+`surface_widening` — both missing pieces are variants of existing surface types. No new v4 atoms or mechanics families are required.

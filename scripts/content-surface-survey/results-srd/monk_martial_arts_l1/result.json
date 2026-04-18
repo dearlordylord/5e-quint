@@ -7,40 +7,34 @@
     {
       "kind": "new_atom",
       "name": "grant_bonus_action_attack",
-      "justification": "Bonus Unarmed Strike grants the ability to make an Unarmed Strike as a Bonus Action — not an extra standard action. grant_extra_action covers extra standard actions and its restriction field excludes action kinds, but there is no atom for 'grant a bonus-action-constrained attack of a specific strike type'.",
-      "evidence": "Bonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action."
+      "justification": "Bonus Unarmed Strike grants the ability to make a specific attack type (Unarmed Strike) as a Bonus Action. grant_extra_action grants a full Action, not a Bonus Action slot for a specific attack; no existing atom captures 'bonus action unarmed strike' as a passive passive grant.",
+      "evidence": "You can make an Unarmed Strike as a Bonus Action."
     },
     {
       "kind": "new_atom",
-      "name": "set_minimum_damage_die",
-      "justification": "Martial Arts Die replaces the normal damage die of Unarmed Strikes and Monk weapons with a specific die (1d6 at L1, scaling by monk level). No existing atom substitutes the damage die of an attack rather than adding a numeric bonus or changing a scaling tier. The v4 scale_die_size atom scales an existing die but cannot establish a replacement base die for a specific strike type.",
-      "evidence": "Martial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels."
+      "name": "replace_damage_die",
+      "justification": "Martial Arts Die replaces the base damage die of Unarmed Strikes and Monk weapons with a class-level-scaled die (d6→d8→d10→d12). natural_weapons is close but only applies to Unarmed Strike (not Monk weapons), carries no scaling (uses a bare number not DiceAmount), and changes damage type — all three properties are wrong here. A 'replace_damage_die' atom scoped to a weapon filter with DiceAmount scaling would cover this.",
+      "evidence": "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels."
+    },
+    {
+      "kind": "new_atom",
+      "name": "substitute_ability_for_rolls",
+      "justification": "Dexterous Attacks lets the monk use DEX instead of STR for attack and damage rolls of Unarmed Strikes and Monk weapons. modify_roll_numeric adds a fixed delta; no existing atom expresses 'use ability A in place of ability B for these rolls'. Also needed for the Grapple/Shove save DC substitution.",
+      "evidence": "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
     },
     {
       "kind": "new_variant",
-      "name": "modify_roll_substitute in types.ts (ability substitution variant)",
-      "justification": "modify_roll_substitute is listed in the v4 taxonomy (TAXONOMY_atoms_graph.md §9) but is absent from types.ts. Dexterous Attacks is a canonical ability-substitution rider: use Dex instead of Str for attack and damage rolls of Unarmed Strikes and Monk weapons. Adding this v4 atom to the surface would cover it.",
-      "evidence": "Dexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons."
+      "name": "EquipmentPredicate.not_wielding_shield",
+      "justification": "The feature's entire gate requires 'not wielding a Shield' as a condition alongside 'not wearing armor'. The existing not_wearing_armor predicate covers the armor half, but there is no not_wielding_shield variant in EquipmentPredicate.",
+      "evidence": "...while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
     },
     {
       "kind": "new_variant",
-      "name": "EquipmentPredicate: unarmed_or_monk_weapons_only",
-      "justification": "The gate requires the monk to be unarmed OR wielding only Monk weapons (Simple or Light Martial Melee). No existing EquipmentPredicate variant expresses this disjunction. The wielding_weapon predicate covers a single weapon-kind and has no 'unarmed' mode.",
-      "evidence": "You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
-    },
-    {
-      "kind": "new_variant",
-      "name": "EquipmentPredicate: not_wielding_shield",
-      "justification": "The gate also excludes wielding a Shield. The existing not_wearing_armor covers armor categories; shields are wielded off-hand and have no equivalent predicate in the current vocabulary.",
-      "evidence": "you aren't wearing armor or wielding a Shield"
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_roll_substitute for save DC (Grapple/Shove)",
-      "justification": "Dexterous Attacks also allows Dex instead of Str to determine the save DC when the monk uses Grapple or Shove options of their Unarmed Strike. This is an ability substitution on the DC computation side, not on a d20 roll kind — a further shape beyond the attack/damage roll substitution.",
-      "evidence": "when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+      "name": "EquipmentPredicate.unarmed_or_monk_weapons_only",
+      "justification": "The feature gate requires 'unarmed OR wielding only Monk weapons' (Simple Melee + Light Martial Melee). The wielding_weapon predicate has coarse weapon-kind categories (ranged/melee_two_handed/melee_one_handed/two_weapons) with no way to express 'unarmed' or 'Monk weapon category (Simple or Light Martial Melee)'.",
+      "evidence": "...while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
     }
   ],
   "confidence": "high",
-  "notes": "The passive family is the correct mechanics family. The three sub-features all require missing atoms or surface variants: (1) Bonus Unarmed Strike needs a grant_bonus_action_attack atom distinct from grant_extra_action; (2) Martial Arts Die needs a damage-die substitution atom (not a scaling atom — the substitution is a replacement, not an additive modifier); (3) Dexterous Attacks needs modify_roll_substitute, which is in the v4 taxonomy but absent from types.ts. Additionally the equipment gate needs two new EquipmentPredicate variants. The Martial Arts Die level-scaling (d6 at L1 → d10 at L17) could reuse scale_die_size once the base substitution atom exists."
+  "notes": "All three sub-features (Bonus Unarmed Strike, Martial Arts Die, Dexterous Attacks) each require a new atom; none can be honestly coerced into the current vocabulary. The equipment gate also needs two new EquipmentPredicate variants. Dominant classification is atom_widening because the missing concepts (bonus-action-specific attack grant, damage die replacement, ability substitution) are not in the v4 taxonomy at all. No dhall/json authored."
 }

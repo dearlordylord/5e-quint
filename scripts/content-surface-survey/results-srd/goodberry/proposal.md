@@ -1,99 +1,95 @@
-# Proposal: Goodberry — structural_widening
+# Proposal: Goodberry — surface_widening
 
 ## Unit
 
-**Goodberry** — Level 1 Transmutation spell (SRD 5.2.1)
+**Spell:** Goodberry (L1 Conjuration, SRD 5.2.1)
 
-> Ten berries appear in your hand and are infused with magic for the duration. A creature can take a Bonus Action to eat one berry. Eating a berry restores 1 Hit Point, and the berry provides enough nourishment to sustain a creature for one day. Uneaten berries disappear when the spell ends.
+## What fits
 
-Header: Action | Touch | V S M (sprig of mistletoe) | 24 hours (timed, not concentration)
+The spell's overall shape is `ongoing_effect` with a 24-hour timed (non-concentration) duration. All of the following atoms exist and would encode cleanly:
 
-## Why no existing family applies
+- `create_object` with `consumable: true` — 10 magical berries
+- `heal_hp` with `amount: {kind: "fixed", expr: {dice: 0, flat: 1}}` — 1 HP restored per berry
+- `timed` duration, 24 hours, `earlyEnd: [{kind: "caster_recasts_spell"}]` (berries vanish at spell end)
 
-### `ongoing_effect` — hard blocked by operation type
+## What is missing
 
-`OngoingOperation = RollModifierOperation | DamageOnHitOperation`. The per-berry effect is `heal_hp`. There is no heal variant in `OngoingOperation`.
+### 1. `OngoingTrigger` variant: creature-consumes-object (blocking)
 
-Even if the operation type were widened, the attachment model would still fail: `ongoing_effect` attaches to a target/area/mark at cast time. Goodberry's items are handed out later to any creature — the "attachment" is to the item holder, not to a creature chosen at cast time.
+The berry-eating event is:
+> "A creature can take a Bonus Action to eat one berry."
 
-### `activation` — wrong temporal shape
+The current `OngoingTrigger` union has:
 
-`activation` models instantaneous one-shot effects (possibly multi-phase). Goodberry has a 24-hour timed duration with 10 independently-triggered sub-effects, one per berry consumed.
-
-### `triggered_reaction` — not a reaction spell
-
-N/A.
-
-### `anchored_trigger` — location-bound, not item-bound
-
-`anchored_trigger` plants a trigger on a location or area (Alarm pattern). Goodberry's berries are portable consumable items held by creatures. Location-binding does not model item-in-hand.
-
-## Missing subgraph: consumable-object pool
-
-The core pattern Goodberry requires does not exist in v4:
-
-```
-spell_root
-  → activate (caster pays action_quota + spell_slot)
-  → create_object_pool (10 berries, timed: 24h)
-     each berry:
-       → [any holder] pays bonus_action_quota
-       → heal_hp (1 HP, target: consumer)
-  → expire (timed: 24h, or when all berries consumed)
+```typescript
+| { readonly kind: "on_caster_spends_action"; readonly cost: OngoingCasterActionCost; }
 ```
 
-Key structural differences from all existing families:
+This fires only when the **caster** spends the action. Goodberry's trigger fires when **any creature** spends a Bonus Action to consume one of the created objects.
 
-1. **Created objects, not creature/location attachment** — The spell produces items that exist independently and can be picked up, distributed, and consumed by any creature. No `Attachment` kind models this.
-
-2. **Consumer pays their own quota** — The activating creature (the one eating the berry) expends their Bonus Action. All existing quota nodes represent the *caster's* action economy. This is a different actor.
-
-3. **Heal as an ongoing-spell operation** — `OngoingOperation` has no heal variant. The v4 taxonomy includes `heal` as an effect atom, but the surface types have not exposed it in a path that a timed spell can reach.
-
-4. **N independent uses depleting a pool** — The 10-berry count is a finite shared pool where each berry is consumed once. This is distinct from `use_count` on a class feature (which is a single resource that refills on rest) and from `charge` (which is an item-level resource). It is closer to "N single-use objects created at cast time."
-
-## Proposed widening (minimum to encode Goodberry)
-
-### 1. New `Attachment` variant: `consumable_pool`
+**Proposed new variant:**
 
 ```typescript
 | {
-    readonly kind: "consumable_pool";
-    readonly count: number;           // 10 berries
-    readonly activationCost: { readonly kind: "bonus_action" };  // paid by holder
-    readonly activatingActor: "holder";   // not caster
+    readonly kind: "on_creature_consumes_object";
+    readonly cost: OngoingCasterActionCost;  // reuse: {kind:"bonus_action"} here
   }
 ```
 
-Or more generally, a new attachment axis for "created items held by creatures."
+Semantics: fires when any creature holding or adjacent to one of the attached consumable objects spends the stated action cost to consume it. The attachment host narrows which objects qualify; one use depletes one object from the pool (maps naturally to the 10-berry count via the `create_object` consumable pool).
 
-### 2. New `OngoingOperation` variant: `heal_on_activate`
+This trigger would also cover future units where a consumable created by a spell can be used by any creature (not just the caster), such as hypothetical "conjure rations" variants.
 
-```typescript
-| {
-    readonly kind: "heal_on_activate";
-    readonly amount: DiceAmount;      // fixed 1 HP
-    readonly target: "activating_actor";   // the creature eating the berry
-  }
+### 2. `nourishment` effect atom (non-blocking, borderline dm_agenda)
+
+> "the berry provides enough nourishment to sustain a creature for one day"
+
+There is no effect atom for "satisfies one day of food requirements." This is a survival-system side effect alongside the HP restoration. Likely DM-agenda (the survival tracking system is caller-owned per ARCHITECTURE.md), but it is stated as a mechanical outcome of eating the berry.
+
+If the project ever models the SRD survival/exhaustion rules mechanically, a `grant_nourishment` atom or similar would be the hook. For now, omitting this is acceptable and does not affect the blocking classification.
+
+## Verdict
+
+**`surface_widening`**: one new variant of the existing `OngoingTrigger` union is needed. All v4 atoms required exist in the taxonomy; the gap is in the TS surface type's trigger vocabulary, scoped to "caster" where the RAW mechanic allows "any creature."
+
+## Encoding skeleton (blocked on widening)
+
+```dhall
+{ kind = "spell"
+, id = "goodberry"
+, name = "Goodberry"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-E-L#Goodberry" }
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 1
+    , school = "conjuration"
+    , castingTime = { kind = "action" }
+    , range = { kind = "touch" }
+    , components = { v = True, s = True, m = Some "a sprig of mistletoe" }
+    , duration = { kind = "timed", value = { unit = "hour", amount = 24 } }
+    , attachment = { kind = "self" }   -- berries appear in caster's hand
+    , operations =
+        [ { trigger = { kind = "on_creature_consumes_object"  -- MISSING VARIANT
+                      , cost = { kind = "bonus_action" } }
+          , effect =
+              { kind = "heal_hp"
+              , amount = { kind = "fixed", expr = { dice = 0, flat = 1 } }
+              , target = "target_creature"
+              }
+          }
+        ]
+    , initialPhase =
+        { kind = "direct"
+        , attachment = { kind = "self" }
+        , effects =
+            [ { kind = "create_object"
+              , maxSize = "tiny"
+              , consumable = True
+              }
+            ]
+        }
+    }
+}
 ```
 
-### 3. Quota model must support `activating_actor` as the quota source
-
-The existing tracer always emits a `bonus_action_quota` node wired to the caster's procedure. A "holder-pays" model requires either:
-- A flag on the quota node indicating which actor pays, or
-- A new relation type `actor_consumes` distinct from the caster-pays `consumes`.
-
-## Scope of widening
-
-This widening is **not cosmetic**. The "create consumable objects with per-use effects activated by any holder" pattern appears in at least:
-
-- **Goodberry** (1 HP heal per berry, 10 berries)
-- **Tasha's Bubbling Cauldron** (XPHB; creates an elixir with randomized effects)
-- **Heroes' Feast** (creates a meal; effects on consuming creatures; more complex rider)
-- **Create Food and Water** (creates food/water; no per-item mechanical effect — might omit)
-
-The pattern warrants a proper subgraph in v4 before encoding these units. The nourishment/survival effect on Goodberry is DM-agenda and would be excluded from core mechanics regardless.
-
-## Classification
-
-`structural_widening` — no existing `SpellMechanics` family can model the "create N consumable objects, each activatable by any holder at the holder's action cost, each triggering a heal on the consumer" pattern without dishonesty.
+This skeleton is provided for illustration only — it cannot typecheck until `on_creature_consumes_object` is added to `OngoingTrigger`.
