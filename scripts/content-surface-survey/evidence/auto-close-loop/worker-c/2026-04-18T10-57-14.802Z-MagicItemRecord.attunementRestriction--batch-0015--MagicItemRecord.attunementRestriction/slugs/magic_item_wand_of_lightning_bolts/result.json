@@ -1,0 +1,29 @@
+{
+  "unit_slug": "magic_item_wand_of_lightning_bolts",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit to the existing magic-item activation surface: spellcaster attunement restriction, held-item gate, 7-charge pool, 1-3 charge cast scaling for Lightning Bolt at levels 3-5, fixed DC 15, dawn recharge, and last-charge destruction roll."
+}
