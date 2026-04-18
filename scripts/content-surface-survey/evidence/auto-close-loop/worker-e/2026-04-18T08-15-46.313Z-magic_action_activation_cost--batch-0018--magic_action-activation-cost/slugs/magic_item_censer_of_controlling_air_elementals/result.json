@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemMechanics.spawned_creature",
+      "justification": "The item is a magic-item activation that creates and controls a temporary companion. Summoned-creature semantics exist for spells, but no magic-item mechanics family can currently express create-companion plus control/dismissal behavior.",
+      "evidence": "\"While gently swinging this censer, you can take a Magic action to summon an Air Elemental.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpawnedCreatureMechanics.catalog_ref_stat_block",
+      "justification": "The summoned creature is a named monster with an external stat block rather than an inline spell-specific stat block. The current summoned-creature surface only accepts an inline CreatureStatBlock, which would force an invented placeholder here.",
+      "evidence": "\"summon an Air Elemental\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Encoding this as a plain magic-item activation would lose the companion creation/control lifecycle, and encoding it as an inline spawned-creature payload would require inventing the Air Elemental stat block."
+}

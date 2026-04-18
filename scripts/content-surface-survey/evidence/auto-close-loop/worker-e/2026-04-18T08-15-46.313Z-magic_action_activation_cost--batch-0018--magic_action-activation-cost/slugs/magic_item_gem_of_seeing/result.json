@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_sense.only_while_peering_through_item",
+      "justification": "The item fits the existing magic-item activation family with a charge pool, duration, and dawn recharge, but the current sense grant can only model unconditional truesight during the duration. This item grants truesight only while the user peers through the gem, which is a narrower deterministic gating condition on an existing atom rather than a new top-level family.",
+      "evidence": "\"For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_gem_of_seeing.dhall because encoding this as a plain timed grant_sense would misstate the rule as always-on truesight for 10 minutes."
+}
