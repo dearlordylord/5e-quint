@@ -1,0 +1,36 @@
+{
+  "cluster": "difficult_terrain",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "conjure_minor_elementals",
+    "spike_growth"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "conjure_minor_elementals",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "spike_growth",
+      "source": "srd-5.2.1",
+      "kind": "spell",
+      "before": "atom_widening",
+      "after": "atom_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}
