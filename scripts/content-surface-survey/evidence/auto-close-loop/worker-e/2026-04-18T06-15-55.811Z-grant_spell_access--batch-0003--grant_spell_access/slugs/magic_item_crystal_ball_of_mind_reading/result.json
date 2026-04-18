@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_crystal_ball_of_mind_reading",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellLifecycleOverride",
+      "justification": "The item grants access to an existing spell, but only with item-specific upkeep semantics: the granted Detect Thoughts instance does not require concentration and instead persists only while a separately granted Scrying instance remains active. The current surface can override DC and targeting, but it cannot override a granted spell's concentration requirement or tie its lifetime to another ongoing spell.",
+      "evidence": "\"You don't need to concentrate on this Detect Thoughts spell to maintain it during its duration, but it ends if the Scrying spell ends.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "MagicItemRecord + passive/composite mechanics fit the item overall, and grant_spell_access already covers fixed DC and spell-sensor targeting. I did not author content files because encoding Detect Thoughts without the missing lifecycle override would falsely imply normal concentration and independent duration."
+}
