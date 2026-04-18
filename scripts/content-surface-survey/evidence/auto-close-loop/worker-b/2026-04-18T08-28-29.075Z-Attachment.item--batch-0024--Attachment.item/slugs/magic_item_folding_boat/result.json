@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.none",
+      "justification": "The item uses repeatable Magic-action command words without charges, uses, or any reset cadence. The activation family exists, but it currently requires an expendable resource.",
+      "evidence": "\"This item also has three command words, each requiring a Magic action to use\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.destroy_on_attached_form_zero_hp",
+      "justification": "The item can be destroyed when one of its transformed vessel forms is reduced to 0 Hit Points, which is not representable by the current exhaustion-based destruction policies.",
+      "evidence": "\"If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Activation predicate: item_has_no_creatures_aboard",
+      "justification": "The fold-back command is only legal when no creatures are aboard, and the current activation surface has no generic non-equipment predicate for that condition.",
+      "evidence": "\"The Folding Boat folds back into a box if no creatures are aboard.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core transform mechanics map to existing item attachment + alter_item_kind, so this is not structural or atom pressure. I did not author placeholder Dhall/JSON because the activation and destruction constraints cannot be represented honestly."
+}
