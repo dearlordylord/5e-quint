@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_adamantine_armor",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "negate_critical_hit_against_wearer",
+      "justification": "The passive magic-item family exists, but the effect vocabulary has no target-side atom for downgrading an incoming critical hit to a normal hit. `modify_crit_range` is attacker-side and would be dishonest here.",
+      "evidence": "While you're wearing it, any Critical Hit against you becomes a normal hit."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_adamantine_armor.dhall because the only close existing atom, modify_crit_range, models outgoing crit-threshold changes rather than incoming critical-hit negation."
+}
