@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.ongoing_effect",
+      "justification": "The item has a real magic-item activation that creates a timed persistent aura over an area. Current magic-item mechanics only allow passive grants or immediate activation phases; they cannot honestly encode a planted aura with ongoing area-scoped effects and a later manual end action.",
+      "evidence": "\"While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws and can sense the location of any Invisible creature that is also in the Bright Light.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Held passive bonuses and held spell access fit existing composite magic-item mechanics, but the Protective Aura does not. I did not author placeholder content because that would require lying about a persistent aura as a one-shot activation."
+}
