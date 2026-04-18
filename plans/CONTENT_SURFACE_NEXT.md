@@ -4,24 +4,35 @@
 
 ## TL;DR
 
-1. Auto-close-loop overnight session + 55-slug bulk re-mine + `TimeResetCadence` split: **done and merged on master**.
-2. `Attachment.object` widening (was the one confirmed real gap from the prior audit): **done and merged** (commit `039b5922`).
-3. Dataset staleness is the recurring cause of phantom "structural_widening" proposals. Re-mine before designing anything against the current dataset.
-4. New follow-up widenings surfaced by the Attachment.object re-mine — see below.
+1. Auto-close-loop overnight session + 55-slug bulk re-mine + `TimeResetCadence` split: **done and merged**.
+2. Shipped widenings on master:
+   - `039b5922` feat: Attachment.object + ObjectFilter
+   - `507b648e` refactor: simplify round 1 (const-array, extract helper)
+   - `31364d5a` feat: emit_light EffectAtom
+   - `88044326` feat: ObjectFilter.maxSize + DurationEndTrigger.caster_recasts_spell + StatBlockSize→Size rename
+3. Clean slugs so far: continual_flame, light (both fully encoded + tracer-verified).
+4. Dataset staleness is the recurring cause of phantom "structural_widening" proposals. Re-mine before designing anything against the current dataset.
+5. Next up: `create_object` atom (highest payoff remaining — see below).
 
 ## Current master state
 
 ```
+88044326 feat(surface): ObjectFilter.maxSize + DurationEndTrigger.caster_recasts_spell
+31364d5a feat(surface): add emit_light EffectAtom
+507b648e refactor(surface): simplify round 1 — Attachment.object
+b8140008 docs(plan): update CONTENT_SURFACE_NEXT after Attachment.object ships
 039b5922 feat(surface): add Attachment.object for existing-object targeting
 6bfc37d7 chore(survey): bulk re-mine 55 units across 5 widening families + plan cleanup
-f89a74c0 refactor(surface): split RestResetCadence / TimeResetCadence by domain
-3bda25a2 merge: auto-close-loop overnight session
 ```
 
 - `packages/prototype-content-surface/src/surface/types.ts`:
   - `RestResetCadence` (rest-only) + `TimeResetCadence` (calendar; owns `never`) + `ResetCadence` union
   - `Attachment` has 5 kinds: `self | target | area | mark | object`
-  - `ObjectFilter` (material / heldOrWorn / manufactured) + `ObjectMaterial` = `"metal" | "flammable"`
+  - `ObjectFilter` (material / heldOrWorn / manufactured / maxSize)
+  - `ObjectMaterial` via `OBJECT_MATERIALS` const-array = `"metal" | "flammable"`
+  - `Size` (formerly `StatBlockSize`) = `"tiny" | "small" | "medium" | "large" | "huge" | "gargantuan"`
+  - `EffectAtom` includes `emit_light { brightRadiusFeet, dimAdditionalFeet? }`
+  - `DurationEndTrigger` includes `caster_recasts_spell`
 - `CLAUDE.md` has the "Domain-language reflex" note — read it before designing any new type.
 
 ## Follow-up widenings surfaced by the Attachment.object re-mine
@@ -61,14 +72,18 @@ The 10-slug re-mine (arcane_lock, continual_flame, daylight, fabricate, gentle_r
 
 ## Recommended next steps
 
-1. **Authoring gap is blocking verification.** Two re-mines returned `invalid` because `content/<slug>.json` doesn't exist. Before more re-mines, author one content file for a representative object-attachment spell (heat_metal is the richest) to close the loop tracer-side. This proves the new `Attachment.object` arm renders correctly end-to-end.
+1. **`create_object` atom — next widening** (highest payoff remaining). Covers fabricate, silent_image, dancing_lights, create_food_and_water, instant_fortress, and likely major_image, minor_illusion, secret_chest, plus some wall spells. Already listed in `V4_EFFECT_ATOMS` in atom-whitelist.ts but missing from `EffectAtom` union — this is the gap.
 
-2. **Pick the next widening** only after re-mining affected clusters. Candidates ranked by ubiquity:
-   - `emit_light` atom — covers continual_flame + light + daylight (and likely dancing_lights, faerie_fire's light payload). Highest payoff.
-   - `create_object` atom + mechanics family — covers fabricate + instant_fortress + create_food_and_water. Separate from attachment; needs its own design session.
-   - `lock_object` atom — narrow, single spell (arcane_lock). Defer.
+2. **Authoring continues to lag.** The re-mine worker only auto-authors content when the surface is close to clean. For slugs with multiple unresolved widenings (produce_flame, silent_image, daylight, heat_metal, fabricate), we need either (a) the widenings shipped, or (b) manual authoring after a full SRD re-read. Prefer (a).
 
-3. **Decision-presentation format** (unchanged from prior session):
+3. **Narrow atoms to defer** (1-unit each, low leverage):
+   - `bond_objects` (sovereign_glue)
+   - `lock_object` (arcane_lock)
+   - `force_drop_object` (heat_metal)
+   - `block_reanimation` / `pause_deadline` (gentle_repose)
+   - `move_controlled_object` (talisman)
+
+4. **Decision-presentation format** (unchanged from prior session):
    1. Show 1–2 exemplar unit proposals.
    2. Show current type definition being widened.
    3. Propose concrete diff.
