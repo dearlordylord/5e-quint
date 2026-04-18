@@ -1,0 +1,36 @@
+{
+  "cluster": "RestResetCadence.century",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_tome_of_clear_thought",
+    "magic_item_tome_of_understanding"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_tome_of_clear_thought",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "invalid",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_tome_of_understanding",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "atom_widening",
+      "after": "invalid",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

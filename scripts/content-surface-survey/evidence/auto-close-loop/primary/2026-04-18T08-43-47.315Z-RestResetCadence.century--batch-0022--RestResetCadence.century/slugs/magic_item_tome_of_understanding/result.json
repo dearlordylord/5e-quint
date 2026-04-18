@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_tome_of_understanding",
+  "outcome": "refused",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The unit fits the existing magic_item activation surface honestly: study-gated activation, one use, century cooldown, and modify_ability_score on Wisdom to max 30. Dhall compiled and the tracer generated content/magic_item_tome_of_understanding.trace.md successfully. I could not classify this as clean because `pnpm typecheck` fails on a pre-existing package error in src/interpreter/tracer.ts:3274 (`traceEquipmentPredicate` returns `string[]` but `traceMagicItemSpawnedCreature` treats it as `string`), and the task forbids editing that file."
+}
