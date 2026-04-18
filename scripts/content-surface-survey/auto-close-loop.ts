@@ -1542,6 +1542,12 @@ function main(): void {
           attempted.add(cluster.canonical);
           state.attempted = [...attempted];
           state.noImproveStreak += 1;
+          // Count abstentions toward parking. A cluster where the agent keeps
+          // refusing to make any change IS a dead-end for automation, same as
+          // one where widenings keep getting reverted — park both paths.
+          if (recordClusterFailure(state, cluster.canonical)) {
+            parked.add(cluster.canonical);
+          }
           writeObservability(args, state);
         } else if (isTransientBatchError(state.lastError)) {
           process.stderr.write("auto-close-loop: transient batch failure; will retry after sleep\n");
