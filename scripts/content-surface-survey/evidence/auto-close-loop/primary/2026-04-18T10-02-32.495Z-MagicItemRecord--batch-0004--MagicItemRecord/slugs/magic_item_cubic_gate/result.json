@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.planeOverride",
+      "justification": "The existing magic-item activation family and charge-cast spell grant can represent the cube's charges, dawn recharge, and Magic action activation, but there is no honest way to express that pressing a given cube face constrains the granted Gate or Plane Shift cast to the plane keyed to that face.",
+      "evidence": "\"Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.planeOverride",
+      "justification": "The same missing shape is required for the second spell mode: the destination plane is not freely chosen at cast time, but inherited from the selected cube face.",
+      "evidence": "\"Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_cubic_gate.dhall. A placeholder grant_spell_access to gate or plane_shift would omit the cube's core keyed-plane mechanic and produce a misleading trace."
+}
