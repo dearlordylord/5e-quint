@@ -1,0 +1,134 @@
+{
+  "description": "While holding the rod, you have Advantage on Wisdom (Perception) checks and on Initiative rolls. While holding the rod, you can cast Detect Evil and Good, Detect Magic, Detect Poison and Disease, and See Invisibility from it. As a Magic action, you can plant the rod in the ground; for 10 minutes, while in its Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws. The aura's Invisible-creature-location rider is omitted from this authored subset; see proposal-magic_item_rod_of_alertness.md.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_rod_of_alertness",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "initiative"
+            ]
+          },
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "ability_check"
+            ],
+            "skillFilter": {
+              "kind": "fixed",
+              "skills": [
+                "perception"
+              ]
+            }
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": "at_will",
+            "spellId": "detect_evil_and_good"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": "at_will",
+            "spellId": "detect_magic"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": "at_will",
+            "spellId": "detect_poison_and_disease"
+          },
+          {
+            "kind": "grant_spell_access",
+            "mode": "at_will",
+            "spellId": "see_invisibility"
+          }
+        ]
+      },
+      {
+        "activationCost": {
+          "action": "magic",
+          "kind": "standard_action"
+        },
+        "condition": {
+          "kind": "holding_item"
+        },
+        "duration": {
+          "kind": "timed",
+          "value": {
+            "amount": 10,
+            "unit": "minute"
+          }
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "area",
+              "occupantDispositionFilter": "friendly_to_source",
+              "origin": {
+                "kind": "self"
+              },
+              "shape": {
+                "kind": "sphere",
+                "radiusFeet": 60
+              }
+            },
+            "effects": [
+              {
+                "delta": {
+                  "dice": 1,
+                  "dieSize": 1,
+                  "kind": "fixed_dice",
+                  "sign": "+"
+                },
+                "kind": "modify_ac"
+              },
+              {
+                "delta": {
+                  "dice": 1,
+                  "dieSize": 1,
+                  "kind": "fixed_dice",
+                  "sign": "+"
+                },
+                "kind": "modify_roll_numeric",
+                "on": [
+                  "saving_throw"
+                ]
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "dawn"
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 1
+          },
+          "kind": "use_count"
+        }
+      }
+    ]
+  },
+  "name": "Rod of Alertness",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RodOfAlertness"
+  },
+  "rarity": "very_rare",
+  "requiresAttunement": true
+}
