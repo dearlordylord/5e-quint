@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_bag_of_holding",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "container_storage_mechanics",
+      "justification": "The current magic-item families only cover passive grants, activated abilities, triggered reactions, or composites of those. Bag of Holding's core rule is persistent extradimensional storage with capacity, retrieval via Utilize action, and item-state failure conditions. That needs a container/storage subgraph rather than a buff or spell-casting encoding.",
+      "evidence": "The bag can hold up to 500 pounds, not exceeding a volume of 64 cubic feet. Retrieving an item from the bag requires a Utilize action."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "nested_extradimensional_collision",
+      "justification": "The current surface has no honest way to model a trigger fired by placing one item inside another extradimensional space, destroying both items, creating a temporary gate, and transporting nearby creatures through it. This is more than a missing effect atom; it is a multi-step item-interaction procedure.",
+      "evidence": "Placing a Bag of Holding inside an extradimensional space created by a Handy Haversack, Portable Hole, or similar item instantly destroys both items and opens a gate to the Astral Plane."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. Encoding this as passive or activation would be misleading because the item's primary mechanic is container state, not an always-on grant or a one-shot activated effect."
+}
