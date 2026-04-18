@@ -942,6 +942,18 @@ function describeReactionTrigger(t: ReactionTrigger): string {
       return `targeted by ${t.spellId}`;
     case "creature_casts_spell":
       return `creature casts spell (${t.components.join("/")})`;
+    case "spell_save_outcome": {
+      const levelTag =
+        t.spellLevelAtMost === undefined
+          ? ""
+          : `, level <= ${t.spellLevelAtMost}`;
+      const schoolTag =
+        t.spellSchool === undefined ? "" : `, ${t.spellSchool}`;
+      const selfTag = t.spellTargetsOnlySelf === true ? ", self only" : "";
+      const areaTag =
+        t.spellHasNoAreaOfEffect === true ? ", no area of effect" : "";
+      return `${t.outcome} on spell save${levelTag}${schoolTag}${selfTag}${areaTag}`;
+    }
     case "any_of":
       return t.triggers.map(describeReactionTrigger).join(" OR ");
     default: {

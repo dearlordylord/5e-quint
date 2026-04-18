@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.modify_roll_advantage.saveSourceFilter = \"spell\"",
+      "justification": "The passive advantage applies only to saving throws against spells, not to all saving throws. The current surface can narrow by roll kind, skill, save ability, or attacker type, but not by whether the save was caused by a spell.",
+      "evidence": "While wearing this ring, you have Advantage on saving throws against spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PassiveMechanics.triggered_operation on ReactionTrigger.spell_save_outcome",
+      "justification": "The ring has an automatic triggered effect after a successful save against a qualifying spell: the spell has no effect on you. Passive mechanics currently support only always-on grants and elapsed-time operations, so there is no honest way to encode this automatic post-save negation without spending a reaction.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "TriggeredReactionAbilityMechanics without required item resource/resetCadence",
+      "justification": "The deflection rider is gated by the reaction quota only; it does not spend charges, uses, or recharge on a cadence. Current non-spell triggered reactions require a separate item resource plus reset cadence, which would fabricate a limit the ring does not have.",
+      "evidence": "you can take a Reaction to deflect the spell back at the spell's caster"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item conceptually fits a composite magic item, and existing atoms cover negate/reflect, but the current surface cannot express spell-only save advantage, automatic post-save negation, and reaction-only deflection without inventing false limits."
+}

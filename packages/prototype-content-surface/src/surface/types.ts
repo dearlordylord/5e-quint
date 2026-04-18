@@ -1012,6 +1012,18 @@ export type ReactionTrigger =
       readonly kind: "creature_casts_spell";
       readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
     }
+  // Post-save spell reflection / conversion window. The trigger fires
+  // only after the reacting creature finishes a saving throw against a
+  // spell, with optional predicates on the triggering spell's school,
+  // level, and targeting shape.
+  | {
+      readonly kind: "spell_save_outcome";
+      readonly outcome: "success" | "failure";
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly spellSchool?: SpellSchool;
+      readonly spellTargetsOnlySelf?: true;
+      readonly spellHasNoAreaOfEffect?: true;
+    }
   | {
       readonly kind: "any_of";
       readonly triggers: ReadonlyNonEmptyArray<ReactionTrigger>;
