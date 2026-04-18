@@ -1,155 +1,105 @@
-# Proposal: Heat Metal — Surface Widenings Required
+# Proposal: Heat Metal — surface widening
 
-**Unit**: Heat Metal (spell, level 2, Transmutation, SRD 5.2.1)
 **Outcome**: `atom_widening`
-**Blocker count**: 4 (1 atom_widening + 3 surface_widening)
+**Unit**: Heat Metal (spell, level 2, transmutation, SRD 5.2.1)
 
----
+## What fits
 
-## RAW Text (relevant excerpts)
+The structural shape of Heat Metal maps cleanly onto the existing surface:
 
-> Choose a manufactured metal object … You cause the object to glow red-hot. Any creature in physical contact with the object takes 2d8 Fire damage when you cast the spell. Until the spell ends, you can take a Bonus Action on each of your later turns to deal this damage again if the object is within range.
->
-> If a creature is holding or wearing the object and takes the damage from it, the creature must succeed on a Constitution saving throw or drop the object if it can. If it doesn't drop the object, it has Disadvantage on attack rolls and ability checks until the start of your next turn.
->
-> Using a Higher-Level Spell Slot: The damage increases by 1d8 for each spell slot level above 2.
+- **Family**: `ongoing_effect` — persistent state (concentration, 1 minute) with a recurring optional cost is exactly what `on_caster_spends_action` was designed for.
+- **Attachment**: `{ kind: "object", count: 1, filter: { manufactured: true, material: "metal" } }` — the manufactured metal object constraint is fully expressible with the existing `ObjectFilter`.
+- **Bonus Action trigger**: `{ kind: "on_caster_spends_action", cost: { kind: "bonus_action" } }` — this was added for Heat Metal-style "each later turn, optionally spend a Bonus Action" patterns.
+- **Damage atom**: `{ kind: "damage", damageType: "fire", amount: ... }` — fire damage is in the vocabulary.
+- **Upcast scaling**: `{ kind: "linear_per_level", axis: "slot", base: { dice: 2, dieSize: 8 }, perLevel: { dice: 1 }, startingAtLevel: 2 }` — slot-linear scaling from level 2 is representable.
 
----
+## What blocks clean encoding
 
-## What fits cleanly
+### Gap 1 — Missing atom: `force_drop_item`
 
-- **Family**: `ongoing_effect` — concentration 1 minute, object attachment, per-turn repeat.
-- **Attachment**: `object` with `{ material: "metal", manufactured: true }` — exactly what the `object` attachment and `ObjectFilter` support.
-- **Upcast**: `+1d8` per slot above 2 → `linear_per_level` on the fire `damage` atom, `axis: "slot"`.
-- **Initial damage**: `initialPhase` on `OngoingEffectMechanics` is the right hook — a one-time `direct` phase at cast time.
+**Evidence**: "the creature must succeed on a Constitution saving throw or **drop the object** if it can"
 
----
-
-## Gap 1 — `force_drop_object` effect atom (BLOCKER, atom_widening)
-
-**RAW**: "the creature must succeed on a Constitution saving throw or drop the object if it can"
-
-The Con save has two branches:
-- **onFail**: creature must drop the held/worn metal object
-- **if doesn't drop** (can't or won't): disadvantage on attack rolls + ability checks
-
-No v4 taxonomy atom covers "release a held or worn item." The closest candidates:
-- `force_move` — positional displacement, not item release
-- `apply_condition` — no "holding object" condition exists in SRD 5.2.1
-- `remove_condition` — same gap; "holding" is not a condition
+The fail branch of the save gate causes the creature to release a held item. No atom in v4 or the current `EffectAtom` union models forcibly dropping/releasing a held or worn object. This is distinct from:
+- `force_move` — repositions the creature, not an item
+- `apply_condition` — no SRD condition models "must release item"
+- `alter_item_kind` — changes the item's form, not its holder relationship
 
 **Proposed atom**:
 ```typescript
 | {
-    readonly kind: "force_drop_object";
-    // Which object to drop — can reference the spell's attached object
-    // or be unqualified (any held object). Heat Metal is always the
-    // attached object; leave unqualified for the common case.
-    readonly objectRef?: "attached_object";
+    readonly kind: "force_drop_item";
+    // No fields needed beyond the kind discriminant for the basic case.
+    // Future widening: filter to specific item categories (wielded weapon,
+    // worn armor) if needed by other units.
   }
 ```
 
-**Note**: The "if it doesn't drop" branch (disadvantage) implicitly depends on the drop outcome — the disadvantage applies only when the creature retains the object despite failing the save. This conditional-on-failed-drop structure has no current surface shape either; a simple `onFail: composite[force_drop_object, disadvantage]` would over-apply the disadvantage to creatures that do drop.
+### Gap 2 — Missing surface variant: object-contact propagation
 
----
+**Evidence**: "Any creature **in physical contact** with the object takes 2d8 Fire damage"
 
-## Gap 2 — `OngoingTrigger.on_caster_bonus_action` (surface_widening)
+The object is the attachment anchor. The effect recipients are creatures touching the object, not the object itself. The current surface has no mechanism for an ongoing operation on an `object` attachment to nominate "creatures currently in physical contact with this object" as the effect target.
 
-**RAW**: "you can take a Bonus Action on each of your later turns to deal this damage again"
+Every existing `EffectAtom` that deals damage (`damage`, `heal_hp`, etc.) assumes the effect applies to the "attached subject." For creature attachments (`target`, `mark`), the attached subject is a creature, so damage is unambiguous. For an `object` attachment, the surface is silent about how damage propagates to interacting creatures.
 
-The ongoing damage is player-activated: the caster optionally spends a Bonus Action each turn. The existing `OngoingTrigger` variants:
-
-| Variant | Why it doesn't fit |
-|---|---|
-| `passive` | Fires automatically — no player choice, no resource spend |
-| `on_caster_turn_start` | Fires unconditionally at turn start — wrong semantics |
-| `on_caster_attack_hit` | Requires an attack hit, not a bonus action spend |
-| others | Unrelated to caster turn economy |
-
-**Proposed variant**:
+**Proposed surface variant**: A new propagation concept on `object` attachments — either an implicit "affects creatures in contact" rule for damage atoms, or an explicit field:
 ```typescript
+// On ObjectAttachment or OngoingOperation:
+readonly propagatesTo?: "creatures_in_contact";
+```
+
+This would allow the tracer to emit a correct `attaches_to` edge from the damage effect to the object, with an implied secondary propagation to touching creatures.
+
+### Gap 3 — Missing surface variant: conditional OR within save_gate onFail
+
+**Evidence**: "the creature must succeed on a Constitution saving throw or drop the object if it can. **If it doesn't drop the object**, it has Disadvantage on attack rolls and ability checks"
+
+The fail outcome is not a single effect but a conditional sequence:
+1. Attempt to drop the object.
+2. If the creature dropped the object → outcome complete.
+3. If the creature did NOT drop the object (because it chose not to, or cannot) → apply Disadvantage.
+
+The current `save_gate.onFail: EffectAtom` accepts a single effect atom (or a `composite`). A `composite` applies all children unconditionally — it cannot express "apply A; if A succeeded, skip B; otherwise apply B." This conditional branching within a fail outcome needs a new surface shape:
+
+```typescript
+// Proposed variant for save_gate onFail:
 | {
-    readonly kind: "on_caster_bonus_action";
-    // The trigger fires when the caster spends their Bonus Action
-    // on their turn while the effect persists.
-    readonly optional: true; // always optional for this trigger
+    readonly kind: "try_or_fallback";
+    readonly try: EffectAtom;      // force_drop_item
+    readonly fallback: EffectAtom; // modify_roll_advantage (disadvantage)
   }
 ```
 
-This variant would consume a `bonus_action_quota` resource node, paralleling how spell casting times emit quota nodes. The tracer would emit a `bonus_action_quota` resource connected to the window with a `consumes` relation.
+### Gap 4 — Missing surface variant: `RiderExpiry.caster_turn_start`
 
----
+**Evidence**: "it has Disadvantage on attack rolls and ability checks **until the start of your next turn**"
 
-## Gap 3 — "creatures in contact with attached object" targeting (surface_widening)
+"Your next turn" refers to the **caster's** next turn start. The existing `RiderExpiry` variants are:
+- `target_uses_or_turn_start` — target's turn start
+- `end_of_next_turn` — presumably the target's or the attacker's next turn END
 
-**RAW**: "Any creature in physical contact with the object takes 2d8 Fire damage"
+Neither variant covers a caster-scoped turn-start boundary. A new variant is needed:
 
-The spell attaches to an **object** (the metal item), but the damage recipients are **creatures touching it**. The current attachment vocabulary offers no way to express "creatures currently in physical contact with the attached object" as an effect target.
-
-Current options and why they fail:
-- `Attachment.target` — requires selecting creatures directly, not via an object intermediary
-- `Attachment.area` — the "area" of contact is not a geometric shape; it's dynamic (any creature touching the object)
-- `Attachment.object` — correct for the anchor, but `EffectAtom` effects then apply *to the object*, not to touching creatures
-
-**Proposed vocabulary**:
-A new `TargetSelection` mode or a new `Attachment` kind:
 ```typescript
-| {
-    readonly kind: "creatures_in_contact_with_object";
-    // Effect reaches all creatures currently touching the attached object.
-    // Resolves dynamically at the time the damage fires.
-  }
+| { readonly kind: "caster_turn_start" }
 ```
 
-Alternatively, the `object` attachment could gain an `affectsCreaturesInContact: true` flag that redirects EffectAtoms to touching creatures rather than the object itself.
+This surfaces in other spells that grant short-duration riders scoped to the caster's initiative (e.g., Vicious Mockery's disadvantage "on the next attack roll it makes before the end of its turn" is target-scoped, but other spells explicitly tie expiry to the caster's turn).
 
----
+## Encoding recommendation
 
-## Gap 4 — `RiderExpiry` for "start of caster's next turn" (surface_widening)
+Do not attempt partial encoding. The save mechanic (drop or disadvantage) is Heat Metal's core mechanical identity — not a minor rider. The damage loop alone would produce a misleadingly simple trace that omits the spell's primary combat function.
 
-**RAW**: "it has Disadvantage on attack rolls and ability checks until the start of your next turn"
+Once all four gaps are resolved:
+1. Add `force_drop_item` to `EffectAtom`.
+2. Clarify how `object` attachment operations propagate to touching creatures (implicit rule or explicit `propagatesTo` field).
+3. Add `try_or_fallback` (or equivalent) to the save_gate onFail shape.
+4. Add `RiderExpiry.caster_turn_start`.
 
-The disadvantage rider expires at the **caster's** next turn start. The two `RiderExpiry` variants:
-
-| Variant | Semantics |
-|---|---|
-| `target_uses_or_turn_start` | Sap mastery: before attacker's next turn OR when target uses a roll |
-| `end_of_next_turn` | Expires at end of a creature's next turn |
-
-Neither matches "start of the caster's turn." The caster is not the target; the target is the creature holding the metal object.
-
-**Proposed variant**:
-```typescript
-| { readonly kind: "start_of_caster_next_turn" }
-```
-
-This would wire to an `on_caster_turn_start` window in the tracer, paralleling how `end_of_next_turn` wires to `turn_end_window`.
-
----
-
-## Encoding plan (for when gaps are resolved)
-
-Once all four gaps are addressed, Heat Metal encodes as an `ongoing_effect` spell:
-
-```
-ongoing_effect
-  attachment: object { material: metal, manufactured: true }
-  initialPhase: direct
-    attachment: creatures_in_contact_with_object   ← Gap 3
-    effects: [damage { fire, 2d8 + 1d8/slot linear }]
-  operations:
-    - trigger: on_caster_bonus_action              ← Gap 2
-      effect: save_gate { con, caster_spell_save_dc
-        onFail: composite [
-          force_drop_object,                       ← Gap 1
-          if_not_dropped: modify_roll_advantage {
-            disadvantage, [attack_roll, ability_check],
-            expiresOn: start_of_caster_next_turn   ← Gap 4
-          }
-        ]
-        onSuccess: none
-      }
-      // + damage to creatures in contact (same Gap 3 issue)
-```
-
-The "if not dropped" conditional on the disadvantage rider has no surface shape either — it's a conditional-on-failed-action that would require a nested branch not expressible with the current `composite` atom. This may require a fifth widening if tackled precisely, but is lower priority than the four above.
+The dhall encoding would then follow the `ongoing_effect` family with:
+- `object` attachment (manufactured metal, range 60 ft)
+- `initialPhase`: `direct` phase → `damage` (2d8 fire) with contact-propagation to touching creatures
+- `operations[0]`: `on_caster_spends_action: bonus_action` → `save_gate` (Con, caster spell save DC):
+  - `onFail`: `try_or_fallback { try: force_drop_item, fallback: composite [modify_roll_advantage disadvantage on attack_roll + ability_check, expiresOn: caster_turn_start] }`
+  - `onSuccess`: `none`
+- Slot scaling: `linear_per_level` axis=slot, +1d8 per slot above 2

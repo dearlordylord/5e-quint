@@ -1554,7 +1554,29 @@ export type OngoingTrigger =
   // Creature enters the area attachment (or starts turn in it —
   // typically combined with on_attached_turn_start via multi-operation).
   // Web, Moonbeam entry, Grease area.
-  | { readonly kind: "on_creature_enters_area" };
+  | { readonly kind: "on_creature_enters_area" }
+  // The caster optionally spends {cost} on each of their later turns
+  // while the effect persists to fire the operation. Produce Flame
+  // (Magic action to hurl fire), Heat Metal (Bonus Action to deal
+  // damage again). Distinct from on_caster_turn_start (fires
+  // unconditionally) and on_caster_attack_hit (fires on any landed
+  // attack).
+  | {
+      readonly kind: "on_caster_spends_action";
+      readonly cost: OngoingCasterActionCost;
+    };
+
+// Subset of action-economy costs valid for a per-turn optional
+// caster-spent action within an ongoing effect. Narrower than
+// ClassFeatureActivationCost: reaction / action_plus_bonus_action /
+// minutes don't fit the "each turn the caster MAY spend this"
+// pattern.
+export type OngoingCasterActionCost =
+  | { readonly kind: "bonus_action" }
+  | {
+      readonly kind: "standard_action";
+      readonly action: StandardActionKind;
+    };
 
 // Optional predicate gating the trigger.
 export type OngoingPredicate = {

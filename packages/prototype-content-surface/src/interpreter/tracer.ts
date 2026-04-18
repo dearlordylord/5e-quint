@@ -1384,6 +1384,21 @@ function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_caster_spends_action": {
+      const winId = ids("win");
+      const atomKind =
+        trigger.cost.kind === "bonus_action"
+          ? "bonus_action_window"
+          : "action_window";
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind,
+        label: `${atomKind}\n(caster spends ${describeOngoingCasterActionCost(trigger.cost)})`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     default: {
       const _: never = trigger;
       throw new Error(`unhandled ongoing trigger: ${String(_)}`);
@@ -2495,6 +2510,21 @@ function traceAttachment(
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeOngoingCasterActionCost(
+  cost: import("../surface/types.ts").OngoingCasterActionCost,
+): string {
+  switch (cost.kind) {
+    case "bonus_action":
+      return "Bonus Action";
+    case "standard_action":
+      return `${cost.action} action`;
+    default: {
+      const _: never = cost;
+      throw new Error(`unhandled ongoing caster action cost: ${String(_)}`);
     }
   }
 }
