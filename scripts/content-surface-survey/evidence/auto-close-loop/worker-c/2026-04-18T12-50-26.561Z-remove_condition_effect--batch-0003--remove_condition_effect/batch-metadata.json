@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 3,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "remove_condition_effect",
+  "archivedAt": "2026-04-18T12:51:50.848Z",
+  "selectedSlugs": [
+    "greater_restoration",
+    "mass_heal"
+  ]
+}
