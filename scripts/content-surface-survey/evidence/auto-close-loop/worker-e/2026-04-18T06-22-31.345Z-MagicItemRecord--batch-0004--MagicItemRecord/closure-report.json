@@ -1,0 +1,36 @@
+{
+  "cluster": "MagicItemRecord",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_cube_of_force",
+    "magic_item_cubic_gate"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_cube_of_force",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_cubic_gate",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}
