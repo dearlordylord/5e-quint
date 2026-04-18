@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "difficult_terrain",
+  "archivedAt": "2026-04-18T15:20:07.441Z",
+  "selectedSlugs": [
+    "conjure_minor_elementals",
+    "spike_growth"
+  ]
+}
