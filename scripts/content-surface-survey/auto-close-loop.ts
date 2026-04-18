@@ -903,6 +903,7 @@ function resultSummaryForSlug(source: Source, slug: string): string {
 
 function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: ReadonlyArray<string>): string {
   const queue = loadQueue();
+  const integrationBranch = process.env.AUTO_LOOP_INTEGRATION_BRANCH ?? DEFAULT_INTEGRATION_BRANCH;
   const evidence = selectedSlugs
     .map((slug) => {
       const row = queue.get(slug);
@@ -912,6 +913,10 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     .join("\n");
   return [
     "You are editing the real repository to reduce one reusable surface gap.",
+    "",
+    `This loop worktree is intentionally based on ${integrationBranch}, not master.`,
+    `Before editing, run 'git log --oneline -1 ${integrationBranch}' and verify your HEAD matches.`,
+    `If it does not, run 'git rebase ${integrationBranch}'. Do not rebase onto master in this loop worktree.`,
     "",
     `Target cluster: ${cluster}`,
     `Target source: ${args.source}`,
@@ -1344,6 +1349,8 @@ function main(): void {
       }
 
       state.batch += 1;
+      state.stopReason = undefined;
+      state.lastError = undefined;
       state.currentCluster = cluster.canonical;
       state.currentBatchStartedAt = new Date().toISOString();
       saveState(args.statePath, state);
