@@ -323,10 +323,6 @@ function sharedRoot(): string {
   return DEFAULT_SHARED_ROOT;
 }
 
-function runSurveyLockPath(): string {
-  return path.join(repoRoot(), "scripts", "content-surface-survey", "run-survey.lock");
-}
-
 function ensureParent(filePath: string): void {
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
 }
@@ -350,50 +346,6 @@ function processAlive(pid: number): boolean {
     return true;
   } catch {
     return false;
-  }
-}
-
-function activeSurveyProcesses(): number[] {
-  const result = spawnSync(
-    "bash",
-    [
-      "-lc",
-      "pgrep -f 'scripts/content-surface-survey/(run-survey\\.sh|worker\\.sh)|content-surface-survey/close-loop\\.ts' || true",
-    ],
-    {
-      cwd: repoRoot(),
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "inherit"],
-    },
-  );
-  return (result.stdout ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0)
-    .map((line) => Number(line))
-    .filter((pid) => Number.isInteger(pid) && pid !== process.pid);
-}
-
-function surveyRunActive(): boolean {
-  return activeSurveyProcesses().length > 0;
-}
-
-function waitForSurveyIdle(args: Args, state: PersistedState): void {
-  let warned = false;
-  while (surveyRunActive()) {
-    if (!warned) {
-      const pids = activeSurveyProcesses();
-      process.stdout.write(
-        `survey already active; waiting for idle before next batch (pids: ${pids.join(", ")})\n`,
-      );
-      warned = true;
-    }
-    state.lastError = "waiting for existing survey activity to finish";
-    saveState(args.statePath, state);
-    sleep(Math.max(args.sleepSeconds, 5));
-  }
-  if (warned && fs.existsSync(runSurveyLockPath())) {
-    fs.rmSync(runSurveyLockPath(), { force: true });
   }
 }
 
@@ -1372,8 +1324,6 @@ function main(): void {
         sleep(Math.max(args.sleepSeconds, 5));
         continue;
       }
-
-      waitForSurveyIdle(args, state);
 
       const cluster = pickNextCluster(args, attempted);
       if (!cluster) {
