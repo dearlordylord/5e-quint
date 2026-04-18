@@ -1,0 +1,41 @@
+{
+  "unit_slug": "magic_item_stone_of_controlling_earth_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "command_companion",
+    "companion",
+    "create_companion",
+    "duration_window",
+    "expire",
+    "holding_item",
+    "magic_item_root",
+    "persist",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.touching_ground_with_item",
+      "justification": "The existing activation/equipment gate vocabulary can express holding the item, but not the stricter requirement that the held item be touching the ground during activation.",
+      "evidence": "\"While touching this 5-pound stone to the ground, you can take a Magic action to summon an Earth Elemental.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CreatureControl.unspecified_command_range_and_default_behavior",
+      "justification": "The spawned-creature control surface currently requires a command range and fallback behavior even when the item text only says the creature obeys commands and gives no command radius or unstated-behavior rule.",
+      "evidence": "\"The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count.\""
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Authored as magic_item + spawned_creature with catalog_ref(Earth Elemental), 1 use refreshed at dawn, 1-hour duration, and bonus-action dismissal. Placeholder values were required for control.commandRangeFeet and control.defaultBehavior. The tracer also omits turn-order and manual-dismiss details even though the JSON carries them."
+}

@@ -1912,8 +1912,24 @@ export type ReanimatedCreatureMechanics = SpellMechanicsHeader & {
   readonly nightOnly?: true;
 };
 
+// Spawned-creature payloads are usually authored with an inline stat
+// block (Find Steed, Find Familiar), but some item lines summon a
+// named SRD creature by catalog identity instead of shipping a custom
+// derived block. Keep the reference grammar aligned with
+// reanimated-creature rather than inventing item-only summon fields.
+export type SpawnedCreatureStatBlock =
+  | {
+      readonly kind: "inline";
+      readonly statBlock: CreatureStatBlock;
+    }
+  | {
+      readonly kind: "catalog_ref";
+      readonly monsterId: string;
+      readonly displayName: string;
+    };
+
 export type SpawnedCreaturePayload = {
-  readonly statBlock: CreatureStatBlock;
+  readonly creature: SpawnedCreatureStatBlock;
   readonly mode?: CreatureMode;
   readonly control: CreatureControl;
   readonly dismissal: CreatureDismissal;

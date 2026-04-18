@@ -1,0 +1,65 @@
+{
+  "description": "While touching this 5-pound stone to the ground, you can take a Magic action to summon an Earth Elemental. The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The stone can't be used this way again until the next dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_stone_of_controlling_earth_elementals",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "control": {
+      "commandCost": {
+        "kind": "no_action_required"
+      },
+      "commandRangeFeet": 30,
+      "defaultBehavior": "dodge_and_avoid",
+      "initiative": "shared_with_caster",
+      "turnOrder": "immediately_after_caster"
+    },
+    "creature": {
+      "displayName": "Earth Elemental",
+      "kind": "catalog_ref",
+      "monsterId": "earth_elemental"
+    },
+    "dismissal": {
+      "manualDismiss": "bonus_action",
+      "onSpellEnd": "disappears",
+      "onZeroHp": "disappears"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "spawned_creature",
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "resetCadence": {
+      "kind": "dawn"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Stone of Controlling Earth Elementals",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StoneOfControllingEarthElementals"
+  },
+  "rarity": "rare",
+  "requiresAttunement": false
+}

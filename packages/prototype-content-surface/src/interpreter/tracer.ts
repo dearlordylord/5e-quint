@@ -82,6 +82,7 @@ import type {
   MagicItemVariant,
   PassiveOperation,
   MagicItemSpawnedCreatureMechanics,
+  SpawnedCreatureStatBlock,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -1611,7 +1612,7 @@ function traceSpawnedCreature(
     id: compId,
     category: "attachment",
     atomKind: "companion",
-    label: `companion\n${describeCreatureStatBlock(m.statBlock)}\nrange ${describeRange(ctx.range)}`,
+    label: `companion\n${describeSpawnedCreatureStatBlock(m.creature)}\nrange ${describeRange(ctx.range)}`,
   });
   edges.push({ from: ctx.procId, to: compId, relation: "attaches_to" });
 
@@ -1620,7 +1621,7 @@ function traceSpawnedCreature(
     id: createId,
     category: "effect",
     atomKind: "create_companion",
-    label: `create_companion\n${m.statBlock.displayName}`,
+    label: `create_companion\n${describeSpawnedCreatureDisplayName(m.creature)}`,
   });
   edges.push({ from: ctx.procId, to: createId, relation: "grants" });
   edges.push({ from: createId, to: compId, relation: "attaches_to" });
@@ -1647,24 +1648,26 @@ function traceSpawnedCreature(
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
 
-  for (const [slot, kind] of [
-    [m.statBlock.actions, "action"],
-    [m.statBlock.bonusActions, "bonus_action"],
-    [m.statBlock.reactions, "reaction"],
-  ] as const) {
-    if (slot === undefined) continue;
-    traceCreatureActions(
-      {
-        procId: ctx.procId,
-        compId,
-        slotId: ctx.slotId,
-        kind,
-        nodes,
-        edges,
-        ids,
-      },
-      slot,
-    );
+  if (m.creature.kind === "inline") {
+    for (const [slot, kind] of [
+      [m.creature.statBlock.actions, "action"],
+      [m.creature.statBlock.bonusActions, "bonus_action"],
+      [m.creature.statBlock.reactions, "reaction"],
+    ] as const) {
+      if (slot === undefined) continue;
+      traceCreatureActions(
+        {
+          procId: ctx.procId,
+          compId,
+          slotId: ctx.slotId,
+          kind,
+          nodes,
+          edges,
+          ids,
+        },
+        slot,
+      );
+    }
   }
 }
 
@@ -1859,6 +1862,36 @@ function describeCreatureStatBlock(sb: CreatureStatBlock): string {
   parts.push(`AC ${describeStatBlockValue(sb.ac)}`);
   parts.push(`HP ${describeStatBlockValue(sb.hp)}`);
   return parts.join(" / ");
+}
+
+function describeSpawnedCreatureStatBlock(
+  creature: SpawnedCreatureStatBlock,
+): string {
+  switch (creature.kind) {
+    case "inline":
+      return describeCreatureStatBlock(creature.statBlock);
+    case "catalog_ref":
+      return `${creature.displayName} / catalog_ref(${creature.monsterId})`;
+    default: {
+      const _exhaustive: never = creature;
+      return _exhaustive;
+    }
+  }
+}
+
+function describeSpawnedCreatureDisplayName(
+  creature: SpawnedCreatureStatBlock,
+): string {
+  switch (creature.kind) {
+    case "inline":
+      return creature.statBlock.displayName;
+    case "catalog_ref":
+      return creature.displayName;
+    default: {
+      const _exhaustive: never = creature;
+      return _exhaustive;
+    }
+  }
 }
 
 function traceActivation(
