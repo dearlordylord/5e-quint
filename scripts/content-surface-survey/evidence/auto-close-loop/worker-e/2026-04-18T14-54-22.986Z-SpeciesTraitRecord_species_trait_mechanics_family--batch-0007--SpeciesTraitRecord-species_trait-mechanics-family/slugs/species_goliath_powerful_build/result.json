@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_goliath_powerful_build",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_carrying_capacity",
+      "justification": "Powerful Build changes only carrying-capacity determination by treating the creature as one size larger. The current surface has no effect atom for carrying-capacity math, and modeling this as an actual size change would be false.",
+      "evidence": "\"You also count as one size larger when determining your carrying capacity.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The trait's first rider fits existing passive mechanics via modify_roll_advantage on ability_check with conditionFilter grappled, but the carrying-capacity rider cannot be encoded honestly. Per protocol, no content or trace files were authored."
+}
