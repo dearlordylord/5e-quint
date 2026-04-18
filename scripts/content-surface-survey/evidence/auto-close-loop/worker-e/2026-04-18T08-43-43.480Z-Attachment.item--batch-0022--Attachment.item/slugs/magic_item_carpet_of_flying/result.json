@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics without mandatory resource/reset",
+      "justification": "The item is activated with a Magic action but has no charges, uses, or recharge cadence. The current activation surface forces a false resource model.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item or Attachment.object for activation phases",
+      "justification": "The activated subject is the carpet itself, not the user or another creature. Existing attachments cannot target the item being commanded.",
+      "evidence": "You can make this carpet hover and fly ... It moves according to your directions"
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.move for commanded item movement",
+      "justification": "The surface can force-move creatures or grant creature speed, but it cannot express persistent commanded motion of an object/item even though v4 includes a move atom.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "movement speed modifier gated by carried-load threshold",
+      "justification": "The carpet's speed depends on whether its carried load exceeds normal capacity. Current predicates do not model weight/load thresholds for movement.",
+      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content or trace file was authored. Magic-item variants could cover the four size rows, but the current surface cannot honestly express at-will item activation plus commanded item movement."
+}

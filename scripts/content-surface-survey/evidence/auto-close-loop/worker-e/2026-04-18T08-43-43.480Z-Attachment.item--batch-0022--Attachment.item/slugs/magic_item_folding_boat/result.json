@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-free magic-item activation",
+      "justification": "The current activation family requires a resource and reset cadence, but Folding Boat's command words are at-will activations that spend only a Magic action.",
+      "evidence": "This item also has three command words, each requiring a Magic action to use"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.kind = item/object",
+      "justification": "The surface has alter_item_kind but no honest attachment kind for selecting the item/object being transformed.",
+      "evidence": "The box unfolds into a Rowboat. Second Command Word. The box unfolds into a Keelboat. Third Command Word. The Folding Boat folds back into a box"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.on_transformed_form_zero_hp",
+      "justification": "The item's destruction trigger depends on the vessel form being reduced to 0 Hit Points, which is different from all current depletion-based destruction policies.",
+      "evidence": "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Encoding this item honestly would require new surface variants for at-will item activations, item/object attachments for alter_item_kind, and an HP-based destruction trigger."
+}
