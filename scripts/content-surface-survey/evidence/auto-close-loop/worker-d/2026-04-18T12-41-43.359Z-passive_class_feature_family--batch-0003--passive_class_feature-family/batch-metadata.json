@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 3,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "passive_class_feature family",
+  "archivedAt": "2026-04-18T12:46:09.002Z",
+  "selectedSlugs": [
+    "barbarian_indomitable_might_l18",
+    "barbarian_primal_champion_l20"
+  ]
+}

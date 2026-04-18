@@ -1,0 +1,16 @@
+{
+  "unit_slug": "barbarian_indomitable_might_l18",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.modify_roll_substitute",
+      "justification": "The feature is a passive floor/substitution on completed Strength checks and Strength saving throws. The current surface has numeric modifiers and advantage/disadvantage riders, but no honest way to replace a roll total with a minimum value derived from an ability score.",
+      "evidence": "If your total for a Strength check or Strength saving throw is less than your Strength score, you can use that score in place of the total."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit is class_feature + passive. I did not author a placeholder content file because any current encoding would be misleading: this is neither a flat bonus nor advantage, and set_ability_score targets ability scores rather than roll totals. The missing concept already exists in v4 taxonomy as modify_roll_substitute, so this is a surface widening, not atom widening."
+}

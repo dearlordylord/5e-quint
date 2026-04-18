@@ -1,0 +1,16 @@
+{
+  "unit_slug": "barbarian_primal_champion_l20",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "modify_ability_score"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean passive class feature fit. Encoded as two modify_ability_score grants: Strength +4 max 25 and Constitution +4 max 25."
+}
