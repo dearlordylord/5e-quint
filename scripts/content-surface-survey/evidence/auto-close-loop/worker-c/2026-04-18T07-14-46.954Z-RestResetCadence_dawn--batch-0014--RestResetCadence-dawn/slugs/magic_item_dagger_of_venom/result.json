@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemComponentMechanics.ongoing_effect",
+      "justification": "The item's activated property is not immediate spell access or a one-shot direct phase. It creates temporary armed state that persists on the weapon until a later hit or timeout.",
+      "evidence": "\"You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "weapon_bound_delayed_on_hit_save_gate",
+      "justification": "The current surface cannot model an activation that attaches to a specific weapon, waits for a future hit against an unknown target, then resolves a save gate and expires on use.",
+      "evidence": "\"That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 weapon bonuses fit existing atoms, but the coated-blade rider is the core blocker. I intentionally did not author a partial or misleading content file."
+}
