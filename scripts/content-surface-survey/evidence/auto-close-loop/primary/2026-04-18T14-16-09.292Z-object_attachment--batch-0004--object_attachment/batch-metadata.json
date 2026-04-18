@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 4,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "object_attachment",
+  "archivedAt": "2026-04-18T14:17:34.834Z",
+  "selectedSlugs": [
+    "arcane_lock",
+    "fabricate"
+  ]
+}
