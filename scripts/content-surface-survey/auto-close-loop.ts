@@ -785,8 +785,8 @@ function archiveBatchEvidence(
   );
 
   const trackedPaths: string[] = [
-    path.relative(sharedRoot(), path.join(archiveDir, "closure-report.json")),
-    path.relative(sharedRoot(), path.join(archiveDir, "batch-metadata.json")),
+    path.relative(repoRoot(), path.join(archiveDir, "closure-report.json")),
+    path.relative(repoRoot(), path.join(archiveDir, "batch-metadata.json")),
   ];
 
   for (const delta of report.deltas) {
@@ -797,7 +797,7 @@ function archiveBatchEvidence(
       const targetPath = path.join(targetDir, filename);
       if (fs.existsSync(sourcePath)) {
         copyIfExists(sourcePath, targetPath);
-        trackedPaths.push(path.relative(sharedRoot(), targetPath));
+        trackedPaths.push(path.relative(repoRoot(), targetPath));
       }
     }
   }
