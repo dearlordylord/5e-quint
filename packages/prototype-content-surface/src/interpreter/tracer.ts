@@ -43,6 +43,7 @@ import type {
   RestResetCadence,
   ActionRestriction,
   TriggeredReactionMechanics,
+  TriggeredReactionAbilityMechanics,
   ReactionTrigger,
   MarkTransfer,
   MasteryMechanics,
@@ -2527,7 +2528,11 @@ function tracePassiveOrActivated(
 }
 
 function traceMagicItemMechanics(
-  m: PassiveMechanics | ActivatedAbilityMechanics | CompositeMagicItemMechanics,
+  m:
+    | PassiveMechanics
+    | ActivatedAbilityMechanics
+    | TriggeredReactionAbilityMechanics
+    | CompositeMagicItemMechanics,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
@@ -2536,10 +2541,24 @@ function traceMagicItemMechanics(
     case "passive":
     case "activation":
       return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "triggered_reaction":
+      return [traceTriggeredReactionAbility(m, nodes, edges, ids)];
     case "composite":
-      return m.parts.map((part) =>
-        tracePassiveOrActivated(part, nodes, edges, ids),
-      );
+      return m.parts.map((part) => {
+        switch (part.family) {
+          case "passive":
+          case "activation":
+            return tracePassiveOrActivated(part, nodes, edges, ids);
+          case "triggered_reaction":
+            return traceTriggeredReactionAbility(part, nodes, edges, ids);
+          default: {
+            const _exhaustive: never = part;
+            throw new Error(
+              `unhandled magic-item component family: ${String((_exhaustive as { family: string }).family)}`,
+            );
+          }
+        }
+      });
     default: {
       const _exhaustive: never = m;
       throw new Error(
@@ -2831,6 +2850,105 @@ function traceActivatedAbility(
   // Phases — iterate in sequence, threading branches_on_completion
   // edges like spell activations.
   const ctx: SpellCtx = { procId, slotId: null, range: { kind: "self" } };
+  let previousResolutionId: string | null = null;
+  m.phases.forEach((phase, idx) => {
+    const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: thisResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = thisResolutionId;
+  });
+
+  return procId;
+}
+
+function traceTriggeredReactionAbility(
+  m: TriggeredReactionAbilityMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("rsp");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "respond",
+    label: "respond",
+  });
+
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
+    edges.push({ from: procId, to: predId, relation: "requires" });
+  }
+
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  const resId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  if (m.usageLimit?.kind === "once_per_turn") {
+    const fenceId = ids("fence");
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+    edges.push({ from: procId, to: fenceId, relation: "consumes" });
+  }
+
+  if (m.duration !== undefined) {
+    traceDuration(m.duration, procId, nodes, edges, ids);
+  }
+
+  const prepId = ids("prep");
+  nodes.push({
+    id: prepId,
+    category: "procedure",
+    atomKind: "prepare",
+    label: "prepare",
+  });
+  edges.push({ from: procId, to: prepId, relation: "prepares" });
+
+  const promptId = ids("prompt");
+  nodes.push({
+    id: promptId,
+    category: "procedure",
+    atomKind: "prompt",
+    label: "prompt",
+  });
+  edges.push({ from: prepId, to: promptId, relation: "prompts" });
+
+  const commitId = ids("commit");
+  nodes.push({
+    id: commitId,
+    category: "procedure",
+    atomKind: "commit",
+    label: "commit",
+  });
+  edges.push({ from: promptId, to: commitId, relation: "commits" });
+
+  if (m.interruptsTrigger) {
+    const intId = ids("int");
+    nodes.push({
+      id: intId,
+      category: "resolution",
+      atomKind: "interrupt_resolution",
+      label: "interrupt_resolution",
+    });
+    edges.push({ from: commitId, to: intId, relation: "grants" });
+  }
+
+  const ctx: SpellCtx = {
+    procId: commitId,
+    slotId: null,
+    range: m.range,
+  };
   let previousResolutionId: string | null = null;
   m.phases.forEach((phase, idx) => {
     const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);

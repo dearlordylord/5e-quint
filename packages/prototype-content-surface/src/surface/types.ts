@@ -1966,6 +1966,24 @@ export type ActivatedAbilityMechanics = ActivatedAbilityHeader & {
   readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
+// Trigger-bound activated ability for non-spell units. This keeps the
+// richer respond/prepare/prompt/commit reaction structure available to
+// magic items without forcing them through spell-only header fields
+// like level/school/spell-slot consumption.
+export type TriggeredReactionAbilityMechanics = Omit<
+  ActivatedAbilityHeader,
+  "activationCost"
+> & {
+  readonly family: "triggered_reaction";
+  readonly activationCost: Extract<
+    ClassFeatureActivationCost,
+    { readonly kind: "reaction" }
+  >;
+  readonly range: Range;
+  readonly interruptsTrigger: boolean;
+  readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
+};
+
 // Back-compat alias: content files historically referenced this name.
 export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 
@@ -2159,14 +2177,14 @@ export type SpeciesTraitRecord = UnitMetadata & {
 
 export type MagicItemComponentMechanics =
   | PassiveMechanics
-  | ActivatedAbilityMechanics;
+  | ActivatedAbilityMechanics
+  | TriggeredReactionAbilityMechanics;
 
 // Composite magic-item mechanics — a single SRD item can combine
 // always-on passive grants with a distinct activated ability while
 // remaining one authored unit. Keep this bounded to existing
-// magic-item families; reaction-triggered activated abilities reuse the
-// shared activation-cost trigger grammar rather than a magic-item-only
-// mechanics branch.
+// magic-item families, including trigger-bound reactions that still
+// spend item resources and reset on item cadence.
 export type CompositeMagicItemMechanics = {
   readonly family: "composite";
   readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;
