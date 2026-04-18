@@ -1,0 +1,17 @@
+{
+  "unit_slug": "species_dwarf_dwarven_resilience",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "grant_resistance",
+    "modify_roll_advantage",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as a species_trait with passive mechanics. The existing surface directly supports poison resistance plus advantage on saving throws to avoid or end the Poisoned condition via conditionFilter."
+}

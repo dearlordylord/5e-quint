@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "species_lineage_choice_with_progression",
+      "justification": "The trait is one unit whose player chooses one of several lineage branches, and that choice controls multiple later level-gated benefits. Existing SpeciesTraitMechanics only allow a flat passive or activation payload, not a build-time branch that owns later grants.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage. When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "level_gated_species_trait_grant",
+      "justification": "The later lineage benefits are not always-on from level 1; they unlock at character levels 3 and 5. Current passive species-trait grants have no honest character-level acquisition gate on individual grant atoms.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access_replaceable_cantrip_on_long_rest",
+      "justification": "High Elf's level-1 cantrip is not a fixed granted spell. It can be swapped for a different Wizard cantrip whenever the character finishes a Long Rest, which is broader than the current static grant_spell_access modes.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "SpeciesTraitRecord exists, and most individual effects already have atoms, but the single-unit shape does not. Drow and Wood Elf level-1 benefits fit existing passive atoms individually; the blocker is the lineage-choice-plus-progression structure, with High Elf adding a further cantrip-replacement gap."
+}
