@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "grant_spell_access",
+  "archivedAt": "2026-04-18T09:10:42.767Z",
+  "selectedSlugs": [
+    "magic_item_crystal_ball_of_mind_reading",
+    "magic_item_ring_of_jumping"
+  ]
+}

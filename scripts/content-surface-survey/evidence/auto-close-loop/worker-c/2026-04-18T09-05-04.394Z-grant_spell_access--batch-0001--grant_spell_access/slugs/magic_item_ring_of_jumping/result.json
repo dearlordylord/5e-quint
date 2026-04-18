@@ -1,0 +1,20 @@
+{
+  "unit_slug": "magic_item_ring_of_jumping",
+  "outcome": "refused",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "magic_item_root",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "The unit fits honestly as a passive magic item granting at-will access to Jump with targetRestriction self_only while wearing the ring. Dhall compiled and the tracer succeeded, but the required `pnpm typecheck` step fails on a pre-existing unrelated TypeScript error in src/interpreter/tracer.ts:3274 (`traceEquipmentPredicate` returns string[] but the caller pushes it as a single edge target). That file is outside the allowed write scope, so I could not make the run fully clean within protocol."
+}
