@@ -1,0 +1,22 @@
+{
+  "unit_slug": "species_goliath_large_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_size",
+      "justification": "The trait's primary mechanic is a temporary self size increase to Large. The current surface has no effect atom for changing creature size without replacing the whole stat block or transforming into a different form.",
+      "evidence": "\"you can change your size to Large as a Bonus Action\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.abilityFilter",
+      "justification": "The current advantage atom can narrow ability checks by skill, but not by base ability. Large Form grants advantage on all Strength checks, which is broader than any closed skill subset and narrower than all ability checks.",
+      "evidence": "\"For that duration, you have Advantage on Strength checks\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The unit fits species_trait + activation structurally: bonus-action activation, self attachment, fixed once-per-long-rest use count, 10-minute duration, and a speed bonus all fit. I stopped before authoring because omitting the size increase would misrepresent the core rule."
+}
