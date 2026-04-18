@@ -2944,7 +2944,7 @@ function traceActivationResource(
   edges: TraceEdge[],
   ids: IdGen,
 ): string {
-  const atomKind = r.kind === "use_count" ? "use_count" : "charge_pool";
+  const atomKind = r.kind === "use_count" ? "use_count" : "charge";
   const id = ids(r.kind === "use_count" ? "use" : "pool");
   const capLabel = describeUseCountCap(r.cap);
   nodes.push({
