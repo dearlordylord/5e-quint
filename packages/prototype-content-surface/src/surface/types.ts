@@ -953,17 +953,21 @@ export type EffectAtom =
   // v4 (additive): grant_feat — Ability Score Improvement "you can take a
   // feat instead", Fighter bonus feats, etc. Records the eligibility
   // gate; the actual feat pick is build-time. Some level-up grants
-  // allow one feat from multiple permitted categories (for example,
-  // Epic Boon or another qualifying feat), so the payload admits
-  // either a single category or a closed list of allowed categories.
+  // allow a feat from a preferred category with an explicit open
+  // fallback to any feat the character qualifies for (for example,
+  // "Epic Boon feat or another feat of your choice for which you
+  // qualify"), so the payload supports both closed category lists and
+  // a category/category-list plus open-fallback form.
   | ({
       readonly kind: "grant_feat";
     } & (
       | {
           readonly category: FeatCategory;
+          readonly openFallback?: "any_qualifying_feat";
         }
       | {
           readonly categories: ReadonlyNonEmptyArray<FeatCategory>;
+          readonly openFallback?: "any_qualifying_feat";
         }
     ))
   // v4: grant_proficiency — permanent grants of skill / weapon / armor

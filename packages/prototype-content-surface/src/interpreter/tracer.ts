@@ -436,11 +436,15 @@ function traceEffectAtom(
       const id = ids("eff");
       const categories =
         "category" in e ? e.category : e.categories.join(" | ");
+      const fallback =
+        e.openFallback === "any_qualifying_feat"
+          ? "\n+ any qualifying feat"
+          : "";
       nodes.push({
         id,
         category: "effect",
         atomKind: "grant_feat",
-        label: `grant_feat\n${categories}`,
+        label: `grant_feat\n${categories}${fallback}`,
       });
       return id;
     }

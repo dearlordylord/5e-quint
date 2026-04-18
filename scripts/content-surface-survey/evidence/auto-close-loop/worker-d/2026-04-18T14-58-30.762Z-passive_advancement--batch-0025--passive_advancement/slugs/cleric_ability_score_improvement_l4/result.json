@@ -1,0 +1,16 @@
+{
+  "unit_slug": "cleric_ability_score_improvement_l4",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_feat"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive class feature that grants the general Ability Score Improvement feat with an explicit open fallback to any qualifying feat."
+}
