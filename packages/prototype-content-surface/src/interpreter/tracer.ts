@@ -2803,6 +2803,11 @@ function traceActivatedAbility(
     label: "activate",
   });
 
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
+    edges.push({ from: procId, to: predId, relation: "requires" });
+  }
+
   // Activation cost. `free` emits nothing — no quota consumed.
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);
 

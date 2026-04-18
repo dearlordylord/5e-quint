@@ -1935,6 +1935,12 @@ export type RestResetCadence =
 // item attuned / held).
 
 type ActivatedAbilityHeader = {
+  // Optional equipment-state gate for activation-shaped units. This
+  // covers held / worn / wielded item requirements on magic-item
+  // activations (for example, wand-family "While holding it, you can
+  // cast..." text) without inventing a parallel item-only predicate
+  // surface. When absent, the activation has no equipment gate.
+  readonly condition?: EquipmentPredicate;
   readonly activationCost: ClassFeatureActivationCost;
   readonly resource: ActivationResource;
   readonly resetCadence: RestResetCadence;
