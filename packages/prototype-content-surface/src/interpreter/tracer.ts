@@ -1456,6 +1456,30 @@ function traceOngoingOpEffect(
       }
       return;
     }
+    case "attack_roll": {
+      const arId = ids("ar");
+      nodes.push({
+        id: arId,
+        category: "resolution",
+        atomKind: "attack_roll",
+        label: `attack_roll\n${eff.attackKind}`,
+      });
+      edges.push({ from: hostId, to: arId, relation: hostRelation });
+      edges.push({ from: arId, to: attId, relation: "attaches_to" });
+      for (const hit of eff.onHit) {
+        const hitId = traceEffectAtom(hit, nodes, ids, edges);
+        if (hitId !== null) {
+          edges.push({ from: arId, to: hitId, relation: "branches_on_hit" });
+        }
+      }
+      for (const miss of eff.onMiss) {
+        const missId = traceEffectAtom(miss, nodes, ids, edges);
+        if (missId !== null) {
+          edges.push({ from: arId, to: missId, relation: "branches_on_miss" });
+        }
+      }
+      return;
+    }
     default: {
       // All other ongoing effects are EffectAtoms — delegate.
       const effId = traceEffectAtom(eff, nodes, ids, edges);

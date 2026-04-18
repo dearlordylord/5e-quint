@@ -1610,6 +1610,17 @@ export type OngoingEffect =
       readonly onFail: EffectAtom;
       readonly onSuccess: SaveSuccessOutcome;
     }
+  // Attack-roll resolution fired by an OngoingTrigger. Produce Flame:
+  // "you can take a Magic action to hurl fire... Make a ranged spell
+  // attack. On a hit, the target takes 1d8 Fire damage." Mirrors
+  // ActivationPhase.attack_roll minus `attachment` (the ongoing
+  // effect's host carries it).
+  | {
+      readonly kind: "attack_roll";
+      readonly attackKind: AttackKind;
+      readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
+      readonly onMiss: ReadonlyNonEmptyArray<EffectAtom>;
+    }
   | ModifyAcSetFloorEffect;
 
 export type OngoingOperation = {
