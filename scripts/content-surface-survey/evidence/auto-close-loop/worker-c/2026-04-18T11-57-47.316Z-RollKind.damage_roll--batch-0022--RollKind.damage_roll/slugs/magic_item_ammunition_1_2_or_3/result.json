@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_ammunition_1_2_or_3",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "grant",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "item_lifecycle_becomes_nonmagical_on_hit",
+      "justification": "The current magic-item surface can encode the rarity-scaled attack and damage bonuses, but it cannot encode an ammunition piece that loses only its magical property after a hit while remaining a mundane item.",
+      "evidence": "Once it hits a target, the ammunition is no longer magical."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a magic-item variant collection with passive rarity-scaled attack and damage bonuses using existing atoms. Typecheck and tracer both passed. Quantity/value text was treated as catalog metadata, not combat mechanics."
+}
