@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The existing surface has an alter_item_kind effect atom, but activated abilities can only attach to self, target, area, or mark. This item's bonus-action form change needs to target the held weapon itself.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.current_item_kind",
+      "justification": "Several grants and one reactive property apply only in specific weapon forms. The passive surface can gate on armor or wielded-weapon category, but not on the current named form of the same magic item.",
+      "evidence": "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only). ... Attack Deflection (Quarterstaff Form Only). ... Ranged Weapon (Quarterstaff Form Only)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content JSON because the item's core form-switching and form-gated mechanics cannot be represented honestly. Secondary omissions remain even after those widenings: the dim-light rider and the thrown-weapon return-to-hand behavior are not currently modeled."
+}
