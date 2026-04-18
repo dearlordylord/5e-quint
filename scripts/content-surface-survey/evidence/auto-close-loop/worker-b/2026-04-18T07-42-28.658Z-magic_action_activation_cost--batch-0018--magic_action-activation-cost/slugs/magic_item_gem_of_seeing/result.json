@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_sense",
+    "holding_item",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "medium",
+  "notes": "Encoded as a magic-item activation with holding-item gate, 3-charge pool, dawn recharge, and a timed self grant of truesight 120 ft. The trace does not model a separate ongoing gate for 'when you peer through the gem'; that clause is treated as a usage qualifier in the description rather than a distinct surface shape."
+}
