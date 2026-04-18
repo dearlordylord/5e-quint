@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.unlimited_or_at_will",
+      "justification": "Non-spell triggered reactions currently require a consumable resource and reset cadence, but this item is an at-will reaction that spends only the normal reaction quota.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon while wearing these gloves, you can take a Reaction to reduce the damage ..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The reaction is only legal when the wearer has a free hand. Current equipment predicates model wearing/holding/armor/weapon states but not empty-hand state.",
+      "evidence": "... if you have a free hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because the current magic-item triggered-reaction surface cannot represent an at-will reaction honestly. Secondary omitted rider: catching the projectile/weapon on reduction to 0 would need further surface work."
+}
