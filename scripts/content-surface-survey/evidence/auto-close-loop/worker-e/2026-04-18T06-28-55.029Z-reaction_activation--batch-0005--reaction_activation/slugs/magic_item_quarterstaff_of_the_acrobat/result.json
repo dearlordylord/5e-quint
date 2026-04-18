@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item has a deterministic toggled light-emission mechanic with a fixed radius, but the surface has no effect atom for granting bright/dim light.",
+      "evidence": "you can cause it to emit green Dim Light out to 10 feet"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The surface has an alter_item_kind effect, but no attachment variant that lets an activation target the held item whose form changes.",
+      "evidence": "you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff"
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_form_gated_passive_or_activation",
+      "justification": "Several properties only apply in some forms, so the surface needs a way to gate passive grants and reactive activations on the current form of the same item.",
+      "evidence": "In certain forms, the weapon has the following additional properties"
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_to_hand_after_thrown_attack",
+      "justification": "The item grants a thrown attack profile plus an automatic return rider after the ranged attack resolves; no current effect atom models that return behavior.",
+      "evidence": "Immediately after you make a ranged attack with the weapon, it flies back to your hand"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level fit is existing magic_item + composite mechanics, not a new family. The cleanly encodable subset (+2 attack and damage with this weapon, reaction +5 AC once per short or long rest) is still blocked by missing form-scoped gating, so no honest content file was authored."
+}
