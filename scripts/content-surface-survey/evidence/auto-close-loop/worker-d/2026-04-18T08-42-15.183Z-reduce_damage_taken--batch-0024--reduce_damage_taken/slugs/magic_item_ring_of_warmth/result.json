@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_ring_of_warmth",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "reduce_damage_taken",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_temperature_protection",
+      "justification": "The item's second rider grants deterministic protection from extreme environmental cold to the wearer and carried/worn gear. That is not typed damage reduction, resistance, or damage immunity, and the current surface has no atom for environmental temperature protection.",
+      "evidence": "while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the cold-damage reduction rider in content/magic_item_ring_of_warmth.dhall and generated JSON + trace successfully. Full pnpm typecheck is blocked by a pre-existing TypeScript error in src/interpreter/tracer.ts:3274 outside the allowed edit scope. The environmental-temperature clause was omitted from the authored payload and recorded as the widening."
+}

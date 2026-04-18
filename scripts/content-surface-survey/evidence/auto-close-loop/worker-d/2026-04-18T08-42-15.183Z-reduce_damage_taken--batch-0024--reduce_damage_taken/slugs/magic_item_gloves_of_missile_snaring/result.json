@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less non-spell triggered_reaction mechanics",
+      "justification": "The existing magic-item triggered_reaction family requires an ActivationResource and RestResetCadence, but Gloves of Missile Snaring has no per-rest or charge pool. It only spends the normal reaction quota when the trigger occurs.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon while wearing these gloves, you can take a Reaction to reduce the damage..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand_available",
+      "justification": "The damage-reduction rider is additionally gated by hand state. Current equipment predicates can express wearing/holding/wielding, but not \"you have a free hand.\"",
+      "evidence": "...if you have a free hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The core reaction shape almost fits, but the current surface cannot encode an unlimited-use non-spell reaction honestly. The secondary catch-the-projectile rider is also not representable in the current surface and is described in the proposal."
+}
