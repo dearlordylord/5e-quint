@@ -2539,6 +2539,10 @@ export type MagicItemAttunement =
 export type MagicItemVariant = {
   readonly id: string;
   readonly name: string;
+  // Collection records still need one shared top-level description for
+  // provenance, but many SRD variant lines also carry variant-specific
+  // rules text that doesn't belong on the collection wrapper.
+  readonly description?: string;
   readonly rarity: MagicItemRarity;
   readonly mechanics: MagicItemMechanics;
   readonly destruction: ItemDestructionPolicy;
