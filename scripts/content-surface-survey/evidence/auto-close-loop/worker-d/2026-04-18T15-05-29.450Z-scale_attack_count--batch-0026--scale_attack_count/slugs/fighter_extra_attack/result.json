@@ -1,0 +1,16 @@
+{
+  "unit_slug": "fighter_extra_attack",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "scale_attack_count"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as a fighter class_feature with passive mechanics granting scale_attack_count +1. JSON compiled, typecheck passed, and tracer emitted the expected passive grant graph."
+}

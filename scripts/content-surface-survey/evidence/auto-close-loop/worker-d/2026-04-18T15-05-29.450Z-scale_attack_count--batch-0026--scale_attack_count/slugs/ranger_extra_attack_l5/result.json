@@ -1,0 +1,16 @@
+{
+  "unit_slug": "ranger_extra_attack_l5",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "scale_attack_count"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Honest fit as a passive class feature. Encoded identically to the existing fighter and paladin Extra Attack level-5 units: a single scale_attack_count grant with additional = 1."
+}
