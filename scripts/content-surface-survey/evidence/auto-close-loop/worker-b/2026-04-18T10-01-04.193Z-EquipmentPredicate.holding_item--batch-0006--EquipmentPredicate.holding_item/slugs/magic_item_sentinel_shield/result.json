@@ -1,0 +1,18 @@
+{
+  "unit_slug": "magic_item_sentinel_shield",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "holding_item",
+    "magic_item_root",
+    "modify_roll_advantage"
+  ],
+  "relations_used": [
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded honestly as a non-attunement passive magic item with a holding_item gate. The tracer output is clean, though its modify_roll_advantage labels do not surface the Perception skillFilter detail from the authored JSON."
+}

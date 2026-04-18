@@ -1,0 +1,88 @@
+{
+  "description": "This wand has 7 charges. While holding the wand, you can cast Command (save DC 15; the command word is restricted to \"flee\" or \"grovel\") for 1 charge or Fear (save DC 15; 60-foot Cone) for 3 charges from it. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_wand_of_fear",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "dcOverride": {
+              "dc": 15,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 1,
+              "minLevel": 1,
+              "perLevelCharges": 0
+            },
+            "spellId": "command"
+          },
+          {
+            "areaOverride": {
+              "kind": "cone",
+              "lengthFeet": 60
+            },
+            "dcOverride": {
+              "dc": 15,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 3,
+              "kind": "charge_cast",
+              "maxLevel": 3,
+              "minLevel": 3,
+              "perLevelCharges": 0
+            },
+            "spellId": "fear"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6,
+          "flat": 1
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 7
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Wand of Fear",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#WandOfFear"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}
