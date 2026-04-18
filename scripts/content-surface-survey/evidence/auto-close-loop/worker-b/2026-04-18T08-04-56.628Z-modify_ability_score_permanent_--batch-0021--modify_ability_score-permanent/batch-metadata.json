@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-b",
+  "batch": 21,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "modify_ability_score (permanent)",
+  "archivedAt": "2026-04-18T08:09:56.426Z",
+  "selectedSlugs": [
+    "magic_item_manual_of_gainful_exercise",
+    "magic_item_manual_of_quickness_of_action"
+  ]
+}
