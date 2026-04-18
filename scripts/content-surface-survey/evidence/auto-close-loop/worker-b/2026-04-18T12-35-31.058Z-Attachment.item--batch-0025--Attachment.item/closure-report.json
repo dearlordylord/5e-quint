@@ -1,0 +1,36 @@
+{
+  "cluster": "Attachment.item",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_carpet_of_flying",
+    "magic_item_folding_boat"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_carpet_of_flying",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "structural_widening",
+      "changed": true,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_folding_boat",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}
