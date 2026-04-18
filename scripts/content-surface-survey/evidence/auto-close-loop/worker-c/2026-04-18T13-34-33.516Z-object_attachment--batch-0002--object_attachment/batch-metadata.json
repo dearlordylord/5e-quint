@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "object_attachment",
+  "archivedAt": "2026-04-18T13:35:59.392Z",
+  "selectedSlugs": [
+    "arcane_lock",
+    "fabricate"
+  ]
+}
