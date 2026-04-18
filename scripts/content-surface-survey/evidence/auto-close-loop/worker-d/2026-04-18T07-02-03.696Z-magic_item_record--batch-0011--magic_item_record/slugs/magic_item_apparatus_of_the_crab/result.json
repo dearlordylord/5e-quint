@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "vehicle_or_controlled_object_mechanics",
+      "justification": "The item's main behavior is not a passive grant or a one-shot activation. It creates a persistent controllable object with its own object stats, occupancy, sealed-compartment state, movement modes, and lever-operated commands that change later behavior.",
+      "evidence": "The Apparatus of the Crab is a Large object with the following statistics: AC 20; HP 200; Speed 30 ft., Swim 30 ft. ... A creature in the compartment can take a Utilize action to move as many as two of the apparatus's levers up or down."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "lever_state_and_command_table",
+      "justification": "The lever table is durable item-owned state. Individual controls toggle shutters, claws, locomotion availability, lighting, hatch state, and attack modes. Those are not expressible as a flat grants list or a single activation phase sequence.",
+      "evidence": "Ten levers are set in a row ... After each use, a lever goes back to its neutral position. Each lever, from left to right, functions as shown in the Apparatus of the Crab Levers table."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current encoding would be misleading. The existing magic-item families cannot honestly represent a persistent controllable vehicle/object with object statistics, occupants, airtight air-supply tracking, depth-pressure damage, and lever-driven mode changes."
+}
