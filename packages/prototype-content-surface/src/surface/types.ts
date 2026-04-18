@@ -2290,16 +2290,20 @@ export type MagicItemAttunement =
 
 // Some SRD magic-item slugs are collection records rather than a single
 // mechanical payload: one shared item header with several named
-// variants, each carrying its own rarity/mechanics/destruction. Keep
-// the variant metadata on the variant itself so mixed-rarity collection
-// states are representable without inventing parallel item records.
+// variants, each carrying its own rarity/mechanics/destruction. The
+// collection itself also carries the default attunement gate so
+// Ioun-Stone / Potion-of-Giant-Strength style records don't need to
+// duplicate identical attunement metadata on every variant while still
+// allowing a variant to override the default when a mixed collection
+// eventually surfaces.
 export type MagicItemVariant = {
   readonly id: string;
   readonly name: string;
   readonly rarity: MagicItemRarity;
   readonly mechanics: MagicItemMechanics;
   readonly destruction: ItemDestructionPolicy;
-} & MagicItemAttunement;
+  readonly attunementOverride?: MagicItemAttunement;
+};
 
 export type MagicItemRecord = UnitMetadata &
   { readonly kind: "magic_item" } & (
@@ -2309,6 +2313,7 @@ export type MagicItemRecord = UnitMetadata &
         readonly destruction: ItemDestructionPolicy;
       } & MagicItemAttunement)
     | {
+        readonly defaultAttunement: MagicItemAttunement;
         readonly variants: ReadonlyNonEmptyArray<MagicItemVariant>;
       }
   );

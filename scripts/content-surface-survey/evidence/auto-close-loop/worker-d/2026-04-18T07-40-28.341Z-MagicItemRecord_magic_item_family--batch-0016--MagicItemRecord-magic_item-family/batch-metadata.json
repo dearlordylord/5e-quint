@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 16,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord + magic_item family",
+  "archivedAt": "2026-04-18T07:47:47.158Z",
+  "selectedSlugs": [
+    "magic_item_ioun_stone",
+    "magic_item_javelin_of_lightning"
+  ]
+}

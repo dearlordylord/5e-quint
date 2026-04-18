@@ -2694,13 +2694,13 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     atomKind: "magic_item_root",
     label:
       "variants" in item
-        ? `magic_item_root\n${item.name}\n(${item.variants.length} variants)`
+        ? `magic_item_root\n${item.name}\n(${item.variants.length} variants)${describeMagicItemCollectionAttunement(item)}`
         : `magic_item_root\n${item.name}\n(${item.rarity})${describeMagicItemAttunement(item)}`,
   });
 
   if ("variants" in item) {
     for (const variant of item.variants) {
-      traceMagicItemVariant(rootId, variant, nodes, edges, ids);
+      traceMagicItemVariant(rootId, item, variant, nodes, edges, ids);
     }
   } else {
     traceMagicItemPayload(rootId, item, nodes, edges, ids);
@@ -2717,20 +2717,32 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
 
 function traceMagicItemVariant(
   parentRootId: string,
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
   variant: MagicItemVariant,
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
 ): void {
+  const attunement = resolveMagicItemVariantAttunement(item, variant);
   const variantRootId = ids("root");
   nodes.push({
     id: variantRootId,
     category: "source",
     atomKind: "magic_item_root",
-    label: `magic_item_root\n${variant.name}\n(${variant.rarity})${describeMagicItemPayloadAttunement(variant)}`,
+    label: `magic_item_root\n${variant.name}\n(${variant.rarity})${describeMagicItemPayloadAttunement(attunement)}`,
   });
   edges.push({ from: parentRootId, to: variantRootId, relation: "roots" });
-  traceMagicItemPayload(variantRootId, variant, nodes, edges, ids);
+  traceMagicItemPayload(
+    variantRootId,
+    {
+      mechanics: variant.mechanics,
+      destruction: variant.destruction,
+      ...attunement,
+    },
+    nodes,
+    edges,
+    ids,
+  );
 }
 
 function traceMagicItemPayload(
@@ -2768,6 +2780,12 @@ function describeMagicItemAttunement(item: MagicItemRecord): string {
   return describeMagicItemPayloadAttunement(item);
 }
 
+function describeMagicItemCollectionAttunement(
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+): string {
+  return describeMagicItemPayloadAttunement(item.defaultAttunement);
+}
+
 function describeMagicItemPayloadAttunement(
   item: {
     readonly requiresAttunement: boolean;
@@ -2777,6 +2795,13 @@ function describeMagicItemPayloadAttunement(
   if (!item.requiresAttunement) return "";
   if (item.attunementRestriction === undefined) return " [attunement]";
   return ` [attunement: ${describeMagicItemAttunementRestriction(item.attunementRestriction)}]`;
+}
+
+function resolveMagicItemVariantAttunement(
+  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  variant: MagicItemVariant,
+): MagicItemAttunement {
+  return variant.attunementOverride ?? item.defaultAttunement;
 }
 
 function describeMagicItemAttunementRestriction(
