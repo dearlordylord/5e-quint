@@ -928,6 +928,8 @@ function surfaceAttemptPrompt(args: Args, cluster: string, selectedSlugs: Readon
     "- if you add a new atom kind, update scripts/content-surface-survey/atom-whitelist.ts",
     "- you may edit packages/prototype-content-surface/src/**, scripts/content-surface-survey/atom-whitelist.ts, and content files for the target slugs if needed",
     "- when verifying TS changes from the repo root, use: pnpm --filter @dnd/prototype-content-surface typecheck",
+    "- if your candidate TS change fails that typecheck, revert your own edits and exit with no code changes",
+    "- prefer no change over a speculative change that widens the wrong family or leaves TS broken",
     "- do not commit",
     "- keep the change as small and reusable as possible",
     "- do not read broad plans or README files unless blocked; inspect the concrete files below first",
