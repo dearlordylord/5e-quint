@@ -1,0 +1,9 @@
+{
+  "unit_slug": "barbarian_ability_score_improvement_l4",
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits the existing class_feature passive family exactly as a single grant_feat(general) effect, matching the already-authored cleric level-4 Ability Score Improvement pattern."
+}
