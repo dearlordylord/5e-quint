@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.fixed ability modifier addend",
+      "justification": "The existing reduction surface can express fixed dice, linked amounts, or resource-spent amounts, but not a non-spell ability modifier added to a fixed roll. The core reduction amount cannot be authored honestly without this.",
+      "evidence": "\"reduce the damage by 1d10 plus your Dexterity modifier\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.free_hand",
+      "justification": "The reaction is only available when the wearer has a free hand. Current equipment predicates cover wearing, holding, armor, wielding, and conjunctions of those, but not an empty-hand requirement.",
+      "evidence": "\"if you have a free hand\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The item fits MagicItemRecord plus triggered_reaction in principle, and the trigger itself can be modeled with hit_by_attack_roll narrowed to ranged-or-thrown via any_of. I did not author placeholder content because the main damage-reduction payload is missing surface support. The catch-on-zero rider is also unmodeled and would need separate treatment if this unit is revisited."
+}
