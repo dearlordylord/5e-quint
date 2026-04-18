@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_sense mediation qualifier for through-item viewing",
+      "justification": "The existing grant_sense atom can express Truesight, but the authored surface cannot constrain that sense to apply only while the bearer is peering through the specific gem.",
+      "evidence": "\"For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic-item activation, charge pool, dawn recharge, and timed duration all fit. The only blocker is the missing surface qualifier for item-mediated sight; encoding unconditional grant_sense would be misleading, so no content JSON/trace was authored."
+}
