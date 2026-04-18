@@ -2968,8 +2968,9 @@ function tracePassiveMechanics(
     label: `grant (passive)\n${m.grants.length} effect(s)`,
   });
   if (m.condition !== undefined && m.condition.kind !== "always") {
-    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
-    edges.push({ from: procId, to: predId, relation: "requires" });
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
   }
   for (const atom of m.grants) {
     const effId = traceEffectAtom(atom, nodes, ids, edges);
@@ -3024,7 +3025,7 @@ function traceEquipmentPredicate(
   p: Exclude<EquipmentPredicate, { kind: "always" }>,
   nodes: TraceNode[],
   ids: IdGen,
-): string {
+): string[] {
   switch (p.kind) {
     case "holding_item": {
       const id = ids("pred");
@@ -3034,7 +3035,7 @@ function traceEquipmentPredicate(
         atomKind: "holding_item",
         label: "holding_item",
       });
-      return id;
+      return [id];
     }
     case "wearing_item": {
       const id = ids("pred");
@@ -3044,7 +3045,7 @@ function traceEquipmentPredicate(
         atomKind: "wearing_item",
         label: "wearing_item",
       });
-      return id;
+      return [id];
     }
     case "unarmored": {
       const id = ids("pred");
@@ -3054,7 +3055,7 @@ function traceEquipmentPredicate(
         atomKind: "unarmored",
         label: "unarmored",
       });
-      return id;
+      return [id];
     }
     case "wearing_armor": {
       const id = ids("pred");
@@ -3064,7 +3065,7 @@ function traceEquipmentPredicate(
         atomKind: "wearing_armor",
         label: `wearing_armor\n[${p.categories.join(", ")}]`,
       });
-      return id;
+      return [id];
     }
     case "wielding_weapon": {
       const id = ids("pred");
@@ -3074,8 +3075,12 @@ function traceEquipmentPredicate(
         atomKind: "wielding_weapon",
         label: `wielding_weapon\n${p.weaponKind}`,
       });
-      return id;
+      return [id];
     }
+    case "all_of":
+      return p.predicates.flatMap((predicate) =>
+        traceEquipmentPredicate(predicate, nodes, ids),
+      );
     default: {
       const _exhaustive: never = p;
       throw new Error(
@@ -3100,8 +3105,9 @@ function traceActivatedAbility(
   });
 
   if (m.condition !== undefined && m.condition.kind !== "always") {
-    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
-    edges.push({ from: procId, to: predId, relation: "requires" });
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
   }
 
   // Activation cost. `free` emits nothing — no quota consumed.
@@ -3158,8 +3164,9 @@ function traceTriggeredReactionAbility(
   });
 
   if (m.condition !== undefined && m.condition.kind !== "always") {
-    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
-    edges.push({ from: procId, to: predId, relation: "requires" });
+    for (const predId of traceEquipmentPredicate(m.condition, nodes, ids)) {
+      edges.push({ from: procId, to: predId, relation: "requires" });
+    }
   }
 
   traceActivationCost(m.activationCost, procId, nodes, edges, ids);

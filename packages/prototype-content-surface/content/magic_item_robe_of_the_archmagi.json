@@ -7,7 +7,7 @@
     ],
     "kind": "class_list"
   },
-  "description": "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2. The Armor and Magic Resistance clauses are omitted from this authored subset; see proposal-magic_item_robe_of_the_archmagi.md.",
+  "description": "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2. The Magic Resistance clause is omitted from this authored subset; see proposal-magic_item_robe_of_the_archmagi.md.",
   "destruction": {
     "kind": "none"
   },
@@ -15,10 +15,29 @@
   "kind": "magic_item",
   "mechanics": {
     "condition": {
-      "kind": "wearing_item"
+      "kind": "all_of",
+      "predicates": [
+        {
+          "kind": "wearing_item"
+        },
+        {
+          "kind": "unarmored"
+        }
+      ]
     },
     "family": "passive",
     "grants": [
+      {
+        "abilityMod": "dex",
+        "const": 15,
+        "delta": {
+          "dice": 0,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_ac_set_base"
+      },
       {
         "delta": {
           "dice": 2,

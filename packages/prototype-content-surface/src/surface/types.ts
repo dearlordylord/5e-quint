@@ -2130,8 +2130,11 @@ export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 // finer discrimination (specific weapon types,
 // versatile-used-two-handed, dual-wielding off-hand) can be added as
 // new Fighting-Style-adjacent units surface it.
-export type EquipmentPredicate =
-  | { readonly kind: "always" }
+//
+// `all_of` is the bounded composition form for passive / activation
+// equipment gates that require multiple simultaneous equipment states
+// (for example, "while wearing this robe and not wearing armor").
+type NonAlwaysEquipmentPredicate =
   | { readonly kind: "holding_item" }
   | { readonly kind: "wearing_item" }
   | { readonly kind: "unarmored" }
@@ -2146,7 +2149,15 @@ export type EquipmentPredicate =
         | "melee_two_handed"
         | "melee_one_handed"
         | "two_weapons";
+    }
+  | {
+      readonly kind: "all_of";
+      readonly predicates: ReadonlyNonEmptyArray<NonAlwaysEquipmentPredicate>;
     };
+
+export type EquipmentPredicate =
+  | { readonly kind: "always" }
+  | NonAlwaysEquipmentPredicate;
 
 // PassiveMechanics — "always on" while the unit is in effect. Survey
 // evidence: 9+9+6 class_feature + 2 species + 2 magic_item proposals

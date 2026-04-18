@@ -6,10 +6,6 @@
 --   • attunement restriction by class list
 --
 -- Deferred / omitted:
---   • Armor. "If you aren't wearing armor, your base Armor Class is 15
---     plus your Dexterity modifier." The current surface cannot express
---     a conjunction of equipment predicates (`wearing_item` AND
---     `unarmored`) on a passive grant.
 --   • Magic Resistance. "You have Advantage on saving throws against
 --     spells and other magical effects." The current surface can grant
 --     advantage on saving throws broadly, or filter by save ability, but
@@ -18,10 +14,15 @@
 let PassiveEffect =
       { kind : Text
       , delta : { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
+      , const : Optional Natural
+      , abilityMod : Optional Text
       , on : Optional (List Text)
       }
 
-let WearingItemCondition = { kind : Text }
+let EquipmentPredicate =
+      { kind : Text
+      , predicates : Optional (List { kind : Text })
+      }
 
 let AttunementRestriction =
       { kind : Text
@@ -45,18 +46,35 @@ let robeOfTheArchmagi =
           , section = "MagicItems#RobeOfTheArchmagi"
           }
       , description =
-          "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2. The Armor and Magic Resistance clauses are omitted from this authored subset; see proposal-magic_item_robe_of_the_archmagi.md."
+          "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2. The Magic Resistance clause is omitted from this authored subset; see proposal-magic_item_robe_of_the_archmagi.md."
       , mechanics =
           { family = "passive"
-          , condition = Some { kind = "wearing_item" }
+          , condition =
+              Some
+                { kind = "all_of"
+                , predicates =
+                    Some
+                      [ { kind = "wearing_item" }
+                      , { kind = "unarmored" }
+                      ]
+                }
+              : Optional EquipmentPredicate
           , grants =
-              [ { kind = "modify_save_dc"
+              [ { kind = "modify_ac_set_base"
+                , delta = { kind = "fixed_dice", dice = 0, dieSize = 1, sign = "+" }
+                , const = Some 15
+                , abilityMod = Some "dex"
+                , on = None (List Text)
+                }
+              , { kind = "modify_save_dc"
                 , delta =
                     { kind = "fixed_dice"
                     , dice = 2
                     , dieSize = 1
                     , sign = "+"
                     }
+                , const = None Natural
+                , abilityMod = None Text
                 , on = None (List Text)
                 }
               , { kind = "modify_roll_numeric"
@@ -66,6 +84,8 @@ let robeOfTheArchmagi =
                     , dieSize = 1
                     , sign = "+"
                     }
+                , const = None Natural
+                , abilityMod = None Text
                 , on = Some ["spell_attack_roll"]
                 }
               ]

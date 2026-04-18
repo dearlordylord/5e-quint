@@ -1,0 +1,30 @@
+{
+  "unit_slug": "magic_item_robe_of_the_archmagi",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "modify_ac",
+    "modify_roll_numeric",
+    "modify_save_dc",
+    "unarmored",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.saveSourceFilter",
+      "justification": "The robe needs saving-throw advantage that applies only when the save is caused by a spell or other magical effect. The existing surface can narrow by save ability, but not by the source/cause of the saving throw.",
+      "evidence": "You have Advantage on saving throws against spells and other magical effects."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored as a composite passive magic item with three honest subsets: unarmored base AC 15 + Dex, +2 spell save DC, and +2 spell attack rolls while worn. The Magic Resistance rider was omitted pending a save-source filter on modify_roll_advantage. Typecheck and tracer both passed."
+}
