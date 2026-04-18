@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_goliath_large_form",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "change_size",
+      "justification": "The trait's primary effect is a temporary creature-size change to Large. The current surface has speed and roll riders, but no effect atom for changing creature size.",
+      "evidence": "you can change your size to Large as a Bonus Action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "availableAtCharacterLevel for SpeciesTraitRecord",
+      "justification": "The trait is locked until character level 5. Species traits currently have no level-unlock field or equivalent activation guard, so authoring it now would falsely imply availability at level 1.",
+      "evidence": "Starting at character level 5"
+    },
+    {
+      "kind": "new_variant",
+      "name": "voluntary_end on activated-ability duration",
+      "justification": "The transformation can be ended early by the bearer without spending an action. Current Duration shapes model timed expiry and several early-end triggers, but not owner-initiated dismissal for activated species traits.",
+      "evidence": "This transformation lasts for 10 minutes or until you end it (no action required)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The existing species_trait + activation family can carry the bonus action, long-rest recharge, timed duration, Strength-check advantage, and +10 speed. I did not author a partial record because omitting the Large-size transformation would misrepresent the unit's core mechanic."
+}
