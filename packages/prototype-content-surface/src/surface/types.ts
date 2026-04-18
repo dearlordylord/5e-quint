@@ -1151,6 +1151,58 @@ export type EffectAtom =
       readonly kind: "composite";
       readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
+  // Gentle Repose: "protected from decay and can't become Undead."
+  // Gates the reanimation family (Animate Dead / Create Undead /
+  // natural undead rising) from targeting the corpse. The
+  // reanimated_creature mechanics family already exists (types.ts
+  // §creature_spawn); this atom flags the target as an invalid
+  // reanimation source.
+  | { readonly kind: "block_reanimation" }
+  // Fabricate (shaped raw materials), Create Food and Water
+  // (ephemeral rations), Instant Fortress (a keep), and the
+  // destructible Walls (Ice/Stone panels) all produce non-illusory
+  // matter. Illusions use create_illusion instead. Lifetime comes
+  // from the host effect's duration; `consumable` flags output that
+  // expires on its own SRD timer (food at 24h) rather than riding
+  // duration. `durability` is optional so ephemeral matter doesn't
+  // fake HP/AC.
+  | {
+      readonly kind: "create_object";
+      readonly maxSize: Size;
+      readonly shape?: AreaShapeSpec;
+      readonly consumable?: true;
+      readonly durability?: CreatedObjectDurability;
+    }
+  // Silent Image, Minor Illusion, Major Image, Dancing Lights.
+  // Insubstantial sensory projection — things pass through it.
+  // Investigation-vs-spell-DC disbelief, mid-duration reposition,
+  // and per-instance linkage rules belong to separate surfaces, not
+  // this atom.
+  | {
+      readonly kind: "create_illusion";
+      readonly maxSize: Size;
+      readonly channels: ReadonlyNonEmptyArray<IllusionSensoryChannel>;
+    }
+  // Heat Metal: "must succeed on a Con save or drop the object if it
+  // can." The object is the effect's attachment host; no filter
+  // needed. "If it can" is a runtime check (free-handed target
+  // auto-satisfies), not a surface field.
+  | { readonly kind: "force_drop_item" }
+  // Sovereign Glue: permanent adhesive bond between the two objects
+  // selected by the attachment. The "broken only by Universal
+  // Solvent / Oil of Etherealness / Wish" clause is a property of
+  // the resulting bond — those counter-items carry the dispelling
+  // semantics in their own content, not this atom.
+  | { readonly kind: "bond_objects" }
+  // Arcane Lock: locks a closed door / window / gate / container /
+  // hatch against nonmagical opening for the host spell's duration.
+  // Designated creatures (cast-time selection) bypass the lock. The
+  // optional password, when spoken within 5 feet, unlocks the object
+  // for 1 minute (fixed SRD constant, no field).
+  | {
+      readonly kind: "lock_object";
+      readonly password?: string;
+    }
   // Emits illumination around the effect's Attachment origin. SRD:
   // Bright Light within brightRadiusFeet; optional Dim Light extends
   // dimAdditionalFeet BEYOND the bright radius. The RAW consequence
@@ -1474,6 +1526,22 @@ export type Attachment =
       readonly filter?: ObjectFilter;
       readonly rangeOrigin?: AttachmentRangeOrigin;
     };
+
+export type CreatedObjectDurability = {
+  readonly acValue: number;
+  readonly hpPerSection: number;
+  readonly damageImmunities?: ReadonlyNonEmptyArray<DamageType>;
+  readonly damageVulnerabilities?: ReadonlyNonEmptyArray<DamageType>;
+};
+
+export const ILLUSION_SENSORY_CHANNELS = [
+  "visual",
+  "sound",
+  "smell",
+  "temperature",
+] as const satisfies ReadonlyArray<string>;
+export type IllusionSensoryChannel =
+  (typeof ILLUSION_SENSORY_CHANNELS)[number];
 
 export const OBJECT_MATERIALS = [
   "metal",
@@ -2546,7 +2614,12 @@ export type ClassFeatureMechanics =
 // "before the end of your next turn". Closed enum for now.
 export type RiderExpiry =
   | { readonly kind: "target_uses_or_turn_start" }
-  | { readonly kind: "end_of_next_turn" };
+  | { readonly kind: "end_of_next_turn" }
+  // Heat Metal: "until the start of your next turn" — "your" = caster.
+  // Distinct from mastery `turn_start` (attacker role); source role
+  // affects runtime dispatch even though both mean "source's next
+  // turn start".
+  | { readonly kind: "caster_turn_start" };
 
 // Trigger for on-hit masteries. Cleave restricts to melee weapon
 // attacks; other masteries (Sap, Topple) accept any weapon hit.

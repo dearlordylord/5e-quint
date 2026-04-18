@@ -142,6 +142,11 @@ export const V4_EFFECT_ATOMS = [
   "alter_item_kind",
   "fall_on_end",
   "emit_light",
+  "block_reanimation",
+  "create_illusion",
+  "force_drop_item",
+  "bond_objects",
+  "lock_object",
 ] as const;
 
 export const V4_RELATIONS = [

@@ -598,6 +598,72 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "block_reanimation": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_reanimation",
+        label: "block_reanimation",
+      });
+      return id;
+    }
+    case "create_object": {
+      const id = ids("eff");
+      const shapeTag = e.shape ? `\n${describeAreaShape(e.shape)}` : "";
+      const consumableTag = e.consumable === true ? "\nconsumable" : "";
+      const durabilityTag = e.durability
+        ? `\nAC ${e.durability.acValue}, HP ${e.durability.hpPerSection}/section`
+        : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "create_object",
+        label: `create_object\nmax ${e.maxSize}${shapeTag}${consumableTag}${durabilityTag}`,
+      });
+      return id;
+    }
+    case "create_illusion": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "create_illusion",
+        label: `create_illusion\nmax ${e.maxSize}\nchannels: ${e.channels.join(", ")}`,
+      });
+      return id;
+    }
+    case "force_drop_item": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "force_drop_item",
+        label: "force_drop_item",
+      });
+      return id;
+    }
+    case "bond_objects": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "bond_objects",
+        label: "bond_objects",
+      });
+      return id;
+    }
+    case "lock_object": {
+      const id = ids("eff");
+      const pwTag = e.password !== undefined ? `\npassword set` : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "lock_object",
+        label: `lock_object${pwTag}`,
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -830,6 +896,12 @@ function traceEffectAtomScaling(
     case "natural_weapons":
     case "water_breathing":
     case "emit_light":
+    case "block_reanimation":
+    case "create_object":
+    case "create_illusion":
+    case "force_drop_item":
+    case "bond_objects":
+    case "lock_object":
       return;
     case "composite":
       for (const child of e.effects) {
@@ -4297,6 +4369,14 @@ function traceRiderExpiry(
         category: "window",
         atomKind: "turn_end_window",
         label: "turn_end_window\n(attacker's next turn)",
+      });
+      break;
+    case "caster_turn_start":
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_start_window",
+        label: "turn_start_window\n(caster's next turn)",
       });
       break;
     default: {
