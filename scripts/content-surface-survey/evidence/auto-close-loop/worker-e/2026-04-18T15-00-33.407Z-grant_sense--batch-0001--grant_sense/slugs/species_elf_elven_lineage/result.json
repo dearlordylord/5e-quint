@@ -1,0 +1,40 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_sense_range",
+      "justification": "Drow modifies the existing Darkvision trait rather than granting an unrelated new sense. Re-authoring it as a second grant would duplicate state.",
+      "evidence": "The range of your Darkvision increases to 120 feet."
+    },
+    {
+      "kind": "new_variant",
+      "name": "species_trait_lineage_choice",
+      "justification": "The trait is a build-time choice among mutually exclusive lineage payloads, not one fixed passive grant list.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "character_level_gated_grants",
+      "justification": "The chosen lineage gains additional spell grants later at character levels 3 and 5.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellcastingAbilityChoice",
+      "justification": "The granted lineage spells use a trait-scoped spellcasting ability chosen from a closed set.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "long_rest_cantrip_replacement",
+      "justification": "High Elf can replace its granted cantrip after each Long Rest, which is neither plain known access nor a once-per-rest cast.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No authored content file was created. The unit mixes option selection, later level-gated grants, trait-scoped spellcasting ability, and one missing atom for modifying an existing sense range."
+}
