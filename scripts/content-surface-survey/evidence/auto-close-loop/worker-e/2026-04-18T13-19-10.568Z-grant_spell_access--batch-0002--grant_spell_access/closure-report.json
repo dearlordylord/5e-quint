@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_spell_access",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "species_elf_elven_lineage",
+    "species_gnome_gnomish_lineage"
+  ],
+  "summary": {
+    "improved": 0,
+    "cleanFlips": 0,
+    "changed": 0
+  },
+  "deltas": [
+    {
+      "slug": "species_elf_elven_lineage",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    },
+    {
+      "slug": "species_gnome_gnomish_lineage",
+      "source": "srd-5.2.1",
+      "kind": "species_trait",
+      "before": "structural_widening",
+      "after": "structural_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}
