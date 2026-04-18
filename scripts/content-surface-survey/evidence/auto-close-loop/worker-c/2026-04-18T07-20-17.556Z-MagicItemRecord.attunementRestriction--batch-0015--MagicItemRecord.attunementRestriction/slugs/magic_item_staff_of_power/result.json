@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_staff_of_power",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_numeric spell-attack-only scope",
+      "justification": "The item separately grants +2 to spell attack rolls and +2 to attack/damage rolls made with the staff itself. The current roll modifier surface cannot narrow to spell attacks only.",
+      "evidence": "While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "last_charge_partial_property_loss_and_recharge",
+      "justification": "The last-charge trigger branches into partial property suppression on a 1 and immediate charge regain on a 20. Existing destruction policies only model destruction or permanent exhaustion.",
+      "evidence": "On a 1, the staff retains its +2 bonus to attack rolls and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.resource_remaining_multiplier",
+      "justification": "Retributive Strike damage scales from the number of charges currently in the staff, not charges spent on the activation and not another damage instance.",
+      "evidence": "you take Force damage equal to 16 times the number of charges in the staff"
+    },
+    {
+      "kind": "new_atom",
+      "name": "chance_gate",
+      "justification": "Retributive Strike's self-resolution is a probabilistic branch with a 50 percent escape chance. No existing resolution atom models chance-based branching without inventing a save or check.",
+      "evidence": "You have a 50 percent chance to instantly travel to a random plane of existence, avoiding the explosion."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The unit fits magic_item composite structurally, but a truthful encoding is blocked by the missing chance-based resolution for Retributive Strike, plus surface gaps for spell-attack-only bonuses, remaining-charge-scaled damage, and the last-charge partial-property-loss branch."
+}

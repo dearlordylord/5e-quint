@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-c",
+  "batch": 15,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "MagicItemRecord.attunementRestriction",
+  "archivedAt": "2026-04-18T07:27:17.930Z",
+  "selectedSlugs": [
+    "magic_item_staff_of_power",
+    "magic_item_wand_of_lightning_bolts"
+  ]
+}
