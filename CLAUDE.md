@@ -39,6 +39,10 @@ General design rule:
 - **Make invalid states irrepresentable.** If a proposed type can represent contradictory provenance, contradictory ownership, or support-status markers with no type/runtime consequence, redesign the type.
 - Do not add status enums or metadata labels that neither affect the type system nor runtime behavior unless there is a specific, durable reason the repo needs them.
 
+## Domain-language reflex (extends SRD-parity rules above)
+
+When a union type feels off, the signal to refactor is **domain conflation**, not *just* "is this type-safe?" Type safety matters a lot; it is necessary but not sufficient. A mixed union whose name fits only half its members already lies about the world even if every variant typechecks. Justify splits/renames in domain terms first (e.g., "rest-triggered" vs "calendar-time-triggered" are distinct SRD triggers), and let type safety follow.
+
 ## Memory
 
 Do not write to the memory system unless explicitly asked.

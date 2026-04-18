@@ -46,7 +46,7 @@ import type {
   ClassFeatureActivationCost,
   ActivationResource,
   UseCountResource,
-  RestResetCadence,
+  ResetCadence,
   ActionRestriction,
   TriggeredReactionMechanics,
   TriggeredReactionAbilityMechanics,
@@ -3779,7 +3779,7 @@ function describeProficiencyGrantSubject(
 }
 
 function traceResetCadence(
-  c: RestResetCadence,
+  c: ResetCadence,
   resId: string,
   nodes: TraceNode[],
   edges: TraceEdge[],

@@ -2226,8 +2226,9 @@ export type ActivationResource = UseCountResource | ChargePoolResource;
 
 export type RelativeDayResetTrigger = "resource_spent" | "resource_empty";
 
-// Disjoint reset cadence — SRD "Short or Long Rest" maps to either rest
-// refilling the pool. `dawn` is the magic-item recharge idiom.
+// Rest-triggered reset cadence — refill fires when the PCs finish an
+// in-game Short or Long Rest (SRD "Rest" rules). These variants are
+// gated on the rest activity itself, NOT on calendar time.
 export type RestResetCadence =
   | { readonly kind: "short_or_long_rest" }
   | { readonly kind: "long_rest" }
@@ -2238,7 +2239,15 @@ export type RestResetCadence =
   | {
       readonly kind: "partial_short_full_long";
       readonly shortRestRefill: number;
-    }
+    };
+
+// Calendar/elapsed-time reset cadence — refill fires on real-world or
+// in-game time passing, regardless of whether the party rested,
+// travelled, or fought. These are NOT SRD Rests; the magic-item
+// "daily at dawn" idiom and explicit hour/day cooldowns live here.
+// `never` is the absence-of-refill sentinel — kept here as the
+// limit of "an arbitrarily long calendar wait", not a rest trigger.
+export type TimeResetCadence =
   // Magic-item idiom: "regains 1dX charges daily at dawn" /
   // "regains all expended charges daily at dawn". Survey evidence:
   // 4 magic-item proposals.
@@ -2281,6 +2290,10 @@ export type RestResetCadence =
   // ItemDestructionPolicy.permanent_on_empty on MagicItemRecord.
   | { readonly kind: "never" };
 
+// Any reset cadence — used by call sites that accept either a
+// rest-triggered or a calendar-time-triggered refill schedule.
+export type ResetCadence = RestResetCadence | TimeResetCadence;
+
 // ---------- activated-ability + passive families ----------
 //
 // Shared across non-spell kinds (class_feature, magic_item, species_trait,
@@ -2298,7 +2311,7 @@ type ActivatedAbilityHeader = {
   readonly condition?: EquipmentPredicate;
   readonly activationCost: ClassFeatureActivationCost;
   readonly resource: ActivationResource;
-  readonly resetCadence: RestResetCadence;
+  readonly resetCadence: ResetCadence;
   // §A11: effect duration for class-feature-scoped conditions.
   // Ranger Nature's Veil: Invisible until end of next turn. Omitted
   // when the ability has no outlasting effect window.
