@@ -29,9 +29,7 @@
       }
     ],
     "resetCadence": {
-      "days": 36500,
-      "kind": "elapsed_days",
-      "startsWhen": "resource_spent"
+      "kind": "century"
     },
     "resource": {
       "cap": {

@@ -9,7 +9,7 @@
 -- Encoding:
 --   • Activated magic item gated by a study window rather than an
 --     action economy cost.
---   • One use per century via use_count + elapsed_days reset.
+--   • One use per century via the dedicated century reset cadence.
 --   • Permanent score increase as modify_ability_score with max 30.
 
 let tome =
@@ -35,21 +35,7 @@ let tome =
               { kind = "use_count"
               , cap = { kind = "fixed", uses = 1 }
               }
-          , resetCadence =
-              { kind = "elapsed_days"
-              , days = 36500
-              , regain =
-                  None
-                    { kind : Text
-                    , expr :
-                        { dice : Natural
-                        , dieSize : Natural
-                        , flat : Optional Natural
-                        , spellcastingMod : Optional Bool
-                        }
-                    }
-              , startsWhen = "resource_spent"
-              }
+          , resetCadence = { kind = "century" }
           , phases =
               [ { kind = "direct"
                 , attachment = { kind = "self" }
