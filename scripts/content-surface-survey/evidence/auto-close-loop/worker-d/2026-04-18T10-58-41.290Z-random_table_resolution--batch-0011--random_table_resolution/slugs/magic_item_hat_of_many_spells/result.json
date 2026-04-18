@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.mode.filtered_spell_list_choice",
+      "justification": "The item's main success path is not a named granted spell. It lets the bearer choose any Wizard spell they do not know, constrained by class list, castable level, and material-cost ceiling, then cast that chosen spell using normal spell parameters.",
+      "evidence": "\"While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can't have Material components costing more than 1,000 GP.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "branch_contingent_cooldown_consumption",
+      "justification": "The hat's once-per-rest lockout applies only on a successful Arcana check, while the spell slot is spent before the check. Current activation mechanics consume the declared resource at activation time and cannot represent a success-only cooldown honestly.",
+      "evidence": "\"Once you decide on the spell, you must expend a spell slot of the spell's level. Then, to determine whether you cast the spell, make an Intelligence (Arcana) check... On a successful check, you cast the spell ... and you can't use this property again until you finish a Short or Long Rest.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.delegated_spell_casting_time",
+      "justification": "The item's activation cost is not fixed on the item. It inherits the casting time of the chosen spell, which the current activation surface cannot express.",
+      "evidence": "\"On a successful check, you cast the spell using its normal casting time.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "spellcasting_focus",
+      "justification": "The passive focus property is a deterministic item rule affecting component substitution for Wizard spells. The current passive effect atoms do not model 'can be used as a spellcasting focus' at all.",
+      "evidence": "\"While holding the hat, you can use it as a Spellcasting Focus for your Wizard spells.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring. The unit fits the existing magic_item top-level kind, but its main property requires filtered arbitrary-spell casting, success-only cooldown consumption, and delegated casting time. Several random-table outcomes may add further gaps, but the success path already blocks an honest encoding."
+}

@@ -1,0 +1,40 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "random_outcome_payload",
+      "justification": "A single random-table branch needs to release heterogeneous payloads: referenced spell casts, local timed effects, summons, and object exile. The current random_table shape can only branch into ActivationPhase arrays, which cannot host those full payloads honestly.",
+      "evidence": "That location becomes the point of origin of a spell or other magical effect determined by rolling on the Wand of Wonder Effects table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "RandomTableOutcome.spell_cast",
+      "justification": "Several rows are immediate casts of existing spells with wand-defined DC/range/origin overrides. grant_spell_access is a persistent grant, not an immediate random resolution.",
+      "evidence": "You cast a spell originating from the chosen point."
+    },
+    {
+      "kind": "new_variant",
+      "name": "random_outcome_branch_duration",
+      "justification": "Different branches have distinct local durations and repeat-save behavior, but activated magic items only carry one shared top-level duration, not branch-local lifecycle.",
+      "evidence": "you have the Stunned condition until the start of your next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "uncontrolled_spawned_creature",
+      "justification": "The current spawned-creature surface assumes a controllable companion. This item creates a creature that is explicitly not under the user's control.",
+      "evidence": "The creature isn't under your control, acts as it normally would, and disappears after 1 hour or when it drops to 0 Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "object_target_attachment",
+      "justification": "One branch targets an unattended object rather than a creature/self/area and exiles it to the Ethereal Plane. Activation-phase attachments do not currently admit object targets.",
+      "evidence": "An object of the GM's choice disappears into the Ethereal Plane."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring. The item shell fits, but the random table forces cross-family composition that the current magic-item activation surface cannot express honestly."
+}
