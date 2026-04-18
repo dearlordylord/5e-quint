@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_figurine_of_wondrous_power",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "linked_multi_companion_activation",
+      "justification": "The existing magic-item `spawned_creature` family creates one companion per activation. This unit has a named variant whose core rule is activating one or two linked figurines together, so a single-companion payload cannot represent it honestly.",
+      "evidence": "Golden Lions (Rare). These gold statuettes of lions are always created in pairs. You can use one figurine or both simultaneously."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "elapsed_time_charge_drain_with_forced_revert",
+      "justification": "Current activated magic items spend charges at activation time and reset on a cadence. This variant spends charges while the creature remains transformed, then auto-reverts and starts a cooldown when the pool empties.",
+      "evidence": "Goat of Traveling. It has 24 charges, and each hour or portion thereof it spends in goat form costs 1 charge. When it runs out of charges, it reverts to a figurine and can't be used again until 7 days have passed, when it regains all expended charges."
+    },
+    {
+      "kind": "new_variant",
+      "name": "active_companion_state_gate",
+      "justification": "Some variants grant owner-facing abilities or extra mechanics only while the figurine is in creature form. The current surface has equipment predicates, but no predicate keyed to an active spawned-companion state.",
+      "evidence": "Silver Raven (Uncommon). While in raven form, the figurine grants you the ability to cast Animal Messenger on it."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest content file was authored. The generic figurine shell matches a magic-item creature-spawn pattern, but the collection as written includes paired simultaneous spawning, duration-burned charges with forced reversion, and companion-state-gated rider mechanics that do not fit one existing mechanics family without omission."
+}

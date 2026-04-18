@@ -66,7 +66,7 @@ import type {
   ItemDestructionPolicy,
   SpellAccessMode,
   SaveGateRiderResult,
-  SpawnedCreatureMechanics,
+  SpawnedCreaturePayload,
   CreatureStatBlock,
   CreatureActions,
   CreatureNamedAttackRoll,
@@ -81,6 +81,7 @@ import type {
   MagicItemAttunementRestriction,
   MagicItemVariant,
   PassiveOperation,
+  MagicItemSpawnedCreatureMechanics,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -1599,7 +1600,7 @@ type CreatureCtx = {
 };
 
 function traceSpawnedCreature(
-  m: SpawnedCreatureMechanics,
+  m: SpawnedCreaturePayload,
   ctx: SpellCtx,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -2636,6 +2637,7 @@ function traceMagicItemMechanics(
     | PassiveMechanics
     | ActivatedAbilityMechanics
     | TriggeredReactionAbilityMechanics
+    | MagicItemSpawnedCreatureMechanics
     | CompositeMagicItemMechanics,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -2645,6 +2647,8 @@ function traceMagicItemMechanics(
     case "passive":
     case "activation":
       return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "spawned_creature":
+      return [traceMagicItemSpawnedCreature(m, nodes, edges, ids)];
     case "triggered_reaction":
       return [traceTriggeredReactionAbility(m, nodes, edges, ids)];
     case "composite":
@@ -2653,6 +2657,8 @@ function traceMagicItemMechanics(
           case "passive":
           case "activation":
             return tracePassiveOrActivated(part, nodes, edges, ids);
+          case "spawned_creature":
+            return traceMagicItemSpawnedCreature(part, nodes, edges, ids);
           case "triggered_reaction":
             return traceTriggeredReactionAbility(part, nodes, edges, ids);
           default: {
@@ -3246,6 +3252,51 @@ function traceTriggeredReactionAbility(
     previousResolutionId = thisResolutionId;
   });
 
+  return procId;
+}
+
+function traceMagicItemSpawnedCreature(
+  m: MagicItemSpawnedCreatureMechanics,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const procId = ids("act");
+  nodes.push({
+    id: procId,
+    category: "procedure",
+    atomKind: "activate",
+    label: "activate",
+  });
+
+  if (m.condition !== undefined && m.condition.kind !== "always") {
+    const predId = traceEquipmentPredicate(m.condition, nodes, ids);
+    edges.push({ from: procId, to: predId, relation: "requires" });
+  }
+
+  traceActivationCost(m.activationCost, procId, nodes, edges, ids);
+
+  const resId = traceActivationResource(m.resource, nodes, edges, ids);
+  edges.push({ from: procId, to: resId, relation: "consumes" });
+  traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
+
+  if (m.usageLimit?.kind === "once_per_turn") {
+    const fenceId = ids("fence");
+    nodes.push({
+      id: fenceId,
+      category: "resource",
+      atomKind: "use_count",
+      label: "use_count\nonce per turn",
+    });
+    edges.push({ from: procId, to: fenceId, relation: "consumes" });
+  }
+
+  if (m.duration !== undefined) {
+    traceDuration(m.duration, procId, nodes, edges, ids);
+  }
+
+  const ctx: SpellCtx = { procId, slotId: null, range: m.range };
+  traceSpawnedCreature(m, ctx, nodes, edges, ids);
   return procId;
 }
 

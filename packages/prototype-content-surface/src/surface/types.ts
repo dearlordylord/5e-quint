@@ -1904,13 +1904,17 @@ export type ReanimatedCreatureMechanics = SpellMechanicsHeader & {
   readonly nightOnly?: true;
 };
 
-export type SpawnedCreatureMechanics = SpellMechanicsHeader & {
-  readonly family: "spawned_creature";
+export type SpawnedCreaturePayload = {
   readonly statBlock: CreatureStatBlock;
   readonly mode?: CreatureMode;
   readonly control: CreatureControl;
   readonly dismissal: CreatureDismissal;
 };
+
+export type SpawnedCreatureMechanics = SpellMechanicsHeader &
+  SpawnedCreaturePayload & {
+    readonly family: "spawned_creature";
+  };
 
 export type SpellMechanics =
   | OngoingEffectMechanics
@@ -2105,6 +2109,15 @@ export type TriggeredReactionAbilityMechanics = Omit<
   readonly interruptsTrigger: boolean;
   readonly phases: ReadonlyNonEmptyArray<ActivationPhase>;
 };
+
+// Magic-item companion summon — same controllable-creature payload as
+// spell summons, but gated by item activation cost/resource/reset
+// rather than spell-slot headers.
+export type MagicItemSpawnedCreatureMechanics = ActivatedAbilityHeader &
+  SpawnedCreaturePayload & {
+    readonly family: "spawned_creature";
+    readonly range: Range;
+  };
 
 // Back-compat alias: content files historically referenced this name.
 export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
@@ -2319,7 +2332,8 @@ export type SpeciesTraitRecord = UnitMetadata & {
 export type MagicItemComponentMechanics =
   | PassiveMechanics
   | ActivatedAbilityMechanics
-  | TriggeredReactionAbilityMechanics;
+  | TriggeredReactionAbilityMechanics
+  | MagicItemSpawnedCreatureMechanics;
 
 // Composite magic-item mechanics — a single SRD item can combine
 // always-on passive grants with a distinct activated ability while
