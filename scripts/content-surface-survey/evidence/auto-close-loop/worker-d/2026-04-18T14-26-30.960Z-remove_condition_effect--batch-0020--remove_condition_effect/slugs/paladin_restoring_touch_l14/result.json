@@ -1,0 +1,16 @@
+{
+  "unit_slug": "paladin_restoring_touch_l14",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "augment_named_activation",
+      "justification": "Restoring Touch does not grant an independent activation or resource. It modifies the existing Lay On Hands activation by adding an optional condition-removal branch that spends from the same healing pool instead of healing. The current surface has no honest way to hook one class feature into another feature's activation and shared resource.",
+      "evidence": "When you use Lay On Hands on a creature, you can also remove one or more of the following conditions from the creature... You must expend 5 Hit Points from the healing pool of Lay On Hands for each of these conditions you remove; those points don't also restore Hit Points to the creature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "A standalone activation record would be dishonest because it would need to duplicate or invent a separate pool instead of consuming the existing Lay On Hands pool."
+}

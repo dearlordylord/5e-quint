@@ -1,0 +1,28 @@
+{
+  "unit_slug": "ranger_tireless_l10",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.ability_modifier.minimumUses",
+      "justification": "The activation half already fits the class_feature activation family, but the resource cap needs an explicit floor so modifier-scaled uses can honor RAW minimums.",
+      "evidence": "You can use this action a number of times equal to your Wisdom modifier (minimum of once)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount minimum total floor",
+      "justification": "The temporary HP amount is a normal rolled amount plus an ability modifier, but the total cannot fall below 1. Current DiceExpr models the sum, not the minimum floor on the resolved total.",
+      "evidence": "you can give yourself a number of Temporary Hit Points equal to 1d8 plus your Wisdom modifier (minimum of 1)"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "rest_window -> condition_progression (exhaustion -1)",
+      "justification": "The second half is deterministic and not DM agenda, but the passive-operation grammar cannot trigger on finishing a Short Rest and the surface cannot represent decreasing a leveled condition by exactly 1 instead of removing it entirely.",
+      "evidence": "Whenever you finish a Short Rest, your Exhaustion level, if any, decreases by 1."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Composite class_feature shape exists, and the temporary-HP activation mostly fits, but three RAW details are unrepresentable: minimum-1 use floor, minimum-1 temp-HP floor, and short-rest exhaustion decrement. No content file was authored to avoid a misleading partial encoding."
+}
