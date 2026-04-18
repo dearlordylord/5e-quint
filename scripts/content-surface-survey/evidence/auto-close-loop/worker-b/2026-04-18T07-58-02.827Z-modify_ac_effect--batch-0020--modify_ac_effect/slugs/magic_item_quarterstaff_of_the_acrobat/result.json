@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "stateful_item_form_mode",
+      "justification": "The item has persistent mutable forms, and later passive/reaction properties are gated by the current form. The existing magic-item surface has composite parts and alter_item_kind, but no way to store current item form and condition other mechanics on it.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff. In certain forms, the weapon has the following additional properties."
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can be toggled to emit dim light, and the current surface has no light-emission effect atom.",
+      "evidence": "you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light"
+    },
+    {
+      "kind": "new_variant",
+      "name": "weapon_property_mutation_with_return",
+      "justification": "The item temporarily gains the Thrown property with explicit normal/long range and an immediate return-to-hand rider after a ranged attack. The current surface lacks an honest way to mutate weapon properties on the item and encode the return behavior.",
+      "evidence": "This weapon has the Thrown property with a normal range of 30 feet and a long range of 120 feet. Immediately after you make a ranged attack with the weapon, it flies back to your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because any current encoding would misrepresent form-gated mechanics as unconditional or omit major functional text."
+}

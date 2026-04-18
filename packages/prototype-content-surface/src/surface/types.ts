@@ -539,6 +539,15 @@ export type EffectAtom =
       readonly kind: "modify_ac";
       readonly delta: DiceDelta;
     }
+  // Prototype extension: persistent additive modifier to the wielder's
+  // spell save DC. Distinct from `grant_spell_access.dcOverride`, which
+  // only changes casts made through a specific granted spell access path.
+  // This atom models broad character-sheet riders such as Robe of the
+  // Archmagi's "+2 to your spell save DC".
+  | {
+      readonly kind: "modify_save_dc";
+      readonly delta: DiceDelta;
+    }
   // v4: apply_condition. `condition` is one of:
   //   • a bare Condition — unconditional application
   //   • a ReadonlyArray<Condition> — ALL listed conditions applied

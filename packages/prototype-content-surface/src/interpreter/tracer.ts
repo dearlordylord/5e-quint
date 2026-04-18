@@ -197,6 +197,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "modify_save_dc": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_save_dc",
+        label: `modify_save_dc\n${describeDelta(e.delta)}`,
+      });
+      return id;
+    }
     case "apply_condition": {
       const id = ids("cond");
       const label = `apply_condition\n${describeConditionChoice(e.condition)}`;
@@ -649,6 +659,7 @@ function traceEffectAtomScaling(
       return;
     case "none":
     case "modify_ac":
+    case "modify_save_dc":
     case "apply_condition":
     case "remove_condition":
     case "grant_resistance":
