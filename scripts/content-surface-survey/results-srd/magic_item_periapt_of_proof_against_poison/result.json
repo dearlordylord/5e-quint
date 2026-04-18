@@ -1,34 +1,19 @@
 {
   "unit_slug": "magic_item_periapt_of_proof_against_poison",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + passive_while_attuned family",
-      "justification": "UnitRecord has no magic_item variant. The item's mechanic is a passive always-on effect while worn and attuned — no activation, no cost, no reset. No existing mechanics family (activation, ongoing_effect, on_hit_trigger, etc.) honestly represents this shape. A new top-level record kind and a new mechanics family are both required.",
-      "evidence": "While you wear it, you have Immunity to the Poisoned condition and Poison damage."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_immunity",
-      "justification": "v4 has grant_resistance (halved damage) but not grant_immunity (no damage/effect). These are mechanically distinct in SRD 5.2.1 — immunity fully negates while resistance halves. A separate atom is required to avoid a dishonest encoding that collapses the two.",
-      "evidence": "you have Immunity to the Poisoned condition and Poison damage"
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_condition_immunity",
-      "justification": "v4 has apply_condition and remove_condition but no atom for granting permanent immunity to a condition. Condition immunity is mechanically distinct from resistance (which applies only to damage) and from remove_condition (which is a one-time effect).",
-      "evidence": "you have Immunity to the Poisoned condition"
-    },
-    {
-      "kind": "new_variant",
-      "name": "attunement requirement on item record",
-      "justification": "The item requires attunement. v4 has attunement_slot as a resource atom and attune as a procedure atom, but the surface has no field on a hypothetical MagicItemRecord to express requires_attunement as a gate. This is a structural surface gap, not just a missing atom.",
-      "evidence": "Wondrous Item, Rare (Requires Attunement)"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_condition_immunity",
+    "grant_damage_immunity",
+    "magic_item_root"
   ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Primary blocker is structural: UnitRecord does not include a magic_item variant. No amount of atom widening resolves this — a new record kind and a new passive mechanics family are the minimum required additions. Secondary blockers (grant_immunity, condition immunity, attunement gate) would also need resolution before a clean encoding is possible."
+  "notes": "Straightforward passive magic item. Both grant_condition_immunity (poisoned) and grant_damage_immunity (poison) exist in the surface. Dhall list homogeneity required the Optional pattern (condition/damageType fields with None Text for unused slot), matching the mind_blank.dhall precedent. Typecheck and tracer both pass cleanly."
 }

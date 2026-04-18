@@ -1,46 +1,53 @@
 {
   "unit_slug": "magic_item_staff_of_charming",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "commit",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "prepare",
+    "prompt",
+    "reaction_quota",
+    "reaction_window",
+    "reflect_triggering_spell",
+    "respond",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "commits",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "opens_window",
+    "persists_until",
+    "prepares",
+    "prompts",
+    "requires",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "multi_mechanics_magic_item",
-      "justification": "Staff of Charming has three independent mechanics that do not fit a single existing MagicItemMechanics value: a charge-based activated spellcasting property, a reaction-based spell reflection property, and a separate once-per-dawn failed-save replacement property. MagicItemMechanics = PassiveMechanics | ActivatedAbilityMechanics can encode only one family per item.",
-      "evidence": "This staff has 10 charges. While holding the staff, you can use any of its properties: Cast Spell. ... Reflect Enchantment. ... Resist Enchantment."
-    },
-    {
-      "kind": "new_variant",
-      "name": "MagicItemRecord attunement class restriction",
-      "justification": "The record can express only requiresAttunement: boolean. It cannot encode that attunement is limited to specific classes, which is part of the item's deterministic eligibility rule.",
-      "evidence": "Requires Attunement by a Bard, Cleric, Druid, Sorcerer, Warlock, or Wizard"
-    },
-    {
-      "kind": "new_variant",
-      "name": "reaction trigger for successful spell save against self-only spell",
-      "justification": "Reflect Enchantment fires only after a successful saving throw against an Enchantment spell that targets only you. Existing reaction triggers cover hit-by-attack, targeted-by-named-spell, or creature-casts-spell, but not success on a save against a triggering spell with school and targeting predicates.",
-      "evidence": "If you succeed on a saving throw against an Enchantment spell that targets only you, you can take a Reaction"
-    },
-    {
       "kind": "new_atom",
-      "name": "reflect_triggering_spell",
-      "justification": "The effect is not just negation or Counterspell-style cancellation. It redirects the triggering spell onto its caster as if you had cast it. Existing atoms such as negate_triggering_spell and negate_named_effect do not express re-targeting and ownership transfer of the triggering spell's full effects.",
-      "evidence": "turn the spell back on its caster as if you had cast the spell"
-    },
-    {
-      "kind": "new_variant",
-      "name": "reactionless trigger on failed spell save",
-      "justification": "Resist Enchantment fires when you fail a saving throw against an Enchantment spell that targets only you, with no action or reaction cost. Existing ActivatedAbilityMechanics requires an activation cost and phases initiated by the user; it cannot express an automatic trigger tied to a failed save.",
+      "name": "convert_save_failure_to_success",
+      "justification": "Resist Enchantment allows the bearer to retroactively convert a just-failed saving throw into a success. No existing atom models this. It is distinct from modify_roll_advantage (which gives advantage on future rolls) and from any existing post-roll modifier. The effect fires after the die roll is resolved but before the failed-save consequences apply.",
       "evidence": "If you fail a saving throw against an Enchantment spell that targets only you, you can turn your failed save into a successful one."
     },
     {
-      "kind": "new_atom",
-      "name": "replace_failed_save_with_success",
-      "justification": "The item changes the outcome of a completed saving throw from failure to success. Current surface atoms can add bonuses or advantage before resolution, but there is no effect atom that substitutes the resolved save result after the roll is known.",
-      "evidence": "you can turn your failed save into a successful one"
+      "kind": "new_variant",
+      "name": "PassiveMechanics.resource (charge_pool)",
+      "justification": "The Cast Spell and Reflect Enchantment properties share a single 10-charge pool. The current surface has no way to declare a shared charge pool across composite components. Each ActivationResource-bearing component must redundantly declare the same pool, which misrepresents the shared depletion constraint. PassiveMechanics also cannot declare a charge pool, forcing charge-cast grants into ActivatedAbilityMechanics even when the activation cost is just 'spend the action to cast'.",
+      "evidence": "This staff has 10 charges. [Cast Spell] expend 1 charge... [Reflect Enchantment] expend 1 charge from the staff."
     }
   ],
   "confidence": "high",
-  "notes": "The Cast Spell property alone would fit the current charge_pool + dawn regain + last_charge_roll + grant_spell_access surface. The item is non-clean because the existing magic-item record cannot combine that activation with Reflect Enchantment and Resist Enchantment, both of which are triggered mechanics with distinct trigger grammars and reset behavior. No dhall/json/trace authored."
+  "notes": "Partial encoding: Cast Spell (3 spells, 1 charge each) and Reflect Enchantment (reaction after save success, 1 charge, reflect_triggering_spell) are encoded cleanly. Resist Enchantment is OMITTED because 'turn a failed save into a success' requires a new atom not in v4. The encoded composite has two components each declaring a charge_pool of cap 10 with dawn reset — this is a surface limitation (no cross-component pool sharing); both declarations represent the same physical pool. The trace and typecheck both pass for the encoded subset."
 }

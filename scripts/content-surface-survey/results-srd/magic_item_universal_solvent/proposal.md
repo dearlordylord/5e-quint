@@ -1,31 +1,83 @@
-`Universal Solvent` does not fit the current magic-item activation surface honestly, so no authored `content/magic_item_universal_solvent.dhall` was created.
+# Proposal: `dissolve_adhesive` atom — Universal Solvent
 
-Why it fails:
+**Unit:** `magic_item_universal_solvent` (Legendary, no attunement)  
+**Outcome:** `atom_widening`  
+**Blocking gap:** no effect atom for dissolving adhesive bonds
 
-- The item targets a non-creature physical surface: "pour 1 or more ounces of solvent from the tube onto a surface within reach." Current `ActivationPhase.attachment` only supports `self`, `target`, `area`, and `mark`; there is no object/surface attachment for magic-item activations.
-- The core effect is not any existing surfaced v4 effect atom. "Each ounce instantly dissolves up to 1 square foot of adhesive it touches" is a deterministic world-state mutation on adhesive coverage, not damage, condition, movement, targeting denial, spell access, or another existing effect atom.
-- The activation economy is specifically a `Utilize` action, not a generic action. Current `ClassFeatureActivationCost` has `action`, `bonus_action`, `reaction`, `free`, and `replace_attack`, but nothing that preserves the SRD action-kind distinction.
-- The consumable resource is variable-spend ounces with a randomized starting quantity: "When found, a tube contains 1d6 + 1 ounces" and each use spends "1 or more ounces". The current magic-item resource model can represent variable spend (`charge_pool`) and non-recharge (`never`), but not a randomized initial pool size on the record.
+---
 
-Recommended widenings:
+## What fits
 
-1. `Attachment` / target-surface widening
-   - Add a variant for a non-creature object/surface target in activation phases.
-   - Evidence: "pour 1 or more ounces of solvent from the tube onto a surface within reach"
+The item frame encodes cleanly with existing surface primitives:
 
-2. New effect atom for adhesive dissolution
-   - Add a deterministic effect atom that removes or dissolves adhesive coverage from a touched surface, parameterized by area per resource spent.
-   - Evidence: "Each ounce instantly dissolves up to 1 square foot of adhesive it touches, including Sovereign Glue."
+| Field | Encoding |
+|---|---|
+| kind | `magic_item` |
+| rarity | `legendary` |
+| requiresAttunement | `false` |
+| mechanics family | `activation` |
+| activationCost | `{ kind: "standard_action", action: "utilize" }` |
+| resource | `charge_pool`, cap `fixed(uses: 6)` ← upper bound; real cap is initial stock |
+| initialCount | `{ kind: "fixed", expr: { dice: 1, dieSize: 6, flat: 1 } }` |
+| resetCadence | `never` (consumable; no refill) |
+| destruction | `permanent_on_empty` |
+| attachment | `{ kind: "object", count: 1 }` (adhesive surface within reach) |
+| range | `{ kind: "touch" }` |
 
-3. `ClassFeatureActivationCost` widening for `utilize`
-   - Preserve the explicit SRD action kind instead of collapsing to generic `action`.
-   - Evidence: "You can take a Utilize action"
+The charge pool idiom fits: 1+ ounces are spent per Utilize, and `charge_pool` + variable-cost activation is the established pattern.
 
-4. Resource-cap widening for randomized initial quantity
-   - Add a way to express "initially contains NdM + K units" for consumable items with no recharge.
-   - Evidence: "When found, a tube contains 1d6 + 1 ounces."
+---
 
-Classification:
+## What is missing
 
-- Primary verdict: `atom_widening`
-- Reason: even if targeting and action-cost variants were added, the item still needs a new core effect atom for dissolving adhesive.
+### `dissolve_adhesive` (new effect atom)
+
+**Evidence:**  
+> "Each ounce instantly dissolves up to 1 square foot of adhesive it touches, including *Sovereign Glue*."
+
+**Why no existing atom covers this:**
+
+- `end_ongoing_spells` — only ends spell effects; Sovereign Glue is a magic item effect (`bond_objects`), not an ongoing spell. Mundane adhesive is not a spell at all.
+- `negate_named_effect` / `negate_triggering_spell` — reactive grammar (fires in a reaction window); Universal Solvent acts proactively via Utilize action.
+- `remove_condition` — bonds are not conditions.
+- `alter_item_kind` — changes form, not bond state.
+- `block_reanimation` — unrelated.
+
+The `bond_objects` atom in `types.ts` explicitly anticipates this gap:
+> "The 'broken only by Universal Solvent / Oil of Etherealness / Wish' clause is a property of the resulting bond — **those counter-items carry the dispelling semantics in their own content**, not this atom."
+
+### Proposed atom shape
+
+```typescript
+| {
+    readonly kind: "dissolve_adhesive";
+    // Square feet of adhesive coverage dissolved per unit of resource spent.
+    // Universal Solvent: 1 sq ft per ounce (= per charge spent).
+    readonly sqFeetPerCharge: number;
+    // Explicitly names the bond_objects effects this dissolves, so the tracer
+    // can emit a named counter-relation. Absent = dissolves any adhesive.
+    readonly counters?: ReadonlyNonEmptyArray<"bond_objects">;
+  }
+```
+
+**Semantics:**  
+- On activation, the caster spends N charges (N ≥ 1, player choice).  
+- Dissolves N × `sqFeetPerCharge` square feet of adhesive contact at the attachment object.  
+- If the object has an active `bond_objects` effect (e.g., from Sovereign Glue), that bond is ended.  
+- Mundane adhesive (non-magical glue, paste, etc.) is also affected — purely narrative, no additional atom needed.
+
+**Coverage area as DM agenda:**  
+The "1 square foot per ounce" is a physical coverage cap, not a tracked game-state number. The tracer emits it as metadata on the atom label; the engine surfaces it as a DM-resolved constraint (how much of the bonded surface is covered).
+
+---
+
+## Impact on other units
+
+- **Oil of Etherealness** — SRD text lists it alongside Universal Solvent as a Sovereign Glue counter. Same atom would apply.
+- **Wish** — The Wish spell's "break Sovereign Glue" is one instance of Wish's general "duplicate any spell or produce any effect" power, which is already DM-agenda. No separate atom needed.
+
+---
+
+## Classification rationale
+
+`atom_widening` (not `structural_widening`): the `activation` family with `charge_pool` resource is an exact fit. Only the leaf effect atom is missing. Adding `dissolve_adhesive` to `EffectAtom` in `types.ts` and a corresponding case to the tracer's `traceEffectAtom` switch would make this unit encodable with no family changes.

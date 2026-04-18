@@ -1,11 +1,11 @@
 {
   "unit_slug": "magic_item_staff_of_healing",
-  "outcome": "surface_widening",
+  "outcome": "clean",
   "atoms_used": [
     "action_quota",
     "activate",
     "attunement_slot",
-    "charge_pool",
+    "charge",
     "direct_apply",
     "duration_window",
     "grant_spell_access",
@@ -21,14 +21,7 @@
     "persists_until",
     "roots"
   ],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "MagicItemRecord attunement restriction metadata",
-      "justification": "The existing magic-item record can only express a boolean attunement requirement, so it loses the class-gated eligibility on items that require attunement by specific classes.",
-      "evidence": "Staff, Rare (Requires Attunement by a Bard, Cleric, or Druid)"
-    }
-  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The charge-based casting, dawn recharge, and last-charge destruction all fit the current surface and traced cleanly. The encoded JSON necessarily omits the bard/cleric/druid attunement restriction because the record shape only supports requiresAttunement: boolean."
+  "notes": "Re-mine: previous result was surface_widening because attunementRestriction.class_list did not yet exist. The surface has since been widened (Staff of Fire uses the same class_list pattern). All mechanics encode cleanly: charge_pool (10 charges), three grant_spell_access with charge_cast modes (Cure Wounds L1-L4 at 1/level, Lesser Restoration 2 charges, Mass Cure Wounds 5 charges), dawn recharge (1d6+4), last_charge_roll destruction."
 }

@@ -1,0 +1,90 @@
+{
+  "defaultAttunement": {
+    "requiresAttunement": false
+  },
+  "description": "While holding this Shield, you have a bonus to Armor Class determined by the Shield's rarity, in addition to the Shield's normal bonus to AC.",
+  "id": "magic_item_shield_1_2_or_3",
+  "kind": "magic_item",
+  "name": "Shield, +1, +2, or +3",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Shield+1+2or+3"
+  },
+  "variants": [
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_shield_plus_1",
+      "mechanics": {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 1,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_ac"
+          }
+        ]
+      },
+      "name": "Shield, +1",
+      "rarity": "uncommon"
+    },
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_shield_plus_2",
+      "mechanics": {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_ac"
+          }
+        ]
+      },
+      "name": "Shield, +2",
+      "rarity": "rare"
+    },
+    {
+      "destruction": {
+        "kind": "none"
+      },
+      "id": "magic_item_shield_plus_3",
+      "mechanics": {
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "passive",
+        "grants": [
+          {
+            "delta": {
+              "dice": 3,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_ac"
+          }
+        ]
+      },
+      "name": "Shield, +3",
+      "rarity": "very_rare"
+    }
+  ]
+}

@@ -1,52 +1,76 @@
-## Wand of Enemy Detection
+# Proposal: Wand of Enemy Detection — surface_widening
 
-Outcome: `surface_widening`
+## Unit
 
-The unit fits the existing top-level shape as a `magic_item` with `activation` mechanics:
+**Wand of Enemy Detection** — Wand, Rare, Requires Attunement (SRD 5.2.1)
 
-- `requiresAttunement = true`
-- `activationCost = action`
-- `resource = charge_pool` with cap 7
-- `resetCadence = dawn` with regain `1d6 + 1`
-- `destruction = last_charge_roll`
+## What fits cleanly
 
-The blocker is the activated payload. The current surface has `EffectAtom.detect`, but it is too narrow for this item.
+The item's resource and lifecycle mechanics encode without issue:
 
-### Required widening 1
+- **Charge pool**: `{ kind: "charge_pool", cap: { kind: "fixed", uses: 7 } }`
+- **Reset cadence**: `{ kind: "dawn", regain: { kind: "fixed", expr: { dice: 1, dieSize: 6, flat: 1 } } }`
+- **Destruction**: `{ kind: "last_charge_roll", die: 20, destroyOn: 1 }`
+- **Activation cost**: `{ kind: "standard_action", action: "magic" }`
+- **Duration**: `{ kind: "timed", value: { unit: "minute", amount: 1 } }`
+- **Equipment gate**: `{ kind: "holding_item" }`
+- **Attunement**: `requiresAttunement: true`
+- **Family**: `ActivatedAbilityMechanics` (activation)
 
-Widen `EffectAtom.detect` so it can represent hostile-creature tracking with a nearest-direction readout.
+## What doesn't fit: the detect atom
 
-Why:
+The core effect is: *"you know the direction of the nearest creature Hostile to you within 60 feet, but not its distance."*
 
-- Current shape: `detect { property, radiusFeet }`
-- Current semantics: sense the presence of a named property within a radius
-- Needed semantics here: know the direction of the nearest hostile creature within a radius, while explicitly not learning distance
+The `detect` atom is the right shape — it models spell-duration property scans within a radius. But it has three gaps:
 
-Evidence:
+### 1. Property enum missing `"hostile_creatures"`
 
-> For 1 minute, you know the direction of the nearest creature Hostile to you within 60 feet, but not its distance from you.
+```typescript
+readonly property:
+  | "magic"
+  | "evil_and_good"
+  | "poison_and_disease"
+  | "thoughts";
+```
 
-This is narrower than a generic presence scan and should not be flattened into plain `detect(property=...)`, because that would lose the nearest-target and direction-only semantics.
+Wand of Enemy Detection needs `"hostile_creatures"` (or `"enemies"`). This is a new variant of the closed enum — a `surface_widening`.
 
-Suggested direction:
+### 2. No directional/nearest-only output fields
 
-- add a `property` variant for hostility-based creature detection, and
-- add a readout mode on `detect` such as `presence` vs `direction_to_nearest`
+The wand grants directional knowledge only — you learn the direction toward the nearest hostile, not distance, and not the positions of all hostiles in range.
 
-### Required widening 2
+The current `detect` atom has only `radiusFeet`. There is no field to express:
+- **Directional output** (you learn direction, not omniscient presence-in-area)
+- **Nearest-only scope** (only the single closest qualifying creature is revealed)
 
-Add a duration early-end trigger for ceasing to hold the activating item.
+Proposed additions to `detect`:
 
-Evidence:
+```typescript
+| {
+    readonly kind: "detect";
+    readonly property: ... | "hostile_creatures";
+    readonly radiusFeet: number;
+    readonly nearestOnly?: true;          // only the closest qualifying creature
+    readonly outputKind?: "direction_only"; // direction but not distance
+  }
+```
 
-> The effect ends if you stop holding the wand.
+### 3. Missing `DurationEndTrigger` variant: `"holder_stops_holding_item"`
 
-Current `DurationEndTrigger` variants cover attacks, damage, spellcasting, donning armor, and similar spell-side clauses, but not item-state termination such as releasing or no longer holding the source item.
+> "The effect ends if you stop holding the wand."
 
-Suggested direction:
+The active 1-minute effect has an early-end condition tied to the holder's grip on the item. The current `DurationEndTrigger` union covers combat-action triggers (`target_makes_attack_roll`, `target_deals_damage`, `target_casts_spell`, `target_dons_armor`, `target_damaged_by_caster_or_ally`, `target_takes_damage`, `caster_recasts_spell`) but nothing for item-holding state changes.
 
-- add a `DurationEndTrigger` variant like `target_stops_holding_item`
+Proposed addition:
 
-### Why this is not `atom_widening`
+```typescript
+| { readonly kind: "holder_stops_holding_item" }
+```
 
-No new top-level family is required. The item is still an activated magic item with a charge pool, timed duration, dawn recharge, and last-charge destruction. The missing pieces are variants inside existing surface types, not a new atom family.
+## Why no partial encoding was produced
+
+A partial encoding using one of the four existing `detect` properties (`magic`, `evil_and_good`, etc.) would produce a valid-but-wrong trace that misrepresents the rule. Per the encoding guardrails, a misleading trace is worse than no trace. No `.dhall`, `.json`, or `.trace.md` were produced.
+
+## Classification
+
+`surface_widening` — the `ActivatedAbilityMechanics` family fits; all resource/lifecycle mechanics encode cleanly. The gap is confined to three missing variants/fields within the existing `detect` atom and `DurationEndTrigger` union. No new v4 taxonomy atom is required.

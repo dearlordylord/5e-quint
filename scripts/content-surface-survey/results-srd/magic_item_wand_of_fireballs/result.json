@@ -1,22 +1,29 @@
 {
   "unit_slug": "magic_item_wand_of_fireballs",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "DcSource.fixed",
-      "justification": "The existing magic-item activation family fits, but the surface cannot represent an item-cast spell that uses a fixed save DC instead of the caster's spell save DC or an innate ability-derived DC.",
-      "evidence": "you can expend no more than 3 charges to cast Fireball (save DC 15) from it"
-    },
-    {
-      "kind": "new_variant",
-      "name": "MagicItemRecord attunement qualifier",
-      "justification": "The record can say an item requires attunement, but it cannot preserve the narrower attunement prerequisite that only spellcasters can attune.",
-      "evidence": "Rare (Requires Attunement by a Spellcaster)"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "This otherwise matches the existing magic_item activation shape: charge_pool cap 7, dawn recharge 1d6+1, and last-charge destruction on 1d20=1. I did not author content because any current encoding would mis-state the fixed DC 15 Fireball cast, and requiresAttunement=true would lose the spellcaster-only qualifier."
+  "notes": "Stale-candidate re-mine. Both widenings from the prior result (DcSource.fixed for grant_spell_access.dcOverride, and MagicItemAttunementRestriction.spellcaster) have since been added to the surface. The unit now encodes cleanly. Structurally identical to magic_item_wand_of_lightning_bolts with spellId=fireball."
 }

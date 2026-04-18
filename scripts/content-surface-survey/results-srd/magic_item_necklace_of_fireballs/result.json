@@ -1,28 +1,26 @@
 {
   "unit_slug": "magic_item_necklace_of_fireballs",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + MagicItemMechanics family",
-      "justification": "No MagicItemRecord exists in UnitRecord. The v4 taxonomy lists magic_item_root as a source atom but types.ts has no corresponding record kind or mechanics family. All magic item encoding is blocked at the top-level kind.",
-      "evidence": "Wondrous Item, Rare — kind is magic_item, which is absent from UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord"
-    },
-    {
-      "kind": "new_variant",
-      "name": "charge resource with random starting count",
-      "justification": "The necklace starts with 1d6+3 beads — a random initial charge count, not representable by UseCountCap (fixed | threshold_tiers). Requires a new cap variant or a dedicated charge resource type with a dice-roll initializer.",
-      "evidence": "This necklace has 1d6 + 3 beads hanging from it."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "multi-charge consumption with linear damage scaling",
-      "justification": "The item allows simultaneous multi-bead use: each additional bead beyond the first adds 1d6 fire damage (cap 12d6). This is a charge-count-to-damage-scale relation not expressible with any existing operation or effect type — it is not slot scaling, not linear_per_level, and the scaling axis is 'charges consumed in a single activation'.",
-      "evidence": "You can hurl multiple beads, or even the whole necklace, at one time. When you do so, increase the damage of the Fireball by 1d6 for each bead after the first (maximum 12d6)."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "charge",
+    "damage",
+    "half_damage",
+    "magic_item_root",
+    "save_gate",
+    "scale_die_count"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The core activation (Magic action, throw bead, detonates as level 3 Fireball DC 15 save_gate in 20-ft sphere) maps cleanly to existing atoms once a magic_item family exists — activate + action_quota + save_gate + area attachment + damage (fire). The structural gap is the missing MagicItemRecord/MagicItemMechanics layer and the charge resource with random starting count. The multi-bead scaling is a secondary widening on top of that."
+  "notes": "Fits cleanly. resource_spent_linear DiceAmount was designed for this exact item (documented in types.ts comments). Base 7d6 + 1d6 per bead spent, max 12d6 encodes correctly: 1 bead = 8d6, matching 'level 3 Fireball'. The 60-foot throw range is implicit in the area origin (point_within_range) rather than a named range field — activated abilities have no top-level range field, so this is expected. Destruction policy is 'none' since the SRD text does not say the necklace is destroyed or becomes nonmagical when beads are exhausted."
 }

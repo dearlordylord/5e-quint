@@ -1,22 +1,29 @@
 {
   "unit_slug": "magic_item_wand_of_polymorph",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "grant_spell_access.fixed_save_dc",
-      "justification": "Magic-item spell grants currently record only spell id and charge-cast mode. This item's cast uses a fixed item DC, which materially changes spell resolution and cannot be omitted honestly.",
-      "evidence": "you can expend 1 charge to cast Polymorph (save DC 15) from it."
-    },
-    {
-      "kind": "new_variant",
-      "name": "MagicItemRecord.attunement_restriction",
-      "justification": "The record can only say whether attunement is required, not who may attune. This item restricts attunement to spellcasters.",
-      "evidence": "Wand, Very Rare (Requires Attunement by a Spellcaster)"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The top-level magic_item activation family fits, but I did not author content because the fixed Polymorph save DC 15 is a blocking surface gap. Recharge and destruction fit existing shapes."
+  "notes": "Structurally identical to Wand of Fireballs. charge_cast with perLevelCharges=0 and minLevel=maxLevel=4 correctly encodes the fixed single-charge, single-level cast. dcOverride covers the item-fixed DC 15."
 }

@@ -1,59 +1,42 @@
-# Wand of Fear
+# Proposal: Wand of Fear — surface_widening
 
-`Wand of Fear` does not fit the current surface cleanly enough to author a truthful `content/magic_item_wand_of_fear.dhall`.
+## Unit
 
-## Honest fit
+**Wand of Fear** (`magic_item_wand_of_fear`) — SRD 5.2.1, Rare, Requires Attunement.
 
-The item's overall chassis already exists:
+## What fits
 
-- `MagicItemRecord`
-- `mechanics.family = "activation"`
-- `resource.kind = "charge_pool"` with cap 7
-- `resetCadence.kind = "dawn"` with regain `1d6 + 1`
-- `destruction.kind = "last_charge_roll"` with `d20`, destroy on `1`
+The primary mechanics encode cleanly on the existing `ActivatedAbilityMechanics` (family `activation`) + `charge_pool` pattern established by Wand of Fireballs:
 
-If the wand only said "cast Command / Fear from it", that part would follow the existing `grant_spell_access` pattern used by other charge-based items.
+- **7-charge pool**, `cap: { kind: "fixed", uses: 7 }`
+- **Two spell grants** at different costs: `grant_spell_access` × 2 with `charge_cast` mode
+- **Fixed DC 15** via `dcOverride: { kind: "fixed", dc: 15 }` on each grant
+- **Fear area override**: the wand's 60-foot Cone vs the spell's printed 30-foot Cone expressed via `areaOverride: { kind: "cone", lengthFeet: 60 }`
+- **Dawn reset** with `regain: 1d6+1`
+- **Last-charge destruction** via `last_charge_roll { die: 20, destroyOn: 1 }`
+- **Holding predicate** via `condition: { kind: "holding_item" }`
 
-## Surface gaps
+Typecheck passes. Tracer produces a valid graph.
 
-Two parts are not representable honestly with the current surface.
+## What does not fit
 
-### 1. Item-defined spell overrides
+### Command spell-option restriction
 
-The wand does not merely grant the base spells:
+**RAW text:** `Command ("flee" or "grovel" only)`
 
-- it fixes the save DC at `15`;
-- it restricts `Command` to `"flee"` or `"grovel"` only;
-- it changes `Fear` to a `60-foot Cone`.
+The Command spell (SRD 5.2.1) normally allows any single word as the command. The wand restricts casts to only two specific options: "flee" or "grovel." This sub-option restriction has no current representation in `grant_spell_access`.
 
-Current `grant_spell_access` only carries:
+**Proposed widening:** Add an optional `spellCommandRestriction` (or similar) field to `grant_spell_access` that names a closed list of allowed command words or spell sub-options:
 
-- `spellId`
-- `mode`
+```typescript
+// on EffectAtom grant_spell_access:
+readonly spellCommandRestriction?: ReadonlyNonEmptyArray<string>;
+```
 
-That means it can only reference the canonical authored spell and its normal parameters. Using it here would silently lie about the spell behavior.
+**Scope:** `surface_widening` — a new optional variant on an existing surface type. No new v4 taxonomy atom is required; `grant_spell_access` already exists and the restriction is a narrowing qualifier on the cast, not a distinct atom.
 
-Needed widening:
-
-- a new `grant_spell_access` variant or nested override payload for item-scoped spell modifications, at minimum:
-  - fixed save DC override;
-  - spell-specific parameter overrides;
-  - spell-specific choice restriction.
-
-### 2. Holding gate
-
-The activation is gated by holding the wand:
-
-> "While holding the wand, you can cast ..."
-
-Current gating options do not represent held-item state. `requiresAttunement` is insufficient because attuned-but-not-holding is a distinct state, and `EquipmentPredicate` only covers armor and weapon cases.
-
-Needed widening:
-
-- `EquipmentPredicate.holding_item` or equivalent held-item gate reusable across magic items.
+**Pressure:** This is the first observed instance of a spell-option restriction in the SRD item catalog. Other Command-granting items (e.g., Ring of Animal Influence) may also carry specific word restrictions — widen once if a second instance confirms the pattern.
 
 ## Classification
 
-`surface_widening`
-
-The top-level unit kind and family already exist, and the needed mechanics align with existing v4 atoms (`grant_spell_access`, charge pool, recharge, destruction). The missing pieces are representational variants on the authored surface, not a new source family or a new v4 atom.
+`surface_widening` — all primary mechanics are representable; one secondary qualifier (Command word restriction) lacks a surface field.

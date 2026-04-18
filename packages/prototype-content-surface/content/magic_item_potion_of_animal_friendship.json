@@ -1,0 +1,70 @@
+{
+  "description": "When you drink this potion, you can cast the level 3 version of the Animal Friendship spell (save DC 13). Agitating this potion's muddy liquid brings little bits into view: a fish scale, a hummingbird feather, a cat claw, or a squirrel hair.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_animal_friendship",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "count": 3,
+            "mode": "choose_up_to",
+            "typeFilter": [
+              "beast"
+            ]
+          }
+        },
+        "dc": {
+          "dc": 13,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "charmed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Animal Friendship",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Potion of Animal Friendship"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

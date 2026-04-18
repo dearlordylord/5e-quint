@@ -1,28 +1,25 @@
 {
   "unit_slug": "magic_item_potion_of_animal_friendship",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + stored_spell_grant family",
-      "justification": "No magic_item kind exists in UnitRecord (types.ts only defines SpellRecord | ClassFeatureRecord | MasteryRecord). The taxonomy lists magic_item_root but the surface has no corresponding record type or payload family.",
-      "evidence": "export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord; — magic_item is absent"
-    },
-    {
-      "kind": "new_variant",
-      "name": "fixed_dc override on stored spell grant",
-      "justification": "The potion specifies a hardcoded save DC 13, independent of any caster's spell save DC. Existing DcSource only has caster_spell_save_dc and weapon_attack_dc. A stored spell grant needs a fixed_dc variant.",
-      "evidence": "you can cast the level 3 version of the Animal Friendship spell (save DC 13)"
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "consume_item activation + stored_spell payload",
-      "justification": "Magic items that grant spell access via consumption (drinking) need an activation model: consume the item (charge/item destroyed) → cast stored spell at fixed level. No existing family covers item-consumption-as-activation.",
-      "evidence": "When you drink this potion, you can cast the level 3 version of the Animal Friendship spell"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "item_destruction",
+    "magic_item_root",
+    "save_gate",
+    "target",
+    "use_count"
   ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The blocking gap is structural: magic_item is not in UnitRecord at all. Secondary gaps (fixed DC override, consume-item activation, stored spell level lock) would also need surface widening once the kind exists. The v4 taxonomy already has magic_item_root and charge atoms, so the atom inventory is not the problem — the surface type layer is missing."
+  "notes": "Encodes as activation family: drink (Action) → save_gate WIS DC 13 on up to 3 Beasts → charmed on fail, 24h timed duration with earlyEnd target_damaged_by_caster_or_ally. The 'level 3 version' translates directly to count=3 in choose_up_to. The duration and earlyEnd are in the JSON and typecheck but are not rendered in the trace graph because traceActivatedAbility does not call traceDuration — minor tracer gap, not a surface gap."
 }

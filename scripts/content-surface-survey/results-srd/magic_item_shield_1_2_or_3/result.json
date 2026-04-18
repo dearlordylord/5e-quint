@@ -1,22 +1,9 @@
 {
   "unit_slug": "magic_item_shield_1_2_or_3",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "EquipmentPredicate.holding_shield",
-      "justification": "The passive AC bonus only applies while the item is being held, and the current passive gate vocabulary cannot represent shield-holding.",
-      "evidence": "While holding this Shield, you have a bonus to Armor Class..."
-    },
-    {
-      "kind": "new_variant",
-      "name": "MagicItemRecord bundled rarity variants",
-      "justification": "This single unit slug represents three distinct rarity/bonus variants (+1, +2, +3), but the record shape only allows one rarity and one fixed mechanics payload.",
-      "evidence": "*Armor (Shield), Uncommon (+1), Rare (+2), or Very Rare (+3)*"
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["grant", "holding_item", "magic_item_root", "modify_ac"],
+  "relations_used": ["grants", "requires", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Top-level kind and passive family exist, but the current surface cannot honestly encode the holding gate or the bundled rarity-linked bonus variants. No content/trace files were authored."
+  "notes": "Collection record (3 variants: uncommon +1, rare +2, very_rare +3). Each variant is a passive with holding_item condition and a fixed modify_ac delta. dieSize=1 collapses to a flat bonus at render time. Typecheck passed, tracer produced clean mermaid graph."
 }

@@ -1,0 +1,70 @@
+{
+  "description": "You can take a Magic action to present the rod and command obedience from each creature of your choice that you can see within 120 feet of yourself. Each target must succeed on a DC 15 Wisdom saving throw or have the Charmed condition for 8 hours. While Charmed in this way, the creature regards you as its trusted leader. If harmed by you or your allies or commanded to do something contrary to its nature, a target ceases to be Charmed in this way. Once used, this property can't be used again until the next dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_rod_of_rulership",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "target_damaged_by_caster_or_ally"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "ability": "wis",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "any_number"
+          }
+        },
+        "dc": {
+          "dc": 15,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "charmed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Rod of Rulership",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RodOfRulership"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

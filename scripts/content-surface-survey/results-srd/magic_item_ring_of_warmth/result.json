@@ -1,22 +1,25 @@
 {
   "unit_slug": "magic_item_ring_of_warmth",
   "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "reduce_damage_taken"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
   "proposed_widenings": [
     {
       "kind": "new_atom",
-      "name": "reduce_damage_taken",
-      "justification": "The ring reduces Cold damage taken by 2d8 — a flat numeric subtraction from incoming damage of a specific type. This is mechanically distinct from grant_resistance (which halves damage). No atom in types.ts or v4 taxonomy covers a fixed-amount damage reduction. TAXONOMY_atoms_graph.md §13 explicitly records this as a known deferred gap.",
-      "evidence": "If you take Cold damage while wearing this ring, the ring reduces the damage you take by 2d8."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_environmental_immunity",
-      "justification": "The second effect protects against sub-zero temperatures — a world-level environmental hazard, not a combat damage type. No existing atom covers environmental condition immunity (distinct from grant_condition_immunity, which covers the 15 SRD combat conditions, and grant_damage_immunity, which covers the 13 combat damage types). This effect is DM-adjudicated in practice but is stated as a deterministic rule.",
-      "evidence": "you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower."
+      "name": "ignore_environmental_hazard",
+      "justification": "The ring's second mechanic — 'unharmed by temperatures of 0 degrees Fahrenheit or lower' — is environmental survival protection. It is not cold damage immunity (grant_damage_immunity covers combat damage, not environment), not a condition immunity, and not any existing effect atom. The SRD Extreme Cold rule (Playing-the-Game#Hazards or equivalent) creates hazard effects for unprotected creatures; this atom blocks those hazard effects for the wearer and their carried equipment. No v4 atom covers environment-scoped hazard suppression.",
+      "evidence": "you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
     }
   ],
   "confidence": "high",
-  "notes": "The primary combat mechanic (2d8 Cold damage reduction) is the blocking gap. grant_resistance cannot honestly represent it — resistance halves damage regardless of amount, while this reduces by a fixed dice roll. The environmental immunity (effect 2) is secondary; it may qualify as dm_agenda since environmental temperature effects are world-level adjudication, but the SRD states it deterministically. Both effects share the same passive magic_item shell — the shell itself fits cleanly; only the atoms are missing."
+  "notes": "Mechanic 1 (cold damage reduction 2d8) encodes cleanly as a passive reduce_damage_taken grant; typecheck and tracer both pass. Mechanic 2 (environmental temperature immunity ≤0°F) has no matching atom — it is a survival/exploration hazard suppressor, distinct from combat damage immunity. The encoded content is honest: only the clean mechanic is represented; the omitted mechanic is documented in the proposal."
 }

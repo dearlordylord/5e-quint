@@ -1,0 +1,82 @@
+{
+  "attunementRestriction": {
+    "kind": "spellcaster"
+  },
+  "description": "This wand has 7 charges. While holding it, you can take a Magic action to expend 1 charge to cause a thin blue ray to streak from the tip toward a creature you can see within 60 feet of yourself. The target must succeed on a DC 15 Constitution saving throw or have the Paralyzed condition for 1 minute. At the end of each of the target's turns, it repeats the save, ending the effect on itself on a success. Regaining Charges. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll 1d20. On a 1, the wand crumbles into ashes and is destroyed.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_wand_of_paralysis",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "holding_item"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "dc": {
+          "dc": 15,
+          "kind": "fixed"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "condition": "paralyzed",
+          "kind": "apply_condition"
+        },
+        "onSuccess": {
+          "kind": "none"
+        },
+        "repeatSave": {
+          "cadence": "end_of_target_turn",
+          "onSuccess": "ends_on_target"
+        }
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6,
+          "flat": 1
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 7
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Wand of Paralysis",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#WandOfParalysis"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

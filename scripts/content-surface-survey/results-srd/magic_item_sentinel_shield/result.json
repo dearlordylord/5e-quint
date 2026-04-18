@@ -1,16 +1,18 @@
 {
   "unit_slug": "magic_item_sentinel_shield",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "EquipmentPredicate.holding_item",
-      "justification": "The unit fits MagicItemRecord with PassiveMechanics, and both mechanical riders fit existing atoms, but the passive grant must be gated on actively holding the shield. The current EquipmentPredicate variants only cover always-on, wearing armor, or wielding weapon states.",
-      "evidence": "\"While holding this Shield, you have Advantage on Initiative rolls and Wisdom (Perception) checks.\""
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "holding_item",
+    "magic_item_root",
+    "modify_roll_advantage"
   ],
+  "relations_used": [
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Mechanically this is a passive magic item using existing v4 atoms: modify_roll_advantage on initiative, plus modify_roll_advantage on ability_check narrowed to perception via skillFilter. I did not author content/magic_item_sentinel_shield.dhall because omitting the holding gate would produce a misleading unconditional trace."
+  "notes": "Both grants fit existing atoms: modify_roll_advantage on 'initiative' and on 'ability_check' with skillFilter=perception. The holding_item EquipmentPredicate gates the passive correctly. No attunement required."
 }

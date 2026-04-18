@@ -14,14 +14,11 @@
 --   • ActivationResource.charge_pool (7 charges)
 --   • grant_spell_access.mode.charge_cast (1-3 charges maps to L3-L5)
 --   • grant_spell_access.dcOverride (fixed DC 15)
+--   • MagicItemAttunementRestriction.spellcaster (requiresAttunement by a spellcaster)
 --   • RestResetCadence.dawn with regain = 1d6 + 1
 --   • ItemDestructionPolicy.last_charge_roll (d20, destroyOn=1)
 --
--- Known omission: the attunement restriction "by a spellcaster" is not
--- representable on MagicItemRecord, which only carries a boolean
--- requiresAttunement flag. That gap is recorded in
--- proposal-magic_item_wand_of_lightning_bolts.md and the result is
--- classified as surface_widening rather than clean.
+-- All mechanics encode cleanly; no widenings required.
 
 let wand =
       { kind = "magic_item"
@@ -29,6 +26,7 @@ let wand =
       , name = "Wand of Lightning Bolts"
       , rarity = "rare"
       , requiresAttunement = True
+      , attunementRestriction = { kind = "spellcaster" }
       , provenance =
           { kind = "srd-5.2.1"
           , section = "MagicItems#WandOfLightningBolts"
@@ -38,7 +36,7 @@ let wand =
       , mechanics =
           { family = "activation"
           , condition = { kind = "holding_item" }
-          , activationCost = { kind = "action" }
+          , activationCost = { kind = "standard_action", action = "magic" }
           , resource =
               { kind = "charge_pool"
               , cap = { kind = "fixed", uses = 7 }

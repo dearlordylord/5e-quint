@@ -1,0 +1,25 @@
+{
+  "description": "While wearing this helm, you can cast Comprehend Languages from it.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_helm_of_comprehending_languages",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "comprehend_languages"
+      }
+    ]
+  },
+  "name": "Helm of Comprehending Languages",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#HelmOfComprehendingLanguages"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

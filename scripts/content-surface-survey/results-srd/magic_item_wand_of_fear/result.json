@@ -1,22 +1,36 @@
 {
   "unit_slug": "magic_item_wand_of_fear",
   "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
   "proposed_widenings": [
     {
       "kind": "new_variant",
-      "name": "grant_spell_access.item_spell_override",
-      "justification": "The existing magic-item activation chassis can represent charges, dawn recharge, and last-charge destruction, but grant_spell_access can only point at a spell id plus cast mode. This wand modifies the accessed spells with item-defined parameters that are not the base spell definitions.",
-      "evidence": "While holding the wand, you can cast one of the spells (save DC 15) on the following table from it. Command (\"flee\" or \"grovel\" only). Fear (60-foot Cone)."
-    },
-    {
-      "kind": "new_variant",
-      "name": "EquipmentPredicate.holding_item",
-      "justification": "Magic-item spell access on this wand is gated by actively holding the wand, not just by attunement or ownership. The current passive/activation gates do not model held-item state.",
-      "evidence": "While holding the wand, you can cast one of the spells ..."
+      "name": "grant_spell_access.spellCommandRestriction",
+      "justification": "The Command spell cast through this wand is restricted to the 'flee' or 'grovel' option only. The current grant_spell_access surface has no field to restrict which sub-option/command word a spell may use when cast. Without this, the encoding implies the wand can issue any Command, which is incorrect.",
+      "evidence": "Command (\"flee\" or \"grovel\" only)"
     }
   ],
   "confidence": "high",
-  "notes": "Do not author against the current surface: using plain grant_spell_access would falsely inherit the base spell save DC and spell geometry/options. The reusable charge-pool, dawn recharge, and last-charge destruction pieces already exist."
+  "notes": "Primary mechanics (charge pool, two spells at different charge costs, fixed DC 15, 60-ft cone area override for Fear, dawn reset, last_charge_roll destruction) all fit the existing surface cleanly — identical pattern to Wand of Fireballs extended to two spells. The Command restriction to 'flee' or 'grovel' is the sole unrepresentable secondary mechanic; it is a new variant on grant_spell_access, not a missing v4 atom."
 }

@@ -1,0 +1,154 @@
+{
+  "description": "This staff has 10 charges. While holding it, you can expend 1 charge (Magic action) to cast Charm Person, Command, or Comprehend Languages using your spell save DC. If you succeed on a saving throw against an Enchantment spell that targets only you, you can take a Reaction to expend 1 charge and turn the spell back on its caster as if you had cast it. [Resist Enchantment omitted: requires a missing 'convert_failed_save_to_success' atom.] The staff regains 1d8+2 expended charges daily at dawn. If you expend the last charge, roll 1d20. On a 1, the staff crumbles to dust and is destroyed.",
+  "destruction": {
+    "destroyOn": 1,
+    "die": 20,
+    "kind": "last_charge_roll"
+  },
+  "id": "magic_item_staff_of_charming",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "activationCost": {
+          "action": "magic",
+          "kind": "standard_action"
+        },
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "charm_person"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "command"
+              },
+              {
+                "kind": "grant_spell_access",
+                "mode": {
+                  "baseCharges": 1,
+                  "kind": "charge_cast",
+                  "maxLevel": 1,
+                  "minLevel": 1,
+                  "perLevelCharges": 0
+                },
+                "spellId": "comprehend_languages"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "dawn",
+          "regain": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 8,
+              "flat": 2
+            },
+            "kind": "fixed"
+          }
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 10
+          },
+          "kind": "charge_pool"
+        }
+      },
+      {
+        "activationCost": {
+          "kind": "reaction",
+          "trigger": {
+            "kind": "spell_save_outcome",
+            "outcome": "success",
+            "spellSchool": "enchantment",
+            "spellTargetsOnlySelf": true
+          }
+        },
+        "condition": {
+          "kind": "holding_item"
+        },
+        "family": "triggered_reaction",
+        "interruptsTrigger": false,
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "reflect_triggering_spell"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "range": {
+          "kind": "self"
+        },
+        "resetCadence": {
+          "kind": "dawn",
+          "regain": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 8,
+              "flat": 2
+            },
+            "kind": "fixed"
+          }
+        },
+        "resource": {
+          "cap": {
+            "kind": "fixed",
+            "uses": 10
+          },
+          "kind": "charge_pool"
+        }
+      }
+    ]
+  },
+  "name": "Staff of Charming",
+  "attunementRestriction": {
+    "classes": [
+      "bard",
+      "cleric",
+      "druid",
+      "sorcerer",
+      "warlock",
+      "wizard"
+    ],
+    "kind": "class_list"
+  },
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#StaffOfCharming"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

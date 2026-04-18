@@ -1,115 +1,45 @@
-# Proposal: Staff of the Woodlands
+# Proposal: magic_item_staff_of_the_woodlands
 
-## Outcome
+**Outcome:** `surface_widening`
 
-`structural_widening`
+## What encoded cleanly
 
-## Why it does not fit honestly
+The Staff of the Woodlands fits the composite magic-item pattern established by Staff of Power:
 
-The current `MagicItemRecord.mechanics` shape is:
+- **Passive part** (`condition: holding_item`): +2 to weapon attack rolls made with the staff (`modify_roll_numeric` on `attack_roll` with `specific_item` weapon filter), +2 to weapon damage rolls (`modify_damage_numeric` with same filter), +2 to spell attack rolls (`modify_roll_numeric` on `spell_attack_roll`). The `spell_attack_roll` RollKind was added precisely for this item per the types.ts comment.
+- **Activation part** (`condition: holding_item`): 6-charge pool, dawn recharge of 1d6, eight `grant_spell_access` entries with `charge_cast` mode (Animal Friendship 1, Awaken 5, Barkskin 2, Locate Animals or Plants 2, Pass without Trace 2, Speak with Animals 1, Speak with Plants 3, Wall of Thorns 6 charges). Spell-level-to-charge mapping is exact for all spells.
+- **Destruction**: `last_charge_roll` (d20, destroys on 1). ✓
 
-- `PassiveMechanics`
-- or `ActivatedAbilityMechanics`
+Typecheck passes; tracer emits a complete graph.
 
-`Staff of the Woodlands` needs both at once:
+## What is missing: Tree Form
 
-- passive held/wielded bonuses:
-  - `+2` to attack rolls made with the staff as a Quarterstaff
-  - `+2` to damage rolls made with the staff
-  - `+2` to spell attack rolls while holding it
-- activated charge-spending abilities:
-  - cast multiple spells from the staff
-  - spend 1 charge to turn the staff into a tree
-  - use another Magic action while touching the tree to revert it
+**SRD text:**
+> You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree. The tree is 60 feet tall and has a 5-foot-diameter trunk, and its branches at the top spread out in a 20-foot radius. The tree appears ordinary but radiates a faint aura of Transmutation magic that can be discerned with the Detect Magic spell. While touching the tree and using a Magic action, you return the staff to its normal form. Any creature in the tree falls when the tree reverts to a staff.
 
-Encoding only the spell-table half as an `activation` item would omit major item text. Encoding only the held bonuses as `passive` would omit the charges and Tree Form. That is a structural mismatch, not just a small atom gap.
+### Gap 1: Per-effect charge cost on non-spell effects
 
-## Specific pressure points
+The `alter_item_kind` atom (target: tree form) exists in the surface but carries no charge cost. The `charge_cast` mode on `grant_spell_access` handles per-spell charge costs, but there is no analogous mechanism for other `EffectAtom` variants.
 
-### 1. Composite magic-item mechanics
+Both Tree Form and the 8 spell accesses draw from the **same** 6-charge pool. If Tree Form were placed in a separate composite part, it would get its own disconnected pool — structurally wrong. If folded into the spell activation part's `direct` phase as a plain `alter_item_kind` effect, the 1-charge cost is invisible: the frame presents it as free relative to the activation's resource bookkeeping.
 
-Needed shape:
+**Proposed widening:** An optional `chargeCount: number` field on `EffectAtom` entries within an `ActivationPhase.direct.effects` list, or a wrapper type `{ chargeCount: number, effect: EffectAtom }`, so non-spell effects can declare their draw on the shared pool. The `charge_cast` pattern on `grant_spell_access` already proves the per-effect variable-cost idiom; this extends it to all atoms.
 
-- a way for one magic item to carry both passive grants and activated abilities simultaneously
+### Gap 2: Transformed-state equipment predicate for Tree Form revert
 
-Evidence:
+**SRD text:**
+> While touching the tree and using a Magic action, you return the staff to its normal form.
 
-> "This staff has 6 charges and can be wielded as a magic Quarterstaff that grants a +2 bonus to attack rolls and damage rolls made with it. While holding it, you have a +2 bonus to spell attack rolls."
+The revert activation is gated on the item being in tree form (transformed state) and the wielder physically touching it. The existing `EquipmentPredicate` variants (`holding_item`, `wearing_item`, `wielding_weapon`, etc.) cover nominal wear/hold states but cannot express an item's current transformation state. A new variant — e.g., `{ kind: "item_in_form", form: string }` — would be needed.
 
-### 2. Holding/using-this-item gate
+### Gap 3: Environmental aftermath (DM-agenda)
 
-Current passive gates only cover:
+> Any creature in the tree falls when the tree reverts to a staff.
 
-- `wearing_armor`
-- `wielding_weapon`
-- unconditional `always`
+This is DM-side adjudication: which creatures are "in the tree" and the resulting fall are environmental/positional consequences. Not a gap in the surface — legitimately DM-agenda, outside the core mechanics model.
 
-That is not enough for:
+Similarly, the tree's Transmutation magic aura (visible via Detect Magic) is a narrative property carried by `alter_item_kind`'s `newKind` string — no surface widening needed for the aura itself.
 
-- "while holding it" for spell attacks
-- "made with it" for attacks/damage from this specific weapon-item
+## Classification
 
-Needed surface widening:
-
-- item-specific held/wielded predicate such as `holding_item` or `using_attached_weapon`
-
-Evidence:
-
-> "While holding it, you have a +2 bonus to spell attack rolls."
-
-### 3. Flat bonus to weapon damage rolls
-
-The surface has:
-
-- `modify_roll_numeric` for attack rolls / saves / checks
-- no corresponding effect atom for flat weapon damage-roll bonuses
-
-Needed atom:
-
-- something like `modify_damage_numeric`
-
-Evidence:
-
-> "...grants a +2 bonus to attack rolls and damage rolls made with it."
-
-### 4. Tree Form item/object transformation
-
-The Tree Form mode is not just spell access. It is item-state transformation with a persistent object in the world plus a revert action and a fall rider on revert.
-
-Evidence:
-
-> "You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree."
-
-> "While touching the tree and using a Magic action, you return the staff to its normal form."
-
-> "Any creature in the tree falls when the tree reverts to a staff."
-
-Needed support likely includes:
-
-- item/object transform or item-mode replacement
-- planted location/object attachment
-- revert action tied to the transformed object
-- fall-on-revert rider
-
-## Secondary gap
-
-The attunement restriction is also underspecified by the current record:
-
-> "*Staff, Rare (Requires Attunement by a Druid)*"
-
-`MagicItemRecord` only has `requiresAttunement: boolean`; it cannot express class-restricted attunement.
-
-## Recommendation
-
-Classify this unit as `structural_widening`.
-
-The first widening should be a composite magic-item mechanics shape that can carry:
-
-- passive grants
-- one or more activated ability blocks
-
-After that, the narrower surface/atom gaps remain:
-
-- item-specific hold/use predicates
-- flat weapon damage bonus support
-- Tree Form item/object transformation semantics
+`surface_widening` — the family, kind, and all required atoms (`alter_item_kind`, composite mechanics) exist; what's missing is a per-effect charge cost mechanism and a transformed-state equipment predicate variant for the Tree Form sub-ability.

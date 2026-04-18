@@ -1,28 +1,34 @@
 {
   "unit_slug": "magic_item_sword_of_wounding",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "magic_item_on_hit_trigger",
-      "justification": "The item is a weapon-hit rider, but MagicItemRecord only supports passive grants or activated abilities. It needs an on-hit trigger family analogous to mastery-side on_hit_trigger.",
-      "evidence": "When you hit a creature with an attack using this magic weapon, the target takes an extra 2d6 Necrotic damage..."
+      "kind": "new_atom",
+      "name": "block_hp_recovery",
+      "justification": "The 'unable to regain Hit Points' effect is not a named SRD condition and has no existing EffectAtom. It is mechanically distinct from block_max_hp_reduction (which only prevents max HP from going down) — this atom prevents current HP from being restored by any means (healing spells, potions, regeneration, etc.) for a timed duration.",
+      "evidence": "must succeed on a DC 15 Constitution saving throw or be unable to regain Hit Points for 1 hour"
     },
     {
       "kind": "new_variant",
-      "name": "DcSource.fixed",
-      "justification": "The save uses a fixed item DC 15, which is not representable by caster spell save DC, weapon attack DC, or innate DC.",
-      "evidence": "...must succeed on a DC 15 Constitution saving throw..."
+      "name": "SaveGateRiderResult widening",
+      "justification": "SaveGateRiderResult currently only supports { kind: 'apply_condition' } or { kind: 'none' }. The Sword of Wounding's save failure result is 'block_hp_recovery', which is not a Condition. SaveGateRiderResult needs to admit a broader EffectAtom (or at least the new block_hp_recovery atom) so magic-item save riders can express non-condition failure effects.",
+      "evidence": "must succeed on a DC 15 Constitution saving throw or be unable to regain Hit Points for 1 hour"
     },
     {
-      "kind": "new_atom",
-      "name": "block_hp_regain",
-      "justification": "The effect prevents a target from regaining hit points for a duration. Existing atoms cover healing, max-HP changes, and healing maximization, but not a healing-prevention lockout.",
-      "evidence": "...or be unable to regain Hit Points for 1 hour."
+      "kind": "new_variant",
+      "name": "MasteryEffect composite / damage support",
+      "justification": "MasteryEffect is a union of ModifyRollAdvantageRider | SaveGateRider | GrantWeaponAttackRider. Sword of Wounding needs both a raw damage instance (2d6 Necrotic) AND a save_gate on the same hit. There is no composite variant and no EffectAtom.damage variant in MasteryEffect. Either MasteryEffect needs to admit a composite form, or OnHitTriggerMechanics needs to carry a ReadonlyNonEmptyArray<MasteryEffect>.",
+      "evidence": "the target takes an extra 2d6 Necrotic damage and must succeed on a DC 15 Constitution saving throw"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SaveGateRider repeatSave field",
+      "justification": "SaveGateRider has no repeatSave field. The Sword of Wounding's save-to-end pattern (repeat at end of each turn, ends on success) is identical in structure to the spell-level RepeatSaveSpec already on ActivationPhase.save_gate. SaveGateRider needs an analogous optional repeatSave field to express this cadence on mastery/item on-hit riders.",
+      "evidence": "The target repeats the save at the end of each of its turns, ending the effect on itself on a success."
     }
   ],
   "confidence": "high",
-  "notes": "No content/tracer files were authored. The primary blocker is structural: current magic-item mechanics cannot express weapon-hit riders honestly. Even with that family added, the unit still needs a fixed save DC source and an atom for preventing HP regain. The repeat-save tail itself would fit once those gaps are addressed."
+  "notes": "The on_hit_trigger family exists in MagicItemComponentMechanics and is the correct family for this unit. All four widenings are surface/atom gaps that prevent honest encoding; none require a new top-level family. The primary blocker (atom_widening) is block_hp_recovery — a timed prevention of all HP regain. The three surface_widening gaps (SaveGateRiderResult, MasteryEffect composites, SaveGateRider.repeatSave) are co-required: fixing only the atom without widening the rider types still cannot express the unit."
 }

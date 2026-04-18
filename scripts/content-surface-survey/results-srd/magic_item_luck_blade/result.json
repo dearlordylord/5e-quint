@@ -1,40 +1,22 @@
 {
   "unit_slug": "magic_item_luck_blade",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + MagicItemMechanics",
-      "justification": "UnitRecord only covers spell | class_feature | mastery. There is no magic_item kind at all. The entire record shape, mechanics header, and family taxonomy are missing.",
-      "evidence": "Weapon (Glaive, Greatsword, Longsword, Rapier, Scimitar, Sickle, or Shortsword), Legendary (Requires Attunement)"
+      "kind": "new_atom",
+      "name": "modify_roll_reroll",
+      "justification": "The Luck property grants a free reroll of one failed D20 Test per dawn. No reroll effect atom exists in types.ts. The v4 taxonomy names modify_roll_reroll but it is absent from the TS surface. The existing modify_roll_advantage and modify_roll_numeric atoms do not cover rerolling a die after it has already been rolled and failed.",
+      "evidence": "If the weapon is on your person, you can call on its luck (no action required) to reroll one failed D20 Test if you don't have the Incapacitated condition. You must use the second roll."
     },
     {
       "kind": "new_variant",
-      "name": "dawn reset cadence in RestResetCadence",
-      "justification": "Both Luck and Wish properties reset 'until the next dawn'. RestResetCadence has short_or_long_rest, long_rest, short_rest, partial_short_full_long — none covers a dawn-based reset, which is the standard magic item recharge cadence.",
-      "evidence": "Once used, this property can't be used again until the next dawn."
-    },
-    {
-      "kind": "new_variant",
-      "name": "passive_item_bonus family (always-on numeric modifier while wielded/on person)",
-      "justification": "The +1 attack/damage (while wielded) and +1 saving throws (while on person) are persistent, passive bonuses — not activations, not concentration. No existing ClassFeatureMechanics or MasteryMechanics family captures an always-on numeric modifier on attack rolls, damage rolls, and saving throws granted by an equipped item.",
-      "evidence": "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. While the weapon is on your person, you also gain a +1 bonus to saving throws."
-    },
-    {
-      "kind": "new_variant",
-      "name": "charge-based spell casting (item charges, expend 1 to cast a named spell)",
-      "justification": "Wish property requires a charge resource with a randomised initial count (1d3) that is not refilled — charges are destroyed, and when 0 remain the property itself is destroyed. The charge atom exists in v4 but the surface has no family for 'expend charge -> cast named spell from item', nor for a destructible item property.",
-      "evidence": "The weapon has 1d3 charges. While holding it, you can expend 1 charge and cast Wish from it. [...] The weapon loses this property if it has no charges."
-    },
-    {
-      "kind": "new_variant",
-      "name": "reroll_failed_d20_test (triggered by failed D20 Test, must-use-second-roll constraint)",
-      "justification": "Luck property is 'reroll one failed D20 Test, must use the second roll.' The modify_roll_reroll atom exists in v4 but the surface type has no shape for 'triggered on a failed roll' (as opposed to a general reroll) and no constraint encoding 'must use second roll'.",
-      "evidence": "you can call on its luck (no action required) to reroll one failed D20 Test if you don't have the Incapacitated condition. You must use the second roll."
+      "name": "ItemDestructionPolicy — property_loss_on_empty variant",
+      "justification": "The Wish charges being depleted causes only the Wish property to be lost, not the whole item. The current ItemDestructionPolicy discriminated union has none / last_charge_roll / permanent_on_empty, all of which apply to the entire item. A partial-property-loss variant is needed for items that shed individual charge-based abilities while retaining other mechanics.",
+      "evidence": "The weapon loses this property if it has no charges."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: magic_item is not a member of UnitRecord. The taxonomy lists magic_item_root as a valid source atom (v4 §1), so the atom inventory is ready, but the surface schema and tracer both have no codepath for this kind. Secondary widenings (dawn reset, passive bonus family, charge-spell family, must-use-second-roll reroll) are real and would each require additional surface work once the structural gap is closed. The Wish property is additionally complicated by being a dm_agenda-adjacent spell (its effect is open-ended narrative) — that boundary would need to be addressed in any future magic_item_root encoding pass."
+  "notes": "The passive +1 attack/damage/saves and the Wish charge-cast are fully encodable with existing surface atoms (passive PassiveMechanics + composite ActivatedAbilityMechanics with grant_spell_access charge_cast mode, ChargePoolResource with 1d3 initialCount, dawn reset). The primary blocker is the Luck property: a reroll of a failed D20 Test is mechanically distinct from advantage (which applies before the roll) and from numeric bonus modifiers. modify_roll_reroll exists in v4 taxonomy but is absent from types.ts. Because Luck is a primary named property and not a secondary rider, partial encoding would be misleading and is not attempted. The property-loss gap (Wish only, not full item destruction) is a secondary widening that would need to be addressed alongside the reroll atom."
 }
