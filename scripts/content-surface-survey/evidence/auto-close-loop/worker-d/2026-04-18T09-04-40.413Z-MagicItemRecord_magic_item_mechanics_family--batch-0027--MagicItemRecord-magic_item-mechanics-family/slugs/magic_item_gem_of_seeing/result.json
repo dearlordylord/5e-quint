@@ -1,0 +1,32 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_sense",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_sense usage qualifier for item-mediated viewing",
+      "justification": "The surface can encode a timed Truesight grant, but it cannot encode that the granted sense only applies while the user is actively peering through the item during the active window.",
+      "evidence": "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "Authored and traced as a magic-item activation with a 3-charge pool and 1d3 dawn recharge. The main widening is the missing runtime qualifier on grant_sense. Also, pnpm typecheck failed in pre-existing tracer code at src/interpreter/tracer.ts:3274, and the tracer output omitted the authored 10-minute duration lifecycle nodes."
+}
