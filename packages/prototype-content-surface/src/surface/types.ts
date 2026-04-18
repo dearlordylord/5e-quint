@@ -66,6 +66,15 @@ export type ResistanceSourceFilter = {
   readonly magicality?: "magical" | "nonmagical";
 };
 
+// Optional narrowing for saving-throw riders that only apply when the
+// save is caused by a spell or other magical effect. Pressure case:
+// Robe of the Archmagi's "Advantage on saving throws against spells and
+// other magical effects." Kept distinct from saveAbilityFilter because
+// the SRD frequently scopes saving throws by cause, not by ability.
+export type SavingThrowSourceFilter = {
+  readonly kind: "spell_or_other_magical_effect";
+};
+
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
 export type DamageType =
@@ -750,6 +759,10 @@ export type EffectAtom =
       // saving_throw riders to specific abilities. Only meaningful
       // when `on` contains "saving_throw".
       readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
+      // Robe of the Archmagi "Advantage on saving throws against spells
+      // and other magical effects" — narrow saving_throw riders to
+      // qualifying save causes rather than save abilities.
+      readonly saveSourceFilter?: SavingThrowSourceFilter;
       readonly count?: number;
       readonly expiresOn?: RiderExpiry;
     }

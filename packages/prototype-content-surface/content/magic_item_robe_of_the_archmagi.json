@@ -7,56 +7,73 @@
     ],
     "kind": "class_list"
   },
-  "description": "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2. The Magic Resistance clause is omitted from this authored subset; see proposal-magic_item_robe_of_the_archmagi.md.",
+  "description": "You gain these benefits while wearing the robe. Armor: if you aren't wearing armor, your base Armor Class is 15 plus your Dexterity modifier. Magic Resistance: you have Advantage on saving throws against spells and other magical effects. War Mage: your spell save DC and spell attack bonus each increase by 2.",
   "destruction": {
     "kind": "none"
   },
   "id": "magic_item_robe_of_the_archmagi",
   "kind": "magic_item",
   "mechanics": {
-    "condition": {
-      "kind": "all_of",
-      "predicates": [
-        {
+    "family": "composite",
+    "parts": [
+      {
+        "condition": {
           "kind": "wearing_item"
         },
-        {
-          "kind": "unarmored"
-        }
-      ]
-    },
-    "family": "passive",
-    "grants": [
-      {
-        "abilityMod": "dex",
-        "const": 15,
-        "delta": {
-          "dice": 0,
-          "dieSize": 1,
-          "kind": "fixed_dice",
-          "sign": "+"
-        },
-        "kind": "modify_ac_set_base"
+        "family": "passive",
+        "grants": [
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "saving_throw"
+            ],
+            "saveSourceFilter": {
+              "kind": "spell_or_other_magical_effect"
+            }
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_save_dc"
+          },
+          {
+            "delta": {
+              "dice": 2,
+              "dieSize": 1,
+              "kind": "fixed_dice",
+              "sign": "+"
+            },
+            "kind": "modify_roll_numeric",
+            "on": [
+              "spell_attack_roll"
+            ]
+          }
+        ]
       },
       {
-        "delta": {
-          "dice": 2,
-          "dieSize": 1,
-          "kind": "fixed_dice",
-          "sign": "+"
+        "condition": {
+          "kind": "all_of",
+          "predicates": [
+            {
+              "kind": "wearing_item"
+            },
+            {
+              "kind": "unarmored"
+            }
+          ]
         },
-        "kind": "modify_save_dc"
-      },
-      {
-        "delta": {
-          "dice": 2,
-          "dieSize": 1,
-          "kind": "fixed_dice",
-          "sign": "+"
-        },
-        "kind": "modify_roll_numeric",
-        "on": [
-          "spell_attack_roll"
+        "family": "passive",
+        "grants": [
+          {
+            "abilityMod": "dex",
+            "const": 15,
+            "kind": "modify_ac_set_base"
+          }
         ]
       }
     ]

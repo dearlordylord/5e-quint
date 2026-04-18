@@ -25,6 +25,7 @@ import type {
   DiceDelta,
   LinkedSpeed,
   ResistanceSourceFilter,
+  SavingThrowSourceFilter,
   WeaponFilter,
   TargetSelection,
   SlotScaling,
@@ -305,11 +306,12 @@ function traceEffectAtom(
         e.attackerTypeFilter !== undefined && e.attackerTypeFilter.length > 0
           ? `\nby: ${e.attackerTypeFilter.join("/")}`
           : "";
+      const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${saveSource}`,
       });
       return id;
     }
@@ -4271,6 +4273,13 @@ function describeResistanceSourceFilter(
     f.magicality === undefined ? "" : `, ${f.magicality} only`;
   const weapon = describeWeaponFilter(f.weaponFilter);
   return `\nfrom: attacks${weapon}${magicality}`;
+}
+
+function describeSavingThrowSourceFilter(
+  f: SavingThrowSourceFilter | undefined,
+): string {
+  if (!f) return "";
+  return "\nsource: spells or other magical effects";
 }
 
 function describeDelta(d: DiceDelta): string {
