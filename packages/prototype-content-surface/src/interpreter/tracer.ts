@@ -1691,7 +1691,7 @@ function traceSpawnedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
@@ -1882,6 +1882,12 @@ function describeCommandCost(c: CreatureControl): string {
       throw new Error(`unhandled command cost: ${String(_)}`);
     }
   }
+}
+
+function describeCommandRange(c: CreatureControl): string {
+  return c.commandRangeFeet === undefined
+    ? "range unspecified"
+    : `range ${c.commandRangeFeet} ft`;
 }
 
 function describeStatBlockValue(v: StatBlockValue): string {
@@ -4435,7 +4441,7 @@ function traceReanimatedCreature(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}\nreassert within ${m.reassertWindow.hours}h (up to ${m.reassertWindow.maxReassertPerCast})`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });
@@ -4486,7 +4492,7 @@ function traceTemplatedMultiSpawn(
     id: cmdId,
     category: "effect",
     atomKind: "command_companion",
-    label: `command_companion\ncost: ${describeCommandCost(m.control)}\nrange ${m.control.commandRangeFeet} ft`,
+    label: `command_companion\ncost: ${describeCommandCost(m.control)}\n${describeCommandRange(m.control)}`,
   });
   edges.push({ from: ctx.procId, to: cmdId, relation: "grants" });
   edges.push({ from: cmdId, to: compId, relation: "attaches_to" });

@@ -1888,8 +1888,13 @@ export type CreatureControl = {
     | { readonly kind: "no_action_required" }
     | { readonly kind: "bonus_action" }
     | { readonly kind: "action" };
-  readonly commandRangeFeet: number;
-  readonly defaultBehavior: "dodge_and_avoid" | "independent";
+  // Some SRD summon/control effects say only that the creature obeys
+  // your commands, without naming a command radius.
+  readonly commandRangeFeet?: number;
+  // Some SRD summon/control effects omit the fallback behavior when no
+  // command is issued; keep that absence representable rather than
+  // forcing invented "dodge" vs "independent" data.
+  readonly defaultBehavior?: "dodge_and_avoid" | "independent";
   readonly telepathy?: {
     readonly rangeFeet: number;
     readonly sharedSenses?: "bonus_action";
