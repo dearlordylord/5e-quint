@@ -24,6 +24,7 @@ import type {
   DiceExprDelta,
   DiceDelta,
   LinkedSpeed,
+  ResistanceSourceFilter,
   WeaponFilter,
   TargetSelection,
   SlotScaling,
@@ -246,7 +247,7 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "grant_resistance",
-        label: `grant_resistance\n${describeDamageTypeRef(e.damageType)}`,
+        label: `grant_resistance\n${describeDamageTypeRef(e.damageType)}${describeResistanceSourceFilter(e.sourceFilter)}`,
       });
       return id;
     }
@@ -4005,6 +4006,16 @@ function describeWeaponFilter(f: WeaponFilter | undefined): string {
       return _exhaustive;
     }
   }
+}
+
+function describeResistanceSourceFilter(
+  f: ResistanceSourceFilter | undefined,
+): string {
+  if (!f) return "";
+  const magicality =
+    f.magicality === undefined ? "" : `, ${f.magicality} only`;
+  const weapon = describeWeaponFilter(f.weaponFilter);
+  return `\nfrom: attacks${weapon}${magicality}`;
 }
 
 function describeDelta(d: DiceDelta): string {

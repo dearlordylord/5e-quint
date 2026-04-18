@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_potion_of_gaseous_form",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.restrict_action_set",
+      "justification": "The item grants an ongoing Gaseous Form state that forbids attacking, spellcasting, and object-use style actions, but the current surface only exposes action restriction as a nested field under grant_extra_action rather than as a standalone ongoing effect.",
+      "evidence": "The target can't talk or manipulate objects, and any objects it was carrying or holding can't be dropped, used, or otherwise interacted with. Finally, the target can't attack or cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_ends_effect_as_bonus_action",
+      "justification": "The potion's timed effect can be ended voluntarily with a Bonus Action, and the current duration surface has no way to encode action-costed self-termination.",
+      "evidence": "When you drink this potion, you gain the effect of the Gaseous Form spell for 1 hour (no Concentration required) or until you end the effect as a Bonus Action."
+    }
+  ],
+  "confidence": "medium",
+  "notes": "No content or trace file was authored. The top-level family fit is magic_item activation, but honest encoding is blocked by missing surface variants. Secondary Gaseous Form movement clauses such as occupying another creature's space and passing through narrow openings were not used as the classification basis."
+}

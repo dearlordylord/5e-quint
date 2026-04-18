@@ -46,6 +46,18 @@ export type WeaponFilter =
       readonly itemId: string;
     };
 
+// Optional source-side narrowing for resistance atoms that only apply
+// against damage from attacks with extra qualifiers. Pressure cases:
+// Shield of Missile Attraction ("from attacks made with Ranged
+// weapons") and Gaseous Form ("from Nonmagical Attacks"). Kept
+// attack-scoped rather than introducing a wider generic damage-source
+// taxonomy before another family needs it.
+export type ResistanceSourceFilter = {
+  readonly kind: "attack";
+  readonly weaponFilter?: WeaponFilter;
+  readonly magicality?: "magical" | "nonmagical";
+};
+
 export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
 export type DamageType =
@@ -593,6 +605,7 @@ export type EffectAtom =
   | {
       readonly kind: "grant_resistance";
       readonly damageType: DamageTypeRef;
+      readonly sourceFilter?: ResistanceSourceFilter;
     }
   // Prototype extension: subtract a rolled or fixed amount from an
   // incoming damage instance before it is applied. Distinct from
