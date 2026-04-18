@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "Sovereign Glue's core deterministic mechanic is creating a permanent adhesive bond between two objects. No existing effect atom models persistent object-to-object adhesion or a bond that can later be broken only by named counters.",
+      "evidence": "\"This viscous, milky-white substance can form a permanent adhesive bond between any two objects.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object_or_item_pair",
+      "justification": "The existing attachment grammar only targets self, creatures, areas, companions, or marks. This item targets two objects rather than a creature or area.",
+      "evidence": "\"between any two objects\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "delayed_set_then_persist",
+      "justification": "The glue does not bond immediately on activation; it is applied first, then sets after 1 minute, and only then becomes permanent. The current activation/passive shapes do not express a delayed effect that matures into a persistent bond.",
+      "evidence": "\"Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set. Once it has done so, the bond it creates...\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.found_quantity_roll",
+      "justification": "The consumable stock is not a fixed charge pool or rest-reset resource; each found container starts with a rolled quantity in ounces.",
+      "evidence": "\"When found, a container contains 1d6 + 1 ounces.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_sovereign_glue.dhall. Existing magic-item activation structure can represent the Utilize action cost in principle, but the truthful object-bond mechanic, object-pair targeting, delayed 1-minute setting, and rolled ounce inventory are not expressible in the current authored surface."
+}
