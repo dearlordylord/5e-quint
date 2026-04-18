@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "unbounded_magic_item_activation",
+      "justification": "The item's form-change procedure is a Bonus Action with no use-count cap or reset cadence, but the current non-spell activation family requires both a resource and a reset cadence.",
+      "evidence": "While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff"
+    },
+    {
+      "kind": "new_variant",
+      "name": "equipment_predicate_item_form_state",
+      "justification": "Several clauses only apply in quarterstaff form or in quarterstaff-and-pole forms. The current equipment gate can say only that the item is held, worn, armed, or unarmored; it cannot test the held item's current form.",
+      "evidence": "Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only) ... Attack Deflection (Quarterstaff Form Only) ... Ranged Weapon (Quarterstaff Form Only)"
+    },
+    {
+      "kind": "new_variant",
+      "name": "triggering_attack_only_ac_bonus",
+      "justification": "The reaction grants AC only against the triggering attack. The current `modify_ac` shape is not scoped to a single triggering attack inside a non-spell triggered reaction.",
+      "evidence": "gaining a +5 bonus to your Armor Class against the triggering attack, potentially causing the attack to miss you"
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The item can create and extinguish dim light on command. No current effect atom models lighting/illumination.",
+      "evidence": "you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light as a Bonus Action"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author a content file. A partial '+2 weapon only' encoding would miss the item's central form-state mechanics and would be misleading."
+}
