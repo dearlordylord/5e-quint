@@ -2798,6 +2798,7 @@ function traceMagicItemMechanics(
     | PassiveMechanics
     | ActivatedAbilityMechanics
     | TriggeredReactionAbilityMechanics
+    | MasteryMechanics
     | MagicItemSpawnedCreatureMechanics
     | CompositeMagicItemMechanics,
   nodes: TraceNode[],
@@ -2808,6 +2809,8 @@ function traceMagicItemMechanics(
     case "passive":
     case "activation":
       return [tracePassiveOrActivated(m, nodes, edges, ids)];
+    case "on_hit_trigger":
+      return [traceMasteryMechanics(m, nodes, edges, ids)];
     case "spawned_creature":
       return [traceMagicItemSpawnedCreature(m, nodes, edges, ids)];
     case "triggered_reaction":
@@ -2818,6 +2821,8 @@ function traceMagicItemMechanics(
           case "passive":
           case "activation":
             return tracePassiveOrActivated(part, nodes, edges, ids);
+          case "on_hit_trigger":
+            return traceMasteryMechanics(part, nodes, edges, ids);
           case "spawned_creature":
             return traceMagicItemSpawnedCreature(part, nodes, edges, ids);
           case "triggered_reaction":

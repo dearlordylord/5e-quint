@@ -2576,13 +2576,18 @@ export type MagicItemComponentMechanics =
   | PassiveMechanics
   | ActivatedAbilityMechanics
   | TriggeredReactionAbilityMechanics
+  // Reuse the shared non-spell on-hit rider family for weapon items
+  // whose text fires on a qualifying weapon hit rather than on
+  // activation or reaction timing.
+  | OnHitTriggerMechanics
   | MagicItemSpawnedCreatureMechanics;
 
 // Composite magic-item mechanics — a single SRD item can combine
 // always-on passive grants with a distinct activated ability while
 // remaining one authored unit. Keep this bounded to existing
 // magic-item families, including trigger-bound reactions that still
-// spend item resources and reset on item cadence.
+// spend item resources and on-hit riders that resolve off the wielded
+// weapon's hit window.
 export type CompositeMagicItemMechanics = {
   readonly family: "composite";
   readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;
