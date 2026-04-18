@@ -1,0 +1,40 @@
+{
+  "unit_slug": "power_word_heal",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ActivationPhase.unconditional",
+      "justification": "Power Word Heal applies its effects to the target unconditionally — no attack roll, no saving throw. The existing ActivationPhase union only has attack_roll and save_gate. An unconditional phase variant is needed to express spells that fire effects directly on a target without a roll.",
+      "evidence": "A wave of healing energy washes over one creature you can see within range."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount.restore_all",
+      "justification": "The heal amount is 'regains all its Hit Points' — a full restore to max HP, not a dice expression. DiceAmount only supports fixed dice expressions, threshold tiers, and linear-per-level progressions. None can encode a 'set HP to maximum' semantic. A new variant such as { kind: 'restore_all' } is required.",
+      "evidence": "The target regains all its Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellEffect.heal_hp",
+      "justification": "HealHpEffect exists in ClassFeatureEffect but is not part of the spell Effect union (Effect = DamageEffect | NoneEffect). Spells cannot currently express a heal effect at all. Power Word Heal's primary mechanic is healing, so the heal_hp effect must be promoted into the spell Effect union.",
+      "evidence": "The target regains all its Hit Points."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellEffect.remove_condition",
+      "justification": "Power Word Heal ends Charmed, Frightened, Paralyzed, Poisoned, and Stunned conditions unconditionally on the target. The v4 atom 'remove_condition' exists in the taxonomy but there is no surface variant in the spell Effect type to encode it. A RemoveConditionEffect variant is needed in the spell Effect union.",
+      "evidence": "If the creature has the Charmed, Frightened, Paralyzed, Poisoned, or Stunned condition, the condition ends."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpellEffect.grant_reaction_use",
+      "justification": "The Prone clause grants the target permission to use its Reaction to stand up — a secondary effect that opens a reaction window for a specific move action. This is not expressible with any existing effect variant. It is a secondary rider and the narrowest pressure; could be modeled as a note or omitted in a first-pass widening, but it is genuinely missing.",
+      "evidence": "If the creature has the Prone condition, it can use its Reaction to stand up."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Power Word Heal is a level-9 instantaneous heal-all spell. It fits the spell kind and could use the activation family structurally, but activation phases are limited to attack_roll and save_gate — neither applies here. The spell fires unconditionally. Additionally: (1) DiceAmount cannot express 'restore all HP'; (2) heal_hp is absent from the spell Effect union; (3) remove_condition is absent from the spell Effect union. All four core widenings are surface-level: the v4 atoms heal and remove_condition already exist; only the surface encoding shapes are missing. The Prone/Reaction rider is a fifth, narrower widening. No dhall or json content authored per guardrails."
+}
