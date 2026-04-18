@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_instant_fortress",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "deployable_structure_object",
+      "justification": "The item's core mechanic is creating and later reverting a persistent, damageable structure with its own occupancy gate, commandable door behavior, and durable damage state. That is not expressible as a passive grant, a one-shot activation, a companion summon, or a simple alter_item_kind effect.",
+      "evidence": "cause it to grow rapidly into a square adamantine tower. Repeating the command word causes the tower to revert to statuette form, which works only if the tower is empty."
+    },
+    {
+      "kind": "new_variant",
+      "name": "effect_atom.create_object",
+      "justification": "The surface can target an object attachment and alter an item's kind, but it cannot create a new persistent object/structure instance in play.",
+      "evidence": "cause it to grow rapidly into a square adamantine tower"
+    },
+    {
+      "kind": "new_variant",
+      "name": "object_structure_stat_block",
+      "justification": "A created fortress needs authored structural durability and defenses distinct from creature stat blocks: AC, HP, damage immunities, damage resistances, and anti-topple behavior.",
+      "evidence": "The roof, the door, and the walls each have AC 20; HP 100; Immunity to Bludgeoning, Piercing, and Slashing damage except that which is dealt by siege equipment; and Resistance to all other damage. Magic prevents the tower from being tipped over."
+    },
+    {
+      "kind": "new_variant",
+      "name": "object_occupancy_gate",
+      "justification": "The revert action is conditioned on the structure being empty; there is no existing activation predicate for object occupancy / emptiness.",
+      "evidence": "which works only if the tower is empty"
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author placeholder Dhall/JSON because the item's main mechanic is a persistent deployable fortress object, not a creature, spell, or simple item-form toggle. Secondary details like the door command and push-clear on creation might be representable after the missing structure/object family exists, but they do not remove the family mismatch."
+}
