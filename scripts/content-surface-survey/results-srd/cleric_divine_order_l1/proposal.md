@@ -1,121 +1,108 @@
-# Proposal: Widenings for Divine Order (cleric L1)
+# Proposal: `cleric_divine_order_l1` — structural_widening
 
-**Outcome:** `structural_widening`  
-**Slug:** `cleric_divine_order_l1`  
-**Provenance:** SRD 5.2.1 — Classes/Cleric#Level 1: Divine Order
+## SRD text
 
----
+> You have dedicated yourself to one of the following sacred roles of your choice.
+>
+> **Protector.** Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor.
+>
+> **Thaumaturge.** You know one extra cantrip from the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1).
 
-## Why the unit does not fit
+## What fits without changes
 
-Divine Order is a **permanent, passive, character-creation choice** feature. The player picks one of two named packages (Protector or Thaumaturge) when they create their cleric; the chosen package modifies the character sheet for the rest of play with no further resource interaction.
+**Protector** encodes cleanly as `PassiveMechanics`:
 
-The current `ClassFeatureMechanics` type has exactly one family: `ClassFeatureActivationMechanics` (`family: "activation"`). That family mandates:
-
-- `activationCost` — how the feature is triggered each use
-- `resource` — a `use_count` pool that depletes
-- `resetCadence` — rest type that refills the pool
-
-None of these apply to Divine Order. Forcing it into `activation` would require fabricating a resource that doesn't exist in the rules — a misleading trace.
-
-Additionally, the feature's **choose-one structure** (Protector vs. Thaumaturge) has no representation in any existing `ClassFeatureMechanics` variant.
-
----
-
-## Proposed widenings
-
-### 1. New family: `passive_grant` (structural)
-
-A `passive_grant` family for class features that grant permanent character-sheet modifications at acquisition time, with no activation cost, no use-count resource, and no rest reset.
-
-Minimum shape:
-
-```typescript
-export type ClassFeaturePassiveGrantMechanics = {
-  readonly family: "passive_grant";
-  readonly effect: ClassFeatureEffect;  // widened — see below
-};
+```
+grants: [
+  { kind: "grant_proficiency", proficiency: { kind: "fixed",
+      proficiencies: [
+        { kind: "weapon_category", category: "martial" },
+        { kind: "armor_category", category: "heavy" }
+      ]
+  }}
+]
 ```
 
-Pressure cases beyond Divine Order: Unarmored Defense (Barbarian L1), Spellcasting (many classes), Fighting Style (Fighter L1), Weapon Mastery (multiple classes L1), Expertise (Rogue L1), Druidic (Druid L1), Thieves' Cant (Rogue L1). This is a high-frequency family.
-
-### 2. New surface shape: `choose_one_package` within passive_grant (structural)
-
-Divine Order requires the character to pick one of N named option bundles once, permanently. The v4 taxonomy has a `choose` procedure atom but it is not surfaced in `ClassFeatureMechanics`.
-
-Minimum extension:
-
-```typescript
-export type NamedPackage = {
-  readonly name: string;
-  readonly effect: ClassFeatureEffect;  // or ReadonlyArray<ClassFeatureEffect>
-};
-
-export type ClassFeaturePassiveGrantMechanics =
-  | { readonly family: "passive_grant"; readonly effect: ClassFeatureEffect }
-  | { readonly family: "passive_grant_choose_one"; readonly options: ReadonlyArray<NamedPackage> };
+**Thaumaturge — Arcana/Religion bonus** encodes cleanly as:
 ```
+{ kind: "modify_roll_numeric",
+  on: ["ability_check"],
+  skillFilter: { kind: "fixed", skills: ["arcana", "religion"] },
+  delta: { kind: "ability_modifier", ability: "wis", sign: "+" }
+}
+```
+(The `minimum of +1` floor is not representable — see Gap 3.)
 
-### 3. New `ClassFeatureEffect` variant: `grant_proficiency` (surface widening)
+## Gaps
 
-The v4 atom `grant_proficiency` exists but is absent from `ClassFeatureEffect`. Both Protector (Martial weapons + Heavy armor) and many other L1 class features require it.
+### Gap 1 (structural — dominant): No build-time exclusive-OR between passive grant bundles
+
+Divine Order requires the character to permanently commit to **one of two** named suborders at level 1. Once chosen, only that suborder's grants apply for the character's entire career.
+
+No existing `ClassFeatureMechanics` family can express this:
+
+| Family | Behavior |
+|---|---|
+| `PassiveMechanics` | Flat `grants[]` — all grants apply unconditionally |
+| `ActivatedAbilityMechanics` | Use-count activation; wrong economy |
+| `CompositeClassFeatureMechanics` | All `parts[]` apply simultaneously |
+
+`ProficiencyGrant.choice` selects among proficiency *subjects*, not between complete feature packages.
+
+**Proposed widening**: A new `suborder_choice` family for `ClassFeatureMechanics`:
 
 ```typescript
-export type GrantProficiencyEffect = {
-  readonly kind: "grant_proficiency";
-  readonly proficiencies: ReadonlyArray<{
-    readonly category: "weapon" | "armor" | "skill" | "tool" | "saving_throw";
-    readonly scope: string;  // "martial_weapons", "heavy_armor", etc.
+export type SuborderChoiceMechanics = {
+  readonly family: "suborder_choice";
+  // The choice is permanent and made at character creation.
+  // Exactly one option is selected; its grants become the character's
+  // passive for the rest of their career.
+  readonly options: ReadonlyNonEmptyArray<{
+    readonly id: string;
+    readonly displayName: string;
+    readonly mechanics: PassiveMechanics | ActivatedAbilityMechanics;
   }>;
 };
 ```
 
-### 4. New `ClassFeatureEffect` variant: `grant_spell_access` (surface widening)
+This pattern recurs across multiple SRD classes (Druid Circle, Paladin Oath, Ranger Archetype, Sorcerer Origin, etc.) at levels other than 1, but Divine Order is the first L1 in-class suborder that shows up as a monolithic feature rather than a separate "Subclass" choice. The v4 taxonomy does not yet include a `suborder_choice` subgraph.
 
-The v4 atom `grant_spell_access` exists but is absent from `ClassFeatureEffect`. Thaumaturge's extra cantrip requires it. This is also needed for Spellcasting features, Eldritch Invocations, and similar.
+### Gap 2 (surface): `grant_spell_access` requires a fixed `spellId`
 
-```typescript
-export type GrantSpellAccessEffect = {
-  readonly kind: "grant_spell_access";
-  readonly count: number;
-  readonly restriction: "cantrip" | "spell" | "any";
-  readonly spellList: string;  // e.g. "cleric"
-};
-```
+The Thaumaturge grants "one extra cantrip from the Cleric spell list" — a player-chosen cantrip from an open category, not a named spell. `grant_spell_access.spellId: string` requires a specific identifier.
 
-### 5. New `RollKind` + `ClassFeatureEffect` shape: ability check modifier (surface widening)
-
-Thaumaturge grants: *bonus to Intelligence (Arcana or Religion) checks equal to Wisdom modifier (min +1)*.
-
-Two gaps compound here:
-- `RollKind` is `"attack_roll" | "saving_throw"` — no `"ability_check"` variant.
-- `ClassFeatureEffect` has no roll-modifier effect shape at all.
-- The source of the bonus is a derived stat (Wisdom modifier), not a fixed number — the current `DiceDelta` shape is for dice expressions, not ability-score references.
-
-Minimum widening:
+**Proposed widening**: An open-list variant on `grant_spell_access` (parallel to `ProficiencyGrant.choice`):
 
 ```typescript
-export type AbilityRef = { readonly kind: "ability_modifier"; readonly ability: Ability; readonly minimum?: number };
-export type BonusSource = number | AbilityRef;
-
-export type ModifyRollNumericEffect = {
-  readonly kind: "modify_roll_numeric";
-  readonly on: ReadonlyArray<"attack_roll" | "saving_throw" | "ability_check">;
-  readonly skillFilter?: ReadonlyArray<string>;  // e.g. ["arcana", "religion"]
-  readonly bonus: BonusSource;
-};
+// New variant alongside the existing specific-spell form:
+| {
+    readonly kind: "grant_spell_access";
+    readonly spellList: "cleric" | "wizard" | ...;  // or class-name union
+    readonly spellLevel: SpellLevel;                  // 0 = cantrip
+    readonly mode: SpellAccessMode;
+    readonly count?: number;                           // default 1
+  }
 ```
 
----
+Alternatively, a `spellId` could be typed as `string | { readonly kind: "choice_from_list"; readonly className: ClassName; readonly maxLevel: SpellLevel }`.
 
-## Summary table
+### Gap 3 (surface): `ability_modifier` DiceDelta has no `minimum` field
 
-| # | Kind | Name | Blocker? |
-|---|------|------|----------|
-| 1 | `new_subgraph` | `passive_grant` family | Yes — unit cannot be expressed at all without it |
-| 2 | `new_subgraph` | `choose_one_package` surface shape | Yes — needed to distinguish Protector vs Thaumaturge |
-| 3 | `new_variant` | `grant_proficiency` in ClassFeatureEffect | Yes — needed for Protector |
-| 4 | `new_variant` | `grant_spell_access` in ClassFeatureEffect | Yes — needed for Thaumaturge cantrip |
-| 5 | `new_variant` | ability-check roll modifier + BonusSource | Yes — needed for Thaumaturge Wis-mod bonus |
+The Thaumaturge bonus is "Wisdom modifier (minimum of +1)". The `ability_modifier` DiceDelta variant carries no floor constraint:
 
-All five are independently required. Widening 1 unblocks the family; widening 2 handles choice structure; widenings 3–5 cover the specific effect shapes needed by each option.
+```typescript
+| {
+    readonly kind: "ability_modifier";
+    readonly ability: Ability;
+    readonly sign: "+" | "-";
+    // missing: readonly minimum?: number;
+  }
+```
+
+**Proposed widening**: Add optional `minimum?: number` to the `ability_modifier` variant. This covers "min +1" floors on ability-derived bonuses without requiring a separate delta kind.
+
+## Why no encoding was produced
+
+The dominant gap (Gap 1) is structural: there is no `ClassFeatureMechanics` family that can honestly represent a permanent build-time OR between two different passive grant bundles within a single authored unit. Encoding only one suborder would produce a misleading record; encoding both in `CompositeClassFeatureMechanics` would imply both apply simultaneously, which contradicts RAW.
+
+A placeholder JSON was not authored because a dishonest trace is worse than no trace.

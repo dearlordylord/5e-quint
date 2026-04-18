@@ -1,73 +1,87 @@
-# Proposal: Widening required for Reliable Talent (rogue L7)
+# Proposal: Reliable Talent (Rogue L7)
 
 ## Unit
 
-- **Name:** Reliable Talent (rogue L7)
-- **Slug:** `rogue_reliable_talent_l7`
-- **Kind:** `class_feature`
-- **Outcome:** `structural_widening`
+**SRD text**: "Whenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10."
 
-## Source text
+## Why it doesn't fit cleanly
 
-> Whenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10.
+The outer structure is fine: `class_feature` + `passive` family with a single `grants` entry. The problem is the effect atom — the mechanic is a **d20 floor**, not an additive bonus:
 
-## Why encoding is blocked
+- `modify_roll_numeric` — additive delta (+N). Cannot express "minimum 10".
+- `modify_roll_advantage` — advantage/disadvantage. Not this.
+- No other existing `EffectAtom` variant models threshold-based substitution.
 
-### Primary gap: no `passive` family for `ClassFeatureMechanics`
+## Gap 1: `modify_roll_substitute` atom
 
-The surface defines exactly one `ClassFeatureMechanics` family:
+The v4 taxonomy (TAXONOMY_atoms_graph.md, section 9 Effect Atoms) already names `modify_roll_substitute`. It is absent from `types.ts`.
 
-```typescript
-export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
-```
-
-`ClassFeatureActivationMechanics` requires:
-
-| Field | What Reliable Talent actually has |
-|---|---|
-| `activationCost` | No activation at all — fires automatically |
-| `resource: UseCountResource` | No use count, no cap |
-| `resetCadence` | Nothing to reset |
-| `effect` | An effect exists, but it is gated on a passive roll trigger |
-
-Reliable Talent is an **always-on passive**: it applies automatically on every ability check that uses a skill or tool proficiency. There is no deliberate invocation, no expendable resource, and no rest-based recovery. Populating these fields with placeholder values (e.g., `uses: 999`, arbitrary `resetCadence`) would produce a trace that misrepresents the rule structure.
-
-**Proposal:** Add a `passive` (or `always_on`) family to `ClassFeatureMechanics`:
-
-```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly trigger: PassiveTrigger;   // when does the passive fire?
-  readonly effect: PassiveEffect;     // what does it do when triggered?
-};
-```
-
-A `PassiveTrigger` would need to express "whenever the owner makes an ability check using a skill or tool proficiency" — a new trigger grammar not currently in the surface.
-
-Other candidates for the same family: Evasion (rogue L7 / monk L7), Uncanny Dodge (rogue L5), Danger Sense (barbarian L2).
-
-### Secondary gap: roll-floor substitution effect
-
-The SRD text "treat a d20 roll of 9 or lower as a 10" is a **conditional floor substitution** on the d20. The v4 taxonomy has `modify_roll_substitute` which is the conceptually closest atom. However:
-
-- The substitution is conditional on the roll being ≤ 9 (a threshold, not a reroll).
-- The condition applies only when the check uses a skill or tool proficiency.
-
-Whether `modify_roll_substitute` is broad enough to absorb this without a new variant is a taxonomy question for the next widening round. The present blocker is the missing family, not this atom.
-
-**Proposed atom (tentative):** `modify_roll_floor` — sets a lower bound on a d20 roll result under a qualifying condition. Alternatively, extend `modify_roll_substitute` with a `threshold` variant:
+Proposed addition to `EffectAtom`:
 
 ```typescript
 | {
     readonly kind: "modify_roll_substitute";
-    readonly mode: "floor";
-    readonly threshold: number;  // treat rolls ≤ threshold as floorValue
-    readonly floorValue: number;
-    readonly on: ReadonlyArray<RollKind>;
-    readonly condition: "proficiency_used";  // scope gate
+    readonly on: ReadonlyNonEmptyArray<RollKind>;
+    // If the raw d20 result is <= threshold, treat it as floor_value instead.
+    readonly threshold: number;
+    readonly floor_value: number;
+    readonly skillFilter?: SkillFilter;
   }
 ```
 
-## No content files authored
+RAW text maps directly: `threshold = 9`, `floor_value = 10`, `on = ["ability_check"]`.
 
-Per protocol, no `.dhall`, `.json`, or `.trace.md` files are written for `structural_widening` outcomes. The misleading trace that `activation` would produce is worse than no trace.
+This atom would also be reusable for similar RAW features (e.g., Bard's Peerless Skill if added to a future campaign source).
+
+## Gap 2: `SkillFilter.proficient` variant
+
+Reliable Talent applies to "any ability check using one of your skill or tool proficiencies." The current `SkillFilter` union:
+
+```typescript
+type SkillFilter =
+  | { kind: "fixed"; skills: ReadonlyNonEmptyArray<Skill> }
+  | { kind: "choice"; options: ReadonlyNonEmptyArray<Skill> };
+```
+
+Neither variant can express "the check uses a skill/tool the character is proficient in at runtime." A new variant is needed:
+
+```typescript
+| { kind: "proficient" }   // applies when the check uses any skill/tool proficiency the character holds
+```
+
+This is distinct from listing skills by name — it defers to the character's actual proficiency set, which is runtime state. The authored unit should not need to enumerate all possible skills the rogue might have.
+
+Note: tool proficiency is a separate concern from skill proficiency. If the surface already models tool proficiencies as a distinct category (via `ProficiencyGrantSubject.kind = "weapon_category"` for weapons, and `armor_category` for armor), a `SkillFilter.proficient` covering both skills and tools may need a `scope` field. At minimum, the simplest valid form — `{ kind: "proficient" }` meaning "any skill or tool check you're proficient in" — covers Reliable Talent.
+
+## Proposed encoding (once both gaps are filled)
+
+```dhall
+{ kind = "class_feature"
+, id = "rogue_reliable_talent"
+, name = "Reliable Talent"
+, className = "rogue"
+, acquiredAtLevel = 7
+, provenance = { kind = "srd-5.2.1", section = "Classes/Rogue#Reliable Talent" }
+, description = "Whenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10."
+, mechanics =
+    { family = "passive"
+    , grants =
+        [ { kind = "modify_roll_substitute"
+          , on = [ "ability_check" ]
+          , threshold = 9
+          , floor_value = 10
+          , skillFilter = { kind = "proficient" }
+          }
+        ]
+    }
+}
+```
+
+## Classification
+
+`surface_widening` — both gaps correspond to surface-level additions:
+
+1. `modify_roll_substitute` is a named v4 atom not yet in `types.ts`.
+2. `SkillFilter.proficient` is a new variant of an existing surface type.
+
+No new top-level family is needed. No new v4 taxonomy atom beyond what is already named in the taxonomy.

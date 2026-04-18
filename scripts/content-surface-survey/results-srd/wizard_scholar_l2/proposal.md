@@ -1,83 +1,96 @@
-# Proposal: wizard_scholar_l2 — structural widening
+# Proposal: wizard_scholar_l2 (Scholar, Wizard L2)
 
-## Unit
+## Outcome: `surface_widening`
 
-**Scholar (Wizard L2)** — SRD 5.2.1, `Classes/Wizard#Level 2: Scholar`
+The unit encodes successfully (typechecks, tracer produces a clean graph) using:
+- `passive` family
+- `modify_roll_numeric` with `proficiency_bonus` delta on `ability_check`
+- `skillFilter.choice` from `[arcana, history, investigation, medicine, nature, religion]`
 
-> While studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.
+Two surface gaps prevent a `clean` classification.
 
-## Why encoding was blocked
+---
 
-Scholar is a **passive, permanent class feature**. It fires once at feature acquisition and persists indefinitely. It has no activation cost, no use-count resource, and no rest-reset cadence.
+## Gap 1 — `SkillFilter.choice` has wrong timing semantics
 
-The current surface type `ClassFeatureMechanics` is a single-family union:
-
-```typescript
-export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
-```
-
-`ClassFeatureActivationMechanics` requires:
-- `activationCost` — Scholar has none (it is not activated)
-- `resource: UseCountResource` — Scholar has no quota
-- `resetCadence: RestResetCadence` — Scholar never expires or recharges
-- `effect: ClassFeatureEffect` — no eligible variant (see below)
-
-Forcing Scholar into `activation` with invented values (`activationCost: free`, `uses: 1`, `resetCadence: long_rest`) would produce a false trace: the tracer would emit `use_count` and `rest_window` atoms that do not represent any real mechanic of Scholar.
-
-## Proposed widenings
-
-### 1. `passive_grant` family for `ClassFeatureMechanics` (structural)
-
-A new mechanics family for class features that are conferred permanently at acquisition:
+### What the surface provides
 
 ```typescript
-export type ClassFeaturePassiveGrantMechanics = {
-  readonly family: "passive_grant";
-  readonly effect: ClassFeatureEffect;  // or a wider union
-};
+export type SkillFilter =
+  | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
+  | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Skill> };
 ```
 
-**Pressure cases:** Scholar, Expertise (bard L2, ranger L9, rogue L1), Jack of All Trades, Unarmored Defense, Fighting Style passive bonuses, species traits (Darkvision, Keen Senses), and many feat passive effects. This is a high-recurrence pattern.
+The `choice` variant is documented with Guidance as the pressure case: _"you choose a skill at cast time from any of the 18 SRD skills."_ The `choice` variant resolves once per activation of the carrying effect.
 
-**Graph shape:** `class_feature_root → activate (or a new "grant" procedure atom) → effect`. No `use_count`, no `rest_window`, no quota atoms.
+### What Scholar needs
 
-### 2. `GrantExpertiseEffect` variant of `ClassFeatureEffect` (surface widening)
+Scholar's choice is a **build-time** (level-up) decision made exactly once when the character acquires the feature at Wizard level 2. The chosen skill is fixed for the character's lifetime; the effect always applies to that one skill. There is no "cast time" in a `passive` mechanic.
+
+### Proposed widening
+
+Add a timing discriminant to `SkillFilter.choice`, or introduce a parallel variant:
 
 ```typescript
-export type GrantExpertiseEffect = {
-  readonly kind: "grant_expertise";
-  readonly skill: SkillName;  // or "chosen_at_acquisition" for player-choice features
-};
+export type SkillFilter =
+  | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
+  | {
+      readonly kind: "choice";
+      readonly options: ReadonlyNonEmptyArray<Skill>;
+      // "cast_time" = resolved per activation (Guidance)
+      // "build_time" = resolved once at feature/feat acquisition (Scholar, Expertise feats)
+      readonly timing?: "cast_time" | "build_time";
+    };
 ```
 
-The v4 atom inventory already contains `grant_proficiency`; this is a direct surface-layer wiring of that atom. The tracer would emit `grant_proficiency` (or a new `grant_expertise` atom if Expertise is modeled as distinct from base proficiency — it doubles the bonus rather than adding it from scratch).
-
-### 3. Acquisition-time choice grammar (surface widening)
-
-Scholar requires the player to select one skill at acquisition. No current surface type captures "choose one from a closed enumerated list at feature-acquisition time."
-
-Analogous existing grammar: `AnchoredFilter { kind: "creature_exemption_list"; chosenAtCast: true }` for Alarm. A parallel structure for class features:
+Or, paralleling how `CastTimeChoice<T>` already explicitly handles both build-time and cast-time choices for other type families, `SkillFilter` could be extended to use the same primitive:
 
 ```typescript
-export type AcquisitionChoice = {
-  readonly kind: "one_from_list";
-  readonly options: ReadonlyArray<SkillName>;
-  readonly chosenAtAcquisition: true;
-};
+export type SkillFilter =
+  | { readonly kind: "fixed"; readonly skills: ReadonlyNonEmptyArray<Skill> }
+  | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Skill> }        // cast-time (Guidance)
+  | { readonly kind: "build_time_choice"; readonly options: ReadonlyNonEmptyArray<Skill> }; // build-time (Scholar)
 ```
 
-This is separate from the runtime effect — it governs what the feature is parameterized with at character-building time, not what happens during play.
+**Other units that would use this**: Any SRD feature that grants Expertise at character-build time:
+- Rogue's Expertise (L1, L5)
+- Bard's Expertise (L2, L9)
+- Ranger's expertise-granting subclass features
+- The Skill Expert feat
 
-## Recurrence
+---
 
-All three widenings have strong multi-unit pressure:
+## Gap 2 — Missing proficiency prerequisite constraint
 
-| Widening | Other units requiring it |
-|---|---|
-| `passive_grant` family | Expertise (bard, ranger, rogue), Fighting Style, Unarmored Defense, Darkvision, Keen Senses, Jack of All Trades, Alert feat, countless others |
-| `GrantExpertiseEffect` | Expertise (bard L2), Expertise (ranger L9), Expertise (rogue L1), Reliable Talent (adjacent), Jack of All Trades (adjacent) |
-| Acquisition-time choice | Magic Initiate feat (spell choice), Fighting Style (fighting style choice), any feature with a permanent menu selection |
+### SRD text
 
-## Recommendation
+> "Choose one of the following skills **in which you have proficiency**."
 
-Implement `passive_grant` family first — it unblocks the broadest set of features. Wire `grant_proficiency`/`grant_expertise` into `ClassFeatureEffect` second. Acquisition-time choice grammar can be deferred unless a feature whose core mechanic depends on parameterization is encountered.
+### What the surface provides
+
+No mechanism exists to gate build-time skill choices to skills the character already has proficiency in. The current surface can only express the 6-option list; it cannot assert "the choice must be drawn from your current proficiencies."
+
+### Proposed widening
+
+A `requiresProficiency: true` flag on the `SkillFilter.build_time_choice` (or on the existing `choice` variant) could express this constraint:
+
+```typescript
+| {
+    readonly kind: "build_time_choice";
+    readonly options: ReadonlyNonEmptyArray<Skill>;
+    readonly requiresProficiency?: true;  // only skills you already have proficiency in are valid
+  }
+```
+
+This is a build-time validation concern (character builder / level-up UI), not a runtime combat concern. It could reasonably remain caller-owned rather than being encoded in the surface — but the gap is worth recording since Expertise is one of 5e's most common build-time skill interactions.
+
+---
+
+## Summary
+
+| Gap | Kind | Urgency |
+|-----|------|---------|
+| `SkillFilter.choice` timing (cast vs build) | `surface_widening` | Medium — several Expertise-granting features will hit this |
+| Proficiency prerequisite on skill choice | `surface_widening` | Low — caller-owned build validation, but frequently cited in RAW |
+
+The current encoding is mechanically correct and produces a valid trace. The `surface_widening` classification reflects that `SkillFilter.choice` needs timing disambiguation before Expertise-granting features can be encoded without semantic leakage.

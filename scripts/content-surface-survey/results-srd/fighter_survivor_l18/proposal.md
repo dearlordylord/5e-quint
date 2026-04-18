@@ -1,142 +1,193 @@
-# Proposal: Survivor (fighter L18) — Widenings Required
+# Proposal: Fighter Survivor L18 — Surface Gaps
 
-## Outcome: `structural_widening`
+**Outcome**: `atom_widening` (contains a `surface_widening` component as well)
 
-Survivor cannot be honestly encoded in any existing `ClassFeatureMechanics` family. No `.dhall` or `.json` was authored.
+## Summary
 
----
-
-## Unit Summary
-
-**Defy Death** — Always-on passive:
-- Advantage on Death Saving Throws.
-- Rolls of 18–20 on a Death Saving Throw are treated as a 20.
-
-**Heroic Rally** — Automatic turn-start trigger:
-- At the start of each of the fighter's turns, if they are Bloodied (≤ half max HP) and have at least 1 HP, they regain HP = 5 + CON modifier.
+Survivor is a composite class feature with two named sub-features: **Defy Death** and **Heroic Rally**. The unit does not fit the current surface for three distinct reasons, one of which requires a new v4 atom and two of which require new variants of existing surface types.
 
 ---
 
-## Why the Unit Does Not Fit
+## Sub-feature 1: Defy Death
 
-### 1. Structural: No passive/automatic class feature family
+### Gap A — Advantage on Death Saving Throws (CLEAN)
 
-`ClassFeatureMechanics` has exactly one family: `activation`. Its required header is:
+> "You have Advantage on Death Saving Throws."
+
+This encodes cleanly as:
+
+```json
+{
+  "kind": "modify_roll_advantage",
+  "mode": "advantage",
+  "on": ["death_saving_throw"]
+}
+```
+
+`death_saving_throw` is already a `RollKind` in the surface. No widening needed here.
+
+### Gap B — 18-20 on a Death Saving Throw counts as 20 (ATOM WIDENING)
+
+> "when you roll 18–20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it"
+
+**Why no existing atom covers this:**
+
+- `modify_crit_range` lowers the critical-hit threshold on attack rolls (`threshold: 19` = crits on 19–20). This is structurally similar, but attack crits and death save natural-20 results are entirely distinct SRD concepts:
+  - An attack crit doubles damage dice.
+  - A death save natural 20 causes the character to immediately regain 1 HP (SRD Rules Glossary: "Regaining Consciousness").
+- Using `modify_crit_range` here would be a false trace: the atom name, its semantics, and its tracer label all describe attack roll behavior.
+
+**Proposed new atom**: `modify_death_save_threshold`
 
 ```typescript
-type ClassFeatureMechanicsHeader = {
-  readonly activationCost: ClassFeatureActivationCost; // "free" | "bonus_action"
-  readonly resource: UseCountResource;                 // requires a use count
-  readonly resetCadence: RestResetCadence;
+{
+  readonly kind: "modify_death_save_threshold";
+  // Rolls at or above this value on a death saving throw are treated
+  // as a natural 20 (i.e., the character regains 1 HP immediately).
+  readonly superSuccessThreshold: number;
+}
+```
+
+Alternatively, this could be modeled as a new variant on `modify_crit_range` with an explicit `rollKind` field, but that conflates attack-crit semantics with death-save semantics in the atom name and existing tracer path.
+
+---
+
+## Sub-feature 2: Heroic Rally
+
+### Gap C — Turn-start trigger in a passive class feature (SURFACE WIDENING)
+
+> "At the start of each of your turns, you regain Hit Points…"
+
+**Why it doesn't fit:**
+
+`PassiveOperation` is the mechanism for "always-on passive class features that repeat on a cadence." Its trigger is:
+
+```typescript
+export type PassiveOperation = {
+  readonly trigger: {
+    readonly kind: "elapsed_time";
+    readonly unit: "hour" | "day";
+    readonly amount: number;
+  };
+  // ...
 };
 ```
 
-Neither Defy Death nor Heroic Rally has an activation cost, a use count, or a rest reset:
+Only `elapsed_time` is supported, and only at `hour` or `day` granularity. The SRD's "at the start of your turn" cadence (used by Heroism temp-HP, Aura of Life conditional heal, Spirit Guardians save) is expressible in `OngoingOperation.trigger` (via `on_attached_turn_start`) for **spells**, but that type is not available in `PassiveOperation`.
 
-- **Defy Death** is always-on — it requires no action and has no limit.
-- **Heroic Rally** fires automatically at the start of each turn (a `turn_start_window` event), conditioned on HP state. It consumes no resource.
-
-Encoding either as `activation { activationCost: free, resource: { cap: { kind: "fixed", uses: ∞ } } }` would be actively false — those fields don't correspond to any rule text.
-
-**Proposed fix:** Add a `passive` (or `turn_start_trigger`) family to `ClassFeatureMechanics`:
+**Proposed widening**: Add `on_attached_turn_start` (and possibly `on_caster_turn_start`) as valid `PassiveOperation.trigger` variants:
 
 ```typescript
-// Sketch only — surface team to finalize shape
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effects: ReadonlyArray<PassiveEffect>;
-};
-
-export type ClassFeatureTurnStartMechanics = {
-  readonly family: "turn_start_trigger";
-  readonly condition?: TriggerCondition;   // e.g., Bloodied + HP > 0
-  readonly effect: ClassFeatureEffect;
+export type PassiveOperation = {
+  readonly trigger:
+    | { readonly kind: "elapsed_time"; readonly unit: "hour" | "day"; readonly amount: number }
+    | { readonly kind: "on_attached_turn_start" }
+    | { readonly kind: "on_caster_turn_start" };
+  readonly predicate?: OngoingPredicate;
+  readonly effect: EffectAtom;
 };
 ```
 
----
+This mirrors the existing `OngoingTrigger` vocabulary already used by spell ongoing operations and avoids duplicating semantics.
 
-### 2. Surface: `DiceAmount` cannot express `5 + ability modifier`
+### Gap D — Bloodied (relative HP threshold) predicate (SURFACE WIDENING)
 
-Heroic Rally heals "5 plus your Constitution modifier." `DiceAmount` only carries:
-- `{kind: "fixed", expr: DiceExpr}` — static dice + flat integer
-- `{kind: "threshold_tiers", ...}` — tiered static values
-- `{kind: "linear_per_level", ...}` — linear per-level scaling of static values
+> "if you are Bloodied and have at least 1 Hit Point"
 
-None can hold a dynamic ability modifier term. This is a second independent source of ability-modifier-as-addend pressure (Second Wind already has a flat + class-level scaling but still uses `DiceExpr` with a static flat; Heroic Rally's CON modifier is per-character-runtime, not per-level-lookup).
+**Why it doesn't fit:**
 
-**Proposed variant:**
+`OngoingPredicate` supports a fixed-integer HP comparison:
+
 ```typescript
-export type DiceAmount =
-  | ...existing variants...
+export type OngoingPredicate = {
+  readonly kind: "at_hp_threshold";
+  readonly threshold: number;
+  readonly comparison: "lte" | "eq" | "gte";
+};
+```
+
+"Bloodied" is defined in SRD 5.2.1 Rules Glossary as "a creature is Bloodied when it has half its Hit Point maximum or fewer Hit Points remaining." This is a **relative** threshold (50% of max HP), not a fixed integer. `at_hp_threshold: { threshold: 0, comparison: "gte" }` would not correctly express this.
+
+**Proposed widening**: Add a `bloodied` predicate variant:
+
+```typescript
+export type OngoingPredicate =
   | {
-      readonly kind: "flat_plus_ability_mod";
-      readonly flat: number;
-      readonly ability: Ability;
+      readonly kind: "at_hp_threshold";
+      readonly threshold: number;
+      readonly comparison: "lte" | "eq" | "gte";
+    }
+  | {
+      // SRD Rules Glossary: HP <= half of HP maximum.
+      readonly kind: "bloodied";
     };
 ```
 
+`at_hp_threshold` with a ratio variant (e.g. `threshold: 0.5, unit: "fraction_of_max"`) is an alternative, but `bloodied` is a first-class SRD concept with its own glossary entry and should be named directly.
+
 ---
 
-### 3. Surface: `RollKind` needs `"death_saving_throw"`
+## Heal Amount
 
-Defy Death grants Advantage on **Death Saving Throws** specifically. Current `RollKind`:
-```typescript
-export type RollKind = "attack_roll" | "saving_throw";
+For completeness: the heal amount "5 plus your Constitution modifier" is expressible with the existing `DiceExpr` shape:
+
+```json
+{ "dice": 0, "dieSize": 1, "flat": 5, "abilityModifier": "con" }
 ```
 
-Death saving throws are mechanically distinct from ordinary saving throws:
-- No ability modifier added.
-- Automatic failure on a 1 (counts as two failures).
-- Automatic stabilization on a 20.
-- Three successes = stabilized; three failures = dead.
-- The 18–20 threshold extension only makes sense in this specific context.
-
-Conflating death saves with ordinary saves (`"saving_throw"`) would lose the specificity.
-
-**Proposed addition:** `"death_saving_throw"` to `RollKind`.
+No widening needed here.
 
 ---
 
-### 4. Surface: Conditional trigger predicate (Bloodied + HP > 0)
+## Proposed Encoding (pending widenings)
 
-Heroic Rally fires only "if you are Bloodied and have at least 1 Hit Point." No current surface type expresses a conditional predicate gating an automatic effect. The Bloodied condition (HP ≤ half max HP) is a specific runtime HP state — it is not a standard `Condition` in the existing closed enum.
+Once gaps B, C, and D are addressed, the unit would encode as a `composite` class feature:
 
-**Proposed addition:** A `TriggerCondition` type (or inline predicate grammar) for gating automatic effects:
-```typescript
-// Sketch only
-export type TriggerCondition =
-  | { readonly kind: "is_bloodied" }
-  | { readonly kind: "hp_at_least"; readonly amount: number }
-  | { readonly kind: "all_of"; readonly conditions: ReadonlyArray<TriggerCondition> };
+```json
+{
+  "kind": "class_feature",
+  "id": "fighter_survivor_l18",
+  "name": "Survivor",
+  "className": "fighter",
+  "acquiredAtLevel": 18,
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "family": "passive",
+        "grants": [
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": ["death_saving_throw"]
+          },
+          {
+            "kind": "modify_death_save_threshold",
+            "superSuccessThreshold": 18
+          }
+        ]
+      },
+      {
+        "family": "passive",
+        "operations": [
+          {
+            "trigger": { "kind": "on_caster_turn_start" },
+            "predicate": { "kind": "bloodied" },
+            "effect": {
+              "kind": "heal_hp",
+              "amount": {
+                "kind": "fixed",
+                "expr": { "dice": 0, "dieSize": 1, "flat": 5, "abilityModifier": "con" }
+              },
+              "target": "self"
+            }
+          }
+        ],
+        "grants": []
+      }
+    ]
+  }
+}
 ```
 
----
-
-### 5. Atom: `modify_roll_threshold` (18–20 → 20 on death saves)
-
-"When you roll 18–20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it."
-
-This widens the automatic-success threshold from {20} to {18, 19, 20}. v4 has no atom for this. The closest candidates:
-
-- `modify_roll_advantage` — changes the roll process (roll twice), not the success threshold.
-- `modify_roll_reroll` — changes what happens to individual die values, not what constitutes success.
-- `crit_window` — mentioned in v4 §12 as deferred single-feat pressure; distinct from death-save threshold.
-
-This is a distinct mechanic: the engine must treat rolls ≥ N (for some configured N < 20) as the maximum-success outcome for a specific roll type.
-
-**Proposed atom:** `modify_roll_threshold` (or `expand_success_range`), parameterized by roll kind and the lower bound of the extended range.
-
----
-
-## Pressure Summary
-
-| Gap | Classification | Severity |
-|---|---|---|
-| No passive/auto class feature family | `structural_widening` | Blocks encoding entirely |
-| `DiceAmount` lacks ability-mod variant | `surface_widening` | Blocks Heroic Rally amount |
-| `RollKind` lacks `death_saving_throw` | `surface_widening` | Blocks Defy Death specificity |
-| No conditional trigger predicate | `surface_widening` | Blocks Heroic Rally condition |
-| No threshold-extension atom | `atom_widening` | Blocks Defy Death 18–20 clause |
-
-All five gaps must be resolved before Survivor can be honestly encoded.
+Note: the "at least 1 Hit Point" gate is the SRD's standard death-prevention clause and may be implicitly enforced by the Bloodied predicate (a dead creature at 0 HP is not Bloodied in the active sense). This may not need an additional predicate.

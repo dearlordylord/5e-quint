@@ -1,0 +1,25 @@
+{
+  "description": "While wearing this hat, you can cast the Disguise Self spell. The spell ends if the hat is removed.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_hat_of_disguise",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_spell_access",
+        "mode": "at_will",
+        "spellId": "disguise_self"
+      }
+    ]
+  },
+  "name": "Hat of Disguise",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#HatOfDisguise"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}

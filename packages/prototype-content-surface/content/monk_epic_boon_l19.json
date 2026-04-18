@@ -1,0 +1,26 @@
+{
+  "acquiredAtLevel": 19,
+  "className": "monk",
+  "description": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended.",
+  "id": "monk_epic_boon_l19",
+  "kind": "class_feature",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "categories": [
+          "epic_boon",
+          "general",
+          "fighting_style",
+          "origin"
+        ],
+        "kind": "grant_feat"
+      }
+    ]
+  },
+  "name": "Epic Boon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Classes/Monk#Epic Boon"
+  }
+}

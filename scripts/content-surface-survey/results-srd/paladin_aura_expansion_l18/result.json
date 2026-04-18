@@ -1,22 +1,16 @@
 {
   "unit_slug": "paladin_aura_expansion_l18",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature",
-      "justification": "Aura Expansion is permanently active from the moment it is acquired — no trigger, no cost, no use-count pool, no reset cadence. ClassFeatureMechanics only has the 'activation' family, which requires all three. A new 'passive' family is needed for always-on class features that modify character state without an activation gate.",
-      "evidence": "Your Aura of Protection is now a 30-foot Emanation."
-    },
-    {
       "kind": "new_atom",
-      "name": "expand_emanation_radius",
-      "justification": "The mechanic is a radius upgrade on a named existing class feature. No v4 effect atom covers this. modify_range applies to spell/attack targeting range, not the spatial footprint of a persistent aura that is continuously evaluated each turn.",
+      "name": "modify_feature_area",
+      "justification": "The unit's entire mechanic is expanding the area of an existing named class feature (Aura of Protection) from 10 ft to 30 ft. No current EffectAtom can reference another feature by ID and replace its area descriptor. The modify_* atoms in the surface cover AC, rolls, speed, HP max, save DC, crit range, damage, ability scores, and PB — none express 'change the emanation radius of feature X'.",
       "evidence": "Your Aura of Protection is now a 30-foot Emanation."
     }
   ],
   "confidence": "high",
-  "notes": "Aura Expansion cannot be honestly forced into the 'activation' family — it has no activationCost, no use_count, and no resetCadence. The only correct encoding requires (a) a new 'passive' family for ClassFeatureMechanics, and (b) an effect atom or cross-feature reference mechanism that expresses 'expand the emanation radius of Aura of Protection from 10 ft to 30 ft'. No dhall or JSON authored."
+  "notes": "The passive family exists and would be the right shell for this feature. The gap is solely the absence of an effect atom that can reference another class feature by ID and modify one of its structural parameters (area radius). A possible encoding once the atom exists: passive { grants: [{ kind: 'modify_feature_area', featureId: 'paladin_aura_of_protection', area: { kind: 'emanation', radiusFeet: 30 } }] }. This is distinct from the modify_speed / modify_ac family because those act on character-sheet stats; this acts on a feature's own geometry."
 }

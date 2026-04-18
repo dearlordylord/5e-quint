@@ -1,22 +1,9 @@
 {
   "unit_slug": "druid_epic_boon_l19",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant (new ClassFeatureMechanics family)",
-      "justification": "The 'gain a feat at level N' mechanic is a permanent passive grant with no activation cost, no use-count resource, and no reset cadence. The only ClassFeatureMechanics family is 'activation', which mandates activationCost + resource + resetCadence + effect. None of those fields have honest values for a level-up feat grant. A new family — 'passive_grant' or 'level_grant' — is required to represent features whose sole mechanic is permanently bestowing a benefit upon reaching a class level.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_feat (new ClassFeatureEffect variant)",
-      "justification": "Even if a passive_grant family existed, ClassFeatureEffect only supports grant_extra_action and heal_hp. Granting a feat (specifically an Epic Boon feat, or any feat the character qualifies for) is a distinct effect shape. It carries a choice-at-level-up semantic — the player selects from a constrained pool (Epic Boon feats) or any qualifying feat — which neither existing effect can model.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Dimensional Travel is recommended."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "All 12 classes carry an identical Epic Boon feature at L19 (barbarian, bard, cleric, druid, fighter, monk, paladin, ranger, rogue, sorcerer, warlock, wizard). The same structural gap applies to every instance. The Ability Score Improvement features (e.g. barbarian_ability_score_improvement_l4) share the same pattern — a permanent passive choice at level-up — and are likewise unrepresentable under the current activation family. Both widenings (passive_grant family + grant_feat effect) would resolve the entire recurring category."
+  "notes": "Identical pattern to bard_epic_boon_l19 and cleric_epic_boon_l19. Passive grant of grant_feat with all four FeatCategory values. The 'openFallback' field was not used (matching the bard/cleric reference encodings which omit it); the categories list already enumerates all valid feat categories, making the open fallback redundant."
 }

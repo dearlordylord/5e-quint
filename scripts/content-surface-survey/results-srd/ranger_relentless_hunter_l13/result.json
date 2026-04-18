@@ -1,22 +1,22 @@
 {
   "unit_slug": "ranger_relentless_hunter_l13",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature_family",
-      "justification": "Relentless Hunter is always-on with no activation, no use-count resource, and no reset cadence. The only ClassFeatureMechanics family is 'activation', which requires activationCost, resource (use_count), and resetCadence — none of which exist here. A 'passive' family is needed for permanently-active class features.",
+      "kind": "new_atom",
+      "name": "suppress_concentration_break",
+      "justification": "No atom expresses 'taking damage cannot break concentration on [specific spell]'. The mechanic is full immunity to the damage-induced concentration check, scoped to a named spell. This is distinct from advantage (modify_roll_advantage) and from any existing saveSourceFilter variant. The v4 taxonomy has no concept for this.",
       "evidence": "Taking damage can't break your Concentration on Hunter's Mark."
     },
     {
-      "kind": "new_atom",
-      "name": "suppress_concentration_break",
-      "justification": "The feature suppresses the concentration saving throw that fires when the bearer takes damage while concentrating on Hunter's Mark. No v4 effect atom covers 'prevent damage from triggering the concentration check for a named spell'. The existing atoms suppress (procedure), concentrate (lifecycle), and negate_named_effect (effect) do not express this semantic.",
+      "kind": "new_variant",
+      "name": "saveSourceFilter { kind: 'damage_induced_concentration_check'; spellId: string }",
+      "justification": "Even if a suppress/immunity mode were added to modify_roll_advantage, scoping it to 'concentration checks specifically caused by taking damage for a named spell' requires a new saveSourceFilter variant. The existing variant only covers 'spell_or_other_magical_effect' and cannot express the concentration-break-on-damage trigger scoped to a specific spell.",
       "evidence": "Taking damage can't break your Concentration on Hunter's Mark."
     }
   ],
   "confidence": "high",
-  "notes": "Pure passive feature: no activation, no resource, no reset cadence. The activation family cannot represent it without lying about structure (fabricating a use_count and resetCadence that don't exist in the rule). Even with a new passive family, a new effect atom is needed for 'suppress concentration-break trigger scoped to named spell'. Structural gap is the blocking issue; atom gap is secondary."
+  "notes": "The feature is a passive always-on grant (family=passive is fine) but needs a new atom to express its payload. The closest existing atom is modify_roll_advantage with saveSourceFilter, but: (1) the mode would need a new 'auto_success'/'immune' variant rather than advantage/disadvantage, and (2) there is no filter shape for 'damage-induced concentration check for spell X'. A dedicated atom suppress_concentration_break { spellId: string } is the cleanest design — it maps to a single v4-style effect atom and the passive family encodes everything else correctly."
 }

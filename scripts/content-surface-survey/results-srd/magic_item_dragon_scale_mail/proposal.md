@@ -1,126 +1,123 @@
-# Proposal: Widenings Required for Dragon Scale Mail
+# Proposal: Dragon Scale Mail — Surface Widening
 
-## Outcome: `structural_widening`
+## Summary
 
-Dragon Scale Mail cannot be encoded. The surface schema (`types.ts`) has no `magic_item` record kind — `UnitRecord` is currently `SpellRecord | ClassFeatureRecord | MasteryRecord`. The v4 atom taxonomy includes `magic_item_root` but the surface layer was never widened to match.
+Dragon Scale Mail encodes as a `magic_item` collection record (10 variants, one per dragon color) with `composite` mechanics: a `passive` part for always-on grants and an `activation` part for the once-per-dawn detection ability. Three of the four mechanics fit the current surface cleanly. Two gaps block honest encoding.
 
----
+## What Fits
 
-## Gap 1 — Missing `MagicItemRecord` kind (structural)
+- **+1 AC** — `modify_ac` with `{ kind: "fixed_dice", dice: 1, dieSize: 1, sign: "+" }` under `condition: { kind: "wearing_item" }`. Clean.
+- **Resistance to one damage type** — `grant_resistance` with a fixed `DamageType` per variant. The collection structure (one variant per dragon color/type, each with its mapped resistance from the table) fits the existing `MagicItemRecord` variants shape. Clean.
+- **Reset cadence** — `{ kind: "dawn" }` for the once-per-dawn detection ability. Clean.
+- **Composite mechanics structure** — `CompositeMagicItemMechanics` with passive + activated parts. Exists.
 
-`UnitRecord` must grow a `MagicItemRecord` variant before any magic item can typecheck. Minimum fields needed:
+## Gap 1: SavingThrowSourceFilter — Breath Weapon Narrowing
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
-};
-```
+**SRD text:** "you have Advantage on saving throws against the breath weapons of Dragons"
 
-Dragon Scale Mail is: Armor (Scale Mail), Very Rare, Requires Attunement.
+The `modify_roll_advantage` atom has two existing mechanisms for narrowing saving-throw advantage:
+- `attackerTypeFilter?: ReadonlyNonEmptyArray<CreatureType>` — narrows to saves against attacks made BY a creature of listed types.
+- `saveSourceFilter?: SavingThrowSourceFilter` — currently only `{ kind: "spell_or_other_magical_effect" }`.
 
----
+Neither fits. `attackerTypeFilter: ["dragon"]` would grant advantage on **all** saving throws against dragons (including their weapon attacks, special actions, etc.), which is too broad. Breath weapons are not spells or magical effects, so `saveSourceFilter.spell_or_other_magical_effect` also doesn't apply.
 
-## Gap 2 — Missing `passive_bundle` mechanics family (structural)
-
-Dragon Scale Mail's three core benefits are **always-on passive effects** that activate at the moment of attunement/equipping and persist until the item is removed or attuning ends:
-
-- +1 bonus to Armor Class
-- Advantage on saving throws against breath weapons of Dragons
-- Resistance to one damage type (chosen at item-creation time by dragon type)
-
-None of the existing mechanics families (`activation`, `ongoing_effect`, `triggered_reaction`, `anchored_trigger`, `on_hit_trigger`) model this shape. A new family is needed — something like:
+**Proposed widening:** Add a new `SavingThrowSourceFilter` variant:
 
 ```typescript
-export type PassiveBundleMechanics = {
-  readonly family: "passive_bundle";
-  readonly effects: ReadonlyArray<PassiveEffect>;
-};
+type SavingThrowSourceFilter =
+  | { readonly kind: "spell_or_other_magical_effect" }
+  | {
+      readonly kind: "creature_breath_weapon";
+      readonly creatureType?: CreatureType; // optional: only when triggered by specific creature type
+    };
 ```
 
-Where `PassiveEffect` includes variants for `modify_ac`, `grant_resistance`, and the scoped advantage described in Gap 3.
+This would author as:
 
----
+```json
+{
+  "kind": "modify_roll_advantage",
+  "mode": "advantage",
+  "on": ["saving_throw"],
+  "saveSourceFilter": { "kind": "creature_breath_weapon", "creatureType": "dragon" }
+}
+```
 
-## Gap 3 — Missing scoped advantage variant (surface widening)
+**Scope:** This is a `surface_widening` — the `modify_roll_advantage` atom and `saving_throw` roll kind both exist in v4; only the source-filter variant is missing.
 
-The Advantage benefit is scoped to a specific trigger context:
+## Gap 2: detect Property — Creature-Type Detection
 
-> "you have Advantage on saving throws **against the breath weapons of Dragons**"
+**SRD text:** "you can focus your senses as a Magic action to discern the distance and direction to the closest dragon within 30 miles of yourself that is of the same type as the armor"
 
-The existing `modify_roll_advantage` type takes `on: ReadonlyArray<RollKind>` — it can express "Advantage on saving throws" but cannot express "Advantage on saving throws **when the source is a breath weapon from a Dragon**". A trigger-filter variant is needed:
+The existing `detect` atom has:
+```typescript
+{ kind: "detect"; property: "magic" | "evil_and_good" | "poison_and_disease" | "thoughts"; radiusFeet: number }
+```
+
+Two issues:
+1. No property variant covers "creature of specific type." The detection is a directional scan for a specific creature type (same type as the armor), returning both distance and direction — not an aura-style presence detection.
+2. The range is 30 miles. Using `radiusFeet: 158400` would be technically parseable but semantically wrong. The surface may need a `rangeMiles` field or a `range` with unit.
+
+**Proposed widening:** Add a new `detect` property variant:
 
 ```typescript
-export type ScopedAdvantageEffect = {
-  readonly kind: "modify_roll_advantage";
-  readonly mode: "advantage" | "disadvantage";
-  readonly on: ReadonlyArray<RollKind>;
-  readonly filter?: ScopeFilter;  // new
-};
-
-export type ScopeFilter =
-  | { readonly kind: "source_creature_type"; readonly creatureType: string }
-  | { readonly kind: "source_ability"; readonly ability: "breath_weapon" };
-  // or a combined form
+readonly property:
+  | "magic"
+  | "evil_and_good"
+  | "poison_and_disease"
+  | "thoughts"
+  | { readonly kind: "creature_of_type"; readonly creatureType: CreatureType };
 ```
 
-The breath weapon filter may need to be a combined predicate: source creature type = "dragon" AND ability = "breath weapon".
-
----
-
-## Gap 4 — Missing `discern_location` effect atom (atom widening)
-
-The active ability reads:
-
-> "you can focus your senses as a Magic action to discern the **distance and direction** to the closest dragon within 30 miles of yourself that is of the same type as the armor"
-
-No v4 atom covers this. `grant_sense` in v4 covers perceptual senses (darkvision, truesight, blindsight) — it is for modifying the creature's sensory apparatus, not for producing a one-shot directional information output.
-
-A new `discern_location` atom is needed:
+And either extend `radiusFeet` to support miles, or add a parallel `rangeMiles` field on the `detect` atom for very long-range divination effects:
 
 ```typescript
-export type DiscernLocationEffect = {
-  readonly kind: "discern_location";
-  readonly targetFilter: CreatureTypeFilter;  // "dragon of same type as armor"
-  readonly rangeMiles: number;                // 30
-  readonly output: "distance_and_direction";
-};
+| {
+    readonly kind: "detect";
+    readonly property: DetectProperty;
+    readonly radiusFeet?: number;
+    readonly rangeMiles?: number;
+  }
 ```
 
-This is distinct from `grant_sense` (which modifies perception range permanently or for a duration) — it is a triggered divination that resolves once and returns information.
+This would author as:
 
----
-
-## Gap 5 — Missing `dawn_reset` reset cadence (surface widening)
-
-The active use has this recharge:
-
-> "This action can't be used again until the next dawn."
-
-The existing `RestResetCadence` variants (`short_rest`, `long_rest`, `short_or_long_rest`, `partial_short_full_long`) are all keyed to rest events. Dawn is a time-of-day event — it may coincide with a long rest but is mechanically distinct. A new variant is needed:
-
-```typescript
-| { readonly kind: "next_dawn" }
+```json
+{
+  "kind": "detect",
+  "property": { "kind": "creature_of_type", "creatureType": "dragon" },
+  "rangeMiles": 30
+}
 ```
 
----
+**Scope:** This is a `surface_widening` — the `detect` atom structure exists; the property and range unit variants are missing.
 
-## Gap 6 — Missing `attunement_slot` in `types.ts` (surface widening)
+## Intended Full Encoding (for reference)
 
-The v4 taxonomy lists `attunement_slot` as a resource atom, but `types.ts` has no `attunement_slot` resource type. Any `MagicItemRecord` that requires attunement must express that it consumes an attunement slot (max 3 per creature). This is a separate resource from `use_count` or `spell_slot`.
+Once both gaps are filled, the item would encode as a collection record:
 
----
+```
+MagicItemRecord (collection)
+├── id: "dragon_scale_mail"
+├── defaultAttunement: { requiresAttunement: true }
+└── variants: [
+    { id: "dragon_scale_mail_black", name: "Dragon Scale Mail (Black Dragon)", rarity: "very_rare",
+      mechanics: composite [
+        passive (condition: wearing_item) grants: [
+          modify_ac +1,
+          modify_roll_advantage (saving_throw, advantage, saveSourceFilter: creature_breath_weapon/dragon),
+          grant_resistance (acid)
+        ],
+        activation (standard_action: magic, use_count 1, reset: dawn) phases: [
+          direct → detect (creature_of_type: dragon, rangeMiles: 30)
+        ]
+      ]
+    },
+    { id: "dragon_scale_mail_blue", … grant_resistance(lightning) … },
+    … (10 variants total per the table)
+  ]
+```
 
-## Summary table
+## Classification
 
-| Gap | Kind | Blocking? |
-|-----|------|-----------|
-| No `MagicItemRecord` in `UnitRecord` | `structural_widening` | Yes — nothing can be authored |
-| No `passive_bundle` mechanics family | `structural_widening` | Yes — always-on passive items have no family |
-| Scoped advantage (breath weapon filter) | `surface_widening` | Yes — cannot represent the specific rider |
-| `discern_location` atom | `atom_widening` | Yes — no v4 atom covers directional divination |
-| `next_dawn` reset cadence | `surface_widening` | Yes — existing cadences are all rest-based |
-| `attunement_slot` resource in types.ts | `surface_widening` | Yes (once magic_item record exists) |
-
-No Dhall or JSON artifacts were authored. A misleading trace would require misrepresenting all three passive effects as something else and omitting the active ability entirely.
+**`surface_widening`** — Both blocking gaps are missing variants of existing surface types (`SavingThrowSourceFilter` and `detect.property`). No new v4 atoms are required; the v4 `detect` and `modify_roll_advantage` atoms already exist in the taxonomy.

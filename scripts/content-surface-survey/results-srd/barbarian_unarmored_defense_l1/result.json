@@ -1,28 +1,16 @@
 {
   "unit_slug": "barbarian_unarmored_defense_l1",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature family",
-      "justification": "Unarmored Defense is always-on while conditions hold (no armor worn). It has no activation cost, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which structurally requires all three via ClassFeatureActivationMechanics. A 'passive' or 'constant' family is needed for features that modify baseline stats or rules whenever a guard predicate is satisfied, without being activated.",
-      "evidence": "While you aren't wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers."
-    },
-    {
       "kind": "new_variant",
-      "name": "set_ac_formula (ClassFeatureEffect variant)",
-      "justification": "The effect replaces the base AC formula with 10 + DEX mod + CON mod. This is not representable as modify_ac (which takes a fixed numeric delta in the current ReactionEffect shape), not heal_hp, and not grant_extra_action. A new ClassFeatureEffect variant is needed that can express 'base AC = fixed_base + ability_A_mod + ability_B_mod', along with a guard condition (no armor equipped) and a permissive clause (shield allowed).",
-      "evidence": "your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit."
-    },
-    {
-      "kind": "new_variant",
-      "name": "equipment_guard (passive condition predicate)",
-      "justification": "The passive applies only when no armor is worn. This requires a closed predicate grammar for 'not wearing armor type X' that gates a passive effect. The current surface has no guard/condition vocabulary for passive features — only the implicit guards embedded in individual spell families (e.g., concentration) or window atoms for triggered effects.",
-      "evidence": "While you aren't wearing any armor..."
+      "name": "modify_ac_set_base (multi-ability)",
+      "justification": "ModifyAcSetBaseEffect currently accepts a single `abilityMod: Ability`. Barbarian Unarmored Defense requires base AC = 10 + DEX mod + CON mod — two distinct ability modifiers summed together. The existing single-modifier shape cannot express this without omitting CON, which would be a dishonest trace. Widening `abilityMod` to `ReadonlyNonEmptyArray<Ability>` (or adding a second optional `secondAbilityMod?: Ability`) would resolve this without a new atom or new family. The same widening would cover Monk Unarmored Defense (10 + DEX + WIS) from a single shape.",
+      "evidence": "your base Armor Class equals 10 plus your Dexterity and Constitution modifiers"
     }
   ],
   "confidence": "high",
-  "notes": "The blocking issue is the missing passive family — even if set_ac_formula were added as a ClassFeatureEffect variant, it cannot be expressed under the activation family without inventing false use-count and reset-cadence fields. Monk Unarmored Defense (L1) is the same structural shape (10 + DEX + WIS) and would require the same widening. The 'shield allowed' clause is an important sub-condition worth capturing in the surface grammar but is not the blocking gap."
+  "notes": "The passive family, unarmored equipment predicate, and modify_ac_set_base atom all exist. The sole blocker is that modify_ac_set_base supports exactly one ability modifier. Shield interaction ('You can use a Shield and still gain this benefit') is already handled implicitly by the RAW AC calculation rules and does not require a separate atom."
 }

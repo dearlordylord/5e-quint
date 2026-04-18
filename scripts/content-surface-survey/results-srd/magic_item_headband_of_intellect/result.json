@@ -1,28 +1,9 @@
 {
   "unit_slug": "magic_item_headband_of_intellect",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord",
-      "justification": "UnitRecord in types.ts is SpellRecord | ClassFeatureRecord | MasteryRecord. There is no magic_item kind or MagicItemMechanics family. The v4 taxonomy lists magic_item_root as a source atom and attune as a procedure atom, but the surface has no corresponding record type, no mechanics header, and no mechanics family for magic items.",
-      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
-    },
-    {
-      "kind": "new_atom",
-      "name": "modify_ability_score",
-      "justification": "The headband's sole mechanical effect is setting the wearer's Intelligence to 19. This is a passive ability-score override, not covered by any existing effect atom. TAXONOMY v4 §12 explicitly lists this as out-of-scope: 'modify_ability_score as a runtime effect versus as pre-runtime character state (currently treated as out-of-scope)'. A future magic_item family would need this atom to encode the Headband of Intellect, Belt of Giant Strength, Amulet of Health, etc.",
-      "evidence": "Your Intelligence is 19 while you wear this headband."
-    },
-    {
-      "kind": "new_variant",
-      "name": "attunement mechanics",
-      "justification": "The item requires attunement. The v4 taxonomy has attunement_slot (resource) and attune (procedure) atoms, but no surface type captures the attunement lifecycle for magic items (equip → attune → effect active; unequip/break attunement → effect inactive).",
-      "evidence": "Requires Attunement"
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["attunement_slot", "grant", "magic_item_root", "set_ability_score"],
+  "relations_used": ["consumes", "grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Primary blocker is structural: no MagicItemRecord in UnitRecord, no magic item mechanics family in types.ts. Secondary blocker is that modify_ability_score is explicitly out-of-scope in TAXONOMY v4 §12. The no-op guard ('no effect if INT ≥ 19 without it') is a comparison predicate on pre-existing stat vs. item-granted stat — this also has no surface representation. No content files written."
+  "notes": "Encodes cleanly as a passive magic item with set_ability_score (int, 19, floor). The SRD 'no effect if Intelligence is 19 or higher without it' is exactly the floor semantics already in the surface. No wearing_item predicate was needed since the attunement gate implicitly scopes the passive to the wearer. Identical shape to Amulet of Health and Gauntlets of Ogre Power."
 }

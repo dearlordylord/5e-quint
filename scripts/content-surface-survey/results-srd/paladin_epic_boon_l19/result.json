@@ -1,28 +1,9 @@
 {
   "unit_slug": "paladin_epic_boon_l19",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_advancement",
-      "justification": "Class features that are granted permanently at a given level (no activation, no resource, no reset) have no mechanics family in the surface. All existing ClassFeatureMechanics share the 'activation' family which mandates activationCost, resource, and resetCadence — none of which apply to a level-up permanent grant.",
-      "evidence": "You gain an Epic Boon feat (see 'Feats') or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_feat",
-      "justification": "The effect of this feature is gaining a feat permanently. No effect atom in v4 captures feat grants. The closest candidate (grant_proficiency) models a proficiency bonus, not a full feat with its own mechanics. A feat grant opens a player-choice over a scoped feat category (Epic Boon feats) or any qualifying feat.",
-      "evidence": "You gain an Epic Boon feat (see 'Feats') or another feat of your choice for which you qualify. Boon of Truesight is recommended."
-    },
-    {
-      "kind": "new_variant",
-      "name": "feat_category_choice (FeatScope variant)",
-      "justification": "The feat selection is scoped to a category ('Epic Boon feat') with an open fallback ('or another feat of your choice for which you qualify'). The surface has no type for a player-resolved choice over a feat category. This is a distinct selection grammar from the existing TargetSelection (which selects creatures).",
-      "evidence": "You gain an Epic Boon feat (see 'Feats') or another feat of your choice for which you qualify."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "This is the same structural gap as Ability Score Improvement and all other level-up passive grants. The surface models activated class features (Action Surge, Second Wind) but has no family for features that are permanent character-advancement grants received at level-up with no combat runtime footprint. The 'activation' family is the only ClassFeatureMechanics variant and it cannot be coerced into representing a passive permanent feat grant without lying about the structure."
+  "notes": "Encodes identically to other class Epic Boon L19 features (bard, fighter, cleric, etc.). grant_feat with categories=[epic_boon, general, fighting_style, origin] covers 'Epic Boon feat or another feat of your choice for which you qualify'. The recommended feat (Boon of Truesight) is advisory text only, not a mechanical constraint."
 }

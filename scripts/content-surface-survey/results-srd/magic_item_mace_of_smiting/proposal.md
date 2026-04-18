@@ -1,83 +1,87 @@
-# Proposal: Mace of Smiting — `structural_widening`
+# Proposal: magic_item_mace_of_smiting
 
 ## Unit
 
-**Name:** Mace of Smiting  
-**Slug:** `magic_item_mace_of_smiting`  
-**Kind:** `magic_item`  
-**Rarity:** Rare  
-**Provenance:** SRD 5.2.1, Equipment/Magic-Items/Items-I-P.md § Mace of Smiting
+**Mace of Smiting** — Weapon (Mace), Rare  
+SRD 5.2.1 magic item.
 
----
+```
+You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon. The bonus increases to +3 when you use the weapon to attack a Construct.
 
-## Why it doesn't fit
+When you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 Bludgeoning damage, or 14 Bludgeoning damage if it's a Construct. If a Construct has 25 Hit Points or fewer after taking this damage, it is destroyed.
+```
 
-### 1. No `MagicItemRecord` in `UnitRecord` (structural)
+## What fits
 
-`UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord`
+- The unconditional base `+1` to attack rolls → `modify_roll_numeric` on `["attack_roll"]` with `weaponFilter: { kind: "specific_item", itemId: "magic_item_mace_of_smiting" }`.
+- The unconditional base `+1` to damage rolls → `modify_damage_numeric` with the same `weaponFilter`.
 
-The taxonomy lists `magic_item_root` as a v4 source atom, but `types.ts` has no corresponding record type. The unit cannot be represented as any existing record kind without falsifying its nature. This alone is a `structural_widening`.
+These two atoms are representable today. Everything else is not.
 
-### 2. Passive weapon bonus — no `passive_property` family (structural)
+## Gap 1 — targetTypeFilter on modify_roll_numeric / modify_damage_numeric (surface_widening)
 
-> "You gain a +1 bonus to attack rolls and damage rolls made with this magic weapon."
+The `+1 → +3` upgrade is gated on the target being a Construct. Neither `modify_roll_numeric` nor `modify_damage_numeric` carry any `targetTypeFilter` field today.
 
-This is a permanent, always-on weapon property — not an activation, not a spell, not a mastery on-hit rider. The bonus applies to every attack roll and damage roll made with the weapon without any action, quota, or trigger. No existing mechanics family (spell `ongoing_effect`, class feature `activation`, mastery `on_hit_trigger`) fits:
+**Proposed widening**: add an optional `targetTypeFilter?: ReadonlyNonEmptyArray<CreatureType>` field to both atoms. When present, the modifier applies only on attacks against one of the listed creature types. The unconditional base bonus and the conditional upgrade can then be authored as two separate passive grants stacking to +3 vs Constructs (+1 always, +2 additionally when target is Construct).
 
-- `ongoing_effect` requires concentration/timed spell duration and caster action
-- `class_feature activation` requires an explicit use-count resource and player action
-- `on_hit_trigger` fires on a hit, not passively on every roll
+## Gap 2 — on_crit trigger variant for OnHitTriggerMechanics (surface_widening)
 
-A **passive property family** is needed for magic item always-on modifiers.
+The extra-damage rider fires specifically on a natural 20, not on every hit. `MasteryTrigger` only has `weapon_hit` and `weapon_hit_melee_only`. There is no crit-scoped trigger.
 
-### 3. `crit_window` atom missing (atom widening)
+**Proposed widening**: add `weapon_crit` (or `weapon_hit_natural_20`) as a new `MasteryTrigger` variant:
 
-> "When you roll a **20** on an attack roll made with this weapon..."
+```typescript
+| { readonly kind: "weapon_crit" }
+```
 
-The extra damage triggers specifically on a **critical hit** (natural 20). This is mechanically distinct from `on_hit_window` (which fires on any hit). The taxonomy already acknowledges `crit_window` as a known weak spot ("single-feat pressure from Boon of Irresistible Offense"). The Mace of Smiting is a second independent pressure case from the magic item stream.
+This variant would open an `on_crit_window` (new window atom) or reuse `on_hit_window` with a crit sub-label. The tracer would need a new window node kind or a label tag on the existing `on_hit_window`.
 
-### 4. Creature-type conditional — no target-type filter (surface widening)
+## Gap 3 — target-type-conditional damage amount (surface_widening)
 
-> "The bonus increases to **+3** when you use the weapon to attack a **Construct**."  
-> "...or **14** Bludgeoning damage if it's a **Construct**."
+The on-crit damage is 7 normally but 14 vs Constructs. `DiceAmount` has no branching on target creature type; `EffectAtom.damage` has no `targetTypeFilter`.
 
-Both the bonus magnitude and the crit extra damage scale based on whether the target is a Construct. No creature-type predicate exists in any surface type: `Attachment`, `DcSource`, `DiceAmount`, or effect variants are all type-agnostic with respect to target creature type. A **`creature_type_filter`** variant (or a general target predicate) is needed.
+**Proposed widening**: add an optional `targetTypeFilter?: ReadonlyNonEmptyArray<CreatureType>` to the `damage` effect atom (parallel to Gap 1). Two sibling `damage` atoms can then express both the universal case and the Construct-boosted case without a new DiceAmount variant:
 
-### 5. HP-threshold instant kill — no matching effect atom (atom widening)
+```json
+{ "kind": "damage", "damageType": "bludgeoning", "amount": { "kind": "fixed", "expr": { "dice": 0, "dieSize": 1, "flat": 7 } } }
+{ "kind": "damage", "damageType": "bludgeoning", "amount": { "kind": "fixed", "expr": { "dice": 0, "dieSize": 1, "flat": 7 } }, "targetTypeFilter": ["construct"] }
+```
 
-> "If a Construct has **25 Hit Points or fewer** after taking this damage, it is **destroyed**."
+…where the second adds the extra 7 for a total of 14 vs Constructs. (Alternatively a single atom with a `byTargetType` DiceAmount variant, but that is heavier machinery.)
 
-This is a deterministic instant-kill conditioned on post-damage remaining HP. v4 has:
-- `apply_condition` — applies a status condition, not destruction
-- `damage` — deals damage, does not query post-damage HP
-- No atom for "if creature HP ≤ N, destroy it"
+## Gap 4 — destroy_creature / instant-kill at HP threshold (atom_widening)
 
-A new **`instant_kill_at_hp_threshold`** effect atom is needed (or a more general `hp_threshold_branch` subgraph).
+"If a Construct has 25 Hit Points or fewer after taking this damage, it is destroyed."
 
----
+This is an instantaneous destruction gated on:
+- target creature type = Construct, AND
+- target's current HP (post-damage) ≤ 25
 
-## Summary of gaps
+No existing `EffectAtom` models this. The closest atoms (`apply_condition: unconscious`, `damage`) are wrong: Constructs are immune to the dying/death-save rules; the SRD explicitly says the item "destroys" them rather than dealing additional damage or applying a condition.
 
-| Gap | Classification | Evidence |
-|-----|---------------|----------|
-| `MagicItemRecord` type missing from `UnitRecord` | `structural_widening` | Item kind = `magic_item`; not in type union |
-| Passive weapon bonus family missing | `structural_widening` | "+1 bonus to attack rolls and damage rolls" — always-on, no action/resource |
-| `crit_window` atom missing | `atom_widening` | "When you roll a 20 on an attack roll" |
-| Creature-type filter missing | `surface_widening` | "+3 when attacking a Construct", "14 damage if it's a Construct" |
-| HP-threshold instant kill missing | `atom_widening` | "If a Construct has 25 HP or fewer... it is destroyed" |
+**Proposed new atom**:
 
-Primary classification: **`structural_widening`** (no `MagicItemRecord`; no passive-property family).
+```typescript
+{
+  readonly kind: "destroy_creature";
+  readonly condition: {
+    readonly hpAtMost: number;
+    readonly targetTypeFilter: ReadonlyNonEmptyArray<CreatureType>;
+  };
+}
+```
 
----
+Semantics: if, after all damage in this resolution step is applied, the target's current HP is ≤ `hpAtMost` AND the target's creature type is in `targetTypeFilter`, the target is instantly destroyed (removed from play, no death saves). This is distinct from dealing damage-to-zero because it bypasses death saves entirely.
 
-## Recommended widening path
+This is a genuinely new v4 concept; `destroy_creature` does not appear in the v4 taxonomy.
 
-To encode Mace of Smiting cleanly, the surface needs at minimum:
+## Classification
 
-1. **`MagicItemRecord`** — a new top-level record in `UnitRecord` with `kind: "magic_item"` and fields for attunement, item type, rarity.
-2. **`passive_property` mechanics family** — covers always-on weapon/armor/wondrous bonuses that require no action or resource.
-3. **`crit_window`** atom in the window category — fires when the attack roll result is a natural 20.
-4. **Creature-type filter** variant — a predicate on attachment or effect gating behavior on target creature type (Construct, Undead, etc.).
-5. **`instant_kill_at_hp_threshold`** or a more general `hp_branch` effect atom — conditional destruction/kill based on post-damage HP.
+| Gap | Classification |
+|---|---|
+| targetTypeFilter on bonus atoms | surface_widening |
+| on_crit trigger variant | surface_widening |
+| target-type-conditional damage amount | surface_widening |
+| destroy_creature HP-threshold atom | **atom_widening** |
 
-Items 3–5 would benefit multiple future magic items (Dragon Slayer, Mace of Disruption, Vorpal Sword all share related patterns).
+Overall: **atom_widening** (the `destroy_creature` mechanic is not in v4; the three other gaps are missing variants of existing surface types).

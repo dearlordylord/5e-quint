@@ -1,28 +1,9 @@
 {
   "unit_slug": "species_orc_darkvision",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "SpeciesTraitRecord + passive_grant family",
-      "justification": "No UnitRecord kind exists for species_trait. The tracer's exhaustive switch throws on any kind other than spell, class_feature, or mastery. A new top-level record kind and at minimum one new mechanics family are required.",
-      "evidence": "UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord — species_trait_root exists in v4 taxonomy but has no corresponding surface record type."
-    },
-    {
-      "kind": "new_variant",
-      "name": "passive_grant mechanics family",
-      "justification": "Darkvision (Orc) is a purely passive, always-on trait with no activation cost, no resource, no reset cadence, and no roll. No existing mechanics family models this shape. A new family (e.g. 'passive_grant') is needed to express traits that are permanent character-state grants.",
-      "evidence": "You have Darkvision with a range of 120 feet. — no trigger, no cost, no duration, no activation."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_sense surface shape",
-      "justification": "The v4 atom 'grant_sense' exists in the taxonomy but types.ts has no surface type for it. A typed surface shape is needed: { kind: 'grant_sense'; sense: 'darkvision' | 'blindsight' | ...; rangeFeet: number }.",
-      "evidence": "You have Darkvision with a range of 120 feet."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["grant", "grant_sense", "species_trait_root"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Darkvision is the simplest possible species trait — one permanent passive sense with a fixed range. It exposes three missing layers simultaneously: no SpeciesTraitRecord kind, no passive mechanics family, and no grant_sense surface type. The tracer would throw 'unhandled unit kind: species_trait' before reaching any mechanics check. No placeholder JSON is honest here."
+  "notes": "Identical structure to darkvision_elf; only species and rangeFeet differ (120 ft vs 60 ft). No widening needed. The other Orc traits (Adrenaline Rush, Relentless Endurance) are out of scope for this unit."
 }

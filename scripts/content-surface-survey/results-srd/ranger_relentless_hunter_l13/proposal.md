@@ -1,70 +1,81 @@
-# Proposal: ranger_relentless_hunter_l13
+# Proposal: Ranger Relentless Hunter (L13)
 
 ## Unit
 
-**Name:** Relentless Hunter (Ranger L13)
-**Kind:** class_feature
-**Source:** SRD 5.2.1, Classes/Ranger — Level 13: Relentless Hunter
-**Text:** "Taking damage can't break your Concentration on *Hunter's Mark*."
+- **Name**: Relentless Hunter
+- **Kind**: `class_feature` / `passive`
+- **Acquired at**: Ranger level 13
+- **SRD text**: "Taking damage can't break your Concentration on *Hunter's Mark*."
 
-## Why It Doesn't Fit
+## Why encoding fails
 
-### Gap 1 — No passive class-feature family (structural_widening)
+The feature is structurally a passive class feature — `family: "passive"` is the correct shell, and `acquiredAtLevel`, `className`, etc. all fit. The problem is the payload atom.
 
-The only `ClassFeatureMechanics` family is `activation`, which requires:
+The mechanic is: the concentration-break-on-damage rule (SRD Playing the Game: "Each time you take damage while concentrating on a spell, you must succeed on a Constitution saving throw…") **does not apply** when the concentration is specifically on Hunter's Mark. This is complete suppression of the mechanic for that spell — not advantage on the save, not auto-success with a condition, but immunity.
 
-- `activationCost` — not applicable; the feature is always-on.
-- `resource` — a `use_count` with a cap; this feature has no uses to spend.
-- `resetCadence` — a rest cadence; there is nothing to reset.
+### What the surface currently offers
 
-Relentless Hunter is permanently active from level 13. There is no player action, no resource to consume, and no rest that restores anything. Encoding it as `activation` with `{ kind: "free" }` cost and a fabricated `{ kind: "fixed", uses: 1 }` resource would misrepresent the rule's structure and produce a misleading trace.
+| Atom | Why it fails |
+|---|---|
+| `modify_roll_advantage` (mode: "advantage") | Advantage ≠ immunity. Also, `saveSourceFilter` only supports `{ kind: "spell_or_other_magical_effect" }` — there is no filter for "damage-induced concentration check". |
+| `grant_condition_immunity` | Suppresses SRD *conditions*, not the concentration-break mechanic. |
+| `block_max_hp_reduction` | Unrelated. |
+| Any DurationEndTrigger suppression | `DurationEndTrigger` only appears on Duration itself, not on passive grants; and none of its variants cover "concentration save from damage". |
 
-### Gap 2 — No effect atom for "suppress concentration break for named spell" (atom_widening)
+### v4 taxonomy gap
 
-Even if a `passive` family were added, the required effect concept is absent from v4:
+The v4 taxonomy (TAXONOMY_atoms_graph.md) does not include any atom for suppressing or modifying the concentration-check-on-damage mechanic. The nearest v4 atoms are:
+- `modify_roll_advantage` — wrong semantics (advantage vs. suppression)
+- No equivalent of `suppress_concentration_break`
 
-- `suppress` (v4 §2 Procedure Atoms) — a procedure, not an effect; expresses cancelling another feature's output, not intercepting a damage-triggered save requirement.
-- `concentrate` (v4 §6 Lifecycle Atoms) — tracks that concentration is maintained; does not expose a hook for blocking the saving throw check.
-- `negate_named_effect` (v4 §9 Effect Atoms) — negates spell effects by name; does not address the concentration-save trigger fired by incoming damage.
+## Proposed widenings
 
-The missing concept: an effect that permanently prevents damage events from opening the concentration-save window, scoped to a specific named spell.
-
-## Proposed Widenings
-
-### W1: `passive` family for `ClassFeatureMechanics`
-
-A new mechanics family for always-on class features with no activation cost, no use-count resource, and no rest cadence.
+### Option A — New atom `suppress_concentration_break`
 
 ```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effect: ClassFeaturePassiveEffect;
-};
-
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveMechanics;
+| {
+    readonly kind: "suppress_concentration_break";
+    // Scope to a specific spell's concentration, or omit for all concentration.
+    readonly spellId?: string;
+    // Narrow to a specific damage trigger (default: all damage).
+    readonly trigger?: "damage";
+  }
 ```
 
-The tracer would need a new `traceClassFeaturePassive` branch in `traceClassFeatureMechanics`.
+**Justification**: The SRD concept is a named, discrete rule: "damage cannot break concentration [on this spell]." It appears on multiple potential future units (e.g., a hypothetical War Caster improvement, class-specific feature, magic item). Encoding it as a first-class atom makes the rule unambiguous and avoids misrepresenting it as a save modifier.
 
-### W2: `suppress_concentration_break` effect atom (atom_widening)
+**Encoding of Relentless Hunter**:
+```dhall
+{ family = "passive"
+, grants =
+    [ { kind = "suppress_concentration_break"
+      , spellId = Some "hunters_mark"
+      , trigger = Some "damage"
+      }
+    ]
+}
+```
 
-New effect atom — goes into v4 §9 Effect Atoms:
+### Option B — New mode on `modify_roll_advantage` + new `saveSourceFilter` variant
 
+Widen `modify_roll_advantage.mode` to add `"auto_success"` and add:
 ```typescript
-export type SuppressConcentrationBreakEffect = {
-  readonly kind: "suppress_concentration_break";
-  readonly scope:
-    | { readonly kind: "named_spell"; readonly spellId: string }
-    | { readonly kind: "any" };
-};
+| { readonly kind: "damage_induced_concentration_check"; readonly spellId?: string }
+```
+to `SavingThrowSourceFilter`.
+
+**Encoding of Relentless Hunter**:
+```json
+{
+  "kind": "modify_roll_advantage",
+  "mode": "auto_success",
+  "on": ["saving_throw"],
+  "saveSourceFilter": { "kind": "damage_induced_concentration_check", "spellId": "hunters_mark" }
+}
 ```
 
-For Relentless Hunter: `scope = { kind: "named_spell", spellId: "hunters_mark" }`.
+**Assessment**: This is possible but awkward — "auto_success" on a saving throw is mechanically different from advantage/disadvantage (it bypasses the roll entirely), and encoding it within `modify_roll_advantage` blurs the atom's semantics. Option A is cleaner.
 
-Graph shape: `class_feature_root → passive_activate → suppress_concentration_break → attaches_to self`.
+## Recommendation
 
-## Classification
-
-**`structural_widening`** — the missing `passive` family is the blocking structural gap. The missing atom is a secondary gap that would need to be resolved alongside the family addition.
+**Option A** — new `suppress_concentration_break` atom. It names the rule exactly, composes naturally with `passive` family grants, and is specific enough that no existing atom is a plausible stand-in. Classification: `atom_widening`.

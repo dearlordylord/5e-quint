@@ -1,128 +1,79 @@
-# Proposal: Spellcasting (sorcerer L1) — structural_widening
+# Proposal: Sorcerer Spellcasting L1
 
-## Why the unit cannot be encoded honestly
+**Outcome:** `structural_widening`  
+**Confidence:** high
 
-The current `ClassFeatureMechanics` surface has exactly one family: `activation`. Its header mandates:
+## Summary
 
-```typescript
-type ClassFeatureMechanicsHeader = {
-  readonly activationCost: ClassFeatureActivationCost;  // free | bonus_action
-  readonly resource: UseCountResource;                   // use_count with fixed/tiered cap
-  readonly resetCadence: RestResetCadence;
-};
-```
+Sorcerer Spellcasting L1 is a class spellcasting framework feature. It installs five sub-features simultaneously:
 
-Spellcasting (sorcerer L1) is not an activated feature. There is no "use Spellcasting" action. The feature is a **passive framework** that permanently grants three distinct things:
+1. **Cantrips** — know N cantrips from class list; count scales at L4 and L10.
+2. **Spell Slots** — table-driven slot economy keyed to class level; refill on Long Rest.
+3. **Prepared Spells** — build-time list of N level-1+ Sorcerer spells; count scales by class level.
+4. **Spellcasting Ability** — designates CHA as the spellcasting ability for spell attack rolls and save DCs.
+5. **Spellcasting Focus** — permits Arcane Focus as a material-component substitute.
 
-| Sub-feature | What it grants | Existing atoms | Missing surface |
-|---|---|---|---|
-| Cantrips | Access to 4 cantrips, scaling to 5@L4, 6@L10 | `grant_spell_access` (v4 effect) | No `ClassFeatureEffect` variant |
-| Spell Slots | Leveled slot pool (table-driven) resetting on long rest | `spell_slot` (v4 resource) | No surface type for leveled slot pool |
-| Prepared Spells | Scaling prepared list (2@L1 → 15@L20) | `grant_spell_access` (v4 effect) | No `ClassFeatureEffect` variant |
-| Spellcasting Ability | CHA designates spell save DC / attack | — | No surface type for ability designation |
-| Spellcasting Focus | Arcane Focus substitutes material components | — | Out-of-core per ARCHITECTURE.md |
+None of these map to existing EffectAtoms or mechanics families.
 
-Forcing this into the `activation` family would require fabricating an `activationCost`, a `UseCountResource`, and a `resetCadence` — none of which correspond to real mechanics. That would produce a misleading trace.
+## Why No Honest Encoding Exists
 
----
+### `passive` family is insufficient
 
-## Proposed widenings
+`PassiveMechanics` carries a `grants: EffectAtom[]` list. Every EffectAtom in the current surface is a concrete mechanical effect (grant a sense, modify AC, apply a condition, etc.). There is no atom that means:
 
-### 1. New `ClassFeatureMechanics` family: `passive_grant` (structural)
+- "install a spell slot economy for this class" (`grant_spell_slots`)
+- "set this ability as the class's spellcasting ability" (`set_spellcasting_ability`)
+- "allow preparing N spells from the Sorcerer list, where N scales by class level" (`grant_class_spell_list_access`)
 
-A new family for class features that are always-on grants rather than activated abilities:
+### `grant_spell_access` is too narrow
 
-```typescript
-export type ClassFeaturePassiveGrantMechanics = {
-  readonly family: "passive_grant";
-  readonly grants: ReadonlyArray<ClassFeaturePassiveGrant>;
-};
+`grant_spell_access` grants access to a **specific named spell** by `spellId`. It cannot express open-ended list access ("any Sorcerer spell for which you have spell slots") or a scaling prepared-count (2 → 15 spells as class level rises).
 
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveGrantMechanics;
-```
+### `use_count` / `charge_pool` resources don't model spell slots
 
-This family has no `activationCost`, no `resource`, no `resetCadence` at the top level — those belong to the individual grants when relevant.
+Spell slots are a multi-tier table resource (one pool per slot level, 1–9) that refills on Long Rest and scales with class level. The existing resource atoms model single-pool use counters or charge pools with a reset cadence — they have no slot-level dimension and no class-level table lookup.
 
-**Pressure:** Every spellcasting class feature (bard, cleric, druid, paladin, ranger, sorcerer, warlock, wizard spellcasting) lands here. This is not a narrow case.
+### No mechanics family captures framework installation
 
----
+`activation` requires a use-count resource and activation cost. `triggered_reaction` requires a reaction trigger. `ongoing_effect` requires concentration/timed duration with ongoing operations. None of these express "install the machinery through which all Sorcerer spells are accessed".
 
-### 2. New `ClassFeatureEffect` variant: `grant_spell_access`
+## Proposed Widenings
 
-Model the cantrip known count and prepared spell list grant:
+### 1. `class_spellcasting_framework` — new mechanics family
 
-```typescript
-export type GrantSpellAccessEffect = {
-  readonly kind: "grant_spell_access";
-  readonly spellKind: "cantrip" | "leveled";
-  readonly source: "class_spell_list";
-  readonly initialCount: number;
-  readonly scaling?: ThresholdTiers<number>;  // axis=class, for cantrip count growth
-  readonly preparationMode: "known" | "prepared";
-};
-```
+A dedicated top-level family for class spellcasting infrastructure. Fields would include:
 
-The v4 taxonomy already lists `grant_spell_access` as an effect atom. This is a surface gap only in `ClassFeatureEffect`.
+- `spellcastingAbility: Ability` — CHA for Sorcerer, WIS for Cleric/Druid, INT for Wizard.
+- `spellSlotTable` — table-driven slot economy, keyed to class level.
+- `cantripsKnown: ThresholdTiers<number>` — count of cantrips by level.
+- `preparedSpells: ThresholdTiers<number>` — count of prepared level-1+ spells by level.
+- `spellList: string` — reference to the class's spell list (e.g., `"sorcerer"`).
+- `focus?: string` — permitted focus type (e.g., `"arcane_focus"`).
 
----
+This family would emit `grant_spell_slots` + `set_spellcasting_ability` + `grant_class_spell_list_access` effect nodes in the trace.
 
-### 3. New resource shape: `spell_slot_pool`
+### 2. `grant_spell_slots` — new EffectAtom
 
-The slot table is not a simple `use_count` — it is a **leveled pool** where casting a level-3 spell consumes a level-3 slot, not an arbitrary use. A dedicated resource shape is needed:
+Represents the slot economy grant. Distinct from `use_count` because it is multi-tiered (L1–L9 slots simultaneously), class-level-keyed, and always Long-Rest-reset.
 
-```typescript
-export type SpellSlotPool = {
-  readonly kind: "spell_slot_pool";
-  readonly resetCadence: RestResetCadence;
-  // Slot counts are defined by class level table; the surface records
-  // that this feature grants the standard class slot progression.
-  readonly progression: "class_table";
-};
-```
+### 3. `set_spellcasting_ability` — new EffectAtom
 
-Alternatively, if the slot pool is treated as a systemic character resource rather than a per-feature grant, the surface needs a `ClassFeaturePassiveGrant` variant that references it:
+Designates an ability as the spellcasting ability for all class spells. Distinct from `set_ability_score` (which sets the numeric value) and `modify_ability_score` (which adjusts it). This is a relational designation, not a numeric change.
 
-```typescript
-export type GrantSpellSlotPoolGrant = {
-  readonly kind: "grant_spell_slot_pool";
-  readonly resetCadence: RestResetCadence;
-};
-```
+### 4. `grant_class_spell_list_access` — new EffectAtom or surface type
 
----
+Expresses "may prepare up to N spells from the named class list at any given level". Carries:
 
-### 4. Spellcasting ability designation
+- `spellList: string` — the class spell list identifier.
+- `preparedCount: ThresholdTiers<number> | LinearPerLevel<number>` — scaling count.
+- `cantripsKnown?: ThresholdTiers<number>` — separate scaling for cantrips if unified here.
 
-`"Charisma is your spellcasting ability"` determines spell save DC and spell attack bonus. This is runtime-relevant (affects combat resolution) but is arguably pre-runtime character state (set once at character creation, not updated during combat). Two options:
+## Cross-Class Applicability
 
-**Option A** — Model as a `ClassFeaturePassiveGrant` variant:
-```typescript
-export type SetSpellcastingAbilityGrant = {
-  readonly kind: "set_spellcasting_ability";
-  readonly ability: Ability;  // "cha"
-};
-```
+This widening applies equally to all full-caster and half-caster class spellcasting features:
 
-**Option B** — Treat as pre-runtime character state (per ARCHITECTURE.md §"out-of-scope for the core mechanics graph") and omit from the surface. Record in the description only.
+- Bard, Cleric, Druid, Sorcerer, Wizard (full casters)
+- Paladin, Ranger (half casters — slot table different)
+- Warlock (pact magic — different slot refresh cadence)
 
-Option B is defensible; the ability designation does not change during play and is already captured in the character's stat block. The tracer does not need to model it as a graph atom unless a downstream use case requires it.
-
----
-
-## Scope of the gap
-
-This structural gap affects **all 9 full-caster spellcasting features** in the SRD 5.2.1 class list, plus half-caster (paladin, ranger) and the warlock's `pact_magic` variant. Any encoding pass over these units will hit this same wall until the `passive_grant` family is added.
-
-The `activation` family should remain unchanged — it correctly models Second Wind, Action Surge, Channel Divinity, etc.
-
----
-
-## Recommended sequencing
-
-1. Add `ClassFeaturePassiveGrantMechanics` family with a `grants` array.
-2. Add `grant_spell_access` as a `ClassFeatureEffect`/grant variant.
-3. Add `grant_spell_slot_pool` (or `spell_slot_pool` resource shape).
-4. Decide Option A vs B for spellcasting ability designation.
-5. Re-run this worker — the unit should encode cleanly after those changes.
+The same `class_spellcasting_framework` family should serve all of them; the `spellSlotTable` and `resetCadence` fields carry the variation.

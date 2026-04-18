@@ -1,89 +1,99 @@
-# Proposal: Dancing Sword — Structural Widening
+# Proposal: Dancing Sword
 
-## Outcome
+**Unit slug:** `magic_item_dancing_sword`
+**Classification:** `structural_widening`
 
-`structural_widening` — the unit cannot be encoded at all because `magic_item` is not a valid `UnitRecord` kind in `types.ts`, and even with that gap closed the unit's core mechanic requires a new family.
+---
 
-## Gap 1: MagicItemRecord (blocking — kind missing)
+## Why no honest encoding exists
 
-`UnitRecord` is currently:
-
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-```
-
-There is no `MagicItemRecord`. `tracer.ts`'s `traceUnit` switch is exhaustive over these three kinds; a `magic_item` JSON would throw at runtime. The taxonomy lists `magic_item_root` as a fully validated source atom (24 items, 2 rounds per TAXONOMY_atoms_graph.md §14), but no surface type or tracer branch has been added yet.
-
-Minimum addition needed:
-
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
-};
-
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord | MagicItemRecord;
-```
-
-## Gap 2: attack_proxy family (blocking — family missing)
-
-The Dancing Sword's entire point is creating an autonomous weapon proxy:
-
-> "the weapon begins to hover, flies up to 30 feet, and attacks one creature of your choice within 5 feet of itself. The weapon uses your attack roll and adds your ability modifier to damage rolls."
-
-This does not fit any existing mechanics family:
+The Dancing Sword creates a **hovering weapon proxy** — a persistent autonomous entity that makes attacks using the wielder's own attack roll and ability modifier. No existing `MagicItemComponentMechanics` family can encode this honestly:
 
 | Family | Why it fails |
 |---|---|
-| `ongoing_effect` | Models a persistent modifier/rider on the wielder or a marked target — not an autonomous weapon making separate attacks |
-| `activation` | Models an instant one-shot or phased resolution — not a multi-turn autonomous attacker |
-| `triggered_reaction` | Models a reaction-window spell — unrelated shape |
-| `anchored_trigger` | Models a planted trigger released by future events — unrelated shape |
-| `on_hit_trigger` (mastery) | Models an on-hit rider on a single attack — cannot model the proxy's own attack loop |
+| `passive` | No activation, no hovering state, no attack proxy. |
+| `activation` (single-shot) | Cannot represent multi-turn persistence, per-turn redirect, or the 4-attack counter. |
+| `triggered_reaction` | Wrong timing and trigger shape. |
+| `on_hit_trigger` | This is not a weapon mastery on-hit rider. |
+| `spawned_creature` | Requires `CreatureStatBlock` — the sword is not a creature; it has no HP, AC, creature type, or independent ability scores. Attacks use the wielder's stats, not a companion stat block. |
+| `composite` | No combination of existing families resolves the lifecycle problem. |
 
-The v4 taxonomy already anticipates this shape with atoms `create_attack_proxy` (effect), `attack_proxy` (attachment), and `command_companion` (analogous procedure for proxy-directing Bonus Actions), but no surface family wires them together.
+---
 
-Proposed new family (sketch — not a complete spec):
+## What the mechanic actually requires
 
-```typescript
-export type AttackProxyMechanics = {
-  readonly family: "attack_proxy";
-  readonly activationCost: ClassFeatureActivationCost; // bonus_action to launch
-  readonly proxyWeapon: "wielded_weapon";              // proxy uses the item itself
-  readonly proxyAttackBasis: "wielder_attack_roll";    // uses wielder's roll + mod
-  readonly chargeLimit: number;                        // 4 attacks before auto-return
-  readonly repositionCost: ClassFeatureActivationCost; // bonus_action to reposition
-  readonly returnConditions: ReadonlyArray<ProxyReturnCondition>;
-};
+### 1. `attack_proxy` attachment atom (v4 taxonomy §3 — already listed)
 
-export type ProxyReturnCondition =
-  | { readonly kind: "charge_exhausted" }
-  | { readonly kind: "wielder_grasps" }
-  | { readonly kind: "wielder_distance_exceeded"; readonly feet: number };
+A new attachment kind distinct from `companion`. Unlike a companion:
+- The proxy has no stat block, no HP, no creature type.
+- Attacks resolve using the **wielder's** attack roll and ability modifier.
+- The proxy's position and target are directed by the wielder.
+- It carries a per-proxy attack counter (4 attacks before auto-return).
+
+The v4 taxonomy (`TAXONOMY_atoms_graph.md` §3) already lists `attack_proxy` as an attachment atom and `create_attack_proxy` as an effect atom. Neither appears in `types.ts`.
+
+### 2. `create_attack_proxy` effect atom (v4 taxonomy §9 — already listed)
+
+Emitted by the initial launch activation. Distinct from `create_companion`:
+- No stat block; inherits wielder attack/damage math.
+- Carries a lifetime attack budget (4 uses) and auto-return on exhaustion.
+- Carries early-return predicates: grasped by wielder, or wielder >30 ft away.
+
+### 3. `weapon_proxy_lifecycle` subgraph
+
+A new multi-turn lifecycle pattern for `MagicItemComponentMechanics`:
+
+```
+activate (Bonus Action)
+  → create_attack_proxy
+  → attack_proxy attachment (hovers, 30 ft range, 5 ft threat)
+  → attack_roll [uses wielder stats]
+  → per-proxy use_count (cap=4)
+
+redirect (Bonus Action, repeating)
+  → fly attack_proxy up to 30 ft within 30 ft of wielder
+  → attack_roll [uses wielder stats]
+  → decrement per-proxy use_count
+
+on use_count exhausted → auto-return to wielder
+on grasped OR wielder >30 ft → early return/fall
 ```
 
-The `chargeLimit` drives a `charge` resource atom (already in v4) with a countdown-to-return lifecycle rather than a refill lifecycle. The `repositionCost` drives a repeatable `bonus_action_quota` consumption on subsequent turns.
+No existing `MagicItemComponentMechanics` family supports this shape. The `spawned_creature` family comes closest structurally (persistent entity, Bonus Action command) but requires a `SpawnedCreatureStatBlock` and resolves combat through the creature's own stats — which is incorrect for the Dancing Sword.
 
-## Gap 3: Attunement surface type (secondary)
+---
 
-The v4 taxonomy lists `attune` as a procedure atom and `attunement_slot` as a resource atom, but neither appears in `types.ts`. Any `MagicItemRecord` that requires attunement needs these surfaced. Minimum:
+## Minimum surface changes required
 
-```typescript
-export type AttunementRequirement =
-  | { readonly required: false }
-  | { readonly required: true; readonly restriction?: string }; // e.g. "by a spellcaster"
-```
+1. **Add `attack_proxy` to `Attachment`** in `types.ts`:
+   ```typescript
+   | {
+       readonly kind: "attack_proxy";
+       readonly rangeFeet: number;       // max distance from wielder
+       readonly threatFeet: number;      // attack reach of proxy
+       readonly attackBudget: number;    // max attacks before auto-return
+     }
+   ```
 
-## What fits cleanly once the gaps are closed
+2. **Add `create_attack_proxy` to `EffectAtom`** in `types.ts`:
+   ```typescript
+   | {
+       readonly kind: "create_attack_proxy";
+       readonly proxy: AttackProxySpec;  // reference to the proxy attachment
+       readonly usesWielderStats: true;  // always true for Dancing Sword family
+     }
+   ```
 
-Once `MagicItemRecord` and `attack_proxy` family exist, the Dancing Sword maps straightforwardly:
+3. **Add a new `MagicItemComponentMechanics` family** — either extend `ActivatedAbilityMechanics` to support multi-turn proxy management, or introduce a dedicated `weapon_proxy` family analogous to `spawned_creature` but without the creature stat block requirement.
 
-- Activation: Bonus Action (toss the sword)
-- Proxy: uses wielder's attack roll and ability modifier to damage
-- Charge: 4 attacks (tracked as `charge` resource, no refill — consumed until auto-return)
-- Reposition: Bonus Action each subsequent turn, ≤ 30 ft, optional attack
-- Return conditions: charge exhausted | wielder grasps | distance > 30 ft
-- Cessation on return: proxy terminates, `charge` resets (item held again)
+---
 
-No ambiguity in the rules text; no DM-agenda items (the mechanic is deterministic once the proxy shape exists).
+## SRD reference
+
+SRD 5.2.1, Equipment/Magic Items — Dancing Sword:
+
+> You can take a Bonus Action to toss this magic weapon into the air. When you do so, the weapon begins to hover, flies up to 30 feet, and attacks one creature of your choice within 5 feet of itself. The weapon uses your attack roll and adds your ability modifier to damage rolls.
+>
+> While the weapon hovers, you can take a Bonus Action to cause it to fly up to 30 feet to another spot within 30 feet of you. As part of the same Bonus Action, you can cause the weapon to attack one creature within 5 feet of the weapon.
+>
+> After the hovering weapon attacks for the fourth time, it flies back to you…

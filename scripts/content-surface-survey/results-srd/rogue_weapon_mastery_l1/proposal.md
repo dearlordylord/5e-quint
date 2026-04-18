@@ -1,109 +1,74 @@
-# Proposal: Weapon Mastery (rogue L1) — structural_widening
+# Proposal: Rogue Weapon Mastery L1
 
 ## Unit
 
-- **Slug:** `rogue_weapon_mastery_l1`
-- **Kind:** `class_feature`
-- **Class / Level:** Rogue L1
-- **Provenance:** SRD 5.2.1 — Classes/Rogue#Level 1: Weapon Mastery
-
-## Source text
+**Rogue, Level 1 — Weapon Mastery**
 
 > Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Daggers and Shortbows.
 >
-> Whenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the mastery properties of Scimitars and Shortswords.
+> Whenever you finish a Long Rest, you can change the kinds of weapons you chose.
 
-## Why the current surface cannot encode this honestly
+## Classification: `atom_widening`
 
-### 1. The only `ClassFeatureMechanics` family is `"activation"` — Weapon Mastery is passive
+The `passive` family and `class_feature` UnitRecord kind both fit this feature structurally. The blocker is a missing effect atom.
 
-`ClassFeatureMechanics = ClassFeatureActivationMechanics`.
+---
 
-`ClassFeatureActivationMechanics` models features that fire at runtime when the player triggers them (Action Surge, Second Wind). Weapon Mastery has no trigger. It is configured once (at level-up, or changed on a Long Rest) and then passively enables mastery use whenever the chosen weapons are wielded. An `"activation"` trace would be a lie.
+## Gap 1 (primary): Missing `grant_mastery_access` atom
 
-### 2. `ClassFeatureMechanicsHeader` requires `resource: UseCountResource` — Weapon Mastery has no use count
+### What the SRD says
+
+The feature confers the right to activate the mastery property of N weapon kinds the character is proficient with. Mastery properties are already modeled as separate `MasteryRecord` units (`mastery_sap`, `mastery_topple`, `mastery_cleave`, etc.). This feature is the entitlement that unlocks those records for chosen weapon kinds.
+
+### Why no existing atom covers it
+
+- `grant_proficiency` — grants attack/damage proficiency eligibility, not mastery-property activation rights. Mechanically distinct: you can be proficient with daggers without having Weapon Mastery.
+- `grant_feat` — feats are a different category; mastery records are `MasteryRecord`, not `FeatRecord`.
+- `grant_spell_access` — spells only.
+- No other EffectAtom variant references mastery records at all.
+
+### Proposed atom
 
 ```typescript
-type ClassFeatureMechanicsHeader = {
-  readonly activationCost: ClassFeatureActivationCost;
-  readonly resource: UseCountResource;       // ← mandatory
-  readonly resetCadence: RestResetCadence;
+| {
+    readonly kind: "grant_mastery_access";
+    // How many weapon kinds the bearer may activate mastery for
+    readonly count: number | ThresholdTiers<number>;
+    // Filter pool: "proficient" means any weapon the character has proficiency with
+    readonly pool: "proficient_weapons";
+  }
+```
+
+The `count` field accepts `ThresholdTiers<number>` to cover classes (like Barbarian) where the count grows at higher levels. For the Rogue, `count` is a fixed `2` through L20.
+
+---
+
+## Gap 2 (secondary): Rest-triggered reassignment of a passive grant parameter
+
+### What the SRD says
+
+> Whenever you finish a Long Rest, you can change the kinds of weapons you chose.
+
+The Rogue replaces ALL choices on long rest (unlike the Barbarian variant which replaces one). This is a rest-triggered reconfiguration of a build-time parameter, not a use-count refill. No existing `ResetCadence` or activation pattern models this: the current surface supports rest-triggered pool refills but has no concept of "on rest, replace the items selected from a build-time choice."
+
+### Proposed variant
+
+A `reconfigurable` flag or a dedicated variant on `grant_mastery_access`:
+
+```typescript
+readonly reconfigureOnRest?: {
+  readonly cadence: RestResetCadence;
+  readonly replaceCount: number | "all";
 };
 ```
 
-There is no "N uses per rest" here. The feature is permanently active for whichever weapon kinds are currently configured. Any `use_count` value would be fabricated.
+For Rogue: `cadence = { kind: "long_rest" }`, `replaceCount = "all"`.
+For Barbarian: `cadence = { kind: "long_rest" }`, `replaceCount = 1`.
 
-### 3. `ClassFeatureEffect` has no mastery-access variant
+This is a secondary gap — it is only meaningful once `grant_mastery_access` exists. If the atom lands without the reconfiguration field, the rest-reassignment mechanic would need a separate proposal pass.
 
-```typescript
-export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
-```
+---
 
-The effect of Weapon Mastery is "grant the ability to invoke mastery properties for the chosen weapon kinds." Neither `GrantExtraActionEffect` nor `HealHpEffect` represents this. The closest v4 atom is `grant_proficiency`, but that atom is not in `ClassFeatureEffect`.
+## Precedent
 
-### 4. The Long Rest interaction is reconfiguration, not use-count replenishment
-
-`RestResetCadence` describes how a use-count pool refills (`refill all`, `refill N`). Weapon Mastery's Long Rest interaction changes *which two weapon kinds* are covered — a structural reconfiguration, not a count refill. This is a new semantic not present in the current `RestResetCadence` union.
-
-## Proposed widenings
-
-### W1 — New `ClassFeatureMechanics` family: `"passive"` (or `"grant_access"`)
-
-A passive class feature family with no activation cost, no mandatory use count, and no rest-cadence refill. Header shape:
-
-```typescript
-type PassiveClassFeatureMechanicsHeader = {
-  readonly configurationType: "at_level_up" | "long_rest_reconfigurable";
-};
-
-export type ClassFeaturePassiveMechanics = PassiveClassFeatureMechanicsHeader & {
-  readonly family: "passive";
-  readonly effect: ClassFeatureEffect;   // widened below
-};
-```
-
-### W2 — New `ClassFeatureEffect` variant: `GrantMasteryAccessEffect`
-
-```typescript
-export type GrantMasteryAccessEffect = {
-  readonly kind: "grant_mastery_access";
-  readonly slotCount: number;          // 2 for rogue/barbarian, 3 for fighter
-  readonly restriction: "proficient_weapons_only";
-};
-```
-
-Maps to the v4 atom `grant_proficiency` (granting use of a game-mechanical property rather than a skill/save proficiency) or possibly a new `grant_mastery_access` atom if the distinction is meaningful.
-
-### W3 — Optional `resource` or `"no_resource"` variant in `ClassFeatureMechanicsHeader`
-
-If the `activation` family is retained and extended, `resource` should become optional or gain a `{ kind: "none" }` variant to accommodate passive features that happen to have side interactions like reconfiguration.
-
-### W4 — New `RestResetCadence` variant: `"long_rest_reconfiguration"` (or similar)
-
-```typescript
-| { readonly kind: "long_rest_reconfiguration" }
-```
-
-Semantically distinct from `long_rest` (which refills a use count): this variant marks that the feature's configuration (choice of weapon kinds, etc.) can be changed on a Long Rest, but no resource is consumed.
-
-## Cross-class note
-
-The same structural gap applies to every class that receives Weapon Mastery at L1:
-
-| Slug | Class | Slots |
-|---|---|---|
-| `barbarian_weapon_mastery_l1` | Barbarian | 2 |
-| `fighter_weapon_mastery_l1` | Fighter | 3 |
-| `paladin_weapon_mastery_l1` | Paladin | 2 |
-| `ranger_weapon_mastery_l1` | Ranger | 2 |
-| `rogue_weapon_mastery_l1` | Rogue | 2 |
-
-The `slotCount` field in W2 would differentiate Fighter (3) from the rest (2) without requiring separate types.
-
-## v4 atom coverage
-
-The proposed passive-grant subgraph would use:
-- `class_feature_root` → `passive` (new) → `grant_mastery_access` (new or maps to `grant_proficiency`)
-- Optional `choose` atom (v4 §2 Procedure) for the per-rest weapon-kind selection, also currently unrepresented on the surface
-
-No new v4 atoms are strictly required if `grant_proficiency` is accepted as the carrier — this is primarily a **surface-layer** structural gap (new family + new effect variant), not a new taxonomy atom.
+`barbarian_weapon_mastery_l1` was classified `atom_widening` for the same primary gap. The Rogue variant differs only in (a) pool scoping ("proficient" vs "Simple or Martial Melee") and (b) `replaceCount = "all"` vs `replaceCount = 1` on long rest. Both differences are parameters on the same missing atom, not new gaps.

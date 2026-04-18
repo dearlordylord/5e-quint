@@ -1,88 +1,108 @@
-# Proposal: Widening for Potion of Diminution
+# Proposal: Potion of Diminution — surface gaps
 
-## Outcome: structural_widening
+## Classification: `atom_widening`
 
-The Potion of Diminution cannot be encoded in the current surface. Three gaps must be closed.
+Two distinct gaps prevent honest encoding.
 
 ---
 
-## Gap 1 — Structural: No `MagicItemRecord` kind (primary blocker)
+## Gap 1 (primary): `modify_size` effect atom
 
-`UnitRecord` is currently `SpellRecord | ClassFeatureRecord | MasteryRecord`. Magic items are a distinct source-root in the v4 TAXONOMY (`magic_item_root`) but have no corresponding record type in the schema.
+### SRD text
 
-A `MagicItemRecord` needs at minimum:
+> "you gain the 'reduce' effect of the *Enlarge/Reduce* spell"
+
+The reduce effect (SRD 5.2.1 Spells/Descriptions-E-H#Enlarge/Reduce):
+
+> The target's size decreases by one size category ... The target also has Disadvantage on Strength checks and Strength saving throws. Its weapon attacks also deal 1d4 less damage.
+
+The **size category reduction** is the defining mechanic of the reduce effect. It affects:
+
+- reach / space occupied (rules-mechanical, not just narrative)
+- interactions with squeeze rules
+- some creature-specific features gated on size
+
+### Why existing atoms don't cover it
+
+- `transform_target` — full polymorph replacing the stat block. Reduce keeps the original stat block; only the size category shifts.
+- `apply_condition` — no size-change condition in the 15 SRD conditions.
+- `set_ability_score` / `modify_ability_score` — unrelated.
+- `modify_speed` — speed is unchanged by the reduce effect.
+
+### Proposed atom
 
 ```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly rarity: "common" | "uncommon" | "rare" | "very_rare" | "legendary" | "artifact";
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
+| {
+    readonly kind: "modify_size";
+    readonly delta: -1 | 1;  // -1 = decrease one category, +1 = increase one category
+  }
+```
+
+`delta: -1` covers the reduce direction (Enlarge/Reduce reduce, Potion of Diminution).  
+`delta: +1` covers the enlarge direction (Enlarge/Reduce enlarge, Giant Strength-like effects).
+
+Using an integer delta rather than a direct size enum keeps the atom composable and avoids encoding the size table into the atom itself.
+
+### What would encode cleanly without this atom
+
+The other two mechanics of the reduce effect are expressible today:
+
+```json
+{ "kind": "modify_roll_advantage", "mode": "disadvantage", "on": ["saving_throw"], "saveAbilityFilter": ["str"] }
+{ "kind": "modify_roll_advantage", "mode": "disadvantage", "on": ["ability_check"] }
+{ "kind": "modify_damage_numeric", "delta": { "kind": "fixed_dice", "dice": 1, "dieSize": 4, "sign": "-" } }
+```
+
+However, omitting `modify_size` produces a materially false trace — the trace would claim to encode the reduce effect while silently dropping its primary mechanic.
+
+---
+
+## Gap 2 (secondary): `DurationValue.amount` as a dice expression
+
+### SRD text
+
+> "for 1d4 hours (no Concentration required)"
+
+### Current type
+
+```typescript
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number;
+  ...
 };
 ```
 
-`MagicItemMechanics` needs at least one family. Potions are single-use consumables with an activation pattern distinct from class features (no class level, no rest-reset cadence, no use-count in the class-feature sense). A `consumable` family is the minimal addition.
+`amount` is a fixed `number`. "1d4 hours" is a random duration resolved at the moment of consumption — not a fixed value.
 
----
+### Proposed widening
 
-## Gap 2 — Surface: No rolled/random duration
-
-`DurationValue` is `{ unit: "round" | "minute" | "hour" | "day"; amount: number }` — a fixed integer. The potion's duration is **1d4 hours**, which requires a `DiceExpr` amount.
-
-A rolled duration variant is needed:
+Widen `DurationValue.amount` to `number | DiceExpr` (or introduce a parallel `DurationDiceValue` variant). The dice-amount variant would be interpreted as "roll at activation time; result is the actual duration."
 
 ```typescript
-export type DurationValue =
-  | { readonly unit: "round" | "minute" | "hour" | "day"; readonly amount: number }
-  | { readonly unit: "round" | "minute" | "hour" | "day"; readonly amount: DiceExpr };
+export type DurationValue = {
+  readonly unit: "round" | "minute" | "hour" | "day";
+  readonly amount: number | DiceExpr;
+  readonly upcastTiers?: ...;
+};
 ```
 
-Or equivalently, a discriminated union so the two shapes are unambiguous:
-
-```typescript
-export type DurationValue =
-  | { readonly kind: "fixed"; readonly unit: ...; readonly amount: number }
-  | { readonly kind: "rolled"; readonly unit: ...; readonly amount: DiceExpr };
-```
-
-This is a surface widening (new variant of `DurationValue`), not a new atom.
+This is surface widening on an existing type rather than a new atom.
 
 ---
 
-## Gap 3 — Atom: No `alter_size` effect
+## Encoding notes (for when gaps are filled)
 
-The "reduce" effect of Enlarge/Reduce simultaneously:
-1. Reduces the creature's size category by one
-2. Reduces weapon damage dice by one die size
-3. Applies disadvantage on Strength checks and Strength saving throws
+Once both gaps are closed, the Potion of Diminution would encode as:
 
-This is not expressible as any existing effect atom:
-- `apply_condition` — "reduced" is not an SRD condition
-- `modify_roll_advantage` — covers only the Strength-roll component
-- `scale_die_size` — is a scaling atom for spell/feature progression, not a runtime effect
+- `kind: "magic_item"`, no attunement
+- `rarity: "rare"`
+- `destruction: { kind: "permanent_on_empty" }`
+- `mechanics.family: "activation"`
+- `activationCost: { kind: "standard_action", action: "utilize" }`
+- `resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } }`
+- `resetCadence: { kind: "never" }`
+- `duration: { kind: "timed", value: { unit: "hour", amount: { dice: 1, dieSize: 4 } } }` *(after gap 2 filled)*
+- `phases: [ { kind: "direct", attachment: { kind: "self" }, effects: [ modify_size(-1), modify_roll_advantage(disadvantage/str saves), modify_roll_advantage(disadvantage/str checks), modify_damage_numeric(-1d4) ] } ]`
 
-A new `alter_size` effect atom is needed:
-
-```
-alter_size — applies a creature-size change (grow or shrink by N categories) 
-             as a runtime effect; may carry secondary riders per SRD (damage die 
-             reduction for shrink, damage die increase for grow)
-```
-
-This is one of the `v4` residue items recorded in `TAXONOMY_atoms_graph.md §12` as a known weak spot (`modify_ability_score` as a runtime effect is adjacent but distinct; `alter_size` is its own mechanical operation).
-
----
-
-## What a future `consumable` family encoding might look like
-
-Once all three gaps are closed, the mechanic maps cleanly:
-
-- Source: `magic_item_root`
-- Family: `consumable` (drink / apply)
-- Activation: drink (no action-economy cost listed → action to drink per SRD potion rules, or bonus action with specific feats — could model as `action` activation)
-- Resource: single use (no recharge)
-- Duration: `{ kind: "rolled", unit: "hour", amount: { dice: 1, dieSize: 4 } }`
-- Effect: `alter_size` (shrink, 1 category) + `modify_roll_advantage` (disadvantage on STR checks and STR saves)
-- Concentration: none (explicitly waived by item text)
-
-The "no Concentration required" rider is notable — it makes the item more valuable than the spell because it frees the caster's concentration slot. This is an item-level property modifier on the duration that the surface would want to track (`requiresConcentration: false` override vs. the base spell's `concentration` duration kind).
+The "no Concentration required" clause is already the default for activation-family items — no special encoding needed.

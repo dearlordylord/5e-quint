@@ -1,80 +1,63 @@
-# Proposal: Weapon Mastery (barbarian L1) — structural_widening
+# Proposal: Weapon Mastery (Barbarian L1)
 
-## Unit
+**Outcome**: `atom_widening`  
+**Unit**: `barbarian_weapon_mastery_l1` — `class_feature`, Barbarian L1  
+**SRD section**: Classes/Barbarian#Weapon Mastery
 
-- **Slug**: `barbarian_weapon_mastery_l1`
-- **Kind**: `class_feature` / Barbarian L1
-- **SRD section**: Classes/Barbarian#Level 1: Weapon Mastery
+---
 
-## Why it does not fit
+## What the feature does
 
-The current `ClassFeatureMechanics` type has exactly one family:
+The feature grants three things:
+
+1. **Mastery access (count-based)**: The barbarian may use the mastery property of N chosen weapon kinds (Simple or Martial Melee). N starts at 2 at L1 and grows per the Barbarian Features table.
+2. **Rest-reconfigurable choice**: After each Long Rest the barbarian may swap one of the chosen weapon kinds for a different one.
+3. **Level scaling**: The count N scales up at higher Barbarian levels (per a class table, not inlined in the source text).
+
+---
+
+## Why it does not fit the current surface
+
+### Gap 1 — Missing atom: `grant_mastery_access`
+
+The `passive` family (always-on grants) is structurally correct for this feature. The blocker is that no `EffectAtom` variant expresses "you may use the mastery property of weapons of kind X."
+
+- `grant_proficiency` covers attack/damage eligibility for weapon categories — not mastery-property eligibility. Proficiency and mastery are mechanically distinct in SRD 5.2.1.
+- Mastery properties are already modeled as `MasteryRecord` units in the system. This feature acts as a per-character "enabler" that licenses the barbarian to apply those records when they wield qualifying weapons.
+- No existing atom covers this link.
+
+**Proposed atom**:
+```typescript
+| {
+    readonly kind: "grant_mastery_access";
+    readonly count: number | ThresholdTiers<number>; // scales at higher levels
+    readonly weaponKind: "simple_melee" | "martial_melee" | "simple_or_martial_melee";
+    // 'choice' — player picks which N weapon kinds at level-up
+  }
+```
+
+The atom would be carried in `PassiveMechanics.grants`. The tracer would emit it as a `grant` procedure → `grant_mastery_access` effect, matching the existing passive pattern.
+
+### Gap 2 — Missing mechanism: rest-reconfigurable passive choice
+
+The Long Rest swap ("change one of those weapon choices") is a rest-triggered partial rebuild of a passive grant parameter. The current surface models rest-triggered resource refills (`ResetCadence`) and rest-triggered full resets, but has no mechanism for reassigning one element of a multi-valued passive grant while leaving the others intact.
+
+This is a new surface variant (not a new v4 atom in the taxonomy sense), but it would need to be expressed somewhere — possibly on `grant_mastery_access` itself:
 
 ```typescript
-export type ClassFeatureActivationMechanics = ClassFeatureMechanicsHeader & {
-  readonly family: "activation";
-  readonly effect: ClassFeatureEffect;
+readonly reconfigureOnRest?: {
+  readonly restKind: RestKind;   // "long"
+  readonly countReplaceable: number; // 1 — can swap this many per rest
 };
 ```
 
-The `ClassFeatureMechanicsHeader` mandates `activationCost`, `resource`, and `resetCadence`. Weapon Mastery has none of these: it is **always-on** from the moment it is gained at level 1. There is no action or bonus action to spend, no use-count to track, no rest to wait for before using it again. Encoding this as `activation` would require inventing fake values (e.g. `activationCost: { kind: "free" }`, `resource: { kind: "use_count", cap: { kind: "fixed", uses: 99 } }`) that have no basis in the SRD text. That is a knowingly false trace.
+### Gap 3 — Level-scaled count (dependent on Gap 1)
 
-Additionally, the current `ClassFeatureEffect` union (`GrantExtraActionEffect | HealHpEffect`) contains nothing that models "the bearer may use mastery properties of N chosen weapon types."
+The Barbarian Features table specifies that N grows at certain class levels (e.g., 2 → 3 → 4). `ThresholdTiers<number>` already exists in the surface and would express this correctly once `grant_mastery_access` exists.
 
-## Required widenings
+---
 
-### 1. New family: `passive_grant`
-
-A second `ClassFeatureMechanics` variant for features that are permanently granted at acquisition and require no activation:
-
-```typescript
-export type ClassFeaturePassiveGrantMechanics = {
-  readonly family: "passive_grant";
-  readonly effect: ClassFeatureEffect;  // extended — see below
-};
-```
-
-No `activationCost`, `resource`, or `resetCadence` in the header. The feature is simply always available.
-
-**Breadth**: The same family is needed for Fighter L1 Weapon Mastery, Paladin L1 Weapon Mastery, Ranger L1 Weapon Mastery, and Rogue L1 Weapon Mastery — all share the identical structural shape. This single addition unblocks at least five units.
-
-### 2. New effect variant: `grant_mastery_access`
-
-```typescript
-export type GrantMasteryAccessEffect = {
-  readonly kind: "grant_mastery_access";
-  // Number of weapon types accessible; scales with class level.
-  readonly count: UseCountCap | ThresholdTiers<number>;
-  // Restriction on eligible weapons (e.g. "Simple or Martial Melee").
-  readonly weaponCategory: WeaponCategoryRestriction;
-  // Optional: mechanism for replacing one choice per rest.
-  readonly swapCadence?: RestKind;
-};
-```
-
-`ClassFeatureEffect` becomes `GrantExtraActionEffect | HealHpEffect | GrantMasteryAccessEffect`.
-
-### 3. New surface type: `WeaponCategoryRestriction`
-
-The feature restricts access to "Simple or Martial Melee weapons." No existing type encodes weapon category or attack mode. A minimal closed type:
-
-```typescript
-export type WeaponKind = "simple" | "martial";
-export type WeaponAttackMode = "melee" | "ranged" | "either";
-
-export type WeaponCategoryRestriction = {
-  readonly kinds: ReadonlyArray<WeaponKind>;   // e.g. ["simple", "martial"]
-  readonly attackMode: WeaponAttackMode;        // "melee"
-};
-```
-
-This makes "Simple or Martial Melee only" unambiguous and unrepresentable as a mixed-provenance state.
-
-### 4. Count scaling via `ThresholdTiers<number>`
-
-The Barbarian Features table shows the mastery weapon count grows at specific levels. The existing `ThresholdTiers<number>` with `axis: "class"` can represent this without new surface types, but the `count` field in `GrantMasteryAccessEffect` needs to accept it.
-
-## Authoring sketch (not executable — for reviewer)
+## Encoding sketch (pending atom addition)
 
 ```dhall
 { kind = "class_feature"
@@ -82,37 +65,34 @@ The Barbarian Features table shows the mastery weapon count grows at specific le
 , name = "Weapon Mastery"
 , className = "barbarian"
 , acquiredAtLevel = 1
-, provenance = { kind = "srd-5.2.1", section = "Classes/Barbarian#Level 1: Weapon Mastery" }
+, provenance = { kind = "srd-5.2.1", section = "Classes/Barbarian#Weapon Mastery" }
 , description = "..."
 , mechanics =
-    { family = "passive_grant"
-    , effect =
-        { kind = "grant_mastery_access"
-        , count =
-            { kind = "threshold_tiers"
-            , axis = "class"
-            , base = 2
-            , tiers = [ ... per Barbarian Features table ... ]
-            }
-        , weaponCategory = { kinds = [ "simple", "martial" ], attackMode = "melee" }
-        , swapCadence = Some "long"
-        }
+    { family = "passive"
+    , grants =
+        [ { kind = "grant_mastery_access"   -- BLOCKED: atom not yet in surface
+          , count =
+              { kind = "threshold_tiers"
+              , axis = "class"
+              , base = 2
+              , tiers = [ ... ]   -- per Barbarian Features table
+              }
+          , weaponKind = "simple_or_martial_melee"
+          , reconfigureOnRest = { restKind = "long", countReplaceable = 1 }
+          }
+        ]
     }
 }
 ```
 
-## Tracer impact
+---
 
-The `class_feature_root → passive_grant` subgraph would follow a similar shape to `activation` but without the quota/resource/rest-window cluster:
+## Classification
 
-```
-class_feature_root --roots--> [no procedure node needed, or a 'grant' procedure atom]
-                   --grants--> grant_mastery_access
-                                 --modifies(?)--> scale_numeric_bonus [axis=class, for count]
-```
+| Gap | Classification |
+|-----|---------------|
+| Missing `grant_mastery_access` atom | `atom_widening` — the concept is absent from the v4 taxonomy |
+| Rest-reconfigurable choice mechanism | `surface_widening` — a new variant on an existing surface pattern |
+| Level-scaled count | No widening needed once the atom exists (`ThresholdTiers<number>` already present) |
 
-The v4 atom `grant_proficiency` is the closest existing atom; `grant_mastery_access` is a narrower sibling that specifically refers to weapon mastery property access (distinct from proficiency bonus on attack rolls).
-
-## Confidence
-
-**High.** The structural mismatch is unambiguous: `activation` is the wrong family. The same pattern recurs across four other classes; the proposed widening is minimal and reusable.
+Primary classification: **`atom_widening`** (the atom gap blocks encoding entirely).

@@ -1,79 +1,74 @@
-# Proposal: Cubic Gate — Structural Widening
+# Proposal: magic_item_cubic_gate
 
-## Outcome: `structural_widening`
+## Outcome: `atom_widening`
 
-The Cubic Gate cannot be encoded in the current surface. The primary blocker is that `magic_item` is not a variant of `UnitRecord` in `types.ts`.
+## What fits
 
----
+The outer frame maps cleanly to `ActivatedAbilityMechanics`:
 
-## Primary gap: Missing `MagicItemRecord` kind
-
-```typescript
-// current
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-
-// needed
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord | MagicItemRecord;
+```
+activationCost: { kind: "standard_action", action: "magic" }
+resource:       { kind: "charge_pool", cap: { kind: "fixed", uses: 3 } }
+resetCadence:   { kind: "dawn", regain: { kind: "fixed", expr: { dice: 1, dieSize: 3 } } }
 ```
 
-The v4 taxonomy already names `magic_item_root` as a source atom, and the survey corpus includes ~200+ magic items at tier 2. However, `types.ts` has never been extended with a `MagicItemRecord` shape. No honest encoding of any magic item is possible until this kind exists.
+The Plane Shift activation can be approximated as `transport_exile` with `destination: "different_plane"`, and the Gate/Plane Shift dichotomy (press once vs. press twice) maps onto a `CastTimeEffectModeChoice` with two options.
 
----
+## What is missing
 
-## Secondary gaps (once the kind exists)
+### 1. `open_planar_portal` atom (blocking — new atom required)
 
-### 1. Dice-valued daily recharge cadence
+**SRD text:** "Pressing one side of the cube, you cast *Gate*, opening a portal to the plane of existence keyed to that side."
 
-**Rule text:** "The cube has 3 charges and regains 1d3 expended charges daily at dawn."
+The Gate spell creates a **bidirectional portal** — a circular passage (20 ft. diameter per SRD) between the current plane and the destination plane. Creatures on either side can move through it. The portal persists while the caster concentrates on it.
 
-The existing `RestResetCadence` covers `short_or_long_rest`, `long_rest`, `short_rest`, and `partial_short_full_long`. It does not cover:
-- Daily-at-dawn recharge (a time-based cadence, not rest-based)
-- Variable refill amount (1d3, not a fixed number)
+`transport_exile` is the closest existing atom, but it sends one or more targets to another plane one-way. There is no "both sides can cross" semantics, no spatial presence (portal occupies an area in space), and no persistence model beyond the basic `concentrate` lifecycle.
 
-This is a `surface_widening`: a new variant of `RestResetCadence` (or a new recharge cadence type for items):
+A new atom is needed, tentatively:
+
+```typescript
+{
+  readonly kind: "open_planar_portal";
+  readonly destination: ExileDestination | "face_keyed";   // see widening 2
+  readonly diameterFeet: number;                            // 20 for Gate
+}
+```
+
+This atom would emit a `block_travel`-category node in the tracer (a planar passage is bidirectional travel enablement), likely with a `persist`/`concentrate` lifecycle, and an `area` attachment of the portal's diameter.
+
+### 2. `GrantedSpellTargetRestriction.face_keyed_plane` (secondary — surface widening)
+
+**SRD text:** "The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM."
+
+The destination of both Gate and Plane Shift is not freely chosen from all planes — it is constrained to one of the six DM-assigned face options selected at activation time by which physical face the bearer presses.
+
+Existing `GrantedSpellTargetRestriction` variants (`self_only`, `visible_target_within_feet`) do not cover this. A new variant is needed:
 
 ```typescript
 | {
-    readonly kind: "daily_at_dawn";
-    readonly refill: DiceAmount;  // supports fixed or dice-valued refill
+    readonly kind: "face_keyed_plane";
+    readonly faceCount: number;           // 6 for this item
+    readonly planeAssignment: "dm_assigned";
   }
 ```
 
-### 2. Spell-by-reference casting via charge expenditure
+This is secondary to the portal-atom blocker: even if we encoded via `grant_spell_access`, the plane constraint has no home in the current surface.
 
-**Rule text:** "As a Magic action, you can expend 1 of the cube's charges to cast one of the following spells using the cube."
+## What could be encoded today (partial)
 
-The item does not originate a spell — it casts a fully-specified named spell (Gate, Plane Shift) by reference. The v4 inventory has `stored_spell` (attachment) and `grant_spell_access` (effect), but neither is wired into a surface mechanics shape. A magic item mechanics family needs a way to express:
+Plane Shift could be encoded without the plane constraint:
 
-```
-activate (Magic action) → consumes charge → casts named_spell [gate | plane_shift]
-```
-
-This is a `surface_widening`: a new `CastNamedSpellEffect` type (or a new `MagicItemEffect` variant) pointing to a spell by ID.
-
-### 3. Plane-keyed selection (partial DM-agenda)
-
-**Rule text:** "The other sides are linked to planes determined by the GM."
-
-Which plane each face connects to is DM-determined at item creation. This is caller-owned metadata. However, the mechanical consequence — "pressing a side opens a portal to *that* plane" — is deterministic given the assignment. The plane identity itself is DM-agenda; the transport effect is core mechanics.
-
-This is analogous to Alarm's audible signal (caller-owned notification surface) combined with a deterministic release trigger. The item mechanic needs a way to say "the destination is the plane keyed to this face" without enumerating all possible planes in the type. A closed grammar might be:
-
-```typescript
-type PlaneTarget = { readonly kind: "keyed_face"; readonly sideIndex: 0 | 1 | 2 | 3 | 4 | 5 }
+```json
+{
+  "kind": "transport_exile",
+  "destination": "different_plane"
+}
 ```
 
-where the actual plane identity is resolved from item state at runtime.
+This is mechanically honest for "transport targets to another plane" but omits the face-keying constraint. A `surface_widening` note could accompany it.
 
----
+Gate cannot be encoded without the new atom and is **not** omittable — it is half the item's active payload.
 
-## Summary of proposed widenings
+## Classification rationale
 
-| Gap | Kind | Classification |
-|-----|------|----------------|
-| `MagicItemRecord` top-level kind | `new_subgraph` | `structural_widening` |
-| Daily-at-dawn dice recharge cadence | `new_variant` of recharge | `surface_widening` |
-| Cast named spell via charge | `new_variant` of item effect | `surface_widening` |
-| Plane-keyed face selection | `new_variant` of target/attachment | `surface_widening` (partially DM-agenda) |
-
-The structural gap must be resolved first; the surface widenings are internal to the magic item mechanics family once the kind exists.
+`atom_widening` rather than `surface_widening`: the missing "bidirectional planar portal" concept is not present in v4 taxonomy at all. `transport_exile` covers one-way exile to another plane; the portal shape is a distinct mechanical primitive (traversable from both sides, area-occupying, cancellable by dropping concentration) with no v4 equivalent. The face-keying restriction is a secondary `surface_widening` on top.

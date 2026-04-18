@@ -1,91 +1,139 @@
 # Proposal: Boon of Combat Prowess
 
-## Outcome: `structural_widening`
+**Outcome:** `atom_widening`
 
-The unit cannot be encoded. Two independent blockers prevent honest representation.
+## Unit
+
+Epic Boon Feat (Level 19+). Two mechanics:
+1. **Ability Score Increase** — increase one ability score of your choice by 1, max 30.
+2. **Peerless Aim** — when you miss with an attack roll, you can hit instead (once per turn reset at turn start).
 
 ---
 
-## Blocker 1 — Missing `FeatRecord` kind (structural)
+## Gap 1 — `convert_miss_to_hit` (atom_widening, blocking)
 
-`UnitRecord` is currently:
+**SRD text:** "When you miss with an attack roll, you can hit instead."
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+Peerless Aim is a retroactive roll-outcome override: after the attack roll resolves as a miss, the bearer may declare it a hit instead. This is distinct from all existing EffectAtoms:
+
+- `modify_roll_numeric` — applies a numeric delta *before* resolution (e.g. +1d4 to the roll). Cannot retroactively change a miss to a hit.
+- `modify_roll_advantage` — grants advantage/disadvantage at roll time. Not retroactive.
+- `modify_crit_range` — lowers the critical-hit threshold. Not a miss-to-hit conversion.
+
+The concept is a **post-resolution outcome substitute**: after the d20 resolves as a miss, the outcome is overridden to "hit." The v4 taxonomy has no atom for this.
+
+**Proposed atom:**
+
+```
+convert_miss_to_hit
+  category: effect
+  semantics: after the bearer's attack roll resolves as a miss, override
+             the outcome to a hit. The attack hits for full weapon damage
+             (no additional effects from the conversion itself).
 ```
 
-There is no `FeatRecord`. The TAXONOMY defines `feat_root` as a source atom, but the surface has no corresponding record kind, mechanics header, or mechanics family. A feat cannot be expressed as any of the three existing kinds without lying about what it is.
+This atom would be the `effect` payload of a triggered-reaction-style activation whose trigger is `caster_misses_attack_roll` (see Gap 2).
 
-### Minimum widening required
+---
 
-A `FeatRecord` needs at minimum:
+## Gap 2 — `ReactionTrigger.caster_misses_attack_roll` (surface_widening)
+
+**SRD text:** "When you miss with an attack roll…"
+
+The bearer's reaction window opens on their own outgoing attack missing. `ReactionTrigger` currently models:
+
+- `hit_by_attack_roll` — an *incoming* attack hits the bearer.
+- `targeted_by_named_spell` — the bearer is targeted by a specific spell.
+- `creature_casts_spell` — a creature within range casts a spell.
+- `spell_save_outcome` — the bearer finishes a saving throw against a spell.
+
+None covers "the bearer just made an attack roll that missed." A new variant is needed:
 
 ```typescript
-export type FeatRecord = UnitMetadata & {
-  readonly kind: "feat";
-  readonly mechanics: FeatMechanics;
+| { readonly kind: "caster_misses_attack_roll" }
+```
+
+---
+
+## Gap 3 — `modify_ability_score.ability: Ability | CastTimeChoice<Ability>` (surface_widening)
+
+**SRD text:** "Increase one ability score of your choice by 1, to a maximum of 30."
+
+`modify_ability_score` currently takes `ability: Ability` — a fixed ability set at authoring time. This feat lets the player pick any of the six abilities at feat-acquisition (build) time.
+
+`CastTimeChoice<T>` is already defined in the surface as a build-time or cast-time selection. The fix is widening the `ability` field:
+
+```typescript
+// before
+readonly ability: Ability;
+
+// after
+readonly ability: Ability | CastTimeChoice<Ability>;
+```
+
+This same widening would apply to any future feat or feature that grants "+1 to a stat of your choice."
+
+---
+
+## Gap 4 — `CompositeFeatMechanics` (surface_widening)
+
+The feat contains both a passive grant (ASI) and an activated ability (Peerless Aim). `FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics` does not admit composite mechanics.
+
+`CompositeClassFeatureMechanics` already exists for class features with the same structural need:
+
+```typescript
+export type CompositeClassFeatureMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<ClassFeatureComponentMechanics>;
 };
 ```
 
-`FeatMechanics` must cover at least:
-- An optional ASI benefit (shared by most feats).
-- An optional active rider (Peerless Aim shape: on-miss trigger → once-per-turn gated effect).
-- Possibly a passive modifier (Alert-style initiative bonus, etc.).
+The parallel for feats would be:
 
-The family shape is not settled — several feats have multiple orthogonal benefits (ASI + active rider + passive modifier). Whether `FeatMechanics` should be a union of single-benefit families or a compound struct with optional fields is an open design question.
+```typescript
+export type CompositeFeatMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<FeatComponentMechanics>; // PassiveMechanics | ActivatedAbilityMechanics
+};
+
+export type FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics | CompositeFeatMechanics;
+```
 
 ---
 
-## Blocker 2 — Missing `force_hit` atom (atom widening)
+## Encoding once gaps are resolved
 
-**Peerless Aim:** "When you miss with an attack roll, you can hit instead."
-
-This mechanic triggers on an `on_miss_window` (the miss outcome of an attack roll) and converts the outcome from miss to hit. The conversion does not reroll and does not add a numeric bonus — it overrides the resolved outcome.
-
-No existing v4 effect atom covers this:
-
-| Atom | What it does | Why it doesn't fit |
-|---|---|---|
-| `modify_roll_numeric` | Adds die/flat to the roll value | Operates on roll value pre-resolution, not on miss outcome |
-| `modify_roll_reroll` | Rerolls keeping higher/lower | Result is still random; this is deterministic |
-| `modify_roll_substitute` | Replaces roll with a fixed value | Substitutes the *number rolled*, not the *hit/miss outcome* |
-| `modify_roll_advantage` | Grants adv/disadv on the roll | Pre-resolution; adds no certainty of hitting |
-
-A new atom is needed — tentatively `force_hit` or a new variant of `modify_roll_outcome`:
+After all four gaps are addressed, the encoding would be:
 
 ```
-force_hit — On an on_miss_window, override the attack resolution outcome to hit.
-             Attaches to the primary target. Gated by a use_count (once per turn).
+FeatRecord {
+  kind: "feat",
+  category: "epic_boon",
+  mechanics: {
+    family: "composite",
+    parts: [
+      // Part 1: ASI
+      {
+        family: "passive",
+        grants: [{
+          kind: "modify_ability_score",
+          ability: { kind: "choice", label: "Ability Score", options: ["str","dex","con","int","wis","cha"] },
+          delta: 1,
+          maximum: 30
+        }]
+      },
+      // Part 2: Peerless Aim
+      {
+        family: "activation",
+        activationCost: { kind: "reaction", trigger: { kind: "caster_misses_attack_roll" } },
+        resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } },
+        resetCadence: ??? // "start of your next turn" — not a rest reset, not a dawn reset
+                         // needs a "turn_start" reset cadence (another gap, lesser priority)
+        phases: [{ kind: "direct", attachment: { kind: "self" }, effects: [{ kind: "convert_miss_to_hit" }] }]
+      }
+    ]
+  }
+}
 ```
 
-**Subgraph shape (if atom existed):**
-
-```
-feat_root → on_miss_window → [gated by use_count once-per-turn] → force_hit → target
-```
-
-The `on_miss_window` atom already exists. The `use_count` with `turn_start_window` reset already exists (used by mastery `once_per_turn`). Only `force_hit` is new.
-
-**Comparable pressure:** Rogue L20 Stroke of Luck ("If you miss with an attack roll, you can turn the miss into a hit") exercises exactly the same mechanic. Both need the same atom.
-
----
-
-## Blocker 3 — Deferred `modify_ability_score` atom (atom widening, known)
-
-**Ability Score Increase:** "Increase one ability score of your choice by 1, to a maximum of 30."
-
-TAXONOMY §12 already records `modify_ability_score` as a known deferred atom:
-
-> `modify_ability_score` as a runtime effect versus as pre-runtime character state — currently treated as out-of-scope.
-
-This is a pre-existing known gap, not a new finding. Every feat with an ASI benefit will hit the same wall. Resolving it requires a policy decision on whether ability score modification is a core-mechanics atom or character-progression metadata.
-
----
-
-## Summary of proposed widenings
-
-| Kind | Name | Urgency |
-|---|---|---|
-| `new_subgraph` | `FeatRecord` + `FeatMechanics` family | Blocks all feat encoding |
-| `new_atom` | `force_hit` (or `modify_roll_outcome: miss_to_hit`) | Blocks Peerless Aim, Stroke of Luck |
-| `new_atom` | `modify_ability_score` | Blocks all ASI-bearing feats (known deferred) |
+Note a fifth minor gap: the reset cadence for Peerless Aim ("until the start of your next turn") is per-turn, not rest-based or dawn-based. The existing `usageLimit: { kind: "once_per_turn" }` on the `ActivatedAbilityMechanics` header covers this exactly — the feature is usable once per turn and the fence resets at turn start. So this gap may already be covered by the `usageLimit` field combined with an appropriate resource cap.

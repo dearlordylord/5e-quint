@@ -1,28 +1,28 @@
 {
   "unit_slug": "sorcerer_elemental_affinity_l6",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_grant (class feature family)",
-      "justification": "Elemental Affinity's resistance component is a permanent passive trait — no activation, no use count, no reset cadence. The only existing class feature family ('activation') mandates a UseCountResource and RestResetCadence, making it structurally incompatible with permanent passives. A 'passive_grant' family (or equivalent) is required to model features that are always-on from the level they are acquired.",
-      "evidence": "You have Resistance to that damage type"
-    },
-    {
       "kind": "new_variant",
-      "name": "grant_resistance (ClassFeatureEffect variant)",
-      "justification": "The v4 atom 'grant_resistance' exists, but there is no ClassFeatureEffect variant that carries it. ClassFeatureEffect currently covers only 'grant_extra_action' and 'heal_hp'. Encoding resistance requires a new variant such as { kind: 'grant_resistance'; damageType: DamageType } in ClassFeatureEffect.",
-      "evidence": "You have Resistance to that damage type"
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_spell_damage_with_ability_mod (ClassFeatureEffect or OngoingOperation variant)",
-      "justification": "The damage bonus is a conditional rider: when the sorcerer casts a spell dealing the chosen damage type, they may add their Charisma modifier to one damage roll. This is neither a fixed DiceDelta (DiceDelta has dice count + die size, not an ability score reference) nor any existing ClassFeatureEffect. A new variant is needed that expresses 'add ability_modifier(CHA) to one damage roll of spells matching damageType', conditioned on a spell_cast_window. The existing modify_roll_numeric atom uses DiceDelta which cannot reference an ability score.",
+      "name": "modify_damage_numeric.damageTypeFilter",
+      "justification": "The CHA-modifier rider only applies when the spell deals the chosen damage type. modify_damage_numeric has weaponFilter to scope by weapon, but no analogous damageTypeFilter to scope by damage type. Without it the atom would apply to ALL damage rolls, which is incorrect.",
       "evidence": "when you cast a spell that deals damage of that type, you can add your Charisma modifier to one damage roll of that spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_damage_numeric.count",
+      "justification": "The rider applies to exactly one damage roll per qualifying spell, not to all damage rolls while the effect persists. modify_roll_numeric already has a count field for this purpose; modify_damage_numeric needs the same field.",
+      "evidence": "you can add your Charisma modifier to one damage roll of that spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "shared_build_time_choice binding",
+      "justification": "Both the resistance grant and the damage modifier must reference the same player-chosen damage type (selected once when the feature is acquired). The surface currently has no mechanism to express that two atoms share a single CastTimeChoice selection — two independent CastTimeChoice<DamageType> fields in two separate atom instances would imply two independent picks.",
+      "evidence": "Choose one of those types: Acid, Cold, Fire, Lightning, or Poison. You have Resistance to that damage type, and when you cast a spell that deals damage of that type..."
     }
   ],
   "confidence": "high",
-  "notes": "The feature does not fit the 'activation' family at all — neither the resistance (permanent passive) nor the spell damage bonus (auto-trigger on spell cast, no use count) can be coerced into a UseCountResource + resetCadence shape without producing a deliberately false trace. The closest analog in the existing schema would be a species trait (permanent passive grant), but no species_trait family is modeled for class features either. Three widenings are needed: a new class-feature mechanics family for passive grants, a grant_resistance ClassFeatureEffect variant, and a new surface shape for ability-score-referenced conditional spell damage bonuses."
+  "notes": "Part 1 (grant_resistance with CastTimeChoice<DamageType> over {acid,cold,fire,lightning,poison}) fits the current surface cleanly. Part 2 (add CHA mod to one damage roll of a qualifying spell) cannot be encoded honestly: modify_damage_numeric needs a damageTypeFilter and a count field analogous to modify_roll_numeric. Additionally, both parts must be bound to a single shared build-time choice, which the surface cannot currently express. No Dhall or trace file written."
 }

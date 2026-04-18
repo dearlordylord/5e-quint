@@ -1,0 +1,67 @@
+{
+  "description": "The medallion has 5 charges. While wearing it, you can expend 1 charge to cast Detect Thoughts (save DC 13) from it. The medallion regains 1d4 expended charges daily at dawn.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_medallion_of_thoughts",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "dcOverride": {
+              "dc": 13,
+              "kind": "fixed"
+            },
+            "kind": "grant_spell_access",
+            "mode": {
+              "baseCharges": 1,
+              "kind": "charge_cast",
+              "maxLevel": 2,
+              "minLevel": 2,
+              "perLevelCharges": 0
+            },
+            "spellId": "detect_thoughts"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "dawn",
+      "regain": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 4
+        },
+        "kind": "fixed"
+      }
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 5
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Medallion of Thoughts",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Medallion of Thoughts"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}

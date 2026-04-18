@@ -1,28 +1,16 @@
 {
   "unit_slug": "monk_evasion_l7",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature family",
-      "justification": "Evasion is a permanent, always-on modifier with no activation cost, no use-count resource, and no reset cadence. The only ClassFeatureMechanics family is 'activation', which requires all three. Encoding Evasion as 'activation' with kind=free cost + fixed 0 uses would falsify the feature's structure — it fires automatically on every matching incoming save_gate, not on player choice.",
-      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed..."
-    },
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureEffect: modify_save_outcome",
-      "justification": "Evasion replaces the standard save_gate outcome branches (success=half, fail=full) with (success=0, fail=half) for a specific class of incoming effects (Dex half-damage saves targeting the feature owner). No existing ClassFeatureEffect variant — grant_extra_action or heal_hp — covers this shape. The v4 atom 'modify_roll_substitute' addresses die roll replacement, not outcome-branch remapping on an external save_gate.",
-      "evidence": "you instead take no damage if you succeed on the saving throw and only half damage if you fail"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Feature suppression condition gate (Incapacitated)",
-      "justification": "The feature explicitly does not apply when the Incapacitated condition is present. This is a passive suppression predicate with no surface representation in the current ClassFeatureMechanics schema. The v4 atom 'suppress' exists but there is no surface type for attaching a condition-predicated suppression gate to a passive class feature.",
-      "evidence": "You don't benefit from this feature if you have the Incapacitated condition."
+      "kind": "new_atom",
+      "name": "evasion_save_outcome",
+      "justification": "Evasion changes the success/failure outcome semantics for a specific class of effects (Dex save, succeed = half damage): success → 0 damage, failure → half damage. No existing atom modifies save outcome semantics. modify_roll_advantage changes the roll; grant_resistance halves damage broadly; grant_damage_immunity is type-scoped. None of these express 'when you succeed a Dex save that would normally deal half damage, you take 0 instead; when you fail, you take half.'",
+      "evidence": "When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail."
     }
   ],
   "confidence": "high",
-  "notes": "Primary gap is the missing 'passive' class feature family. ClassFeatureMechanics only has 'activation', which models player-triggered features with use-count resources. Evasion is always-on state that intercepts incoming save_gates — the correct family shape is closer to a persistent passive modifier. A secondary gap is the save-outcome-override effect shape: no ClassFeatureEffect variant or v4 atom precisely models 'when a matching incoming save_gate fires against this creature, upgrade its outcome branches'. The Incapacitated suppression gate is a tertiary gap common to many passive features."
+  "notes": "The passive family fits well: family=passive, suppressedBy=[{kind: condition_active, conditions: [incapacitated]}]. The suppressor mechanism is already in the surface (see Danger Sense). What's missing is an atom for the save-outcome modification. The feature is not about rolling better (not modify_roll_advantage), not about a flat damage type reduction (not grant_resistance), and not about blanket immunity (not grant_damage_immunity). It specifically upgrades the outcome tier of Dex-save-for-half-damage effects: the normal (succeed=half, fail=full) table becomes (succeed=0, fail=half). This is a new class of atom that does not exist in v4."
 }

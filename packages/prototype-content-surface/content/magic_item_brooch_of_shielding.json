@@ -1,0 +1,29 @@
+{
+  "description": "While wearing this brooch, you have Resistance to Force damage, and you have Immunity to damage from the Magic Missile spell.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_brooch_of_shielding",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "damageType": "force",
+        "kind": "grant_resistance"
+      },
+      {
+        "kind": "negate_named_effect",
+        "scope": "damage_only",
+        "spellId": "magic_missile"
+      }
+    ]
+  },
+  "name": "Brooch of Shielding",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Brooch of Shielding"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": true
+}

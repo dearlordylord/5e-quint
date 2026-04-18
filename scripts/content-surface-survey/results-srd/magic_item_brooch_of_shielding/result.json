@@ -1,28 +1,19 @@
 {
   "unit_slug": "magic_item_brooch_of_shielding",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord + passive_grant family",
-      "justification": "No MagicItemRecord exists in UnitRecord. The surface union only has SpellRecord | ClassFeatureRecord | MasteryRecord. Magic items need a top-level record kind ('magic_item') and a mechanics family for always-on passive effects ('passive_grant' or equivalent). The brooch grants two permanent effects while worn — no activation, no trigger, no casting time.",
-      "evidence": "While wearing this brooch, you have Resistance to Force damage, and you have Immunity to damage from the Magic Missile spell."
-    },
-    {
-      "kind": "new_variant",
-      "name": "attunement surface field on MagicItemRecord",
-      "justification": "Items requiring attunement need a field (or attunement_slot resource reference) on the record. The v4 taxonomy has 'attunement_slot' as a resource atom, but there is no surface field or mechanics family to express it.",
-      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_immunity effect variant (named-source immunity)",
-      "justification": "The brooch grants Immunity to damage specifically from Magic Missile — not general Force immunity and not a reaction-triggered negate. The existing negate_named_effect atom lives inside TriggeredReactionMechanics.effects and requires a reaction cast. A passive named-source immunity is mechanically distinct and needs a new effect variant or a surface path to negate_named_effect from a passive_grant context.",
-      "evidence": "you have Immunity to damage from the Magic Missile spell"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_resistance",
+    "magic_item_root",
+    "negate_named_effect"
   ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The two atomic effects (grant_resistance:force, negate_named_effect:magic_missile/damage_only) both have v4 atom analogs. The gap is entirely structural: no MagicItemRecord in UnitRecord, no passive_grant mechanics family, and no attunement surface field. Once MagicItemRecord + passive_grant are added, this unit should encode cleanly."
+  "notes": "Both mechanics map directly to existing atoms: grant_resistance(force) for Force damage resistance, negate_named_effect(magic_missile, damage_only) for Magic Missile damage immunity. The passive family + attunement gate covers the while-wearing condition. No widening needed."
 }

@@ -1,40 +1,34 @@
 {
   "unit_slug": "monk_disciplined_survivor_l14",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature",
-      "justification": "The first bullet of Disciplined Survivor is a permanent passive grant (proficiency in all saving throws). It has no activation cost, no use count, and no reset cadence. The existing ClassFeatureMechanics only has `activation` family, which mandates activationCost + resource + resetCadence. A passive always-on feature cannot be represented in the activation family without lying about those fields.",
+      "kind": "new_variant",
+      "name": "ProficiencyGrantSubject.saving_throw",
+      "justification": "The feature grants proficiency in all saving throws. ProficiencyGrantSubject covers skill / weapon_category / armor_category but has no saving_throw variant. This is the canonical D&D mechanic of adding PB to a save; it needs a dedicated subject kind.",
       "evidence": "Your physical and mental discipline grant you proficiency in all saving throws."
     },
     {
+      "kind": "new_atom",
+      "name": "modify_roll_reroll",
+      "justification": "The feature lets the monk reroll a failed saving throw and keep the new result. modify_roll_reroll exists in the v4 taxonomy (Section 9, effect atoms) but is absent from types.ts. No existing atom covers forced rerolls of an already-resolved d20 test.",
+      "evidence": "whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll"
+    },
+    {
       "kind": "new_variant",
-      "name": "grant_proficiency (ClassFeatureEffect variant)",
-      "justification": "The passive saving throw proficiency grant requires a `grant_proficiency` effect. ClassFeatureEffect is currently limited to `grant_extra_action | heal_hp`. The v4 taxonomy includes `grant_proficiency` as an effect atom (§9), but it is not in the surface type's ClassFeatureEffect union.",
-      "evidence": "Your physical and mental discipline grant you proficiency in all saving throws."
+      "name": "ReactionTrigger.any_failed_saving_throw",
+      "justification": "The activation trigger is 'whenever you make a saving throw and fail'. The existing spell_save_outcome trigger is scoped to saving throws caused by spells. A general any_failed_saving_throw variant (not spell-scoped) is needed for class feature reactions.",
+      "evidence": "whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it"
     },
     {
       "kind": "new_subgraph",
-      "name": "triggered_optional_class_feature",
-      "justification": "The reroll mechanic is a trigger-gated optional ability: it fires on a specific event (failed saving throw = post_roll_window on failure), the player chooses whether to invoke it (optional), and it consumes a Focus Point. This is not a player-initiated `activation` — the trigger window opens externally, not from a player decision to use the feature. No existing ClassFeatureMechanics family covers this shape. The closest analog in the spell surface is `triggered_reaction`, but there is no class-feature equivalent.",
-      "evidence": "whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll."
-    },
-    {
-      "kind": "new_variant",
-      "name": "focus_point (ClassFeatureActivationCost variant)",
-      "justification": "The reroll costs 1 Focus Point — a monk-specific resource distinct from action economy (not `free`, not `bonus_action`). ClassFeatureActivationCost has no cost variant for expending a class-specific point resource. This is the same pattern as Stunning Strike, Patient Defense, etc. A `focus_point` (or generic `class_point`) cost variant is needed.",
+      "name": "shared_class_resource_reference",
+      "justification": "Focus Points are a Monk class-level shared pool established at Level 2 (Monk Discipline Points / Focus Points). Multiple Monk features draw from this single pool. The current surface models each activated feature as owning its own resource; there is no mechanism to express 'expend from the character's existing Focus Point pool' without declaring a new independent resource per feature, which would be dishonest.",
       "evidence": "you can expend 1 Focus Point to reroll it"
-    },
-    {
-      "kind": "new_variant",
-      "name": "modify_roll_reroll (ClassFeatureEffect variant)",
-      "justification": "The reroll effect is `modify_roll_reroll` from v4 taxonomy §9, but this atom is not represented in ClassFeatureEffect (only `grant_extra_action | heal_hp`). The effect forces a reroll of a specific roll already made, with the constraint `must use new roll`.",
-      "evidence": "you can expend 1 Focus Point to reroll it, and you must use the new roll."
     }
   ],
   "confidence": "high",
-  "notes": "Both core mechanics are unrepresentable: (1) the passive proficiency grant has no passive class feature family and no grant_proficiency effect variant; (2) the triggered save reroll has no triggered class feature family, no Focus Point cost type, and no modify_roll_reroll effect variant. The closest existing features are Fighter Indomitable (save reroll, long-rest reset, no trigger gate) and the spell triggered_reaction family — but Indomitable uses the activation family at player initiative, and the spell triggered_reaction is not available to class features. All five proposed widenings are necessary; none is redundant."
+  "notes": "The unit naturally decomposes into a CompositeClassFeatureMechanics with two parts: (1) a PassiveMechanics granting saving throw proficiency in all six abilities, and (2) an ActivatedAbilityMechanics triggered by any failed save that spends a Focus Point to reroll. Both parts hit surface gaps. Gap 1 (saving throw proficiency subject) blocks the passive part. Gaps 2-4 block the activation part. The composite family itself exists and would be the right shape. The Focus Point shared-resource issue is the deepest gap — it exposes that the surface currently cannot express 'reference this character's existing class resource pool' without per-feature resource duplication. No dhall/json/trace authored: encoding would require lying about at least three surface shapes."
 }

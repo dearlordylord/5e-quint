@@ -1,34 +1,46 @@
 {
   "unit_slug": "monk_martial_arts_l1",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature family",
-      "justification": "Martial Arts grants three always-on benefits that are active while the monk meets preconditions (unarmored, wielding only monk weapons, no shield). No existing ClassFeatureMechanics family handles condition-gated passive features without a use_count resource or reset cadence. The 'activation' family mandates UseCountResource and RestResetCadence, neither of which applies here.",
-      "evidence": "You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
-    },
-    {
       "kind": "new_atom",
       "name": "grant_bonus_action_attack",
-      "justification": "Bonus Unarmed Strike grants the option to make a specific attack (Unarmed Strike) as a Bonus Action. grant_extra_action grants a full extra action (which may exclude Magic); it does not model a scoped bonus-action attack. A distinct effect is needed for 'you may make attack X as a Bonus Action'.",
-      "evidence": "You can make an Unarmed Strike as a Bonus Action."
+      "justification": "Bonus Unarmed Strike grants the ability to make an Unarmed Strike as a Bonus Action — not an extra standard action. grant_extra_action covers extra standard actions and its restriction field excludes action kinds, but there is no atom for 'grant a bonus-action-constrained attack of a specific strike type'.",
+      "evidence": "Bonus Unarmed Strike. You can make an Unarmed Strike as a Bonus Action."
     },
     {
       "kind": "new_atom",
-      "name": "replace_damage_die",
-      "justification": "Martial Arts Die replaces the normal damage die of Unarmed Strikes and Monk weapons with the Martial Arts die (1d6, scaling via scale_die_size to d12 at Monk L17). modify_roll_substitute exists in v4 taxonomy but covers roll-result substitution (reroll/replace with a die result), not die-expression replacement at the weapon level. ClassFeatureEffect has no slot for this, and the scaling (scale_die_size) has no path to ClassFeatureEffect.",
-      "evidence": "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels."
+      "name": "set_minimum_damage_die",
+      "justification": "Martial Arts Die replaces the normal damage die of Unarmed Strikes and Monk weapons with a specific die (1d6 at L1, scaling by monk level). No existing atom substitutes the damage die of an attack rather than adding a numeric bonus or changing a scaling tier. The v4 scale_die_size atom scales an existing die but cannot establish a replacement base die for a specific strike type.",
+      "evidence": "Martial Arts Die. You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels."
     },
     {
       "kind": "new_variant",
-      "name": "ability_score_substitution on attack/damage rolls",
-      "justification": "Dexterous Attacks permits using DEX in place of STR for attack and damage rolls of Unarmed Strikes and Monk weapons, and for the save DC of Grapple/Shove. This is a conditional ability-score substitution on rolls, not a numeric bonus (modify_roll_numeric) and not a die-size change. modify_ability_score is explicitly flagged as out-of-scope in the v4 taxonomy residue section, leaving no honest atom for this effect.",
-      "evidence": "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons."
+      "name": "modify_roll_substitute in types.ts (ability substitution variant)",
+      "justification": "modify_roll_substitute is listed in the v4 taxonomy (TAXONOMY_atoms_graph.md §9) but is absent from types.ts. Dexterous Attacks is a canonical ability-substitution rider: use Dex instead of Str for attack and damage rolls of Unarmed Strikes and Monk weapons. Adding this v4 atom to the surface would cover it.",
+      "evidence": "Dexterous Attacks. You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate: unarmed_or_monk_weapons_only",
+      "justification": "The gate requires the monk to be unarmed OR wielding only Monk weapons (Simple or Light Martial Melee). No existing EquipmentPredicate variant expresses this disjunction. The wielding_weapon predicate covers a single weapon-kind and has no 'unarmed' mode.",
+      "evidence": "You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate: not_wielding_shield",
+      "justification": "The gate also excludes wielding a Shield. The existing not_wearing_armor covers armor categories; shields are wielded off-hand and have no equivalent predicate in the current vocabulary.",
+      "evidence": "you aren't wearing armor or wielding a Shield"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_substitute for save DC (Grapple/Shove)",
+      "justification": "Dexterous Attacks also allows Dex instead of Str to determine the save DC when the monk uses Grapple or Shove options of their Unarmed Strike. This is an ability substitution on the DC computation side, not on a d20 roll kind — a further shape beyond the attack/damage roll substitution.",
+      "evidence": "when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
     }
   ],
   "confidence": "high",
-  "notes": "All three sub-features of Martial Arts require surface gaps to be filled. The primary blocker is structural: ClassFeatureMechanics has no 'passive' family for always-on, condition-gated benefits with no resource or reset cadence. Even with that widening, three distinct effect atoms or variants are missing: a bonus-action scoped attack grant (not grant_extra_action), a damage-die replacement effect with die-size scaling, and a DEX-for-STR ability score substitution on attack/damage rolls. No Dhall or JSON authored — unit does not fit the current surface honestly."
+  "notes": "The passive family is the correct mechanics family. The three sub-features all require missing atoms or surface variants: (1) Bonus Unarmed Strike needs a grant_bonus_action_attack atom distinct from grant_extra_action; (2) Martial Arts Die needs a damage-die substitution atom (not a scaling atom — the substitution is a replacement, not an additive modifier); (3) Dexterous Attacks needs modify_roll_substitute, which is in the v4 taxonomy but absent from types.ts. Additionally the equipment gate needs two new EquipmentPredicate variants. The Martial Arts Die level-scaling (d6 at L1 → d10 at L17) could reuse scale_die_size once the base substitution atom exists."
 }

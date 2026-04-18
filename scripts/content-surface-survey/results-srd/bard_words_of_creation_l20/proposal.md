@@ -1,87 +1,71 @@
-# Proposal: Words of Creation (bard L20)
+# Proposal: Words of Creation (Bard L20) — atom_widening
 
-## Outcome: `structural_widening`
+## Unit
 
-## Why it doesn't fit
+**Class feature** — Bard level 20, SRD 5.2.1, section `Classes/Bard#Words of Creation`.
 
-Words of Creation has two mechanics:
+## What encodes cleanly
 
-1. **Always-prepared grant** — the bard permanently has *Power Word Heal* and *Power Word Kill* prepared.
-2. **Cast-time secondary target** — when casting either spell, the bard may target a second creature within 10 feet of the first.
+Two `grant_spell_access` atoms with `mode: "prepared"` in a `passive` mechanics family cover the always-prepared clause:
 
-Both are **passive and permanent**. There is no activation, no use count, and no reset cadence.
-
-The only current `ClassFeatureMechanics` family is `activation`, whose header unconditionally requires:
-
-```typescript
-type ClassFeatureMechanicsHeader = {
-  readonly activationCost: ClassFeatureActivationCost;   // not applicable
-  readonly resource: UseCountResource;                    // not applicable — no resource
-  readonly resetCadence: RestResetCadence;               // not applicable — no reset
-};
+```json
+{ "kind": "grant_spell_access", "spellId": "power_word_heal", "mode": "prepared" }
+{ "kind": "grant_spell_access", "spellId": "power_word_kill", "mode": "prepared" }
 ```
 
-Encoding Words of Creation under `activation` with fabricated `use_count` / `resetCadence` values would produce a false trace — the tracer would emit `use_count`, `rest_window`, and `activate` nodes that have no basis in the rule text. That violates the project's honesty guardrail.
+Typecheck passes. Tracer emits a valid graph.
 
-## Proposed widenings
+## What does not encode
 
-### 1. New class feature family: `passive_modifier` (structural)
+> "When you cast either spell, you can target a second creature with it if that creature is within 10 feet of the first target."
 
-A second top-level family for class features that grant permanent, always-on modifications:
+This clause adds a **second eligible target** whenever the bard casts either named spell through this feature. The second target must be within 10 feet of the primary target.
 
-```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive_modifier";
-  readonly effects: ReadonlyArray<ClassFeaturePassiveEffect>;
-};
-```
+### Why no existing atom fits
 
-No activation cost, resource, or reset cadence fields — those concepts don't exist for passive features.
+- **`grant_spell_access.targetRestriction`** — restricts or re-anchors the target of a granted spell access path. It cannot *extend* the target count or *add* a proximity-bounded second target.
+- **`scale_target_count`** — scales target count with spell slot level (e.g. Bless at higher slot). Not applicable here; neither spell has a variable target count in its base definition, and this feature is not a slot-scaling modifier.
+- **`modify_roll_numeric` / `modify_roll_advantage`** — wrong domain entirely (d20 rolls, not targeting).
+- No v4 effect atom models "when you cast spell X (by any means), you may choose an additional creature within N feet of the primary target."
 
-Pressure cases: Words of Creation (bard L20), Jack of All Trades (bard L2, adds half PB to non-proficient checks), various passive proficiency/sense grants across classes.
+### Shape of the missing concept
 
-### 2. New `ClassFeatureEffect` variant: `grant_spell_access` (surface)
+The missing surface extension is a modifier that scopes to a specific spell cast event and widens the target set by one, bounded by proximity to the primary target. Two candidate shapes:
 
-The v4 taxonomy already lists `grant_spell_access` as an effect atom. It needs to be added to the TypeScript surface as a `ClassFeatureEffect` variant:
+**Option A — new field on `grant_spell_access`:**
 
 ```typescript
-export type GrantSpellAccessEffect = {
+{
   readonly kind: "grant_spell_access";
-  readonly spellIds: ReadonlyArray<string>;
-  readonly alwaysPrepared: true;
-};
+  readonly spellId: string;
+  readonly mode: SpellAccessMode;
+  // ... existing fields ...
+  readonly additionalTargets?: {
+    readonly count: number;
+    readonly maxFeetFromPrimary: number;
+  };
+}
 ```
 
-Pressure: Words of Creation (always-prepared PWH + PWK), Life Domain Spells (always-prepared domain spells), Magical Discoveries, and many subclass "bonus spells" patterns.
+This would express "when casting through this access grant, up to N additional creatures within X feet of the primary target may also be targeted."
 
-### 3. New atom or surface variant: secondary-target-adjacent modifier (atom)
-
-"When you cast either spell, you can target a second creature with it if that creature is within 10 feet of the first target."
-
-This is a permanent, feature-granted modification of specific named spells' targeting. It differs from:
-
-- **slot-based `scale_target_count`** — that scales within the spell's own upcast rules; this is a class feature adding a target option on top of the base spell definition
-- **`choose_up_to` selection** — that is part of the spell's own attachment grammar; this is a rider from outside the spell
-
-A new surface type is needed, tentatively:
+**Option B — new effect atom `extend_cast_target_count`:**
 
 ```typescript
-export type ModifyNamedSpellTargetingEffect = {
-  readonly kind: "modify_named_spell_targeting";
-  readonly spellIds: ReadonlyArray<string>;
-  readonly additionalTargets: number;
-  readonly constraint: { readonly kind: "within_feet_of_primary"; readonly feet: number };
-};
+| {
+    readonly kind: "extend_cast_target_count";
+    readonly spellId: string;
+    readonly additionalCount: number;
+    readonly maxFeetFromPrimary: number;
+  }
 ```
 
-This would map to a new v4 atom (`modify_named_spell_targeting` or similar), or could be expressed as a composition of existing atoms if the taxonomy team determines that `scale_target_count` + a new `named_spell_scope` qualifier covers it.
+A passive grant that modifies the targeting of a named spell whenever cast (regardless of which access path is used). This is slightly broader than Option A — the SRD text says "when you cast either spell," not "when you cast it via this prepared grant," so Option B may be more faithful.
 
-## Summary
+### Precedent
 
-| Gap | Kind | Blocking |
-|-----|------|---------|
-| No passive class feature family | `structural_widening` | Yes — cannot author any record |
-| `ClassFeatureEffect` missing `grant_spell_access` | `surface_widening` | Yes — needed inside passive family |
-| No atom for feature-granted adjacent secondary target | `atom_widening` | Yes — needed inside passive family |
+The warlock Contact Patron (L9) follows the same partial-encoding pattern: the always-prepared + once-per-long-rest grants encode cleanly; the "auto-succeed on the spell's saving throw" rider does not fit and is recorded as a widening. The same approach is applied here.
 
-All three gaps must be resolved before this unit can be cleanly encoded.
+## Classification
+
+`atom_widening` — the mechanics family (`passive`), kind (`class_feature`), and existing atoms (`grant_spell_access`) are all present in the surface. The gap is a missing atom or field for proximity-bounded target-count extension of a named spell cast.

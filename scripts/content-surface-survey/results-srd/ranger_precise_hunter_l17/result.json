@@ -1,28 +1,16 @@
 {
   "unit_slug": "ranger_precise_hunter_l17",
-  "outcome": "structural_widening",
+  "outcome": "surface_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature",
-      "justification": "Precise Hunter is a permanently-active modifier with no activation, no use count, and no reset cadence. The only existing ClassFeatureMechanics family is 'activation', which requires activationCost + resource (use_count) + resetCadence. A 'passive' (or 'conditional_modifier') family is needed for always-on non-activated class features.",
-      "evidence": "You have Advantage on attack rolls against the creature currently marked by your Hunter's Mark."
-    },
-    {
       "kind": "new_variant",
-      "name": "modify_roll_advantage in ClassFeatureEffect",
-      "justification": "The effect is Advantage on attack rolls scoped to the Hunter's Mark target. ClassFeatureEffect currently only covers GrantExtraActionEffect and HealHpEffect. A modify_roll_advantage variant (already present in MasteryEffect and v4 taxonomy) is needed in ClassFeatureEffect.",
+      "name": "modify_roll_advantage.targetMarkedBySpellFilter",
+      "justification": "The advantage applies only to attack rolls made against the creature currently bearing Hunter's Mark. The existing modify_roll_advantage atom has no field to scope the effect to the marked target. All current filters (attackerTypeFilter, skillFilter, conditionFilter, saveAbilityFilter, saveSourceFilter) constrain by attacker type, skill, condition, or save ability/source — none express 'the target that has spell X's mark on it'. A new optional field (e.g. markedBySpell: spellId, or a general targetStateFilter referencing the mark attachment) is needed.",
       "evidence": "You have Advantage on attack rolls against the creature currently marked by your Hunter's Mark."
-    },
-    {
-      "kind": "new_variant",
-      "name": "mark-scoped attachment for class feature modifiers",
-      "justification": "The advantage is conditional on the target being the current Hunter's Mark target. This requires a way to scope a roll modifier to 'attacks against the marked creature' — distinct from a general advantage buff and related to the mark attachment atom. No existing ClassFeatureEffect variant expresses attachment-scoped roll modification.",
-      "evidence": "against the creature currently marked by your Hunter's Mark"
     }
   ],
   "confidence": "high",
-  "notes": "Precise Hunter is the clearest possible passive-modifier class feature: always-on, no resource, no activation, no reset. The surface has no family for this shape. Even if a passive family were added, ClassFeatureEffect would need a modify_roll_advantage variant with mark-scoped attachment. The v4 atom modify_roll_advantage already exists; the gap is exclusively in the class-feature surface type and the absence of a passive family."
+  "notes": "The passive family and class_feature kind fit correctly. The effect is a simple always-on modify_roll_advantage on attack_roll. The sole gap is target-side scoping: the advantage is restricted to attacks against the Hunter's Mark target, which is a cross-unit reference the current surface cannot represent without a new field on modify_roll_advantage. Encoding it without this field would produce a dishonest trace (advantage on ALL attack rolls, not just against the marked creature)."
 }

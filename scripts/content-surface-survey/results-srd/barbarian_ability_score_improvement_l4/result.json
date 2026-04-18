@@ -1,22 +1,9 @@
 {
   "unit_slug": "barbarian_ability_score_improvement_l4",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant",
-      "justification": "The Ability Score Improvement feature is a permanent, passive character-progression benefit with no activation cost, no use-count resource, and no rest-reset cadence. The only existing ClassFeatureMechanics family ('activation') requires all three of those fields plus a ClassFeatureEffect, none of which apply here. A new mechanics family is needed for level-up benefits that are granted permanently and passively.",
-      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_feat_choice",
-      "justification": "No existing ClassFeatureEffect atom covers granting a feat selection. The feature's effect is permanently granting a feat (the ASI feat or another qualifying feat). This is distinct from grant_proficiency, grant_extra_action, heal_hp, or any other existing effect atom. The TAXONOMY residue notes 'modify_ability_score' as out-of-scope for the runtime graph, but the feat-grant framing is a character-advancement mechanism that still needs a surface representation.",
-      "evidence": "You gain the Ability Score Improvement feat (see 'Feats') or another feat of your choice for which you qualify. You gain this feature again at Barbarian levels 8, 12, and 16."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The 'activation' family is the only ClassFeatureMechanics family. It requires activationCost, resource (use_count), resetCadence, and a ClassFeatureEffect. The ASI feature has none of these: it is a permanent passive grant made at level-up, not an activated ability. Forcing it into 'activation' would require fabricating a use_count resource and rest-reset cadence that do not exist in the rules. The TAXONOMY residue explicitly notes 'modify_ability_score as a runtime effect' is out-of-scope, but the feat-grant framing is distinct — it is a character advancement token, not a runtime combat effect. A 'passive_grant' mechanics family is needed for ASI-style features that appear across all 12 classes at multiple levels."
+  "notes": "Identical structure to bard_ability_score_improvement_l4 and wizard_ability_score_improvement_l4. Passive grant_feat with category=general. The 'openFallback: any_qualifying_feat' encoding is not used here, matching the established pattern for this SRD feature text."
 }

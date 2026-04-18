@@ -1,90 +1,113 @@
-# Proposal: Dagger of Venom
+# Proposal: magic_item_dagger_of_venom
 
-## Outcome: `structural_widening`
+## Outcome: surface_widening
 
-The unit cannot be encoded. The primary blocker is that `magic_item` is not a valid
-`UnitRecord` kind in `src/surface/types.ts`. The union is:
+The Dagger of Venom has two distinct mechanics:
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
+1. **+1 passive** — fits cleanly as a `composite` passive: `modify_roll_numeric` on `["attack_roll"]` and `modify_damage_numeric`, both scoped to this weapon via `weaponFilter: { kind: "specific_item", itemId: "magic_item_dagger_of_venom" }`.
+2. **Poison coating** — does not fit. Two independent surface gaps block encoding.
+
+---
+
+## Gap 1: No "activation-arms-an-on-hit-rider" pattern
+
+**SRD text:**
+> You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature. That creature must succeed on a DC 15 Constitution saving throw…
+
+The poison coating is a two-phase mechanic:
+
+- **Phase A (activation):** Spend a Bonus Action. Arm the weapon with a pending on-hit effect. Resource: use_count 1, reset at dawn.
+- **Phase B (on hit):** When the armed weapon hits, fire the save gate. The armed state is consumed.
+
+Neither existing family captures this:
+
+- `on_hit_trigger` fires on every weapon hit (or optionally when the wielder chooses). There is no activation step and no concept of an "armed state" that gates whether the rider fires.
+- `activation` family has `ActivationPhase` variants: `attack_roll`, `save_gate`, `direct`, `ability_check_gate`, `random_table`. None of these represents "defer to the next weapon hit."
+
+### Proposed widening
+
+A new subgraph or variant for **armed-on-hit riders** that composes an activation step with a deferred on-hit trigger:
+
+```
+armed_on_hit_rider:
+  activationCost: bonus_action
+  resource: use_count { cap: fixed 1 }
+  resetCadence: dawn
+  armedDuration: { kind: "timed", value: { unit: "minute", amount: 1 } }
+  trigger: weapon_hit (expends armed state on first qualifying hit)
+  onHit: save_gate { ... }
 ```
 
-`magic_item_root` is listed in the v4 taxonomy atom inventory but has no corresponding
-record type in the surface.
+The `armedDuration` covers the "1 minute or until hit" expiry clause. The `trigger` fires once and disarms.
+
+This pattern may also apply to other "coat/anoint weapon" items in the SRD (e.g., applying poisons manually). A general `armed_on_hit_rider` subgraph is preferable to a per-item hack.
 
 ---
 
-## Gap 1 — Missing `magic_item` kind (structural)
+## Gap 2: SaveGateRiderResult cannot express damage
 
-A `MagicItemRecord` top-level kind and at least one mechanics family are required.
-Magic items have two mechanically distinct sub-patterns illustrated by this item alone:
+**SRD text:**
+> …or take 2d10 Poison damage and have the Poisoned condition for 1 minute.
 
-- **Passive property** (always-on): +1 bonus to attack/damage rolls. No activation cost,
-  no resource, no reset. This maps loosely to an `item_property_root` subgraph but there
-  is no family for "passive continuous weapon enhancement" in the current surface.
+The save's fail branch requires **both** a damage instance (2d10 Poison) and a condition application (Poisoned).
 
-- **Activated charge** (bonus-action, limited use): Coat blade with poison. Has a
-  use-count resource, an activation cost, and a non-rest reset cadence (dawn).
-
-Both patterns share the `magic_item_root` source atom but have distinct procedure shapes.
-A minimal `MagicItemRecord` would need at least one family (e.g. `activated_charge`) to
-cover the poison coating mechanic, and a separate family or a passive modifier shape for
-the always-on +1.
-
----
-
-## Gap 2 — Missing `dawn` reset cadence (surface widening)
-
-`RestResetCadence` covers short rest, long rest, short-or-long rest, and partial-short
-full-long. The dagger resets "until the next dawn" — a calendar-time reset that does not
-map to any rest kind. A new variant is needed:
-
+`SaveGateRiderResult` is:
 ```typescript
-| { readonly kind: "dawn" }
+export type SaveGateRiderResult =
+  | { readonly kind: "apply_condition"; readonly condition: Condition }
+  | { readonly kind: "none" };
 ```
 
-Evidence: *"The weapon can't be used this way again until the next dawn."*
+This can only apply one condition or do nothing. It cannot express damage, and it cannot express a composite of damage + condition.
 
----
+This is deliberately narrower than `EffectAtom` (the full save gate's `onFail: EffectAtom` supports composites). The narrowing was appropriate for simple mastery riders (Topple: just prone; Sap: just disadvantage), but the Dagger of Venom is the first item that uses an on-hit save gate with a damage component.
 
-## Gap 3 — Missing `poisoned` condition (surface widening)
+### Proposed widening
 
-`Condition` is currently `"prone"` only. The poison save failure applies the Poisoned
-condition, which is a standard SRD condition with distinct mechanical effects
-(disadvantage on attack rolls and ability checks). The type must be widened:
+Widen `SaveGateRiderResult` to admit a damage variant and composite:
 
 ```typescript
-export type Condition = "prone" | "poisoned";
+export type SaveGateRiderResult =
+  | { readonly kind: "apply_condition"; readonly condition: Condition }
+  | { readonly kind: "damage"; readonly damageType: DamageTypeRef; readonly amount: DiceAmount }
+  | { readonly kind: "composite"; readonly effects: ReadonlyNonEmptyArray<SaveGateRiderResult> }
+  | { readonly kind: "none" };
 ```
 
-Evidence: *"…have the Poisoned condition for 1 minute."*
+A `composite` variant allows the Dagger of Venom's "2d10 Poison damage AND Poisoned condition" fail branch without replacing the whole type with `EffectAtom`.
 
 ---
 
-## Gap 4 — Missing `fixed` DC source (surface widening)
+## Encoding plan (once gaps are closed)
 
-`DcSource` has two variants:
-- `caster_spell_save_dc` — derived from the caster's spellcasting stat
-- `weapon_attack_dc` — `8 + attack ability mod + PB`
+```
+composite:
+  parts:
+    # Part 1 — passive +1
+    - family: passive
+      condition: { kind: "always" }
+      grants:
+        - { kind: "modify_roll_numeric", on: ["attack_roll"], delta: { kind: "fixed_dice", dice: 1, dieSize: 1, sign: "+" }, weaponFilter: { kind: "specific_item", itemId: "magic_item_dagger_of_venom" } }
+        - { kind: "modify_damage_numeric", delta: { kind: "fixed_dice", dice: 1, dieSize: 1, sign: "+" }, weaponFilter: { kind: "specific_item", itemId: "magic_item_dagger_of_venom" } }
 
-DC 15 is a fixed item-property DC, not computable from either formula. A new variant:
-
-```typescript
-| { readonly kind: "fixed"; readonly value: number }
+    # Part 2 — poison coating (needs armed_on_hit_rider + SaveGateRiderResult.composite)
+    - family: armed_on_hit_rider        # NEW
+      activationCost: { kind: "bonus_action" }
+      resource: { kind: "use_count", cap: { kind: "fixed", uses: 1 } }
+      resetCadence: { kind: "dawn" }
+      armedDuration: { kind: "timed", value: { unit: "minute", amount: 1 } }
+      trigger: { kind: "weapon_hit" }
+      onHit:
+        kind: save_gate
+        ability: con
+        dc: { kind: "fixed", dc: 15 }
+        onFail:
+          kind: composite                # NEW variant of SaveGateRiderResult
+          effects:
+            - { kind: "damage", damageType: "poison", amount: { kind: "fixed", expr: { dice: 2, dieSize: 10 } } }
+            - { kind: "apply_condition", condition: "poisoned" }
+            # Note: Poisoned is for 1 minute — duration on a condition rider not currently expressible either (separate gap)
+        onSuccess: { kind: "none" }
 ```
 
-Evidence: *"That creature must succeed on a DC 15 Constitution saving throw."*
-
----
-
-## Summary of widening pressure
-
-| Gap | Classification | Blocks encoding? |
-|-----|---------------|-----------------|
-| No `magic_item` UnitRecord kind | `structural_widening` | Yes — primary blocker |
-| No `dawn` reset cadence | `surface_widening` | Yes — secondary |
-| No `poisoned` condition | `surface_widening` | Yes — secondary |
-| No `fixed` DC source | `surface_widening` | Yes — secondary |
-
-All four gaps must be closed before this unit can be encoded honestly. The structural gap
-takes precedence; the surface gaps are listed here to inform the widening plan.
+Note: the Poisoned condition's duration ("for 1 minute") is a third gap — condition riders have no duration qualifier in the current surface. This is a pre-existing gap also observed in other poison/paralysis items and is not specific to this unit.

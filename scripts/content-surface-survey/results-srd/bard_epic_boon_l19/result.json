@@ -1,22 +1,9 @@
 {
   "unit_slug": "bard_epic_boon_l19",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant",
-      "justification": "Epic Boon is a permanent, passive level-up grant — not an activated feature. It has no use_count, no reset cadence, no activation cost. The existing 'activation' family mandates all three via ClassFeatureMechanicsHeader. A new family (e.g. 'passive_grant') is needed for features that permanently bestow something on the character at level-up with no runtime toggle.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_feat",
-      "justification": "The effect is granting access to an entire feat unit record — not a narrowly scoped runtime effect. No v4 effect atom covers this. grant_proficiency and grant_spell_access are the closest analogues, but a feat grant enables a full separate mechanics block, not a single proficiency or spell list entry. Distinct atom needed.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Spell Recall is recommended."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Epic Boon is structurally identical across all 12 SRD classes at level 19. The pattern is a permanent character-progression feat grant with no runtime activation. The current surface has no honest encoding path: the only ClassFeatureMechanics family ('activation') requires use_count + resetCadence + activationCost, none of which exist here. ClassFeatureEffect contains no feat-grant atom. Structural widening — a new family and a new effect atom — is required before this unit can be encoded."
+  "notes": "Identical pattern to cleric_epic_boon_l19 and paladin_epic_boon_l19. Passive class feature granting a feat pick from all four FeatCategory variants (epic_boon | general | fighting_style | origin), encoding the SRD's 'Epic Boon feat or another feat of your choice for which you qualify' text."
 }

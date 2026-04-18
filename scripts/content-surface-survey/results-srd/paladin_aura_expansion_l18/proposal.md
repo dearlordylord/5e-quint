@@ -1,84 +1,62 @@
-# Proposal: paladin_aura_expansion_l18 — Structural Widening
+# Proposal: Aura Expansion (Paladin L18)
 
 ## Unit
 
-**Aura Expansion (Paladin L18)** — SRD 5.2.1, Classes/Paladin#Level 18: Aura Expansion
+**Name:** Aura Expansion  
+**Kind:** class_feature (paladin, L18)  
+**Text:** "Your Aura of Protection is now a 30-foot Emanation."
 
-> "Your Aura of Protection is now a 30-foot Emanation."
+## Why it doesn't fit
 
-## Classification: `structural_widening`
+The `passive` family is the correct shell. The problem is that the unit's entire mechanical content is *modifying a structural parameter (area radius) of another named class feature*. The current `EffectAtom` union has no atom that:
 
-## Why the current surface cannot encode this unit honestly
+1. References another feature by ID, and
+2. Replaces or overrides one of its geometry parameters.
 
-### 1. No `passive` family for `ClassFeatureMechanics`
+The existing `modify_*` atoms (`modify_ac`, `modify_speed`, `modify_roll_numeric`, `modify_save_dc`, `modify_crit_range`, `modify_damage_numeric`, `modify_ability_score`, `modify_proficiency_bonus`, `modify_max_hp`) all act on character-sheet stats — numeric or categorical values on the creature itself. None act on another feature's authored structure.
 
-The only existing `ClassFeatureMechanics` family is `activation`. The `activation` family requires:
+Encoding this as, say, `modify_speed` with a creative argument would be a lie that produces a misleading trace.
 
-- `activationCost` — what the player spends to trigger the feature
-- `resource` — a `use_count` pool with a cap
-- `resetCadence` — when the pool refills
-- `effect` — one of `GrantExtraActionEffect | HealHpEffect`
+## Classification
 
-Aura Expansion has none of these. It is permanently active from the moment it is acquired at level 18 — no trigger, no cost, no pool, no effect that fires on demand. Forcing it into `activation` with `{ kind: "free" }` cost and a fabricated `use_count` would be structurally false and would generate a meaningless trace.
+`atom_widening` — a new `EffectAtom` variant is needed. The `passive` family and v4 `grant` procedure atom are sufficient; only the leaf effect atom is missing.
 
-### 2. No effect atom for "expand emanation radius"
+## Proposed widening
 
-Even if a `passive` family existed, the needed effect is "change the radius of an existing class feature (Aura of Protection) from 10 feet to 30 feet." The v4 atom inventory contains:
-
-- `modify_range` — applies to spell/attack targeting range (a one-shot constraint at cast time), not an aura footprint
-- `modify_speed` — movement speed, not area radius
-- No atom for `expand_emanation`, `modify_aura_radius`, or cross-feature parameter override
-
-The distinction between `modify_range` and an emanation-radius modification is mechanically meaningful: aura footprint is a spatial region evaluated continuously each turn; spell range is a targeting constraint evaluated once at the moment of action.
-
-### 3. No cross-feature reference mechanism
-
-The surface has no way to declare "this feature modifies a parameter of another feature by id." Aura Expansion is a modifier on Aura of Protection (acquired at L6). Encoding it correctly would require either:
-- A `targetFeatureId` reference field pointing to `paladin_aura_of_protection_l6`, or
-- A dedicated `modify_class_feature` or `expand_emanation_radius` effect variant
-
-## Proposed Widenings
-
-### Widening 1: New family — `passive` for `ClassFeatureMechanics`
+### New atom: `modify_feature_area`
 
 ```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effect: ClassFeaturePassiveEffect;
-};
-
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveMechanics;
+| {
+    readonly kind: "modify_feature_area";
+    readonly featureId: string;
+    readonly area: AreaShapeDescriptor;
+  }
 ```
 
-Motivation: Several class features are permanently-active upgrades with no activation gate (Aura Expansion, Barbarian Fast Movement, Barbarian Indomitable Might, Fighter Survivor, etc.). The `activation` family cannot model these without fabricating phantom resources.
+**Justification:** Aura Expansion is not the only SRD class feature that upgrades another feature's area — this pattern recurs (e.g., monk Ki Resonation widening, ranger Deft Explorer terrain bonuses). A `featureId`-keyed area override is the minimal honest shape. It references the feature whose area is being replaced and provides the replacement descriptor using the existing `AreaShapeDescriptor` union (emanation with `radiusFeet: 30` is already expressible there).
 
-### Widening 2: New effect type — `expand_emanation_radius`
+**Intended encoding once atom exists:**
 
-```typescript
-export type ExpandEmanationRadiusEffect = {
-  readonly kind: "expand_emanation_radius";
-  readonly targetFeatureId: string; // e.g. "paladin_aura_of_protection_l6"
-  readonly radiusFeet: number;      // e.g. 30
-};
+```dhall
+{ kind = "class_feature"
+, id = "paladin_aura_expansion_l18"
+, name = "Aura Expansion"
+, className = "paladin"
+, acquiredAtLevel = 18
+, provenance = { kind = "srd-5.2.1", section = "Classes/Paladin#Aura Expansion" }
+, description = "Your Aura of Protection is now a 30-foot Emanation."
+, mechanics =
+    { family = "passive"
+    , grants =
+        [ { kind = "modify_feature_area"
+          , featureId = "paladin_aura_of_protection"
+          , area = { kind = "emanation", radiusFeet = 30 }
+          }
+        ]
+    }
+}
 ```
 
-This lets Aura Expansion honestly declare: "modify the emanation radius of Aura of Protection to 30 feet." A more general `ModifyFeatureParameterEffect` is also possible but may over-generalize before enough pressure cases exist.
+## Tracer impact
 
-## Other class features likely to hit the same `passive` gap
-
-The following SRD features are permanently active and would require the same widening:
-
-| Feature | Why passive |
-|---|---|
-| Barbarian Fast Movement (L5) | Speed bonus, always on while not in heavy armor |
-| Barbarian Indomitable Might (L18) | STR check floor equals STR score, always on |
-| Paladin Aura of Courage (L10) | Allies in aura can't be frightened while paladin is conscious |
-| Fighter Survivor (L18) | Passive HP regen at turn start when below half max HP |
-
-All are always-on and require a `passive` family to encode without fabricating activation structure.
-
-## Atom inventory note
-
-`modify_range` is in v4 and in the tracer but is not added to `ClassFeatureEffect` in `types.ts`, and even if it were, it maps to spell/attack range, not aura footprint. A new atom or a renamed/scoped variant of `modify_range` (e.g., `modify_emanation_radius`) would be the right addition.
+The tracer's `traceEffectAtom` exhaustive switch would need a new `"modify_feature_area"` case. Suggested category: `"effect"`, atomKind: `"modify_feature_area"`. The node label could read: `modify_feature_area\npaladin_aura_of_protection → emanation 30 ft`.

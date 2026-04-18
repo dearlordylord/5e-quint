@@ -1,28 +1,34 @@
 {
   "unit_slug": "feat_boon_of_combat_prowess",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "FeatRecord + FeatMechanics family",
-      "justification": "UnitRecord has no 'feat' kind. types.ts only defines SpellRecord, ClassFeatureRecord, and MasteryRecord. Feats require a new top-level record kind with its own mechanics header (at minimum: no class/level requirement, may bundle ASI + active rider). The TAXONOMY has feat_root as an atom but no surface family corresponds to it.",
-      "evidence": "Epic Boon Feat (Prerequisite: Level 19+) — the feat kind is not representable in UnitRecord at all."
+      "kind": "new_atom",
+      "name": "convert_miss_to_hit",
+      "justification": "Peerless Aim lets the bearer retroactively declare that a missed attack roll hits instead. No existing EffectAtom models post-roll outcome substitution — this is distinct from modify_roll_numeric (pre-roll delta), modify_roll_advantage (advantage/disadvantage), and modify_crit_range (crit threshold). It is a retroactive roll-outcome override, a new concept not present in v4.",
+      "evidence": "When you miss with an attack roll, you can hit instead."
     },
     {
-      "kind": "new_atom",
-      "name": "force_hit (or modify_roll_outcome: miss_to_hit)",
-      "justification": "Peerless Aim converts a missed attack roll into a hit without rerolling. This is distinct from modify_roll_reroll (reroll keeping higher/lower), modify_roll_substitute (replace with a fixed numeric value), and modify_roll_numeric (add a die/flat bonus). It operates on the resolved outcome (miss), not on the roll value itself, and overrides the outcome to hit. No v4 atom covers this.",
-      "evidence": "When you miss with an attack roll, you can hit instead. Once you use this benefit, you can't use it again until the start of your next turn."
+      "kind": "new_variant",
+      "name": "ReactionTrigger.caster_misses_attack_roll",
+      "justification": "Peerless Aim fires when the bearer misses with their own attack roll. ReactionTrigger currently covers: hit_by_attack_roll (incoming), targeted_by_named_spell, creature_casts_spell, spell_save_outcome, any_of — none covers the bearer's own outgoing attack missing.",
+      "evidence": "When you miss with an attack roll, you can hit instead."
     },
     {
-      "kind": "new_atom",
-      "name": "modify_ability_score",
-      "justification": "Ability Score Increase is the canonical ASI rider shared by most feats. TAXONOMY §12 already records this as a known deferred atom ('modify_ability_score as a runtime effect versus as pre-runtime character state'). It is out-of-scope for the current atom inventory but is required to represent the ASI benefit of this feat.",
+      "kind": "new_variant",
+      "name": "modify_ability_score.ability: Ability | CastTimeChoice<Ability>",
+      "justification": "The ASI on this feat says 'one ability score of your choice' — a build-time open selection over all six abilities. modify_ability_score.ability is typed as Ability (fixed). Needs widening to Ability | CastTimeChoice<Ability> to represent player-picks-any-ability grants.",
       "evidence": "Increase one ability score of your choice by 1, to a maximum of 30."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CompositeFeatMechanics",
+      "justification": "The feat has both a passive grant (ASI) and an activated ability (Peerless Aim). FeatMechanics = PassiveMechanics | ActivatedAbilityMechanics — no composite form. CompositeClassFeatureMechanics exists for class features; the same pattern is needed for feats.",
+      "evidence": "Ability Score Increase [...] Peerless Aim. When you miss with an attack roll, you can hit instead."
     }
   ],
   "confidence": "high",
-  "notes": "Two independent blockers. Primary: no FeatRecord kind exists — the surface cannot represent a feat at all, so no honest encoding is possible. Secondary: even with a FeatRecord, Peerless Aim requires a 'force hit' effect atom that has no v4 equivalent, and ASI requires modify_ability_score which is explicitly deferred. The Peerless Aim rider also has an on_miss_window trigger shape, but the miss-outcome-to-hit conversion has no target effect atom in v4. The Rogue's Stroke of Luck (L20) exercises a similar shape; both would need the same widening."
+  "notes": "The blocking gap is the convert_miss_to_hit atom — a retroactive post-roll outcome override with no analog in v4. The Peerless Aim trigger (caster misses own attack) is also absent from ReactionTrigger. Additionally: the ASI part needs CastTimeChoice<Ability> in modify_ability_score, and the dual-mechanic structure (passive ASI + activated Peerless Aim) needs a CompositeFeatMechanics parallel to the existing CompositeClassFeatureMechanics. The once-per-turn reset cadence for Peerless Aim (usageLimit: once_per_turn) would fit the existing UsageLimit shape once the other gaps are filled."
 }

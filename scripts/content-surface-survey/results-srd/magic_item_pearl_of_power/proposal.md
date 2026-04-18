@@ -1,133 +1,60 @@
-# Proposal: Widenings required for Pearl of Power
+# Proposal: `magic_item_pearl_of_power`
 
-## Unit
+## Outcome: `atom_widening`
 
-**Pearl of Power** — Wondrous Item, Uncommon (Requires Attunement by a Spellcaster)
+## Missing atom: `recover_spell_slot`
+
+### SRD text
 
 > While this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower. Once you use the pearl, it can't be used again until the next dawn.
 
-## Outcome: `structural_widening`
+### What fits
 
-The unit cannot be honestly encoded. The primary blocker is that `magic_item` is not a `UnitRecord` kind. The current union is `SpellRecord | ClassFeatureRecord | MasteryRecord`.
+The record shape and mechanics family are fully expressible:
 
-## Required widenings (in dependency order)
+- **Kind**: `magic_item`
+- **Family**: `activation`
+- **Activation cost**: `{ kind: "standard_action", action: "magic" }`
+- **Resource**: `{ kind: "use_count", cap: { kind: "fixed", uses: 1 } }`
+- **Reset cadence**: `{ kind: "dawn" }`
+- **Attunement**: `requiresAttunement: true`, `attunementRestriction: { kind: "spellcaster" }`
+- **Condition**: `{ kind: "wearing_item" }` (covers "while this pearl is on your person")
+- **Destruction**: `{ kind: "none" }`
 
-### 1. `MagicItemRecord` — new top-level `UnitRecord` kind (structural)
+### What is missing
 
-A new record variant is needed:
+The entire mechanical payload — recovering an expended spell slot — has no corresponding `EffectAtom` in the current surface. No existing atom comes close:
 
-```typescript
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly requiresAttunement: AttunementRequirement | false;
-  readonly mechanics: MagicItemMechanics;
-};
-```
+- `grant_spell_access` — grants the ability to cast a spell, not to recover a slot
+- `heal_hp` — wrong resource domain
+- `grant_temp_hp` — wrong resource domain
+- All other atoms — unrelated to the spell-slot economy
 
-The `magic_item_root` source atom already exists in v4. The surface just has no record type that maps to it.
-
-### 2. `AttunementRequirement` — new surface type (surface widening)
-
-Magic items can require attunement, with an optional constraint on who may attune:
-
-```typescript
-export type AttunementRequirement =
-  | { readonly kind: "any" }
-  | { readonly kind: "spellcaster" }
-  | { readonly kind: "class"; readonly className: ClassName }
-  | { readonly kind: "alignment"; readonly alignment: string };
-```
-
-Pearl of Power uses `{ kind: "spellcaster" }`.
-
-v4 atom traced: `attunement_slot` (resource).
-
-### 3. `RestResetCadence.dawn` — new variant (surface widening)
-
-The pearl resets at next dawn, not at a rest. The existing `RestResetCadence` union covers short/long rest patterns only:
+### Proposed new atom
 
 ```typescript
-| { readonly kind: "dawn" }
+| {
+    readonly kind: "recover_spell_slot";
+    // Maximum slot level that may be recovered. The player chooses any
+    // expended slot at or below this level at activation time.
+    readonly maxLevel: SpellLevel;
+  }
 ```
 
-This is the pattern used by many magic items (e.g., "can't be used again until the next dawn"). No v4 atom gap — dawn is a time boundary expressible as a `duration_window` or `expire` lifecycle atom.
+**Semantics**: At activation time, the bearer chooses one expended spell slot of level ≤ `maxLevel` from their own spell slot pool and regains it. This is player-chosen at the moment of activation and constrained to the bearer's own slots.
 
-### 4. `MagicItemActivationCost.magic_action` — new variant (surface widening)
+**Pressure**: Pearl of Power is the sole SRD 5.2.1 unit with this shape in this survey batch, but the mechanic is well-established in 5e design (Arcane Recovery, Natural Recovery, Spell Mastery all share similar slot-recovery semantics — they differ in cadence and scope). A bounded `maxLevel` field covers the Pearl's "level 3 or lower" constraint and generalises to other potential slot-recovery items.
 
-The item is activated by taking the Magic action (a `StandardActionKind`). `ClassFeatureActivationCost` only covers `free` and `bonus_action`. A magic item activation cost needs to support the full standard action set:
+**v4 taxonomy placement**: `effect` category — it changes the bearer's resource state (spell slot pool) deterministically. Not `resource` (that's the source pool atom), not `lifecycle` (no duration/expiry). The outcome is immediate and complete on resolution.
 
-```typescript
-export type MagicItemActivationCost =
-  | { readonly kind: "free" }
-  | { readonly kind: "action" }
-  | { readonly kind: "magic_action" }
-  | { readonly kind: "bonus_action" }
-  | { readonly kind: "reaction"; readonly trigger: ReactionTrigger };
+### Tracer subgraph sketch
+
 ```
-
-v4 atom traced: `action_quota` (resource), labeled with the magic action kind.
-
-### 5. `refund_spell_slot` — new effect shape (surface widening)
-
-The core effect is recovering an expended spell slot up to a maximum level. v4 has a `refund` procedure atom. The surface needs a corresponding effect type:
-
-```typescript
-export type RefundSpellSlotEffect = {
-  readonly kind: "refund_spell_slot";
-  readonly maxLevel: SpellLevel;  // 3 for Pearl of Power
-};
+activate
+  → consumes: use_count (max 1)
+  → consumes: action_quota (magic)
+  → resets_via: duration_window (daily at dawn)
+  → requires: wearing_item
+  → grants: direct_apply [phase 1]
+    → grants: recover_spell_slot (maxLevel=3)
 ```
-
-v4 atom traced: `refund` (procedure) → `spell_slot` (resource).
-
-### 6. `MagicItemMechanics` — new payload family (structural)
-
-The mechanics family for an activated magic item with a use-count and dawn reset:
-
-```typescript
-export type MagicItemActivationMechanics = {
-  readonly family: "activation";
-  readonly activationCost: MagicItemActivationCost;
-  readonly resource: UseCountResource;
-  readonly resetCadence: RestResetCadence;  // extended with dawn variant
-  readonly effect: MagicItemEffect;
-};
-
-export type MagicItemEffect = RefundSpellSlotEffect | /* future effects */;
-
-export type MagicItemMechanics = MagicItemActivationMechanics;
-```
-
-## Encoding (once widened)
-
-```dhall
-{ kind = "magic_item"
-, id = "magic_item_pearl_of_power"
-, name = "Pearl of Power"
-, provenance = { kind = "srd-5.2.1", section = "Magic-Items/Items-I-P#Pearl of Power" }
-, description = "While this pearl is on your person, you can take a Magic action to regain one expended spell slot of level 3 or lower. Once you use the pearl, it can't be used again until the next dawn."
-, requiresAttunement = { kind = "spellcaster" }
-, mechanics =
-    { family = "activation"
-    , activationCost = { kind = "magic_action" }
-    , resource = { kind = "use_count", cap = { kind = "fixed", uses = 1 } }
-    , resetCadence = { kind = "dawn" }
-    , effect = { kind = "refund_spell_slot", maxLevel = 3 }
-    }
-}
-```
-
-## Tracer atoms that would be emitted (once widened)
-
-| atom | category |
-|---|---|
-| `magic_item_root` | source |
-| `activate` | procedure |
-| `action_quota` | resource (magic action) |
-| `use_count` | resource |
-| `duration_window` / `expire` | lifecycle (dawn reset) |
-| `attunement_slot` | resource |
-| `refund` | procedure |
-| `spell_slot` | resource (max level 3) |
-
-All atoms exist in v4 except `refund_spell_slot` as a named effect shape — `refund` exists as a procedure atom, so no new v4 atom is needed, only a new surface effect variant.

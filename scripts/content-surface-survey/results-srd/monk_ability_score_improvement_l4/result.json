@@ -1,22 +1,9 @@
 {
   "unit_slug": "monk_ability_score_improvement_l4",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant family for class features",
-      "justification": "Ability Score Improvement is a permanent passive feature granted on leveling up. The only existing ClassFeatureMechanics family is 'activation', whose header mandates activationCost, resource (UseCountResource), and resetCadence. None of those fields exist for ASI — it has no activation, no use count, and no rest reset. A new 'passive_grant' (or 'level_grant') family is needed for permanently-applied, non-activated class features.",
-      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_feat_choice effect variant in ClassFeatureEffect",
-      "justification": "The unit's core mechanic is granting the player a feat selection. ClassFeatureEffect only covers GrantExtraActionEffect and HealHpEffect. A new variant is needed to represent 'gain a feat (defaulting to ASI feat) or another qualified feat'.",
-      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The TAXONOMY v4 §12 explicitly records 'modify_ability_score as a runtime effect versus as pre-runtime character state (currently treated as out-of-scope)'. ASI is firmly pre-runtime character state — it modifies the character sheet at level-up, not during combat. The structural gap is that ClassFeatureMechanics only models the activation family; every class in the SRD has ASI entries (or equivalent) at multiple levels, so a passive_grant family would unblock an entire category of cross-class features. No .dhall or .json content files are written for this unit."
+  "notes": "Encodes identically to other class ASI features (cleric, bard, druid, wizard). grant_feat with category=general covers both the named ASI feat and the open fallback to any qualifying feat."
 }

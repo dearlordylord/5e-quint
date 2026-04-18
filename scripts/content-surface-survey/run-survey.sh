@@ -12,6 +12,7 @@
 #   run-survey.sh --tier 2 --limit 10     run first 10 unprocessed units in tier 2
 #   run-survey.sh --slug bless            run one queue item by slug
 #   run-survey.sh --slug bless --force    rerun one item even if already recorded
+#   run-survey.sh --slugs-file PATH       run every slug listed in PATH (one per line)
 #   run-survey.sh --dry-run               don't invoke Claude; use mock mode
 #                                          (requires MOCK_ENCODING_SRC env)
 #
@@ -33,12 +34,14 @@ TIER="all"
 DRY_RUN=0
 LIMIT=""
 SLUG=""
+SLUGS_FILE=""
 FORCE=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tier) TIER="$2"; shift 2 ;;
     --limit) LIMIT="$2"; shift 2 ;;
     --slug) SLUG="$2"; shift 2 ;;
+    --slugs-file) SLUGS_FILE="$2"; shift 2 ;;
     --force) FORCE=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     -h|--help)
@@ -46,6 +49,11 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown flag: $1" >&2; exit 64 ;;
   esac
 done
+
+if [[ -n "$SLUGS_FILE" ]]; then
+  [[ -f "$SLUGS_FILE" ]] || { echo "missing --slugs-file $SLUGS_FILE" >&2; exit 66; }
+  [[ -n "$SLUG" ]] && { echo "--slug and --slugs-file are mutually exclusive" >&2; exit 64; }
+fi
 
 MAX_PARALLEL="${MAX_PARALLEL:-5}"
 QUEUE="$SCRIPT_DIR/unit-queue.jsonl"
@@ -85,6 +93,7 @@ while IFS= read -r row; do
   if [[ "$TIER" != "all" && "$row_tier" != "$TIER" ]]; then continue; fi
   slug=$(jq -r .slug <<<"$row")
   if [[ -n "$SLUG" && "$slug" != "$SLUG" ]]; then continue; fi
+  if [[ -n "$SLUGS_FILE" ]] && ! grep -qFx "$slug" "$SLUGS_FILE"; then continue; fi
   if [[ "$FORCE" != "1" ]] && already_processed "$slug"; then
     skipped=$((skipped+1))
     continue

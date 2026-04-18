@@ -1,28 +1,9 @@
 {
   "unit_slug": "ranger_ability_score_improvement_l4",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant family for ClassFeatureMechanics",
-      "justification": "Ability Score Improvement is a permanent character-progression grant that fires at level-up. It has no activation cost, no use-count resource, and no rest reset cadence. The current surface only supports the 'activation' family, which structurally requires all three of those fields. A 'passive_grant' family (or equivalent 'level_up_grant') is needed to encode features that are simply received when leveling, with no trigger or quota.",
-      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify. You gain this feature again at Ranger levels 8, 12, and 16."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_feat",
-      "justification": "The mechanic is 'you receive a feat' (specifically the ASI feat, or any feat you qualify for). The current ClassFeatureEffect union (GrantExtraActionEffect | HealHpEffect) has no variant for feat grants. The v4 atom taxonomy also lacks a 'grant_feat' atom — modify_ability_score is listed as out-of-scope residue, and feat selection is entirely absent from the inventory.",
-      "evidence": "You gain the Ability Score Improvement feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_variant",
-      "name": "recurring_at_levels on ClassFeatureRecord (or passive_grant mechanics)",
-      "justification": "The feature is gained at Ranger levels 4, 8, 12, and 16. The current ClassFeatureRecord has a single acquiredAtLevel field. Recurring per-class-level grants either need a list of levels or a threshold-tier schedule on the feature record itself so the surface can represent 'gain this again at L8, L12, L16'.",
-      "evidence": "You gain this feature again at Ranger levels 8, 12, and 16."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The unit cannot be encoded because no existing ClassFeatureMechanics family covers passive, permanent feat grants. Forcing it into 'activation' would require fabricating an activationCost, resource, and resetCadence that don't exist in the SRD text — a dishonest encoding. The recurring-at-multiple-levels pattern is a secondary gap; the primary blocker is the absence of a passive_grant family and a grant_feat effect atom."
+  "notes": "Encodes identically to other class ASI features (barbarian, cleric, druid, monk). Passive family with a single grant_feat atom (category: general). The 'or another feat of your choice for which you qualify' fallback is implicit in how grant_feat is interpreted at build time."
 }

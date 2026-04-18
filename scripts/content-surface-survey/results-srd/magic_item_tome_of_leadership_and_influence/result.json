@@ -1,28 +1,24 @@
 {
   "unit_slug": "magic_item_tome_of_leadership_and_influence",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "study_to_consume_magic_item",
-      "justification": "The item is neither an always-on passive nor an immediate activation. Its core mechanic is a gated, multi-day study process that culminates in a one-time permanent benefit and temporarily exhausts the item.",
-      "evidence": "\"If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines\""
-    },
-    {
-      "kind": "new_atom",
-      "name": "modify_ability_score",
-      "justification": "The existing surface can set or floor an ability score, but it cannot encode a permanent additive increase by a fixed amount with an explicit cap above the normal range.",
-      "evidence": "\"your Charisma increases by 2, to a maximum of 30\""
-    },
-    {
-      "kind": "new_variant",
-      "name": "long_recharge_century",
-      "justification": "Current magic-item reset cadences cover rests, dawn, and never. They cannot represent an item that becomes inert and regains its magic after a century.",
-      "evidence": "\"The manual then loses its magic but regains it in a century.\""
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "No honest encoding exists in the current surface. Modeling this as passive would be false because the bonus is not contingent on wearing or attunement, and modeling it as activation would be false because the system has no study-duration / multi-day completion shape and no additive ability-score increase atom."
+  "notes": "Clean encode. The study activation cost (48h within 6 days), modify_ability_score (cha+2 max 30), use_count resource, and century reset cadence all fit the existing surface directly. No attunement required."
 }

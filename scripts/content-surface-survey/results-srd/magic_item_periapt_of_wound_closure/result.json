@@ -1,46 +1,22 @@
 {
   "unit_slug": "magic_item_periapt_of_wound_closure",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord",
-      "justification": "UnitRecord has no magic_item kind. types.ts defines only SpellRecord | ClassFeatureRecord | MasteryRecord. The v4 taxonomy lists magic_item_root as a source atom and the survey queue includes magic_item units, but no corresponding TypeScript record type, mechanics header, or payload family exists. All magic items are blocked at this level.",
-      "evidence": "Wondrous Item, Uncommon (Requires Attunement)"
-    },
-    {
       "kind": "new_atom",
       "name": "modify_roll_floor",
-      "justification": "Life Preservation sets a minimum roll value of 10 on death saving throws. This is mechanically distinct from modify_roll_numeric (additive delta) and modify_roll_advantage (advantage/disadvantage). A floor/clamp atom is needed to express 'treat any roll below N as N'.",
+      "justification": "Life Preservation sets a minimum result on a specific roll kind (death saving throw ≤ 9 → treated as 10). This is structurally distinct from modify_roll_numeric (additive flat delta applies unconditionally) and modify_roll_advantage (changes the roll mechanism). A conditional minimum-result guarantee requires its own atom shape: { kind: 'modify_roll_floor', on: RollKind[], minimum: number }.",
       "evidence": "Whenever you make a Death Saving Throw, you can change a roll of 9 or lower to a 10, turning a failed save into a successful one."
     },
     {
-      "kind": "new_variant",
-      "name": "death_saving_throw window or filter on save_gate",
-      "justification": "Life Preservation fires specifically on death saving throws, which are not saves against a caster DC but a fixed-DC survival mechanic. No window atom or save-gate variant targets this event.",
-      "evidence": "Whenever you make a Death Saving Throw"
-    },
-    {
       "kind": "new_atom",
-      "name": "hit_die_window",
-      "justification": "Natural Healing Boost fires when a creature rolls a Hit Point Die (spends a Hit Die during a rest). No existing window atom covers Hit Die expenditure. rest_window covers rest completion, not the individual die roll within a rest.",
-      "evidence": "Whenever you roll a Hit Point Die to regain Hit Points"
-    },
-    {
-      "kind": "new_atom",
-      "name": "modify_hp_multiplier (or scale_heal_multiplier)",
-      "justification": "Natural Healing Boost doubles the HP restored by a Hit Die roll. This is a multiplier effect — not a fixed heal amount, not a numeric addend, not a die-size or die-count change. No existing effect or scaling atom models HP multiplication.",
-      "evidence": "double the number of Hit Points it restores"
-    },
-    {
-      "kind": "new_variant",
-      "name": "attunement requirement on MagicItemRecord",
-      "justification": "The item requires attunement. The v4 taxonomy has attune (procedure) and attunement_slot (resource), but the surface has no field or type modeling whether a magic item requires attunement and how many slots it consumes.",
-      "evidence": "Requires Attunement"
+      "name": "modify_hit_die_recovery",
+      "justification": "Natural Healing Boost doubles HP restored whenever the bearer rolls a Hit Die during a short rest or similar recovery context. No existing trigger covers 'on Hit Die rolled' in PassiveOperation (only elapsed_time exists), and no effect atom covers a multiplicative scaling of Hit Die results. maximize_healing_received (Beacon of Hope) is not equivalent — it maximizes all received healing from any source, not a multiplier scoped specifically to Hit Die rolls.",
+      "evidence": "Whenever you roll a Hit Point Die to regain Hit Points, double the number of Hit Points it restores."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: no MagicItemRecord in UnitRecord. Even if that were added, two atom gaps remain (modify_roll_floor for the death save minimum, hit_die_window + HP multiplier for the healing boost). The death save floor mechanic is also novel enough to require a new window variant. All three mechanics of this item require widenings beyond what the current surface can honestly express."
+  "notes": "Passive family and magic_item kind fit (wearing_item condition, uncommon, requires attunement, destruction: none). Both mechanics are blocked by missing atoms. Life Preservation needs a roll-floor concept; Natural Healing Boost needs both a new PassiveOperation trigger kind (on_hit_die_rolled) and a new effect (multiply HD recovery by N). Neither can be approximated honestly with existing atoms — modify_roll_numeric is unconditionally additive, not a conditional floor; maximize_healing_received applies to all healing sources, not just HD rolls."
 }

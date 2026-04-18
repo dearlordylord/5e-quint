@@ -1,0 +1,21 @@
+{
+  "description": "You have Darkvision with a range of 120 feet.",
+  "id": "orc_darkvision",
+  "kind": "species_trait",
+  "mechanics": {
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_sense",
+        "rangeFeet": 120,
+        "sense": "darkvision"
+      }
+    ]
+  },
+  "name": "Darkvision",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Species/Orc#Darkvision"
+  },
+  "species": "orc"
+}

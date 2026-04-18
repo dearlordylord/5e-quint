@@ -1,28 +1,23 @@
 {
   "unit_slug": "warlock_fiend_spells_l3",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_spell_access"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_grant family for ClassFeatureMechanics",
-      "justification": "Fiend Spells has no activation cost, no use_count resource, and no rest reset. Spells are 'always prepared' — a permanent passive benefit with no player decision point beyond having the requisite warlock level. The only existing ClassFeatureMechanics family is 'activation', which structurally requires activationCost + resource + resetCadence. A new passive family is needed that carries only a level-threshold schedule and a list of granted effects.",
+      "kind": "new_variant",
+      "name": "EquipmentPredicate / per-grant class-level threshold",
+      "justification": "The Fiend Spells table grants different spells at warlock levels 3, 5, 7, and 9. PassiveMechanics.grants is a flat unconditional list — there is no mechanism to gate individual grants on reaching a minimum class level. The L5/7/9 rows (Fireball, Stinking Cloud; Fire Shield, Wall of Fire; Geas, Insect Plague) cannot be represented without a per-grant level predicate.",
       "evidence": "when you reach a Warlock level specified in the Fiend Spells table, you thereafter always have the listed spells prepared"
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_spell_access variant for ClassFeatureEffect",
-      "justification": "ClassFeatureEffect currently supports only GrantExtraActionEffect and HealHpEffect. Granting always-prepared spells requires a grant_spell_access effect variant. The v4 taxonomy already includes grant_spell_access as an effect atom, so no atom_widening is needed — only the surface ClassFeatureEffect union needs the new variant.",
-      "evidence": "you thereafter always have the listed spells prepared — Burning Hands, Command, Scorching Ray, Suggestion (L3); Fireball, Stinking Cloud (L5); Fire Shield, Wall of Fire (L7); Geas, Insect Plague (L9)"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ThresholdTiers<SpellId[]> payload for grant_spell_access",
-      "justification": "The spell grants are gated by warlock class-level thresholds (3, 5, 7, 9), each tier adding a new batch of spell IDs. The existing ThresholdTiers<T> is parameterized over T but only used with numeric T in the current surface. A list-valued tier payload (each tier unlocking additional spell IDs rather than replacing a scalar) is a structurally distinct shape that the current ThresholdTiers encoding does not honestly capture.",
-      "evidence": "Level 3: Burning Hands, Command, Scorching Ray, Suggestion; Level 5: Fireball, Stinking Cloud; Level 7: Fire Shield, Wall of Fire; Level 9: Geas, Insect Plague"
     }
   ],
   "confidence": "high",
-  "notes": "This is the canonical 'domain spell list' pattern — a subclass feature that grants always-prepared spells at class-level thresholds. No honest encoding is possible under the current surface: the activation family requires activationCost/resource/resetCadence that this feature doesn't have. A passive_grant family + grant_spell_access effect variant would cover this unit and the structurally identical 'Domain Spells' features across other classes (Cleric Life Domain Spells, Paladin Oath of Devotion Spells, Druid Circle of the Land Spells, etc.)."
+  "notes": "The L3 row (Burning Hands, Command, Scorching Ray, Suggestion) encodes cleanly as passive grant_spell_access(prepared). The full feature spans levels 3/5/7/9; encoding only L3 is honest for this slug but incomplete for the feature as a whole. The gap is in PassiveMechanics: grants have no per-entry class-level threshold variant — EquipmentPredicate covers equipment state only, not character/class level advancement."
 }

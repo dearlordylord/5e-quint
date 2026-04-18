@@ -1,109 +1,95 @@
-# Widening Proposal: Evasion (monk L7)
+# Proposal: Monk Evasion L7
 
-**Outcome:** `structural_widening`
+## Outcome: `atom_widening`
 
----
+## Unit
 
-## What the rule says
+**Evasion (Monk Level 7)**
 
-> When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You don't benefit from this feature if you have the Incapacitated condition.
+> When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail.
+>
+> You don't benefit from this feature if you have the Incapacitated condition.
 
----
+## What fits
 
-## Why the unit does not fit
+- **Family**: `passive` — correct. Evasion is always-on while active, no activation cost, no resource.
+- **`suppressedBy`**: `[{ kind: "condition_active", conditions: ["incapacitated"] }]` — fits exactly; same pattern as Barbarian Danger Sense.
 
-### Gap 1 — No passive class feature family
+## What's missing
 
-`ClassFeatureMechanics` has exactly one variant:
+The core mechanic has no atom. Evasion modifies the **outcome semantics** of a specific class of save effects:
 
-```typescript
-export type ClassFeatureMechanics = ClassFeatureActivationMechanics;
-// family: "activation"
-```
+| Context | Normal | With Evasion |
+|---|---|---|
+| Succeed Dex save (half-damage effect) | ½ damage | 0 damage |
+| Fail Dex save (half-damage effect) | full damage | ½ damage |
 
-The `activation` family requires:
-- `activationCost` — how the player triggers the feature
-- `resource: UseCountResource` — a use pool
-- `resetCadence: RestResetCadence` — how that pool refills
+No existing atom captures this. The closest candidates, and why they fail:
 
-Evasion has none of these. It is a **passive, persistent interceptor** that fires automatically every time a matching Dex half-damage save-gate targets the feature owner. There is no player trigger, no resource consumed, and no cadence to reset.
+- **`modify_roll_advantage`** — grants advantage/disadvantage on the roll itself. Evasion doesn't touch the roll; it changes what the result *means*.
+- **`grant_resistance`** — halves all incoming damage of a type, unconditionally. Evasion is conditional on succeeding a specific class of save, and additionally zeroes damage on success rather than halving.
+- **`grant_damage_immunity`** — immunity to a damage type. Evasion is not blanket immunity; failure still deals half damage.
+- **`modify_roll_numeric`** — numeric bonus to a roll. Same issue as `modify_roll_advantage`.
 
-Encoding this in `activation` would require fabricating `activationCost: { kind: "free" }`, a dummy `use_count` resource, and a dummy reset cadence. All three would be lies about how the feature works. A misleading trace is worse than no trace.
+## Proposed atom
 
-**Proposed addition:** A `"passive"` (or `"passive_modifier"`) family for `ClassFeatureMechanics`. This family has no activation cost, no resource, and no reset cadence. It describes state that continuously applies to the feature owner and fires automatically when its trigger condition is met.
-
----
-
-### Gap 2 — No save-outcome override effect shape
-
-The effect of Evasion is:
-
-> For incoming save_gates that are Dex-typed and normally deal half-damage on success / full-damage on failure, remap the outcomes to: success → 0 damage, failure → half damage.
-
-No existing `ClassFeatureEffect` variant covers this:
-- `grant_extra_action` — unrelated
-- `heal_hp` — unrelated
-
-The v4 atom `modify_roll_substitute` addresses rolling a different die, not remapping save gate outcome branches.
-
-The v4 atom `grant_resistance` would halve incoming damage unconditionally — but Evasion's success branch gives full immunity (0 damage), not halving. Using `grant_resistance` would over-simplify and misrepresent the RAW mechanic.
-
-**Proposed addition:** A new `ClassFeatureEffect` variant, tentatively `modify_save_outcome`, with a shape along the lines of:
+**`evasion_save_outcome`** — modifies save outcome tiers for Dex-save-for-half-damage effects:
 
 ```typescript
 {
-  kind: "modify_save_outcome";
-  // The class of triggers this applies to: Dex saves that deal half on success
-  triggerClass: "dex_half_damage_save";
-  // Remapped outcome branches
-  onSuccess: { kind: "damage_multiplier"; multiplier: 0 };   // no damage
-  onFail:    { kind: "damage_multiplier"; multiplier: 0.5 }; // half damage
+  readonly kind: "evasion_save_outcome";
+  readonly saveAbility: "dex";
+  // Implicit semantics:
+  //   on success: 0 damage (instead of the default half)
+  //   on failure: half damage (instead of the default full)
 }
 ```
 
-Whether this is modeled as a new `ClassFeatureEffect` variant, a new `v4` atom, or a `save_gate_override` surface shape is a design decision. The key constraint is that the outcome remap must be expressible at the surface level, not just in prose.
+This atom is scoped to the "Dex save, succeed = half" save family. It is distinct from `grant_resistance` (which is passive and type-scoped, not outcome-scoped) and from `modify_roll_advantage` (which affects the roll, not the outcome).
 
----
+### Alternate framing
 
-### Gap 3 — Condition-based feature suppression
-
-> You don't benefit from this feature if you have the Incapacitated condition.
-
-This is a suppression predicate: the entire feature is inactive while the Incapacitated condition is present. There is currently no surface type for attaching a condition-gated suppression to a class feature. The v4 atom `suppress` exists, but no `ClassFeatureMechanics` field references it.
-
-This gap is narrower and will likely recur across many passive features (Danger Sense has an identical Incapacitated suppression clause). A shared `suppressedBy?: Condition[]` field on passive feature records, or a `suppress` edge in the tracer, would cover this pattern.
-
----
-
-## Proposed new surface shapes (sketch)
+If the surface prefers a more general atom, this could be expressed as a `modify_save_outcome` atom with a scope discriminant:
 
 ```typescript
-// New family for ClassFeatureMechanics
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effect: ClassFeaturePassiveEffect;
-  readonly suppressedBy?: ReadonlyArray<Condition>;
-};
-
-// New effect variant (sketch)
-export type SaveOutcomeOverrideEffect = {
-  readonly kind: "save_outcome_override";
-  readonly triggerClass: "dex_half_damage_save"; // extend as needed
-  readonly onSuccess: DamageOutcomeBranch;
-  readonly onFail: DamageOutcomeBranch;
-};
-
-// New ClassFeaturePassiveEffect union
-export type ClassFeaturePassiveEffect = SaveOutcomeOverrideEffect; // extend as needed
-
-// Updated union
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics
-  | ClassFeaturePassiveMechanics;
+{
+  readonly kind: "modify_save_outcome";
+  readonly scope: { readonly kind: "dex_save_for_half_damage" };
+  // on success: onSuccessOutcome = "none" (no damage)
+  // on failure: onFailOutcome = "half" (half damage)
+}
 ```
 
----
+This alternate form would also cover future units like Rogue's Evasion (identical text) and any other "evasion-style" feature without inventing separate atoms per class.
 
-## Pressure coverage
+## Encoding sketch (not authored — missing atom)
 
-This gap is not unique to Evasion. The rogue's **Evasion (rogue L7)** is identical text. Multiple other passive features (Danger Sense, Uncanny Dodge, Barbarian Feral Instinct, etc.) would also require a `"passive"` family. The `activation` family alone cannot honestly represent the class feature space.
+```dhall
+{ kind = "class_feature"
+, id = "monk_evasion_l7"
+, name = "Evasion"
+, className = "monk"
+, acquiredAtLevel = 7
+, provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Evasion" }
+, description = "..."
+, mechanics =
+    { family = "passive"
+    , suppressedBy =
+        [ { kind = "condition_active"
+          , conditions = [ "incapacitated" ]
+          }
+        ]
+    , grants =
+        [ { kind = "evasion_save_outcome"  -- MISSING ATOM
+          , saveAbility = "dex"
+          }
+        ]
+    }
+}
+```
+
+## Notes
+
+- Rogue also has Evasion (identical text, same level 7). The proposed atom would cover both without duplication.
+- The `suppressedBy` mechanism already handles the Incapacitated suppressor cleanly.
+- No new family or structural widening is needed — only this one atom is missing.

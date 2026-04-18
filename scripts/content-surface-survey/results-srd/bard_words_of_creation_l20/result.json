@@ -1,28 +1,23 @@
 {
   "unit_slug": "bard_words_of_creation_l20",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_spell_access"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "passive_class_feature family",
-      "justification": "Words of Creation is a permanent passive modifier. The existing ClassFeatureMechanics only covers 'activation' family (requires use_count, activationCost, resetCadence). None of those fields apply: there is no activation, no use count, and no reset cadence — the feature is always-on from level 20. Encoding it under 'activation' with fabricated use_count/resetCadence values would produce a false trace.",
-      "evidence": "You therefore always have the Power Word Heal and Power Word Kill spells prepared. When you cast either spell, you can target a second creature with it if that creature is within 10 feet of the first target."
-    },
-    {
-      "kind": "new_variant",
-      "name": "grant_spell_access variant of ClassFeatureEffect",
-      "justification": "The feature grants always-prepared access to two named spells. The v4 taxonomy has a grant_spell_access atom, but ClassFeatureEffect union only contains GrantExtraActionEffect | HealHpEffect. A new variant is needed, e.g. { kind: 'grant_spell_access'; spellIds: ReadonlyArray<string>; alwaysPrepared: true }.",
-      "evidence": "you therefore always have the Power Word Heal and Power Word Kill spells prepared"
-    },
-    {
       "kind": "new_atom",
-      "name": "modify_named_spell_targeting (secondary adjacent target)",
-      "justification": "The feature allows optionally targeting a second creature within 10 feet of the first when casting the two named spells. This is a class-feature-granted modification of specific spells' cast-time target selection — not slot-level scaling, not a spell-internal rule, but a permanent feature-level rider. No v4 atom captures 'add optional secondary target within N feet of primary target when casting a specific named spell'.",
+      "name": "extend_spell_target_count",
+      "justification": "The secondary-target clause modifies how many creatures a specific named spell may target when cast through this feature, bounded by proximity to the primary target. No existing v4 atom or grant_spell_access field models this. grant_spell_access.targetRestriction restricts targets; it cannot add them. scale_target_count scales by slot level, not by feature. A new atom or a new field on grant_spell_access is needed.",
       "evidence": "When you cast either spell, you can target a second creature with it if that creature is within 10 feet of the first target."
     }
   ],
   "confidence": "high",
-  "notes": "No .dhall, .json, or .trace.md authored — the unit does not fit any existing ClassFeatureMechanics family. Three stacked gaps: (1) no passive/permanent class feature family [structural — dominant]; (2) ClassFeatureEffect missing grant_spell_access variant [surface]; (3) no v4 atom for feature-granted secondary-target-adjacent-to-primary modifier on named spells [atom]."
+  "notes": "The two grant_spell_access(prepared) atoms encode the always-prepared clause honestly and typecheck cleanly. The secondary-target-within-10-feet rider is omitted — it has no corresponding v4 atom or surface field. The closest analogue would be a new field on grant_spell_access such as additionalTargets: { count: number, maxFeetFromPrimary: number }, or a standalone effect atom that modifies targeting for specific spells. Classified as atom_widening because the gap is a missing v4 effect/modifier concept, not a missing mechanics family or surface type variant."
 }

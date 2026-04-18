@@ -1,194 +1,123 @@
-# Proposal: Widenings for Elemental Fury (druid L7)
+# Proposal: Druid Elemental Fury L7
 
-## Summary
+**Outcome**: `structural_widening`
 
-**Outcome:** `structural_widening`
+## SRD Text
 
-Elemental Fury grants a level-7 druid one of two permanent sub-features. Neither sub-feature can be honestly encoded in the current surface. Three structural gaps and two surface-level variant gaps were identified.
+> **Potent Spellcasting.** Add your Wisdom modifier to the damage you deal with any Druid cantrip.
+>
+> **Primal Strike.** Once on each of your turns when you hit a creature with an attack roll using a weapon or a Beast form's attack in Wild Shape, you can cause the target to take an extra 1d8 Cold, Fire, Lightning, or Thunder damage (choose when you hit).
 
----
+## Why It Does Not Fit
 
-## Outer structure gap: choose-one-of sub-features
+Elemental Fury has three independent encoding gaps:
 
-The feature reads: *"You gain one of the following options of your choice."*
+### Gap 1 — Build-time one-of-N option choice (structural)
 
-`ClassFeatureMechanics` has a single `family` discriminant. There is no way to express "pick one of N mechanics payloads at level-up." This is a character-creation-time choice, not a runtime activation. The surface needs either:
+The feature grants exactly **one** of two mechanically distinct packages chosen at character level-up. The existing surface has no shape for this:
 
-- A `choose_one_of` wrapper at the `ClassFeatureRecord` level, or
-- Separate sibling `ClassFeatureRecord`s under a shared parent feature with a `choice_group` link.
+- `composite` grants **all** parts simultaneously — wrong semantics.
+- `CastTimeEffectModeChoice` is cast-time — wrong scope.
+- `grant_feat` is a feat-level pick — wrong abstraction level.
 
-Until this is resolved, Elemental Fury cannot be encoded as one record — it would need to split into two records (one per option) with a linking mechanism the surface does not currently have.
+Many SRD class features use this "choose one of the following" pattern (Fighting Styles on some classes, Elemental Fury, Blessed Strikes, etc.). A shared `build_time_option_choice` wrapper over `ClassFeatureComponentMechanics` alternatives is needed.
 
----
+### Gap 2 — `on_hit_trigger` not in `ClassFeatureMechanics` (structural)
 
-## Gap 1 — Missing `passive` class feature family
+Primal Strike's mechanic is precisely the `on_hit_trigger` / `MasteryMechanics` family:
 
-**Unit:** Potent Spellcasting  
-**Text:** *"Add your Wisdom modifier to the damage you deal with any Druid cantrip."*
+- Trigger: weapon hit or Wild Shape (Beast form) attack hit
+- Effect: `damage` (1d8, player-chosen type from {cold, fire, lightning, thunder})
+- Usage limit: `once_per_turn`
 
-This sub-feature is permanently active: no activation cost, no use count, no rest reset. The only `ClassFeatureMechanics` family is `activation`, which requires:
+`OnHitTriggerMechanics` exists and `MagicItemComponentMechanics` admits it, but `ClassFeatureComponentMechanics` is restricted to `PassiveMechanics | ActivatedAbilityMechanics`. Extending `ClassFeatureComponentMechanics` to include `OnHitTriggerMechanics` would unblock Primal Strike and likely other class features with the same pattern (Divine Strike for Clerics, Sneak Attack for Rogues when modeled as on-hit).
+
+Additionally, the attack filter for Primal Strike spans both **weapon attacks** and **Wild Shape Beast form attacks**. The current `MasteryTrigger` (`weapon_hit` | `weapon_hit_melee_only`) has no way to express "weapon or Beast form natural weapon". A new variant such as `weapon_or_natural_weapon_hit` would be needed.
+
+### Gap 3 — No cantrip/spell-class filter on `modify_damage_numeric` (surface)
+
+Potent Spellcasting adds Wis modifier to damage "with any Druid cantrip". The `modify_damage_numeric` atom currently supports only `weaponFilter?: WeaponFilter` (weapon_category / weapon_property / specific_item). There is no filter for spell level (cantrip = level 0) or class origin.
+
+A `spellFilter` variant such as `{ kind: "cantrip" }` or `{ kind: "class_cantrip", className: "druid" }` would allow honest encoding without overstating the bonus (e.g., incorrectly applying it to non-cantrip spells or non-Druid cantrips taken through multiclassing).
+
+### Gap 4 — Hit-time damage type choice labeling (surface, minor)
+
+The `CastTimeChoice<DamageType>` shape technically has the right structure for "choose from {cold, fire, lightning, thunder} when you hit", but its `kind: "choice"` label reads as cast-time. The semantics are hit-time. This may be acceptable with a loose reading, or may need a parallel `hit_time_choice` variant for clarity. This is minor relative to Gaps 1–3.
+
+## Proposed Surface Changes
+
+### 1. `build_time_option_choice` for `ClassFeatureMechanics`
 
 ```typescript
-{
-  activationCost: ClassFeatureActivationCost;
-  resource: UseCountResource;
-  resetCadence: RestResetCadence;
-  effect: ClassFeatureEffect;
-}
-```
-
-None of these fields have any counterpart in the rule text. Encoding this as `activationCost: { kind: "free" }` with a fake `use_count` and `resetCadence` would fabricate state that the rule does not have.
-
-**Proposed widening:** A new `passive` family for `ClassFeatureMechanics`:
-
-```typescript
-export type ClassFeaturePassiveMechanics = {
-  readonly family: "passive";
-  readonly effect: ClassFeaturePassiveEffect;
+export type ClassFeatureOptionChoiceMechanics = {
+  readonly family: "build_time_option_choice";
+  readonly label: string;
+  readonly options: ReadonlyNonEmptyArray<{
+    readonly id: string;
+    readonly displayName: string;
+    readonly mechanics: ClassFeatureComponentMechanics;
+  }>;
 };
+
+export type ClassFeatureMechanics =
+  | ClassFeatureComponentMechanics
+  | CompositeClassFeatureMechanics
+  | ClassFeatureOptionChoiceMechanics;  // new
 ```
 
-This parallels the existing `activation` family but with no resource/reset machinery.
-
----
-
-## Gap 2 — Missing `ability_score_damage_bonus` effect type
-
-**Unit:** Potent Spellcasting  
-**Text:** *"Add your Wisdom modifier to the damage you deal with any Druid cantrip."*
-
-The needed effect is: "add a specific ability modifier (Wis) to damage from a filtered class of actions (Druid cantrips)."
-
-`ClassFeatureEffect` currently only includes `GrantExtraActionEffect | HealHpEffect`. `modify_roll_numeric` exists as an ongoing operation for spells (via `RollModifierOperation`), but:
-
-1. That type uses a fixed `DiceDelta`, not an ability modifier value.
-2. There is no scope filter for "Druid cantrips" on any existing operation type.
-
-**Proposed widening:** New `ClassFeaturePassiveEffect` variant:
+### 2. `on_hit_trigger` in `ClassFeatureComponentMechanics`
 
 ```typescript
-export type ModifyActionDamageEffect = {
-  readonly kind: "modify_action_damage";
-  readonly bonus: { readonly kind: "ability_modifier"; readonly ability: Ability };
-  readonly scope: { readonly kind: "cantrip"; readonly className: ClassName };
-};
+export type ClassFeatureComponentMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics
+  | OnHitTriggerMechanics;  // admit existing type
 ```
 
-This represents "permanently add [ability] modifier to damage from [className] cantrips."
+And extend `MasteryTrigger`:
+```typescript
+export type MasteryTrigger =
+  | { readonly kind: "weapon_hit" }
+  | { readonly kind: "weapon_hit_melee_only" }
+  | { readonly kind: "weapon_or_natural_weapon_hit" };  // new — covers Wild Shape Beast attacks
+```
 
----
-
-## Gap 3 — Missing `on_hit_trigger` family for class features
-
-**Unit:** Primal Strike  
-**Text:** *"Once on each of your turns when you hit a creature with an attack roll using a weapon or a Beast form's attack in Wild Shape, you can cause the target to take an extra 1d8 Cold, Fire, Lightning, or Thunder damage (choose when you hit)."*
-
-This is structurally identical to mastery `OnHitTriggerMechanics` — an on-hit damage rider with a once-per-turn usage limit — but it belongs to a class feature record, not a mastery record. The mastery family cannot be used here because:
-
-- `MasteryRecord` represents a weapon mastery property, not a class feature.
-- Using `kind: "mastery"` would misrepresent the provenance (this is a Druid class feature, not a weapon mastery).
-
-**Proposed widening:** Extend `ClassFeatureMechanics` with an `on_hit_trigger` family:
+### 3. `spellFilter` on `modify_damage_numeric`
 
 ```typescript
-export type ClassFeatureOnHitTriggerMechanics = {
-  readonly family: "on_hit_trigger";
-  readonly trigger: ClassFeatureTrigger;
-  readonly optional: boolean;
-  readonly effect: OnHitRiderEffect;
-  readonly usageLimit?: UsageLimit;
-};
+export type SpellFilter =
+  | { readonly kind: "cantrip" }
+  | { readonly kind: "class_cantrip"; readonly className: ClassName };
+
+// In EffectAtom:
+| {
+    readonly kind: "modify_damage_numeric";
+    readonly delta: DiceDelta;
+    readonly weaponFilter?: WeaponFilter;
+    readonly spellFilter?: SpellFilter;  // new
+  }
 ```
 
-Where `ClassFeatureTrigger` handles the weapon-or-Wild-Shape case (see Gap 5 below).
+## Intended Encoding (post-widening)
 
----
-
-## Gap 4 — Missing runtime damage-type choice variant
-
-**Unit:** Primal Strike  
-**Text:** *"…extra 1d8 Cold, Fire, Lightning, or Thunder damage (choose when you hit)."*
-
-`DamageEffect.damageType` is `DamageType`, a single fixed literal. There is no "player selects from a closed set at resolution time" variant. This is a different concept from the damage type being chosen at cast/feature-acquisition time.
-
-**Proposed widening:** New `DamageType` surface shape for deferred choice:
-
-```typescript
-export type DamageTypeChoice =
-  | DamageType  // fixed
-  | { readonly kind: "choose_at_activation"; readonly options: ReadonlyArray<DamageType> };
 ```
+ClassFeatureRecord (druid_elemental_fury_l7)
+  mechanics: build_time_option_choice
+    option A: "Potent Spellcasting"
+      mechanics: passive
+        grants:
+          - modify_damage_numeric
+              delta: { kind: "ability_modifier", ability: "wis", sign: "+" }
+              spellFilter: { kind: "class_cantrip", className: "druid" }
 
-Used in `DamageEffect` (and potentially `DamageOnHitOperation`) to mark that the type is resolved at the moment the effect fires.
-
----
-
-## Gap 5 — Missing trigger variant for Wild Shape Beast-form attacks
-
-**Unit:** Primal Strike  
-**Text:** *"…using a weapon or a Beast form's attack in Wild Shape…"*
-
-The existing `MasteryTrigger` has:
-- `weapon_hit`
-- `weapon_hit_melee_only`
-
-Neither covers natural attacks made while in Wild Shape Beast form. A Beast form's attack is not a weapon attack. This distinction matters because Wild Shape Beast-form attacks cannot have weapon masteries applied to them.
-
-**Proposed widening:** New trigger variant (applicable to both mastery and the new class feature `on_hit_trigger` family):
-
-```typescript
-| { readonly kind: "weapon_or_wild_shape_attack" }
+    option B: "Primal Strike"
+      mechanics: on_hit_trigger
+        trigger: { kind: "weapon_or_natural_weapon_hit" }
+        optional: true
+        usageLimit: { kind: "once_per_turn" }
+        effect:
+          save_gate OR direct damage:
+            damage
+              damageType: { kind: "choice", label: "elemental type", options: ["cold","fire","lightning","thunder"] }
+              amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } }
 ```
-
-Or more compositionally:
-
-```typescript
-| { readonly kind: "any_of"; readonly triggers: ReadonlyArray<MasteryTrigger> }
-```
-
-Combined with a new base trigger `wild_shape_beast_attack`.
-
----
-
-## Encoding plan (once widenings land)
-
-If all five widenings are accepted, Elemental Fury would encode as two sibling `ClassFeatureRecord`s under a shared `choice_group`:
-
-**Option A — Potent Spellcasting:**
-```dhall
-{ family = "passive"
-, effect =
-    { kind = "modify_action_damage"
-    , bonus = { kind = "ability_modifier", ability = "wis" }
-    , scope = { kind = "cantrip", className = "druid" }
-    }
-}
-```
-
-**Option B — Primal Strike:**
-```dhall
-{ family = "on_hit_trigger"
-, trigger = { kind = "weapon_or_wild_shape_attack" }
-, optional = True
-, effect =
-    { kind = "damage"
-    , damageType = { kind = "choose_at_activation", options = [ "cold", "fire", "lightning", "thunder" ] }
-    , amount = { kind = "fixed", expr = { dice = 1, dieSize = 8 } }
-    }
-, usageLimit = { kind = "once_per_turn" }
-}
-```
-
----
-
-## Atom inventory impact
-
-| Gap | New atom required? | v4 candidate |
-|---|---|---|
-| `passive` family | No new atom — uses existing `modify_roll_numeric` or new effect variant | — |
-| `modify_action_damage` effect | New effect atom: `modify_action_damage` | Not in v4 |
-| `on_hit_trigger` class feature family | Reuses `on_hit_window` atom | Atom exists |
-| `choose_at_activation` DamageType | Surface shape only; no new atom | — |
-| `weapon_or_wild_shape_attack` trigger | No new atom — trigger shape only | — |
-
-The primary atom pressure is `modify_action_damage` (ability-score-rooted damage modifier to a scoped action class), which is absent from v4. This is `atom_widening` pressure nested inside a broader `structural_widening`.

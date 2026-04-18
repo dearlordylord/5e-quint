@@ -1,28 +1,24 @@
 {
   "unit_slug": "magic_item_tome_of_understanding",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "modify_ability_score",
-      "justification": "The existing surface can only set or floor an ability score to a fixed value. Tome of Understanding instead permanently increases Wisdom by a delta, with a higher cap than normal character progression surfaces currently expose.",
-      "evidence": "your Wisdom increases by 2, to a maximum of 30"
-    },
-    {
-      "kind": "new_variant",
-      "name": "ClassFeatureActivationCost.study",
-      "justification": "The item is not passive and not an instantaneous action-style activation. Its deterministic mechanic requires a study-time gate before the effect resolves.",
-      "evidence": "If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines"
-    },
-    {
-      "kind": "new_variant",
-      "name": "RestResetCadence.century",
-      "justification": "The item regains magic on a century-scale recharge, which is outside the existing short rest, long rest, dawn, and never cadences.",
-      "evidence": "The manual then loses its magic, but regains it in a century."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "activate",
+    "direct_apply",
+    "duration_window",
+    "magic_item_root",
+    "modify_ability_score",
+    "self",
+    "use_count"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "MagicItemRecord exists, but no honest encoding is available in the current read-only surface. The primary blocker is the missing additive ability-score-increase atom; the study window and century recharge are secondary surface gaps."
+  "notes": "All mechanics fit cleanly. Study cost (48h / 6 days) maps to ClassFeatureActivationCost.study. Wisdom +2 max 30 maps to modify_ability_score. Century reset maps to TimeResetCadence.century. Single-use pool with century refill encodes correctly."
 }

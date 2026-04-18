@@ -1,114 +1,150 @@
-# Proposal: Widenings required for Monk Martial Arts
+# Proposal: Monk Martial Arts — Surface Gaps
 
-**Unit:** Martial Arts (monk L1)
-**Outcome:** `structural_widening`
-**Confidence:** high
+**Unit**: Monk Martial Arts (Level 1 Class Feature)  
+**Outcome**: `atom_widening`  
+**Confidence**: High
 
----
+## Summary
 
-## Why it does not fit
-
-Martial Arts is a permanently-active conditional feature. While the monk is unarmed or wielding only Monk weapons and is not wearing armor or wielding a Shield, three distinct benefits apply automatically — no activation, no resource expenditure, no rest reset.
-
-The current `ClassFeatureMechanics` union has only one member: `ClassFeatureActivationMechanics`, which structurally requires:
-
-```ts
-{ family: "activation"; activationCost; resource: UseCountResource; resetCadence; effect }
-```
-
-None of these fields apply to Martial Arts. There is no use count, no reset cadence, and the three sub-mechanics are permanently granted under a condition — not activated on demand.
+All three core mechanics of Martial Arts require atoms that do not exist in the v4 taxonomy or the current TS surface. The equipment gate requires two additional surface widenings. No honest encoding is possible without fabricating atom kinds that would throw in the tracer's exhaustive switch.
 
 ---
 
-## Required widenings
+## Gap 1: `grant_bonus_action_attack` (atom_widening)
 
-### 1. Passive/permanent class feature family (structural)
+**Rule**: "You can make an Unarmed Strike as a Bonus Action."
 
-A `passive` (or `permanent_grant`) family is needed for class features that:
-- are always active under a condition, OR
-- are always active unconditionally (passive static grants)
+The closest existing atom is `grant_extra_action` (grants an additional Action subject to an `ActionRestriction`), but this grants a *full Action*, not a Bonus Action attack. The Bonus Unarmed Strike is:
 
-Martial Arts satisfies the conditional form: benefits apply only while unarmed/monk-weapon and no armor/shield.
+- Always available while the equipment gate holds (no use-count resource, no reset cadence)
+- Scoped specifically to Unarmed Strike
+- Uses the bonus action economy, not the action economy
 
-**Suggested shape (sketch):**
+There is no atom for "grant the ability to make a specific attack type as a Bonus Action." A new atom `grant_bonus_action_attack` is needed, carrying a weapon-kind or attack-type discriminant (e.g., `weaponKind: "unarmed_strike"`).
 
-```ts
-export type ClassFeaturePassiveMechanics = ClassFeatureMechanicsHeader_Passive & {
-  readonly family: "passive";
-  readonly condition?: PassiveCondition;   // new type: "unarmed_or_monk_weapon_unarmored" etc.
-  readonly grants: ReadonlyArray<PassiveGrant>;
-};
-```
-
-The `PassiveCondition` type would encode the equipment-state guard. The `PassiveGrant` union would carry each sub-mechanic.
-
----
-
-### 2. Damage substitution surface (surface widening)
-
-The Martial Arts Die says "roll 1d6 **in place of** the normal damage." This is a damage *override*, not a bonus. No existing `ClassFeatureEffect` or `OngoingOperation` covers substitution.
-
-The die scales by Monk class level: d6 → d8 (L5) → d10 (L11) → d12 (L17). This maps cleanly to the v4 `scale_die_size` atom (already in the taxonomy) once a substitution surface exists.
-
-**Suggested shape (sketch):**
-
-```ts
-export type SubstituteDamageDieEffect = {
-  readonly kind: "substitute_damage_die";
-  readonly targetWeaponKind: "unarmed_or_monk_weapon";
-  readonly amount: DiceAmount;   // threshold_tiers, axis=class, base={dice:1,dieSize:6}, tiers: [L5→d8, L11→d10, L17→d12]
-};
+**Proposed shape**:
+```typescript
+| {
+    readonly kind: "grant_bonus_action_attack";
+    readonly attackKind: "unarmed_strike" | "monk_weapon";
+  }
 ```
 
 ---
 
-### 3. Ability-score substitution surface (surface widening)
+## Gap 2: `substitute_damage_die` (atom_widening)
 
-Dexterous Attacks allows using DEX instead of STR for attack rolls, damage rolls, and Grapple/Shove save DCs on Unarmed Strikes and Monk weapons.
+**Rule**: "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons."
 
-The v4 taxonomy names `modify_roll_substitute` as an existing atom. However, `types.ts` has no surface shape that maps to it. `modify_roll_numeric` handles numeric deltas; `modify_roll_advantage` handles advantage state. Neither captures "which ability modifier feeds this roll."
+The die scales by class level: d6 (L1–4) → d8 (L5–10) → d10 (L11–16) → d12 (L17+).
 
-**Suggested shape (sketch):**
+`modify_damage_numeric` is additive — it adds a signed delta to damage rolls. The Martial Arts Die is a *substitution*: the player rolls the Martial Arts die *instead of* the weapon's normal damage die. This is fundamentally different from an additive bonus.
 
-```ts
-export type SubstituteAbilityEffect = {
-  readonly kind: "substitute_ability";
-  readonly replace: Ability;          // "str"
-  readonly withAbility: Ability;      // "dex"
-  readonly on: ReadonlyArray<"attack_roll" | "damage_roll" | "save_dc">;
-  readonly weaponKind: "unarmed_or_monk_weapon";
-};
+`scale_die_size` exists in the v4 taxonomy and would describe the progression, but there is no delivery atom for the substitution itself. A new atom is needed to express "when making an attack with a qualifying weapon, you may substitute this die for the weapon's damage die."
+
+**Proposed shape**:
+```typescript
+| {
+    readonly kind: "substitute_damage_die";
+    readonly amount: DiceAmount;  // threshold_tiers with axis="class" for the d6→d12 progression
+    readonly weaponFilter?: WeaponFilter | "unarmed_or_monk_weapon";
+    readonly optional: boolean;   // true — "you can roll 1d6 in place of…"
+  }
+```
+
+The scaling would encode as:
+```typescript
+amount: {
+  kind: "threshold_tiers",
+  axis: "class",
+  base: { dice: 1, dieSize: 6 },
+  tiers: [
+    { atLevel: 5,  override: { dieSize: 8 } },
+    { atLevel: 11, override: { dieSize: 10 } },
+    { atLevel: 17, override: { dieSize: 12 } }
+  ]
+}
 ```
 
 ---
 
-### 4. Unlimited / per-turn use cap (surface widening)
+## Gap 3: `substitute_attack_ability` (atom_widening)
 
-The Bonus Unarmed Strike can be used every turn, unlimited times per day. `UseCountCap` currently only supports `fixed` (a specific number) and `ThresholdTiers<number>`. `RestResetCadence` has no `per_turn` or `unlimited` variant.
+**Rule**: "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons."
 
-If the bonus-action unarmed strike is eventually modeled via an `activation`-adjacent family, the cap and cadence types need one of:
+The surface has `modify_roll_numeric` (additive delta) and `modify_roll_advantage` (advantage/disadvantage). Neither covers ability substitution — replacing the ability whose modifier is used in a roll. This is a qualitatively different operation: the modifier's sign and magnitude come from a different ability entirely.
 
-- A `{ kind: "unlimited" }` variant of `UseCountCap`, OR
-- A `per_turn` entry in `RestResetCadence` that resets the quota at each turn start
-
-Note: if a `passive` family is introduced (widening #1) with a dedicated `grant_bonus_action_attack` passive grant, this widening may become unnecessary — the grant is simply always available rather than tracked as a depleting resource.
-
----
-
-## Atom inventory check
-
-All three sub-mechanic atoms are already named in the v4 taxonomy:
-
-| Sub-mechanic | v4 atom | Gap |
-|---|---|---|
-| Bonus Unarmed Strike | `grant_extra_action` (approximate) | Not quite — it's a per-turn unarmed-only bonus action, not a full extra action |
-| Martial Arts Die | `scale_die_size` (scaling), but no substitution atom | Surface shape missing |
-| Dexterous Attacks | `modify_roll_substitute` | Surface shape missing in `types.ts` |
-
-The `modify_roll_substitute` atom is already listed in the v4 taxonomy (§9 Effect Atoms). It simply has no surface encoding yet.
+**Proposed shape**:
+```typescript
+| {
+    readonly kind: "substitute_attack_ability";
+    readonly substituteAbility: Ability;  // "dex"
+    readonly forAbility: Ability;         // "str"
+    readonly on: ReadonlyNonEmptyArray<"attack_roll" | "damage_roll">;
+    readonly weaponFilter?: WeaponFilter | "unarmed_or_monk_weapon";
+  }
+```
 
 ---
 
-## Recommended classification rationale
+## Gap 4: `substitute_maneuver_dc_ability` (atom_widening)
 
-The primary gap is **structural** (no passive family), not merely surface-level. Even if widenings 2–4 were added today, Martial Arts still could not be encoded without widening #1. Hence `structural_widening` is the correct top-level outcome, with the secondary surface gaps documented above.
+**Rule**: "When you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+
+Grapple and Shove are special options within the Unarmed Strike, each establishing a save DC for the target. This is a DC ability substitution scoped to specific combat maneuvers. No existing DC-related atom covers this: `DcSource` is a spell/ability DC shape, not a per-maneuver ability substitution for the attacker's DC calculation.
+
+**Proposed shape**:
+```typescript
+| {
+    readonly kind: "substitute_maneuver_dc_ability";
+    readonly substituteAbility: Ability;  // "dex"
+    readonly forAbility: Ability;         // "str"
+    readonly maneuvers: ReadonlyNonEmptyArray<"grapple" | "shove">;
+  }
+```
+
+Alternatively, this could be folded into `substitute_attack_ability` with an extended `on` field that includes `"maneuver_dc"`.
+
+---
+
+## Gap 5: Equipment predicate — unarmed or Monk weapons (surface_widening)
+
+**Rule**: "while you are unarmed or wielding only Monk weapons"
+
+The `wielding_weapon` predicate covers `ranged | melee_two_handed | melee_one_handed | two_weapons`. None of these cover "unarmed state" or "wielding only class-specific weapons." The disjunction ("unarmed OR Monk weapons") also cannot be composed from existing predicates since `all_of` is conjunctive.
+
+A new predicate variant is needed:
+
+```typescript
+| { readonly kind: "unarmed_or_wielding_monk_weapons" }
+```
+
+Or alternatively, a general `any_of` disjunctive predicate (mirroring `all_of`) plus an `unarmed` predicate variant.
+
+---
+
+## Gap 6: Equipment predicate — not wielding Shield (surface_widening)
+
+**Rule**: "you aren't wearing armor or wielding a Shield"
+
+`not_wearing_armor` accepts `categories: ReadonlyArray<"light" | "medium" | "heavy">`. Shield is an `ArmorTrainingCategory` but is absent from the category list. Adding `"shield"` to the categories array of `not_wearing_armor` would resolve this:
+
+```typescript
+// Current:
+readonly categories: ReadonlyArray<"light" | "medium" | "heavy">
+
+// Proposed:
+readonly categories: ReadonlyArray<"light" | "medium" | "heavy" | "shield">
+```
+
+---
+
+## Encoding Sketch (pending widening)
+
+Once the above atoms/variants land, Martial Arts would encode as a `class_feature` with `family: "composite"` containing:
+
+1. A `passive` part with `condition: { kind: "unarmed_or_wielding_monk_weapons" }` AND `{ kind: "not_wearing_armor", categories: ["light", "medium", "heavy", "shield"] }` (via `all_of`) carrying grants:
+   - `grant_bonus_action_attack` (Bonus Unarmed Strike)
+   - `substitute_damage_die` with threshold_tiers for the Martial Arts Die scaling
+   - `substitute_attack_ability` (Dex for Str on attack/damage)
+   - `substitute_maneuver_dc_ability` (Dex for Str on Grapple/Shove DC)

@@ -1,34 +1,22 @@
 {
   "unit_slug": "magic_item_cubic_gate",
-  "outcome": "structural_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_subgraph",
-      "name": "MagicItemRecord",
-      "justification": "The surface type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord has no magic_item variant. The v4 taxonomy lists magic_item_root as a source atom and the survey corpus includes many magic items (tier 2), but the TypeScript surface has never been widened to accept a magic item record shape. No honest encoding is possible without a new top-level record kind.",
-      "evidence": "Cubic Gate is kind: magic_item. UnitRecord does not include a MagicItemRecord branch."
+      "kind": "new_atom",
+      "name": "open_planar_portal",
+      "justification": "Gate creates a persistent, bidirectional circular portal between planes — creatures on either side can walk through it. `transport_exile` is directional (one-way send), making it semantically wrong for a portal. A new atom is needed for 'create a traversable passage to another plane while concentration holds.'",
+      "evidence": "Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side."
     },
     {
       "kind": "new_variant",
-      "name": "charge_recharge_daily_dice",
-      "justification": "The item has 3 charges and regains 1d3 expended charges daily at dawn. The existing UseCountResource + RestResetCadence only models rest-based fixed refills. This requires a new recharge cadence variant: daily-at-dawn with a dice-valued refill amount.",
-      "evidence": "The cube has 3 charges and regains 1d3 expended charges daily at dawn."
-    },
-    {
-      "kind": "new_variant",
-      "name": "cast_named_spell_via_charge",
-      "justification": "Each of the two item modes (Gate, Plane Shift) works by expending a charge to cast a named spell. The surface has no shape for 'consume charge → cast spell by reference'. The v4 atom inventory has stored_spell (attachment) and grant_spell_access (effect) but neither is wired into an item-activation mechanics family.",
-      "evidence": "As a Magic action, you can expend 1 of the cube's charges to cast one of the following spells using the cube. Gate. [...] Plane Shift. [...]"
-    },
-    {
-      "kind": "new_variant",
-      "name": "plane_keyed_side_selection",
-      "justification": "The six faces are each keyed to a different plane determined by the GM. The portal or shift destination is the plane keyed to the pressed side. This is a DM-agenda assignment at item creation time, but the mechanical consequence (transport to that plane) is a deterministic effect. A closed atom for plane-of-existence target would be needed, or this is classified as caller-owned metadata.",
-      "evidence": "The six sides of the cube are each keyed to a different plane of existence [...] The other sides are linked to planes determined by the GM."
+      "name": "GrantedSpellTargetRestriction.face_keyed_plane",
+      "justification": "The cube's six faces are each assigned to a specific plane at item-creation time. Pressing a face constrains the destination to that face's plane — a closed set of up to 6 DM-determined options, not freely chosen from all planes. No existing GrantedSpellTargetRestriction variant captures 'destination locked to one of N pre-assigned item-face options.'",
+      "evidence": "The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM."
     }
   ],
   "confidence": "high",
-  "notes": "Primary blocker is structural: magic_item is not a UnitRecord variant. All secondary blockers (dice-valued daily recharge, spell-by-reference casting, plane-keyed selection) are downstream of the missing kind. The plane-keying is partially DM-agenda (which planes) but the transport effect itself is deterministic, so this is not purely dm_agenda — it has real mechanical content that belongs in core once the kind exists."
+  "notes": "The charge-pool / dawn-recharge / magic-action frame fits ActivatedAbilityMechanics cleanly. Plane Shift could be partially encoded as `transport_exile` with `destination: 'different_plane'`, missing only the face-plane constraint. Gate has no honest atom — `transport_exile` is directional exile, not portal creation. Because Gate is half the item's mechanical payload, a complete honest encoding is impossible without the new atom. No dhall/json produced."
 }

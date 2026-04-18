@@ -1,28 +1,9 @@
 {
   "unit_slug": "fighter_epic_boon_l19",
-  "outcome": "structural_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_subgraph",
-      "name": "passive_grant family for ClassFeatureMechanics",
-      "justification": "Epic Boon is a permanent character-sheet acquisition with no activation cost, no use-count resource, and no rest reset. The existing 'activation' family requires all three. A new family (e.g. 'passive_grant' or 'level_grant') is needed for features that are simply owned at level-up with no trigger.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_atom",
-      "name": "grant_feat",
-      "justification": "The effect of Epic Boon is acquiring a feat of the player's choice from the Epic Boon category. No ClassFeatureEffect variant covers this. The v4 taxonomy has grant_proficiency and grant_spell_access but no grant_feat atom.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
-    },
-    {
-      "kind": "new_variant",
-      "name": "open_choice constraint on grant_feat",
-      "justification": "The feat is not a fixed selection — the player chooses from the Epic Boon feat category (or any feat they qualify for). This is an open-choice picker pattern that the current surface has no way to encode for feat grants. The surface would need a way to express 'one feat from category X' or 'any qualifying feat'.",
-      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify. Boon of Combat Prowess is recommended."
-    }
-  ],
+  "outcome": "clean",
+  "atoms_used": ["class_feature_root", "grant", "grant_feat"],
+  "relations_used": ["grants", "roots"],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Unit is a straightforward level-19 feat grant — the entire mechanic is 'permanently acquire one feat of choice'. No activation, no resource, no reset. The current surface only models activatable class features. This pattern (feat-slot grant at a class level) appears identically across all 12 classes at L19, so any fix here unblocks all 12 Epic Boon entries plus similar feat-grant features elsewhere in the class tables."
+  "notes": "Identical structure to bard_epic_boon_l19, cleric_epic_boon_l19, and paladin_epic_boon_l19. Passive grant_feat with all four FeatCategory values encodes 'an Epic Boon feat or another feat of your choice for which you qualify'."
 }
