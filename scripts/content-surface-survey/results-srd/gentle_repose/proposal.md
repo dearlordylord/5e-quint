@@ -1,71 +1,60 @@
-# Proposal: Gentle Repose — atom_widening
+# Proposal: `freeze_deadline` atom (Gentle Repose widening)
 
 ## Unit
 
-**Gentle Repose** (SRD 5.2.1, Level 2 Necromancy)  
-Casting Time: Action or Ritual | Range: Touch | Duration: 10 days (timed, non-concentration)  
-Components: V, S, M (2 CP, consumed)
+Gentle Repose — SRD 5.2.1, Level 2 Necromancy spell.
 
-## What Fits
+## What encodes cleanly
 
-The structural shell encodes without widening:
+| Mechanic | Encoding |
+|---|---|
+| "can't become Undead" | `block_reanimation` EffectAtom (already in types.ts) |
+| Timed 10-day duration | `duration: { kind: "timed", value: { unit: "day", amount: 10 } }` |
+| Casting Time: Action or Ritual | `castingTime: { kind: "action", ritual: true }` |
+| Target: corpse or remains | `attachment: { kind: "object", count: 1 }` |
+| Material component (consumed) | `components.materialConsumed: true` |
 
-- `spell` kind, `activation` family (single `direct` phase)
-- `{ kind: "timed", value: { unit: "day", amount: 10 } }` duration
-- `{ kind: "action", ritual: true }` casting time
-- `{ kind: "touch" }` range
-- `{ kind: "object", count: 1 }` attachment (targets a corpse/remains)
-- M component: `{ m: "2 Copper Pieces, which the spell consumes", materialCostGp: ..., materialConsumed: true }`
+"Protected from decay" is DM-agenda narrative (no mechanical atom models physical decay).
 
-## What Doesn't Fit
+## The missing mechanic
 
-### Effect 1 — "can't become Undead"
+> "The spell also effectively extends the time limit on raising the target from the dead, since days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead."
 
-RAW: "the target… can't become Undead"
+This is a cross-spell deadline interaction: for each day Gentle Repose persists on the corpse, the 10-day window of *Raise Dead* (or similar revival spells) does not advance. In mechanical terms, the spell **freezes the elapsed-time counter** of an adjacent effect.
 
-This is a deterministic mechanical protection: any spell or effect that would animate the target as undead fails while Gentle Repose persists. It is distinct from:
+No existing EffectAtom in v4 models this. The closest candidates fall short:
 
-- `block_targeting` — that prevents targeting of a *creature* by spells/effects (Globe of Invulnerability idiom). This protection applies to a *corpse/object* against a specific category of transformation.
-- `grant_condition_immunity` — covers the 15 SRD conditions only; "undead" is a creature type, not a condition.
-- `grant_damage_immunity` — wrong domain entirely.
+- `block_reanimation` — prevents the corpse from becoming undead; does not touch Raise Dead's deadline.
+- `remove_condition` / `grant_condition_immunity` — condition-scoped; deadlines are not conditions.
+- `modify_roll_numeric` / `modify_roll_advantage` — roll modifiers; no deadlines.
 
-**Proposed atom: `block_reanimation`**
+## Proposed atom: `freeze_deadline`
 
 ```typescript
+// Suspends the elapsed-time progress of a named adjacent spell or
+// effect while the host spell persists. For each in-game day the host
+// persists, the named effect's countdown does not advance by one day.
+// Gentle Repose: freezes the Raise Dead (and similar revival spells)
+// 10-day resurrection window while the target is under the host spell.
+//
+// `forSpellFamily` is a closed descriptor naming which deadline(s) are
+// frozen. Kept as a string tag rather than a specific spellId so the
+// atom generalizes to the SRD resurrection family (Raise Dead,
+// Resurrection, True Resurrection, Revivify) without enumerating each.
 | {
-    readonly kind: "block_reanimation";
+    readonly kind: "freeze_deadline";
+    readonly forSpellFamily: "resurrection_window";
   }
 ```
 
-Emits in the v4 effect category. No parameters needed — the scope is always "undead creation" and applies to the attached object while the spell persists. Could optionally carry a `creatureType` field if future spells block other type-transitions (e.g., "can't become a Construct"), but single-unit pressure doesn't warrant it now.
+### v4 taxonomy fit
 
-### Effect 2 — "days don't count against raise dead time limit"
+This concept does not appear in the v4 atom taxonomy (`TAXONOMY_atoms_graph.md`). It is not a scaling atom, a roll modifier, a condition modifier, or an HP/AC modifier. It is a novel interaction on a **spell-duration timeline**. A potential v4 family home would be in the **Effect Atoms** section as a lifecycle-adjacent effect: "pause the elapsed-time progress of an adjacent spell window."
 
-RAW: "days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead"
+### Scope
 
-This pauses countdown timers associated with resurrection-window mechanics. It is not:
+Single-unit pressure so far (Gentle Repose is the only SRD spell with this mechanic). However, the resurrection spell family (Raise Dead, Revivify, Resurrection) all have timed windows that DMs track, and any future "preserve corpse" mechanics would also need this. Worth adding as a first-class atom.
 
-- A delta on any numeric stat (HP, speed, AC, save, ability score)
-- A condition, resistance, or immunity
-- A blocking or negation of a spell being cast
+### Alternative: `dm_agenda` treatment
 
-It's a meta-mechanic that modifies how another spell's time constraint is evaluated. The closest analog would be a DurationEndTrigger suppressor, but that concept doesn't exist as a first-class atom and the current `earlyEnd` field on `Duration` only adds new termination triggers, not suppresses existing progression.
-
-**Proposed atom: `pause_deadline`**
-
-```typescript
-| {
-    readonly kind: "pause_deadline";
-    readonly scope: "resurrection_window";
-  }
-```
-
-`scope` is closed to `"resurrection_window"` for now (the only RAW example). If other deadline-pausing effects surface (e.g., a feature that pauses a curse's countdown), the scope could be widened.
-
-### Minor: ObjectFilter lacks `corpse` discriminant
-
-The existing `ObjectFilter` supports `material`, `heldOrWorn`, and `manufactured`. A corpse is none of these (it's not metal, not flammable, and its held/worn or manufactured status is irrelevant). Authoring the attachment would require omitting the filter entirely, which permits any object. This is a minor `surface_widening` — a `biological_remains?: true` flag or a `kind: "corpse"` variant would close it — but it's secondary to the atom gaps above.
-
-## Classification
-
-`atom_widening` — the spell's family, duration, range, and casting-time shapes all fit; two effect atoms (`block_reanimation`, `pause_deadline`) are absent from both the v4 taxonomy and the TS surface.
+If the project decides that resurrection-window tracking is inherently DM-owned (the deadline is narrated, not enforced by the engine), this mechanic could be classified as DM-agenda and permanently omitted. That would make Gentle Repose a `dm_agenda` outcome on this clause rather than `atom_widening`. The `block_reanimation` encoding would remain valid regardless.

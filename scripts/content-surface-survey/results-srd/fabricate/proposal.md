@@ -1,63 +1,46 @@
-# Proposal: `create_object` atom + fabrication surface
+# Proposal: Fabricate surface gaps
 
-## Unit: Fabricate (SRD 5.2.1, Level 4 Transmutation)
+Fabricate encodes cleanly as `activation` / `direct` / `create_object`. Typecheck passes and the tracer emits a valid graph. The following secondary gaps remain.
 
-## Blocking gap
+## Gap 1: Material-conditional size cap on `create_object`
 
-The v4 taxonomy lists `create_object` as an Effect Atom (TAXONOMY_atoms_graph.md §9) but it has never been surfaced in `types.ts`. Fabricate is the first spell that forces it in.
+**Evidence:** "If you're working with metal, stone, or another mineral substance, however, the fabricated object can be no larger than Medium (contained within a 5-foot Cube)."
 
-## What Fabricate needs
+The current `create_object` atom has one `maxSize: Size` field. Fabricate defines two distinct size caps:
+- General materials: Large or smaller (10-foot Cube)
+- Metal / stone / mineral: Medium or smaller (5-foot Cube)
 
-```
-activation spell
-  direct phase
-    attachment: object (raw materials within 120 ft)
-    effect: create_object { ... }
-```
-
-The `create_object` atom needs to carry:
-
-1. **Material constraint** — the output must be made from the input raw material ("products of the same material"). The input and output share a material identity; the atom is not conjuration out of nothing.
-2. **Size bounds** — a maximum size for the created object, with a material-dependent tighter bound (Large for general materials; Medium for metal/stone/mineral).
-3. **Proficiency gate** — certain output categories (weapons, armor, high-skill craft items) require the caster to have proficiency with the relevant Artisan's Tools. This is a cast-time eligibility check, not a saving throw.
-4. **Exclusion list** — creatures and magic items cannot be the output. This is an absolute constraint, not a die roll.
-
-## Proposed surface shape
+**Proposed widening:** Add a `materialMaxSize` map or a conditional variant to `create_object`:
 
 ```typescript
-export type CreateObjectSizeConstraint =
-  | { readonly kind: "fixed"; readonly maxSize: "tiny" | "small" | "medium" | "large" }
-  | {
-      readonly kind: "material_dependent";
-      readonly default: "tiny" | "small" | "medium" | "large";
-      readonly materials: ReadonlyNonEmptyArray<{
-        readonly material: string;  // "metal" | "stone" | "mineral" — extend ObjectMaterial
-        readonly maxSize: "tiny" | "small" | "medium" | "large";
-      }>;
-    };
-
-// New EffectAtom variant:
 | {
     readonly kind: "create_object";
-    // Output must match input material — no conjuration from nothing
-    readonly sameInputMaterial: true;
-    readonly sizeConstraint: CreateObjectSizeConstraint;
-    // Caster must have proficiency with relevant tools to create these
-    readonly requiresToolProficiencyFor?: ReadonlyNonEmptyArray<"weapons" | "armor">;
-    // Absolute exclusions regardless of material/size
-    readonly cannotCreate?: ReadonlyNonEmptyArray<"creature" | "magic_item">;
+    readonly maxSize: Size;
+    readonly shape?: AreaShapeSpec;
+    readonly consumable?: true;
+    readonly durability?: CreatedObjectDurability;
+    // NEW: override maxSize for specific material categories
+    readonly materialSizeCaps?: ReadonlyArray<{
+      readonly material: "metal" | "stone" | "mineral";
+      readonly maxSize: Size;
+    }>;
   }
 ```
 
-## Secondary gap: ObjectFilter material enum
+Alternative: express as a single `maxSizeByMaterial` map. The current encoding uses `maxSize = "large"` and omits the mineral cap.
 
-The `object` attachment's `ObjectFilter.material` is `"metal" | "flammable"`. Fabricate targets "raw materials" broadly. A `"raw_material"` material tag or a more general "unprocessed stock" concept would be needed to accurately express the attachment predicate. This is a lesser concern — authors could omit the material filter as an approximation — but the primary blocker remains the missing effect atom.
+## Gap 2: Proficiency gate for high-skill items
 
-## Why `alter_item_kind` is not a substitute
+**Evidence:** "You also can't use it to create items that require a high degree of skill—such as weapons and armor—unless you have proficiency with the type of Artisan's Tools used to craft such objects."
 
-`alter_item_kind` is designed for "Folding Boat switches between box / rowboat / keelboat forms" — it targets one specific existing item and changes which named form it presents as. The atom carries no raw-material input, no size or material bounds, and no proficiency gate. Using it for Fabricate would produce a trace that says the spell changes an existing item's kind, which is mechanically false. Fabricate creates a new object from raw stock; the raw stock is consumed, not transformed in place.
+No proficiency-check gate exists on `create_object` or on the `direct` activation phase. This is a constraint that prevents the spell from fabricating weapons/armor without tool proficiency. It would require either:
+- A `proficiencyGate` field on `create_object` referencing the relevant `ArtiansTools` proficiency, or
+- A new `proficiency_check_gate` activation phase variant (heavier).
 
-## Classification
+The constraint is partially DM-resolved (what counts as "high degree of skill" is judgment), so a simple flag or annotation may suffice.
 
-- `create_object` is a **v4 atom** (taxonomy §9) — this is `atom_widening`, not `structural_widening`.
-- The `activation` family with a `direct` phase and `minutes` casting time is the correct structural home. No new family is needed.
+## Gap 3: Raw-material targeting in ObjectFilter
+
+**Evidence:** "Choose raw materials that you can see within range."
+
+`ObjectFilter.material` only supports `"metal" | "flammable"`. There is no way to express "raw/unprocessed material" as an attachment filter. The encoding omits the filter entirely, which is functionally equivalent to "any object" rather than "raw material only". A `"raw"` or `"unprocessed"` material category — or a `manufactured: false` filter — would address this. Note: `ObjectFilter.manufactured` already exists; setting it to `false` would partially capture "unprocessed material" semantics.

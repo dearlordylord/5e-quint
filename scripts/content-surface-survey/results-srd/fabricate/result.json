@@ -1,22 +1,41 @@
 {
   "unit_slug": "fabricate",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "create_object",
+    "direct_apply",
+    "object",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
   "proposed_widenings": [
     {
-      "kind": "new_atom",
-      "name": "create_object",
-      "justification": "Fabricate's entire mechanic is transforming raw materials into a crafted product of the same material. No existing EffectAtom represents object creation from raw stock. 'alter_item_kind' is for form-switching a single existing item (Folding Boat) and carries no concept of raw-material inputs, size constraints, or proficiency gates. 'create_object' appears in the v4 taxonomy (TAXONOMY_atoms_graph.md §9 Effect Atoms) but is absent from types.ts.",
-      "evidence": "You convert raw materials into products of the same material. For example, you can fabricate a wooden bridge from a clump of trees, a rope from a patch of hemp, or clothes from flax or wool."
+      "kind": "new_variant",
+      "name": "create_object: material-conditional maxSize (Large for general, Medium for metal/stone/mineral)",
+      "justification": "The SRD defines two size caps depending on raw material type: Large-or-smaller for most materials, Medium-or-smaller for metal, stone, or other mineral substances. The current create_object atom has a single maxSize field with no way to express material-dependent sizing. Encoding uses maxSize='large' (the general case) and omits the mineral-specific cap.",
+      "evidence": "If you're working with metal, stone, or another mineral substance, however, the fabricated object can be no larger than Medium (contained within a 5-foot Cube)."
     },
     {
       "kind": "new_variant",
-      "name": "ObjectFilter.material — extend beyond 'metal' | 'flammable'",
-      "justification": "The object attachment filter's material enum ('metal' | 'flammable') cannot express 'raw/unprocessed material'. Fabricate targets raw stock generally. A 'raw_material' filter concept or removal of the filter restriction would be needed.",
+      "name": "create_object: proficiency gate (Artisan's Tools prerequisite for high-skill items)",
+      "justification": "The spell cannot be used to create weapons, armor, or other high-skill items unless the caster has proficiency with the relevant Artisan's Tools. No proficiency-gate field exists on create_object or on the direct phase.",
+      "evidence": "You also can't use it to create items that require a high degree of skill—such as weapons and armor—unless you have proficiency with the type of Artisan's Tools used to craft such objects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ObjectFilter.material — extend to cover non-manufactured raw material targeting",
+      "justification": "The object attachment targets raw materials in the environment, but ObjectFilter.material only covers 'metal' | 'flammable'. There is no 'raw_material' or 'unprocessed' category to express the raw-stock nature of the targeted objects. Encoding omits the filter entirely.",
       "evidence": "Choose raw materials that you can see within range."
     }
   ],
   "confidence": "high",
-  "notes": "The spell fits the 'activation' family structurally (instantaneous, direct phase, 10-minute casting time which maps to CastingTime.minutes). The blocking gap is the missing 'create_object' effect atom — it exists in the v4 taxonomy but has never been surfaced in types.ts. Using 'alter_item_kind' would produce a dishonest trace: that atom models form-switching of a single existing item, not material-to-product fabrication. The size constraints (Large vs Medium for minerals) and proficiency gate (no high-skill items without Artisan's Tools proficiency) are secondary encoding concerns that would also need surface additions but are not the primary blocker."
+  "notes": "The core mechanic (transform raw materials into a fabricated object) encodes cleanly as activation/direct/create_object. Typecheck passes and tracer emits a valid graph. The three proposed widenings are secondary: material-conditional sizing, proficiency gate, and raw-material filter. None are blocking — the trace is honest about what it captures."
 }

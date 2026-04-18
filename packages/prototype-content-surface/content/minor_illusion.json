@@ -1,0 +1,85 @@
+{
+  "description": "You create a sound or an image of an object within range that lasts for the duration. The illusion ends if you cast this spell again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature.",
+  "id": "minor_illusion",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of fleece",
+      "s": true,
+      "v": false
+    },
+    "duration": {
+      "earlyEnd": [
+        {
+          "kind": "caster_recasts_spell"
+        }
+      ],
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "cube",
+            "sideFeet": 5
+          }
+        },
+        "kind": "direct",
+        "mode": {
+          "label": "Illusion Type",
+          "options": [
+            {
+              "displayName": "Sound",
+              "effects": [
+                {
+                  "channels": [
+                    "sound"
+                  ],
+                  "kind": "create_illusion",
+                  "maxSize": "tiny"
+                }
+              ],
+              "id": "sound"
+            },
+            {
+              "displayName": "Image",
+              "effects": [
+                {
+                  "channels": [
+                    "visual"
+                  ],
+                  "kind": "create_illusion",
+                  "maxSize": "small"
+                }
+              ],
+              "id": "image"
+            }
+          ]
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Minor Illusion",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-R#Minor Illusion"
+  }
+}

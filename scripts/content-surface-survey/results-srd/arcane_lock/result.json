@@ -1,34 +1,25 @@
 {
   "unit_slug": "arcane_lock",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "lock_object",
-      "justification": "Arcane Lock's core mechanic is permanently preventing nonmagical opening/unlocking of a specific touched object. This is distinct from block_travel (Wall of Force, Forcecage), which blocks physical passage through an area. A lockable object can still be opened by authorized parties; a force barrier cannot. The authorized-bypass list (caster + designated creatures) is intrinsic to the lock mechanic, not DM agenda.",
-      "evidence": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock."
-    },
-    {
-      "kind": "new_variant",
-      "name": "lock_object authorized_bypass list parameter",
-      "justification": "The lock carries a cast-time-designated set of creatures that may bypass it. No existing effect atom accepts an authorized-creature exception list. This is mechanically deterministic (creature either is or isn't on the list) and not DM-agenda.",
-      "evidence": "You and any creatures you designate when you cast the spell can open and close the object despite the lock."
-    },
-    {
-      "kind": "new_atom",
-      "name": "password_unlock or surface_widening on lock_object",
-      "justification": "The password mechanic (spoken word within 5 ft unlocks for 1 minute) is a timed conditional bypass with no atom analog. The 1-minute temporary unlock is deterministic given the password; the password content itself is DM-agenda. The trigger+duration shape is closest to an anchored_trigger on the object but the unlock effect is temporary and the trigger is a spoken word, not a physical event.",
-      "evidence": "You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute."
-    },
-    {
-      "kind": "new_variant",
-      "name": "ObjectFilter closeable_element",
-      "justification": "The spell targets 'a closed door, window, gate, container, or hatch' — closeable architectural/containment elements. The existing ObjectFilter (material, heldOrWorn, manufactured) cannot express this. manufactured:true is the nearest but is far too broad.",
-      "evidence": "You touch a closed door, window, gate, container, or hatch"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "expire",
+    "lock_object",
+    "object",
+    "persist",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "The dominant gap is the absence of a lock_object atom — block_travel is semantically wrong (it blocks passage, not opening) and would produce a misleading trace. The authorized-bypass list and password mechanic compound the gap. No dhall/json authored: a misleading trace is worse than no trace per the guardrails."
+  "notes": "The `lock_object` atom was purpose-built for Arcane Lock and round-trips cleanly. Designated-creature bypass is a cast-time selection noted as caller-owned in the atom comment (no surface field needed). The optional password is a cast-time player decision; `lock_object.password` can carry a fixed authored string but is omitted here since the spell does not prescribe a specific password — the 1-minute unlock timer is the fixed SRD constant baked into the atom's semantics."
 }

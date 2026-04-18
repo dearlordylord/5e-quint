@@ -1,28 +1,38 @@
 {
   "unit_slug": "silent_image",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "create_illusion",
+    "expire",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
   "proposed_widenings": [
     {
       "kind": "new_atom",
-      "name": "create_object",
-      "justification": "Silent Image's primary effect is creating a persistent illusory object/phenomenon in the world. The v4 taxonomy (TAXONOMY_atoms_graph.md §9) already lists `create_object` as an effect atom, but it is absent from types.ts which notes it as 'forthcoming'. Without this atom the operations list for the ongoing_effect is empty and the encoding would be dishonest.",
-      "evidence": "You create the image of an object, a creature, or some other visible phenomenon that is no larger than a 15-foot Cube. The image appears at a spot within range and lasts for the duration."
+      "name": "reposition_attachment",
+      "justification": "The caster can spend a Magic action on any turn while the spell persists to move the illusion to any other spot within range. The on_caster_spends_action trigger (standard_action: magic) exists and fits perfectly, but the resulting operation — repositioning the effect's spatial anchor to a new point within range — has no corresponding atom. force_move and teleport apply only to creatures; alter_item_kind applies to item forms. No atom moves a non-creature effect attachment to a new location. Identical gap identified in Dancing Lights and Major Image.",
+      "evidence": "As a Magic action, you can cause the image to move to any spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image."
     },
     {
       "kind": "new_variant",
       "name": "OngoingTrigger.on_creature_studies",
-      "justification": "The investigation-check-to-see-through mechanic fires when a creature takes a Study action targeting the image, not on turn start, creature entry, or damage. No existing OngoingTrigger variant covers a specific standard action taken by a creature against the attachment. A new trigger variant (e.g. `on_creature_studies` or a generic `on_creature_takes_action` with an action discriminant) is needed.",
+      "justification": "The disbelief mechanic fires when a creature spends a Study action to examine the illusion, triggering an Intelligence (Investigation) check against the spell save DC. No OngoingTrigger variant covers a creature spending a specific named action (Study) to examine the effect. The closest existing trigger is on_attached_turn_start (unconditional) or on_caster_spends_action (caster-side). A new trigger variant is needed for 'creature spends Study action on the attachment'.",
       "evidence": "A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC."
-    },
-    {
-      "kind": "new_subgraph",
-      "name": "mid_duration_reposition",
-      "justification": "The caster can spend a Magic action during the spell's duration to move the image to any new spot within range. There is no surface mechanism for a recurring mid-duration activation that costs a standard-action quota and repositions an ongoing_effect's area attachment. This is distinct from both initial attachment placement and from ongoing operations (which fire on triggers, not on player-initiated action economy spends).",
-      "evidence": "As a Magic action, you can cause the image to move to any spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image."
     }
   ],
   "confidence": "high",
-  "notes": "The duration earlyEnd trigger `caster_recasts_spell` is already in the surface and was explicitly anticipated for Silent Image (types.ts cites it). The structural shell (ongoing_effect, concentration, area attachment, caster_recasts_spell earlyEnd) fits cleanly. The blocking issue is `create_object` — it exists in v4 taxonomy but is missing from types.ts. The move-image mechanic and Study-check mechanic are additional widenings beyond the primary blocking atom. No dhall/json authored because the operations list cannot be honestly populated without `create_object`."
+  "notes": "Core mechanic encodes cleanly: create_illusion (huge, visual only) as a passive ongoing operation over an area (15-ft cube) attachment at point_within_range. Typecheck passes; tracer emits a valid graph. Identical structure to Major Image (level 3, gargantuan, all four sensory channels) — same two widenings apply. The disbelief check is a secondary mechanic present on all illusion spells; the reposition_attachment gap is the primary atom missing from v4."
 }

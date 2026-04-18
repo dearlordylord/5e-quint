@@ -1,115 +1,92 @@
-# Proposal: Major Image widening
+# Proposal: Major Image surface gaps
 
-**Unit:** Major Image (spell, level 3, Illusion, SRD 5.2.1)  
-**Outcome:** `surface_widening`  
-**Reason encoding was not attempted:** `OngoingOperation` has no variant for illusion/object creation. The closest honest family is `ongoing_effect`, but coercing the spell into `roll_modifier` or `damage_on_hit` would produce a false trace.
+## Encoded core
 
----
+`major_image.json` encodes the spell's primary mechanic honestly:
 
-## Why `ongoing_effect` is the right structural home
+- Family: `ongoing_effect`
+- Attachment: `area { kind: "cube", sideFeet: 20 }` at `point_within_range`
+- Single passive operation: `create_illusion { maxSize: "gargantuan", channels: ["visual","sound","smell","temperature"] }`
+- Duration: `concentration` up to 10 minutes
 
-Major Image is a concentration spell (up to 10 minutes) that:
-- Consumes a level-3 spell slot and an Action
-- Attaches a persistent object/illusion to a point within 120 ft range
-- Has no attack roll, no saving throw, no damage, no roll modifier
-
-This maps cleanly to `ongoing_effect`: a spell procedure that `attaches_to` an area and `grants` some persistent operation while concentration holds. The header fields (level, school, castingTime, range, components, duration) all encode without issue.
-
-## Widenings required
-
-### 1. `OngoingOperation` — `create_object` variant (blocking)
-
-Current `OngoingOperation`:
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
-
-Major Image's core operation is creating a persistent illusion object — a sensory phenomenon with spatial extent. The v4 taxonomy already has `create_object` as an effect atom. The `OngoingOperation` union needs a new variant, minimally:
-
-```typescript
-export type CreateObjectOperation = {
-  readonly kind: "create_object";
-  readonly maxExtent: { readonly shape: "cube"; readonly maxSideFeet: number };
-  // sensory: sounds, smells, temperature — presentation facts, caller-owned
-};
-```
-
-This is a blocking gap: without it, the spell cannot be encoded in `ongoing_effect`.
-
-### 2. Passive ability-check detection (blocking for honest trace completeness)
-
-The spell defines a creature-initiated detection mechanic:
-
-> A creature that takes a Study action to examine the image can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC.
-
-The v4 taxonomy has `ability_check` as a resolution atom. The existing `ActivationPhase` union only has `attack_roll` and `save_gate`, both caster-initiated. Detection here is:
-- initiated by the creature (not the caster)
-- contingent on the creature spending its Study action
-- resolved via INT (Investigation) vs caster's spell save DC
-- consequential: if discerned, creature can "see through" the image
-
-This needs a new passive detection grammar. The most natural home would be a new `OngoingOperation` variant or a new `PassiveDetectionGate` field on the `create_object` operation:
-
-```typescript
-export type PassiveDetectionGate = {
-  readonly kind: "ability_check";
-  readonly ability: Ability;           // "int"
-  readonly skill: string;              // "investigation"
-  readonly dc: DcSource;               // caster_spell_save_dc
-  readonly onSuccess: "reveal";        // see-through effect
-};
-```
-
-This is a new sub-grammar rather than a new top-level family.
-
-### 3. Slot-conditioned duration override (surface widening for upcast)
-
-The higher-level text:
-
-> The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot.
-
-This changes the Duration **kind** (from `concentration` to `timed` with an indefinite-until-dispelled value) based on the slot used. No existing `SlotScaling<T>` shape covers a conditional switch of Duration variant. A new type is needed, e.g.:
-
-```typescript
-export type SlotConditionedDuration = {
-  readonly kind: "slot_conditioned";
-  readonly base: Duration;
-  readonly overrideAtSlot: number;       // 4
-  readonly override: Duration;           // { kind: "timed", value: { unit: "until_dispelled" } }
-};
-```
-
-This also requires a new `DurationValue.unit` variant `"until_dispelled"` or a new `Duration` kind `"permanent_until_dispelled"`.
-
-### 4. `Attachment.area.shape` — `cube` variant (minor)
-
-The image's spatial extent is a 20-foot Cube. `Attachment.area.shape` only has `sphere`:
-
-```typescript
-// current:
-readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number }
-// needed:
-| { readonly kind: "cube"; readonly maxSideFeet: number }
-```
-
-Note: `cube` already exists on `AnchorTarget.area` for the Alarm encoding, so this is a narrowing of an already-accepted concept into the `Attachment` type.
-
-### 5. Secondary: caster reposition operation (minor, omittable for initial encoding)
-
-> you can take a Magic Action to cause the image to move to any other spot within range
-
-This is a caster-activated repositioning of the ongoing attachment. It could be expressed as a bonus action-cost operation on the ongoing effect, or as a new `caster_reposition` operation variant. This is omittable from a first widening pass — the core creation mechanic matters more.
+Typecheck passes; tracer emits a clean graph with `create_illusion` attached to the cube area.
 
 ---
 
-## Summary table
+## Gap 1 — Missing atom: `reposition_attachment`
 
-| Gap | Kind | Blocking? |
-|---|---|---|
-| `OngoingOperation.create_object` | new_variant | yes |
-| Passive ability-check detection on ongoing effects | new_variant | yes (for honest trace) |
-| Slot-conditioned Duration override | new_variant | yes (for upcast) |
-| `Attachment.area.shape.cube` | new_variant | minor |
-| Caster reposition operation | new_variant | no (omittable) |
+### RAW text
 
-All proposed atoms (`create_object`, `ability_check`) exist in the v4 taxonomy. None of these widenings require a new top-level family — the `ongoing_effect` family remains the correct structural home.
+> If you are within range of the illusion, you can take a Magic action to cause the image to move to any other spot within range. As the image changes location, you can alter its appearance so that its movements appear natural for the image.
+
+### Why it is not encodable
+
+The `on_caster_spends_action { cost: { kind: "standard_action", action: "magic" } }` trigger exists and fits perfectly. The problem is the *effect*: there is no atom that moves the spatial anchor of an ongoing effect to a new point within range.
+
+- `force_move` — applies to creatures only (push/pull/slide).
+- `teleport` — applies to the caster or a target creature.
+- `alter_item_kind` — changes an item's rules form, not an effect's location.
+- `set_speed` / `modify_speed` / `grant_speed` — all creature-facing.
+
+This gap is identical to **Dancing Lights** (`reposition_attachment` new_atom, same widening), confirming it is a systematic v4 gap rather than a one-off.
+
+### Proposed widening
+
+```
+new_atom: reposition_attachment
+category: effect
+semantics: moves the host effect's spatial anchor (area or location
+           attachment origin) to a new point within range. Parameters:
+             • maxFeet: number | "within_spell_range"  (distance the
+               anchor may move per invocation)
+             • destination: "any_visible_point_within_range" | ...
+```
+
+---
+
+## Gap 2 — Missing surface variant: upcast changes duration kind
+
+### RAW text
+
+> Using a Higher-Level Spell Slot: The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot.
+
+### Why it is not encodable
+
+`DurationUpcastTier` supports amount changes only:
+
+```typescript
+export type DurationUpcastTier = {
+  readonly atSlot: number;
+  readonly amount: number;  // ← changes the amount within the same unit
+};
+```
+
+At slot 4+, Major Image does not change the *amount* — it changes the duration *kind* from `concentration` to `permanent { endsOn: ["dispel"] }`. No existing field or tier variant expresses "at slot N, strip concentration and make permanent."
+
+The `permanentIfMaintainedFull` flag on concentration duration is the closest existing shape, but semantically distinct: it promotes to permanent only after holding concentration for the *full* base duration. Major Image at 4+ is permanent *immediately* from cast, with no concentration requirement at all.
+
+### Proposed widening
+
+Add an optional field to the `concentration` duration variant:
+
+```typescript
+// Existing concentration duration variant — add one optional field:
+{
+  readonly kind: "concentration";
+  readonly upTo: DurationValue;
+  readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+  readonly permanentIfMaintainedFull?: true;
+  // NEW: at this slot level and above, concentration is removed and the
+  // spell persists permanently (until dispelled). The base duration
+  // becomes the fallback for lower-slot casts.
+  readonly permanentAtSlot?: number;
+}
+```
+
+SRD units where this pattern appears: Major Image (slot 4), Hypnotic Pattern (no such upcast — this is Major-Image-specific so far). Keep the field narrow and slot-scoped to avoid over-generalizing.
+
+---
+
+## Classification
+
+`atom_widening` — the reposition mechanic requires a new v4 atom (`reposition_attachment`) not present in the taxonomy. The upcast duration-kind change is a `surface_widening` (new variant of an existing type), but the atom gap is the binding constraint since atoms are the harder requirement.

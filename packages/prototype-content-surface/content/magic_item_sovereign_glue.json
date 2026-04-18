@@ -1,0 +1,54 @@
+{
+  "description": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects. It must be stored in a jar or flask that has been coated inside with Oil of Slipperiness. When found, a container contains 1d6 + 1 ounces. One ounce of the glue can cover a 1-foot square surface. Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set. Once it has done so, the bond it creates can be broken only by the application of Universal Solvent or Oil of Etherealness, or with a Wish spell.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_sovereign_glue",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "utilize",
+      "kind": "standard_action"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "count": 2,
+          "kind": "object"
+        },
+        "effects": [
+          {
+            "kind": "bond_objects"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 7
+      },
+      "initialCount": {
+        "expr": {
+          "dice": 1,
+          "dieSize": 6,
+          "flat": 1
+        },
+        "kind": "fixed"
+      },
+      "kind": "charge_pool"
+    }
+  },
+  "name": "Sovereign Glue",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#SovereignGlue"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": false
+}

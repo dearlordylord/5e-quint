@@ -1,22 +1,22 @@
 {
   "unit_slug": "create_food_and_water",
-  "outcome": "surface_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_variant",
-      "name": "ActivationPhase — direct kind",
-      "justification": "Create Food and Water has no attack roll and no saving throw. It is an instantaneous activation spell that directly produces an unconditional effect. The current ActivationPhase union only allows attack_roll | save_gate, making it impossible to represent a phase that simply fires an effect without a roll-gated branch.",
-      "evidence": "You create 45 pounds of food and 30 gallons of fresh water on the ground or in containers within range"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Effect — create_object kind",
-      "justification": "The spell's sole effect is conjuring physical objects (food and water) into the world. The v4 atom inventory includes create_object, but the surface Effect union only has damage | none. A CreateObjectEffect variant is required to represent this atom honestly.",
-      "evidence": "You create 45 pounds of food and 30 gallons of fresh water on the ground or in containers within range"
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "create_object",
+    "direct_apply",
+    "self",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Spell fits the activation family overall (instantaneous, one-shot, no concentration). The gap is entirely within existing types: ActivationPhase needs a direct variant for roll-free phases, and Effect needs a create_object variant. Both atoms are in v4. The spoilage mechanic (food spoils after 24 hours) is a world-state side-effect, not a core mechanic — omit from core atom graph per ARCHITECTURE.md."
+  "notes": "Encoded as activation/direct with two create_object effects: food (maxSize=medium, consumable=true) and water (maxSize=large, no consumable). The consumable flag is documented in types.ts as 'food at 24h' — exact match for the RAW spoilage clause. Two minor simplifications that do not require widenings: (1) attachment=self approximates 'on the ground or in containers within range' — there is no 'point within range' placement attachment for conjured objects, but this is a positioning detail, not a mechanical resolution gate; (2) the specific quantity of provisions (45 lbs food, 30 gallons water) is not captured — create_object has maxSize but not a quantity field. Neither gap forces a structural change."
 }

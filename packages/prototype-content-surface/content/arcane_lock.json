@@ -1,0 +1,48 @@
+{
+  "description": "You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.",
+  "id": "arcane_lock",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "gold dust worth 25+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 25,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": [
+        "dispel"
+      ],
+      "kind": "permanent"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "count": 1,
+          "kind": "object"
+        },
+        "effects": [
+          {
+            "kind": "lock_object"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Arcane Lock",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Arcane Lock"
+  }
+}

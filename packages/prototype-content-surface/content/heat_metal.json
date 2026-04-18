@@ -1,0 +1,134 @@
+{
+  "description": "Choose a manufactured metal object, such as a metal weapon or a suit of Heavy or Medium metal armor, that you can see within range. You cause the object to glow red-hot. Any creature in physical contact with the object takes 2d8 Fire damage when you cast the spell. Until the spell ends, you can take a Bonus Action on each of your later turns to deal this damage again if the object is within range. If a creature is holding or wearing the object and takes the damage from it, the creature must succeed on a Constitution saving throw or drop the object if it can. If it doesn't drop the object, it has Disadvantage on attack rolls and ability checks until the start of your next turn. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 2.",
+  "id": "heat_metal",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "count": 1,
+      "filter": {
+        "manufactured": true,
+        "material": "metal"
+      },
+      "kind": "object"
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a piece of iron and a flame",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "count": 1,
+        "filter": {
+          "manufactured": true,
+          "material": "metal"
+        },
+        "kind": "object"
+      },
+      "effects": [
+        {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 3
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 3
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "kind": "force_drop_item"
+              },
+              {
+                "expiresOn": {
+                  "kind": "caster_turn_start"
+                },
+                "kind": "modify_roll_advantage",
+                "mode": "disadvantage",
+                "on": [
+                  "attack_roll",
+                  "ability_check"
+                ]
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Heat Metal",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Heat Metal"
+  }
+}

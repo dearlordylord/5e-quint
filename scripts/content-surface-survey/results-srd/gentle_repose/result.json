@@ -1,22 +1,32 @@
 {
   "unit_slug": "gentle_repose",
   "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "block_reanimation",
+    "direct_apply",
+    "expire",
+    "object",
+    "persist",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
   "proposed_widenings": [
     {
       "kind": "new_atom",
-      "name": "block_reanimation",
-      "justification": "Prevents targeted remains from being animated as undead. Distinct from block_targeting (which prevents spells from targeting a creature) and grant_condition_immunity (which covers the 15 SRD conditions, not creature-type transitions). This is a deterministic protection applied to an object/corpse against undead-creation effects.",
-      "evidence": "the target is protected from decay and can't become Undead"
-    },
-    {
-      "kind": "new_atom",
-      "name": "pause_deadline",
-      "justification": "Pauses countdown timers associated with resurrection window mechanics for the spell's duration. Unique effect type with no v4 equivalent — it modifies how other spells' time constraints are calculated rather than applying any direct effect to the target creature. Not expressible as modify_speed, grant_resistance, or any existing numeric-delta atom.",
-      "evidence": "days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead"
+      "name": "freeze_deadline",
+      "justification": "Gentle Repose suspends the countdown timer of another effect (the 10-day Raise Dead resurrection window) for as long as Gentle Repose persists. No existing EffectAtom models pausing or suspending the elapsed-time progress of an adjacent spell or effect. block_reanimation only flags the corpse as an invalid reanimation source; it does not interact with Raise Dead's deadline at all.",
+      "evidence": "The spell also effectively extends the time limit on raising the target from the dead, since days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead."
     }
   ],
   "confidence": "high",
-  "notes": "The structural scaffolding fits: spell kind, timed 10-day duration (non-concentration), action-or-ritual casting time, touch range, object attachment (corpse/remains). The ObjectFilter also lacks a 'corpse' or 'remains' discriminant (minor surface_widening), but the blocking two atoms above are the primary gap. 'Protected from decay' is DM-agenda/narrative with no mechanical game state. The two deterministic mechanics — undead-creation blocking and resurrection-deadline pausing — have no v4 atom equivalents."
+  "notes": "Primary mechanic (block_reanimation) encodes cleanly; the atom was added to types.ts specifically for this spell. The decay-protection clause is pure narrative (DM agenda, no atom needed). The Raise Dead timer-freeze clause is the missing atom: it requires cross-spell deadline interaction that v4 has no atom for. The encoded trace is honest for the two encodable mechanics (block_reanimation + timed-persist lifecycle). One secondary mechanic is omitted with documentation."
 }
