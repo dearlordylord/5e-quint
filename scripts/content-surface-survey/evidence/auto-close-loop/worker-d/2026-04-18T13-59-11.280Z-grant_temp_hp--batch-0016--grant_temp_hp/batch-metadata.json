@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 16,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_temp_hp",
+  "archivedAt": "2026-04-18T14:03:50.917Z",
+  "selectedSlugs": [
+    "druid_wild_shape_l2",
+    "cleric_improved_blessed_strikes_l14"
+  ]
+}

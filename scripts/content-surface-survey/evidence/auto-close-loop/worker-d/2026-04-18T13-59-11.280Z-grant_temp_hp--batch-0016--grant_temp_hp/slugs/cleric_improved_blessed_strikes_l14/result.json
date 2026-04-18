@@ -1,0 +1,28 @@
+{
+  "unit_slug": "cleric_improved_blessed_strikes_l14",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "upgrade_prior_feature_choice",
+      "justification": "This level-14 feature does not grant a fixed standalone payload. It upgrades whichever Blessed Strikes option the cleric chose earlier, so the surface needs an honest way to target and refine a prior feature choice instead of pretending both branches apply or splitting one SRD unit into two fake units.",
+      "evidence": "The option you chose for Blessed Strikes grows more powerful."
+    },
+    {
+      "kind": "new_variant",
+      "name": "non_spell_triggered_passive_operation",
+      "justification": "The Potent Spellcasting branch is a passive triggered rider, not an activation and not an elapsed-time passive operation. The current class-feature surface has passive grants and elapsed-time passive operations only, so it cannot model a trigger like dealing damage with a cleric cantrip.",
+      "evidence": "When you cast a Cleric cantrip and deal damage to a creature with it, you can give vitality to yourself or another creature within 60 feet of yourself"
+    },
+    {
+      "kind": "new_variant",
+      "name": "dice_amount_ability_modifier_multiplier",
+      "justification": "Temporary Hit Points equal to twice Wisdom modifier cannot be expressed by the current DiceExpr shape, which allows one ability modifier but no multiplier.",
+      "evidence": "granting a number of Temporary Hit Points equal to twice your Wisdom modifier"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest content record was authored. Divine Strike is an upgrade to an existing prior-choice rider, and Potent Spellcasting also needs a non-spell triggered passive operation plus a 2x ability-mod amount expression."
+}
