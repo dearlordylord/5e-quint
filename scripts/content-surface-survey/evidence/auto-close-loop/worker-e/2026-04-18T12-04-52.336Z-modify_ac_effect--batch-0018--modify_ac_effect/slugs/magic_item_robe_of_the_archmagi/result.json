@@ -1,0 +1,24 @@
+{
+  "unit_slug": "magic_item_robe_of_the_archmagi",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "modify_ac",
+    "modify_roll_advantage",
+    "modify_roll_numeric",
+    "modify_save_dc",
+    "unarmored",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly as a composite magic item with two passive parts so the robe-wide worn benefits and the narrower unarmored AC formula keep distinct equipment gates."
+}
