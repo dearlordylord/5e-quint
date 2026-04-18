@@ -1,0 +1,31 @@
+{
+  "unit_slug": "magic_item_staff_of_fire",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_resistance",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded honestly as a composite magic item: passive held Fire resistance plus held action-gated charge casting for Burning Hands, Fireball, and Wall of Fire, with dawn recharge and last-charge destruction."
+}
