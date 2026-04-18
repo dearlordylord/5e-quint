@@ -1213,6 +1213,11 @@ function resetForNextCycle(state: PersistedState, reason: string): void {
   state.lastError = undefined;
 }
 
+function clearAttempted(attempted: Set<string>, state: PersistedState): void {
+  attempted.clear();
+  state.attempted = [];
+}
+
 function clusterEligible(cluster: ClusterRecord, queueKind?: string, minClusterSize = 2): boolean {
   if (cluster.count < minClusterSize) return false;
   if (queueKind && !cluster.kinds.includes(queueKind)) return false;
@@ -1319,6 +1324,7 @@ function main(): void {
         summarizeStop("reached max batches", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
+        clearAttempted(attempted, state);
         resetForNextCycle(state, "reached max batches");
         saveState(args.statePath, state);
         sleep(Math.max(args.sleepSeconds, 5));
@@ -1330,6 +1336,7 @@ function main(): void {
         summarizeStop("no eligible clusters left", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
+        clearAttempted(attempted, state);
         resetForNextCycle(state, "no eligible clusters left");
         saveState(args.statePath, state);
         sleep(Math.max(args.sleepSeconds, 5));
@@ -1441,6 +1448,7 @@ function main(): void {
         summarizeStop("too many failed batches", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
+        clearAttempted(attempted, state);
         resetForNextCycle(state, "too many failed batches");
         saveState(args.statePath, state);
         sleep(Math.max(args.sleepSeconds, 5));
@@ -1451,6 +1459,7 @@ function main(): void {
         summarizeStop("too many no-improve batches", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
+        clearAttempted(attempted, state);
         resetForNextCycle(state, "too many no-improve batches");
         saveState(args.statePath, state);
         sleep(Math.max(args.sleepSeconds, 5));
