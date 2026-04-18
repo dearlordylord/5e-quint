@@ -564,6 +564,52 @@ Handoff readiness:
 
 - Blocked on CSA2..CSA7.
 
+### Task 7.5 - CSA9 - DM-Agenda And Residual Nonsense Cull
+
+Status: `blocked`
+
+Depends on: `CSA8`
+
+Blocks: `CSC1`
+
+Scope:
+
+- Run a deliberate review pass over the residual widening queue after the closure loop has harvested the obvious reusable wins.
+- Reclassify product-useless and architecture-unsound residuals into explicit DM-agenda / carveout buckets instead of continuing to widen the executable surface for them.
+- Focus especially on world-object-state, narrative-mutation, persistent environment, adhesive/bonding, and similar mechanics that are technically real rules pressure but not worth encoding for this app.
+- Record which residuals stay as real widening work versus which residuals are now intentionally excluded.
+
+Input:
+
+- Current closure-loop telemetry under `.output/content-surface-closure/`.
+- Current residual widening clusters from `REPORT_SRD.md` and the latest survey artifacts.
+- `ARCHITECTURE.md` §1 DM-agenda rules.
+
+Output:
+
+- A checked-in residual-cull note listing:
+  - DM-agenda carveouts accepted by this pass;
+  - residual widenings that remain legitimate executable-surface work;
+  - representative examples for each bucket.
+- Updated convergence interpretation for CSA8/CSC1 so the loop is no longer judged against product-useless residue.
+
+Next action:
+
+- Blocked.
+
+Research note:
+
+- This is where items like `bond_objects` should be decided explicitly instead of silently remaining in the widening queue forever. The goal is not to deny that the rule exists; the goal is to stop paying convergence cost for mechanics that the app should intentionally leave outside the executable surface.
+
+Verification requirements:
+
+- Every carveout must be justified against `ARCHITECTURE.md` §1, not only by "low value".
+- Do not collapse legitimate reusable mechanics into DM-agenda merely because they are inconvenient.
+
+Handoff readiness:
+
+- Blocked on CSA8.
+
 ### Task 8 - CSB1 - Species Traits Batch
 
 Status: `ready-for-implementation-after-light-research`
