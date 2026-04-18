@@ -1321,6 +1321,22 @@ export type ActionRestriction =
 // EffectAtom { kind: "none" }.
 export type SaveSuccessOutcome = { readonly kind: "half_damage" } | EffectAtom;
 
+// Closed roll-driven branch selection. Used for percentile / d20 tables
+// whose outcome is chosen nondeterministically at resolution time
+// rather than by player choice. Branches may recurse into further
+// activation phases for nested random rolls.
+export type RandomTableRoll = {
+  readonly die: number;
+  readonly modifier?: number;
+};
+
+export type RandomTableOutcome = {
+  readonly min: number;
+  readonly max: number;
+  readonly label: string;
+  readonly phases?: ReadonlyNonEmptyArray<ActivationPhase>;
+};
+
 export type ActivationPhase =
   | {
       readonly kind: "attack_roll";
@@ -1370,6 +1386,14 @@ export type ActivationPhase =
       readonly onPass: EffectAtom;
       readonly onFail?: EffectAtom;
       readonly autoSuccessIfCasterSlotGte?: "target_spell_level";
+    }
+  // Mandatory roll on a closed outcome table. Used for effects such as
+  // percentile-driven magic-item mishaps and other nondeterministic
+  // branches that don't fit attack/save/check resolution shapes.
+  | {
+      readonly kind: "random_table";
+      readonly roll: RandomTableRoll;
+      readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
     }
   // Direct application — spells that just apply effects with no
   // resolution gate (no attack roll, no saving throw).

@@ -2064,6 +2064,53 @@ function tracePhase(
       }
       return resId;
     }
+    case "random_table": {
+      const resId = ids("res");
+      nodes.push({
+        id: resId,
+        category: "resolution",
+        atomKind: "random_table",
+        label: `random_table [phase ${phaseNumber}]\nroll: ${describeRandomTableRoll(phase.roll)}`,
+      });
+      edges.push({ from: ctx.procId, to: resId, relation: "grants" });
+
+      for (const outcome of phase.outcomes) {
+        const branchId = ids("tbl");
+        nodes.push({
+          id: branchId,
+          category: "resolution",
+          atomKind: "table_result",
+          label:
+            `table_result\n${describeRandomTableOutcomeRange(outcome)}` +
+            `\n${outcome.label}`,
+        });
+        edges.push({ from: resId, to: branchId, relation: "branches_on_roll" });
+
+        if (outcome.phases === undefined) continue;
+
+        const branchCtx: SpellCtx = { ...ctx, procId: branchId };
+        let previousResolutionId: string | null = null;
+        outcome.phases.forEach((nestedPhase, idx) => {
+          const nestedResolutionId = tracePhase(
+            nestedPhase,
+            idx + 1,
+            branchCtx,
+            nodes,
+            edges,
+            ids,
+          );
+          if (previousResolutionId !== null) {
+            edges.push({
+              from: previousResolutionId,
+              to: nestedResolutionId,
+              relation: "branches_on_completion",
+            });
+          }
+          previousResolutionId = nestedResolutionId;
+        });
+      }
+      return resId;
+    }
     default: {
       const _exhaustive: never = phase;
       throw new Error(`unhandled phase: ${String(_exhaustive)}`);
@@ -2745,6 +2792,25 @@ function describeMagicItemAttunementRestriction(
       return _exhaustive;
     }
   }
+}
+
+function describeRandomTableRoll(roll: { die: number; modifier?: number }): string {
+  const modifier =
+    roll.modifier === undefined || roll.modifier === 0
+      ? ""
+      : roll.modifier > 0
+        ? `+${roll.modifier}`
+        : `${roll.modifier}`;
+  return `d${roll.die}${modifier}`;
+}
+
+function describeRandomTableOutcomeRange(outcome: {
+  min: number;
+  max: number;
+}): string {
+  return outcome.min === outcome.max
+    ? `${outcome.min}`
+    : `${outcome.min}-${outcome.max}`;
 }
 
 function traceItemDestruction(

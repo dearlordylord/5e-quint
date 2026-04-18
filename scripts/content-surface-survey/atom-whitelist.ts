@@ -234,12 +234,17 @@ export const STAGE_3_EXTENSIONS = [
   "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.
   "natural_weapons", // §C4e Alter Self — replace default Unarmed Strike profile.
   "water_breathing", // §C4e Alter Self — breathe underwater while the mode persists.
+  // Random roll-driven branch selection and traced table-result nodes
+  // for percentile/d20 outcome tables authored as activation phases.
+  "random_table",
+  "table_result",
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.
 export const STAGE_3_RELATIONS = [
   "repeats_as", // repeat_save cadence edge.
   "lifecycle", // magic-item destruction edge from root → item_destruction.
+  "branches_on_roll", // random-table outcome edge from table → result.
 ] as const;
 
 export const ALL_KNOWN_ATOMS: ReadonlyArray<string> = [
