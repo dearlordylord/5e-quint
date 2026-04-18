@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_feat",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "bard_epic_boon_l19",
+    "cleric_ability_score_improvement_l4"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 1,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "bard_epic_boon_l19",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "cleric_ability_score_improvement_l4",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}

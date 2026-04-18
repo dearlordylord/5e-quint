@@ -1,0 +1,16 @@
+{
+  "unit_slug": "bard_epic_boon_l19",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_feat category choice / any_qualifying_feat",
+      "justification": "The existing class_feature passive family fits, but the current grant_feat payload only allows one fixed feat category. This rule grants one feat chosen from either Epic Boon feats or another qualifying feat, which cannot be represented honestly as a single fixed category.",
+      "evidence": "You gain an Epic Boon feat (see \"Feats\") or another feat of your choice for which you qualify."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Stopped before authoring content/bard_epic_boon_l19.dhall. The unit fits class_feature + passive, but current grant_feat is too narrow to encode the choice without a misleading trace. The recommendation for Boon of Spell Recall is advisory only."
+}

@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 2,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "grant_feat",
+  "archivedAt": "2026-04-18T12:38:59.234Z",
+  "selectedSlugs": [
+    "bard_epic_boon_l19",
+    "cleric_ability_score_improvement_l4"
+  ]
+}
