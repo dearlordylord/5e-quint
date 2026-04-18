@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 15,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "RestResetCadence: dawn",
+  "archivedAt": "2026-04-18T07:37:06.644Z",
+  "selectedSlugs": [
+    "magic_item_brazier_of_commanding_fire_elementals",
+    "magic_item_dagger_of_venom"
+  ]
+}
