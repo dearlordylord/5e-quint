@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The current surface has object attachment and consumable activation scaffolding, but it still lacks the core deterministic effect: creating a persistent adhesive bond between two objects that prevents separation until a closed set of counters breaks it.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "delayed_settlement",
+      "justification": "The glue does not create its permanent state immediately on application. The authored surface lacks a way for a magic-item activation to apply an effect after a 1-minute setting window and then persist until explicitly broken.",
+      "evidence": "Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set."
+    }
+  ],
+  "confidence": "high",
+  "notes": "I did not author content JSON/Dhall because any current encoding would either apply the bond immediately or replace the bond with an unrelated existing atom. Object targeting itself is no longer the blocker in the current surface."
+}
