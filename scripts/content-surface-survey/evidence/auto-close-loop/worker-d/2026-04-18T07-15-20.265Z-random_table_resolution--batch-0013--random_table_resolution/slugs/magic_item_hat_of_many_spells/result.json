@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_hat_of_many_spells",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spell_list_pick",
+      "justification": "The existing surface only grants named spells by spellId. This item instead lets the user attempt any eligible unknown spell from the Wizard spell list, bounded by spell level and material-cost constraints.",
+      "evidence": "\"While holding the hat, you can try to cast a level 1+ spell you don't know. The spell must be on the Wizard spell list, it must be of a level you can cast, and it can't have Material components costing more than 1,000 GP.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ClassFeatureActivationCost.chosen_spell_casting_time",
+      "justification": "The item's activation does not have a fixed action cost. On success it resolves using the selected spell's normal casting time, which the current non-spell activation header cannot express.",
+      "evidence": "\"On a successful check, you cast the spell using its normal casting time\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivationResource.spell_slot",
+      "justification": "The item spends the wielder's spell slot rather than a use-count or charge pool. The current activation-resource surface for non-spell units cannot consume spell slots.",
+      "evidence": "\"you must expend a spell slot of the spell's level\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "success_only_cooldown_after_ability_check",
+      "justification": "The item's once-per-rest lockout applies only on the successful branch of the Arcana check. Existing activation resources are consumed at activation time rather than conditionally after one branch resolves.",
+      "evidence": "\"On a successful check, you cast the spell ... and you can't use this property again until you finish a Short or Long Rest. On a failed check, you fail to cast the spell and a random effect occurs instead\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because the existing magic-item surface cannot honestly encode the unknown-spell attempt workflow. The failure table also mixes additional random and caller-owned outcomes, but the success-path gaps already block honest authoring."
+}

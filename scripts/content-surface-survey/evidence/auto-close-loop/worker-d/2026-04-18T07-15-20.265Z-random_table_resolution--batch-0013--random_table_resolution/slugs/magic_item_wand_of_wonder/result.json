@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_wand_of_wonder",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "roll_table_dispatch",
+      "justification": "The item shell fits magic-item activation, but the actual effect is determined by a mandatory random table with weighted ranges and nested rerolls. The current surface only models player choice and fixed resolutions, not random branching.",
+      "evidence": "That location becomes the point of origin of a spell or other magical effect determined by rolling on the Wand of Wonder Effects table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.rangeOverride",
+      "justification": "Casts made through the wand can extend a granted spell's maximum range to 120 feet, but grant_spell_access currently has no range override field.",
+      "evidence": "If a spell's maximum range is normally less than 120 feet, it becomes 120 feet when cast from the wand."
+    },
+    {
+      "kind": "new_atom",
+      "name": "create_obscured_area",
+      "justification": "Several results create persistent areas whose mechanical effect is Lightly Obscured or Heavily Obscured. That payload is not represented in the current effect atom surface.",
+      "evidence": "During that time, the area of effect is Lightly Obscured."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because encoding this as player choice or a fixed spell grant would be dishonest. The top-level magic-item activation family fits; the blocking gap is random effect-table dispatch, with additional secondary gaps for range override and obscured-area outcomes."
+}
