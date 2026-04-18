@@ -1,0 +1,36 @@
+{
+  "unit_slug": "magic_item_wand_of_fireballs",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant_spell_access",
+    "holding_item",
+    "item_destruction",
+    "magic_item_root",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "lifecycle",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "MagicItemRecord.attunementEligibility",
+      "justification": "The item can record that attunement is required, but not the RAW restriction on who is eligible to attune.",
+      "evidence": "Rare (Requires Attunement by a Spellcaster)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The deterministic mechanics fit honestly as a magic-item activation: held-item gate, 7-charge pool, Fireball charge-cast at levels 3-5 with fixed DC 15, dawn recharge, and last-charge destruction. The only omitted rider is the spellcaster-only attunement qualifier."
+}
