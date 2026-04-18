@@ -2070,10 +2070,15 @@ export type UseCountResource = {
 // their initial stock when found/created ("has 1d6 + 3 beads hanging
 // from it"). Keep that separate from `cap`: `cap` remains the maximum
 // pool size, while `initialCount` captures the one-time starting roll.
+// Some absorption items also have a non-resetting lifetime intake cap:
+// they may currently store up to `cap`, but once they have absorbed
+// `lifetimeAbsorptionCap` total charges over the course of their
+// existence, they cannot take in more.
 export type ChargePoolResource = {
   readonly kind: "charge_pool";
   readonly cap: UseCountCap;
   readonly initialCount?: DiceAmount;
+  readonly lifetimeAbsorptionCap?: number;
 };
 
 // Activated-ability resource — either a discrete use counter (each

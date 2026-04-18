@@ -3546,11 +3546,15 @@ function traceActivationResource(
     r.kind === "charge_pool" && r.initialCount !== undefined
       ? `\ninitial ${describeDiceAmount(r.initialCount)}`
       : "";
+  const lifetimeAbsorptionLabel =
+    r.kind === "charge_pool" && r.lifetimeAbsorptionCap !== undefined
+      ? `\nlifetime absorb <= ${r.lifetimeAbsorptionCap}`
+      : "";
   nodes.push({
     id,
     category: "resource",
     atomKind,
-    label: `${atomKind}\n${capLabel}${initialLabel}`,
+    label: `${atomKind}\n${capLabel}${initialLabel}${lifetimeAbsorptionLabel}`,
   });
   // If the cap scales by level, emit a scaling node that modifies the pool/counter.
   if (r.cap.kind === "threshold_tiers") {
