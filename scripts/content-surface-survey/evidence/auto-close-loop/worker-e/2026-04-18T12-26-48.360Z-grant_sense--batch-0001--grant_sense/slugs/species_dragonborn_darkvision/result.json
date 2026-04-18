@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_dragonborn_darkvision",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "grant_sense",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as SpeciesTraitRecord with passive grant_sense. Typecheck and tracer both passed. Minor trace discrepancy: the rendered trace header includes a 5e.tools link despite SRD provenance."
+}

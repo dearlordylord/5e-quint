@@ -4188,7 +4188,16 @@ function describeEarlyEnd(
 }
 
 function describeSpellAccessMode(m: SpellAccessMode): string {
-  if (typeof m === "string") return m;
+  if (typeof m === "string") {
+    switch (m) {
+      case "prepared_once_per_long_rest":
+        return "prepared + 1/long rest free cast";
+      case "known_once_per_long_rest":
+        return "known + 1/long rest free cast";
+      default:
+        return m;
+    }
+  }
   switch (m.kind) {
     case "charge_cast": {
       const chargesAt = (k: number): number =>

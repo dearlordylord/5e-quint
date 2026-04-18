@@ -511,6 +511,10 @@ export type LinkedDamage = {
 // SpellAccessMode — how the grantee may cast the named spell.
 //   • at_will / once_per_long_rest / prepared / known — simple modes
 //     tied to the character's own resource pools.
+//   • prepared_once_per_long_rest / known_once_per_long_rest — the
+//     common grant pattern where the spell is added to the grantee's
+//     normal prepared/known access AND also gets one free cast per
+//     long rest. Pressure case: Elven Lineage L3/L5 spell grants.
 //   • charge_cast — the magic-item charge idiom: each cast spends
 //     charges from the item's charge_pool. Cost of casting at level K
 //     is `baseCharges + perLevelCharges × (K - minLevel)`; level range
@@ -523,7 +527,9 @@ export type SpellAccessMode =
   | "at_will"
   | "once_per_long_rest"
   | "prepared"
+  | "prepared_once_per_long_rest"
   | "known"
+  | "known_once_per_long_rest"
   | {
       readonly kind: "charge_cast";
       readonly baseCharges: number;
