@@ -1151,6 +1151,18 @@ export type EffectAtom =
       readonly kind: "composite";
       readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
+  // Emits illumination around the effect's Attachment origin. SRD:
+  // Bright Light within brightRadiusFeet; optional Dim Light extends
+  // dimAdditionalFeet BEYOND the bright radius. The RAW consequence
+  // of Dim Light is Lightly Obscured (disadvantage on Perception to
+  // see in the zone). Distinct from grant_sense (which gives a
+  // creature a sense) — emit_light changes the world around the
+  // origin, not any creature's perception capability.
+  | {
+      readonly kind: "emit_light";
+      readonly brightRadiusFeet: number;
+      readonly dimAdditionalFeet?: number;
+    }
   // Sentinel: explicit "no effect" for branches (e.g., save onSuccess)
   | { readonly kind: "none" };
 

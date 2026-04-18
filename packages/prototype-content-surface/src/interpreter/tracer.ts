@@ -584,6 +584,20 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "emit_light": {
+      const id = ids("eff");
+      const dimTag =
+        e.dimAdditionalFeet !== undefined && e.dimAdditionalFeet > 0
+          ? `\ndim: +${e.dimAdditionalFeet} ft`
+          : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "emit_light",
+        label: `emit_light\nbright: ${e.brightRadiusFeet} ft${dimTag}`,
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -815,6 +829,7 @@ function traceEffectAtomScaling(
     case "transform_target":
     case "natural_weapons":
     case "water_breathing":
+    case "emit_light":
       return;
     case "composite":
       for (const child of e.effects) {

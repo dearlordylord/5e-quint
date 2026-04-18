@@ -1,119 +1,75 @@
-# Proposal: Light (cantrip) — atom_widening
+# Proposal: Surface widenings for Light
 
-## Unit
+## Status: surface_widening (2 gaps)
 
-**Light** — Evocation cantrip, SRD 5.2.1
+The core mechanic of Light encodes cleanly: `activation` family, `direct` phase, `object` attachment, `emit_light` effect, 1-hour `timed` duration. Two secondary constraints in the RAW text lack surface representation.
 
-## What fits today
+---
 
-- **Family**: `ongoing_effect` on a timed 1-hour duration (no concentration). Matches `{ kind: "timed", value: { unit: "hour", amount: 1 } }`.
-- **Attachment**: `{ kind: "object", count: 1, filter: { heldOrWorn: "forbidden" } }` — the shape exists and correctly models "an object not being worn or carried".
-- **Casting time**: `{ kind: "action" }`.
-- **Components**: `{ v: true, s: false, m: "a firefly or phosphorescent moss" }`.
-- **Range**: `{ kind: "touch" }`.
+## Gap 1: ObjectFilter missing size cap
 
-## What doesn't fit
+**RAW text:** "You touch one Large or smaller object that isn't being worn or carried by someone else."
 
-### 1. Missing atom: `grant_light` (atom_widening — primary blocker)
+**Current surface:** `ObjectFilter` has three fields: `material`, `heldOrWorn`, `manufactured`. No size field.
 
-**RAW text:** *"Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet."*
+**Encoded as-is:** The filter only captures `heldOrWorn: "forbidden"`. The size cap (Large or smaller) is silently dropped, meaning the encoded spell would technically match a Huge object.
 
-The entire mechanical payload of this spell is making an object emit illumination. This has deterministic mechanical consequences in SRD 5.2.1: Bright Light enables sight and prevents hiding (Rules Glossary, "Bright Light"); Dim Light creates the Lightly Obscured condition for creatures within it. The effect is not DM-agenda — it is a deterministic environmental state change with downstream rules consequences.
-
-No atom in v4 taxonomy or `types.ts` models light emission. The closest existing atoms are:
-
-- `grant_sense` — gives a *creature* a perceptual sense; does not apply to objects or areas.
-- `detect` — a divination property scan; does not emit light.
-- `modify_ac_set_base` / etc. — unrelated.
-
-**Proposed atom:**
-
-```typescript
-| {
-    readonly kind: "grant_light";
-    readonly brightRadiusFeet: number;
-    readonly dimRadiusFeet: number;   // additional beyond brightRadius
-    // Optional: color is cosmetic (no mechanical consequence); omit from atom.
-  }
-```
-
-Attach to an `object` attachment. The v4 taxonomy has no corresponding atom name either — this is a genuine gap, not a missing surface realization of an existing v4 atom.
-
-### 2. Missing DurationEndTrigger variant: `caster_recasts_this_spell` (surface_widening)
-
-**RAW text:** *"The spell ends if you cast it again."*
-
-This is a one-at-a-time constraint: the previous instance of the spell ends when the caster casts Light a second time. The existing `DurationEndTrigger` variants all model *target-side* events (`target_makes_attack_roll`, `target_takes_damage`, etc.). None model a caster-side recast.
-
-**Proposed variant:**
-
-```typescript
-| { readonly kind: "caster_recasts_this_spell" }
-```
-
-This pattern appears on multiple SRD cantrips (Mage Hand, Dancing Lights, etc.) and should be added to the closed `DurationEndTrigger` enum.
-
-### 3. Missing ObjectFilter field: size constraint (surface_widening)
-
-**RAW text:** *"You touch one Large or smaller object…"*
-
-`ObjectFilter` currently has `material`, `heldOrWorn`, and `manufactured`. There is no size field. "Large or smaller" is a targeting restriction that cannot be expressed in the current surface.
-
-**Proposed field:**
+**Proposed widening:** Add an optional `maxSize: StatBlockSize` field to `ObjectFilter`:
 
 ```typescript
 export type ObjectFilter = {
   readonly material?: ObjectMaterial;
   readonly heldOrWorn?: "required" | "forbidden";
   readonly manufactured?: boolean;
-  readonly maxSize?: "tiny" | "small" | "medium" | "large";   // new
+  readonly maxSize?: StatBlockSize;  // new
 };
 ```
 
-## Encoding sketch (if widenings are accepted)
-
+**Usage for Light:**
 ```dhall
-{ kind = "spell"
-, id = "light"
-, name = "Light"
-, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-L#Light" }
-, description = "..."
-, mechanics =
-    { family = "ongoing_effect"
-    , level = 0
-    , school = "evocation"
-    , castingTime = { kind = "action" }
-    , range = { kind = "touch" }
-    , components = { v = True, s = False, m = Some "a firefly or phosphorescent moss" }
-    , duration =
-        { kind = "timed"
-        , value = { unit = "hour", amount = 1 }
-        , earlyEnd = [ { kind = "caster_recasts_this_spell" } ]  -- NEW variant
-        }
-    , attachment =
-        { kind = "object"
-        , count = 1
-        , filter = { heldOrWorn = "forbidden", maxSize = Some "large" }  -- maxSize NEW
-        }
-    , operations =
-        [ { trigger = { kind = "passive" }
-          , effect =
-              { kind = "grant_light"         -- NEW atom
-              , brightRadiusFeet = 20
-              , dimRadiusFeet = 20
-              }
-          }
-        ]
-    }
-}
+filter = { heldOrWorn = "forbidden", maxSize = "large" }
 ```
 
-## Classification
+**Pressure:** Light is the first spell in the survey to target a size-capped object. The constraint is genuine RAW text, not a narrative note — a Gargantuan object cannot be targeted by Light per SRD.
 
-| Gap | Classification |
-|-----|---------------|
-| `grant_light` atom | `atom_widening` (not in v4 taxonomy) |
-| `caster_recasts_this_spell` DurationEndTrigger | `surface_widening` (variant missing from closed enum) |
-| `ObjectFilter.maxSize` | `surface_widening` (field missing from existing type) |
+---
 
-Overall verdict: **`atom_widening`** (primary blocker is the missing atom).
+## Gap 2: DurationEndTrigger missing "caster recasts spell"
+
+**RAW text:** "The spell ends if you cast it again."
+
+**Current surface:** `DurationEndTrigger` variants cover:
+- `target_makes_attack_roll`
+- `target_deals_damage`
+- `target_casts_spell`
+- `target_dons_armor`
+- `target_damaged_by_caster_or_ally`
+- `target_takes_damage`
+
+None matches "caster recasts THIS spell".
+
+**Proposed widening:** Add a new variant:
+
+```typescript
+| { readonly kind: "caster_recasts_this_spell" }
+```
+
+This models the "you can only have one active instance" pattern — common in cantrips and some buffs. The v4 taxonomy already has `replace_on_recast` as a lifecycle atom concept, but it has no surface hook on `Duration.timed.earlyEnd`.
+
+**Usage for Light:**
+```dhall
+duration =
+  { kind = "timed"
+  , value = { unit = "hour", amount = 1 }
+  , earlyEnd = [ { kind = "caster_recasts_this_spell" } ]
+  }
+```
+
+**Pressure:** This pattern appears in multiple cantrips (Light, Dancing Lights, others) and some lower-level spells. It is worth closing the taxonomy now rather than deferring.
+
+---
+
+## Omissions (DM agenda / narrative — not widenings)
+
+- **"The light can be colored as you like"** — pure narrative flavor, no mechanical consequence. Correctly omitted.
+- **"Covering the object with something opaque blocks the light"** — DM-agenda physical occlusion rule. The core engine does not model light propagation or physical occlusion; this belongs to the DM layer per ARCHITECTURE.md §1.

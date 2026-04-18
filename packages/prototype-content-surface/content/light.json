@@ -1,0 +1,52 @@
+{
+  "description": "You touch one Large or smaller object that isn't being worn or carried by someone else. Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The light can be colored as you like. Covering the object with something opaque blocks the light. The spell ends if you cast it again.",
+  "id": "light",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a firefly or phosphorescent moss",
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "count": 1,
+          "filter": {
+            "heldOrWorn": "forbidden"
+          },
+          "kind": "object"
+        },
+        "effects": [
+          {
+            "brightRadiusFeet": 20,
+            "dimAdditionalFeet": 20,
+            "kind": "emit_light"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "evocation"
+  },
+  "name": "Light",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-L-P#Light"
+  }
+}

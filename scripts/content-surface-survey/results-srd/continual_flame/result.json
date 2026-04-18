@@ -1,16 +1,25 @@
 {
   "unit_slug": "continual_flame",
-  "outcome": "atom_widening",
-  "atoms_used": [],
-  "relations_used": [],
-  "proposed_widenings": [
-    {
-      "kind": "new_atom",
-      "name": "emit_light",
-      "justification": "Continual Flame's sole mechanical payload is producing magical light with specific bright-light and dim-light radii. Light conditions are mechanically relevant in 5e (bright → normal, dim → lightly obscured, darkness → heavily obscured / blinded). No 'emit_light' or equivalent atom exists in EffectAtom or in the v4 taxonomy (TAXONOMY_atoms_graph.md §9). This is the first SRD spell whose entire effect is a persistent light emission on an object, so the atom is genuinely new rather than a missing surface instantiation of an existing v4 concept.",
-      "evidence": "The effect casts Bright Light in a 20-foot radius and Dim Light for an additional 20 feet."
-    }
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "direct_apply",
+    "emit_light",
+    "expire",
+    "object",
+    "persist",
+    "spell_root",
+    "spell_slot"
   ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
   "confidence": "high",
-  "notes": "Structural shape fits cleanly: activation family, permanent duration with endsOn=[dispel], object attachment at touch range, direct phase, material component consumed. The only blocker is the absence of an emit_light effect atom. The v4 taxonomy has no lighting-related atom at all, so this is atom_widening rather than surface_widening. Secondary flavor properties (no heat, no fuel, immune to smothering/quenching) are object-behavior notes with no deterministic mechanical resolution; they would remain unencoded even after emit_light is added."
+  "notes": "Straightforward permanent-duration spell. Targets an object (Attachment.object count=1), applies emit_light, permanent until dispelled. All required atoms (emit_light, object attachment, permanent duration) were already in the surface. No widenings needed."
 }

@@ -1,0 +1,50 @@
+{
+  "description": "A flame springs from an object that you touch. The effect casts Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. It looks like a regular flame, but it creates no heat and consumes no fuel. The flame can be covered or hidden but not smothered or quenched.",
+  "id": "continual_flame",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "ruby dust worth 50+ GP, which the spell consumes",
+      "materialConsumed": true,
+      "materialCostGp": 50,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "endsOn": [
+        "dispel"
+      ],
+      "kind": "permanent"
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "attachment": {
+          "count": 1,
+          "kind": "object"
+        },
+        "effects": [
+          {
+            "brightRadiusFeet": 20,
+            "dimAdditionalFeet": 20,
+            "kind": "emit_light"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "evocation"
+  },
+  "name": "Continual Flame",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Continual Flame"
+  }
+}

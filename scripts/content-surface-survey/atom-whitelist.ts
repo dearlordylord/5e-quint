@@ -141,6 +141,7 @@ export const V4_EFFECT_ATOMS = [
   "transfer_mark",
   "alter_item_kind",
   "fall_on_end",
+  "emit_light",
 ] as const;
 
 export const V4_RELATIONS = [
