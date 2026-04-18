@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_cubic_gate",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destinationRestriction.keyed_plane_face",
+      "justification": "The existing magic-item activation + charge-pool shape fits, but the surface cannot constrain a granted spell's destination to a cube face's keyed plane. Cubic Gate does not grant generic Gate or Plane Shift access; it grants item-mediated casts whose destination is fixed by the pressed side.",
+      "evidence": "\"Gate. Pressing one side of the cube, you cast Gate, opening a portal to the plane of existence keyed to that side.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.destinationRestriction.keyed_plane_face",
+      "justification": "The same missing shape is pressured by the second spell mode as well. Plane Shift from the cube is not an unrestricted cast; it transports targets to the plane keyed to the chosen side.",
+      "evidence": "\"Plane Shift. Pressing one side of the cube twice, you cast Plane Shift, transporting the targets to the plane of existence keyed to that side.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Do not author this as plain grant_spell_access for Gate and Plane Shift. That would falsely imply normal destination selection instead of the item's face-keyed plane restriction. Charge pool, dawn recharge, legendary magic-item kind, and action activation all fit existing surface shapes."
+}
