@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_gem_of_seeing",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "duration-scoped conditional effect application for activated abilities",
+      "justification": "The item is a normal charge-based activation with a timed sense grant, but the granted sense only applies while the bearer is peering through the gem during that 10-minute window. The current surface can gate a passive or gate activation itself, but cannot express a timed activated effect whose applicability is conditional during its duration.",
+      "evidence": "For the next 10 minutes, you have Truesight out to 120 feet when you peer through the gem."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content/magic_item_gem_of_seeing.dhall because any current encoding would be misleading: passive loses the charge-timed activation, while plain activation lies about unconditional Truesight for the full 10 minutes."
+}

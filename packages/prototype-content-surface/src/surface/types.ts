@@ -1172,6 +1172,13 @@ export type RepeatSaveSpec = {
 // eligible targets. Omitted = no type restriction.
 export type TargetTypeFilter = ReadonlyNonEmptyArray<CreatureType>;
 
+// Area-occupant disposition filter for self-centered auras and similar
+// area effects whose footprint is geometric but whose affected
+// creatures are narrowed by relationship to the source.
+export type AreaOccupantDispositionFilter =
+  | "friendly_to_source"
+  | "hostile_to_source";
+
 export type TargetSelection =
   | { readonly mode: "one"; readonly typeFilter?: TargetTypeFilter }
   | {
@@ -1264,6 +1271,7 @@ export type Attachment =
       readonly kind: "area";
       readonly shape: AreaShapeSpec;
       readonly origin: AreaOrigin;
+      readonly occupantDispositionFilter?: AreaOccupantDispositionFilter;
       readonly rangeOrigin?: AttachmentRangeOrigin;
     }
   // v4 `mark` attachment — stateful binding on a creature that effects

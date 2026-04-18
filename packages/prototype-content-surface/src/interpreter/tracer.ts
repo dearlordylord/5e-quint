@@ -60,6 +60,7 @@ import type {
   AnchoredFilter,
   AnchoredSignal,
   AreaOrigin,
+  AreaOccupantDispositionFilter,
   AreaShapeDescriptor,
   AreaShapeSpec,
   DamageTypeRef,
@@ -2352,11 +2353,14 @@ function traceAttachment(
     }
     case "area": {
       const originLabel = describeAreaOrigin(a.origin, range, a.rangeOrigin);
+      const occupantLabel = describeAreaOccupantDispositionFilter(
+        a.occupantDispositionFilter,
+      );
       nodes.push({
         id,
         category: "attachment",
         atomKind: "area",
-        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}`,
+        label: `area\n${describeAreaShape(a.shape)}\n${originLabel}${occupantLabel}`,
       });
       return id;
     }
@@ -2428,6 +2432,23 @@ function describeAttachmentRange(
 ): string {
   const base = describeRange(range);
   return (origin ?? "caster") === "caster" ? base : `${base} from spell sensor`;
+}
+
+function describeAreaOccupantDispositionFilter(
+  filter: AreaOccupantDispositionFilter | undefined,
+): string {
+  switch (filter) {
+    case undefined:
+      return "";
+    case "friendly_to_source":
+      return "\naffects: friendly creatures";
+    case "hostile_to_source":
+      return "\naffects: hostile creatures";
+    default: {
+      const _: never = filter;
+      throw new Error(`unhandled area occupant disposition filter: ${String(_)}`);
+    }
+  }
 }
 
 function describeAreaShape(s: AreaShapeSpec): string {
