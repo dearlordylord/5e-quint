@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount additive ability modifier term for reduce_damage_taken",
+      "justification": "The core reaction reduces damage by a die roll plus Dexterity modifier. `reduce_damage_taken.amount` currently accepts `DiceAmount`, but `DiceExpr` can only add a flat number or spellcasting modifier, not a general ability modifier.",
+      "evidence": "\"reduce the damage by 1d10 plus your Dexterity modifier\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "activation or equipment predicate for free hand",
+      "justification": "The reaction is only available if the wearer has a free hand. Existing item predicates cover wearing, holding, armor, and weapon states, but not an open-hand requirement.",
+      "evidence": "\"if you have a free hand\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "catch_incoming_missile",
+      "justification": "Reducing the hit to 0 can convert the intercepted ammunition or thrown weapon into a held object. That object-capture rider is deterministic item-state transfer, not just flavor, and no current effect atom models it.",
+      "evidence": "\"If you reduce the damage to 0, you can catch the ammunition or weapon if it is small enough for you to hold in that hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content files. The unit fits the magic-item triggered-reaction family in principle, but the primary mechanic cannot be encoded honestly with the current surface. The catch-on-zero rider is a secondary additional gap beyond the two surface blockers."
+}

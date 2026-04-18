@@ -1,0 +1,27 @@
+{
+  "unit_slug": "magic_item_ring_of_warmth",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "magic_item_root",
+    "reduce_damage_taken",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_environmental_temperature_immunity",
+      "justification": "The encoded half traces cleanly, but the item's second clause is deterministic environmental protection against extreme cold for both the wearer and worn/carried gear, which is not expressible as damage reduction, resistance, or any existing surface atom.",
+      "evidence": "while wearing this ring, you and everything you wear and carry are unharmed by temperatures of 0 degrees Fahrenheit or lower"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored the cold-damage reduction half as a passive worn-item grant. Omitted the extreme-temperature protection rider from the content file and recorded it as a required atom widening."
+}
