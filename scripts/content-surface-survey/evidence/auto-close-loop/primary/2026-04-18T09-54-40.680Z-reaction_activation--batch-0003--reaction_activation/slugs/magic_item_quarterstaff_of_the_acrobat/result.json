@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_quarterstaff_of_the_acrobat",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.item_form",
+      "justification": "Several mechanics are gated by the weapon's current form, but the current passive/activation gating vocabulary can only express holding/wearing/wielding state, not which authored form the item is in.",
+      "evidence": "\"Acrobatic Assist (Quarterstaff and 10-Foot Pole Forms Only).\" / \"Attack Deflection (Quarterstaff Form Only).\" / \"Ranged Weapon (Quarterstaff Form Only).\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "The item can change its own form, but activation phases can only attach to self, target, area, or mark. There is no honest way to direct `alter_item_kind` at the held weapon itself.",
+      "evidence": "\"While holding this weapon, you can take a Bonus Action to alter its form, turning it into a 6-inch rod ... or a 10-foot pole, or reverting it a Quarterstaff.\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "emit_light",
+      "justification": "The surface has no atom for creating or extinguishing bright/dim light radii from an item.",
+      "evidence": "\"you can cause it to emit green Dim Light out to 10 feet ... or you can extinguish the light\""
+    },
+    {
+      "kind": "new_atom",
+      "name": "return_item_after_thrown_attack",
+      "justification": "The boomerang-style return rider is a deterministic equipment movement effect not represented by any current atom.",
+      "evidence": "\"Immediately after you make a ranged attack with the weapon, it flies back to your hand.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level kind/family fits a composite magic item, and some subclauses already match existing surface pieces (+2 attack rolls/damage rolls with a specific item, Acrobatics advantage, reaction +5 AC once per short or long rest). I did not author a partial content file because the item's central mechanics still require unsupported form-scoped gating plus a non-v4 light-emission effect, and encoding the supported riders without that scoping would be misleading."
+}
