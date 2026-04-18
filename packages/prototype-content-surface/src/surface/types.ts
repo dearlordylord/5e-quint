@@ -1313,6 +1313,26 @@ export type OngoingOperation = {
   readonly effect: OngoingEffect;
 };
 
+// Passive / equipped recurring operation — bounded non-spell analogue of
+// spell ongoing operations for "while worn/orbiting, this repeats on a
+// fixed cadence" idioms. Pressure case: Ioun Stone (Regeneration)
+// "regain 15 Hit Points at the end of each hour if you have at least
+// 1 Hit Point while this stone orbits your head."
+//
+// Keep this separate from spell OngoingOperation rather than reusing the
+// spell trigger grammar wholesale: non-spell passives do not have caster /
+// attached-turn semantics or spell headers, and the only surfaced timing
+// pressure here is a fixed elapsed-time cadence.
+export type PassiveOperation = {
+  readonly trigger: {
+    readonly kind: "elapsed_time";
+    readonly unit: "hour" | "day";
+    readonly amount: number;
+  };
+  readonly predicate?: OngoingPredicate;
+  readonly effect: EffectAtom;
+};
+
 // ---------- activation phases (spells) ----------
 
 export type ActionRestriction =
@@ -2087,6 +2107,7 @@ export type PassiveMechanics = {
   readonly family: "passive";
   readonly condition?: EquipmentPredicate;
   readonly grants: ReadonlyArray<EffectAtom>;
+  readonly operations?: ReadonlyNonEmptyArray<PassiveOperation>;
 };
 
 export type ClassFeatureMechanics =

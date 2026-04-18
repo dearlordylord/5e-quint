@@ -79,6 +79,7 @@ import type {
   GrantedSpellTargetRestriction,
   MagicItemAttunementRestriction,
   MagicItemVariant,
+  PassiveOperation,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -2936,7 +2937,47 @@ function tracePassiveMechanics(
       edges.push({ from: procId, to: effId, relation: "grants" });
     }
   }
+  for (const operation of m.operations ?? []) {
+    tracePassiveOperation(operation, procId, nodes, edges, ids);
+  }
   return procId;
+}
+
+function tracePassiveOperation(
+  operation: PassiveOperation,
+  procId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const winId = ids("win");
+  nodes.push({
+    id: winId,
+    category: "window",
+    atomKind: "duration_window",
+    label: describePassiveOperationWindow(operation),
+  });
+  edges.push({ from: procId, to: winId, relation: "opens_window" });
+
+  const effId = traceEffectAtom(operation.effect, nodes, ids, edges);
+  if (effId !== null) {
+    edges.push({ from: winId, to: effId, relation: "grants" });
+  }
+}
+
+function describePassiveOperationWindow(operation: PassiveOperation): string {
+  const predicate =
+    operation.predicate === undefined
+      ? ""
+      : `\nif ${describeOngoingPredicate(operation.predicate)}`;
+  const unitLabel =
+    operation.trigger.amount === 1
+      ? operation.trigger.unit
+      : `${operation.trigger.unit}s`;
+  return (
+    `duration_window\nevery ${operation.trigger.amount} ${unitLabel}` +
+    predicate
+  );
 }
 
 function traceEquipmentPredicate(
@@ -3841,6 +3882,25 @@ function describeConditionChoice(
   if (Array.isArray(c)) return `${c.join(", ")} (all)`;
   const choose = c as { kind: "choose"; from: ReadonlyArray<string> };
   return `${choose.from.join(" OR ")} (caster choice)`;
+}
+
+function describeOngoingPredicate(p: {
+  readonly kind: "at_hp_threshold";
+  readonly threshold: number;
+  readonly comparison: "lte" | "eq" | "gte";
+}): string {
+  switch (p.comparison) {
+    case "lte":
+      return `HP <= ${p.threshold}`;
+    case "eq":
+      return `HP = ${p.threshold}`;
+    case "gte":
+      return `HP >= ${p.threshold}`;
+    default: {
+      const _exhaustive: never = p.comparison;
+      throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);
+    }
+  }
 }
 
 function describeEarlyEnd(
