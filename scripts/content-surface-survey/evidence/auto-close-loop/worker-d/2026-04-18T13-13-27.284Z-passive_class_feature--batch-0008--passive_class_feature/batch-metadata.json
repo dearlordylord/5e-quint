@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 8,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "passive_class_feature",
+  "archivedAt": "2026-04-18T13:18:07.784Z",
+  "selectedSlugs": [
+    "monk_disciplined_survivor_l14",
+    "paladin_aura_expansion_l18"
+  ]
+}
