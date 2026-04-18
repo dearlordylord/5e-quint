@@ -1,0 +1,16 @@
+{
+  "unit_slug": "barbarian_ability_score_improvement_l4",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_feat"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes cleanly as a passive class feature that grants one general feat. Typecheck and tracer both passed."
+}

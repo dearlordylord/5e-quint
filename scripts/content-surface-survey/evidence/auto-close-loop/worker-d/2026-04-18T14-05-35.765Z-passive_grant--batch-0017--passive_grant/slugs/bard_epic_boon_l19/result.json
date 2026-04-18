@@ -1,0 +1,16 @@
+{
+  "unit_slug": "bard_epic_boon_l19",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_feat"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive class feature granting a qualifying feat choice across the existing feat categories. Typecheck and tracer both passed."
+}
