@@ -1,0 +1,40 @@
+{
+  "unit_slug": "species_goliath_giant_ancestry",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.build_time_choice",
+      "justification": "Giant Ancestry is one species trait whose core mechanic is choosing exactly one ancestry boon at character creation, and the options are mechanically heterogeneous rather than one shared family payload.",
+      "evidence": "Choose one of the following benefits-a supernatural boon from your ancestry"
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.triggered_reaction",
+      "justification": "Two ancestry options are reaction-shaped species abilities, but species traits currently admit only passive or activation mechanics.",
+      "evidence": "Stone's Endurance... you can take a Reaction to roll 1d12... and reduce the damage by that total. Storm's Thunder... you can take a Reaction to deal 1d8 Thunder damage to that creature."
+    },
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.on_hit_trigger",
+      "justification": "Three ancestry options are on-hit riders, but the current on-hit family exists only for masteries and is not available to species traits.",
+      "evidence": "Fire's Burn... When you hit a target with an attack roll and deal damage to it... Frost's Chill... When you hit a target with an attack roll and deal damage to it... Hill's Tumble... When you hit a Large or smaller creature with an attack roll and deal damage to it"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.take_damage",
+      "justification": "The reaction trigger grammar does not cover generic damage-taken reactions or damage taken from a creature within a stated range.",
+      "evidence": "When you take damage... When you take damage from a creature within 60 feet of you"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OnHitTrigger.target_size_filter",
+      "justification": "Hill's Tumble needs a target eligibility filter by creature size, which the current on-hit trigger surface cannot express.",
+      "evidence": "When you hit a Large or smaller creature with an attack roll and deal damage to it"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No honest single-family SpeciesTraitRecord fits this trait today. The primary blocker is build-time choice across mixed mechanics families; secondary blockers are missing species-trait reaction/on-hit families and narrower trigger/filter variants."
+}

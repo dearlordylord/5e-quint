@@ -1,0 +1,34 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "PassiveMechanics.choice_of_grants",
+      "justification": "The trait is one species trait whose mechanics are chosen from a closed build-time lineage table, and each lineage carries a different grant bundle. The current passive surface can only express one fixed grants list.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "level_gated_passive_grant",
+      "justification": "The same chosen lineage adds further grants at character levels 3 and 5. Current passive grants have no character-level threshold wrapper, so encoding them as always-on would be false.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.choice_from_spell_list_with_rest_swap",
+      "justification": "High Elf does not grant one fixed cantrip. It grants one Wizard cantrip and allows replacing it after each Long Rest. The current spell-access surface requires a fixed spellId and has no rest-based replacement path.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spellcasting_ability_choice",
+      "justification": "The trait chooses one spellcasting ability when the lineage is selected, then uses that ability for all spells cast through the trait. Current grant_spell_access supports DC override, but not a build-time ability-choice source for the grant.",
+      "evidence": "Intelligence, Wisdom, or Charisma is your spellcasting ability for the spells you cast with this trait (choose the ability when you select the lineage)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author a placeholder record. Individual sub-benefits map to existing atoms like grant_sense, modify_speed, and grant_spell_access, but the unit as written needs build-time lineage selection plus character-level-gated grants and High Elf's long-rest cantrip replacement."
+}
