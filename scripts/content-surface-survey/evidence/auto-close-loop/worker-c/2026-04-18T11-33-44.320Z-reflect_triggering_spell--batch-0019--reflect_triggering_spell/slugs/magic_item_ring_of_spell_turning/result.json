@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "PassiveOperation.trigger.spell_save_outcome",
+      "justification": "The ring needs an always-on, no-action listener on a successful spell save to apply `negate_triggering_spell`. Existing non-spell passives only support elapsed-time operations, and `triggered_reaction` would falsely charge a reaction for the automatic negation clause.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Passive save advantage fits existing `modify_roll_advantage`, and the optional deflection reaction fits existing `triggered_reaction` + `reflect_triggering_spell`. The blocker is the actionless post-save negation, which cannot be authored honestly in the current non-spell surface."
+}
