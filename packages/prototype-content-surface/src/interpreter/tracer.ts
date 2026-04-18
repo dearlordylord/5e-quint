@@ -17,6 +17,7 @@ import type {
   Range,
   Attachment,
   AttachmentRangeOrigin,
+  ObjectFilter,
   EffectAtom,
   OngoingOperation,
   DiceAmount,
@@ -2466,17 +2467,8 @@ function traceAttachment(
       return id;
     }
     case "object": {
-      const filterParts: string[] = [];
-      if (a.filter?.material !== undefined)
-        filterParts.push(a.filter.material);
-      if (a.filter?.manufactured === true) filterParts.push("manufactured");
-      if (a.filter?.heldOrWorn === "required")
-        filterParts.push("held_or_worn");
-      if (a.filter?.heldOrWorn === "forbidden")
-        filterParts.push("not_held_or_worn");
-      const filterLabel =
-        filterParts.length > 0 ? `\nfilter: ${filterParts.join(", ")}` : "";
       const countLabel = a.count === 2 ? "2 objects" : "object";
+      const filterLabel = describeObjectFilter(a.filter);
       nodes.push({
         id,
         category: "attachment",
@@ -2490,6 +2482,28 @@ function traceAttachment(
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
     }
   }
+}
+
+function describeObjectFilter(f: ObjectFilter | undefined): string {
+  if (f === undefined) return "";
+  const parts: string[] = [];
+  if (f.material !== undefined) parts.push(f.material);
+  if (f.manufactured === true) parts.push("manufactured");
+  switch (f.heldOrWorn) {
+    case "required":
+      parts.push("held_or_worn");
+      break;
+    case "forbidden":
+      parts.push("not_held_or_worn");
+      break;
+    case undefined:
+      break;
+    default: {
+      const _: never = f.heldOrWorn;
+      throw new Error(`unhandled heldOrWorn: ${String(_)}`);
+    }
+  }
+  return parts.length > 0 ? `\nfilter: ${parts.join(", ")}` : "";
 }
 
 function describeDamageTypeRef(d: DamageTypeRef): string {

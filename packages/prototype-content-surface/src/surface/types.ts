@@ -1450,12 +1450,9 @@ export type Attachment =
       readonly rangeOrigin?: AttachmentRangeOrigin;
       readonly transfer?: MarkTransfer;
     }
-  // Attachment targeting existing world object(s) — non-creature,
-  // non-area. SRD examples: Heat Metal (metal weapon/armor),
-  // Daylight cast on an unworn object, Continual Flame (flammable
-  // object), Sovereign Glue (two-object bond). Does NOT cover object
-  // CREATION — that is a separate effect concept handled by a
-  // forthcoming `create_object` atom or mechanics family.
+  // Targets existing world object(s). Distinct from object CREATION
+  // (Fabricate, Instant Fortress) — that is a forthcoming
+  // `create_object` atom, not an Attachment kind.
   | {
       readonly kind: "object";
       readonly count: 1 | 2;
@@ -1463,19 +1460,17 @@ export type Attachment =
       readonly rangeOrigin?: AttachmentRangeOrigin;
     };
 
-// Filter predicates for existing-object selection. Fields are
-// combined with AND. All optional; absence means the filter does
-// not constrain on that dimension.
+export const OBJECT_MATERIALS = [
+  "metal",
+  "flammable",
+] as const satisfies ReadonlyArray<string>;
+export type ObjectMaterial = (typeof OBJECT_MATERIALS)[number];
+
 export type ObjectFilter = {
   readonly material?: ObjectMaterial;
   readonly heldOrWorn?: "required" | "forbidden";
   readonly manufactured?: boolean;
 };
-
-// Narrow enum; extend only when a new SRD unit surfaces a new
-// material. Current SRD evidence: metal (Heat Metal), flammable
-// (Continual Flame).
-export type ObjectMaterial = "metal" | "flammable";
 
 // ---------- resolution DC ----------
 
