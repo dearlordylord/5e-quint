@@ -1808,7 +1808,10 @@ export type SpellMechanics =
 // than introducing item-specific cost variants. `action_plus_bonus_action`
 // is the bounded compound-economy case where the same activation requires
 // both quotas in sequence, without modeling a new nested procedure family.
-// `reaction` covers reactive uses that consume the reaction quota.
+// `reaction` covers reactive uses that consume the reaction quota. It may
+// also carry the same closed trigger grammar spell reactions use, so
+// non-spell abilities can declare what opens the reaction window without
+// inventing a parallel trigger surface.
 // `replace_attack` is the Extra-Attack-economy cost: the ability is
 // triggered by spending one of the attacks you would otherwise make
 // during the Attack action (Breath Weapon, some smite-like species
@@ -1821,7 +1824,7 @@ export type ClassFeatureActivationCost =
   | { readonly kind: "action" }
   | { readonly kind: "action_plus_bonus_action" }
   | { readonly kind: "bonus_action" }
-  | { readonly kind: "reaction" }
+  | { readonly kind: "reaction"; readonly trigger?: ReactionTrigger }
   | { readonly kind: "replace_attack" };
 
 // use_count cap — fixed amount, a threshold-tier schedule (Option B:
@@ -2137,8 +2140,9 @@ export type MagicItemComponentMechanics =
 // Composite magic-item mechanics — a single SRD item can combine
 // always-on passive grants with a distinct activated ability while
 // remaining one authored unit. Keep this bounded to existing
-// magic-item families; trigger-shaped item abilities still require
-// their own widening rather than being smuggled through this record.
+// magic-item families; reaction-triggered activated abilities reuse the
+// shared activation-cost trigger grammar rather than a magic-item-only
+// mechanics branch.
 export type CompositeMagicItemMechanics = {
   readonly family: "composite";
   readonly parts: ReadonlyNonEmptyArray<MagicItemComponentMechanics>;

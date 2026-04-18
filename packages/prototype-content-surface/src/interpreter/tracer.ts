@@ -2904,6 +2904,16 @@ function traceActivationCost(
         label: "reaction_quota\n(Activation: Reaction)",
       });
       edges.push({ from: procId, to: id, relation: "consumes" });
+      if (c.trigger !== undefined) {
+        const winId = ids("win");
+        nodes.push({
+          id: winId,
+          category: "window",
+          atomKind: "reaction_window",
+          label: `reaction_window\ntrigger: ${describeReactionTrigger(c.trigger)}`,
+        });
+        edges.push({ from: procId, to: winId, relation: "opens_window" });
+      }
       return;
     }
     case "replace_attack": {

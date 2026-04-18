@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_gloves_of_missile_snaring",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "reduce_damage_taken",
+      "justification": "The item's core mechanic is a one-shot variable reduction to the triggering hit's damage, which is not representable by existing atoms like damage, grant_resistance, or negate_named_effect.",
+      "evidence": "you can take a Reaction to reduce the damage by 1d10 plus your Dexterity modifier"
+    },
+    {
+      "kind": "new_variant",
+      "name": "reaction hit_by_attack_roll qualifier for thrown weapons",
+      "justification": "The existing trigger filter vocabulary cannot honestly encode \"Ranged or Thrown weapon\" because WeaponFilter only admits melee/ranged categories or a specific item.",
+      "evidence": "If you're hit by an attack roll made with a Ranged or Thrown weapon"
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The top-level shape fits a reaction-based magic-item activation, but the core damage-reduction mechanic is missing from the atom surface. The catch-on-zero rider is also unmodeled and was not forced into a placeholder encoding."
+}
