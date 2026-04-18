@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_alertness",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "activated_magic_item_ongoing_aura",
+      "justification": "The item combines a passive held grant with a separate activated property that creates a timed persistent aura. Current magic-item activations only express one-shot phase sequences; they do not model an activation that establishes an ongoing area benefit window.",
+      "evidence": "\"As a Magic action, you can plant the haft end of the rod in the ground... While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws... The effect ends after 10 minutes\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "friendly_creature_area_filter",
+      "justification": "Current target and area attachments can select creatures in an area, but they cannot restrict a persistent benefit to the user and allies while excluding other creatures in the same area.",
+      "evidence": "\"While in that Bright Light, you and your allies gain a +1 bonus to Armor Class and saving throws\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "activated_item_early_end_on_pull",
+      "justification": "The aura has a deterministic manual dismissal condition tied to another creature using a Magic action on the planted rod. Existing activated-ability duration/reset shapes do not encode this early-end trigger.",
+      "evidence": "\"the effect ends after 10 minutes or when a creature takes a Magic action to pull the rod from the ground\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive held properties fit existing surface pieces (`holding_item`, `modify_roll_advantage`, `grant_spell_access`), but the activated Protective Aura does not fit honestly enough to author a partial content file without misrepresenting the item."
+}
