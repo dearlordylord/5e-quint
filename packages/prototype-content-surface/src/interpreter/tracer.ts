@@ -3379,7 +3379,7 @@ function traceResetCadence(
     case "dawn": {
       const did = ids("dawn");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       nodes.push({
@@ -3394,7 +3394,7 @@ function traceResetCadence(
     case "elapsed_days": {
       const did = ids("days");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       const trigger =
@@ -3413,7 +3413,7 @@ function traceResetCadence(
     case "elapsed_hours": {
       const hid = ids("hours");
       const refill =
-        c.regain === null
+        c.regain == null
           ? "refill all"
           : `refill ${describeDiceAmount(c.regain)}`;
       const hourLabel = c.hours === 1 ? "hour" : "hours";

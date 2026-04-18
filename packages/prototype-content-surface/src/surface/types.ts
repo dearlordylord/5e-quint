@@ -1935,8 +1935,11 @@ export type RestResetCadence =
   // 4 magic-item proposals.
   | {
       readonly kind: "dawn";
-      // null = regains all; DiceAmount for e.g. "1d6 + 4" style partial.
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all; DiceAmount for e.g. "1d6 + 4" style
+      // partial. `dhall-to-json --omit-empty` drops `None`, so the JSON
+      // authoring flow naturally serializes the full-refill case by
+      // omitting the field.
+      readonly regain?: null | DiceAmount;
     }
   // Relative calendar-time cooldown. Covers item text like "can't be
   // used again until 5 days have passed" and pool-based recharge that
@@ -1944,7 +1947,9 @@ export type RestResetCadence =
   | {
       readonly kind: "elapsed_days";
       readonly days: number;
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all after the cooldown elapses. Omission is
+      // the stable JSON form produced by `dhall-to-json --omit-empty`.
+      readonly regain?: null | DiceAmount;
       readonly startsWhen: RelativeDayResetTrigger;
     }
   // Relative sub-day cooldown. Covers item text like "can't be used
@@ -1953,7 +1958,9 @@ export type RestResetCadence =
   | {
       readonly kind: "elapsed_hours";
       readonly hours: number;
-      readonly regain: null | DiceAmount;
+      // null/omitted = regains all after the cooldown elapses. Omission is
+      // the stable JSON form produced by `dhall-to-json --omit-empty`.
+      readonly regain?: null | DiceAmount;
     }
   // Single-shot or bounded-use items that never refill — Chime of
   // Opening "can be used 10 times. After the tenth time, it cracks
