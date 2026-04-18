@@ -1,0 +1,49 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item",
+      "justification": "Tree Form needs activation phases to target the staff itself after it is planted in an unoccupied space, rather than incorrectly attaching the transform to self.",
+      "evidence": "\"You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.last_charge_suppresses_magic",
+      "justification": "The last-charge rider does not destroy the item; it removes the item's magical properties and leaves behind a mundane Quarterstaff.",
+      "evidence": "\"If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "item_transform_revert_fall_rider",
+      "justification": "The tree-form lifecycle needs a revert-triggered rider that causes creatures in the transformed tree to fall when it becomes a staff again.",
+      "evidence": "\"Any creature in the tree falls when the tree reverts to a staff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored subset encodes the held-item bonuses, spell grants, charge pool, and dawn recharge. Tree Form and the non-destructive last-charge rider are omitted because the current surface cannot target or lifecycle-track the transformed item honestly."
+}

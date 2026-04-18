@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "PassiveOperation.trigger.touch_item / end_of_turn_holding_or_carrying",
+      "justification": "The item's passive damage rider needs event-driven item-contact and item-possession triggers, not elapsed-time cadence.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    },
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke destroys the target outright on a failed save; no existing effect atom honestly models deterministic destruction with no remains.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate target-type disadvantage rider",
+      "justification": "The save penalty applies only when the save target is a Fiend or an Undead. Existing save/advantage shapes do not express that conditional modifier honestly.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item's magic-item/composite envelope exists, but the missing contact-trigger grammar and destroy-on-fail effect are central enough that a partial encoding would misrepresent the unit."
+}
