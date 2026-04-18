@@ -1,0 +1,13 @@
+{
+  "runnerId": "primary",
+  "batch": 1,
+  "source": "srd-5.2.1",
+  "kind": "spell",
+  "backend": "codex",
+  "cluster": "apply_condition_effect",
+  "archivedAt": "2026-04-18T14:37:12.304Z",
+  "selectedSlugs": [
+    "befuddlement",
+    "command"
+  ]
+}
