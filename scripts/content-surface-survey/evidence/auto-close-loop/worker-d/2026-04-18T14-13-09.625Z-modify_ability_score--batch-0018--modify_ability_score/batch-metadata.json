@@ -1,0 +1,13 @@
+{
+  "runnerId": "worker-d",
+  "batch": 18,
+  "source": "srd-5.2.1",
+  "kind": "class_feature",
+  "backend": "codex",
+  "cluster": "modify_ability_score",
+  "archivedAt": "2026-04-18T14:17:45.026Z",
+  "selectedSlugs": [
+    "barbarian_primal_champion_l20",
+    "monk_body_and_mind_l20"
+  ]
+}

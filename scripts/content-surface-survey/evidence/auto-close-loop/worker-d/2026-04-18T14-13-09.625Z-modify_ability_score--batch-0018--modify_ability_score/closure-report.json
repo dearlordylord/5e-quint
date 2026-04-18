@@ -1,0 +1,36 @@
+{
+  "cluster": "modify_ability_score",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "barbarian_primal_champion_l20",
+    "monk_body_and_mind_l20"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 2,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "barbarian_primal_champion_l20",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "monk_body_and_mind_l20",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "structural_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    }
+  ]
+}
