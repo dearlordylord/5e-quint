@@ -187,6 +187,13 @@ const DEFAULT_INTEGRATION_LOCK_PATH = path.join(
   "content-surface-closure",
   "integration.lock.json",
 );
+const DEFAULT_TRACKED_EVIDENCE_ROOT = path.join(
+  DEFAULT_SHARED_ROOT,
+  "scripts",
+  "content-surface-survey",
+  "evidence",
+  "auto-close-loop",
+);
 
 class NoSurfaceChangeNeededError extends Error {}
 
@@ -327,6 +334,14 @@ function ensureParent(filePath: string): void {
 function sleep(seconds: number): void {
   if (seconds <= 0) return;
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, seconds * 1000);
+}
+
+function sanitizePathComponent(value: string): string {
+  return value
+    .replaceAll(/[^A-Za-z0-9._-]+/g, "-")
+    .replaceAll(/-+/g, "-")
+    .replaceAll(/^-|-$/g, "")
+    .slice(0, 120) || "unknown";
 }
 
 function processAlive(pid: number): boolean {
@@ -722,6 +737,72 @@ function resultDirForSlug(source: Source, slug: string): string {
   return source === "srd-5.2.1"
     ? `scripts/content-surface-survey/results-srd/${slug}`
     : `.references/xphb-srd-pairing/phb-survey/results/${slug}`;
+}
+
+function trackedEvidenceDir(args: Args, state: PersistedState, reportPath: string, cluster: string | null): string {
+  const reportStem = path.basename(reportPath, ".json");
+  const clusterStem = sanitizePathComponent(cluster ?? "manual");
+  return path.join(
+    DEFAULT_TRACKED_EVIDENCE_ROOT,
+    args.runnerId,
+    `${reportStem}--batch-${String(state.batch).padStart(4, "0")}--${clusterStem}`,
+  );
+}
+
+function copyIfExists(from: string, to: string): void {
+  if (!fs.existsSync(from)) return;
+  ensureParent(to);
+  fs.copyFileSync(from, to);
+}
+
+function archiveBatchEvidence(
+  args: Args,
+  state: PersistedState,
+  reportPath: string,
+  report: ClosureReport,
+): string[] {
+  const archiveDir = trackedEvidenceDir(args, state, reportPath, report.cluster);
+  fs.mkdirSync(archiveDir, { recursive: true });
+
+  copyIfExists(reportPath, path.join(archiveDir, "closure-report.json"));
+  fs.writeFileSync(
+    path.join(archiveDir, "batch-metadata.json"),
+    JSON.stringify(
+      {
+        runnerId: args.runnerId,
+        batch: state.batch,
+        source: args.source,
+        kind: args.kind,
+        backend: args.backend,
+        cluster: report.cluster,
+        archivedAt: new Date().toISOString(),
+        selectedSlugs: report.deltas.map((delta) => delta.slug),
+      },
+      null,
+      2,
+    ) + "\n",
+    "utf8",
+  );
+
+  const trackedPaths: string[] = [
+    path.relative(sharedRoot(), path.join(archiveDir, "closure-report.json")),
+    path.relative(sharedRoot(), path.join(archiveDir, "batch-metadata.json")),
+  ];
+
+  for (const delta of report.deltas) {
+    const sourceDir = path.join(repoRoot(), resultDirForSlug(delta.source, delta.slug));
+    const targetDir = path.join(archiveDir, "slugs", delta.slug);
+    for (const filename of ["proposal.md", "result.json", "verdict.json"] as const) {
+      const sourcePath = path.join(sourceDir, filename);
+      const targetPath = path.join(targetDir, filename);
+      if (fs.existsSync(sourcePath)) {
+        copyIfExists(sourcePath, targetPath);
+        trackedPaths.push(path.relative(sharedRoot(), targetPath));
+      }
+    }
+  }
+
+  return trackedPaths;
 }
 
 function contentPathsForSlug(slug: string): string[] {
@@ -1169,6 +1250,17 @@ function integrateCommittedBatch(commitSha: string): void {
   }
 }
 
+function resetForNextCycle(state: PersistedState, reason: string): void {
+  state.stopReason = reason;
+  state.attempted = [];
+  state.batch = 0;
+  state.noImproveStreak = 0;
+  state.errorStreak = 0;
+  state.currentCluster = undefined;
+  state.currentBatchStartedAt = undefined;
+  state.lastError = undefined;
+}
+
 function clusterEligible(cluster: ClusterRecord, queueKind?: string, minClusterSize = 2): boolean {
   if (cluster.count < minClusterSize) return false;
   if (queueKind && !cluster.kinds.includes(queueKind)) return false;
@@ -1270,14 +1362,28 @@ function main(): void {
     const state = loadState(args);
     const attempted = new Set<string>(state.attempted);
 
-    while (state.batch < args.maxBatches) {
+    while (true) {
+      if (state.batch >= args.maxBatches) {
+        summarizeStop("reached max batches", state);
+        saveState(args.statePath, state);
+        writeObservability(args, state);
+        resetForNextCycle(state, "reached max batches");
+        saveState(args.statePath, state);
+        sleep(Math.max(args.sleepSeconds, 5));
+        continue;
+      }
+
       waitForSurveyIdle(args, state);
 
       const cluster = pickNextCluster(args, attempted);
       if (!cluster) {
         summarizeStop("no eligible clusters left", state);
         saveState(args.statePath, state);
-        return;
+        writeObservability(args, state);
+        resetForNextCycle(state, "no eligible clusters left");
+        saveState(args.statePath, state);
+        sleep(Math.max(args.sleepSeconds, 5));
+        continue;
       }
 
       state.batch += 1;
@@ -1300,6 +1406,7 @@ function main(): void {
           throw new NoSurfaceChangeNeededError(`surface-change attempt made no changes for ${cluster.canonical}`);
         }
         const { reportPath, report } = runBatch(args, cluster.canonical);
+        const archivedEvidencePaths = archiveBatchEvidence(args, state, reportPath, report);
         state.lastReportPath = reportPath;
         state.lastError = undefined;
         state.errorStreak = 0;
@@ -1311,7 +1418,10 @@ function main(): void {
           state.improvedBatches += 1;
           state.noImproveStreak = 0;
           writeObservability(args, state, report);
-          const commitSha = maybeCommitBatch(args, state, report, surfaceAttempt.changedPaths);
+          const commitSha = maybeCommitBatch(args, state, report, [
+            ...surfaceAttempt.changedPaths,
+            ...archivedEvidencePaths,
+          ]);
           if (commitSha) {
             integrateCommittedBatch(commitSha);
           }
@@ -1335,6 +1445,10 @@ function main(): void {
           state.attempted = [...attempted];
           state.noImproveStreak += 1;
           writeObservability(args, state, report);
+          const commitSha = maybeCommitBatch(args, state, report, archivedEvidencePaths);
+          if (commitSha) {
+            integrateCommittedBatch(commitSha);
+          }
           ensureCleanTrackedWorktreeAfterBatch(`reverted batch ${cluster.canonical}`);
         }
       } catch (error) {
@@ -1377,22 +1491,24 @@ function main(): void {
         summarizeStop("too many failed batches", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
-        return;
+        resetForNextCycle(state, "too many failed batches");
+        saveState(args.statePath, state);
+        sleep(Math.max(args.sleepSeconds, 5));
+        continue;
       }
 
       if (state.noImproveStreak >= args.maxNoImprove) {
         summarizeStop("too many no-improve batches", state);
         saveState(args.statePath, state);
         writeObservability(args, state);
-        return;
+        resetForNextCycle(state, "too many no-improve batches");
+        saveState(args.statePath, state);
+        sleep(Math.max(args.sleepSeconds, 5));
+        continue;
       }
 
       sleep(args.sleepSeconds);
     }
-
-    summarizeStop("reached max batches", state);
-    saveState(args.statePath, state);
-    writeObservability(args, state);
   } finally {
     releaseLock();
   }

@@ -25,7 +25,8 @@ One-liner: **this dir tells us what's MISSING; the package's `content/` dir hold
 | `run-survey.sh` | orchestrator: reads queue, runs N workers in parallel, resumable |
 | `close-loop.ts` | Stage 2 closure loop: ranks widening clusters, reruns a targeted batch, writes before/after closure report |
 | `auto-close-loop.ts` | unattended batch driver: resumes from persisted state, applies timeouts, continues cluster-by-cluster |
-| `run-auto-close-loop.sh` | launcher for overnight runs: `start`, `status`, `logs`, `stop`, `restart` |
+| `run-auto-close-loop.sh` | supervised launcher for overnight runs: `start`, `status`, `logs`, `stop`, `restart` |
+| `evidence/auto-close-loop/` | tracked per-batch archive: closure report + per-slug proposal/result/verdict snapshots |
 | `provenance-check.sh` | pre-commit sweep: fails if PHB content leaked to main repo |
 
 ## Routing rule (hard)
@@ -155,6 +156,34 @@ After a tier completes:
 6. The script writes a before/after closure report under:
    - `.output/content-surface-closure/*.json`
 
+## Evidence locations
+
+There are now three different kinds of survey artifacts, and they are not interchangeable:
+
+1. `scripts/content-surface-survey/results-srd/<slug>/`
+   - mutable worker-local rerun artifacts
+   - overwritten by future reruns
+   - useful for the latest local state of a slug
+
+2. `.output/content-surface-closure/`
+   - machine-local telemetry and control files
+   - runner state, locks, convergence history, latest snapshots, failure logs
+   - not intended as durable git history
+
+3. `scripts/content-surface-survey/evidence/auto-close-loop/`
+   - tracked durable archive for completed auto-close-loop batches
+   - one directory per batch/run stamp
+   - stores:
+     - `closure-report.json`
+     - `batch-metadata.json`
+     - per-slug `proposal.md`, `result.json`, `verdict.json`
+
+The reason this exists separately from `results-srd/` is that parallel workers
+rewrite `results-srd/` in place. We want those live working files for the
+current rerun, but we do **not** want to merge them directly across workers.
+The evidence archive is the durable, checked-in backup of what a completed batch
+saw at the time it finished.
+
 `close-loop.ts` is the rerun engine used inside the convergence loop.
 By itself it is not enough for convergence; the reusable surface-change
 step lives in `auto-close-loop.ts`.
@@ -166,11 +195,12 @@ step lives in `auto-close-loop.ts`.
 - latest global convergence snapshot in `.output/content-surface-closure/auto-close-loop.latest.json`
 - append-only convergence history in `.output/content-surface-closure/auto-close-loop.history.jsonl`
 - append-only failed-attempt log in `.output/content-surface-closure/failed-surface-attempts.jsonl`
+- tracked per-batch evidence snapshots in `scripts/content-surface-survey/evidence/auto-close-loop/`
 - bounded step-2 surface-change attempt before each rerun batch
 - automatic keep-or-revert based on rerun outcome
 - per-batch hard timeout
-- failed-batch streak stopping
-- no-improvement streak stopping
+- self-recycling after failed-batch / no-improve / exhausted-state thresholds
+- launcher-level supervisor restart if a runner process exits unexpectedly
 - sleep between batches
 - optional per-batch git commits for completed atoms (`AUTO_COMMIT=1`)
 - optional multi-worker mode via `AUTO_RUNNER_NAME`

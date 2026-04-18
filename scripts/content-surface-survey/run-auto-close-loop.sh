@@ -13,6 +13,7 @@ if [[ "$RUNNER_NAME" == "primary" ]]; then
   STATE_FILE="$OUTPUT_DIR/auto-close-loop.state.json"
   LOCK_FILE="$OUTPUT_DIR/auto-close-loop.lock.json"
   PID_FILE="$OUTPUT_DIR/auto-close-loop.pid"
+  STOP_FILE="$OUTPUT_DIR/auto-close-loop.stop"
   WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop}"
   WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop}"
 else
@@ -20,6 +21,7 @@ else
   STATE_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.state.json"
   LOCK_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.lock.json"
   PID_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.pid"
+  STOP_FILE="$OUTPUT_DIR/auto-close-loop.$RUNNER_NAME.stop"
   WORKTREE_DIR="${AUTO_WORKTREE_PATH:-$REPO_ROOT/.worktrees/auto-close-loop-$RUNNER_NAME}"
   WORKTREE_BRANCH="${AUTO_WORKTREE_BRANCH:-auto-close-loop-$RUNNER_NAME}"
 fi
@@ -62,6 +64,9 @@ clear_stale_lock() {
   if [[ -f "$PID_FILE" ]] && ! session_live; then
     rm -f "$PID_FILE"
   fi
+  if [[ -f "$STOP_FILE" ]] && ! session_live && ! lock_live; then
+    rm -f "$STOP_FILE"
+  fi
 }
 
 wait_for_cleanup() {
@@ -86,6 +91,7 @@ status() {
 
 stop() {
   clear_stale_lock
+  : > "$STOP_FILE"
   sid="$(session_pid)"
   if [[ -n "${sid:-}" ]] && session_live; then
     pkill -TERM -s "$sid" 2>/dev/null || true
@@ -219,8 +225,10 @@ start() {
   fi
 
   prepare_worktree
+  rm -f "$STOP_FILE"
 
   auto_kind="${AUTO_KIND:-magic_item}"
+  restart_delay="${AUTO_RESTART_DELAY_SECONDS:-5}"
 
   args=(
     --runner-id "$RUNNER_NAME"
@@ -250,10 +258,22 @@ start() {
   quoted_args="$(printf '%q ' "${args[@]}")"
   nohup setsid bash -lc "
     cd '$WORKTREE_DIR'
-    exec env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' AUTO_LOOP_SHARED_ROOT='$REPO_ROOT' AUTO_LOOP_INTEGRATION_BRANCH='$INTEGRATION_BRANCH' AUTO_LOOP_INTEGRATION_WORKTREE='$INTEGRATION_WORKTREE' \
-      pnpm --filter @dnd/prototype-content-surface exec tsx \
-      ../../scripts/content-surface-survey/auto-close-loop.ts \
-      $quoted_args
+    stop_file='$STOP_FILE'
+    while true; do
+      if [[ -f \"\$stop_file\" ]]; then
+        exit 0
+      fi
+      env MAX_PARALLEL=1 AUTO_LOOP_REPO_ROOT='$WORKTREE_DIR' AUTO_LOOP_SHARED_ROOT='$REPO_ROOT' AUTO_LOOP_INTEGRATION_BRANCH='$INTEGRATION_BRANCH' AUTO_LOOP_INTEGRATION_WORKTREE='$INTEGRATION_WORKTREE' \
+        pnpm --filter @dnd/prototype-content-surface exec tsx \
+        ../../scripts/content-surface-survey/auto-close-loop.ts \
+        $quoted_args
+      status=\$?
+      if [[ -f \"\$stop_file\" ]]; then
+        exit 0
+      fi
+      printf '%s supervisor: worker exited with status %s; restarting in %ss\n' \"\$(date -Is)\" \"\$status\" '$restart_delay' >&2
+      sleep '$restart_delay'
+    done
   " >>"$LOG_FILE" 2>&1 < /dev/null &
   child_pid=$!
   echo "$child_pid" > "$PID_FILE"

@@ -1,0 +1,14 @@
+{
+  "runnerId": "worker-d",
+  "batch": 10,
+  "source": "srd-5.2.1",
+  "kind": "magic_item",
+  "backend": "codex",
+  "cluster": "magic_item_record",
+  "archivedAt": "2026-04-18T01:25:14.896Z",
+  "selectedSlugs": [
+    "magic_item_apparatus_of_the_crab",
+    "magic_item_bag_of_holding"
+  ],
+  "salvagedFromState": true
+}
