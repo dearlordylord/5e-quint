@@ -357,6 +357,32 @@ Per user:
 - **Sandboxing dropped.** Prompt instructions cover file boundaries; the session is already sandboxed.
 - **PHB-in-main-repo = failure.** Dedicated provenance sweep (`provenance-check.sh`) runs before any Tier 2 commit; run aborts if any PHB string leaks into main repo paths.
 
+## Audit note — 2026-04-18 (convergence-loop local optimum)
+
+After ~6.5 h of 5-worker `AUTO_KIND=magic_item` mining with `auto-close-loop`, the loop hit a steady-state plateau: 213 commits landed on `auto-close-loop-integration`, but weighted debt drifted sideways at 602–610 for the last ~90 min with clean count stuck at 20/257. Net session improvement: 635 → 610 (−25). Acceptance rate: 211/367 batch attempts = 57% committed; 43% reverted.
+
+**Root cause — six stacked factors:**
+
+1. **Greedy cluster picker.** `close-loop.ts` picks the highest-weighted cluster. Once every member of a cluster has a widening proposal, attempts reshuffle weight (structural↔atom↔surface) without resolving — the cluster stays on top, picker re-selects it.
+2. **Recycle clears per-worker `attempted` set.** On noImprove≥4 the worker resets to batch 1 with empty memory and re-tries the same hard clusters it just gave up on. Infinite loop per worker.
+3. **No cross-worker attempt memory.** Workers don't share failures; all 5 converge independently on the same hard frontier.
+4. **Interdependent widenings.** 89 structural widenings on `magic_item` share modeling decisions; a 2-slug batch can't co-resolve the 3–5 that need to move together.
+5. **No kind diversity.** 5 workers × 1 kind → frontier collision.
+6. **Hard floor from `refused`.** 69 honest LLM abstentions × ~1 weight ≈ 69. These can't drop without human authoring; they set the per-kind minimum.
+
+**Strategy — three layers, cheapest first:**
+
+- **Layer 1 — kind diversity at launch (no code change).** Assign each runner a different `AUTO_KIND` (2× spell, 1× magic_item, 1× class_feature, 1× species_trait). Applied 2026-04-18.
+- **Layer 1.5 — prompt surgery in `attemptSurfaceChange()` (applied 2026-04-18).** The original prompt showed the agent only the 2 batched slugs and no prior-attempt history, so it designed per-batch fixes that left the other 15+ cluster members to reopen the cluster. The enriched prompt injects: (a) full cluster size and a sample of up to 10 representative widening proposals from ALL cluster members, (b) last 5 reverted attempts for this cluster from `failed-surface-attempts.jsonl` with a "don't repeat them" instruction, (c) explicit framing that refusing to change is preferred over a narrow fix, (d) requirement to state coverage in `notes` (how many cluster members the change intends to close). New helpers: `loadPriorAttemptsForCluster`, `clusterContextForPrompt`.
+- **Layer 2 — cluster parking on repeated reverts (applied 2026-04-18).** Narrower than the originally-planned plateau-detection + kind-rotation. Each worker tracks consecutive validator-revert count per cluster in `state.clusterFailures`. When a cluster hits `AUTO_PARK_THRESHOLD` (default 3) consecutive reverts, it's added to `state.parkedClusters`, a set that survives recycles. The picker filters out parked clusters. `recordClusterSuccess` clears the counter on a successful commit (so a cluster only gets parked if it's *consistently* failing). This stops the "recycle → re-pick same hard cluster → fail → recycle" loop without needing full kind rotation; kind diversity (Layer 1) already covers that side. Acceptance criteria to watch: revert rate should drop over time as exhausted clusters accumulate in `parkedClusters`. See `plans/CONTENT_SURFACE_LOOP_ACCEPTANCE.md` for the measurable thresholds.
+- **Layer 3 — cross-worker attempted ledger.** Shared `attempts.jsonl` so parking is fleet-wide, not per-worker. Only if Layer 2's per-worker parking still lets workers independently try the same exhausted cluster.
+
+**Follow-ups needed:**
+
+- Review diff `master..auto-close-loop-integration` (213 commits) before merging. Early-session commits landed real wins; late-session commits are suspected to include reactive-abstraction noise.
+- Refused-unit triage pass: rank the 69 refused units by combat centrality, author the top 10–20 by hand. No automated search can close them.
+- Extend `unit-catalog.ts` to parse feats / species / masteries from `.references/srd-5.2.1/` markdown (currently only XPHB-JSON spells + manual Tier 1 list).
+
 ## Appendix: v4 atom whitelist
 
 Pulled from `.references/xphb-srd-pairing/TAXONOMY_atoms_graph.md` (v4) and `TAXONOMY_graph_representation.md` (v1). `atom-whitelist.ts` exports these as const arrays; the harness references them for validation.
