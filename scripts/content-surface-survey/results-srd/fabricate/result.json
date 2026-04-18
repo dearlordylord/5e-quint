@@ -1,28 +1,22 @@
 {
   "unit_slug": "fabricate",
-  "outcome": "surface_widening",
+  "outcome": "atom_widening",
   "atoms_used": [],
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "ActivationPhase / direct",
-      "justification": "Fabricate has no attack roll and no saving throw — it is an unconditional transformation. The current ActivationPhase union only has 'attack_roll' and 'save_gate'. A 'direct' phase variant (no resolution gating) is needed for spells whose effect fires without any check.",
-      "evidence": "You convert raw materials into products of the same material."
+      "kind": "new_atom",
+      "name": "create_object",
+      "justification": "Fabricate's entire mechanic is transforming raw materials into a crafted product of the same material. No existing EffectAtom represents object creation from raw stock. 'alter_item_kind' is for form-switching a single existing item (Folding Boat) and carries no concept of raw-material inputs, size constraints, or proficiency gates. 'create_object' appears in the v4 taxonomy (TAXONOMY_atoms_graph.md §9 Effect Atoms) but is absent from types.ts.",
+      "evidence": "You convert raw materials into products of the same material. For example, you can fabricate a wooden bridge from a clump of trees, a rope from a patch of hemp, or clothes from flax or wool."
     },
     {
       "kind": "new_variant",
-      "name": "Effect / create_object",
-      "justification": "Fabricate's sole effect is producing a physical object from raw materials. The v4 taxonomy lists 'create_object' as an effect atom (§9), but the surface Effect type only contains DamageEffect | NoneEffect. A create_object variant is required.",
-      "evidence": "you can fabricate a Large or smaller object (contained within a 10-foot Cube or eight connected 5-foot Cubes) given a sufficient quantity of material"
-    },
-    {
-      "kind": "new_variant",
-      "name": "Attachment / object",
-      "justification": "The spell targets raw materials (objects), not creatures. The v4 taxonomy lists 'object' as an attachment atom (§3), but the surface Attachment union only covers self | target | area | mark. An 'object' attachment variant is needed for spells that operate on inanimate matter.",
+      "name": "ObjectFilter.material — extend beyond 'metal' | 'flammable'",
+      "justification": "The object attachment filter's material enum ('metal' | 'flammable') cannot express 'raw/unprocessed material'. Fabricate targets raw stock generally. A 'raw_material' filter concept or removal of the filter restriction would be needed.",
       "evidence": "Choose raw materials that you can see within range."
     }
   ],
   "confidence": "high",
-  "notes": "All three missing surface shapes have corresponding v4 atoms (create_object, object attachment, and an unconditional activation phase implicitly covered by the 'activate' procedure atom). No new taxonomy-level atoms are needed; only three new variants of existing surface union types. The proficiency-gating restriction ('unless you have proficiency') and size/material constraints are authoring-time predicates that would be expressed in the description field, not as runtime atoms."
+  "notes": "The spell fits the 'activation' family structurally (instantaneous, direct phase, 10-minute casting time which maps to CastingTime.minutes). The blocking gap is the missing 'create_object' effect atom — it exists in the v4 taxonomy but has never been surfaced in types.ts. Using 'alter_item_kind' would produce a dishonest trace: that atom models form-switching of a single existing item, not material-to-product fabrication. The size constraints (Large vs Medium for minerals) and proficiency gate (no high-skill items without Artisan's Tools proficiency) are secondary encoding concerns that would also need surface additions but are not the primary blocker."
 }

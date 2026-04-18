@@ -1,56 +1,71 @@
 # Proposal: Gentle Repose — atom_widening
 
-## Outcome
+## Unit
 
-`atom_widening` — the spell's core mechanics cannot be honestly expressed in the current surface. No Dhall or JSON was authored.
+**Gentle Repose** (SRD 5.2.1, Level 2 Necromancy)  
+Casting Time: Action or Ritual | Range: Touch | Duration: 10 days (timed, non-concentration)  
+Components: V, S, M (2 CP, consumed)
 
-## What the spell does
+## What Fits
 
-Gentle Repose (Necromancy 2, Action, Touch, 10 days timed, ritual-eligible) touches a corpse or remains and produces three distinct effects for the duration:
+The structural shell encodes without widening:
 
-1. **Prevent decay** — the corpse does not physically deteriorate.
-2. **Block undead transformation** — the corpse cannot become Undead.
-3. **Pause resurrection timer** — days spent under the spell don't count against the time limit of Raise Dead and similar spells.
+- `spell` kind, `activation` family (single `direct` phase)
+- `{ kind: "timed", value: { unit: "day", amount: 10 } }` duration
+- `{ kind: "action", ritual: true }` casting time
+- `{ kind: "touch" }` range
+- `{ kind: "object", count: 1 }` attachment (targets a corpse/remains)
+- M component: `{ m: "2 Copper Pieces, which the spell consumes", materialCostGp: ..., materialConsumed: true }`
 
-## Why it doesn't fit the current surface
+## What Doesn't Fit
 
-### Gap 1 — No v4 atom for blocking a state transition
+### Effect 1 — "can't become Undead"
 
-"Can't become Undead" is a deterministic mechanical block on a creature-type state transition. The v4 taxonomy has no atom for this. The closest candidates:
+RAW: "the target… can't become Undead"
 
-- `apply_condition` — applies SRD conditions (Prone, etc.); creature-type changes are not conditions.
-- `block_targeting` — prevents a spell or effect from targeting the creature; orthogonal.
-- `remove_condition` — removes conditions; doesn't block transformations.
+This is a deterministic mechanical protection: any spell or effect that would animate the target as undead fails while Gentle Repose persists. It is distinct from:
 
-A new atom is needed. Working name: **`block_state_transition`**, parameterised by what transition is blocked (e.g., `undead_reanimation`). This is a new effect atom, not in v4.
+- `block_targeting` — that prevents targeting of a *creature* by spells/effects (Globe of Invulnerability idiom). This protection applies to a *corpse/object* against a specific category of transformation.
+- `grant_condition_immunity` — covers the 15 SRD conditions only; "undead" is a creature type, not a condition.
+- `grant_damage_immunity` — wrong domain entirely.
 
-### Gap 2 — No `object` attachment variant in `types.ts`
+**Proposed atom: `block_reanimation`**
 
-The v4 taxonomy lists `object` as an attachment atom, but `types.ts` `Attachment` union only has `self | target | area | mark`. The spell targets a corpse (an object), not a living creature. Using `target` would be dishonest: the `TargetSelection` grammar assumes a creature context (attack rolls, saving throws, conditions).
+```typescript
+| {
+    readonly kind: "block_reanimation";
+  }
+```
 
-**Fix:** Add `{ readonly kind: "object"; readonly description: string }` to the `Attachment` union, or promote `object` from the v4 taxonomy to `types.ts`.
+Emits in the v4 effect category. No parameters needed — the scope is always "undead creation" and applies to the attached object while the spell persists. Could optionally carry a `creatureType` field if future spells block other type-transitions (e.g., "can't become a Construct"), but single-unit pressure doesn't warrant it now.
 
-### Gap 3 — `OngoingOperation` is closed and has no matching variant
+### Effect 2 — "days don't count against raise dead time limit"
 
-`OngoingOperation = roll_modifier | damage_on_hit`. The effects above require a third operation variant (something like `apply_passive_effect` or `grant_persistent_block`). This is a `surface_widening` of `OngoingOperation` that goes alongside the atom gap.
+RAW: "days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead"
 
-## What is legitimately DM-agenda
+This pauses countdown timers associated with resurrection-window mechanics. It is not:
 
-The "pause resurrection timer" mechanic ("days don't count against Raise Dead's time limit") is cross-spell bookkeeping. There is no combat-engine evaluation, no deterministic outcome gate, and no runtime state that the engine owns. Per `ARCHITECTURE.md`, this is the caller's (DM/narrative layer) responsibility. It should be noted in the spell's description but does not require a new atom.
+- A delta on any numeric stat (HP, speed, AC, save, ability score)
+- A condition, resistance, or immunity
+- A blocking or negation of a spell being cast
 
-## Proposed widenings
+It's a meta-mechanic that modifies how another spell's time constraint is evaluated. The closest analog would be a DurationEndTrigger suppressor, but that concept doesn't exist as a first-class atom and the current `earlyEnd` field on `Duration` only adds new termination triggers, not suppresses existing progression.
 
-| Kind | Name | Justification |
-|---|---|---|
-| `new_atom` | `block_state_transition` | Block undead transformation is a deterministic mechanical effect with no v4 atom |
-| `new_variant` | `Attachment: object` | Corpse/remains is an object, not a creature; `target` is an honest mismatch |
-| `new_variant` | `OngoingOperation: apply_passive_effect` (or similar) | `ongoing_effect` family needs an operation variant for passive protective effects |
+**Proposed atom: `pause_deadline`**
 
-## Recommendation
+```typescript
+| {
+    readonly kind: "pause_deadline";
+    readonly scope: "resurrection_window";
+  }
+```
 
-Once `object` attachment and `block_state_transition` are added (with appropriate `OngoingOperation` widening), Gentle Repose can be encoded as `ongoing_effect` with:
+`scope` is closed to `"resurrection_window"` for now (the only RAW example). If other deadline-pausing effects surface (e.g., a feature that pauses a curse's countdown), the scope could be widened.
 
-- `attachment: { kind: "object", description: "corpse_or_remains" }`
-- `operation: { kind: "apply_passive_effect", effects: ["block_state_transition:undead_reanimation"] }`
-- Duration: `timed { unit: "day", amount: 10 }`
-- The resurrection-timer clause stays in `description` only (DM-agenda).
+### Minor: ObjectFilter lacks `corpse` discriminant
+
+The existing `ObjectFilter` supports `material`, `heldOrWorn`, and `manufactured`. A corpse is none of these (it's not metal, not flammable, and its held/worn or manufactured status is irrelevant). Authoring the attachment would require omitting the filter entirely, which permits any object. This is a minor `surface_widening` — a `biological_remains?: true` flag or a `kind: "corpse"` variant would close it — but it's secondary to the atom gaps above.
+
+## Classification
+
+`atom_widening` — the spell's family, duration, range, and casting-time shapes all fit; two effect atoms (`block_reanimation`, `pause_deadline`) are absent from both the v4 taxonomy and the TS surface.

@@ -5,24 +5,24 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "Attachment { kind: \"object\" }",
-      "justification": "Light targets a physical object, not a creature or area. The Attachment union in types.ts has no 'object' variant. v4 §3 lists 'object' in attachment atoms, but it is not exposed in the surface schema. Adding this variant is a surface_widening prerequisite.",
-      "evidence": "You touch one Large or smaller object that isn't being worn or carried by someone else."
-    },
-    {
       "kind": "new_atom",
-      "name": "grant_illumination",
-      "justification": "Light's sole mechanical operation is causing an object to shed Bright Light (20 ft radius) and Dim Light (additional 20 ft). No existing OngoingOperation variant (roll_modifier, damage_on_hit) captures illumination. No v4 effect atom models light emission as a deterministic mechanical property granted to an object. A new atom — grant_illumination or emit_light — is required.",
+      "name": "grant_light",
+      "justification": "The spell's entire mechanical payload is making a touched object shed Bright Light in a radius and Dim Light in a further radius. This has real mechanical consequences (visibility, hiding, Perception checks, etc.) but no atom in v4 or types.ts models light emission from an object. It is distinct from grant_sense (which gives a creature a sense) and from any existing effect atom.",
       "evidence": "Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet."
     },
     {
       "kind": "new_variant",
-      "name": "Duration { kind: \"timed\", selfBreak: true }",
-      "justification": "The spell ends when cast again ('The spell ends if you cast it again'). The Duration type has no self_break field or trigger. v4 has a 'self_break' lifecycle atom but it is not surfaced in types.ts. This is a secondary gap — the timed duration itself fits; only the early-termination trigger is missing.",
+      "name": "DurationEndTrigger.caster_recasts_this_spell",
+      "justification": "The spell ends early if the caster casts Light again (one-at-a-time constraint). The existing DurationEndTrigger variants cover target-side events; there is no variant for 'caster recasts this same spell', which is a distinct SRD pattern appearing on several cantrips.",
       "evidence": "The spell ends if you cast it again."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ObjectFilter.maxSize",
+      "justification": "The spell restricts valid targets to Large or smaller objects. ObjectFilter has no size field, so this targeting constraint is unrepresentable in the current surface.",
+      "evidence": "You touch one Large or smaller object that isn't being worn or carried by someone else."
     }
   ],
   "confidence": "high",
-  "notes": "The ongoing_effect family is structurally correct (timed, non-concentration, attaches a persistent operation to a target). Both primary gaps must be resolved before honest encoding is possible: (1) an object attachment variant (surface_widening, v4 already has the atom) and (2) a grant_illumination effect atom (atom_widening, not in v4). The self-break rule is a secondary gap that could be deferred. The overall outcome is atom_widening because a new v4 atom is required beyond the attachment surface fix."
+  "notes": "The object attachment shape already works (heldOrWorn: 'forbidden'). The timed duration (1 hour, no concentration) maps cleanly to `{ kind: 'timed', value: { unit: 'hour', amount: 1 } }`. The only blockers are: (1) no grant_light atom for the core illumination mechanic, (2) no DurationEndTrigger variant for recast-by-caster, (3) no size constraint on ObjectFilter. Dhall/JSON/trace files are intentionally omitted because encoding the spell honestly requires grant_light, and a placeholder trace would misrepresent the mechanics."
 }

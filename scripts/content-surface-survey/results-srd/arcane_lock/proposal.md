@@ -1,99 +1,119 @@
-# Proposal: Arcane Lock — surface_widening
+# Proposal: Arcane Lock — atom_widening
 
 ## Unit
 
-- **Name:** Arcane Lock
-- **Slug:** arcane_lock
-- **Kind:** spell / level 2 / Abjuration
-- **Provenance:** srd-5.2.1
+**Arcane Lock** — Level 2 Abjuration (SRD 5.2.1)
 
-## Why the unit does not fit
+> You touch a closed door, window, gate, container, or hatch and magically lock it for the duration. This lock can't be unlocked by any nonmagical means. You and any creatures you designate when you cast the spell can open and close the object despite the lock. You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute.
 
-Arcane Lock is structurally closest to `ongoing_effect` — it applies persistent state to a target with no combat resolution and no concentration. However, it requires three new variants of existing surface types before it can be encoded honestly. Writing a `content/arcane_lock.dhall` with the current surface would require fabricating a false duration, a false attachment, and a false operation — all three guardrail violations.
+## Why it doesn't fit
 
----
+The spell is structurally an `activation` spell with a `permanent` duration (ended only by `dispel`), applied via a `direct` phase to an `object` attachment. All of that fits cleanly. The gap is the **effect atom**.
 
-## Widening 1 — `Duration: permanent`
+### Gap 1 — No `lock_object` atom
 
-**Surface type:** `Duration`
+The core mechanic is: "this object cannot be opened or unlocked by nonmagical means." The only existing atom with adjacent semantics is `block_travel` (`scope: string`), which is documented as covering Wall of Force and Forcecage — absolute planar/geometric barriers that block creature movement through space. Arcane Lock is categorically different:
 
-**Current variants:** `instantaneous` | `concentration` | `timed`
+- It targets a specific openable object, not a space.
+- Authorized creatures can bypass it freely (open and close the object normally).
+- It prevents *opening/unlocking* by nonmagical means, not *passage* through space.
+- Magical means (knock, dispel magic) can still overcome it.
 
-**Missing variant:**
-```typescript
-{ readonly kind: "permanent"; readonly endsOn: "dispel" }
-```
+Using `block_travel` here would emit a trace saying "block_travel (scope: ...)" which misrepresents the mechanics. A creature walking up to a locked door has not had their travel blocked — they just can't open the door.
 
-**Evidence:** The 5etools source encodes `"type": "permanent", "ends": ["dispel"]`. The spell's lock persists indefinitely; only *Dispel Magic* (or similar) removes it. This is mechanically distinct from `timed` (which expires on a clock) and from `concentration` (which the caster can drop and which breaks on damage).
+### Gap 2 — Authorized-bypass list
 
-**Scope:** narrow — only spells with permanent-until-dispelled duration. Alarm used `timed` for its 8-hour ward, but Arcane Lock has no time bound at all. Other candidates with this duration shape: Forbiddance, Glyph of Warding, Symbol.
+"You and any creatures you designate when you cast the spell can open and close the object despite the lock."
 
----
+The authorized-bypass list is cast-time-determined and mechanically deterministic (a creature either is or isn't on the list). No existing effect atom carries a bypass-exemption list as a parameter. This is not DM-agenda: there is a crisp yes/no answer at runtime.
 
-## Widening 2 — `Attachment: object`
+### Gap 3 — Password mechanic
 
-**Surface type:** `Attachment`
+"You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute."
 
-**Current variants:** `self` | `target` (creature) | `area` | `mark`
+The password content is DM-agenda (what the password is, how it's detected). But the *mechanical consequence* (the object is unlocked for 1 minute) is deterministic. This is an anchored-trigger-like shape (event: password spoken within 5 ft → unlock for 1 minute) applied to the object. The closest existing family is `anchored_trigger`, but that spell family plants a trigger in a location and emits a signal — it doesn't apply a timed unlock to an object. The temporary unlock effect itself has no atom.
 
-**Missing variant:**
-```typescript
-| {
-    readonly kind: "object";
-    readonly description: string;  // "door_window_gate_container_or_hatch" etc.
-  }
-```
+### Gap 4 — ObjectFilter precision
 
-**Evidence:** `"You touch a closed door, window, gate, container, or hatch"`. The attachment target is a physical object, not a creature. The v4 taxonomy already includes `object` as an attachment atom (§3 Attachment Atoms), so this is a surface exposure of an existing v4 concept, not a new atom.
+The spell targets "a closed door, window, gate, container, or hatch" — closeable architectural/containment elements. The existing `ObjectFilter` offers:
+- `material`: `"metal" | "flammable"` — does not cover wood, stone, etc.
+- `heldOrWorn`: `"required" | "forbidden"` — not relevant
+- `manufactured: boolean` — true but vastly over-broad (covers weapons, furniture, etc.)
 
-**Scope:** narrow for combat-relevant spells; broader for utility/abjuration spells that affect the environment (Arcane Lock, Continual Flame, Magic Mouth, Glyph of Warding, Guards and Wards).
+A `closeable_element` filter variant (or an open-string enum for object category) would express this honestly.
 
----
+## Proposed widening
 
-## Widening 3 — `OngoingOperation: lock_object` (maps to v4 `block_travel`)
+### 1. New atom: `lock_object`
 
-**Surface type:** `OngoingOperation`
-
-**Current variants:** `roll_modifier` | `damage_on_hit`
-
-**Missing variant:**
 ```typescript
 | {
     readonly kind: "lock_object";
-    readonly exemptions?: "caster_and_designated_creatures";
+    // Authorized creatures bypass the lock entirely (can open/close normally).
+    readonly authorizedBypass: "caster_and_designated_at_cast";
+    // What means are blocked from overcoming the lock.
+    readonly blockedMeans: "nonmagical";
   }
 ```
 
-Or more generically, a `block_access` operation with a closed filter enum.
+Emits as an `effect` atom. Connected via `direct_apply → lock_object → object attachment`.
 
-**Evidence:** `"This lock can't be unlocked by any nonmagical means."` The mechanical effect is access-blocking on the attached object. The v4 atom `block_travel` covers this. Neither `roll_modifier` nor `damage_on_hit` is honest — the spell has no roll, no damage, and no ongoing hit condition.
+### 2. Password secondary effect (optional widening)
 
-**Scope:** covers all spells that apply persistent access/movement restrictions to objects or areas (Arcane Lock, Forcecage, Wall of Force).
+The password mechanic could be a secondary `AnchoredTrigger`-like gate layered on the locked object — a keyword spoken within 5 ft temporarily suspends the lock for 1 minute. This is lower priority and could be modeled as DM-agenda at the prototype stage (which password, who speaks it). Consider deferred until a second SRD unit forces the trigger.
 
----
+### 3. Surface widening: `ObjectFilter.elementKind`
 
-## Secondary omission — password mechanic
+```typescript
+export type ObjectElementKind = "door_or_window_or_gate" | "container" | "hatch";
 
-The spell also includes: `"You can also set a password that, when spoken within 5 feet of the object, unlocks it for 1 minute."`
-
-This is a **secondary, conditional suppression trigger** — a spoken-word event within range temporarily suppresses the lock. It would require:
-- A new event kind in some trigger grammar (spoken word / password match)
-- A `suppress` procedure (v4 has `suppress` as a procedure atom) that temporarily suspends the lock operation
-- A `timed` sub-duration (1 minute) on the suppression
-
-This is not the primary encoding blocker (the three widenings above are) but it represents additional surface work beyond them. The password mechanic is a pure runtime/adjudication concern in many interpretations, but the 1-minute suppression is deterministic enough to belong in core.
-
----
-
-## Recommended encoding shape (after widenings)
-
-```
-ongoing_effect family:
-  castingTime: { kind: "action" }
-  range: { kind: "touch" }
-  duration: { kind: "permanent", endsOn: "dispel" }   ← widening 1
-  attachment: { kind: "object", description: "door_window_gate_container_or_hatch" }  ← widening 2
-  operation: { kind: "lock_object", exemptions: "caster_and_designated_creatures" }   ← widening 3
+// Extend ObjectFilter:
+export type ObjectFilter = {
+  readonly material?: ObjectMaterial;
+  readonly heldOrWorn?: "required" | "forbidden";
+  readonly manufactured?: boolean;
+  readonly elementKind?: ObjectElementKind;  // new
+};
 ```
 
-Password mechanic would add a sub-trigger on the operation, deferred to a later widening pass.
+This parallels the existing `AnchorTarget.description = "door_or_window"` already in the surface, showing the taxonomy already recognizes this architectural category.
+
+## Reference encoding (pending atom widening)
+
+```dhall
+-- NOT YET AUTHORABLE — requires lock_object atom and ObjectFilter.elementKind
+
+let arcaneLock =
+      { kind = "spell"
+      , id = "arcane_lock"
+      , name = "Arcane Lock"
+      , mechanics =
+          { family = "activation"
+          , level = 2
+          , school = "abjuration"
+          , castingTime = { kind = "action" }
+          , range = { kind = "touch" }
+          , components = { v = True, s = True, m = Some "gold dust worth 25+ GP", materialConsumed = True }
+          , duration = { kind = "permanent", endsOn = [ "dispel" ] }
+          , phases =
+              [ { kind = "direct"
+                , attachment =
+                    { kind = "object"
+                    , count = 1
+                    -- , filter = { elementKind = "door_or_window_or_gate" }  -- NEEDS WIDENING
+                    }
+                , effects =
+                    [ { kind = "lock_object"  -- NEEDS NEW ATOM
+                      , authorizedBypass = "caster_and_designated_at_cast"
+                      , blockedMeans = "nonmagical"
+                      }
+                    ]
+                }
+              ]
+          }
+      }
+```
+
+## Priority
+
+**Medium.** Arcane Lock is a common utility spell (level 2, core SRD). The `lock_object` atom pattern likely recurs for Leomund's Tiny Hut, Forbiddance, and other "ward/seal a location/object" spells. The authorized-bypass list is the key new semantic — other sealing spells may share it.

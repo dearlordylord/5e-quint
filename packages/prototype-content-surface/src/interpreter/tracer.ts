@@ -2465,6 +2465,26 @@ function traceAttachment(
       });
       return id;
     }
+    case "object": {
+      const filterParts: string[] = [];
+      if (a.filter?.material !== undefined)
+        filterParts.push(a.filter.material);
+      if (a.filter?.manufactured === true) filterParts.push("manufactured");
+      if (a.filter?.heldOrWorn === "required")
+        filterParts.push("held_or_worn");
+      if (a.filter?.heldOrWorn === "forbidden")
+        filterParts.push("not_held_or_worn");
+      const filterLabel =
+        filterParts.length > 0 ? `\nfilter: ${filterParts.join(", ")}` : "";
+      const countLabel = a.count === 2 ? "2 objects" : "object";
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "object",
+        label: `${countLabel}${filterLabel}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}`,
+      });
+      return id;
+    }
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);

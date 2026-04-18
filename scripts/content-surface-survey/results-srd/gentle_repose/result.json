@@ -6,17 +6,17 @@
   "proposed_widenings": [
     {
       "kind": "new_atom",
-      "name": "block_state_transition",
-      "justification": "The spell prevents a corpse from becoming Undead — a deterministic mechanical block on a creature-type state transition. No v4 atom covers this. 'apply_condition' only applies SRD conditions; 'block_targeting' blocks spell targeting, not type changes. This is a new effect class.",
+      "name": "block_reanimation",
+      "justification": "Prevents targeted remains from being animated as undead. Distinct from block_targeting (which prevents spells from targeting a creature) and grant_condition_immunity (which covers the 15 SRD conditions, not creature-type transitions). This is a deterministic protection applied to an object/corpse against undead-creation effects.",
       "evidence": "the target is protected from decay and can't become Undead"
     },
     {
-      "kind": "new_variant",
-      "name": "Attachment: object (corpse/remains)",
-      "justification": "The spell targets a corpse or remains, which is an object rather than a living creature. The v4 taxonomy lists 'object' as an attachment atom but it is absent from types.ts Attachment union (self | target | area | mark). Targeting a corpse cannot be honestly expressed as 'target' since that selection grammar assumes a living creature context.",
-      "evidence": "You touch a corpse or other remains."
+      "kind": "new_atom",
+      "name": "pause_deadline",
+      "justification": "Pauses countdown timers associated with resurrection window mechanics for the spell's duration. Unique effect type with no v4 equivalent — it modifies how other spells' time constraints are calculated rather than applying any direct effect to the target creature. Not expressible as modify_speed, grant_resistance, or any existing numeric-delta atom.",
+      "evidence": "days spent under the influence of this spell don't count against the time limit of spells such as Raise Dead"
     }
   ],
   "confidence": "high",
-  "notes": "No Dhall/JSON authored: the spell cannot be honestly encoded. Two gaps block encoding: (1) no v4 atom for blocking a state transition (undead reanimation); the closest candidates 'apply_condition' and 'block_targeting' are both wrong. (2) no 'object' attachment variant in types.ts for targeting a corpse. A third mechanic — 'days spent under this spell don't count against the time limit of Raise Dead' — is DM-agenda cross-spell bookkeeping with no deterministic combat-engine resolution and is intentionally out of core scope per ARCHITECTURE.md."
+  "notes": "The structural scaffolding fits: spell kind, timed 10-day duration (non-concentration), action-or-ritual casting time, touch range, object attachment (corpse/remains). The ObjectFilter also lacks a 'corpse' or 'remains' discriminant (minor surface_widening), but the blocking two atoms above are the primary gap. 'Protected from decay' is DM-agenda/narrative with no mechanical game state. The two deterministic mechanics — undead-creation blocking and resurrection-deadline pausing — have no v4 atom equivalents."
 }

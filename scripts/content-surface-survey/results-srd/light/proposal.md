@@ -1,130 +1,119 @@
 # Proposal: Light (cantrip) — atom_widening
 
-## Summary
+## Unit
 
-Light fits the `ongoing_effect` spell family structurally (timed, non-concentration, attaches a persistent operation to a target). However, encoding it honestly requires two changes that the current surface cannot provide: an `object` attachment variant and a new illumination effect atom.
+**Light** — Evocation cantrip, SRD 5.2.1
 
----
+## What fits today
 
-## Gap 1 — `Attachment` missing `object` variant (surface_widening)
+- **Family**: `ongoing_effect` on a timed 1-hour duration (no concentration). Matches `{ kind: "timed", value: { unit: "hour", amount: 1 } }`.
+- **Attachment**: `{ kind: "object", count: 1, filter: { heldOrWorn: "forbidden" } }` — the shape exists and correctly models "an object not being worn or carried".
+- **Casting time**: `{ kind: "action" }`.
+- **Components**: `{ v: true, s: false, m: "a firefly or phosphorescent moss" }`.
+- **Range**: `{ kind: "touch" }`.
 
-**Classification:** surface_widening (v4 already has the atom; `types.ts` does not expose it)
+## What doesn't fit
 
-Light touches **an object**, not a creature:
+### 1. Missing atom: `grant_light` (atom_widening — primary blocker)
 
-> "You touch one Large or smaller object that isn't being worn or carried by someone else."
+**RAW text:** *"Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet."*
 
-The `Attachment` union in `types.ts` contains `self | target | area | mark`. All of these assume creature-centric or point-in-space targeting. The v4 taxonomy §3 lists `object` as an attachment atom, but it is absent from the schema.
+The entire mechanical payload of this spell is making an object emit illumination. This has deterministic mechanical consequences in SRD 5.2.1: Bright Light enables sight and prevents hiding (Rules Glossary, "Bright Light"); Dim Light creates the Lightly Obscured condition for creatures within it. The effect is not DM-agenda — it is a deterministic environmental state change with downstream rules consequences.
 
-**Proposed widening:**
+No atom in v4 taxonomy or `types.ts` models light emission. The closest existing atoms are:
 
-```typescript
-// Add to Attachment union in types.ts:
-| { readonly kind: "object"; readonly sizeConstraint?: "large_or_smaller" | "any" }
-```
+- `grant_sense` — gives a *creature* a perceptual sense; does not apply to objects or areas.
+- `detect` — a divination property scan; does not emit light.
+- `modify_ac_set_base` / etc. — unrelated.
 
-This variant would express that the spell plants its effect on a physical object chosen at cast time, distinct from creature targeting or area geometry.
-
----
-
-## Gap 2 — No illumination effect atom in v4 (atom_widening)
-
-**Classification:** atom_widening (concept absent from v4 taxonomy)
-
-Light's operation is purely illumination:
-
-> "Until the spell ends, the object sheds Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. The light can be colored as you like."
-
-The existing `OngoingOperation` variants are:
-- `roll_modifier` — adds/subtracts a die to rolls
-- `damage_on_hit` — deals extra damage when the caster hits
-
-Neither captures "cause an object to emit a calibrated light field." No v4 effect atom covers this either. The closest candidates all fall short:
-
-| v4 atom | Why it fails |
-|---|---|
-| `modify_ac` | AC is not illumination |
-| `create_object` | The object already exists; Light modifies its property |
-| `alter_item_kind` | Would imply type change, not light emission |
-| `grant_sense` | This is the beneficiary's perception, not the source's emission |
-
-**Proposed new atom:**
-
-```
-grant_illumination
-  category: effect
-  fields:
-    brightRadiusFeet: number
-    dimRadiusFeet: number   // additional beyond bright
-    colorable: boolean      // caster may choose color at cast time
-```
-
-**Proposed `OngoingOperation` extension:**
+**Proposed atom:**
 
 ```typescript
-export type GrantIlluminationOperation = {
-  readonly kind: "grant_illumination";
-  readonly brightRadiusFeet: number;
-  readonly dimRadiusFeet: number;
-  readonly colorable: boolean;
+| {
+    readonly kind: "grant_light";
+    readonly brightRadiusFeet: number;
+    readonly dimRadiusFeet: number;   // additional beyond brightRadius
+    // Optional: color is cosmetic (no mechanical consequence); omit from atom.
+  }
+```
+
+Attach to an `object` attachment. The v4 taxonomy has no corresponding atom name either — this is a genuine gap, not a missing surface realization of an existing v4 atom.
+
+### 2. Missing DurationEndTrigger variant: `caster_recasts_this_spell` (surface_widening)
+
+**RAW text:** *"The spell ends if you cast it again."*
+
+This is a one-at-a-time constraint: the previous instance of the spell ends when the caster casts Light a second time. The existing `DurationEndTrigger` variants all model *target-side* events (`target_makes_attack_roll`, `target_takes_damage`, etc.). None model a caster-side recast.
+
+**Proposed variant:**
+
+```typescript
+| { readonly kind: "caster_recasts_this_spell" }
+```
+
+This pattern appears on multiple SRD cantrips (Mage Hand, Dancing Lights, etc.) and should be added to the closed `DurationEndTrigger` enum.
+
+### 3. Missing ObjectFilter field: size constraint (surface_widening)
+
+**RAW text:** *"You touch one Large or smaller object…"*
+
+`ObjectFilter` currently has `material`, `heldOrWorn`, and `manufactured`. There is no size field. "Large or smaller" is a targeting restriction that cannot be expressed in the current surface.
+
+**Proposed field:**
+
+```typescript
+export type ObjectFilter = {
+  readonly material?: ObjectMaterial;
+  readonly heldOrWorn?: "required" | "forbidden";
+  readonly manufactured?: boolean;
+  readonly maxSize?: "tiny" | "small" | "medium" | "large";   // new
 };
-
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | GrantIlluminationOperation;  // new
 ```
 
----
-
-## Gap 3 — Self-break rule not surfaced (surface_widening, deferrable)
-
-**Classification:** surface_widening (v4 has `self_break` lifecycle atom; `Duration` lacks a field)
-
-> "The spell ends if you cast it again."
-
-The `Duration` type in `types.ts` has no `selfBreak` field or trigger. v4 §6 lists `self_break` as a lifecycle atom. This could be expressed as an optional flag on `Duration`:
-
-```typescript
-// Possible addition to timed duration:
-| { readonly kind: "timed"; readonly value: DurationValue; readonly selfBreak?: true }
-```
-
-This gap is secondary — it only affects completeness of the trace, not the fundamental ability to encode the spell's primary operation. It can be deferred until another pressure case also needs it.
-
----
-
-## What an honest encoding would look like (once gaps are resolved)
+## Encoding sketch (if widenings are accepted)
 
 ```dhall
-let light =
-  { kind = "spell"
-  , id = "light"
-  , name = "Light"
-  , provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-I-N#Light" }
-  , description = "You touch one Large or smaller object..."
-  , mechanics =
-      { family = "ongoing_effect"
-      , level = 0
-      , school = "evocation"
-      , castingTime = { kind = "action" }
-      , range = { kind = "touch" }
-      , components = { v = True, s = False, m = Some "a firefly or phosphorescent moss" }
-      , duration = { kind = "timed", value = { unit = "hour", amount = 1 } }
-      , attachment = { kind = "object", sizeConstraint = "large_or_smaller" }
-      , operation =
-          { kind = "grant_illumination"
-          , brightRadiusFeet = 20
-          , dimRadiusFeet = 20
-          , colorable = True
+{ kind = "spell"
+, id = "light"
+, name = "Light"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-L#Light" }
+, description = "..."
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 0
+    , school = "evocation"
+    , castingTime = { kind = "action" }
+    , range = { kind = "touch" }
+    , components = { v = True, s = False, m = Some "a firefly or phosphorescent moss" }
+    , duration =
+        { kind = "timed"
+        , value = { unit = "hour", amount = 1 }
+        , earlyEnd = [ { kind = "caster_recasts_this_spell" } ]  -- NEW variant
+        }
+    , attachment =
+        { kind = "object"
+        , count = 1
+        , filter = { heldOrWorn = "forbidden", maxSize = Some "large" }  -- maxSize NEW
+        }
+    , operations =
+        [ { trigger = { kind = "passive" }
+          , effect =
+              { kind = "grant_light"         -- NEW atom
+              , brightRadiusFeet = 20
+              , dimRadiusFeet = 20
+              }
           }
-      }
-  }
-in light
+        ]
+    }
+}
 ```
 
----
+## Classification
 
-## Pressure context
+| Gap | Classification |
+|-----|---------------|
+| `grant_light` atom | `atom_widening` (not in v4 taxonomy) |
+| `caster_recasts_this_spell` DurationEndTrigger | `surface_widening` (variant missing from closed enum) |
+| `ObjectFilter.maxSize` | `surface_widening` (field missing from existing type) |
 
-Light is a very common cantrip (on Bard, Cleric, Sorcerer, Wizard lists). Any future object-targeting utility spell (Continual Flame, Darkness if targeting an object, Dancing Lights on objects) will hit the same `Attachment.object` gap. The illumination atom is narrower but Continual Flame and Daylight share the same shape. Both gaps are worth resolving together.
+Overall verdict: **`atom_widening`** (primary blocker is the missing atom).

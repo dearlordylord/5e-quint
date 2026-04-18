@@ -5,18 +5,24 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "Attachment.object",
-      "justification": "The item targets objects, not creatures, self, areas, or marks. Its core mechanic attaches adhesive state to two chosen objects or surfaces.",
-      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
-    },
-    {
       "kind": "new_atom",
       "name": "bond_objects",
-      "justification": "The surface lacks an effect atom for creating a persistent adhesive bond between two objects that prevents separation until broken by specific counters.",
+      "justification": "No existing EffectAtom represents creating a permanent adhesive bond between two objects. The effect is not damage, condition, movement, resistance, speed, sensing, or any other existing atom category. It is a permanent physical joining of two discrete objects that persists until broken by specific means.",
       "evidence": "Once it has done so, the bond it creates can be broken only by the application of Universal Solvent or Oil of Etherealness, or with a Wish spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.bond_objects — breaking condition predicate",
+      "justification": "The bond is breakable only by named specific items or a named spell. This 'only broken by X' qualifier is a new constraint shape on an effect — distinct from duration (permanent vs. timed) and from negate_named_effect (which negates spells, not bonds). A breakable-by-item/spell field on bond_objects would capture this.",
+      "evidence": "the bond it creates can be broken only by the application of Universal Solvent or Oil of Etherealness, or with a Wish spell"
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityHeader.activationDelay",
+      "justification": "The Utilize action starts the application but the effect (bond) does not take hold for 1 minute. The current surface has no field for a post-activation delay window before the effect resolves. This differs from duration (which describes how long an effect persists after taking hold), and differs from CastingTime.minutes (which is the full cast time, not a two-phase apply-then-set sequence).",
+      "evidence": "Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set."
     }
   ],
   "confidence": "high",
-  "notes": "Existing magic-item activation scaffolding is close, but encoding this honestly would require at least object targeting plus a dedicated object-bond effect. I did not author placeholder Dhall/JSON because any current encoding would misrepresent the rule."
+  "notes": "The item kind (magic_item) and activation family fit cleanly. The charge pool resource (1d6+1 ounces initial, 1 oz per use, never refill) and object attachment (count=2) also exist in the surface. The sole blocker is the absence of a bond_objects effect atom and a delayed-effect surface variant. No honest placeholder atom exists: block_travel, alter_item_kind, and container_storage all lie about the mechanic."
 }
