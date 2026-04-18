@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.spell_targets_only_self_no_area",
+      "justification": "The existing reaction trigger grammar can name a creature casting a spell or a named incoming spell, but it cannot express the Rod's narrower gate that the triggering spell must target only the wielder and must not create an area of effect.",
+      "evidence": "\"you can take a Reaction to absorb a spell that is targeting only you and doesn't create an area of effect\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "absorb_triggering_spell_into_item_energy_reservoir",
+      "justification": "The rod does more than negate a triggering spell. On a successful reaction, it cancels the spell, reads the triggering spell's cast level, and conditionally stores that many levels in an item-owned reservoir subject to both current storage and lifetime absorption limits. That reservoir flow is not modeled by existing effect atoms or resource shapes.",
+      "evidence": "\"The absorbed spell's effect is canceled, and the spell's energy—not the spell itself—is stored in the rod. The energy has the same level as the spell when it was cast. The rod can absorb and store up to 50 levels of energy over the course of its existence.\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "spend_item_energy_as_generic_spell_slot",
+      "justification": "The existing grant_spell_access shape only grants named spells. Rod of Absorption instead lets the attuned spellcaster spend stored item energy as a substitute slot source for any spell they already have prepared or know, with slot-level ceilings tied to both the wielder's own slot access and an item max of level 5.",
+      "evidence": "\"you can convert energy stored in it into spell slots to cast spells you have prepared or know. You can create spell slots only of a level equal to or lower than your own spell slots, up to a maximum of level 5\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. The item's top-level kind and composite magic-item family exist, but its core mechanics require a spell-energy reservoir plus generic spell-slot substitution, so any current encoding would be materially false."
+}
