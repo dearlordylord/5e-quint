@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_wand_of_fear",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spell_parameter_override",
+      "justification": "Magic items can grant a named spell but constrain or override part of that spell's authored payload. The current surface can override DC and targeting only; it cannot narrow a granted spell's allowed command mode or replace the spell's printed area shape/range header.",
+      "evidence": "\"Command (\\\"flee\\\" or \\\"grovel\\\" only)\" and \"Fear (60-foot Cone)\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "The top-level magic-item activation family already fits: rare attunement item, 7-charge pool, fixed-DC spell grants, dawn recharge, and last-charge destruction roll. The blocker is narrower: the granted-spell surface cannot honestly express spell-specific payload overrides for Command and Fear, so no content file was authored."
+}
