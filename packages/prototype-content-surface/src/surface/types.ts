@@ -2283,6 +2283,20 @@ export type MagicItemSpawnedCreatureMechanics = ActivatedAbilityHeader &
 // Back-compat alias: content files historically referenced this name.
 export type ClassFeatureActivationMechanics = ActivatedAbilityMechanics;
 
+export type ClassFeatureComponentMechanics =
+  | PassiveMechanics
+  | ActivatedAbilityMechanics;
+
+// Composite class-feature mechanics — a single SRD feature can combine
+// an always-on passive grant with a distinct activated ability while
+// remaining one authored unit. This mirrors the existing magic-item
+// composite shape, but stays bounded to the two class-feature families
+// the surface already supports.
+export type CompositeClassFeatureMechanics = {
+  readonly family: "composite";
+  readonly parts: ReadonlyNonEmptyArray<ClassFeatureComponentMechanics>;
+};
+
 // EquipmentPredicate — gate for PassiveMechanics grants. When the
 // predicate doesn't hold, none of the grants apply. Survey evidence
 // (reshape-validate batch 1): all four Fighting Style feats (Defense,
@@ -2351,8 +2365,8 @@ export type PassiveMechanics = {
 };
 
 export type ClassFeatureMechanics =
-  | ActivatedAbilityMechanics
-  | PassiveMechanics;
+  | ClassFeatureComponentMechanics
+  | CompositeClassFeatureMechanics;
 
 // ---------- mastery (weapon mastery property) ----------
 

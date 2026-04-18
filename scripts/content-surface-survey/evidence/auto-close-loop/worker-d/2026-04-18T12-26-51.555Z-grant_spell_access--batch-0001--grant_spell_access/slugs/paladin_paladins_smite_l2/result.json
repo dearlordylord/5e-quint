@@ -1,0 +1,16 @@
+{
+  "unit_slug": "paladin_paladins_smite_l2",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "grant_spell_access"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encoded as a passive class feature with two parallel spell-access grants for the same spell: always prepared, plus one free cast per long rest."
+}

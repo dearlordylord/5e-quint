@@ -1,0 +1,36 @@
+{
+  "cluster": "grant_spell_access",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "paladin_paladins_smite_l2",
+    "warlock_contact_patron_l9"
+  ],
+  "summary": {
+    "improved": 1,
+    "cleanFlips": 1,
+    "changed": 1
+  },
+  "deltas": [
+    {
+      "slug": "paladin_paladins_smite_l2",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "surface_widening",
+      "after": "clean",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": true
+    },
+    {
+      "slug": "warlock_contact_patron_l9",
+      "source": "srd-5.2.1",
+      "kind": "class_feature",
+      "before": "surface_widening",
+      "after": "surface_widening",
+      "changed": false,
+      "improved": false,
+      "cleanFlip": false
+    }
+  ]
+}

@@ -2722,13 +2722,15 @@ function traceClassFeatureUnit(feat: ClassFeatureRecord): Trace {
     label: `class_feature_root\n${feat.name}\n(${feat.className}, L${feat.acquiredAtLevel})`,
   });
 
-  const procedureId = traceClassFeatureMechanics(
+  const procedureIds = traceClassFeatureMechanics(
     feat.mechanics,
     nodes,
     edges,
     ids,
   );
-  edges.push({ from: rootId, to: procedureId, relation: "roots" });
+  for (const procedureId of procedureIds) {
+    edges.push({ from: rootId, to: procedureId, relation: "roots" });
+  }
 
   return {
     unitId: feat.id,
@@ -3071,12 +3073,27 @@ function traceClassFeatureMechanics(
   nodes: TraceNode[],
   edges: TraceEdge[],
   ids: IdGen,
-): string {
+): string[] {
   switch (m.family) {
     case "activation":
-      return traceActivatedAbility(m, nodes, edges, ids);
+      return [traceActivatedAbility(m, nodes, edges, ids)];
     case "passive":
-      return tracePassiveMechanics(m, nodes, edges, ids);
+      return [tracePassiveMechanics(m, nodes, edges, ids)];
+    case "composite":
+      return m.parts.map((part) => {
+        switch (part.family) {
+          case "activation":
+            return traceActivatedAbility(part, nodes, edges, ids);
+          case "passive":
+            return tracePassiveMechanics(part, nodes, edges, ids);
+          default: {
+            const _exhaustive: never = part;
+            throw new Error(
+              `unhandled class-feature component family: ${String((_exhaustive as { family: string }).family)}`,
+            );
+          }
+        }
+      });
     default: {
       const _exhaustive: never = m;
       throw new Error(
