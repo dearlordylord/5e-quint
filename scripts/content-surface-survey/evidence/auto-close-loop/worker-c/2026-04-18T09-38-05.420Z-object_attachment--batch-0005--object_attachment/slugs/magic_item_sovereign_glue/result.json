@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The item's core mechanic is creating a persistent adhesive bond between two objects. No existing effect atom models object-to-object bonding or the restricted break conditions that follow from that state.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.object_pair",
+      "justification": "The current attachment surface can target one object, but Sovereign Glue operates on a pair of objects as the subject of one activation.",
+      "evidence": "between any two objects"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "delayed_set_then_persist",
+      "justification": "Applying the glue and having the bond take effect are separated by a one-minute setting delay. The current activation family has immediate phases and optional ongoing duration, but no honest way to defer the bond's application until after the setup window completes.",
+      "evidence": "Applying an ounce of Sovereign Glue takes a Utilize action, and the applied glue takes 1 minute to set."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The item fits the magic_item activation family structurally, and its ounce count could plausibly map to a non-recharging consumable pool, but the core mechanic is not representable without inventing a new bonding effect. I also did not model the storage requirement in Oil of Slipperiness or the limited break methods, because forcing a partial placeholder trace here would be misleading."
+}

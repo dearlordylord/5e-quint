@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_instant_fortress",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "resource-less repeatable magic-item activation",
+      "justification": "The current magic-item activation family requires a resource and reset cadence, but Instant Fortress has repeatable command-word activations with no use-count, charge pool, or recharge schedule.",
+      "evidence": "\"As a Magic action, you can place this 1-inch adamantine statuette on the ground and, using a command word, cause it to grow rapidly into a square adamantine tower. Repeating the command word causes the tower to revert to statuette form\""
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "persistent created structure with reversible form and carried damage state",
+      "justification": "The item creates a world object with dimensions, occupancy push-out, controlled door state, durability stats, damage immunities/resistances, and damage persistence across shrinking back to statuette form. The current surface has object attachment and alter_item_kind, but no honest way to author a created structure with HP/AC/resistances and reversible lifecycle.",
+      "evidence": "\"Shrinking the tower back down to statuette form doesn't repair damage to the tower.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall. The closest existing family is magic_item activation, but it cannot represent at-will repeatable activations or the tower's persistent object-state mechanics without inventing false resources or omitting core rules."
+}
