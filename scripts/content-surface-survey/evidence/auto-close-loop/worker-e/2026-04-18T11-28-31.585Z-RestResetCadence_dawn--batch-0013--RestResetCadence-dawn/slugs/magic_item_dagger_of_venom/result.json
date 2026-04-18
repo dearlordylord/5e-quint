@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_dagger_of_venom",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activated_nonspell_ongoing_weapon_rider",
+      "justification": "The item has an activated, resource-gated, dawn-reset weapon coating that persists for a bounded time, ends early on the next qualifying hit, and then resolves a save-gated rider from that later hit. Existing magic-item activation mechanics only resolve phases at activation time; existing ongoing operations exist only on spell families.",
+      "evidence": "You can take a Bonus Action to magically coat the blade with poison. The poison remains for 1 minute or until an attack using this weapon hits a creature."
+    },
+    {
+      "kind": "new_variant",
+      "name": "timed_condition_on_save_result",
+      "justification": "The later hit applies a condition with its own independent 1-minute duration. Current save results can apply a condition, but there is no way to author that condition's standalone timed duration on a non-spell item rider.",
+      "evidence": "That creature must succeed on a DC 15 Constitution saving throw or take 2d10 Poison damage and have the Poisoned condition for 1 minute."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The passive +1 attack/damage bonus fits existing passive magic-item atoms with a specific-item weapon filter, but omitting the poison-coating mechanic would under-encode the item's core behavior. No content file was authored."
+}
