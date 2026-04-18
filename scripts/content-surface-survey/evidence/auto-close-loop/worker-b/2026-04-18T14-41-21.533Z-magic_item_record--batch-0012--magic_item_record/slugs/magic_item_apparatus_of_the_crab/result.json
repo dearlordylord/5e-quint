@@ -1,0 +1,16 @@
+{
+  "unit_slug": "magic_item_apparatus_of_the_crab",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "vehicle_object_control_platform",
+      "justification": "The item is a stateful controllable vehicle/object with its own statistics, occupants, pilot requirement, persistent lever-controlled modes, and vehicle-owned attacks. None of the existing magic-item mechanics families can represent that honestly.",
+      "evidence": "A creature in the compartment can take a Utilize action to move as many as two of the apparatus's levers up or down."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because encoding this as passive, activation, composite, or spawned_creature would misrepresent a persistent vehicle/object control surface as a normal wearer ability."
+}
