@@ -2213,6 +2213,17 @@ export type MagicItemRarity =
   | "legendary"
   | "artifact";
 
+// Attunement eligibility gate on magic items. Keep this on the record,
+// not mechanics, because the restriction scopes who may attune to the
+// item regardless of whether the item is passive, activated, or
+// composite.
+export type MagicItemAttunementRestriction =
+  | { readonly kind: "spellcaster" }
+  | {
+      readonly kind: "class_list";
+      readonly classes: ReadonlyNonEmptyArray<ClassName>;
+    };
+
 // ItemDestructionPolicy — lifecycle trigger that removes the item from
 // play. SRD wand idiom: "If you expend the wand's last charge, roll
 // 1d20. On a 1, the wand crumbles into ashes and is destroyed." The
@@ -2234,13 +2245,21 @@ export type ItemDestructionPolicy =
   // SRD wands).
   | { readonly kind: "permanent_on_empty" };
 
-export type MagicItemRecord = UnitMetadata & {
-  readonly kind: "magic_item";
-  readonly rarity: MagicItemRarity;
-  readonly requiresAttunement: boolean;
-  readonly mechanics: MagicItemMechanics;
-  readonly destruction: ItemDestructionPolicy;
-};
+export type MagicItemRecord = UnitMetadata &
+  {
+    readonly kind: "magic_item";
+    readonly rarity: MagicItemRarity;
+    readonly mechanics: MagicItemMechanics;
+    readonly destruction: ItemDestructionPolicy;
+  } & (
+    | {
+        readonly requiresAttunement: false;
+      }
+    | {
+        readonly requiresAttunement: true;
+        readonly attunementRestriction?: MagicItemAttunementRestriction;
+      }
+  );
 
 export type UnitRecord =
   | SpellRecord

@@ -75,6 +75,7 @@ import type {
   ReanimatedCreatureMechanics,
   TemplatedMultiSpawnMechanics,
   GrantedSpellTargetRestriction,
+  MagicItemAttunementRestriction,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -2637,7 +2638,7 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
   const ids = idGen();
 
   const rootId = ids("root");
-  const attun = item.requiresAttunement ? " [attunement]" : "";
+  const attun = describeMagicItemAttunement(item);
   nodes.push({
     id: rootId,
     category: "source",
@@ -2672,6 +2673,27 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
     edges,
     atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
   };
+}
+
+function describeMagicItemAttunement(item: MagicItemRecord): string {
+  if (!item.requiresAttunement) return "";
+  if (item.attunementRestriction === undefined) return " [attunement]";
+  return ` [attunement: ${describeMagicItemAttunementRestriction(item.attunementRestriction)}]`;
+}
+
+function describeMagicItemAttunementRestriction(
+  restriction: MagicItemAttunementRestriction,
+): string {
+  switch (restriction.kind) {
+    case "spellcaster":
+      return "spellcaster";
+    case "class_list":
+      return restriction.classes.join(", ");
+    default: {
+      const _exhaustive: never = restriction;
+      return _exhaustive;
+    }
+  }
 }
 
 function traceItemDestruction(

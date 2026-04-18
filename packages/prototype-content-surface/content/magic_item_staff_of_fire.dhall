@@ -18,11 +18,6 @@
 --   • dawn recharge
 --   • last-charge destruction roll
 --
--- Known omission: the attunement clause is class-gated ("by a Druid,
--- Sorcerer, Warlock, or Wizard"), but MagicItemRecord only exposes a
--- boolean requiresAttunement flag. That is recorded as a
--- surface_widening in proposal-magic_item_staff_of_fire.md.
-
 let ChargeCast =
       { kind : Text
       , baseCharges : Natural
@@ -72,12 +67,24 @@ let MagicItemPart =
       , phases : Optional (List DirectPhase)
       }
 
+let AttunementRestriction =
+      { kind : Text
+      , classes : Optional (List Text)
+      }
+
 let staffOfFire =
       { kind = "magic_item"
       , id = "magic_item_staff_of_fire"
       , name = "Staff of Fire"
       , rarity = "very_rare"
       , requiresAttunement = True
+      , attunementRestriction =
+          Some
+            { kind = "class_list"
+            , classes =
+                Some ["druid", "sorcerer", "warlock", "wizard"]
+            }
+      : Optional AttunementRestriction
       , provenance =
           { kind = "srd-5.2.1"
           , section = "MagicItems#StaffOfFire"
