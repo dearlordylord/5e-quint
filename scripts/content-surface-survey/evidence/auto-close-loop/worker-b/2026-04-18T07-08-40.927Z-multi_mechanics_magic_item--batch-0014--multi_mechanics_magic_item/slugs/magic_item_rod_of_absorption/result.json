@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_rod_of_absorption",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "spell_energy_reservoir",
+      "justification": "The item stores absorbed spell levels as a persistent reservoir distinct from fixed charges, and also cares about a separate lifetime absorption ceiling.",
+      "evidence": "The spell's energy-not the spell itself-is stored in the rod. The energy has the same level as the spell when it was cast. The rod can absorb and store up to 50 levels of energy over the course of its existence."
+    },
+    {
+      "kind": "new_atom",
+      "name": "store_triggering_spell_energy",
+      "justification": "The reaction must convert the triggering spell's level into stored item energy when the spell is canceled.",
+      "evidence": "The absorbed spell's effect is canceled, and the spell's energy-not the spell itself-is stored in the rod."
+    },
+    {
+      "kind": "new_atom",
+      "name": "substitute_spell_slot_from_item_energy",
+      "justification": "The rod lets a spellcaster cast arbitrary prepared or known spells by paying from the rod's stored energy instead of expending their own spell slots.",
+      "evidence": "If you are a spellcaster holding the rod, you can convert energy stored in it into spell slots to cast spells you have prepared or know. You use the stored levels in place of your slots but otherwise cast the spell as normal."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ReactionTrigger.spell_targets_only_self_no_area",
+      "justification": "The reaction trigger is a generic spell-targeting predicate with self-only and no-area constraints, not a named-spell trigger.",
+      "evidence": "While holding this rod, you can take a Reaction to absorb a spell that is targeting only you and doesn't create an area of effect."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall/trace. The record kind exists, but the item's core mechanics require new atom-level resource and substitution support beyond the current surface."
+}
