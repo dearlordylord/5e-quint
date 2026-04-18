@@ -1,0 +1,22 @@
+{
+  "unit_slug": "magic_item_javelin_of_lightning",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "replace_damage_type",
+      "justification": "The item's passive weapon rider replaces the existing damage type of a hit made with this specific weapon. The current surface can add damage or modify numeric damage, but it cannot rewrite a weapon hit's damage type from one type to another.",
+      "evidence": "Each time you make an attack roll with this magic weapon and hit, you can have it deal Lightning damage instead of Piercing damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_return_to_hand_after_resolution",
+      "justification": "The Lightning Bolt property otherwise fits an activated magic-item attack replacement, but the surface has no way to state that the thrown weapon immediately reappears in the wielder's hand after the effect resolves.",
+      "evidence": "Immediately after dealing this damage, the weapon reappears in your hand."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No Dhall/JSON/trace content file was authored. The item fits the existing magic_item kind and mostly fits a composite passive + activation shape, but its passive damage-type replacement needs a new atom, so authoring only the Lightning Bolt property would be misleading."
+}
