@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_talisman_of_pure_good",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "destroy_target",
+      "justification": "Pure Rebuke's failed-save branch destroys the target outright and is not representable as damage, condition, or exile without lying about the rule.",
+      "evidence": "On a failed save, the target falls into the fissure and is destroyed, leaving no remains."
+    },
+    {
+      "kind": "new_variant",
+      "name": "save_gate.target_type_conditional_disadvantage",
+      "justification": "The activation needs a one-shot save modifier keyed by the target's creature type, which the current save_gate shape cannot express.",
+      "evidence": "If the target is a Fiend or an Undead, it has Disadvantage on the save."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "passive_item_contact_hazard",
+      "justification": "The talisman automatically damages external creatures that touch it and repeats the damage while they keep holding or carrying it; the current passive item operation surface has no trigger+attachment shape for this.",
+      "evidence": "A Fiend or an Undead that touches the talisman takes 8d6 Radiant damage and takes the damage again each time it ends its turn holding or carrying the talisman."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content Dhall/JSON/trace was authored. The item kind and composite magic-item family exist, but producing a trace would require false encoding of the destroy-on-fail branch and the automatic touch/carry hazard."
+}

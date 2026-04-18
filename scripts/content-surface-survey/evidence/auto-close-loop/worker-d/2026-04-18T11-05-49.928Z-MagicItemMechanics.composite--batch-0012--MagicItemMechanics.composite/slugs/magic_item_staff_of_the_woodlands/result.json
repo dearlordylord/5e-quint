@@ -1,0 +1,49 @@
+{
+  "unit_slug": "magic_item_staff_of_the_woodlands",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "attunement_slot",
+    "charge",
+    "direct_apply",
+    "duration_window",
+    "grant",
+    "grant_spell_access",
+    "holding_item",
+    "magic_item_root",
+    "modify_damage_numeric",
+    "modify_roll_numeric",
+    "self"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Attachment.item_or_object_target",
+      "justification": "Tree Form transforms the staff itself after planting it in the ground. The current activation attachment grammar cannot target the held item/object honestly.",
+      "evidence": "\"You can take a Magic action to plant one end of the staff in earth in an unoccupied space and expend 1 charge to transform the staff into a healthy tree.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom.fall_on_end",
+      "justification": "The taxonomy already recognizes this cleanup rider, but the authored surface and tracer do not expose it. Tree Form needs it for the revert clause.",
+      "evidence": "\"Any creature in the tree falls when the tree reverts to a staff.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.lose_properties_on_last_charge_roll",
+      "justification": "The last-charge rider is a permanent magical shutdown, not destruction. Current destruction variants can only destroy the item or do nothing.",
+      "evidence": "\"If you expend the last charge, roll 1d20. On a 1, the staff loses its properties and becomes a nonmagical Quarterstaff.\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Authored subset includes the held bonuses, druid-only attunement, charge-cast spell table, and dawn recharge. Tree Form and the non-destructive last-charge shutdown were omitted and recorded in the proposal."
+}
