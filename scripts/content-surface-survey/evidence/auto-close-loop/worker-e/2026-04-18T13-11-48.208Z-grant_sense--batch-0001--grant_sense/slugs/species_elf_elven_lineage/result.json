@@ -1,0 +1,28 @@
+{
+  "unit_slug": "species_elf_elven_lineage",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "SpeciesTraitMechanics.composite_or_choice",
+      "justification": "Elven Lineage is one species trait that requires choosing one of several lineage packages, each with different passive grants and spell grants. The current species-trait surface only allows a single passive or activation payload, not a build-time choice over multiple mechanics bundles.",
+      "evidence": "Choose a lineage from the Elven Lineages table. You gain the level 1 benefit of that lineage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "level_gated_species_trait_grant",
+      "justification": "The trait unlocks additional spell grants at character levels 3 and 5. Current passive species-trait grants are always on and grant_spell_access has no acquired-at-character-level gate.",
+      "evidence": "When you reach character levels 3 and 5, you learn a higher-level spell, as shown on the table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_spell_access.spell_list_replace_on_long_rest",
+      "justification": "High Elf does not grant one fixed cantrip. It grants a Wizard cantrip that can be swapped for a different Wizard cantrip after each Long Rest. grant_spell_access currently requires a fixed spellId.",
+      "evidence": "Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Did not author content JSON/Dhall because encoding this as a flat passive species trait would be misleading. The unit mixes lineage selection, level-gated unlocks, and a spell-list replacement rider."
+}

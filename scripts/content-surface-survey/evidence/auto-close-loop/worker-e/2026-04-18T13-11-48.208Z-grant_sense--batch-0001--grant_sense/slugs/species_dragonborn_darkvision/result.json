@@ -1,0 +1,16 @@
+{
+  "unit_slug": "species_dragonborn_darkvision",
+  "outcome": "clean",
+  "atoms_used": [
+    "grant",
+    "grant_sense",
+    "species_trait_root"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes honestly as a SpeciesTraitRecord with passive mechanics and a single grant_sense atom. Dhall compiled, pnpm typecheck passed, and the tracer emitted the expected graph."
+}
