@@ -1,0 +1,34 @@
+{
+  "unit_slug": "magic_item_censer_of_controlling_air_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "spawned_creature placement relative to item/source",
+      "justification": "The existing spawned-creature surface only offers coarse `Range` values like `self`, `touch`, or a numeric point range. This item requires a deterministic nearest-valid-space placement rule relative to the censer, not a distance chosen by the user.",
+      "evidence": "\"The elemental appears in an unoccupied space as close to the censer as possible.\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CreatureControl without invented command range",
+      "justification": "The current `CreatureControl` record requires `commandRangeFeet`, but this item gives no numeric command range. Encoding one would invent a rule.",
+      "evidence": "\"obeys your commands\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "CreatureControl with unspecified fallback behavior",
+      "justification": "The current `CreatureControl` record requires `defaultBehavior`, but the item does not specify what the elemental does when uncommanded. Supplying `independent` or `dodge_and_avoid` would be a false rule addition.",
+      "evidence": "\"obeys your commands\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "catalog_ref summoned-creature overrides for language comprehension",
+      "justification": "The item deterministically changes what the summoned creature understands, but `catalog_ref` companions cannot currently carry a targeted override like `understandsCasterLanguages`.",
+      "evidence": "\"understands your languages\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level kind and family are clearly magic_item + spawned_creature, but the present surface cannot encode this item honestly without inventing summon placement, command range, fallback behavior, and language-understanding details. No content/tracer files were written."
+}

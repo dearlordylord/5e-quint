@@ -1,0 +1,36 @@
+{
+  "cluster": "MagicItemRecord + magic_item UnitRecord kind",
+  "backend": "codex",
+  "source": "srd-5.2.1",
+  "selectedSlugs": [
+    "magic_item_adamantine_armor",
+    "magic_item_censer_of_controlling_air_elementals"
+  ],
+  "summary": {
+    "improved": 2,
+    "cleanFlips": 0,
+    "changed": 2
+  },
+  "deltas": [
+    {
+      "slug": "magic_item_adamantine_armor",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    },
+    {
+      "slug": "magic_item_censer_of_controlling_air_elementals",
+      "source": "srd-5.2.1",
+      "kind": "magic_item",
+      "before": "structural_widening",
+      "after": "surface_widening",
+      "changed": true,
+      "improved": true,
+      "cleanFlip": false
+    }
+  ]
+}
