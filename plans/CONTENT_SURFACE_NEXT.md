@@ -2,70 +2,59 @@
 
 ## State
 
-- 145 clean / 583 modelable slugs in `survey-results-srd.jsonl` (~25%).
-  Many "modelable-widening" verdicts are stale (surface already covers
-  them). A full re-mine would likely jump to ~45-50% without any code
-  changes.
-- Surface supports:
-  - Attachments: `self | target | area | mark | object` (object has
-    filter: material / heldOrWorn / manufactured / maxSize)
-  - EffectAtoms: emit_light, block_reanimation, create_object,
-    create_illusion, force_drop_item, bond_objects, lock_object, plus
-    the pre-existing ~40 atoms.
-  - OngoingTrigger.on_caster_spends_action (recurring caster-action
-    gated effect).
-  - OngoingEffect.attack_roll (attack-roll resolution inside ongoing).
-  - DurationEndTrigger.caster_recasts_spell.
-  - RiderExpiry.caster_turn_start.
+- ~150 clean / 583 modelable in `survey-results-srd.jsonl` (pre-re-mine
+  baseline). Many `widening` verdicts are stale; 98 candidates with
+  this-session-covered widenings are being re-mined now (background
+  task). Expect clean count to jump significantly.
+- Surface vocabulary current:
+  - **Attachment**: `self | target | area | mark | object`
+    (object: filter material / heldOrWorn / manufactured / maxSize)
+  - **EffectAtom** (last-added): emit_light, block_reanimation,
+    create_object (+ CreatedObjectDurability), create_illusion,
+    force_drop_item, bond_objects, lock_object, reposition_attachment.
+  - **OngoingTrigger**: on_caster_spends_action, on_creature_studies.
+  - **OngoingEffect**: attack_roll, ability_check_gate.
+  - **DurationEndTrigger**: caster_recasts_spell.
+  - **RiderExpiry**: caster_turn_start.
+  - `Size` (renamed from StatBlockSize — domain-correct for both
+    creatures and objects).
 
-## Next actions in order
+## Next actions
 
-1. **Run a full dataset re-mine** (~2-3 h wall-clock, all 1877 slugs).
-   Most leveraged next move: dissolves the stale-proposal backlog and
-   gives an honest picture of real remaining work. Launch with
-   `run-survey.sh --tier all --force`. Don't block on it — continue
-   widening design in parallel.
+1. **Wait for targeted re-mine** (`bgazefyjd` — 98 slugs). Commit
+   verdict shifts when done. Expected ~20-30 flips to clean.
+2. **After that: full 432-slug re-mine of all non-clean units**
+   (overnight run, ~3-5 h wall-clock at observed pace). Gives the
+   honest clean % baseline.
+3. **Structural widenings still open** (design only — ship when a
+   second SRD unit surfaces each):
+   - `object_contact_propagation` (heat_metal's creature-in-contact
+     damage).
+   - `conditional_or_save_outcome` (save_gate onFail branching).
+   - `CastTimeChoice<Attachment>` (Daylight two-mode cast).
+   - `on_area_overlap_window` (Daylight dispel-Darkness).
+   - `Duration.concentration.upcastRemovesConcentration` (Major Image
+     — 1 unit, defer until a second shows up).
+4. **Deferred atoms** — `freeze_deadline` (needs Raise-Dead deadline
+   system modeled).
 
-2. **Pick the next structural widening** from these candidates after
-   the re-mine reports. The current top-unresolved families (to be
-   re-evaluated post-re-mine): `passive family for ClassFeatureMechanics`,
-   `grant_temp_hp`, `multi_mechanics_magic_item`, `composite_magic_item_mechanics`.
+## Workflow
 
-3. **Deferred — needs the deadline primitive first**: `pause_deadline`
-   for Gentle Repose (no time-of-death / revive-window system modeled
-   yet). Ship when Raise Dead family lands.
-
-## Known structural gaps still open
-
-- `object_contact_propagation` — Heat Metal's "damage to creatures in
-  physical contact with the object" redirect. Needs either an
-  Attachment subtargeting or a new propagation concept.
-- `conditional_or_save_outcome` — save_gate onFail branching ("drop,
-  and IF it doesn't drop, Disadvantage"). No current shape.
-- Illusion disbelief gate — Investigation-vs-spell-DC via Study action
-  on illusion targets.
-- Mid-duration reposition for persistent conjurations (Silent Image,
-  Dancing Lights).
-- Daylight's `on_area_overlap_window` (dispel-lower-level-Darkness).
-- Daylight / True Strike etc. `CastTimeChoice<Attachment>` for two-
-  form casts.
-
-## Workflow notes
-
-- Decision-presentation format (unchanged): show exemplar unit
-  proposals → show current type → propose concrete diff → apply →
-  typecheck → tracer smoke → re-mine affected slugs → commit.
+- One re-mine at a time (flock). If it stalls: kill, clean lock at
+  `scripts/content-surface-survey/run-survey.lock`, retry.
+- Full dataset re-mine is slow — use `--slugs-file` with a targeted
+  list filtered to non-clean slugs.
+- Parallel widening design via sub-agents while re-mine runs; agent
+  returns TypeScript + affected slugs; apply sequentially.
 - Agent makes obvious calls autonomously; asks only when a choice
   has real design impact.
-- Domain-language-first: prefer naming that reflects the SRD concept
-  (see `CLAUDE.md` "Domain-language reflex").
-- Re-mine blocks on a flock; only run one at a time. Use sub-agents
-  in parallel to DESIGN widenings while a re-mine runs.
+- Commit feat(surface) + push after each logical widening batch.
+- Keep this file a resume point, not a log.
 
-## Related files (don't edit blindly)
+## Related plans
 
-- `plans/CONTENT_SURFACE_SURVEY.md` — historical.
-- `plans/CONTENT_SURFACE_LOOP_ACCEPTANCE.md` — loop criteria.
-- `plans/CONTENT_SURFACE_DEFERRED.md` — tracked deferred questions.
-- `plans/CONTENT_SURFACE_DATA_FLOW_TEMP.md` — pipeline map.
-- `plans/CONTENT_SURFACE_PROTOTYPE.md` — original red/green plan.
+- `CONTENT_SURFACE_SURVEY.md` — historical.
+- `CONTENT_SURFACE_LOOP_ACCEPTANCE.md` — loop criteria.
+- `CONTENT_SURFACE_DEFERRED.md` — tracked deferred questions.
+- `CONTENT_SURFACE_DATA_FLOW_TEMP.md` — pipeline map.
+- `CONTENT_SURFACE_PROTOTYPE.md` — original red/green plan.
