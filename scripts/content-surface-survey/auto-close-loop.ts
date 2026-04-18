@@ -874,8 +874,7 @@ function closeLoopArgsForCluster(args: Args, cluster: string): CloseLoopArgs {
 }
 
 function selectedSlugsForCluster(args: Args, cluster: string): ReadonlyArray<string> {
-  const queue = loadQueue();
-  const rows = loadRows(args.source, queue);
+  const { queue, rows } = loadEffectiveRows(args);
   const clusters = buildClusters(rows, queue, args.kind);
   return selectSlugs(closeLoopArgsForCluster(args, cluster), rows, queue, clusters);
 }
@@ -1241,8 +1240,7 @@ function clusterScore(cluster: ClusterRecord): number {
 }
 
 function pickNextCluster(args: Args, attempted: Set<string>): ClusterRecord | null {
-  const queue = loadQueue();
-  const rows = loadRows(args.source, queue);
+  const { queue, rows } = loadEffectiveRows(args);
   const clusters = buildClusters(rows, queue, args.kind)
     .filter((cluster) => clusterEligible(cluster, args.kind, args.minClusterSize))
     .filter((cluster) => !attempted.has(cluster.canonical))
