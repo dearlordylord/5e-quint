@@ -1,0 +1,20 @@
+{
+  "unit_slug": "magic_item_ring_of_jumping",
+  "outcome": "clean",
+  "atoms_used": [
+    "attunement_slot",
+    "grant",
+    "grant_spell_access",
+    "magic_item_root",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Clean fit as an attunement-gated passive magic item: while worn, it grants at-will access to Jump with an item-level self-only target restriction."
+}
