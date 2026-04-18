@@ -728,6 +728,15 @@ export type EffectAtom =
   | {
       readonly kind: "negate_triggering_spell";
     }
+  // Reflection idiom for post-save magic-item reactions such as Ring
+  // of Spell Turning and Staff of Charming. Unlike
+  // `negate_triggering_spell`, this does not just cancel the trigger:
+  // it re-targets the triggering spell back at its caster and resolves
+  // it using the triggering spell's own save math, as if the reactor
+  // had cast it.
+  | {
+      readonly kind: "reflect_triggering_spell";
+    }
   // Beacon of Hope: "when the target regains Hit Points, it regains
   // the maximum number possible." Dodges the normal dice roll.
   | {

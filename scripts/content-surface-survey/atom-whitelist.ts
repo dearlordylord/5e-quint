@@ -231,6 +231,7 @@ export const STAGE_3_EXTENSIONS = [
   "block_max_hp_reduction", // §A16 — Aura of Life "HP maxes can't be reduced".
   "set_speed_ratio", // Spirit Guardians / Slow — halve speed inside area / on target.
   "negate_triggering_spell", // §C1 Counterspell — negate whatever spell fired the reaction.
+  "reflect_triggering_spell", // Ring of Spell Turning / Staff of Charming — turn the triggering spell back on its caster.
   "end_ongoing_spells", // §C3 Dispel Magic — end ongoing spells on target up to a level bound.
   "maximize_healing_received", // Beacon of Hope — take max on healing dice.
   "transform_target", // §C4d Polymorph family — swap target stat block for a catalog-ref form.

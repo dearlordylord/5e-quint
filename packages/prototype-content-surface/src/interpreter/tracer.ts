@@ -583,6 +583,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "reflect_triggering_spell": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reflect_triggering_spell",
+        label: "reflect_triggering_spell",
+      });
+      return id;
+    }
     case "end_ongoing_spells": {
       const id = ids("eff");
       nodes.push({
@@ -691,6 +701,7 @@ function traceEffectAtomScaling(
     case "detect":
     case "set_speed":
     case "negate_triggering_spell":
+    case "reflect_triggering_spell":
     case "end_ongoing_spells":
     case "maximize_healing_received":
     case "transform_target":
