@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_sovereign_glue",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "bond_objects",
+      "justification": "The item's core mechanic is not damage, movement, condition, spell access, or item-form change. It creates a persistent adhesive bond between two objects that survives until a narrow set of named breakers is applied.",
+      "evidence": "This viscous, milky-white substance can form a permanent adhesive bond between any two objects."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ActivatedAbilityMechanics.range",
+      "justification": "Non-spell activations currently hardcode trace context to Self. Sovereign Glue targets object surfaces being coated, so an honest encoding needs a non-spell targeting/range header such as Touch rather than a misleading self-only application.",
+      "evidence": "One ounce of the glue can cover a 1-foot square surface. Applying an ounce of Sovereign Glue takes a Utilize action..."
+    },
+    {
+      "kind": "new_variant",
+      "name": "UseCountCap.rolled",
+      "justification": "The item's stock is instance-variable rather than fixed. A generic Sovereign Glue record needs to express that found containers begin with a rolled quantity instead of a fixed use cap.",
+      "evidence": "When found, a container contains 1d6 + 1 ounces."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Magic item + activation is the right top-level shell, but no honest encoding exists today. The blocking gap is a missing persistent object-bond effect atom; secondary gaps are non-spell range/targeting for object applications and rolled initial quantity."
+}
