@@ -1,0 +1,28 @@
+{
+  "unit_slug": "magic_item_ring_of_spell_turning",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.vs_spells",
+      "justification": "The passive benefit needs to apply only to saving throws caused by spells, not all saving throws.",
+      "evidence": "While wearing this ring, you have Advantage on saving throws against spells."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "automatic_post_save_spell_negation",
+      "justification": "The item automatically cancels a qualifying triggering spell on the wearer after a successful save, with no action or reaction cost.",
+      "evidence": "If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you."
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "reflect_triggering_spell_to_caster",
+      "justification": "The optional rider must retarget the triggering spell back at its caster and resolve that spell against the caster.",
+      "evidence": "you can take a Reaction to deflect the spell back at the spell's caster; the caster must make a saving throw against the spell using their own spell save DC."
+    }
+  ],
+  "confidence": "high",
+  "notes": "No content file was authored. Existing magic-item families cannot represent the automatic post-save interrupt honestly, and the reflection rider also lacks a triggering-spell replay surface."
+}
