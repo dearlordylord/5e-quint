@@ -63,6 +63,7 @@ module battle {
     slots: SpellSlotState,
     kind: CreatureKind,
     creatureSize: Size,
+    baseArmorClass: int,                    // battle-owned base AC fact for hit resolution
     monsterResources: MonsterResourceState,  // legendary actions/resistances (B10)
     statBlock: StatBlock,                    // stat block for reading LA uses, recharge, etc. (B12)
     rogueLevel: int,                         // 0 = not a rogue (B11)
@@ -667,6 +668,7 @@ module battle {
     slots: FRESH_SPELL_SLOTS,
     kind: k,
     creatureSize: Medium,
+    baseArmorClass: 10,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
@@ -722,6 +724,7 @@ module battle {
     },
     kind: k,
     creatureSize: Medium,
+    baseArmorClass: 10,
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
@@ -776,6 +779,7 @@ module battle {
       slots: FRESH_SPELL_SLOTS,
       kind: Monster,
       creatureSize: sb.creatureSize,
+      baseArmorClass: sb.ac,
       monsterResources: EMPTY_MONSTER_RESOURCES
         .with("legendaryActionsRemaining", sb.legendaryActionUses)
         .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
@@ -1540,6 +1544,7 @@ module battle {
   // Stat block for test monster "C": 3 LA, 3 LR, one recharge ability.
   val TEST_MONSTER_STAT_BLOCK: StatBlock = NULL_STAT_BLOCK
     .with("name", "TestMonster")
+    .with("ac", 10)
     .with("speeds", Map(Walk -> 30, Fly -> 0, Swim -> 0, Climb -> 0, Burrow -> 0))
     .with("attacks", Map(
       "tentacle" -> {
@@ -2174,7 +2179,6 @@ module battle {
     nondet retDmg = 1.to(12).oneOf()
     nondet retDt = Set(Slashing, Piercing, Bludgeoning).oneOf()
     nondet retCrit = Bool.oneOf()
-    nondet retTgtAc = 10.to(20).oneOf()
     match bPhase {
       | BPAwaitingReaction(ctx) =>
         match ctx.interrupt {
@@ -2187,7 +2191,13 @@ module battle {
               val reactor = bCreatures.get(reactorId)
               val cs1 = spendReaction(bCreatures, reactorId)
               val newOffered = ctx.offered.union(Set(reactorId))
-              val hit = retAtkRoll >= retTgtAc or retAtkRoll == 20
+              val retaliationTarget = bCreatures.get(ad.damageSource)
+              val retaliationTargetAc = effectiveArmorClass(
+                bCreatures,
+                ad.damageSource,
+                retaliationTarget.baseArmorClass,
+              )
+              val hit = retAtkRoll >= retaliationTargetAc or retAtkRoll == 20
               if (not(hit)) {
                 all {
                   reactorId == ad.damagedCreature,

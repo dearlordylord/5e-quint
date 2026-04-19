@@ -581,7 +581,6 @@ const battleDriverSchema = {
     retDmg: OI,
     retDt: OV,
     retCrit: OB,
-    retTgtAc: OI,
     reactorId: OS,
   },
   bCastSaveSpell: {
@@ -1048,7 +1047,6 @@ function createBattleMachineDriver() {
           retDmg: p(picks, "retDmg", 5),
           retDt: mapDamageType(ps(picks, "retDt", "Slashing")),
           retCrit: pb(picks, "retCrit", false),
-          retTgtAc: armorClass(p(picks, "retTgtAc", 15)),
         });
       },
       bCastSaveSpell: (picks: Record<string, unknown>) => {

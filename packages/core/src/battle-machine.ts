@@ -73,7 +73,10 @@ import {
   battleUseRechargeAbility,
   battleWakeEffect,
 } from "#/battle-machine-actions-turn.ts";
-import type { BattleContext, BattleEvent } from "#/battle-machine-types.ts";
+import type {
+  BattleContext,
+  BattleEvent,
+} from "#/battle-machine-types.ts";
 
 // Action functions take a narrowed event (BattleActionArgs<T>), but XState's assign()
 // expects the full BattleEvent union. Two casts required: input (contravariance) and

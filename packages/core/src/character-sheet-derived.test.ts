@@ -8,7 +8,8 @@ import {
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
 import type { ClassName } from "#/features/class-tables.ts";
-import { spellId } from "#/types.ts";
+import { MAGE_ARMOR_PROJECTION } from "#/projected-compiler-fixtures.ts";
+import { CreatureId, spellId } from "#/types.ts";
 
 describe("character-sheet-derived", () => {
   const alertFeat = {
@@ -530,6 +531,25 @@ describe("character-sheet-derived", () => {
       battleProjection.readyableSpellPayloads!.get(spellId("hold_person"))
         ?.release.saveDC,
     ).toBe(15);
+  });
+
+  it("threads active projected persistents through battle projection without storing them on the sheet", () => {
+    const sheet = finalizeSorcererSheet();
+    const activeProjectedPersistents = new Set([
+      {
+        record: MAGE_ARMOR_PROJECTION,
+        casterId: CreatureId("mage"),
+        targetId: CreatureId("mage"),
+      },
+    ]);
+
+    const battleProjection = characterSheetBattleProjection(sheet, {
+      activeProjectedPersistents,
+    });
+
+    expect(battleProjection.activeProjectedPersistents).toBe(
+      activeProjectedPersistents,
+    );
   });
 
   it("projects spellcasting ability from the first caster class on the advancement path", () => {

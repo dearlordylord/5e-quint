@@ -19,6 +19,16 @@ spell-id / unit-id-indexed registry. Both bypassed the
 
 This doc pins one shape that threads the EPT5 contract directly.
 
+## Ownership Decision
+
+EPT6 owns active projected persistents at **battle setup/runtime time**, not on
+the canonical character sheet. The exact projected record passes through the
+existing battle-host seam (`InitCreatureConfig`, optionally via
+`characterSheetBattleProjection(..., { activeProjectedPersistents })`) and then
+lives on `BattleCreatureState`. The sheet remains durable character data only;
+it does not gain a parallel `{ spellId: "mage_armor" }` or other reconstructed
+persistent registry.
+
 ## Shape
 
 ### 1. Active record — holds the projected record + runtime identity only
@@ -125,12 +135,14 @@ pure def pProjectedBaseAcOverride(s: CreatureState): Option[int] =
 ```
 
 Battle AC computation consults `pProjectedBaseAcOverride(s)` before falling
-back to armor-state-based AC.
+back to armor-state-based AC, and never applies the projected base-AC override
+while the creature is wearing armor.
 
-### 6. Battle event — `DON_ARMOR`
+### 6. Internal battle seam — `DON_ARMOR`
 
-Adds one battle transition that both flips armor state *and* walks active
-persistents:
+Adds one internal battle transition that both flips armor state *and* walks
+active persistents. This is an owned runtime seam, not a new public battle
+command surface:
 
 ```qnt
 action doDonArmor(creatureId: str, armor: Armor) = all {
@@ -150,7 +162,9 @@ action doDonArmor(creatureId: str, armor: Armor) = all {
 
 Straight one-for-one mirror of the Quint types. `ActiveProjectedPersistent`
 and `activePersistents` field on the TS creature-state type. Same pure helpers
-exported from a new module next to `projected-executable.ts`.
+exported from a new module next to `projected-executable.ts`. The TS
+battle-init seam also canonicalizes contradictory input so `Mage Armor` cannot
+remain active once the creature is already marked as wearing armor.
 
 ## Out of scope for EPT6
 
@@ -165,5 +179,5 @@ exported from a new module next to `projected-executable.ts`.
 
 - `pAddActivePersistent` + `pRemoveActivePersistentsOnTrigger` as pure tests
   in `dndTest.qnt` (or the TS equivalent).
-- `DON_ARMOR` MBT parity (Quint action ↔ TS reducer).
+- Internal `DON_ARMOR` hook parity (Quint action ↔ TS reducer).
 - End-to-end MBT for the Mage Armor lifecycle is in EPT9/EPT11, not EPT6.
