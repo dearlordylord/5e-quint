@@ -14,6 +14,7 @@ import {
   type ProjectedLevelAxis,
   type ProjectedPersistentRecord,
   type ProjectedResourceAxis,
+  type ProjectedResourcePool,
   type ProjectedSaveDc,
   type ProjectedUnitKind,
   type ProjectedUsageLimit,
@@ -132,6 +133,7 @@ describe("projected-executable TS mirror", () => {
       resourceGate: {
         tag: "PRGUseCount",
         value: {
+          pool: "PRPSecondWind",
           cap: {
             tag: "PRCThresholdTiers",
             value: {
@@ -178,6 +180,7 @@ describe("projected-executable TS mirror", () => {
     expect(action.resourceGate).toEqual({
       tag: "PRGUseCount",
       value: {
+        pool: "PRPSecondWind",
         cap: {
           tag: "PRCThresholdTiers",
           value: {
@@ -207,6 +210,7 @@ describe("projected-executable TS mirror", () => {
       resourceGate: {
         tag: "PRGUseCount",
         value: {
+          pool: "PRPActionSurge",
           cap: {
             tag: "PRCThresholdTiers",
             value: {
@@ -245,6 +249,7 @@ describe("projected-executable TS mirror", () => {
       resourceGate: {
         tag: "PRGUseCount",
         value: {
+          pool: "PRPActionSurge",
           cap: {
             tag: "PRCThresholdTiers",
             value: {
@@ -310,6 +315,8 @@ describe("projected-executable TS mirror", () => {
     const _levelAxis: ProjectedLevelAxis = "PLAWarlockLevel";
     // @ts-expect-error closed resource-axis subset
     const _resourceAxis: ProjectedResourceAxis = "PRASpellcasting";
+    // @ts-expect-error closed resource-pool subset
+    const _resourcePool: ProjectedResourcePool = "PRPSpellSlot";
     // @ts-expect-error closed unit-kind subset
     const _unitKind: ProjectedUnitKind = "PUKFeat";
     // @ts-expect-error closed persistent-record subset

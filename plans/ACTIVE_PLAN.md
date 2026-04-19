@@ -51,8 +51,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 7,  "id": "EPT4",  "status": "done", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "done", "title": "Build Surface-To-Projection Compiler" },
     { "number": 9,  "id": "EPT6",  "status": "ready-for-research", "title": "Hook Persistent Projection For Mage Armor" },
-    { "number": 10, "id": "EPT7",  "status": "ready-for-implementation-after-light-research", "title": "Build Projected Mechanic Interpreter" },
-    { "number": 11, "id": "EPT8",  "status": "blocked", "title": "Route Availability And Execution Through Projected Records" },
+    { "number": 10, "id": "EPT7",  "status": "done", "title": "Build Projected Mechanic Interpreter" },
+    { "number": 11, "id": "EPT8",  "status": "ready-for-implementation-after-light-research", "title": "Route Availability And Execution Through Projected Records" },
     { "number": 12, "id": "EPT9",  "status": "blocked", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
     { "number": 13, "id": "EPT10", "status": "blocked", "title": "Add Quint And TypeScript Parity Tests For First Slice" },
     { "number": 14, "id": "EPT11", "status": "blocked", "title": "Add End-To-End MCP Tracer-Bullet Tests" },
@@ -120,8 +120,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | done | EPT3 | EPT5 | Landed [projected-executable.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.ts) and [projected-executable.test.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.test.ts), mirroring the EPT3 Quint subset one-for-one in TypeScript with the same closed tags, node shapes, persistent-record payload, and Mage Armor lifecycle constants. Focused tests pin the frozen first-slice facts for Acid Splash, Second Wind, Action Surge, and Mage Armor so EPT5 can compile against the exact contract rather than looser example fixtures. | Landed on 2026-04-19. EPT5 is now unblocked. |
 | 8 | EPT5 - Build Surface-To-Projection Compiler | done | EPT2, EPT3, EPT4 | EPT6, EPT7 | Landed a unit-scoped surface-to-projection compiler plus inspectable fixture constants for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. The compiler now rejects both out-of-scope units and in-scope preserved-fact drift at the EPT5 boundary. | Landed on 2026-04-19. EPT6 and EPT7 are now unblocked. |
 | 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-research | EPT5 | EPT9, EPT10 | Research and pin one owned source for "active Mage Armor" plus one owned lifecycle hook for `target_dons_armor` before implementation. The current seams provide projected records and battle AC reads, but they do not yet provide either stored active persistent state on character sheets or a legal armor-state transition in battle. | Re-opened for research on 2026-04-19 after dual attempts showed that deriving activation from prepared spells is wrong, while a battle-only cast hook still lacks a real `target_dons_armor` transition. |
-| 10 | EPT7 - Build Projected Mechanic Interpreter | ready-for-implementation-after-light-research | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Unblocked by EPT5 on 2026-04-19. |
-| 11 | EPT8 - Route Availability And Execution Through Projected Records | blocked | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. | Blocked on interpreter. |
+| 10 | EPT7 - Build Projected Mechanic Interpreter | done | EPT5 | EPT8 | Land one closed graph walker for the executable first slice that emits reducer-consumable transitions for `Acid Splash`, `Second Wind`, and `Action Surge` without unit-id branches. The projection contract now carries explicit use-count pool identity so resource spend transitions do not need to infer pools from source ids. | Landed on 2026-04-19. EPT8 is now unblocked. |
+| 11 | EPT8 - Route Availability And Execution Through Projected Records | ready-for-implementation-after-light-research | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. Use EPT7's transitions as the sole execution contract instead of re-reading legacy payload facts. | Unblocked by EPT7 on 2026-04-19. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
 | 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Acid Splash`, `Mage Armor`, `Second Wind`, and `Action Surge`, including spell save-gate assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
 | 14 | EPT11 - Add End-To-End MCP Tracer-Bullet Tests | blocked | EPT9, EPT10 | EPT12 | Add end-to-end MCP tests for character creation/finalization, battle start, action availability, `execute_action` flows, and turn ends for the bounded scenario. | Blocked on parity-tested integrated path. |
@@ -686,7 +686,7 @@ Handoff readiness:
 
 ### Task 10 - EPT7 - Build Projected Mechanic Interpreter
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `EPT5`
 
@@ -707,10 +707,7 @@ Input:
 Output:
 
 - projected mechanic interpreter
-
-Next action:
-
-- Route projected executable nodes into battle events or reducer-consumable transitions.
+- explicit reducer-consumable transitions for activation spend, resource spend, usage-limit marking, save-gate outcomes, damage, healing, and restricted extra-action grants
 
 Verification requirements:
 
@@ -721,11 +718,13 @@ Verification requirements:
 
 Handoff readiness:
 
-- Unblocked by EPT5 on 2026-04-19.
+- Landed on 2026-04-19.
+- The interpreter stays generic: no unit-id dispatch, no legacy payload wiring, no state mutation.
+- `PRGUseCount` now carries explicit pool identity (`PRPSecondWind`, `PRPActionSurge`) so EPT8 can spend the right pool without inferring it from source ids.
 
 ### Task 11 - EPT8 - Route Availability And Execution Through Projected Records
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT7`
 
@@ -761,7 +760,8 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT7.
+- Unblocked by EPT7 on 2026-04-19.
+- Use the projected interpreter transitions as the execution input; do not reconstitute spell or feature behavior from legacy runtime payloads.
 
 ### Task 12 - EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario
 

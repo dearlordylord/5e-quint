@@ -101,6 +101,12 @@ export const PROJECTED_RESOURCE_AXES = [
 ] as const satisfies ReadonlyArray<string>;
 export type ProjectedResourceAxis = (typeof PROJECTED_RESOURCE_AXES)[number];
 
+export const PROJECTED_RESOURCE_POOLS = [
+  "PRPSecondWind",
+  "PRPActionSurge",
+] as const satisfies ReadonlyArray<string>;
+export type ProjectedResourcePool = (typeof PROJECTED_RESOURCE_POOLS)[number];
+
 export interface ProjectedThresholdUseCapTier {
   readonly atLevel: number;
   readonly value: number;
@@ -133,6 +139,7 @@ export type ProjectedResourceGate =
   | {
       readonly tag: "PRGUseCount";
       readonly value: {
+        readonly pool: ProjectedResourcePool;
         readonly cap: ProjectedResourceCap;
         readonly resetCadence: ProjectedResetCadence;
       };

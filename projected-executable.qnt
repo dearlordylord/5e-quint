@@ -95,6 +95,10 @@ module projectedExecutable {
   type ProjectedResourceAxis =
     | PRAClass
 
+  type ProjectedResourcePool =
+    | PRPSecondWind
+    | PRPActionSurge
+
   type ProjectedThresholdUseCapTier = {
     atLevel: int,
     value: int,
@@ -120,6 +124,7 @@ module projectedExecutable {
   type ProjectedResourceGate =
     | PRGNone
     | PRGUseCount({
+        pool: ProjectedResourcePool,
         cap: ProjectedResourceCap,
         resetCadence: ProjectedResetCadence,
       })

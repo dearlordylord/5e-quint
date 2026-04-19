@@ -53,6 +53,7 @@ export const FIGHTER_SECOND_WIND_PROJECTION: ProjectedExecutableAction = {
   resourceGate: {
     tag: "PRGUseCount",
     value: {
+      pool: "PRPSecondWind",
       cap: {
         tag: "PRCThresholdTiers",
         value: {
@@ -106,6 +107,7 @@ export const FIGHTER_ACTION_SURGE_L2_PROJECTION: ProjectedExecutableAction = {
   resourceGate: {
     tag: "PRGUseCount",
     value: {
+      pool: "PRPActionSurge",
       cap: {
         tag: "PRCThresholdTiers",
         value: {
