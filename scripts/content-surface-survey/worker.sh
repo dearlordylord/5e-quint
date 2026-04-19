@@ -228,6 +228,7 @@ invoke_backend() {
           "$CLAUDE_CMD" --model "$CLAUDE_MODEL" --print --output-format json \
             --dangerously-skip-permissions \
             --strict-mcp-config \
+            --exclude-dynamic-system-prompt-sections \
             < "$prompt_path" \
             > "$backend_log" 2>&1
       )
