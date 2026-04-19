@@ -1,0 +1,75 @@
+{
+  "description": "You conjure spirits from the Elemental Planes that flit around you in a 15-foot Emanation for the duration. Until the spell ends, any attack you make deals an extra 2d8 damage when you hit a creature in the Emanation. This damage is Acid, Cold, Fire, or Lightning (your choice when you make the attack). In addition, the ground in the Emanation is Difficult Terrain for your enemies.",
+  "id": "conjure_minor_elementals",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "self"
+      },
+      "shape": {
+        "kind": "emanation",
+        "radiusFeet": 15
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 4,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 4
+          },
+          "damageType": {
+            "kind": "choice",
+            "label": "elemental damage type (chosen per attack)",
+            "options": [
+              "acid",
+              "cold",
+              "fire",
+              "lightning"
+            ]
+          },
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_caster_attack_hit"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "conjuration"
+  },
+  "name": "Conjure Minor Elementals",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Conjure Minor Elementals"
+  }
+}

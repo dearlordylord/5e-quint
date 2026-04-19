@@ -1,1 +1,16 @@
-{"unit_slug":"disguise_self","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "disguise_self",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "alter_appearance",
+      "justification": "Disguise Self modifies the caster's own appearance illusively — clothing, armor, weapons, and body shape — for a timed duration. No existing atom models personal appearance modification. The closest candidate, `create_illusion`, covers free-standing insubstantial projections (Silent Image, Minor Illusion) with a `maxSize: Size` field that doesn't map to wrapping the caster's own form. Using `create_illusion` would misrepresent the rule: the illusion is not a separate object in space but an overlay on the caster's appearance.",
+      "evidence": "You make yourself—including your clothing, armor, weapons, and other belongings on your person—look different until the spell ends. You can seem 1 foot shorter or taller and can appear heavier or lighter. You must adopt a form that has the same basic arrangement of limbs as you have."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell has two mechanical layers: (1) the appearance-change illusion itself, and (2) a disbelief check (Study action + Int Investigation vs spell save DC). The disbelief mechanic IS expressible via `ongoing_effect` with `on_creature_studies` trigger and `ability_check_gate` ongoing effect. However, the core appearance-change effect has no atom. `alter_appearance` is explicitly listed in TAXONOMY_atoms_graph.md §12 as genuinely new atom pressure not in v4. The encoding cannot proceed without it — there is no honest way to express 'caster's appearance is illusively modified' with the current atom inventory. Duration is timed (not concentration), attachment is self."
+}

@@ -1,1 +1,28 @@
-{"unit_slug":"clairvoyance","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "clairvoyance",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "create_sensor",
+      "justification": "Clairvoyance creates an intangible, invulnerable remote sensing point — distinct from create_object (physical matter with AC/HP) and from any existing attachment. The surface already acknowledges spell sensors via AttachmentRangeOrigin='spell_sensor' (used by Crystal Ball of Mind Reading to measure range FROM an existing sensor), but no atom exists for the spell that CREATES the sensor. Needed as an effect atom in an ongoing_effect family.",
+      "evidence": "You create an Invisible sensor within range in a location familiar to you... The intangible, invulnerable sensor remains in place for the duration."
+    },
+    {
+      "kind": "new_atom",
+      "name": "remote_perception",
+      "justification": "The caster perceives through the sensor using normal senses as if present in its space. This is not grant_sense (which adds a new sense type from the caster's location) and not detect (which scans for magical properties in a radius). Remote perception is a divination-specific capability requiring its own atom: a chosen sense (seeing or hearing) applied from a remote vantage point.",
+      "evidence": "You can use the chosen sense through the sensor as if you were in its space. As a Bonus Action, you can switch between seeing and hearing."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastTimeEffectModeChoice with perception_toggle payload",
+      "justification": "The cast-time choose-seeing-or-hearing plus Bonus Action switch is structurally similar to CastTimeEffectModeChoice (used by Alter Self) and on_caster_spends_action with bonus_action cost. However, the payload of each mode is a remote_perception atom that does not yet exist, so the mode-switch infrastructure alone cannot express this.",
+      "evidence": "When you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space. As a Bonus Action, you can switch between seeing and hearing."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the correct structural container (concentration, up to 10 minutes, persistent sensor). The 10-minute casting time is already supported via CastingTime { kind: 'minutes', amount: 10, ritual: false }. The spell range '1 mile' has no existing Range variant (only point feet / touch / self) — this is a minor surface_widening secondary gap. The core blocker is the absence of create_sensor and remote_perception atoms. No dhall/json authored because no honest encoding exists."
+}

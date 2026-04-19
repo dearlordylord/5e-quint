@@ -1,1 +1,48 @@
-{"unit_slug":"conjure_woodland_beings","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "conjure_woodland_beings",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "post_action_window",
+    "save_gate",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_action_as_bonus_action",
+      "justification": "Conjure Woodland Beings grants the caster the ability to take the Disengage action as a Bonus Action for the spell's duration. No v4 atom covers lowering the action-economy cost of a standard action to a bonus action. deny_opportunity_attack is not equivalent: Disengage prevents triggering opportunity attacks when leaving threatened squares on any movement, not just a single OA suppression. grant_extra_action only grants an additional main-action quota, not a bonus-action-cost variant of an existing action.",
+      "evidence": "In addition, you can take the Disengage action as a Bonus Action for the spell's duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.once_per_turn_dedup_predicate",
+      "justification": "Conjure Woodland Beings (and Spirit Guardians, Web, Cloudkill) all include the clause 'A creature makes this save only once per turn.' The current OngoingOperation has no predicate variant for cross-trigger dedup within a single turn. Without this, encoding both on_creature_enters_area and on_creature_ends_turn_in_area triggers for the same save_gate would incorrectly imply two independent saves are possible per turn.",
+      "evidence": "A creature makes this save only once per turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingEffect.save_gate.optional",
+      "justification": "The save in Conjure Woodland Beings is triggered at the caster's discretion: 'you can force that creature to make a Wisdom saving throw.' The save is not mandatory on every qualifying trigger. The current OngoingEffect.save_gate has no optional flag; it always fires when the trigger condition is met.",
+      "evidence": "you can force that creature to make a Wisdom saving throw"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Partial encoding: the entry-triggered Wisdom save_gate (5d8 Force, half on success, slot-scaled +1d8 per slot above 4) was encoded using on_creature_enters_area. The on_creature_ends_turn_in_area sibling trigger was deferred — without a once-per-turn dedup predicate, including both would misrepresent RAW. The optional save (caster chooses whether to force it) is encoded as mandatory; this is a surface_widening gap noted in proposals. The Disengage-as-Bonus-Action grant is entirely omitted due to the atom_widening gap. Typecheck passes; tracer emits a clean graph."
+}

@@ -1,1 +1,28 @@
-{"unit_slug":"contagion","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "contagion",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RepeatSaveSpec.successThreshold / failureThreshold",
+      "justification": "Contagion's repeat save resolves only after accumulating 3 successes (spell ends) or 3 failures (7-day lock-in). The existing RepeatSaveSpec only encodes binary single-success termination (onSuccess: 'ends_on_target'). A threshold variant is needed.",
+      "evidence": "The target must repeat the saving throw at the end of each of its turns until it gets three successes or failures. If the target succeeds on three of these saves, the spell ends on the target. If the target fails three of the saves, the spell lasts for 7 days on it."
+    },
+    {
+      "kind": "new_atom",
+      "name": "on_condition_removal_attempt (OngoingTrigger variant)",
+      "justification": "The poison-removal resistance requires an ongoing trigger that fires when an external effect attempts to remove a specific condition from the target. No such trigger exists in the v4 OngoingTrigger vocabulary. The closest is 'on_attached_damaged' but condition-removal interception is a distinct semantic event.",
+      "evidence": "Whenever the Poisoned target receives an effect that would end the Poisoned condition, the target must succeed on a Constitution saving throw, or the Poisoned condition doesn't end on it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "saveAbilityFilter CastTimeChoice<Ability>",
+      "justification": "The spell asks the caster to choose one ability at cast time; while Poisoned, the target has Disadvantage on saves made with that chosen ability. The modify_roll_advantage atom's saveAbilityFilter only accepts ReadonlyNonEmptyArray<Ability> (a fixed filter), not a cast-time choice. A CastTimeChoice<Ability> variant is needed on this field.",
+      "evidence": "choose one ability when you cast the spell. While Poisoned, the target has Disadvantage on saving throws made with the chosen ability."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Three distinct gaps prevent honest encoding. (1) The 3-success/3-failure accumulation mechanic is the structural core of the spell and cannot be expressed with RepeatSaveSpec.onSuccess='ends_on_target', which terminates on a single success. (2) The poison-removal resistance is a genuinely new trigger concept: 'intercept and gate an incoming condition-removal effect'. (3) The cast-time ability selection for the save disadvantage rider needs CastTimeChoice<Ability> on saveAbilityFilter. No Dhall authored; no JSON generated."
+}

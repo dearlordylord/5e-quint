@@ -1,1 +1,57 @@
-{"unit_slug":"cloudkill","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "cloudkill",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "half_damage",
+    "post_action_window",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "area_is_heavily_obscured",
+      "justification": "Cloudkill's fog makes its area Heavily Obscured — a distinct SRD 5.2.1 visibility tier (Rules Glossary: creatures in a Heavily Obscured area have the Blinded condition). area_is_difficult_terrain exists for movement cost; no atom covers the Heavily Obscured tier. These are independent mechanics and cannot be conflated.",
+      "evidence": "Its area is Heavily Obscured."
+    },
+    {
+      "kind": "new_atom",
+      "name": "drift_area_attachment",
+      "justification": "The sphere drifts 10 feet away from the caster automatically at the start of each of the caster's turns. This is mandatory (no action cost, no choice) and directional ('away from you'). reposition_attachment models an optional caster-triggered repositioning with no direction. Neither reposition_attachment nor on_caster_turn_start + reposition_attachment honestly encodes automatic directional drift with no action cost.",
+      "evidence": "The Sphere moves 10 feet away from you at the start of each of your turns."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_area_moves_onto_creature",
+      "justification": "The save fires when the sphere moves into a creature's space — the area approaching the creature, not the creature entering the area. on_creature_enters_area covers only the case where the creature moves into the area. These are distinct triggers: a stationary creature in the path of a drifting sphere takes damage. Without drift_area_attachment and this trigger, the interaction is unrepresentable.",
+      "evidence": "A creature must also make this save when the Sphere moves into its space."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.once_per_turn_dedup",
+      "justification": "The spell explicitly caps saves to once per turn per creature across all three triggers (initial, enters, ends-turn-in). The current OngoingOperation surface has no deduplication field — multiple operations can fire independently on the same creature in the same turn. Same gap already noted for Blade Barrier and Spirit Guardians.",
+      "evidence": "A creature makes this save only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The core damage mechanic encodes cleanly: ongoing_effect family, area attachment (sphere 20 ft, point_within_range), initialPhase save_gate, on_creature_enters_area and on_creature_ends_turn_in_area operations, slot-linear upcast. Typecheck passes, tracer runs. Four mechanics omitted: (1) area_is_heavily_obscured — requires a new atom; (2) mandatory directional sphere drift — requires a new atom or significant surface_widening on reposition_attachment; (3) 'sphere moves into creature's space' trigger — requires a new OngoingTrigger variant; (4) once-per-turn dedup — requires a new OngoingOperation field (same gap as Blade Barrier). The drift mechanic is the most strategically significant gap: without it the trace shows a static sphere, misrepresenting how the spell threatens movement corridors."
+}

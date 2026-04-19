@@ -1,1 +1,34 @@
-{"unit_slug":"demiplane","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "demiplane",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "create_portal",
+      "justification": "Demiplane creates a traversable two-way door connecting the material plane to a persistent extradimensional room. This is mechanically distinct from transport_exile (one-way involuntary exile), container_storage (item-holding containers, no creature traversal), and create_object (creates an inert object with no extradimensional destination). A portal atom needs to model: the door object on the material plane, the extradimensional destination space, and the ability for creatures to move voluntarily through in both directions.",
+      "evidence": "You create a shadowy Medium door on a flat solid surface that you can see within range. This door can be opened and closed, and it leads to a demiplane that is an empty room 30 feet in each dimension."
+    },
+    {
+      "kind": "new_atom",
+      "name": "create_extradimensional_space",
+      "justification": "The demiplane is a persistent extradimensional room (30ft cube) that can hold objects and creatures, persists between castings, and survives spell end for its contents. This differs from container_storage (passive item storage profile with weight/volume caps, no creature habitation) and from transport_exile destinations (creatures exiled to a plane don't imply the caster created that plane). The demiplane is a player-authored persistent space.",
+      "evidence": "a demiplane that is an empty room 30 feet in each dimension, made of wood or stone (your choice) ... any objects inside the demiplane remain there"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger: target_shunted_from_extradimensional_space",
+      "justification": "When the door vanishes on spell end, creatures inside are force-moved to the closest unoccupied space outside and gain the Prone condition. No existing DurationEndTrigger models a lifecycle cleanup effect applied to creatures inside an extradimensional space. The existing end triggers (target_makes_attack_roll, target_takes_damage, etc.) are early-end predicates, not on-end effect delivery.",
+      "evidence": "Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door's former space."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastTimeChoice: dynamic_self_reference (connect to prior casting)",
+      "justification": "The cast-time routing choice (create new demiplane OR connect to a specific prior casting of this spell) requires referencing a dynamically identified prior spell instance. CastTimeEffectModeChoice requires a fixed enumerable options list, but the 'existing demiplane' option is a runtime reference to a specific past casting that cannot be enumerated at content-authoring time.",
+      "evidence": "each time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The payload family exists (activation spell with a direct phase, 1-hour timed duration). The door object itself could be partially encoded with create_object. The blocking gap is the extradimensional traversable space mechanic and the portal semantics — neither transport_exile nor container_storage captures voluntary bidirectional traversal to a persistent room the caster owns. The cast-time routing to a dynamic prior-casting reference is also inexpressible with the closed CastTimeEffectModeChoice options list."
+}

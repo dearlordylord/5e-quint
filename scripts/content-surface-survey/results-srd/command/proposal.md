@@ -1,78 +1,105 @@
-# Proposal: Command (surface_widening)
+# Proposal: Surface gaps for Command (srd-5.2.1)
 
-## Unit
+## Classification: `atom_widening`
 
-**Command** — Level 1 Enchantment spell (SRD 5.2.1)
+Command is a Level 1 Enchantment spell. Its structure is a Wisdom save gate with a cast-time choice of 5 command options that execute on the target's next turn. Two of the five commands (Drop, Grovel) map to existing atoms cleanly; three require new atoms or variants.
+
+---
 
 ## What fits
 
-The spell maps cleanly onto `activation` family with a `save_gate` phase:
+| Element | Encoding |
+|---|---|
+| Wisdom save gate | `save_gate`, ability: "wis", dc: caster_spell_save_dc |
+| Target (one creature, 60 ft) | `attachment.target`, selection mode: "one" |
+| Upcast (+1 target/slot above 1) | `choose_up_to` with `SlotScaling<number>` |
+| Drop → drop held items | `force_drop_item` |
+| Grovel → Prone condition | `apply_condition prone` |
 
-- Casting time: `action`
-- Range: `point`, 60 ft
-- Duration: `instantaneous`
-- Phase: WIS save, DC = caster spell save DC, target selection fits `choose_up_to` with slot-scaling (Bless pattern)
-- On success: `none`
+---
 
-The multi-target upcasting (+1 target per slot above 1) fits `SlotScaling<number>` exactly as Bless uses it.
+## Gap 1 — No deferred execution timing for non-damage effects
 
-## What doesn't fit
+All five commands execute **on the target's next turn**, not immediately. The surface has `damage.timing = "end_of_next_turn"` for deferred damage, but there is no general deferred-execution wrapper for behavioral/condition effects.
 
-### Gap 1: `apply_condition` absent from spell `Effect`
+**Proposed widening**: Extend the deferred `timing` field (currently damage-only) to the general `EffectAtom` wrapper, or introduce a `deferred_to_next_turn` wrapper atom that contains a payload EffectAtom.
 
-The mastery surface has `apply_condition` in `SaveGateRiderResult`, but the spell surface `Effect` union only allows:
+**Evidence**: "The target must succeed on a Wisdom saving throw or follow the command on its next turn."
 
-```typescript
-export type Effect = DamageEffect | NoneEffect;
+---
+
+## Gap 2 — No cast-time mode choice inside save_gate.onFail
+
+The 5 commands are a cast-time selection over mutually exclusive behavioral branches. The surface has `CastTimeEffectModeChoice` but it only appears inside `ActivationPhase.direct`, not as a standalone `EffectAtom` composable inside `save_gate.onFail`.
+
+**Proposed widening**: Promote `CastTimeEffectModeChoice` to an `EffectAtom` variant (e.g., `{ kind: "cast_time_mode_choice", ... }`) so it can appear wherever EffectAtom appears, including save branches.
+
+---
+
+## Gap 3 — No goal-directed forced movement atoms (Approach, Flee)
+
+**Approach**: "The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you."
+
+**Flee**: "The target spends its turn moving away from you by the fastest available means."
+
+`force_move` takes a fixed direction (`push` | `pull` | `slide`) and a fixed distance in feet. It cannot express:
+- "move toward [dynamic position] by shortest path"
+- "spend your full movement moving away from [dynamic position]"
+- The conditional turn-end (stop if within 5 feet)
+
+**Proposed atoms**:
+- `forced_move_toward`: `{ kind: "forced_move_toward", targetRef: "caster", stopWithinFeet?: number }` — target uses its movement to approach the referenced creature by shortest path, optionally stopping early.
+- `forced_move_away`: `{ kind: "forced_move_away", targetRef: "caster" }` — target uses all available movement to maximize distance from the referenced creature.
+
+---
+
+## Gap 4 — No turn-level action economy restriction (Halt)
+
+**Halt**: "On its turn, the target doesn't move and takes no action or Bonus Action."
+
+This is not `apply_condition incapacitated`. Per SRD Rules Glossary, Incapacitated prevents Actions AND Reactions. Halt explicitly restricts actions and bonus actions but does **not** restrict reactions. No existing atom covers this configuration:
+
+- `set_speed { feet: 0 }` handles the movement restriction.
+- But "no action or bonus action while reactions remain available" has no atom.
+
+**Proposed atom**: `restrict_turn_economy`: `{ kind: "restrict_turn_economy", noAction: true, noBonusAction: true, noMovement: true }` — a turn-scoped restriction on specific action-economy slots, distinct from the condition vocabulary.
+
+---
+
+## Encoding sketch (if all gaps were filled)
+
+```
+activation spell, level 1, enchantment
+castingTime: action
+range: 60 ft point
+components: V only
+duration: instantaneous
+
+phases:
+  save_gate:
+    attachment: target (one creature)
+    ability: wis
+    dc: caster_spell_save_dc
+    onFail:
+      cast_time_mode_choice (label: "Choose a command"):
+        Approach: deferred_to_next_turn { forced_move_toward caster, stop within 5 ft }
+        Drop:     deferred_to_next_turn { force_drop_item }
+        Flee:     deferred_to_next_turn { forced_move_away caster }
+        Grovel:   deferred_to_next_turn { apply_condition prone }
+        Halt:     deferred_to_next_turn { restrict_turn_economy noAction noBonusAction noMovement }
+    onSuccess: none
+
+upcast: target selection scales to choose_up_to (SlotScaling base=1, +1/slot above 1)
 ```
 
-Grovel requires `{ kind: "apply_condition"; condition: "prone" }` on a failed save. This cannot typecheck.
+---
 
-**Widening needed:** Add `apply_condition` to spell `Effect` (same shape as in mastery `SaveGateRiderResult`).
+## Atoms needed (summary)
 
-### Gap 2: `force_move` absent from spell `Effect`
-
-Approach and Flee impose directed movement on the target. The v4 atom `force_move` covers this semantically, but it is not present in the surface `Effect` union.
-
-**Widening needed:** Add a `force_move` variant to spell `Effect`. Minimally:
-```typescript
-{ kind: "force_move"; direction: "toward_caster" | "away_from_caster"; stopWithin?: number }
-```
-
-### Gap 3: No `restrict_turn_on_target` in spell `Effect`
-
-Halt suppresses the target's movement, action, and bonus action on its turn. The existing `restrict_action_set` atom targets the *caster's* extra action grant (Action Surge pattern) — it does not model restricting another creature's own turn.
-
-**Widening needed:** Either a new `restrict_turn` variant in `Effect`, or a generalized `restrict_action_set` with a `target` field distinguishing self vs. creature. Possibly:
-```typescript
-{ kind: "restrict_turn"; noMove: boolean; noAction: boolean; noBonusAction: boolean }
-```
-
-### Gap 4: No `drop_held_items` effect
-
-Drop forces the target to release held items. Nothing in v4 atoms or the surface covers "force release of a held item." This may be a new atom (`drop_held_item`) or could be expressed as a constrained variant of `alter_item_kind`, but neither currently exists in the surface.
-
-**Widening needed:** New effect variant. This is narrow — single-spell pressure — so it may warrant deferral, but it is unrepresentable today.
-
-### Gap 5: Cast-time command choice has no surface representation
-
-Command's five options are chosen by the caster **before the save resolves**, not as a post-save branch. The current surface has no mechanism for "choose one of N discrete effect variants at cast time." This is distinct from:
-- Slot-level scaling (linear parameter, not discrete branching)
-- Save branches (post-resolution, not caster choice)
-- Phase sequencing (sequential, not optioned)
-
-**Widening needed:** A `cast_time_choice` mechanism on `ActivationMechanics` — or alternatively, each command is treated as a separate authored unit sharing the same spell header. The latter is the simpler surface path but loses the SRD unity.
-
-## Suggested minimal path to `clean`
-
-1. Add `apply_condition` to spell `Effect` (enables Grovel, also unblocks other condition spells like Blindness/Deafness)
-2. Add `force_move` to spell `Effect` (enables Approach + Flee)
-3. Decide on Halt encoding (restrict_turn vs. new atom)
-4. Decide on Drop encoding (new atom or deferred)
-5. Choose between: (a) model Command as 5 separate authored units sharing a header, or (b) add a `cast_time_choice` Effect variant
-
-Option (a) avoids Gap 5 at the cost of authoring 5 records. Option (b) adds a new surface shape but captures the SRD structure faithfully.
-
-## Classification
-
-`surface_widening` — the `activation`/`save_gate` family exists; the blocking gap is the `Effect` union being too narrow.
+| Gap | Kind | Name |
+|---|---|---|
+| Deferred next-turn execution | `new_variant` | Extend `EffectAtom` with deferred timing (non-damage) |
+| Cast-time choice inside save branch | `new_variant` | `cast_time_mode_choice` as EffectAtom |
+| Approach: goal-directed movement toward | `new_atom` | `forced_move_toward` |
+| Flee: goal-directed movement away | `new_atom` | `forced_move_away` |
+| Halt: action+bonus-action restriction without reaction block | `new_atom` | `restrict_turn_economy` |

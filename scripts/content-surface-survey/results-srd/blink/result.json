@@ -1,1 +1,28 @@
-{"unit_slug":"blink","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "blink",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "on_caster_turn_end",
+      "justification": "Blink fires 'at the end of each of your turns' — a turn-end trigger on the caster. OngoingTrigger has on_caster_turn_start and on_attached_turn_start but no turn-end counterparts. The distinction is mechanically meaningful: turn-end fires after the creature's last action, turn-start fires before the first.",
+      "evidence": "Roll 1d6 at the end of each of your turns for the duration."
+    },
+    {
+      "kind": "new_variant",
+      "name": "random_table in OngoingEffect",
+      "justification": "The d6 roll with threshold outcome (4-6 = transport, 1-3 = nothing) is a random table resolved inside an ongoing operation. OngoingEffect supports save_gate, attack_roll, ability_check_gate, and EffectAtom variants, but not a random_table variant. The random_table phase shape exists on ActivationPhase but is not carried into OngoingEffect.",
+      "evidence": "Roll 1d6 at the end of each of your turns for the duration. On a roll of 4-6, you vanish from your current plane of existence and appear in the Ethereal Plane."
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_attached_turn_end",
+      "justification": "For symmetry and future coverage, the turn-end trigger family should include on_attached_turn_end (parallel to on_attached_turn_start). Blink's self-attachment means on_caster_turn_end covers this specific case, but the general gap affects any self/target-attached ongoing effect that fires at turn end.",
+      "evidence": "Roll 1d6 at the end of each of your turns for the duration."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The transport_exile (ethereal_plane) and teleport atoms both exist and would cover the core planar movement. The return-at-start-of-next-turn mechanic could be encoded as a second ongoing operation with trigger on_caster_turn_start and effect teleport (unoccupied_visible_space, 10 ft), though the conditional 'only if currently on Ethereal Plane' cannot be expressed — that predicate references planar location which is outside the current predicate vocabulary. The perception clause while on the Ethereal Plane (see 60 ft into material plane in gray) is narrative/DM-managed and correctly omitted. Primary blockers are the missing turn-end trigger and the missing random_table variant in OngoingEffect."
+}

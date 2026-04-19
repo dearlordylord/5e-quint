@@ -1,0 +1,118 @@
+{
+  "description": "A storm cloud appears at a point within range that you can see above yourself. It takes the shape of a Cylinder that is 10 feet tall with a 60-foot radius. When you cast the spell, choose a point you can see under the cloud. A lightning bolt shoots from the cloud to that point. Each creature within 5 feet of that point makes a Dexterity saving throw, taking 3d10 Lightning damage on a failed save or half as much damage on a successful one. Until the spell ends, you can take a Magic action to call down lightning in that way again, targeting the same point or a different one. Using a Higher-Level Spell Slot: The damage increases by 1d10 for each spell slot level above 3.",
+  "id": "call_lightning",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "point_within_range"
+      },
+      "shape": {
+        "heightFeet": 10,
+        "kind": "cylinder",
+        "radiusFeet": 60
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 5
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "amount": {
+          "axis": "slot",
+          "base": {
+            "dice": 3,
+            "dieSize": 10
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 3
+        },
+        "damageType": "lightning",
+        "kind": "damage"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 3,
+    "operations": [
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 3,
+                "dieSize": 10
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 3
+            },
+            "damageType": "lightning",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Call Lightning",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Call Lightning"
+  }
+}

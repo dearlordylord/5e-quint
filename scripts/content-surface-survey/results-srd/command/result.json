@@ -1,1 +1,40 @@
-{"unit_slug":"command","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "command",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "forced_movement_toward",
+      "justification": "The Approach command requires the target to move toward the caster by the shortest/most direct route, stopping if it comes within 5 feet. This is goal-directed movement behavior that cannot be expressed by force_move (which takes a direction enum of push/pull/slide and a fixed distance). Approach requires pathfinding semantics against a dynamic position.",
+      "evidence": "The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you."
+    },
+    {
+      "kind": "new_atom",
+      "name": "forced_movement_away",
+      "justification": "The Flee command requires the target to move away from the caster by the fastest available means for its full turn. Like Approach, this is goal-directed movement that force_move cannot express — there is no 'away from' direction, no 'spend your full movement' semantics, and no pathfinding to the furthest reachable point.",
+      "evidence": "The target spends its turn moving away from you by the fastest available means."
+    },
+    {
+      "kind": "new_atom",
+      "name": "restrict_turn_economy",
+      "justification": "The Halt command prevents the target from moving AND from taking an action or bonus action on its turn, while explicitly NOT preventing reactions. This is distinct from apply_condition incapacitated (which also blocks reactions per SRD Rules Glossary). No existing atom targets the action+bonus-action slots without touching the reaction slot.",
+      "evidence": "On its turn, the target doesn't move and takes no action or Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom deferred timing for non-damage effects",
+      "justification": "All five Command effects (Approach, Drop, Flee, Grovel, Halt) execute on the target's NEXT turn, not immediately. The only deferred timing in the surface is damage.timing = 'end_of_next_turn'. A general deferred-execution wrapper for non-damage EffectAtoms is needed to express Command's core mechanic.",
+      "evidence": "The target must succeed on a Wisdom saving throw or follow the command on its next turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastTimeEffectModeChoice as EffectAtom",
+      "justification": "Command's 5 options are a cast-time selection among distinct behavioral branches, which is exactly CastTimeEffectModeChoice. However, that type only exists in ActivationPhase.direct, not as a standalone EffectAtom usable inside save_gate.onFail. Command needs mode-choice composition inside a save branch.",
+      "evidence": "Choose the command from these options: Approach / Drop / Flee / Grovel / Halt"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Two of the five commands (Drop via force_drop_item and Grovel via apply_condition prone) map cleanly to existing atoms. The core encoding obstacle is threefold: (1) goal-directed forced movement for Approach and Flee has no atom; (2) Halt's turn-level action+bonus-action restriction is not incapacitated; (3) all five commands execute on the target's next turn, and no general deferred-execution timing exists for non-damage atoms. Even if all five effects were encodeable individually, there is no mechanism to wrap them as a cast-time choice inside a save_gate.onFail. The upcast target scaling (+1 creature per slot above 1) would encode cleanly via SlotScaling<number> on choose_up_to."
+}

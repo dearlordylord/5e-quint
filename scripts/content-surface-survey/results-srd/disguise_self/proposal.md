@@ -1,77 +1,97 @@
-# Proposal: Disguise Self — atom_widening
+# Proposal: `alter_appearance` atom — Disguise Self
 
-## What fits
+## Unit
 
-Disguise Self maps cleanly to the `ongoing_effect` family. Every header field is expressible today:
+**Disguise Self** — SRD 5.2.1, Illusion L1, Spells/Descriptions-A-D#Disguise Self
 
-| Field | Value |
-|---|---|
-| `family` | `"ongoing_effect"` |
-| `level` | `1` |
-| `school` | `"illusion"` |
-| `castingTime` | `{ kind: "action" }` |
-| `range` | `{ kind: "self" }` |
-| `components` | `{ v: true, s: true, m: false }` |
-| `duration` | `{ kind: "timed", value: { unit: "hour", amount: 1 } }` |
-| `attachment` | `{ kind: "self" }` |
+## Gap
 
-## What doesn't fit
+The spell's core effect — modify the caster's own appearance as a timed illusion — has no atom in the current surface. `create_illusion` is the only candidate but is the wrong shape:
 
-### Blocker 1 — missing `OngoingOperation` variant and v4 atom
+| Property | `create_illusion` | Disguise Self |
+|---|---|---|
+| Subject | Free-standing projected object | Caster's own body and worn/carried items |
+| `maxSize` field | Size of the illusion object | N/A — the illusion wraps the caster's form |
+| Channels | Visual, sound, smell, temperature | Visual only |
+| SRD examples | Silent Image, Minor Illusion, Major Image | — |
 
-`OngoingOperation = RollModifierOperation | DamageOnHitOperation`
+Using `create_illusion` with `attachment: { kind: "self" }` would emit a misleading trace implying a size-bounded free-standing object rather than a personal appearance overlay.
 
-The spell's effect is visual appearance modification: the caster (and gear) looks different for 1 hour. Neither existing operation variant covers this.
+The TAXONOMY (§12) already lists `alter_appearance (2)` as genuinely new atom pressure not in v4.
 
-In the v4 atom taxonomy there is no effect atom for creature appearance modification. `alter_item_kind` is scoped to items only. A new atom — tentatively `alter_appearance` — is needed.
-
-**Proposed surface shape (sketch):**
+## Proposed atom
 
 ```typescript
-export type AlterAppearanceOperation = {
-  readonly kind: "alter_appearance";
-  readonly constraints: {
-    readonly sameLimbArrangement: true;
-    readonly maxHeightDeltaFeet: number;       // 1 for Disguise Self
-  };
-  readonly failsPhysicalInspection: boolean;  // true for Disguise Self
-  readonly piercingCheck?: PiercingCheck;
-};
-
-// Where PiercingCheck encodes the "Study + INT Investigation vs spell save DC" pattern:
-export type PiercingCheck = {
-  readonly requiredAction: "study";
-  readonly ability: Ability;                  // "int"
-  readonly skill: string;                     // "investigation"
-  readonly dc: DcSource;                      // { kind: "caster_spell_save_dc" }
-};
+| {
+    readonly kind: "alter_appearance";
+    // Whether the illusion is visually insubstantial (fails physical inspection).
+    // Disguise Self: true (objects pass through additions, no tactile feel).
+    readonly insubstantial: boolean;
+    // Optional constraint on how much the form may deviate from the caster's base form.
+    // Disguise Self: "same_basic_limb_arrangement" — can shift height ±1 ft, weight
+    // appearance, clothing/equipment look, but can't add or remove limb arrangements.
+    readonly formConstraint?: "same_basic_limb_arrangement";
+  }
 ```
 
-### Blocker 2 — detection mechanic needs a surface shape
+## Secondary mechanic (already encodable)
 
-The `ability_check` resolution atom exists in v4. But the surface has no grammar for a *passive*, *creature-initiated* piercing check that runs against an ongoing illusion effect. The current resolution atoms (`attack_roll`, `save_gate`, `ability_check`) are all attacker-initiated at cast time, not observer-initiated post-cast.
-
-The `piercingCheck` rider on `AlterAppearanceOperation` above is the minimal surface addition needed to capture this. Alternatively, a dedicated `PiercingCheck` could be a top-level member of `OngoingOperation` if other spells (Major Image, Silent Image, etc.) share the pattern — but Disguise Self is the current pressure case.
-
-## v4 atom inventory impact
-
-| Atom | Action |
-|---|---|
-| `alter_appearance` | **new** effect atom — visual appearance modification of a creature, does not change underlying physical properties, fails physical inspection |
-
-All other atoms in the graph for this unit (`activate`, `persist`, `expire`, `action_quota`, `spell_slot`, `self`) already exist in v4.
-
-## Tracer graph shape (if widening lands)
+The disbelief check IS expressible with the current surface:
 
 ```
-spell_root → activate → action_quota (consumes)
-                      → spell_slot ≥ 1 (consumes)
-                      → persist → expire (1 hour)
-                      → self (attaches_to)
-                      → alter_appearance (grants) → self (attaches_to)
-                                                  → ability_check (piercing check, observer-initiated)
+ongoing_effect
+  attachment: { kind: "self" }
+  operations:
+    - trigger: { kind: "on_creature_studies" }
+      effect:
+        kind: "ability_check_gate"
+        ability: "int"
+        dc: { kind: "caster_spell_save_dc" }
+        onPass: { kind: "none" }   // creature sees through the disguise (DM agenda)
+        onFail: { kind: "none" }   // disguise holds
 ```
 
-## Confidence
+The pass/fail outcomes are DM-agenda (the creature perceiving the disguise vs not), but the gate itself is mechanical.
 
-**High.** The family fit is unambiguous; the single gap is the missing operation/atom for appearance modification.
+## Encoding once widened
+
+```dhall
+{ kind = "spell"
+, id = "disguise_self"
+, name = "Disguise Self"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-A-D#Disguise Self" }
+, description = "..."
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 1
+    , school = "illusion"
+    , castingTime = { kind = "action" }
+    , range = { kind = "self" }
+    , components = { v = True, s = True, m = False }
+    , duration = { kind = "timed", value = { unit = "hour", amount = 1 } }
+    , attachment = { kind = "self" }
+    , operations =
+        [ { trigger = { kind = "passive" }
+          , effect =
+              { kind = "alter_appearance"
+              , insubstantial = True
+              , formConstraint = Some "same_basic_limb_arrangement"
+              }
+          }
+        , { trigger = { kind = "on_creature_studies" }
+          , effect =
+              { kind = "ability_check_gate"
+              , ability = "int"
+              , dc = { kind = "caster_spell_save_dc" }
+              , onPass = { kind = "none" }
+              , onFail = { kind = "none" }
+              }
+          }
+        ]
+    }
+}
+```
+
+## Classification
+
+`atom_widening` — `alter_appearance` is not in the v4 atom inventory. The disbelief gate is encodable; the appearance-change effect is not.

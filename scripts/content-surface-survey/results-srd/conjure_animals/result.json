@@ -1,1 +1,34 @@
-{"unit_slug":"conjure_animals","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "conjure_animals",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_caster_moves",
+      "justification": "The pack can be repositioned up to 30 feet when the caster moves on their turn, at no action cost. This is distinct from on_caster_turn_start (unconditional per-turn firing) and on_caster_spends_action (explicit economy cost). A trigger keyed on the caster expending movement is needed to couple the reposition_attachment effect to caster movement.",
+      "evidence": "when you move on your turn, you can also move the pack up to 30 feet to an unoccupied space you can see"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_area_repositioned_to_include_creature",
+      "justification": "The Dexterity save fires when the pack (area) moves within 10 feet of a creature, not just when a creature enters the area. on_creature_enters_area captures the creature-moves direction; the pack-moves direction requires a symmetric trigger keyed on the area repositioning to enclose a previously-outside creature.",
+      "evidence": "Whenever the pack moves within 10 feet of a creature you can see"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingPredicate.caster_within_feet_of_attachment",
+      "justification": "The Strength-save advantage applies only while the caster is within 5 feet of the pack. No existing OngoingPredicate or EquipmentPredicate models the caster's position relative to a spell's own attachment origin. at_hp_threshold is the only current OngoingPredicate variant and it is target-HP-keyed, not caster-proximity-keyed.",
+      "evidence": "You have Advantage on Strength saving throws while you're within 5 feet of the pack"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.maxOncePerTurnPerCreature",
+      "justification": "The save against the pack may be triggered multiple times in a single turn (creature enters + ends turn there; pack moves to creature). RAW caps this at once per turn per creature. No current field on OngoingOperation limits application frequency by (turn, creature) pair; count is a per-operation total, not a per-turn-per-target fence.",
+      "evidence": "A creature makes this save only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The damage atoms (save_gate, damage, slot-linear scaling) and the area attachment shape all exist and would encode cleanly. The four gaps are all new variants of existing surface shapes (triggers, predicates, operation metadata) rather than entirely new v4 atoms. Classification is surface_widening, not atom_widening."
+}

@@ -1,1 +1,28 @@
-{"unit_slug":"control_weather","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "control_weather",
+  "outcome": "dm_agenda",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Range with miles unit",
+      "justification": "Control Weather's range is a 5-mile sphere. The current Range type only supports { kind: 'point', feet: number }. Miles is a distinct unit needed for large-scale environmental spells.",
+      "evidence": "\"range\": { \"type\": \"sphere\", \"distance\": { \"type\": \"miles\", \"amount\": 5 } }"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger: caster_goes_indoors",
+      "justification": "The spell ends early if the caster goes indoors. This is a deterministic location-state trigger not in the current DurationEndTrigger vocabulary.",
+      "evidence": "\"it ends early if you go indoors\""
+    },
+    {
+      "kind": "new_variant",
+      "name": "Cast restriction: outdoors_only",
+      "justification": "The spell requires the caster to be outdoors to cast it. No existing cast-restriction predicate exists in the surface for environmental location gates.",
+      "evidence": "\"You must be outdoors to cast this spell\""
+    }
+  ],
+  "confidence": "high",
+  "notes": "Control Weather's core payload is dm_agenda: the DM determines the initial weather conditions and adjudicates all mechanical consequences of each weather stage (does a Blizzard impose difficult terrain? visibility penalties? movement restrictions?). The spell grants the caster the ability to shift stages on three DM-defined tables (precipitation, temperature, wind), but what those stages *mean* mechanically is 100% DM territory — the SRD text explicitly states conditions 'are determined by the DM'. No existing atom covers world-state/environmental control. Additionally, the spell has three surface-level structural gaps even if a weather-state atom existed: (1) range in miles, not feet; (2) early-end trigger 'goes indoors' not in DurationEndTrigger; (3) no outdoor-only cast restriction predicate. The casting time of 10 minutes maps cleanly to { kind: 'minutes', amount: 10, ritual: false }."
+}

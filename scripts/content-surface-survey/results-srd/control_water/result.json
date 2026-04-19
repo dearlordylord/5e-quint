@@ -1,1 +1,40 @@
-{"unit_slug":"control_water","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "control_water",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "mode_conditional_operations",
+      "justification": "Control Water selects one of four persistent modes at cast time, switchable via Magic action. Each mode's ongoing mechanical effects (Whirlpool's per-turn pull + damage) are only active while that mode is selected. The ongoing_effect family has a fixed operations array with no conditional-on-mode variant—there is no surface way to say 'fire this operation only while Whirlpool is the active mode.' The atoms (force_move pull, save_gate) exist; the delivery wrapper does not.",
+      "evidence": "As a Magic action on your later turns, you can repeat the same effect or choose a different one."
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_creature_spends_action_to_escape",
+      "justification": "Whirlpool's escape mechanic requires the trapped creature to spend its own action and succeed on an Athletics check to break free. OngoingTrigger has on_caster_spends_action but nothing for 'target creature spends its action attempting escape from an ongoing restraining/pulling effect.' This is a new trigger variant on the target's action economy.",
+      "evidence": "A creature can swim away from the whirlpool only if it first takes an action to pull away and succeeds on a Strength (Athletics) check against your spell save DC."
+    },
+    {
+      "kind": "new_atom",
+      "name": "raise_water_level",
+      "justification": "Flood mode raises standing water by up to 20 feet and creates a traveling wave that transports Huge-or-smaller vehicles, with a 25% capsizing chance. This is a deterministic (and random-table) environmental water-manipulation effect with no v4 atom representation.",
+      "evidence": "You cause the water level of all standing water in the area to rise by as much as 20 feet. If you choose an area in a large body of water, you instead create a 20-foot tall wave that travels from one side of the area to the other and then crashes. Any Huge or smaller vehicles struck by the wave have a 25% chance of capsizing."
+    },
+    {
+      "kind": "new_atom",
+      "name": "part_water",
+      "justification": "Part Water mode creates a trench through the spell area and walls of water on either side, altering traversability of the terrain. No v4 atom covers water-parting or terrain-reshaping at this level.",
+      "evidence": "You part water in the area and create a trench. The trench extends across the spell's area, and the separated water forms a wall to either side."
+    },
+    {
+      "kind": "new_atom",
+      "name": "redirect_water_flow",
+      "justification": "Redirect Flow mode causes flowing water in the area to move in a caster-chosen direction regardless of obstacles or gravity. No v4 atom covers directed environmental flow control.",
+      "evidence": "You cause flowing water in the area to move in a direction you choose, even if the water has to flow over obstacles, up walls, or in other unlikely directions."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Top-level structure (ongoing_effect, concentration 10 min, CastTimeEffectModeChoice with allowsMidDurationSwitchAs: magic_action) is expressible. Whirlpool mode's atoms exist (force_move pull 10 ft, save_gate STR 2d8 bludgeoning half on success, on_creature_enters_area + on_creature_ends_turn_in_area triggers). The blocking gap is that ongoing operations cannot be conditioned on which mode is currently active — they would always fire, which misrepresents the spell. Three of four modes (Flood, Part Water, Redirect Flow) also lack atom representation; they could be encoded as DM-owned narrative (options with no effects), but Flood's capsizing random-table and Part Water's traversability change are mechanically real. No dhall/json authored."
+}

@@ -1,1 +1,26 @@
-{"unit_slug":"beacon_of_hope","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "beacon_of_hope",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "concentrate",
+    "concentration_lock",
+    "expire",
+    "maximize_healing_received",
+    "modify_roll_advantage",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "All three mechanics encoded cleanly: Wis-save advantage via modify_roll_advantage + saveAbilityFilter=[wis], death-save advantage via modify_roll_advantage on death_saving_throw, and maximize_healing_received. Target selection uses any_number mode. Dhall required Optional-field trick to homogenize the three operations list. No surface gaps found."
+}

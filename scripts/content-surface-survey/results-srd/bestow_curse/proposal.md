@@ -1,144 +1,142 @@
-# Proposal: Bestow Curse — surface_widening
+# Proposal: Bestow Curse widenings
 
-## Why this unit was not encoded
+**Unit:** Bestow Curse (spell, L3 Necromancy)
+**Outcome:** `atom_widening` (with three additional `surface_widening` items)
 
-Bestow Curse cannot be encoded honestly in the current surface. The spell's core mechanic is:
-
-> You touch a creature. It makes a WIS save. On failure it becomes cursed — the **caster chooses one of four distinct curse effects** at cast time.
-
-The `choose` v4 procedure atom exists in `TAXONOMY_atoms_graph.md` but is entirely absent from `types.ts` and `tracer.ts`. There is no `ActivationPhase`, `EffectAtom` variant, or composition pattern in the current surface that can represent "pick one of N alternative persistent effect packages at cast time." Encoding a single option and dropping the other three would produce a misleading trace.
+Bestow Curse fits the `ongoing_effect` spell family structurally: Touch range, initial WIS `save_gate`, on-fail curse persists as `ongoing_effect` with a `CastTimeEffectModeChoice` selecting among four curse options. The widenings arise entirely inside the four effect payloads and the upcast duration mechanism.
 
 ---
 
-## Proposed widenings
+## Widening 1 — `force_action` atom (atom_widening, blocking)
 
-### 1. Cast-time choice subgraph (`new_subgraph`)
+**Effect 3 text:** "In combat, the target must succeed on a Wisdom saving throw at the start of each of its turns or be forced to take the Dodge action on that turn."
 
-**Atom:** `choose` (v4 procedure atom, already in taxonomy)
+**Encoding attempt:** `on_attached_turn_start` trigger → `save_gate` ongoing effect → on fail: ???
 
-The caster picks exactly one curse effect from an authored list when the spell is cast. This is a permanent binding choice, not a runtime branch — the chosen effect is the one that persists for the duration.
+The on-fail result is "the creature must use its action to Dodge." This is not:
+- `apply_condition` — no condition imposes a mandatory action choice
+- `grant_extra_action` — that grants an _additional_ action to the bearer, not forces a specific action on the target
+- `restrict_action_set { kind: "exclude" }` — that removes options but doesn't mandate a specific choice
 
-Proposed surface shape:
-
-```typescript
-export type ChoiceOption = {
-  readonly label: string;
-  readonly effects: ReadonlyArray<EffectAtom>;
-};
-
-export type CastTimeChoice = {
-  readonly kind: "cast_time_choice";
-  readonly options: ReadonlyArray<ChoiceOption>;
-};
-```
-
-This would be usable as an `EffectAtom` variant or as a new `ActivationPhase` kind. The tracer would emit a `choose` procedure node with edges to each option's effect cluster.
-
----
-
-### 2. Ability-scoped roll modifier (`new_variant`)
-
-**Extends:** `modify_roll_advantage` / `modify_roll_numeric`
-
-Option 1 applies disadvantage only to ability checks and saving throws made with a **specific ability the caster designates at cast time**. The current `on: ReadonlyArray<RollKind>` has no ability filter.
-
-Proposed addition to `modify_roll_advantage`:
-
-```typescript
-| {
-    readonly kind: "modify_roll_advantage";
-    readonly mode: "advantage" | "disadvantage";
-    readonly on: ReadonlyArray<RollKind>;
-    readonly abilityFilter?: Ability;  // if present, restricts to that ability's rolls
-  }
-```
-
-This is `surface_widening` — `modify_roll_advantage` exists, a new optional field is needed.
-
----
-
-### 3. Caster-relative attack scope (`new_variant`)
-
-**Extends:** `modify_roll_advantage`
-
-Option 2 imposes disadvantage only on attack rolls **directed at the caster**, not all attack rolls. Current `modify_roll_advantage` has no target-scope restriction.
-
-Proposed addition:
-
-```typescript
-readonly targetScope?: "against_caster" | "all";  // default "all"
-```
-
----
-
-### 4. Per-turn repeat save (`new_variant`)
-
-**Atom:** `repeat_save` (v4 Resolution atom, missing from `types.ts`)
-
-Option 3 triggers a WIS save at the start of each of the target's turns. This is a recurring resolution, not a one-shot save. The v4 taxonomy lists `repeat_save` explicitly.
-
-Proposed surface shape (as an `EffectAtom` or standalone `ActivationPhase`):
-
-```typescript
-| {
-    readonly kind: "repeat_save";
-    readonly trigger: "turn_start";
-    readonly ability: Ability;
-    readonly dc: DcSource;
-    readonly onFail: EffectAtom;
-    readonly onSuccess: EffectAtom;
-  }
-```
-
----
-
-### 5. Force-action effect (`new_atom`)
-
-Option 3's save failure compels the target to take the Dodge action on that turn. This is distinct from:
-- `apply_condition` — no standard condition mandates Dodge
-- `restrict_action_set` — that removes choices; this mandates a specific one
-- `grant_extra_action` — that grants an additional action to another creature
-
-No v4 atom covers "compel the target to spend its action on a specific `StandardActionKind`." This is a genuine `atom_widening`.
-
-Proposed:
+A new `force_action` atom is needed:
 
 ```typescript
 | {
     readonly kind: "force_action";
-    readonly action: StandardActionKind;
+    readonly action: StandardActionKind;  // "dodge" in this case
   }
 ```
 
-Candidate v4 name: `compel_action` or `force_action` — not currently in the taxonomy.
+This atom forces the subject to spend its action on a specific standard action kind on its next turn (or current turn, depending on delivery context). It is mechanically distinct from both action granting and action restriction.
 
 ---
 
-### 6. Slot-conditional duration (`new_variant`)
+## Widening 2 — Ability picker for `modify_roll_advantage` (surface_widening)
 
-The spell's duration and concentration status both shift by slot level:
+**Effect 1 text:** "Choose one ability. The target has Disadvantage on ability checks and saving throws made with that ability."
 
-| Slot | Concentration | Duration |
-|------|---------------|----------|
-| 3    | yes           | 1 min    |
-| 4    | yes           | 10 min   |
-| 5–6  | no            | 8 hr     |
-| 7–8  | no            | 24 hr    |
-| 9    | no            | until dispelled |
+**Encoding attempt:** `modify_roll_advantage { mode: "disadvantage", on: ["ability_check", "saving_throw"], abilityFilter: ??? }`
 
-The current `Duration` type has no slot-conditional shape. A threshold-tiers duration variant is needed where the `kind` (`concentration` vs `timed`) itself can change by slot level.
+Two gaps:
+1. `saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>` exists for saving throws but is a **fixed** list — not a cast-time choice.
+2. No `abilityCheckAbilityFilter` equivalent exists for ability check rolls.
+
+The ability is chosen by the caster at cast time from any of the six SRD abilities. Needed additions:
+
+```typescript
+// On modify_roll_advantage:
+readonly abilityFilter?: AbilityFilter;  // narrows which ability the roll uses
+
+export type AbilityFilter =
+  | { readonly kind: "fixed"; readonly abilities: ReadonlyNonEmptyArray<Ability> }
+  | { readonly kind: "choice"; readonly options: ReadonlyNonEmptyArray<Ability> };
+```
+
+This parallels the existing `SkillFilter` shape (`fixed` / `choice` variants). The `saveAbilityFilter` field (currently a bare array) would migrate to use `AbilityFilter` or a separate `abilityFilter` field could cover both check and save rolls.
 
 ---
 
-## Summary
+## Widening 3 — Attack-target filter on `modify_roll_advantage` (surface_widening)
 
-| Gap | Kind | v4 coverage |
-|-----|------|-------------|
-| Cast-time choice from N effects | `new_subgraph` | `choose` atom exists in taxonomy |
-| Ability-scoped roll disadvantage | `new_variant` | `modify_roll_advantage` exists |
-| Caster-relative attack scope | `new_variant` | `modify_roll_advantage` exists |
-| Per-turn repeat save | `new_variant` | `repeat_save` atom exists in taxonomy |
-| Force-action effect | `new_atom` | Not in v4 taxonomy |
-| Slot-conditional duration kind | `new_variant` | `Duration` type exists, needs tier variant |
+**Effect 2 text:** "The target has Disadvantage on attack rolls against you."
 
-Primary classification: **`surface_widening`** — the cast-time choice subgraph (`choose`) is in v4 but absent from the TS surface. The force-action effect is additionally `atom_widening`, but the dominant blocker is the choice mechanism.
+**Encoding attempt:** `modify_roll_advantage { mode: "disadvantage", on: ["attack_roll"], attackTargetFilter: ??? }`
+
+The existing `attackerTypeFilter` narrows by the **attacker's** creature type (used in Protection from Evil and Good). Effect 2 narrows by the **target** of the attack: specifically, attacks whose intended target is the caster.
+
+Needed addition on `modify_roll_advantage`:
+
+```typescript
+readonly attackTargetIsCaster?: true;
+```
+
+This is a boolean sentinel (not a general "target filter grammar") because the only SRD pressure is "against you (the caster)." Widen further if future units need "against [specific named ally]."
+
+---
+
+## Widening 4 — `on_caster_deals_damage` trigger (surface_widening)
+
+**Effect 4 text:** "If you deal damage to the target with an attack roll or a spell, the target takes an extra 1d8 Necrotic damage."
+
+**Encoding attempt:** `OngoingOperation { trigger: ??? , effect: damage { kind: "damage", damageType: "necrotic", amount: { kind: "fixed", expr: { dice: 1, dieSize: 8 } } } }`
+
+`on_caster_attack_hit` fires only when the caster's attack roll lands. Spell damage (e.g., Fire Bolt, Fireball) does not go through `on_caster_attack_hit`; it goes through separate resolution chains. Effect 4 needs a trigger for any caster-to-target damage delivery regardless of the delivery mechanism.
+
+Needed addition to `OngoingTrigger`:
+
+```typescript
+| { readonly kind: "on_caster_deals_damage" }
+```
+
+This fires whenever the caster resolves damage against the attached target, encompassing attack hits, save-fail damage, and direct-apply damage. It subsumes `on_caster_attack_hit` as a sub-case and is the natural generalization for "mark" effects that add riders to all damage the caster deals.
+
+---
+
+## Widening 5 — Duration upcast kind-change (surface_widening)
+
+**Upcast text:** "If you use a level 5+ spell slot, the spell doesn't require Concentration, and the duration becomes 8 hours (level 5-6 slot) or 24 hours (level 7-8 slot). If you use a level 9 spell slot, the spell lasts until dispelled."
+
+The current `DurationValue.upcastTiers` only changes the `amount` field within a fixed duration `kind`. Bestow Curse's upcast switches the Duration discriminant itself:
+
+- L3: `{ kind: "concentration", upTo: { unit: "minute", amount: 1 } }`
+- L4: `{ kind: "concentration", upTo: { unit: "minute", amount: 10 } }`
+- L5-6: `{ kind: "timed", value: { unit: "hour", amount: 8 } }` ← no concentration
+- L7-8: `{ kind: "timed", value: { unit: "hour", amount: 24 } }` ← no concentration
+- L9: `{ kind: "permanent", endsOn: ["dispel"] }`
+
+A new upcast structure is needed that can switch the Duration kind (and concentration flag) as a function of minimum slot level:
+
+```typescript
+export type DurationUpcastBySlot =
+  | { readonly atSlot: number; readonly duration: Duration };
+
+// On SpellMechanicsHeader:
+readonly durationUpcastBySlot?: ReadonlyNonEmptyArray<DurationUpcastBySlot>;
+```
+
+Each entry overrides the entire `Duration` when the spell is cast at ≥ `atSlot`. The base `duration` field applies for casts below the lowest tier. This is orthogonal to `DurationValue.upcastTiers` (which handles intra-kind amount scaling) and is needed wherever a spell changes its concentration status when upcast.
+
+---
+
+## Encoding path (once widenings land)
+
+With all five widenings, the honest encoding is:
+
+```
+ongoing_effect
+  initial_phase: save_gate (WIS, caster_spell_save_dc, touch attachment)
+    onFail: direct_apply
+      mode: CastTimeEffectModeChoice (choose one at cast)
+        option A: modify_roll_advantage (disadvantage, ability_check+saving_throw, abilityFilter.choice)
+        option B: modify_roll_advantage (disadvantage, attack_roll, attackTargetIsCaster)
+        option C: ongoing_operation (on_attached_turn_start → save_gate → onFail: force_action "dodge")
+        option D: ongoing_operation (on_caster_deals_damage → damage 1d8 necrotic)
+    onSuccess: none
+  durationUpcastBySlot:
+    L4: concentration 10 min
+    L5: timed 8 hours
+    L7: timed 24 hours
+    L9: permanent (until dispelled)
+```
+
+The `family`, `school`, `castingTime`, `range`, `components`, and `attachment` (touch target, one creature) all encode cleanly today.

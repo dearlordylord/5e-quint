@@ -1,1 +1,40 @@
-{"unit_slug":"bestow_curse","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "bestow_curse",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "force_action",
+      "justification": "Effect 3 forces the cursed target to take the Dodge action on its turn if it fails a save. No existing atom forces a creature to spend its action on a specific standard action kind. This is mechanically distinct from apply_condition (which doesn't mandate action choice) and grant_extra_action (which grants, not forces).",
+      "evidence": "In combat, the target must succeed on a Wisdom saving throw at the start of each of its turns or be forced to take the Dodge action on that turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.abilityFilter (choice variant)",
+      "justification": "Effect 1 applies Disadvantage on ability checks AND saving throws made with a caster-chosen ability. The surface has saveAbilityFilter (fixed ReadonlyNonEmptyArray<Ability>) for saves only, and no abilityFilter at all for ability checks. A cast-time ability picker variant is needed to express 'choose one of the six abilities at cast time' covering both check and save rolls.",
+      "evidence": "Choose one ability. The target has Disadvantage on ability checks and saving throws made with that ability."
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.attackTargetFilter",
+      "justification": "Effect 2 gives the target Disadvantage on attack rolls specifically against the caster. The existing attackerTypeFilter narrows by the attacker's creature type, not by the intended victim of the attack. A new filter scoping the rider to 'attacks whose target is [caster]' is required.",
+      "evidence": "The target has Disadvantage on attack rolls against you."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_caster_deals_damage",
+      "justification": "Effect 4 fires whenever the caster deals damage to the target via attack roll OR spell. The existing on_caster_attack_hit trigger only covers landed attack rolls; spell damage has no trigger variant. A broader trigger covering any caster damage delivery (attack or spell) is required.",
+      "evidence": "If you deal damage to the target with an attack roll or a spell, the target takes an extra 1d8 Necrotic damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration upcast kind-change (concentration → timed / permanent)",
+      "justification": "Bestow Curse's upcast scaling doesn't just change the duration amount — at L5+ the spell stops requiring Concentration entirely, becoming a timed or permanent Duration. DurationValue.upcastTiers only supports amount changes within a fixed duration kind. No surface mechanism can flip the Duration kind (and concentration flag) as a function of slot level.",
+      "evidence": "If you use a level 5+ spell slot, the spell doesn't require Concentration, and the duration becomes 8 hours (level 5-6 slot) or 24 hours (level 7-8 slot). If you use a level 9 spell slot, the spell lasts until dispelled."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell's top-level structure (ongoing_effect family, initial save_gate on touch, CastTimeEffectModeChoice for the four curse options, on_attached_turn_start trigger for Effect 3) maps cleanly to existing surface families. All four widenings arise inside the individual curse option payloads and the upcast duration mechanism, not from the family shape itself. The blocking atom widening is force_action (Effect 3) — this concept does not appear anywhere in the v4 taxonomy. The duration upcast kind-change is the second hard blocker: flipping from concentration to timed/permanent based on slot level is unrepresentable with DurationValue.upcastTiers."
+}

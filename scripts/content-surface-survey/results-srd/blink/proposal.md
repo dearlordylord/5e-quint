@@ -1,96 +1,85 @@
-# Proposal: surface_widening for Blink
+# Proposal: Blink (surface_widening)
 
 ## Unit
 
-- **Slug:** `blink`
-- **Kind:** spell
-- **Level:** 3, Transmutation
-- **Provenance:** SRD 5.2.1
-
-## Gap Summary
-
-Blink cannot be honestly encoded because `OngoingOperation` has no variant for a **per-turn probabilistic roll check**. A new variant is needed.
-
-## Rule Text (Evidence)
-
-> Roll 1d6 at the end of each of your turns for the duration. On a roll of 4-6, you vanish from your current plane of existence and appear in the Ethereal Plane (the spell ends instantly if you are already on that plane). While on the Ethereal Plane, you can perceive the plane you left, which is cast in shades of gray, but you can't see anything there more than 60 feet away. You can affect and be affected only by other creatures on the Ethereal Plane, and creatures on the other plane can't perceive you unless they have a special ability that lets them perceive things on the Ethereal Plane.
->
-> You return to the other plane at the start of your next turn and when the spell ends if you are on the Ethereal Plane. You return to an unoccupied space of your choice that you can see within 10 feet of the space you left.
-
-## Why `ongoing_effect` Is the Right Family
-
-- **Duration:** timed, 1 minute (non-concentration) → maps to `duration: timed`
-- **Attachment:** self (no other creature targeted) → maps to `attachment: self`
-- **Persistent per-turn effect:** something fires each turn for the spell's duration → fits `ongoing_effect` semantics
-
-None of `activation`, `triggered_reaction`, or `anchored_trigger` applies:
-- Not instant/one-shot → not `activation`
-- No reaction trigger → not `triggered_reaction`
-- No spatial anchor on a location → not `anchored_trigger`
-
-## What Is Missing
-
-### Proposed widening: `PerTurnRollCheckOperation` (new `OngoingOperation` variant)
-
-`OngoingOperation` currently:
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
-
-Neither existing variant can represent Blink's mechanic:
-- `RollModifierOperation` modifies the result of *existing* dice rolls (e.g., Bless adds 1d4 to attack rolls).
-- `DamageOnHitOperation` opens an `on_hit_window` and deals bonus damage.
-
-Blink needs a new variant that expresses:
-
-```
-at turn_end_window:
-  roll die (1d6)
-  if result in threshold [4..6]:
-    apply transport_exile (→ Ethereal Plane)
-    grant return_on_end (at turn_start_window or spell end)
-    while displaced:
-      apply block_targeting (material-plane creatures cannot target/affect)
-      apply perception restriction (can see material plane in gray, max 60 ft)
-```
-
-Proposed shape (illustrative, not prescriptive for types.ts):
-
-```typescript
-export type PerTurnRollCheckOperation = {
-  readonly kind: "per_turn_roll_check";
-  readonly window: "turn_end";           // fires at turn_end_window
-  readonly die: DiceExpr;               // 1d6
-  readonly threshold: { readonly min: number; readonly max: number }; // 4-6
-  readonly onThreshold: PerTurnRollEffect;
-};
-
-export type PerTurnRollEffect =
-  | { readonly kind: "planar_displacement"; readonly returnAt: "turn_start" | "spell_end" };
-  // future: other threshold effects
-```
-
-## V4 Atoms Used (All Exist)
-
-| Atom | Category | Role |
-|------|----------|------|
-| `transport_exile` | effect | displacement to Ethereal Plane |
-| `return_on_end` | lifecycle | return to material plane at turn start or spell end |
-| `turn_end_window` | window | when the d6 roll fires |
-| `turn_start_window` | window | when the caster returns |
-| `self` | attachment | spell targets the caster |
-| `block_targeting` | effect | material-plane creatures can't affect the displaced caster |
-
-No new v4 atoms are required. The gap is purely at the `OngoingOperation` surface type level.
-
-## Secondary Gap: Planar Isolation State
-
-While displaced, the caster has:
-1. **Perception restriction:** can see material plane but not beyond 60 feet, in grayscale. → partially expressible as a `grant_sense` modifier, but the "limited range while displaced" is a conditional perception state not currently modeled
-2. **Targeting isolation:** bidirectional — can only affect/be affected by Ethereal Plane creatures. → `block_targeting` covers the inbound direction; outbound restriction has no current atom
-
-These secondary gaps are real but subordinate to the blocking gap above. Encoding is not possible without the `PerTurnRollCheckOperation` variant regardless.
+**Blink** — Level 3 Transmutation spell (SRD 5.2.1)
 
 ## Classification
 
-`surface_widening` — new variant of existing surface type `OngoingOperation` needed; all v4 atoms present.
+`surface_widening` — the required atoms (`transport_exile`, `teleport`) exist in the v4 taxonomy and the TS surface. Two variants of existing surface types are missing, preventing honest encoding.
+
+## Gaps
+
+### 1. Missing `on_caster_turn_end` / `on_attached_turn_end` in `OngoingTrigger`
+
+**SRD text:** "Roll 1d6 at the end of each of your turns for the duration."
+
+`OngoingTrigger` has turn-start variants (`on_caster_turn_start`, `on_attached_turn_start`) and `on_creature_ends_turn_in_area` (area-attachment-scoped only). There is no turn-end variant for self/target attachments.
+
+**Proposed addition to `OngoingTrigger`:**
+```typescript
+| { readonly kind: "on_caster_turn_end" }
+| { readonly kind: "on_attached_turn_end" }
+```
+
+The tracer would emit a `turn_end_window` node (parallel to `turn_start_window`) with label `"turn_end_window\n(caster)"`.
+
+Turn-end and turn-start are mechanically distinct: turn-end fires after the creature's last action but before the next creature's turn, while turn-start fires before the creature's first action. The distinction matters for action-economy interactions (e.g., effects that modify upcoming actions cannot be applied at turn-end to take effect on the same turn).
+
+### 2. Missing `random_table` variant in `OngoingEffect`
+
+**SRD text:** "On a roll of 4-6, you vanish from your current plane of existence and appear in the Ethereal Plane."
+
+The d6 threshold outcome is a random table: 1–3 = nothing, 4–6 = `transport_exile`. This pattern exactly matches the existing `random_table` `ActivationPhase` shape, but `OngoingEffect` does not include this variant.
+
+**Proposed addition to `OngoingEffect`:**
+```typescript
+| {
+    readonly kind: "random_table";
+    readonly roll: RandomTableRoll;
+    readonly outcomes: ReadonlyNonEmptyArray<RandomTableOutcome>;
+  }
+```
+
+This reuses the exact shape already present on `ActivationPhase.random_table`. The tracer already handles `random_table` in the activation path; an `OngoingEffect` branch would delegate to the same subgraph.
+
+## Secondary gap (conditional return — not blocking, but notable)
+
+The return clause ("You return to the other plane at the start of your next turn") would encode as a second `on_caster_turn_start` operation with effect `teleport { maxFeet: 10, destination: "unoccupied_visible_space" }`. However, this return should only fire when the caster *is currently on the Ethereal Plane* — a predicate on planar location that falls outside the current `OngoingPredicate` vocabulary (`at_hp_threshold` only). This conditional is DM-resolved in practice and could be omitted as DM-agenda, leaving the return as an unconditional start-of-turn teleport (always-on while the spell persists). This is an acceptable approximation if the primary gaps are resolved.
+
+## Omitted mechanics (correctly out-of-scope)
+
+- **Ethereal perception clause** ("you can perceive the plane you left... cast in shades of gray... can't see anything more than 60 feet away"): narrative/DM-managed, no mechanical effect on rolls or outcomes. Correctly omitted per ARCHITECTURE.md.
+- **"Creatures on the other plane can't perceive you unless..."**: DM-agenda (special-ability detection is creature-stat territory, not spell-surface territory).
+
+## Proposed encoding (if gaps are resolved)
+
+```
+family: ongoing_effect
+level: 3
+school: transmutation
+castingTime: { kind: "action" }
+range: { kind: "self" }
+components: { v: true, s: true, m: false }
+duration: { kind: "timed", value: { unit: "minute", amount: 1 } }
+attachment: { kind: "self" }
+operations:
+  - trigger: { kind: "on_caster_turn_end" }                   ← MISSING
+    effect:
+      kind: "random_table"                                     ← MISSING in OngoingEffect
+      roll: { die: 6 }
+      outcomes:
+        - { min: 1, max: 3, label: "no effect" }
+        - { min: 4, max: 6, label: "ethereal shift",
+            phases: [
+              { kind: "direct", attachment: { kind: "self" },
+                effects: [{ kind: "transport_exile", destination: "ethereal_plane" }] }
+            ]
+          }
+  - trigger: { kind: "on_caster_turn_start" }
+    effect:
+      kind: "teleport"
+      maxFeet: 10
+      destination: "unoccupied_visible_space"
+      # NOTE: should only fire when on Ethereal Plane — conditional predicate not representable
+```

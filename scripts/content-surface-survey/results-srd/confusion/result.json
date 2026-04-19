@@ -1,1 +1,22 @@
-{"unit_slug":"confusion","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "confusion",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "random_table as OngoingEffect variant",
+      "justification": "Confusion's on-fail effect includes rolling 1d10 at the start of each affected creature's turn to determine behavior. This is a random_table resolution that fires on an on_attached_turn_start trigger. The random_table phase type already exists in ActivationPhase but is absent from the OngoingEffect union, so it cannot be expressed as an ongoing per-turn resolution.",
+      "evidence": "must roll 1d10 at the start of each of its turns to determine its behavior for that turn"
+    },
+    {
+      "kind": "new_atom",
+      "name": "restrict_action_economy (or equivalent)",
+      "justification": "The on-fail effect removes the target's ability to take Bonus Actions and Reactions for the duration. No existing EffectAtom covers removal of specific action-economy types from a target. apply_condition cannot express this: Incapacitated removes both the Action and Bonus Action (wrong), and no condition covers 'no Bonus Action + no Reaction' without also blocking the Action. A new atom (e.g., restrict_action_economy with a set of economy types to suppress) is needed.",
+      "evidence": "that target can't take Bonus Actions or Reactions"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell is an ongoing_effect (concentration, area, Wis save, repeat save cadence) and structurally matches that family. Two mechanics block honest encoding: (1) the per-turn 1d10 behavior table requires random_table as an OngoingEffect variant — it is currently only an ActivationPhase kind; (2) suppressing Bonus Actions and Reactions (but not Actions) has no EffectAtom equivalent. The repeat-save-to-end pattern (end_of_target_turn, ends_on_target) and the area sphere attachment would both encode cleanly. The radius upcast (+5 ft per slot above 4) would require a surface_widening on AreaShapeDescriptor (no slot-scaling on sphere radius), but that is a secondary gap behind the two primary blockers."
+}

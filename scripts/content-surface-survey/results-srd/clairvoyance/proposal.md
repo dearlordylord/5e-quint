@@ -1,101 +1,98 @@
-# Proposal: Clairvoyance widening
+# Proposal: Clairvoyance — atom_widening
 
-## Outcome: `atom_widening`
+## Unit summary
 
-Clairvoyance cannot be encoded honestly. Two gaps block it.
+**Clairvoyance** (SRD 5.2.1, L3 Divination) creates an invisible, intangible, invulnerable sensor at a remote location up to 1 mile away. While concentrating (up to 10 minutes), the caster perceives through the sensor using a chosen sense (seeing or hearing), switchable with a Bonus Action.
 
----
+## Family fit
 
-## Gap 1 (primary blocker): `grant_remote_perception` atom
+**`ongoing_effect`** is the correct structural container: concentration, up to 10 minutes, a persistent object at an attachment point with an ongoing operation. The `CastingTime { kind: "minutes", amount: 10, ritual: false }` variant already exists. No structural widening is needed.
 
-**SRD text:**
-> You create an Invisible sensor within range in a location familiar to you… You can use the chosen sense through the sensor as if you were in its space.
+## Missing atoms
 
-**What the mechanic is:**  
-The caster projects a sensor to a remote location and then uses their sight or hearing *through that sensor* — effectively borrowing the sensor's spatial position for the purpose of one sensory channel.
+### 1. `create_sensor` (new EffectAtom)
 
-**Why no existing atom covers it:**
+The spell creates an intangible, invulnerable remote sensing point. No existing atom covers this:
 
-- `grant_sense` — grants a new sense type (darkvision 60 ft, blindsight, etc.) *to the creature*. It does not place a remote observation point.
-- `detect` — scans for a closed set of properties (magic, evil_and_good, poison_and_disease, thoughts) within a radius around the caster. It is not general remote vision or hearing.
-- `create_object` — creates tangible, potentially destructible matter. The sensor is intangible and invulnerable — not an object in the SRD sense.
+- `create_object` — models physical matter with optional AC/HP; a sensor is explicitly intangible and invulnerable.
+- `create_illusion` — sensory projections that are insubstantial and disbelievable; a sensor is a functional vantage point, not an illusion.
+- The surface already recognizes spell sensors via `AttachmentRangeOrigin = "spell_sensor"` (used by Crystal Ball of Mind Reading to anchor the range of its granted Detect Thoughts cast from the sensor). But no atom exists for the spell that *creates* the sensor. Clairvoyance is that spell.
 
-**Proposed atom:**
-
+**Proposed shape:**
 ```typescript
 | {
-    readonly kind: "grant_remote_perception";
-    readonly channels: ReadonlyNonEmptyArray<"sight" | "hearing">;
-    // Perceive through the spell's attachment anchor (sensor location)
-    // as if occupying that space.
+    readonly kind: "create_sensor";
+    readonly visible?: "invisible";           // default: invisible, visible to truesight
+    readonly tangible: false;                 // intangible: passes through creatures/objects
+    readonly invulnerable: true;
   }
 ```
 
-The two-channel `channels` field parallels `create_illusion`'s `IllusionSensoryChannel`. Only `sight` and `hearing` are pressured by Clairvoyance; future units (e.g. a scrying variant) may add others.
+This atom would be delivered via a `passive` ongoing trigger (the sensor is always present while the spell persists), attached to a `location` attachment at the spell's range.
 
-The attachment anchor for the sensor is the existing `area` or `object` attachment at `rangeOrigin: "spell_sensor"` — the `spell_sensor` AttachmentRangeOrigin concept already exists on the surface for exactly this remote-measurement pattern.
+### 2. `remote_perception` (new EffectAtom)
 
----
+The caster perceives through the sensor as if in its space. No existing atom covers this:
 
-## Gap 2 (secondary): `allowsMidDurationSwitchAs: "bonus_action"` variant
+- `grant_sense` — adds a new sense type (darkvision, blindsight, etc.) FROM the caster's own location. Does not relocate the caster's senses.
+- `detect` — scans for a magical property (magic, evil, poison, thoughts) within a radius. Not general remote seeing/hearing.
+- `grant_speed` / `teleport` — physical movement, not sensory projection.
 
-**SRD text:**
-> As a Bonus Action, you can switch between seeing and hearing.
-
-**Current surface:**
+**Proposed shape:**
 ```typescript
-export type CastTimeEffectModeChoice = {
-  readonly label: string;
-  readonly options: ReadonlyNonEmptyArray<{...}>;
-  readonly allowsMidDurationSwitchAs?: "magic_action";
-};
+| {
+    readonly kind: "remote_perception";
+    // Sense(s) available through the sensor at cast time. Player chooses one at cast;
+    // optional Bonus Action switch between available options.
+    readonly senses: ReadonlyNonEmptyArray<"seeing" | "hearing">;
+    readonly switchCost?: { readonly kind: "bonus_action" };
+  }
 ```
 
-The only supported mid-duration switch cost is `"magic_action"`. Clairvoyance's switch costs a **Bonus Action**.
+This is the core divination atom — "use chosen sense from the sensor's vantage point as if present there." The `senses` list records available options; the `switchCost` encodes the Bonus Action toggle.
 
-**Proposed widening:**
-```typescript
-readonly allowsMidDurationSwitchAs?: "magic_action" | "bonus_action";
-```
+### Secondary gap: Range in miles
 
-This is a closed enum extension with no semantic complexity — the tracer already emits an `action_quota` / `bonus_action_quota` resource node for the switch; adding the variant lets the tracer branch correctly.
+The SRD text specifies range "1 mile." The existing `Range` type only supports `self`, `touch`, and `point { feet }`. A `{ kind: "point"; miles: number }` variant (or a generalized unit field) would be needed to accurately author the range header. This is a minor `surface_widening` secondary to the main atom gaps.
 
----
-
-## Sketch of what a clean encoding would look like
+## Honest encoding shape (if atoms existed)
 
 ```dhall
 { kind = "spell"
 , id = "clairvoyance"
 , name = "Clairvoyance"
+, ...
 , mechanics =
     { family = "ongoing_effect"
     , level = 3
     , school = "divination"
     , castingTime = { kind = "minutes", amount = 10, ritual = False }
-    , range = { kind = "point", feet = 5280 }   -- 1 mile
-    , components = { v = True, s = True, m = Some "a focus worth 100+ GP..." }
+    , range = { kind = "point", miles = 1 }          -- surface_widening: miles not in Range
+    , components = { v = True, s = True, m = Some "a focus worth 100+ GP (jeweled horn or glass eye)" }
     , duration = { kind = "concentration", upTo = { unit = "minute", amount = 10 } }
-    , attachment = { kind = "area", shape = ..., origin = { kind = "point_within_range" }, rangeOrigin = "spell_sensor" }
+    , attachment = { kind = "location", description = "familiar_or_obvious_location" }
+                                                       -- surface_widening: location attachment needs broader descriptor vocab
     , operations =
         [ { trigger = { kind = "passive" }
-          , effect =
-              { kind = "grant_remote_perception"     -- MISSING
-              , channels = [ "sight", "hearing" ]
-              }
+          , effect = { kind = "create_sensor", visible = "invisible", tangible = False, invulnerable = True }
+                     -- atom_widening: create_sensor does not exist
+          }
+        , { trigger = { kind = "passive" }
+          , effect = { kind = "remote_perception", senses = [ "seeing", "hearing" ], switchCost = { kind = "bonus_action" } }
+                     -- atom_widening: remote_perception does not exist
           }
         ]
     }
 }
 ```
 
-The `CastTimeEffectModeChoice` (choose sight vs. hearing at cast, switch via Bonus Action) would layer on top once both gaps are resolved.
-
----
-
 ## Classification
 
-| Gap | Kind | Blocking? |
-|-----|------|-----------|
-| `grant_remote_perception` atom | `atom_widening` | Yes — no honest substitute |
-| `allowsMidDurationSwitchAs: "bonus_action"` | `surface_widening` | Yes (secondary) |
+| Gap | Kind | Severity |
+|-----|------|----------|
+| `create_sensor` atom | `atom_widening` | **blocker** |
+| `remote_perception` atom | `atom_widening` | **blocker** |
+| `Range` in miles | `surface_widening` | secondary |
+| `location` attachment descriptor vocabulary | `surface_widening` | secondary |
+
+Primary outcome: **`atom_widening`** — the `ongoing_effect` family fits; the missing atoms block honest encoding.

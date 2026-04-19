@@ -1,65 +1,103 @@
-# Cloudkill — Surface Widening Proposal
+# Proposal: Cloudkill surface gaps
 
 ## Unit
 
-- **Slug**: `cloudkill`
-- **Kind**: spell
-- **Level**: 5 (Conjuration, Concentration up to 10 min)
-- **Provenance**: SRD 5.2.1
+**Cloudkill** — SRD 5.2.1, Level 5 Conjuration spell.
 
-## What Fits
+## Outcome
 
-- `ongoing_effect` family — correct shape for a persistent area spell.
-- `area` attachment with `sphere radiusFeet=20` — exists.
-- `initialPhase` → `save_gate` (Con, caster spell save DC, onFail: 5d8 poison, onSuccess: half_damage) — covers the cast-time save on all creatures already in the sphere.
-- `on_creature_enters_area` operation → `save_gate` — covers creatures who walk into the sphere mid-duration.
-- `damage` atom (poison, `linear_per_level` for +1d8/slot above 5) — fully expressible.
-- `concentration` duration with 10-minute `upTo` — fits.
+`atom_widening` — partial encoding produced. Typecheck passes, tracer runs. Four mechanics are unrepresentable in the current surface.
 
-## Gaps
+## What fits
 
-### 1. `on_creature_ends_turn_in_area` (primary gap)
+The core damage mechanic encodes cleanly as an `ongoing_effect` spell:
 
-**SRD text**: "A creature must also make this save when… it ends its turn there."
+- **Area attachment**: `sphere r=20 ft`, `origin: point_within_range`, range 120 ft.
+- **initialPhase**: `save_gate` Con vs spell save DC → 5d8 Poison / half.
+- **on_creature_enters_area** → `save_gate` (same).
+- **on_creature_ends_turn_in_area** → `save_gate` (same).
+- **Upcast scaling**: `linear_per_level` axis=slot, +1d8/slot above 5.
 
-The `OngoingTrigger` union has `on_attached_turn_start` (fires at the *start* of the attached creature's turn) but nothing for end-of-turn. Cloudkill's core ongoing threat is creatures stuck in the cloud who take damage at the *end* of each of their turns, not the start. These are mechanically distinct — a creature who enters and immediately moves out before their turn ends would take the enter-save but not the end-of-turn save.
+## Gap 1 — `area_is_heavily_obscured` (new atom)
 
-**Proposed addition** to `OngoingTrigger`:
+> "Its area is Heavily Obscured."
+
+SRD 5.2.1 Rules Glossary: creatures inside a Heavily Obscured area have the Blinded condition (disadvantage on attack rolls, attackers have advantage). This is a distinct visibility tier from Difficult Terrain.
+
+`area_is_difficult_terrain` exists but covers movement cost only. There is no atom for area-level heavy obscurement. This is a new `effect` atom needed in the v4 taxonomy.
+
+**Proposed atom:**
 ```typescript
-| { readonly kind: "on_creature_ends_turn_in_area" }
+| { readonly kind: "area_is_heavily_obscured" }
 ```
 
-This parallels `on_attached_turn_start` but fires at the *end* of each affected creature's turn. Other spells that use "ends its turn in the area" semantics (e.g., Wall of Fire, Spirit Guardians variants) would benefit from the same variant.
+Emits alongside `area_is_difficult_terrain` in the same taxonomy bucket. Both are passive area-modifying effect atoms on an area attachment.
 
-### 2. Automatic directional sphere movement
+## Gap 2 — `drift_area_attachment` (new atom)
 
-**SRD text**: "The Sphere moves 10 feet away from you at the start of each of your turns."
+> "The Sphere moves 10 feet away from you at the start of each of your turns."
 
-The existing `reposition_attachment` atom is described as a caster-initiated action (e.g., Silent Image: "spend a Magic action to relocate"). Cloudkill's movement is:
-- Automatic (no caster action required)
-- Directional (always away from caster, not a free-choice repositioning)
-- Fixed distance (exactly 10 ft)
+The sphere drifts automatically each caster turn — mandatory, directional ("away from you"), no action cost, no player choice. The existing `reposition_attachment` atom models a caster-initiated optional relocation (Silent Image, Dancing Lights):
 
-A clean encoding would need either:
-- A new `OngoingEffect` variant for automatic attachment movement (e.g., `auto_move_attachment` with `distanceFeet` and `direction: "away_from_caster"`), or
-- Enrichment of `reposition_attachment` with `automatic: true` and a `direction` field.
+```typescript
+| {
+    readonly kind: "reposition_attachment";
+    readonly maxMoveFeet?: number;
+  }
+```
 
-This is lower priority than gap 1 — the movement changes the *footprint* of the sphere over time but doesn't affect the core save-gate resolution logic.
+This does not encode:
+- **Automaticity**: fires unconditionally at start of caster turn, not on caster-action spend.
+- **Direction**: away from the caster is a specific directional constraint, not a free relocation.
 
-### 3. Once-per-turn save deduplication
+Using `on_caster_turn_start` + `reposition_attachment` would misrepresent the mechanic as a caster-chosen relocation.
 
-**SRD text**: "A creature makes this save only once per turn."
+**Proposed atom (or field on OngoingOperation effect):**
+```typescript
+| {
+    readonly kind: "drift_area";
+    readonly feetPerTurn: number;
+    readonly direction: "away_from_caster";  // widen when other directions surface
+  }
+```
 
-Cloudkill fires saves on three triggers: initial cast, creature enters, creature ends turn. If multiple triggers fire in one turn (e.g., the sphere moves into a creature's space on the caster's turn, and the creature entered on its own turn), the spell caps the creature at one save per turn. The surface has no mechanism to express cross-operation deduplication within a turn boundary.
+Alternatively, a `direction` field on `reposition_attachment` combined with a mandatory trigger mode. Drift is a first-class mechanic in area-hazard spells (Cloudkill, Moonbeam shares the same "area moves into creature's space" wording).
 
-This is a narrower constraint than the others — it would require either:
-- A `maxPerTurn: 1` field on `OngoingOperation`, or
-- A shared `trigger_group` mechanism that deduplicates saves across operations.
+## Gap 3 — `OngoingTrigger.on_area_moves_onto_creature` (new trigger variant)
 
-## Encoding Decision
+> "A creature must also make this save when the Sphere moves into its space."
 
-No `.dhall` authored. The "ends its turn there" save is Cloudkill's primary damage vector (most encounters involve creatures who enter, can't escape, and take damage each turn they remain). Encoding only the enter-save would produce a trace that looks correct but silently drops the dominant mechanic. Per the guardrails, a misleading trace is worse than no trace.
+This fires when the **area moves** to overlap a **stationary creature** — the inverse of `on_creature_enters_area`. The two are mechanically distinct: a creature standing still in the sphere's drift path triggers this; a creature moving into a static sphere triggers `on_creature_enters_area`.
 
-## Classification
+Without the drift atom (Gap 2), this trigger is unreachable. Both gaps must be resolved together to fully model Cloudkill's hazard.
 
-`surface_widening` — the `ongoing_effect` family and all effect atoms are correct; the missing piece is a trigger variant (`on_creature_ends_turn_in_area`) on the existing `OngoingTrigger` union.
+**Proposed trigger variant:**
+```typescript
+| { readonly kind: "on_area_moves_onto_creature" }
+```
+
+Same gap identified in Moonbeam ("A creature makes this save again when the spell's area moves into its space") and Spirit Guardians ("whenever the Emanation enters a creature's space").
+
+## Gap 4 — `OngoingOperation.once_per_turn_dedup` (new surface field)
+
+> "A creature makes this save only once per turn."
+
+The three save triggers (initial, enters, ends-turn) can all fire in the same turn for the same creature (e.g., sphere drifts into creature's space AND creature ends its turn there). RAW caps total saves at one per creature per turn. The `OngoingOperation` type has no deduplication mechanism — each operation fires independently.
+
+**Proposed field on `OngoingOperation`:**
+```typescript
+type OngoingOperation = {
+  readonly trigger: OngoingTrigger;
+  readonly predicate?: OngoingPredicate;
+  readonly effect: OngoingEffect;
+  readonly maxPerTurn?: 1;  // "once per turn" rate limit across all operations sharing this tag
+};
+```
+
+Same gap noted for Blade Barrier (`OngoingOperation.once_per_turn_dedup`) and Spirit Guardians.
+
+## Tracer note
+
+The tracer does not emit `scale_die_count` nodes for save_gate effects inside ongoing operations (only the initialPhase scaling is traced). This is a tracer limitation, not a surface issue — the JSON encoding is correct.
+
+Also: the ongoing operation `save_gate` branches do not emit a `half_damage` node in the current tracer path (`traceOngoingOpEffect` skips `half_damage` variant of `onSuccess`). Same tracer limitation.

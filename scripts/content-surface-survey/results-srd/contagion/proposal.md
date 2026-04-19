@@ -1,111 +1,146 @@
-# Proposal: Contagion — Surface and Atom Widenings
+# Proposal: Contagion (surface / atom widenings)
 
-**Outcome:** `atom_widening`  
-**Unit:** Contagion (level 5, Necromancy, SRD 5.2.1)
+## Unit
+
+**Contagion** — SRD 5.2.1 level-5 Necromancy spell, touch range, 7-day timed duration (non-concentration).
+
+## Why no honest encoding exists
+
+Three distinct gaps block an honest encoding. Each is described below.
 
 ---
 
-## Why the unit cannot be encoded honestly
+## Gap 1 — Threshold-based repeat save (surface_widening)
 
-Contagion exercises four mechanics that have no honest encoding in the current surface. Three expose missing variants of existing surface types (all backed by v4 atoms already). One requires a new atom with no v4 counterpart.
+### Current surface
 
----
-
-## Gap 1 — `apply_condition` absent from spell `Effect`
-
-**Type:** `surface_widening`
-
-The initial save gate on fail applies both 11d8 Necrotic damage and the Poisoned condition. The `Effect` union used in `ActivationPhase.onFail`/`onSuccess` supports only `damage` and `none`:
-
+`RepeatSaveSpec` supports:
 ```typescript
-export type Effect = DamageEffect | NoneEffect;
-```
-
-The v4 atom `apply_condition` exists (§9 Effect Atoms) and is already surface-reachable via `SaveGateRiderResult` in masteries. It is not reachable from `ActivationPhase`. Adding a variant to `Effect`:
-
-```typescript
-export type ApplyConditionEffect = {
-  readonly kind: "apply_condition";
-  readonly condition: Condition;
+type RepeatSaveSpec = {
+  readonly cadence: "end_of_target_turn" | "on_target_takes_damage";
+  readonly onSuccess: "ends_on_target";
+  readonly onFailAgain?: EffectAtom;
 };
-export type Effect = DamageEffect | ApplyConditionEffect | NoneEffect;
 ```
 
-would close this gap, though `Condition` currently only lists `"prone"` and would need `"poisoned"` added.
+`onSuccess: "ends_on_target"` terminates the spell after **one** success. This covers Hold Person (one success ends). It does not cover Contagion.
 
-**Evidence:** *"the target must succeed on a Constitution saving throw or take 11d8 Necrotic damage and have the Poisoned condition"*
+### What Contagion needs
+
+> "The target must repeat the saving throw at the end of each of its turns until it gets **three successes** or **failures**. If the target succeeds on **three** of these saves, the spell ends on the target. If the target fails **three** of the saves, the spell lasts for 7 days on it."
+
+The repeat save accumulates a counter. The spell resolves in either direction only when a threshold is crossed. The binary `onSuccess: "ends_on_target"` cannot express this.
+
+### Proposed widening
+
+Add two optional fields to `RepeatSaveSpec`:
+
+```typescript
+type RepeatSaveSpec = {
+  readonly cadence: "end_of_target_turn" | "on_target_takes_damage";
+  readonly onSuccess: "ends_on_target";
+  readonly onFailAgain?: EffectAtom;
+  // New:
+  readonly successThreshold?: number;   // How many successes before spell ends (default 1)
+  readonly failureThreshold?: number;   // How many failures before spell locks in (default: unlimited)
+  readonly onFailureLockIn?: EffectAtom; // Effect applied when failureThreshold is crossed
+};
+```
+
+Contagion would author:
+- `successThreshold: 3` (3 successes → spell ends)
+- `failureThreshold: 3` (3 failures → spell locks in for 7 days; the timed duration applies)
+- `onFailureLockIn: { kind: "none" }` (the duration simply runs its full 7 days)
+
+The existing `onSuccess: "ends_on_target"` with no threshold implies threshold=1, preserving backward compatibility with Hold Person et al.
 
 ---
 
-## Gap 2 — `repeat_save` absent from `ActivationPhase`
+## Gap 2 — Condition-removal interception trigger (atom_widening)
 
-**Type:** `surface_widening`
+### Current surface
 
-The spell requires the target to make repeated end-of-turn CON saves, accumulating independent success/failure counters with different resolution outcomes at threshold (3 of either). This is structurally distinct from the one-shot `save_gate` phase: it has state (counters), per-counter-threshold effects, and two asymmetric terminal branches.
+`OngoingTrigger` has these variants:
+- `passive`, `on_caster_attack_hit`, `on_attached_turn_start`, `on_caster_turn_start`
+- `on_attached_damaged`, `on_creature_moves`, `on_creature_enters_area`
+- `on_creature_ends_turn_in_area`, `on_caster_spends_action`, `on_creature_studies`
 
-The v4 taxonomy includes `repeat_save` as a Resolution Atom (§5). It is not represented in `ActivationPhase`. A new variant is needed:
+None of these fire when an *external effect tries to remove a condition from the target*.
+
+### What Contagion needs
+
+> "Whenever the Poisoned target receives an effect that would end the Poisoned condition, the target must succeed on a Constitution saving throw, or the Poisoned condition doesn't end on it."
+
+This is an intercept-and-gate mechanic: an incoming effect targeting a specific condition on the attached creature triggers a save; on failure, the removal is suppressed. It is distinct from all existing triggers because:
+
+1. It fires in response to an *incoming mechanical event* (another effect being applied), not a turn-cadence or action event.
+2. It *suppresses* the triggering effect on save failure — a gating semantic not expressible via existing `OngoingEffect`.
+
+### Proposed widening
+
+New `OngoingTrigger` variant:
 
 ```typescript
 | {
-    readonly kind: "repeat_save";
-    readonly ability: Ability;
-    readonly dc: DcSource;
-    readonly successThreshold: number;
-    readonly failureThreshold: number;
-    readonly onSuccessThresholdReached: Effect;  // spell ends
-    readonly onFailureThresholdReached: Effect;  // spell persists full duration
+    readonly kind: "on_condition_removal_attempt";
+    readonly condition: Condition; // Which condition's removal to intercept
   }
 ```
 
-**Evidence:** *"The target must repeat the saving throw at the end of each of its turns until it gets three successes or failures. If the target succeeds on three of these saves, the spell ends on the target. If the target fails three of the saves, the spell lasts for 7 days on it."*
+Paired with a new `OngoingEffect` variant or an extension to `save_gate`:
+
+```typescript
+// OngoingEffect.save_gate when triggered by on_condition_removal_attempt
+// onFail: the removal is suppressed (condition stays)
+// onSuccess: the removal proceeds normally
+```
+
+The tracer would emit this as a `post_action_window` (closest existing window atom) or a new `intercept_window` to make the interception semantic explicit.
 
 ---
 
-## Gap 3 — `modify_roll_advantage` with condition-gate and cast-time ability parameter
+## Gap 3 — Cast-time ability choice for save disadvantage (surface_widening)
 
-**Type:** `surface_widening`
+### Current surface
 
-While the target has the Poisoned condition, it has Disadvantage on saving throws made with ONE ability chosen at cast time. Two sub-gaps:
+`modify_roll_advantage` has:
+```typescript
+readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
+```
 
-**3a. Condition-gate on a persistent effect.** The Disadvantage only applies while the target holds the Poisoned condition. The current surface has no mechanism for a persistent modifier gated on an active condition. `OngoingOperation.roll_modifier` and `MasteryEffect.modify_roll_advantage` have no `prerequisiteCondition` field.
+This accepts only a fixed list of abilities — chosen at authoring time, not cast time.
 
-**3b. Cast-time ability selector.** The affected ability is not a fixed parameter — it is chosen by the caster at cast time. The surface has no mechanism for a caster-choice that parameterizes a downstream effect at cast time (analogous to `MarkTransfer`'s `chosenAtCast: true` on filters, but for effect parameters).
+### What Contagion needs
 
-**Evidence:** *"choose one ability when you cast the spell. While Poisoned, the target has Disadvantage on saving throws made with the chosen ability"*
+> "choose one ability when you cast the spell. While Poisoned, the target has Disadvantage on saving throws made with the chosen ability."
+
+The ability is selected by the caster at cast time, not predetermined in the authored unit. This is structurally parallel to `CastTimeChoice<DamageType>` already present in the surface.
+
+### Proposed widening
+
+Widen `saveAbilityFilter` to accept a cast-time choice:
+
+```typescript
+readonly saveAbilityFilter?:
+  | ReadonlyNonEmptyArray<Ability>
+  | CastTimeChoice<Ability>;
+```
+
+Alternatively, introduce a parallel field:
+
+```typescript
+readonly saveAbilityChoice?: CastTimeChoice<Ability>;
+```
+
+The first form is preferred — it mirrors the `DamageTypeRef = DamageType | CastTimeChoice<DamageType>` pattern already used in the surface.
 
 ---
 
-## Gap 4 — Condition-persistence gate (new atom, no v4 counterpart)
+## v4 taxonomy note
 
-**Type:** `atom_widening`
+Gap 2 (condition-removal intercept trigger) is a genuinely new concept not in the v4 atom inventory. Gaps 1 and 3 are surface variants of existing concepts and do not require new v4 atoms; they require widening existing surface types.
 
-Contagion adds a new kind of protection to the Poisoned condition: whenever any effect would remove Poisoned from the target, the target must first succeed on a CON save. On a success the removal goes through; on a failure, Poisoned stays.
+## Classification
 
-This is not any existing v4 atom:
-
-| Candidate | Why it fails |
-|---|---|
-| `block_targeting` | Blocks targeting of the creature, not condition-removal events |
-| `negate_named_effect` | Negates a specific named spell, not a class of effects (remove_condition) |
-| `condition_progression` | Models conditions worsening over time; does not intercept incoming removals |
-| `repeat_save` | Models repeated save chains; does not intercept effect events |
-| `remove_condition` | Is itself the effect being intercepted/blocked, not the interceptor |
-
-The needed atom would intercept incoming `remove_condition` events targeted at a specific condition on a specific creature, gate the removal behind a save, and conditionally suppress it on failure. Proposed name: **`condition_persistence_gate`**.
-
-**Evidence:** *"Whenever the Poisoned target receives an effect that would end the Poisoned condition, the target must succeed on a Constitution saving throw, or the Poisoned condition doesn't end on it."*
-
----
-
-## Summary
-
-| Gap | Classification | v4 atom exists? |
-|---|---|---|
-| `apply_condition` in spell `Effect` | `surface_widening` | Yes (`apply_condition`) |
-| `repeat_save` as `ActivationPhase` variant | `surface_widening` | Yes (`repeat_save`) |
-| `modify_roll_advantage` with condition-gate + cast-time ability param | `surface_widening` | Partial (`modify_roll_advantage` exists; condition-gate and cast-time param do not) |
-| Condition-persistence gate | `atom_widening` | No |
-
-Overall classification: **`atom_widening`** (the condition-persistence gate requires a new v4 atom; the three surface gaps are additive).
-
-The `activation` spell family is the correct structural home for this unit — the gaps are surface and atom level, not structural. No new family is needed.
+- Primary: `atom_widening` (Gap 2 — `on_condition_removal_attempt` trigger is not in v4)
+- Secondary: `surface_widening` (Gaps 1 and 3 — `RepeatSaveSpec` threshold fields and `CastTimeChoice<Ability>` on `saveAbilityFilter`)

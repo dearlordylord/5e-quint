@@ -1,1 +1,28 @@
-{"unit_slug":"conjure_fey","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "conjure_fey",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "apply_condition with expiry",
+      "justification": "The frightened condition lasts 'until the start of your next turn' — a turn-scoped expiry. apply_condition has no duration/expiry field. modify_roll_advantage already has count + expiresOn; apply_condition needs a parallel mechanism.",
+      "evidence": "the target has the Frightened condition until the start of your next turn"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AreaOrigin or AttachmentRangeOrigin: spirit_position / companion_position",
+      "justification": "Attacks target 'a creature within 5 feet of it [the spirit]' — the spirit is the melee range origin, not the caster. Existing AreaOrigin variants are point_within_range, on_primary_target, self. None captures 'from the conjured spirit's current position'. The spirit is not a spawned creature with a stat block; it is a persistent mobile attack origin that the caster uses directly.",
+      "evidence": "you can make one melee spell attack against a creature within 5 feet of it"
+    },
+    {
+      "kind": "new_subgraph",
+      "name": "coupled multi-step bonus action (reposition + attack)",
+      "justification": "The Bonus Action on later turns simultaneously teleports the spirit and makes the attack. OngoingOperation is trigger → single effect. There is no way to express 'these two effects (reposition_attachment + attack_roll) share one bonus action cost'. Modeling them as two separate operations with the same trigger would double-charge the bonus action or leave the coupling implicit.",
+      "evidence": "As a Bonus Action on your later turns, you can teleport the spirit to an unoccupied space you can see within 30 feet of the space it left and make the attack against a creature within 5 feet of it"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family is the correct structural home: concentration spell, persistent spirit, per-turn optional activation. The spirit itself has no stat block or independent actions — it is a mobile melee-range origin controlled entirely by the caster, which makes spawned_creature a poor fit. All three surface gaps are variants or composition patterns on existing families/atoms, not missing v4 taxonomy atoms. The upcast scaling (+1d12/slot above 6) is standard linear_per_level on the damage atom and poses no encoding problem."
+}

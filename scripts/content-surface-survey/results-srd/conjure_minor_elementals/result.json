@@ -1,1 +1,48 @@
-{"unit_slug":"conjure_minor_elementals","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "conjure_minor_elementals",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "on_hit_window",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "on_caster_attack_hit with area attachment (scope extension)",
+      "justification": "The trigger docs only list `self` (Divine Favor: any attack hit) and `mark/target` (Hunter's Mark: attack against marked creature). This spell needs `on_caster_attack_hit` scoped to an area: 'any attack you make deals an extra 2d8 damage when you hit a creature in the Emanation.' The grammar says 'scope derived from attachment' which implies the area case is supported, but no prior encoding exercises it and the combination is not explicitly documented.",
+      "evidence": "any attack you make deals an extra 2d8 damage when you hit a creature in the Emanation"
+    },
+    {
+      "kind": "new_variant",
+      "name": "area_is_difficult_terrain with dispositionFilter",
+      "justification": "The `area_is_difficult_terrain` atom has no parameters (binary, no filter). The spell specifies 'Difficult Terrain for your enemies' — a hostile-only restriction that requires a dispositionFilter parameter analogous to `AreaOccupantDispositionFilter` on Attachment. Omitted in this encoding following spike_growth/grease precedent (spatial DM-agenda); the filter gap blocks honest encoding regardless.",
+      "evidence": "the ground in the Emanation is Difficult Terrain for your enemies"
+    },
+    {
+      "kind": "new_variant",
+      "name": "per-attack damage type choice (CastTimeChoice timing semantics)",
+      "justification": "CastTimeChoice<DamageType> is documented as 'caster picks one at cast/build time.' This spell's choice is made per-attack: 'your choice when you make the attack.' Structurally the same shape (closed option set), but the timing semantics differ. The label 'CastTimeChoice' is inaccurate for per-attack resolution; a 'per-resolution choice' variant would be more precise.",
+      "evidence": "This damage is Acid, Cold, Fire, or Lightning (your choice when you make the attack)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The attack-damage rider encodes cleanly. Tracer emits correct graph: area (emanation 15 ft, self origin) + on_hit_window + damage (choice type, 2d8 +1d8/slot). The difficult-terrain clause is omitted per corpus precedent (spike_growth, grease both defer it as spatial DM-agenda). Two genuine surface gaps documented: area-scoped on_caster_attack_hit is novel (works in practice, grammar implies it, but undocumented), and area_is_difficult_terrain lacks any disposition filter."
+}

@@ -1,1 +1,34 @@
-{"unit_slug":"delayed_blast_fireball","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "delayed_blast_fireball",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "LevelAxis.turns_elapsed",
+      "justification": "The damage counter starts at 12d6 and increases by 1d6 each turn the spell remains active. This is a runtime accumulator driven by turns elapsed during concentration — not a cast-time slot level, character level, or class level. LevelAxis has no 'turns elapsed' variant.",
+      "evidence": "The spell's base damage is 12d6, and the damage increases by 1d6 whenever your turn ends and the spell hasn't ended."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_spell_end",
+      "justification": "The bead's explosion — the save_gate + damage — fires specifically when the spell ends (naturally after 1 minute, or triggered early by touch/throw). Currently OngoingTrigger has no 'on spell end' variant; all triggers fire during the spell's active window, not at its termination.",
+      "evidence": "When the spell ends, the bead explodes, and each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_creature_touches_attachment",
+      "justification": "A creature physically touching the bead (the spell's attachment point) opens a Dex save window. This is distinct from all existing OngoingTrigger variants: it is not a turn-start, attack-hit, movement, area-entry, or caster-action trigger — it is contact with the bead itself.",
+      "evidence": "If a creature touches the glowing bead before the spell ends, that creature makes a Dexterity saving throw."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingEffect.creature_throw_attachment",
+      "justification": "On a successful touch save, the creature may throw the bead up to 40 feet. If the thrown bead enters a creature's space or collides with a solid object, the spell ends (triggering the explosion). This is creature-agency repositioning of the spell's attachment point with collision-triggered spell termination — not covered by reposition_attachment (which is a caster action, not a creature-agency throw with collision semantics).",
+      "evidence": "On a successful save, the creature can throw the bead up to 40 feet. If the thrown bead enters a creature's space or collides with a solid object, the spell ends, and the bead explodes."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell is clearly ongoing_effect family (concentration, point attachment, timed duration). The primary blocker is the accumulating damage counter: DiceAmount.linear_per_level with axis='turns_elapsed' would be the narrowest fix, but LevelAxis conceptually covers cast-time scalar levels, not a runtime counter that increments during play. A dedicated DiceAmount variant like 'accumulating' with startExpr/perTriggerDelta would be more honest. Secondary blockers are the on_spell_end trigger and the touch/throw mechanics. The upcast (+1d6 base per slot above 7) maps cleanly to DiceAmount.linear_per_level with axis='slot'. Flammable objects igniting is DM-agenda and legitimately omitted. No dhall/json/trace written because the accumulating damage and on_spell_end explosion cannot be authored honestly with the current surface."
+}

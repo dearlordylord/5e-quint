@@ -1,1 +1,32 @@
-{"unit_slug":"call_lightning","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "call_lightning",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "action_window",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "half_damage",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Encodes as ongoing_effect (concentration 10 min). Main attachment is the storm cloud cylinder (60 ft radius, 10 ft tall). InitialPhase is a Dex save_gate with a 5-ft sphere attachment capturing the bolt's per-point target area. The on_caster_spends_action (Magic) operation fires the same Dex save_gate for subsequent bolts. Slot-scaling (+1d10 per slot above 3) uses linear_per_level on axis=slot. One mechanic deliberately omitted as DM-agenda: the outdoor-storm situational +1d10 bonus (environment-determined, no deterministic surface trigger)."
+}

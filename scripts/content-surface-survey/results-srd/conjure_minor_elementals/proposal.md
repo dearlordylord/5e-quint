@@ -1,77 +1,82 @@
-# Proposal: Conjure Minor Elementals — atom_widening
+# Surface Widening Proposal: Conjure Minor Elementals
 
-## Unit
-
-**Conjure Minor Elementals** (Level 4 Conjuration, concentration 10 min)
-
-> You conjure spirits from the Elemental Planes that flit around you in a 15-foot Emanation for the duration. Until the spell ends, any attack you make deals an extra 2d8 damage when you hit a creature in the Emanation. This damage is Acid, Cold, Fire, or Lightning (your choice when you make the attack).
->
-> In addition, the ground in the Emanation is Difficult Terrain for your enemies.
-
-Higher-level scaling: +1d8 damage per slot level above 4.
+**Outcome:** `surface_widening`  
+**Encoded:** Yes (attack-damage rider only; difficult-terrain clause omitted)  
+**Typecheck:** Pass  
+**Tracer:** Clean (no throws)
 
 ---
 
-## Payload family
+## What was encoded
 
-`ongoing_effect` — concentration spell producing a persistent zone for its duration. The attachment would be `area` (emanation, radius 15 ft, origin self). Two simultaneous persistent operations needed.
+The 15-ft emanation attack-damage rider:
+- `ongoing_effect` family, concentration 10 min
+- Area attachment: `{ kind: "area", shape: { kind: "emanation", radiusFeet: 15 }, origin: { kind: "self" } }`
+- One operation: `on_caster_attack_hit` → `damage` (CastTimeChoice over acid/cold/fire/lightning, 2d8 base + 1d8/slot, linear_per_level, axis=slot, startingAtLevel=4)
 
----
+## What was omitted
 
-## Blocking widenings
-
-### 1. `difficult_terrain` — new atom (atom_widening)
-
-**Evidence:** "the ground in the Emanation is Difficult Terrain for your enemies."
-
-The current `EffectAtom` union has no atom for imposing terrain-state on an area. `force_move` moves creatures; `modify_speed` changes a creature's speed value. Neither expresses "all enemy movement through this area costs double." Difficult terrain is a named SRD rule state that attaches to a region of space, persists for the spell's duration, and affects enemy movement cost — none of which is composable from existing atoms.
-
-The v4 TAXONOMY survey (§12, "Content Surface Survey Findings") independently identified `difficult_terrain` as genuinely new atom pressure (2 hits across the 460-unit survey).
-
-**Proposed atom:**
-```
-difficult_terrain:
-  kind: "difficult_terrain"
-  scope: "enemies" | "all_creatures"   // CME uses "enemies"; other spells (Spike Growth) apply to all
-```
-
-This is a new v4 effect atom. It attaches to an area and persists for the spell's duration.
+**"the ground in the Emanation is Difficult Terrain for your enemies"** — omitted per corpus precedent. Both `spike_growth` and `grease` defer their difficult-terrain clauses as DM-agenda spatial geometry. Additionally, `area_is_difficult_terrain` carries no filter parameter, making the "enemies only" restriction inexpressible regardless.
 
 ---
 
-### 2. `damage_type_choice_at_use` — new variant (surface_widening, secondary)
+## Gap 1: `on_caster_attack_hit` + `area` attachment — undocumented scope
 
-**Evidence:** "This damage is Acid, Cold, Fire, or Lightning (your choice when you make the attack)."
+**RAW:** "any attack you make deals an extra 2d8 damage when you hit a creature in the Emanation"
 
-The current `damage_on_hit` operation (and the `damage` EffectAtom) require a single fixed `DamageType`. This spell's on-hit damage type is chosen per-attack, not fixed at cast time. Encoding it as any single fixed type would be dishonest.
+The `on_caster_attack_hit` trigger comment documents two scopes:
+- `self` → any attack hit by caster (Divine Favor)
+- `mark/target` → caster's attack against the attached creature (Hunter's Mark)
 
-**Proposed surface variant** for `DamageType`-carrying fields:
+This spell requires a third: **area** → caster hits a creature inside the area. The grammar says "scope derived from attachment," which implies the area case is intended to work, but no prior encoding exercises it.
+
+**Proposed surface clarification:** Extend the trigger documentation to cover `area` attachment explicitly: "area → caster hits a creature that is currently within the area." No type change required — this is a documentation/specification gap, not a type gap. The tracer already handles it correctly (emits `on_hit_window (caster hits attachment)` for any attachment kind).
+
+**Impact:** Low. The encoded trace is correct. This is a documentation gap only.
+
+---
+
+## Gap 2: `area_is_difficult_terrain` needs a `dispositionFilter`
+
+**RAW:** "the ground in the Emanation is Difficult Terrain for your enemies"
+
+The current atom:
 ```typescript
-type DamageTypeSpec =
-  | DamageType                                          // fixed (existing)
-  | { readonly kind: "choice_at_use";                   // chosen per activation
-      readonly options: ReadonlyArray<DamageType> }
+| { readonly kind: "area_is_difficult_terrain" }
 ```
 
-This variant is needed here and would likely recur for Dragon's Breath (choice at cast time), Chromatic Orb, and similar spells. The distinction between "choice at cast" and "choice per use" matters for runtime modeling.
+No parameters. Applying the atom without filter would make the entire emanation difficult terrain for ALL creatures, including allies. The spell explicitly scopes it to enemies.
+
+**Proposed widening:**
+```typescript
+| {
+    readonly kind: "area_is_difficult_terrain";
+    readonly dispositionFilter?: AreaOccupantDispositionFilter;
+  }
+```
+
+Where `AreaOccupantDispositionFilter = "friendly_to_source" | "hostile_to_source"`. This matches the existing filter vocabulary already used on `Attachment`.
+
+**Impact:** Medium. Multiple spells would benefit (Conjure Minor Elementals, and any future spell with ally-safe difficult terrain). The omission in this encoding is intentional — forcing `area_is_difficult_terrain` without filter would produce an inaccurate trace.
 
 ---
 
-## Honest encoding posture
+## Gap 3: Per-attack damage type choice — timing label mismatch
 
-The spell cannot be encoded without both widenings. The on-hit damage bonus *could* be partially encoded with a fixed damage type, but:
-- It would falsely represent the player's per-attack choice.
-- The `difficult_terrain` effect still has no atom and cannot be omitted without losing a mechanically significant part of the spell.
+**RAW:** "your choice when you make the attack"
 
-No `.dhall`, `.json`, or `.trace.md` is produced for this unit.
+`CastTimeChoice<DamageType>` is documented as "caster picks one at cast/build time." This spell's choice happens at each individual attack resolution, not once at cast time. Structurally the JSON shape is correct (closed option set), but the label implies a once-at-cast semantic.
+
+**Proposed widening:** A `PerResolutionChoice<T>` variant or a `timing: "cast" | "per_resolution"` field on `CastTimeChoice`. Alternatively, rename `CastTimeChoice` to `ClosedMenuChoice` to be timing-agnostic and add an optional `timing` field.
+
+**Impact:** Low. The tracer renders the choice correctly regardless of timing. The gap is a semantic label issue, not a structural one. Chromatic Orb (cast-time) and this spell (per-attack) would be distinguished.
 
 ---
 
-## Classification
+## Summary
 
-| Gap | Kind | Blocking? |
-|---|---|---|
-| `difficult_terrain` atom | `atom_widening` | Yes — no existing atom covers terrain-state |
-| damage type choice at use | `surface_widening` | Yes — DamageType is fixed in current surface |
-
-Overall outcome: **`atom_widening`** (most severe classification present).
+| Gap | Blocking? | Proposed fix | Scope |
+|-----|-----------|--------------|-------|
+| `on_caster_attack_hit` + area scope undocumented | No (tracer works) | Document the area case | Docs only |
+| `area_is_difficult_terrain` no dispositionFilter | Yes (clause omitted) | Add `dispositionFilter?: AreaOccupantDispositionFilter` | types.ts widening |
+| `CastTimeChoice` timing label mismatch | No (structural fit) | Add timing discriminant or rename | Minor refactor |

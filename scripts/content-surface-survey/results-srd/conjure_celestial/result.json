@@ -1,1 +1,28 @@
-{"unit_slug":"conjure_celestial","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "conjure_celestial",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingEffect.caster_choice_gate (per-application choice)",
+      "justification": "The spell's trigger fires per-creature (on enter, on end-turn, on cylinder-move-into) and the caster chooses ONE of two disjoint effects per activation: Healing Light (heal_hp) or Searing Light (save_gate). CastTimeEffectModeChoice picks one mode for the whole spell, not one mode per-creature-per-trigger-firing. OngoingEffect needs a variant that says: when this trigger fires, the caster selects one of N effect bundles to apply to the triggering creature.",
+      "evidence": "For each creature you can see in the Cylinder, choose which of these lights shines on it: Healing Light [...] Searing Light [...] you can bathe it in one of the lights."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_caster_moves",
+      "justification": "The cylinder can be moved 'when you move on your turn' — this is a free movement-economy cost, not a standard/bonus action spend. on_caster_spends_action requires an explicit action economy cost; movement is a separate resource. The reposition_attachment atom exists but there is no trigger to fire it from caster movement.",
+      "evidence": "when you move on your turn, you can also move the Cylinder up to 30 feet"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.usageLimit (per-creature per-turn cap)",
+      "justification": "The spell constrains that each creature may be affected by the light choice at most once per turn across all triggers (enter, end-turn, cylinder-moves-into). OngoingOperation has no per-target per-turn throttle field. Without this, a creature that both enters AND ends its turn in the cylinder in the same turn would be bathed twice, contrary to RAW.",
+      "evidence": "A creature can be affected by this spell only once per turn."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The per-application caster choice is the core mechanic — both Healing Light and Searing Light are equally fundamental, not a primary + optional rider. Cannot encode the spell at all without the per-activation choice variant on OngoingEffect. The cylinder-movement trigger and once-per-turn cap are secondary gaps but also real. All three gaps are surface_widening (new variants of existing surface types); all atoms involved — heal_hp, save_gate, damage, emit_light, reposition_attachment, on_creature_enters_area, on_creature_ends_turn_in_area — already exist."
+}

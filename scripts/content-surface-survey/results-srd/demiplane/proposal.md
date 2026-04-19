@@ -1,82 +1,110 @@
-# Proposal: Demiplane — structural_widening
+# Widening Proposal: Demiplane
 
-## Unit
+**Unit:** Demiplane (spell, level 8 conjuration)  
+**Outcome:** `atom_widening`  
+**Blocking gaps:** 3 missing atoms/variants
 
-- **Name:** Demiplane
-- **Level:** 8 conjuration
-- **Duration:** 1 hour (timed, not concentration)
-- **Casting time:** Action
-- **Range:** 60 ft (point)
-- **Components:** S
+---
 
-## Why it does not fit
+## What fits
 
-None of the four existing `SpellMechanics` families can represent this spell honestly:
+- **Family:** `activation` (instant delivery, 1-hour timed duration via `persist → expire`)
+- **Attachment:** `object` (the door is placed on a flat surface within 60 ft) or a `location` attachment
+- **Door creation:** `create_object` (Medium, manufactured) covers the door object itself
+- **Casting time / range / components / duration:** all encode cleanly
 
-| Family | Why it fails |
-|---|---|
-| `ongoing_effect` | Requires an `operation` (`roll_modifier` or `damage_on_hit`). Demiplane has neither — it creates a space, not a rider on targets. |
-| `activation` | For instantaneous/one-shot spells. Demiplane has a 1-hour timed duration with persistent state. |
-| `triggered_reaction` | Reaction-shaped spells only. Demiplane is cast with an action. |
-| `anchored_trigger` | Plants a sensor that fires on a creature-caused event (physical contact / enters area). Demiplane creates a traversable living space; the expiry behavior is cleanup, not the primary function. Using `anchored_trigger` would misrepresent the core mechanic. |
+## What does not fit
 
-## New family required: `space_creation`
+### Gap 1: Traversable portal to an extradimensional space
 
-A spell that creates a persistent, traversable, caster-owned space accessible through a portal/door object. Core shape:
+**Missing atom:** `create_portal` (or equivalent)
+
+The door isn't an inert object — it's a traversable opening to a persistent extradimensional room. Neither existing atom covers this:
+
+- `create_object` — creates an inert object. Has no concept of extradimensional destination, traversal, or connecting two spaces.
+- `transport_exile { destination: "demiplane" }` — one-way involuntary exile of a targeted creature. Demiplane's door is a voluntary two-way passage that the caster creates and controls.
+- `container_storage` — passive carrying-capacity profile for item-holding magic items (Bag of Holding). Doesn't model creature habitation, traversal, or a room-scale environment.
+
+**What a `create_portal` atom would need to carry:**
 
 ```
-SpellMechanicsHeader + {
-  family: "space_creation";
-  portal: PortalCreation;         // the door object
-  space: ExtradimensionalSpace;   // the attached pocket dimension
-  castTimeChoice: SpaceChoice;    // new vs. connect-to-existing
-  onExpiry: SpaceExpiryEffect;    // optional creature shunting
+{
+  kind: "create_portal",
+  destination: ExileDestination | "new_extradimensional_space",
+  portalObject: { size: Size, description: string },
+  bidirectional: boolean,
 }
 ```
 
-**Pressure cases** (other SRD spells that need this family):
-- Mordenkainen's Magnificent Mansion (level 7, similar pocket-dimension space)
-- Rope Trick (level 2, extradimensional space inside a rope)
-- Leomund's Tiny Hut (level 3, dome/shelter — adjacent)
+Or the portal and the room can be separate atoms linked by the spell's design.
 
-## Required widenings
+### Gap 2: Persistent extradimensional room / demiplane space
 
-### 1. New family: `space_creation`
+**Missing atom:** `create_extradimensional_space`
 
-For spells that create a persistent traversable extradimensional space via a portal. Distinct from `anchored_trigger` (event sensor) and `ongoing_effect` (rider on targets).
+The demiplane is a 30ft-cube room that:
+- Persists between castings (objects left inside survive until the demiplane is revisited)
+- Can hold creatures (habitable environment, not just item storage)
+- Is caster-owned (connects to the caster's identity across multiple spell instances)
 
-### 2. New atom: `create_portal`
+`container_storage` is not the right shape: it models carrying capacity with weight/volume caps for a passive magic item, not a habitable room with cube dimensions and creature-accessible interior.
 
-A door/portal object with a destination (the extradimensional space). Extends the existing `create_object` v4 atom with:
-- `destination` — points to the attached space
-- `traversable` — bidirectional entry/exit
-- `openable` — can be opened and closed
+**What a `create_extradimensional_space` atom would need to carry:**
 
-### 3. New atom: `extradimensional_space`
+```
+{
+  kind: "create_extradimensional_space",
+  dimensions: { feet: number } | AreaShapeDescriptor,
+  material: string,            // "wood" or "stone" — cast-time choice
+  persists: "between_castings" // contents survive spell end
+}
+```
 
-A caster-owned pocket dimension with physical dimensions that persists beyond individual castings. Distinct from `location` and `area` (both in-world coordinates). Carries:
-- Physical dimensions
-- Persistence across castings (can be reconnected later)
-- Cross-caster read-access (can connect to another caster's demiplane if known)
+### Gap 3: Shunt-on-end lifecycle effect
 
-### 4. New expiry variant: `eject_occupants`
+**Missing variant:** A `DurationEndTrigger` (or expiry-phase mechanism) that applies effects to creatures inside the extradimensional space when the duration expires.
 
-An on-expiry effect that optionally repositions creatures inside the space to the nearest unoccupied positions outside, applying the `prone` condition. The existing `expire` lifecycle atom records when duration ends but does not model creature repositioning with condition application.
+SRD text: *"Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door's former space."*
 
-Evidence: _"Any creatures inside also remain unless they opt to be shunted through the door as it vanishes, landing with the Prone condition in the unoccupied spaces closest to the door's former space."_
+This is an opt-in expiry effect: creatures choosing to exit are force-moved + gain Prone. Existing `DurationEndTrigger` variants are all **early-end predicates** (conditions that end the spell before its full duration). None model a cleanup effect delivered to subjects inside an extradimensional space at the moment of normal expiry.
 
-### 5. New cast-time choice variant
+A new variant or expiry-phase hook would be needed:
 
-The caster chooses at cast time: create a new demiplane, or connect the door to a prior casting's demiplane (including another caster's). The v4 `choose` procedure atom exists but there is no surface type variant in `SpellMechanics` for a cast-time choice that selects between creating vs. connecting a persistent named space.
+```
+// on spell expire, for creatures inside who opt to exit:
+{ kind: "target_shunted_from_extradimensional_space" }
+// paired with force_move + apply_condition prone
+```
 
-Evidence: _"Each time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell. Additionally, if you know the nature and contents of a demiplane created by a casting of this spell by another creature, you can connect the shadowy door to that demiplane instead."_
+### Gap 4 (secondary): Dynamic cast-time routing
 
-## Not classified as `dm_agenda`
+**Missing variant:** `CastTimeEffectModeChoice` with a dynamic self-referential option
 
-The spell has deterministic mechanical outcomes: a door appears at a valid location, creatures can enter, the door vanishes at duration end, creatures inside are moved to specific positions. The "knowing the nature and contents" prerequisite for connecting to another caster's demiplane is a precondition on the choice, not a DM-adjudicated narrative outcome.
+SRD text: *"each time you cast this spell, you can create a new demiplane or connect the shadowy door to a demiplane you created with a previous casting of this spell."*
 
-## Files not produced
+The `CastTimeEffectModeChoice` surface requires a closed enumerable `options` array. "Connect to a prior casting of this spell" is a runtime reference to a specific past spell instance — its options are not fixed at content-authoring time. This is narrowly inexpressible without a mechanism for referencing caster-specific spell history.
 
-- No `content/demiplane.dhall` — no honest encoding possible
-- No `content/demiplane.json`
-- No `content/demiplane.trace.md`
+This is the least blocking gap (it's a configuration choice, not a mechanical atom), but it prevents full round-tripping of the spell's routing semantics.
+
+---
+
+## Encoding path once widened
+
+Once the above atoms/variants exist, Demiplane would encode as an `activation` spell:
+
+```
+family = "activation"
+phases = [
+  { kind = "direct"
+  , attachment = { kind = "location" or "object" (flat surface within 60 ft) }
+  , effects = [
+      { kind = "create_portal", ... },    -- the door
+      { kind = "create_extradimensional_space", ... }  -- the room
+    ]
+  , mode = { label = "Routing", options = ["new_demiplane", "connect_to_prior"] }
+  }
+]
+duration = { kind = "timed", value = { unit = "hour", amount = 1 },
+             earlyEnd = [] }
+-- expiry cleanup: shunt creatures (needs new lifecycle hook)
+```

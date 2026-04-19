@@ -1,101 +1,62 @@
-# Proposal: Control Weather — Structural Widening
+# Proposal: Control Weather
 
-## Unit
+**Outcome:** `dm_agenda`
 
-**Control Weather** (level 8 transmutation, SRD 5.2.1, concentration up to 8 hours)
+## Why this is dm_agenda
 
-## Why it doesn't fit
+Control Weather's entire mechanical payload is DM-adjudicated. The SRD text explicitly states the current weather conditions "are determined by the DM." The caster can shift stages on three environmental tables (precipitation, temperature, wind) by one step per change, but what each stage *means* mechanically — whether a Blizzard imposes difficult terrain, halves visibility, prevents ranged attacks, deals cold damage, or all of the above — is left entirely to the DM.
 
-Control Weather's core mechanic is **staged environmental state mutation**: the caster shifts one of three weather axes (precipitation, temperature, wind) by ±1 on a DM-initialized discrete table, repeatably during concentration. It has no attack rolls, saving throws, conditions, damage, healing, or creature-targeted riders.
+Unlike spells with DM-adjacent flavor but defined mechanics (e.g., Suggestion: target takes a "reasonable" action, but the spell itself deals no damage, applies defined conditions, etc.), Control Weather has no deterministic mechanical resolution in the SRD text. The spell's observable effects on the game state are 100% DM agenda.
 
-Checking each existing family:
+The staged tables (5 precipitation stages, 6 temperature stages, 5 wind stages) describe world-state labels, not mechanical operations. No existing atom family covers environmental/world-state control.
 
-| Family | Why it fails |
-|---|---|
-| `ongoing_effect` | `OngoingOperation` is closed to `roll_modifier` and `damage_on_hit`. Weather stage mutation is neither. |
-| `activation` | `ActivationPhase` is closed to `attack_roll` and `save_gate`. Control Weather has neither. |
-| `triggered_reaction` | Requires Reaction casting time. Casting time is 10 minutes. |
-| `anchored_trigger` | Requires an anchor point + event-triggered release. The spell grants ongoing direct control, not a stored trigger released by an external event. |
+## Structural gaps (independent of dm_agenda classification)
 
-There is no honest encoding path.
+Even if we wanted to encode the deterministic skeleton (the spell IS concentration, the stages ARE defined), three additional surface gaps would block clean encoding:
 
-## Proposed widenings
+### 1. Range in miles
 
-### 1. New family: `world_state_control` (structural)
+The spell's range is a 5-mile sphere. The current `Range` type only supports:
+- `{ kind: "self" }`
+- `{ kind: "touch" }`
+- `{ kind: "point", feet: number }`
 
-A new `SpellMechanics` family is needed for spells whose primary mechanic is steering staged, enumerable world-state variables within a radius over a concentration duration.
-
-Sketch of the new family shape:
+A miles-based range variant is needed for large-area environmental spells. This would be a `surface_widening`:
 
 ```typescript
-type WeatherAxis = "precipitation" | "temperature" | "wind";
-
-type WorldStateAxis = {
-  readonly kind: "weather_stage";
-  readonly axis: WeatherAxis;
-};
-
-type WorldStateMutation = {
-  readonly kind: "shift_stage";
-  readonly axes: ReadonlyArray<WorldStateAxis>;
-  readonly delta: -1 | 0 | 1;  // shift by one up or down
-  readonly transitionDelay?: DiceExpr;  // 1d4 × 10 min
-};
-
-type WorldStateControlMechanics = SpellMechanicsHeader & {
-  readonly family: "world_state_control";
-  readonly area: { readonly kind: "self_radius"; readonly miles: number };
-  readonly castConditions?: ReadonlyArray<CastCondition>;
-  readonly terminationConditions?: ReadonlyArray<TerminationCondition>;
-  readonly operation: WorldStateMutation;
-};
+| { readonly kind: "point_miles"; readonly miles: number }
+// or extend Range to support a unit field:
+| { readonly kind: "sphere_miles"; readonly miles: number }
 ```
 
-This family would also cover future spells like Move Earth, Control Water (partial), and Earthquake that mutate large-scale environmental features rather than targeting creatures.
+### 2. Early-end trigger: caster goes indoors
 
-### 2. New `Range` variant: `self_radius_miles` (surface)
+"The spell ends early if you go indoors" has no matching `DurationEndTrigger` variant. Existing variants cover target actions (attack roll, deals damage, casts spell, dons armor, takes damage, damaged by caster/ally, recasts spell) — none cover the caster's physical location relative to an indoor/outdoor boundary.
 
-The existing `Range` type supports `self`, `touch`, and `point { feet }`. Control Weather's range is a 5-mile sphere centered on the caster — not a targetable point. A `self_radius` variant with a `miles` (or large-feet) dimension is needed.
-
+New variant needed:
 ```typescript
-| { readonly kind: "self_radius"; readonly miles: number }
+| { readonly kind: "caster_goes_indoors" }
 ```
 
-Evidence: *"You take control of the weather within 5 miles of you for the duration."*
+### 3. Outdoor-only cast restriction
 
-### 3. New `CastCondition` / `TerminationCondition` surface types (surface)
+"You must be outdoors to cast this spell" is a cast-time location gate with no surface representation. This is a new class of casting restriction (location predicate) not currently in the schema.
 
-The spell requires being outdoors at cast time and terminates early if the caster goes indoors. No existing surface type models:
+## What an honest encoding would require
 
-- A precondition on the physical environment required for casting
-- A circumstantial (non-timed, non-concentration-break) termination condition
+Beyond resolving dm_agenda classification, a full honest encoding would need:
+1. A `control_weather_state` or `set_world_state` effect atom (or equivalent) to represent environmental manipulation
+2. The miles range variant
+3. The `caster_goes_indoors` early-end trigger
+4. An outdoor-only cast-restriction predicate
+5. A mechanism for the stage-shift state machine (the caster can repeatedly shift by 1, but the current surface has no "modify world state by delta" atom family)
 
-```typescript
-type CastCondition =
-  | { readonly kind: "must_be_outdoors" };
+The stage-shift mechanic is a player-controlled state machine over DM-owned world state, which has no v4 analogue. Even structurally, this would require a new atom family.
 
-type TerminationCondition =
-  | { readonly kind: "caster_goes_indoors" };
+## Casting time note
+
+The 10-minute casting time maps cleanly to the existing surface:
+```dhall
+{ kind = "minutes", amount = 10, ritual = False }
 ```
-
-Evidence: *"You must be outdoors to cast this spell, and it ends early if you go indoors."*
-
-### 4. New `TransitionDelay` surface variant (surface)
-
-After shifting a weather stage, 1d4×10 minutes pass before the new conditions take effect. This random latency between caster action and effect manifestation has no existing surface type.
-
-Evidence: *"It takes 1d4 × 10 minutes for the new conditions to take effect."*
-
-### 5. New v4 atom: `modify_world_state` (atom)
-
-All existing v4 effect atoms target creatures, rolls, movement, or named spell-effects on creatures/objects. A new atom is needed for the mutation of staged environmental state variables within a large area. This would be the primary effect atom granted by the `world_state_control` family.
-
-Evidence: *"find a current condition on the following tables and change its stage by one, up or down."*
-
-## Classification
-
-`structural_widening` — no existing `SpellMechanics` family can honestly represent this unit. The widening is at the family level, with secondary surface and atom widenings.
-
-## Pressure assessment
-
-This pattern (large-area environmental control with staged progression tables) is unlikely to be a one-off. Other pressure candidates: Control Water (four distinct modes, some analogous), Move Earth, Earthquake, Wind Walk (travel mode, no creature attack). A `world_state_control` family is not Control-Weather-specific.
+This is the only aspect of the spell that fits without widening.

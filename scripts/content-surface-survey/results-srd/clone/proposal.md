@@ -1,121 +1,78 @@
-# Proposal: Clone widening gaps
+# Proposal: Clone (structural_widening)
 
-## Outcome: `atom_widening`
+## Unit
 
-Clone cannot be encoded honestly. The blocking gap is a missing effect atom. Secondary gaps are new surface type variants.
+**Clone** — Level 8 Necromancy spell (SRD 5.2.1, `srd52: true`)
 
----
+## Why No Honest Encoding Exists
 
-## Closest honest family: `anchored_trigger`
+Clone's mechanic is: create an inert biological duplicate inside a sealed vessel; after 120 days, if the original creature dies and its soul is free and willing, the soul transfers to the clone, which then becomes the living creature.
 
-Clone's shape is deferred-trigger: the caster plants something during the cast that waits indefinitely, then fires when a specific event occurs (the original creature's death). This matches the `anchored_trigger` family pattern.
+### Family analysis
 
-However, `anchored_trigger` as currently specified cannot host Clone without lying about:
-1. What the anchor is (vessel, not location/area)
-2. What event fires the trigger (creature death, not physical contact / enters area)
-3. What the released effect does (soul transfer, no v4 atom exists)
-4. What gate must pass (soul-state predicate, not a creature exemption list)
-5. The casting time unit (1 hour, no `hours` variant)
+| Family | Honest fit? | Reason |
+|---|---|---|
+| `ongoing_effect` | No | Duration is `instantaneous` per the printed card; the clone's persistence is a property of the created object, not the spell's concentration/timed window |
+| `activation` | No | The soul transfer fires on the original's future death — not a one-shot effect at cast time |
+| `triggered_reaction` | No | Clone is a long-cast spell (1 hour), not a reaction |
+| `anchored_trigger` | No | Anchored triggers plant at a `location` or `area`; the anchor here is the *original creature*, which is not a supported anchor target. Events `physical_contact` / `enters_area` do not cover "creature dies" |
+| `spawned_creature` | No | The clone is not a controlled companion. The caster has no command relationship with it — it is a vessel for the original creature's own soul |
+| `reanimated_creature` | No | Reanimation targets a corpse with caster control; Clone produces a vessel the original creature inhabits autonomously |
 
----
+No existing family fits.
 
-## Required widenings
+## Required Widenings
 
-### 1. New atom: `soul_transfer` (blocking)
+### 1. `CastingTime.hours` variant (surface_widening)
 
-**Category:** effect
+The surface has `CastingTime.minutes` (for Alarm: 1 minute) but no `hours` variant. Clone casts in 1 hour. Adding `{ kind: "hours"; amount: number; ritual: boolean }` would resolve this gap and is also required by other long-cast spells (Glyph of Warding, etc.).
 
-**What it models:** The soul of a named creature vacates the original body and takes up residence in a pre-built clone body, restoring the creature there with full memories, personality, and abilities. The original body becomes permanently inert.
+### 2. `soul_vessel` subgraph (structural_widening)
 
-**Why no existing atom suffices:**
-- `heal` — restores HP; does not move a soul or change which body a creature inhabits
-- `create_companion` — summons a new, separate creature; clone is not a companion
-- `transport_exile` — moves a creature spatially; clone is not a teleport
-- `return_on_end` — lifecycle reset when an effect expires; the trigger here is the *original's death*, not an effect ending
-- `fall_on_end` — narrows to gravity-type cleanup
+A new spell family is needed for spells that create an inert biological vessel that activates on a triggering event (the original's death). Distinguishing features:
+- The created vessel is not under caster control (different from `spawned_creature`)
+- The vessel's activation is triggered by a future event external to the spell's normal duration
+- The vessel carries personality/memories/abilities — not just stats — distinguishing it from `polymorph` / `transform_target`
 
-Soul transfer is a distinct mechanical operation: one creature-body's soul vacates and reanimates a waiting body elsewhere. This is the resurrection/reincarnation class of effects, which v4 has not modeled.
+### 3. `on_creature_dies` trigger event (surface_widening)
 
-**Shape sketch:**
+The soul transfer fires "if the original creature dies." No trigger in `OngoingTrigger` or `AnchoredEvent` covers creature death. Needed:
 ```
-soul_transfer {
-  sourceCreature: "original"       // implied by the anchor setup
-  destinationAnchor: AnchorTarget  // the vessel holding the clone body
-}
+| { readonly kind: "on_creature_dies" }
 ```
+This is distinct from `on_attached_turn_start`, `on_attached_damaged`, etc.
 
-**SRD evidence:**
-> "the creature's soul transfers to the clone if the soul is free and willing to return. The clone is physically identical to the original and has the same personality, memories, and abilities"
+### 4. `soul_transfer` effect atom (atom_widening)
 
----
+Moving a creature's soul to a prepared vessel — carrying personality, memories, and abilities, with the creature resuming life at the clone's location — is not any existing EffectAtom:
+- Not `heal_hp` (the original is dead)
+- Not `transform_target` (that replaces stats; doesn't model soul continuity)
+- Not `create_companion` (no control relationship)
+- Not `grant_condition_immunity` or `apply_condition`
 
-### 2. New `CastingTime` variant: `hours`
-
-**Current surface type** (`CastingTime`) has: `action`, `bonus_action`, `reaction`, `minutes`.
-
-Clone casts in 1 hour. Other long-cast spells (Forbiddance: 10 minutes; Sequester: 1 hour; Astral Projection: 1 hour) suggest an `hours` variant is needed rather than overloading `minutes` with `amount: 60`.
-
-**Proposed addition:**
+Proposed shape (sketch):
 ```typescript
-| { readonly kind: "hours"; readonly amount: number; readonly ritual: boolean }
+| {
+    readonly kind: "soul_transfer";
+    readonly toVessel: "linked_clone_vessel";
+    readonly condition: "soul_free_and_willing";  // partially DM agenda
+  }
 ```
 
----
+Note: "soul is free and willing to return" is partially DM agenda and cannot be resolved deterministically. The condition would need to be flagged as DM-resolved at the table.
 
-### 3. New `AnchorTarget` variant: `vessel`
+### 5. `block_reanimation_of_original` / `render_inert` atom (atom_widening)
 
-**Current variants:** `location` (door_or_window), `area` (cube max side).
+"The creature's original remains, if any, become inert and can't be revived." The existing `block_reanimation` atom prevents undead reanimation of a corpse; this is stronger — it prevents ALL revival (Raise Dead, Resurrection, True Resurrection, etc.) because the soul is elsewhere. Either a new `render_permanently_inert` atom or an extension to `block_reanimation` with a `scope: "all_revival"` field is needed.
 
-Clone's anchor is a physical container holding an inert creature body. This is neither a location in the movement/contact sense nor an area in the sphere-of-influence sense.
+### 6. `delayed_growth_timer` (surface_widening)
 
-**Proposed addition:**
-```typescript
-| { readonly kind: "vessel"; readonly description: "sealable_creature_sized_container" }
-```
+"Finishes growing after 120 days" — a readiness gate on the created vessel before it can receive a soul. No existing timer primitive models a one-shot readiness delay on a created object. `PassiveOperation.elapsed_time` is for recurring worn-item effects, not a creation readiness gate.
 
----
+## DM Agenda Component
 
-### 4. New `AnchoredEvent` variant: `creature_dies`
+"If the soul is free and willing to return" — willingness is DM-adjudicated. This is not a blocking issue for the surface (the trigger could simply note `requires_dm_resolution: true`), but the condition means the spell cannot be modeled as fully deterministic.
 
-**Current variants:** `physical_contact`, `enters_area`.
+## Confidence
 
-Clone fires when the **original creature dies** — a specific creature-state transition, not a creature-location interaction.
-
-**Proposed addition:**
-```typescript
-| { readonly kind: "creature_dies"; readonly which: "original" }
-```
-
----
-
-### 5. New `AnchoredFilter` variant: `soul_willing_and_free`
-
-**Current variant:** `creature_exemption_list` (chosen at cast, prevents certain creatures from triggering the release).
-
-Clone has a gate: the soul transfer only completes if the soul is both free (not magically trapped, e.g. by soul cage) and willing (the creature chooses to return). This cannot be modeled as a creature exemption list chosen at cast time — it is a runtime state predicate evaluated at trigger time.
-
-**Proposed addition:**
-```typescript
-| { readonly kind: "soul_willing_and_free" }
-```
-
-Note: the "willing" component has a player-agency dimension, but the SRD treats it as a mechanical gate (the spell simply fails to activate if the soul is unwilling or trapped), so it belongs in the filter grammar rather than DM agenda.
-
----
-
-## Secondary observation: 120-day gestation
-
-Clone includes a 120-day growth period before the clone body is ready. The current `anchored_trigger` schema has no concept of a preparation delay between casting and the anchor becoming active. This could potentially be modeled as a `timed` duration on the `store` procedure (the spell is "stored" for 120 days before the trigger arms), but `AnchoredTriggerMechanics` has no `readyAfter` or `preparationPeriod` field. This is noted as a minor surface gap; it does not require a new atom.
-
----
-
-## Summary of widenings by priority
-
-| # | Kind | Name | Blocking? |
-|---|------|------|-----------|
-| 1 | `new_atom` | `soul_transfer` | Yes |
-| 2 | `new_variant` | `CastingTime.hours` | Yes (typecheck) |
-| 3 | `new_variant` | `AnchorTarget.vessel` | Yes |
-| 4 | `new_variant` | `AnchoredEvent.creature_dies` | Yes |
-| 5 | `new_variant` | `AnchoredFilter.soul_willing_and_free` | Yes |
-| 6 | (minor) | `AnchoredTriggerMechanics.preparationPeriod` | No |
+**High.** Six independent gaps were found. Even if individual gaps could be worked around with creative encoding, the combination of (a) no appropriate family, (b) no "creature dies" trigger, and (c) no soul-transfer atom makes an honest encoding impossible with the current surface.

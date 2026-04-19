@@ -1,121 +1,118 @@
-# Proposal: Conjure Elemental — structural_widening
+# Proposal: Conjure Elemental — surface_widening
 
-## Summary
+## Intended encoding
 
-Conjure Elemental cannot be honestly encoded in the current surface. The spell's core mechanic is a **stationary conjured spirit entity** that persistently occupies a location and independently opens save-gate windows when creatures move nearby. No existing payload family models this shape. The nearest family, `anchored_trigger`, terminates at `AnchoredSignal` (audible/mental notifications) rather than a combat-effect pipeline. Beyond the structural gap, four additional surface widenings are required to express the spell's effects.
+**Family**: `ongoing_effect`  
+**Attachment**: `area` with a point-within-range origin at 60 ft, encompassing the spirit's space and a 5-ft emanation around it.  
+**Cast-time element choice**: `CastTimeChoice<DamageType>` selecting from `["lightning", "thunder", "fire", "cold"]` (already in surface).  
+**Upcast scaling**: `linear_per_level` with `axis="slot"`, `+1d8` to both damage tiers per slot above 5 (already in surface).
 
----
+The spirit is intangible and produces no stat block, companion control, or independent action — it is a persistent area hazard, not a spawned creature.
 
-## Primary gap: missing conjured-spirit family
+## Why honest encoding is blocked
 
-The spell creates a Large intangible spirit at a point in range. The spirit:
-- persists for concentration up to 10 minutes
-- occupies a location (a space on the grid)
-- triggers independently: "whenever a creature enters the spirit's space or starts its turn within 5 feet"
-- has runtime state: tracks whether any creature is currently Restrained by it
-
-None of the four spell families capture this:
-
-| Family | Why it fails |
-|---|---|
-| `activation` | One-shot; no persistent entity placed at a location |
-| `ongoing_effect` | Attaches to targets (via `roll_modifier` or `damage_on_hit`); no location entity or entry trigger |
-| `triggered_reaction` | Caster reacts to an event; no persistent zone |
-| `anchored_trigger` | Closest: plants something at a location, but emits only `AnchoredSignal` — not damage or conditions |
-
-The needed family would model: **cast → create spirit entity at location → spirit autonomously opens save-gate windows on creature entry/turn-start → gated on spirit's current condition-occupancy state**.
-
-A candidate name: `conjured_spirit` or, more generically, `persistent_zone_entity`. This would be a new top-level `SpellMechanics` family with its own mechanics header covering:
-- the spirit's attachment (location at range point)
-- the per-creature-per-turn trigger condition (enter space OR start turn within N feet)
-- the conditional trigger guard (only when spirit has 0 Restrained targets)
-- the on-fail branch (damage + apply_condition)
-- the repeat-save loop (each turn of a Restrained target)
-- the on-success branch of the repeat save (remove_condition)
+Five surface type variants are absent. None is a missing v4 taxonomy atom; all are new variants of existing surface types.
 
 ---
 
-## Secondary gaps (all required before honest encoding)
+### Gap 1 — `OngoingPredicate`: no mutex-condition variant
 
-### 1. `Condition: "restrained"`
+**Missing**: `{ kind: "no_condition_active_on_any_target"; condition: Condition }`
 
-`Condition` is currently closed at `"prone"`. The spell applies and removes the Restrained condition. This widening would also unlock encoding of other Restrained-applying spells (Ensnaring Strike, Grasping Vine, Evard's Black Tentacles, etc.).
+The trigger is guarded by the state of the spell's own effect: it only fires **if no creature is currently Restrained by this effect instance**. This is a stateful mutex — at most one creature can be held at a time.
 
-```typescript
-export type Condition = "prone" | "restrained";
-```
+`OngoingPredicate` only provides `{ kind: "at_hp_threshold", threshold, comparison }`. There is no variant for "this condition is not currently held on any target by this effect."
 
-### 2. `Effect: apply_condition`
+**SRD text**: *"you can force that creature to make a Dexterity saving throw if the spirit has no creature Restrained"*
 
-The `Effect` union (`DamageEffect | NoneEffect`) has no way to express condition application. The on-fail save branch here deals damage AND applies Restrained — two effects on one branch. This requires either a compound effect or an `apply_condition` variant. The v4 atom `apply_condition` already exists.
-
-```typescript
-export type ApplyConditionEffect = {
-  readonly kind: "apply_condition";
-  readonly condition: Condition;
-};
-export type Effect = DamageEffect | NoneEffect | ApplyConditionEffect;
-```
-
-### 3. `Effect: remove_condition`
-
-The on-success branch of the repeat save removes Restrained. `remove_condition` is in v4 but not in the `Effect` union.
-
-```typescript
-export type RemoveConditionEffect = {
-  readonly kind: "remove_condition";
-  readonly condition: Condition;
-};
-```
-
-### 4. `ActivationPhase: repeat_save`
-
-The v4 resolution atom `repeat_save` has no corresponding `ActivationPhase` variant. The Restrained target repeats the DEX save at the start of each of its turns. This requires a new phase kind:
-
+**Proposed shape**:
 ```typescript
 | {
-    readonly kind: "repeat_save";
-    readonly trigger: RepeatSaveTrigger;  // e.g. { kind: "start_of_restrained_target_turn" }
-    readonly ability: Ability;
-    readonly dc: DcSource;
-    readonly onFail: Effect;
-    readonly onSuccess: Effect;
+    readonly kind: "no_condition_active_on_any_target";
+    readonly condition: Condition;
   }
 ```
 
-`RepeatSaveTrigger` would be a new closed enum (narrow starting shape: `start_of_restrained_target_turn`).
+---
 
-### 5. Conditional trigger guard: `condition_occupancy_check`
+### Gap 2 — `RepeatSaveSpec.cadence`: no `start_of_target_turn`
 
-The save window only opens "if the spirit has no creature Restrained." This is a runtime guard keyed on the spirit's current state — zero attached creatures currently hold the Restrained condition. No existing surface shape models a trigger conditional on runtime condition-occupancy of the caster's effect. A new trigger guard type would be needed:
+**Missing**: `"start_of_target_turn"` as a cadence option.
 
+The repeat save fires at the **start** of the Restrained target's turn. The existing cadences are `"end_of_target_turn"` and `"on_target_takes_damage"`. Start-of-turn is distinct: it fires before the creature can move or act, which matters for ongoing area hazards (Cloudkill uses end-of-turn; Conjure Elemental explicitly uses start-of-turn for the repeat).
+
+**SRD text**: *"At the start of each of its turns, the Restrained target repeats the save."*
+
+**Proposed addition**:
 ```typescript
-export type TriggerGuard =
-  | { readonly kind: "no_restrained_targets" };
+readonly cadence: "end_of_target_turn" | "on_target_takes_damage" | "start_of_target_turn";
 ```
 
-This guard would sit on the per-creature trigger, preventing the window from opening when the spirit already has a Restrained creature.
+---
+
+### Gap 3 — `RepeatSaveSpec.onSuccess`: semantics mismatch
+
+**Missing**: a `remove_condition` outcome for repeat save success.
+
+The current `onSuccess: "ends_on_target"` terminates the spell on the succeeding target. Conjure Elemental has different semantics: success removes the Restrained condition but **the spell continues on the target**. The spirit can Restrain that creature again on a future turn. Encoding as `"ends_on_target"` would make the spell appear to terminate when the target breaks free, which is false.
+
+**SRD text**: *"On a successful save, the target isn't Restrained by the spirit."*
+
+**Proposed addition** to `RepeatSaveSpec.onSuccess`:
+```typescript
+readonly onSuccess:
+  | "ends_on_target"
+  | { readonly kind: "remove_condition"; readonly condition: Condition };
+```
 
 ---
 
-## Cast-time parameter (not a widening)
+### Gap 4 — `OngoingTrigger`: no caster-optional flag
 
-The element choice (air=Lightning, earth=Thunder, fire=Fire, water=Cold) is a cast-time selection of damage type. The `DamageType` union already covers all four values. This is an authoring-time parameter (`damageType: DamageType`), not a structural gap.
+**Missing**: a flag indicating the trigger fires only if the caster chooses to invoke it.
 
-## Slot scaling (not a widening)
+"You **can** force" is a player decision at each qualifying event — the caster may choose not to use the save gate on a given creature entering the area. All existing `OngoingTrigger` kinds fire unconditionally when their event fires (passive, on_creature_enters_area, on_attached_turn_start, etc.).
 
-+1d8 per slot level above 5 maps cleanly to `linear_per_level` with `axis: "slot"`. No widening needed once the structural family exists.
+This is distinct from `optional: boolean` on `OnHitTriggerMechanics` (mastery), which gates the whole mastery family. Here, the caster decides per-firing whether to invoke the save gate.
+
+**SRD text**: *"you can force that creature to make a Dexterity saving throw"*
+
+**Proposed approach**: Add an optional `casterActivated?: true` flag to `OngoingOperation` (or to the affected trigger variants) signaling that the caster must actively elect to trigger the effect each time.
 
 ---
 
-## Atom inventory check
+### Gap 5 — `OngoingTrigger`: no compound "any_of" trigger
 
-| Needed atom | In v4? | In types.ts? |
-|---|---|---|
-| `apply_condition` | yes | no (only mastery `save_gate` result, not general Effect) |
-| `remove_condition` | yes | no |
-| `repeat_save` | yes | no (resolution atom only, no ActivationPhase variant) |
-| `create_companion` / spirit entity | v4 has `create_companion` | no |
-| `condition_occupancy_check` guard | no | no |
+**Missing**: a compound trigger that fires on either of two distinct event kinds.
 
-The conditional trigger guard is a genuine new atom (not in v4), which would normally push this toward `atom_widening`. However, the primary blocker is the absence of a family that can even host these atoms — making `structural_widening` the correct classification.
+The effect fires when a creature **enters the spirit's space** (≈ `on_creature_enters_area`) OR **starts its turn within 5 feet** (≈ `on_attached_turn_start` scoped to the 5-ft area). These are two different mechanical events. Splitting into two operations would duplicate the save gate and the mutex predicate, diverging authoring and creating implicit coupling. `ReactionTrigger` already has `{ kind: "any_of", triggers: [...] }` for exactly this pattern at the reaction level; the same shape is needed for `OngoingTrigger`.
+
+**SRD text**: *"enters the spirit's space or starts its turn within 5 feet of the spirit"*
+
+**Proposed addition**:
+```typescript
+| {
+    readonly kind: "any_of";
+    readonly triggers: ReadonlyNonEmptyArray<OngoingTrigger>;
+  }
+```
+
+---
+
+## Elements that do fit the current surface
+
+| Element | Surface support |
+|---|---|
+| `CastTimeChoice<DamageType>` for element selection | ✅ exists |
+| `linear_per_level` upcast scaling on `DiceAmount` (axis="slot") | ✅ exists |
+| `on_creature_enters_area` trigger | ✅ exists |
+| `on_attached_turn_start` trigger | ✅ exists |
+| `apply_condition restrained` on fail | ✅ exists |
+| `damage` atom (8d8 / 4d8 spirit-type) | ✅ exists |
+| `composite` effect for fail branch (damage + restrained) | ✅ exists |
+| `save_gate` with `caster_spell_save_dc` | ✅ exists |
+| Concentration duration, 10 minutes | ✅ exists |
+
+## Encoding verdict
+
+**Do not author** `content/conjure_elemental.dhall` or `content/conjure_elemental.json`. The five missing variants collectively misrepresent the spell's core mechanic (the mutex restraint gate, the start-of-turn repeat, and the condition-remove-not-spell-end success semantics). A forced encoding would produce a misleading trace.

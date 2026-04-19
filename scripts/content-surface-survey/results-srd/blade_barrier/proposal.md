@@ -1,68 +1,75 @@
-# Proposal: Blade Barrier — structural_widening
+# Proposal: Blade Barrier surface gaps
 
 ## Unit
 
-- **Name:** Blade Barrier
-- **Kind:** spell (level 6, evocation, concentration 10 min)
-- **Source:** srd-5.2.1
+**Blade Barrier** — SRD 5.2.1, Level 6 Evocation spell.
 
-## Why no encoding was produced
+## Outcome
 
-Blade Barrier creates a persistent hazardous zone that fires a DEX save gate every time any creature *enters* the zone or *ends its turn* there, for the full concentration duration. No existing `SpellMechanics` family can represent this honestly:
+`atom_widening` — Three-Quarters Cover requires a new v4 atom; ring wall shape requires a new `AreaShapeDescriptor` variant; once-per-turn deduplication is a missing surface constraint.
 
-| Family | Why it doesn't fit |
-|---|---|
-| `activation` | Phases fire once at cast. Cannot model "fire save gate on every entry / end-turn event for 10 minutes." |
-| `ongoing_effect` | Models persistent modifiers on creatures already attached to the spell. Does not model event-triggered saves against new creatures that cross into the area. |
-| `triggered_reaction` | Single reaction cast by the caster. Wrong shape entirely. |
-| `anchored_trigger` | Models a one-time release when an event fires (Alarm). Blade Barrier fires **repeatedly**, once per interacting creature per turn. |
+## Structural fit
 
-Forcing the spell into `activation` with a `save_gate` phase would model only the initial placement — silently dropping the ongoing entry/end-turn triggers. That is a misleading trace.
+Blade Barrier is an `ongoing_effect` spell. The mechanics family fits:
 
-## Proposed widenings
+- Area attachment (wall footprint)
+- Initial phase: creatures in the wall at cast time make a Dex save
+- Two ongoing triggers: `on_creature_enters_area` and `on_creature_ends_turn_in_area` (both exist in types.ts)
+- Save gate: Dex vs caster spell save DC, 6d10 Force on fail, half on success
+- Passive: `area_is_difficult_terrain` (atom exists)
 
-### 1. New family: `hazard_zone` (structural_widening)
+The blocking gaps prevent honest encoding.
 
-A new `SpellMechanics` family for spells that create a persistent, dangerous area which fires a resolution (save gate or damage) every time a creature satisfies a trigger condition (enters, ends turn, starts turn) for the spell's duration.
+## Gap 1: Ring wall shape (surface_widening)
 
-**Key shape elements needed:**
-- `area` with shape (see below)
-- `trigger_condition`: `enters_area | ends_turn_in_area | starts_turn_in_area`
-- `per_creature_per_turn` fence (once-per-turn constraint)
-- `resolution: save_gate` (same shape as existing `save_gate` phase)
-- `onFail / onSuccess: EffectAtom`
-- Duration handled by existing lifecycle atoms (`concentrate → expire`)
+The spell offers a cast-time choice between two wall forms:
 
-Candidate v4 graph: `activate → opens_window(duration_window) → [for each creature that satisfies trigger] → save_gate → damage/none`
+- **Straight**: 100 ft long, 20 ft high, 5 ft thick
+- **Ring**: 60 ft diameter, 20 ft high, 5 ft thick
 
-### 2. New `AreaShapeDescriptor` variants: `wall_straight` and `wall_ring` (surface_widening)
+The cast-time choice is encodable via `AreaShapeSpec.choice`. The straight wall could use `line` (precedent: `wall_of_stone.dhall`, which noted the missing height dimension but used it anyway as an approximation). The **ring wall** has no matching shape. `cylinder` is a filled disk — not a hollow ring/annulus. There is no `ring` or `annulus` variant in `AreaShapeDescriptor`.
+
+### Proposed widening
 
 ```typescript
 | {
-    readonly kind: "wall_straight";
-    readonly lengthFeet: number;
-    readonly heightFeet: number;
-    readonly thicknessFeet: number;
-  }
-| {
-    readonly kind: "wall_ring";
+    readonly kind: "ring";
     readonly diameterFeet: number;
     readonly heightFeet: number;
     readonly thicknessFeet: number;
   }
 ```
 
-These are vertical planar structures. `line` (2D: length × width) does not model a wall — it has no height and implies a ground-level effect.
-
-### 3. New effect atom: `difficult_terrain` (atom_widening)
+Alternatively, a generic `wall` shape with length/height/thickness covering the straight form, paired with `ring` for the hollow form:
 
 ```typescript
-| { readonly kind: "difficult_terrain" }
+| {
+    readonly kind: "wall";
+    readonly lengthFeet: number;
+    readonly heightFeet: number;
+    readonly thicknessFeet: number;
+  }
+| {
+    readonly kind: "ring";
+    readonly diameterFeet: number;
+    readonly heightFeet: number;
+    readonly thicknessFeet: number;
+  }
 ```
 
-Blade Barrier makes its entire space Difficult Terrain for the duration. TAXONOMY_atoms_graph.md §12 already records this as survey pressure (2 hits). It should be promoted to v4 alongside the `hazard_zone` family.
+The `wall` variant with explicit height also resolves the gap noted in `wall_of_stone.dhall` where the 20 ft height was unrepresentable.
 
-### 4. New effect atom: `grant_cover` (atom_widening)
+## Gap 2: Three-Quarters Cover (atom_widening)
+
+The wall provides Three-Quarters Cover. No existing `EffectAtom` expresses granting a cover tier. This is distinct from:
+
+- `block_targeting` — prevents targeting entirely
+- `modify_roll_advantage` — imposes disadvantage
+- `modify_roll_numeric` — adds a numeric modifier
+
+Three-Quarters Cover is an environment property of the wall itself that imposes −5 to attack rolls and saving throws for attacks passing through it (SRD Rules Glossary). It applies to creatures using the wall as cover, not creatures in the wall.
+
+### Proposed widening
 
 ```typescript
 | {
@@ -71,27 +78,49 @@ Blade Barrier makes its entire space Difficult Terrain for the duration. TAXONOM
   }
 ```
 
-The wall grants Three-Quarters Cover to creatures behind it. Cover modifies attack roll and DEX saving throw targeting, making it a mechanically deterministic effect that belongs in the core atom inventory.
+Applied as an ongoing passive effect on the area attachment, it marks the area as providing a specified cover tier to creatures sheltering behind it.
 
-## Scope of the hazard_zone family
+## Gap 3: Once-per-turn deduplication (surface_widening)
 
-Other SRD spells that would also need this family (non-exhaustive):
+The spell has three triggers that fire the same save:
 
-- **Wall of Fire** — deals fire damage on enter/end-turn, concentration
-- **Wall of Thorns** — difficult terrain + damage on move-through, concentration
-- **Spike Growth** — difficult terrain + piercing damage per 5 ft moved through, concentration
-- **Cloudkill** — CON save on start-of-turn in sphere, concentration
-- **Insect Plague** — WIS save on start-of-turn in sphere, concentration
+1. Creatures in the wall when it appears (initial phase)
+2. Creature enters the wall's space (`on_creature_enters_area`)
+3. Creature ends its turn in the wall's space (`on_creature_ends_turn_in_area`)
 
-The pattern is consistent: a persistent area, an event condition (enter / start-turn / end-turn / move-through), and a resolution that fires repeatedly per creature per turn.
+But: "A creature makes that save only once per turn."
 
-## Relationship to existing atoms
+The current `OngoingOperation` surface has no mechanism to group multiple operations and cap the total fires per creature per turn. Each operation fires independently. Spirit Guardians (`spirit_guardians.dhall`) documents the same gap — it omitted the `on_creature_enters_area` trigger rather than fire the save twice.
 
-The `hazard_zone` family would reuse:
-- `area` attachment with the widened `AreaShapeDescriptor`
-- `save_gate` resolution node (same as in `activation` phases)
-- `damage` effect atom
-- `concentrate → expire` lifecycle chain
-- `difficult_terrain` and `grant_cover` as persistent area effects attached to the zone rather than to individual creatures
+### Proposed widening
 
-No existing atoms need to change. The widening is additive.
+A `deduplication` field on `OngoingOperation` or a grouping mechanism:
+
+```typescript
+export type OngoingOperation = {
+  readonly trigger: OngoingTrigger;
+  readonly predicate?: OngoingPredicate;
+  readonly effect: OngoingEffect;
+  readonly deduplication?: { readonly kind: "once_per_turn" };
+};
+```
+
+When two or more operations in the same spell share `deduplication: { kind: "once_per_turn" }`, the runtime fires the effect at most once per creature per turn regardless of how many triggers activate.
+
+## Encoding decision
+
+No `content/blade_barrier.dhall` authored. The ring wall shape has no honest representation, the Three-Quarters Cover atom is missing, and the once-per-turn dedup constraint is absent. Forcing a `line` for both shapes or omitting cover would produce a misleading trace.
+
+If the three widenings above are applied:
+
+1. Add `ring` and `wall` variants to `AreaShapeDescriptor`
+2. Add `grant_cover` to `EffectAtom`
+3. Add `deduplication` to `OngoingOperation`
+
+The spell would encode cleanly as an `ongoing_effect` with:
+
+- `attachment.area.shape.choice` between `{ kind: "wall", ... }` and `{ kind: "ring", ... }`
+- `initialPhase` save_gate for creatures in the wall at cast time
+- Two operations with `on_creature_enters_area` and `on_creature_ends_turn_in_area`, both with `deduplication: { kind: "once_per_turn" }`
+- Passive `area_is_difficult_terrain` operation
+- Passive `grant_cover { tier: "three_quarters" }` operation

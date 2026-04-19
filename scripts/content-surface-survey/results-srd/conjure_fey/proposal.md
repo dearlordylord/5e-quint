@@ -1,133 +1,126 @@
-# Proposal: Widenings Required for Conjure Fey
+# Proposal: Surface Widenings for Conjure Fey
 
-## Classification: `structural_widening`
-
-Conjure Fey cannot be honestly encoded in any existing `SpellMechanics` family. The spell's core pattern — conjure a persistent proxy entity, optional attack on cast, repeatable Bonus Action attack on each subsequent turn — does not map to `ongoing_effect`, `activation`, `triggered_reaction`, or `anchored_trigger`.
+**Unit:** Conjure Fey (spell, level 6, conjuration)
+**Outcome:** `surface_widening`
+**Family:** `ongoing_effect` (correct structural home — persistent concentration effect with per-turn operations)
 
 ---
 
-## Primary Gap: Missing Spell Family for Proxy-Conjure
+## What the spell does
 
-### The pattern
+Conjure Fey creates a Medium spirit at a point within 60 ft. The spirit occupies a space and serves as a mobile melee-range origin: the caster makes attacks against creatures within 5 ft of the spirit. When the spirit appears, the caster may make one melee spell attack (3d12 + spellcasting mod psychic, +Frightened until start of caster's next turn). On later turns, as a Bonus Action, the caster teleports the spirit up to 30 ft and makes the attack again from the new position.
 
-1. Spell creates a **persistent proxy entity** at a point within range (the Fey spirit).
-2. **On cast**: The caster *optionally* makes one melee spell attack against a creature within 5 ft of the proxy.
-3. **On later turns**: The caster may spend a **Bonus Action** to teleport the proxy (up to 30 ft within sight) and make the same attack again.
-4. The proxy persists while concentration holds (up to 10 minutes).
+The spirit has no stat block, no independent actions, and no command economy — it is not a spawned creature. It is a persistent mobile attack origin fully controlled by the caster.
 
-### Why existing families fail
+---
 
-| Family | Why it fails |
-|---|---|
-| `activation` | Executes all phases at cast time; cannot model per-turn Bonus Action re-use on *later* turns |
-| `ongoing_effect` | Passive modifier (roll_modifier or damage_on_hit rider); Conjure Fey's attacks are actively chosen expenditures, not passive riders on the caster's existing attacks |
-| `triggered_reaction` | Wrong cost and trigger structure entirely |
-| `anchored_trigger` | Plants a location/area trigger; no analog here |
+## Gap 1: `apply_condition` lacks an expiry field
 
-### v4 atoms already exist
+**Evidence:** "the target has the Frightened condition until the start of your next turn"
 
-The v4 taxonomy has `create_attack_proxy` (effect) and `attack_proxy` (attachment), meaning the atom inventory anticipated this pattern. What is missing is a **spell family** that wires these atoms into a coherent subgraph.
+The current `apply_condition` atom applies a condition with no duration or expiry. Conditions are usually assumed to last for the host effect's duration or until explicitly removed. But the Frightened condition here expires on the caster's next turn start — a turn-scoped expiry that is independent of the spell's 10-minute concentration duration.
 
-### Proposed family shape: `proxy_conjure`
+`modify_roll_advantage` already carries `count` and `expiresOn: RiderExpiry` for analogous per-hit riders (e.g., Vicious Mockery). The parallel extension for `apply_condition` is:
 
-```
-spell_root → activate
-activate --consumes--> action_quota
-activate --consumes--> spell_slot (≥ 6)
-activate --consumes--> concentration_lock
-activate --grants--> concentrate → expire (≤ 10 minutes)
-activate --grants--> create_attack_proxy
-create_attack_proxy --attaches_to--> point (within 60 ft range)
-
-// Optional attack on cast
-activate --opens_window--> action_window (optional, on cast)
-action_window --grants--> attack_roll (melee_spell_attack)
-attack_roll --attaches_to--> target (within 5 ft of proxy)
-attack_roll --opens_window--> on_hit_window
-on_hit_window --grants--> damage (3d12+mod psychic, linear_per_level slot)
-on_hit_window --grants--> apply_condition (frightened, until turn_start_window)
-
-// Per-turn Bonus Action reuse
-activate --grants--> bonus_action_window (wielder choice, each turn while concentrated)
-bonus_action_window --consumes--> bonus_action_quota
-bonus_action_window --grants--> move (proxy teleport, ≤ 30 ft within sight)
-bonus_action_window --grants--> attack_roll (same as above)
+```typescript
+// Proposed addition to EffectAtom apply_condition:
+| {
+    readonly kind: "apply_condition";
+    readonly condition: Condition | ...;
+    readonly expiresOn?: RiderExpiry;  // absent = lasts for host effect duration
+  }
 ```
 
-The key structural addition is a spell family that has:
-- `create_attack_proxy` effect on cast
-- An optional immediate attack
-- A repeatable per-turn activation (Bonus Action cost) that moves the proxy and grants another attack
+Where `RiderExpiry` already includes `{ kind: "caster_turn_start" }` (added for Heat Metal).
 
 ---
 
-## Secondary Gaps (surface widenings within existing types)
+## Gap 2: Attack origin from spirit's position
 
-These widenings are needed regardless of which family is added.
+**Evidence:** "you can make one melee spell attack against a creature within 5 feet of it"
 
-### 1. `apply_condition` variant in `Effect`
+The attack targets a creature within 5 ft of the **spirit**, not the caster. This is a positional constraint on the attack whose origin is the spirit's current location. `AreaOrigin` only has:
+- `point_within_range` — a fixed point selected at cast time
+- `on_primary_target` — secondary effect origin
+- `self` — from the caster
 
-**Current state:** `Effect = DamageEffect | NoneEffect`
+None of these captures "from the spirit's current position, which changes when the spirit is repositioned."
 
-**What's needed:** `ApplyConditionEffect = { kind: "apply_condition"; condition: Condition; duration: ConditionDuration }`
+**Proposed widening:** Add a new `AreaOrigin` variant:
 
-The Frightened condition is applied directly on hit (no save). Conjure Fey uses an unconditional on-hit condition application. The `apply_condition` atom already exists in v4, and `SaveGateRiderResult` in the mastery surface has `apply_condition`, but the spell `Effect` type has no such variant.
+```typescript
+| { readonly kind: "from_effect_attachment" }
+```
 
-**Evidence:** *"the target has the Frightened condition until the start of your next turn"*
+This allows an attack or area to originate from the effect's own attachment (the spirit), which is tracked as a repositionable position. This generalizes cleanly — any persistent attachment that can be repositioned (via `reposition_attachment`) becomes a valid origin for subsequent attacks.
 
----
-
-### 2. `frightened` in `Condition`
-
-**Current state:** `Condition = "prone"`
-
-**What's needed:** `Condition = "prone" | "frightened"` (at minimum; likely more conditions as further spells land)
-
-**Evidence:** Conjure Fey applies Frightened; Conjure Fey, Fear, Command (Flee), and many other spells require it.
+Alternatively, `AttachmentRangeOrigin` (currently `"caster" | "spell_sensor"`) could gain a third variant `"effect_attachment"` for attacks/areas whose range is measured from the persistent effect position.
 
 ---
 
-### 3. Dynamic flat in `DiceExpr`
+## Gap 3: Coupled multi-step Bonus Action (reposition + attack)
 
-**Current state:** `DiceExpr.flat?: number` — static integer only
+**Evidence:** "As a Bonus Action on your later turns, you can teleport the spirit to an unoccupied space you can see within 30 feet of the space it left **and** make the attack against a creature within 5 feet of it."
 
-**What's needed:** A way to express "plus caster's spellcasting ability modifier" as the flat component.
+The Bonus Action performs two things atomically:
+1. Reposition the spirit (`reposition_attachment`, 30 ft max)
+2. Make a melee spell attack against a creature within 5 ft of the new position
 
-The damage is defined as **3d12 + spellcasting ability modifier**. The modifier is resolved at runtime from the caster's character sheet; it is not a fixed number baked into the spell encoding.
+`OngoingOperation` is a single `trigger → effect` pair. Modeling these as two separate operations with `on_caster_spends_action (bonus_action)` triggers would:
+- Imply the player can spend two separate Bonus Actions (incorrect)
+- Leave the sequencing (must reposition before attacking) implicit
 
-Options:
-- Union: `flat?: number | { kind: "spellcasting_ability_modifier" }`
-- Separate field: `flatFromCaster?: "spellcasting_ability_modifier" | "proficiency_bonus"`
+**Proposed widening:** Add a `steps` list to `OngoingOperation` (or a `composite_operation` variant) to allow multiple effects that share one trigger and action cost:
 
-This widening likely affects other spells that add the caster's ability modifier to damage (Divine Smite, Inflict Wounds, etc.) — it is not Conjure Fey–specific.
+```typescript
+// Option A: extend OngoingOperation
+export type OngoingOperation = {
+  readonly trigger: OngoingTrigger;
+  readonly predicate?: OngoingPredicate;
+  readonly effect: OngoingEffect;
+  readonly followedBy?: OngoingEffect;  // fires after effect, same activation
+};
 
-**Evidence:** *"the target takes Psychic damage equal to 3d12 plus your spellcasting ability modifier"*
+// Option B: composite OngoingEffect
+| {
+    readonly kind: "sequence";
+    readonly steps: ReadonlyNonEmptyArray<OngoingEffect>;
+  }
+```
+
+Option B is cleaner because it keeps the multi-step logic inside the effect layer rather than adding protocol fields to the operation header.
 
 ---
 
-## Slot Scaling (fits existing surface)
-
-The upcast progression (+1d12 per slot above 6) maps cleanly to the existing `DiceAmount` `linear_per_level` shape:
+## Encoding shape (once gaps are resolved)
 
 ```
-{
-  kind: "linear_per_level",
-  axis: "slot",
-  base: { dice: 3, dieSize: 12 },
-  perLevel: { dice: 1 },
-  startingAtLevel: 6
+family: ongoing_effect
+attachment: { kind: "area", shape: { kind: "emanation", radiusFeet: 0 }, origin: { kind: "point_within_range" } }
+  — represents the spirit's position; reposition_attachment moves this point
+
+initialPhase: attack_roll {
+  attachment: target (one creature within 5 ft of spirit),
+  attackKind: melee_spell_attack,
+  onHit: [
+    damage { kind: "linear_per_level", axis: "slot", base: 3d12+spellcasting_mod psychic, perLevel: +1d12, startingAtLevel: 7 },
+    apply_condition { condition: "frightened", expiresOn: { kind: "caster_turn_start" } }
+  ]
 }
-```
 
-No new types needed for this component.
+operations: [
+  {
+    trigger: { kind: "on_caster_spends_action", cost: { kind: "bonus_action" } },
+    effect: sequence [
+      reposition_attachment { maxMoveFeet: 30 },
+      attack_roll { attackKind: melee_spell_attack, onHit: [...same as initial...] }
+    ]
+  }
+]
+```
 
 ---
 
-## Summary
+## Classification
 
-| Gap | Classification | Priority |
-|---|---|---|
-| No spell family for proxy-conjure | `structural_widening` | Blocks encoding |
-| `Effect` missing `apply_condition` variant | `surface_widening` | Also needed for other spells |
-| `Condition` missing `frightened` | `surface_widening` | Also needed for other spells |
-| `DiceExpr.flat` cannot hold ability modifier | `surface_widening` | Also needed for other spells |
+All three gaps are variants or composition extensions of existing surface types, not missing v4 taxonomy atoms. The `ongoing_effect` family, `reposition_attachment` atom, `melee_spell_attack` attack kind, `apply_condition`, and `on_caster_spends_action` trigger all exist. No new top-level atom is required.
