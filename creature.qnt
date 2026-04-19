@@ -2644,7 +2644,7 @@ module creature {
     if (damageRoll <= 0) s
     else {
       val s1 = pTakeDamage(s, damageRoll, Bludgeoning, resistances, vulnerabilities, immunities, false)
-      if (s1 == s) s else pApplyCondition(s1, CProne, Set())
+      if (s1 == s) s else s1.with("prone", true)
     }
   }
 

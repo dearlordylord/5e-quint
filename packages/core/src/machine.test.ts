@@ -3265,6 +3265,7 @@ describe("machine action edge cases", () => {
       immunities: new Set(),
     });
     expect(isDead(snap(a))).toBe(true);
+    expect(ctx(a).prone).toBe(true);
   });
 
   it("use action: ready", () => {
