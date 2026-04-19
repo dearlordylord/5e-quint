@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
 import { battleMachine } from "#/battle-machine.ts";
-import { MAGE_ARMOR_PROJECTION } from "#/projected-compiler-fixtures.ts";
 import {
   addActiveProjectedPersistent,
   applyProjectedDonArmor,
@@ -11,6 +10,21 @@ import {
   removeActiveProjectedPersistentsOnTrigger,
 } from "#/projected-persistent.ts";
 import { armorClass, CreatureId } from "#/types.ts";
+
+const MAGE_ARMOR_RECORD = {
+  tag: "PPRSetBaseAc" as const,
+  value: {
+    source: {
+      unitId: "mage_armor",
+      unitKind: "PUKSpell" as const,
+      unitName: "Mage Armor",
+    },
+    attachment: "PPAChosenTarget" as const,
+    baseArmorClass: 13,
+    abilityModifier: "dex" as const,
+    earlyEnds: ["PPEETargetDonsArmor"] as const,
+  },
+};
 
 describe("projected persistent battle state", () => {
   it("applies Mage Armor AC from the active projected record", () => {
@@ -21,7 +35,7 @@ describe("projected persistent battle state", () => {
       dexMod: 2,
       baseArmorClass: armorClass(12),
       activeProjectedPersistents: addActiveProjectedPersistent(new Set(), {
-        record: MAGE_ARMOR_PROJECTION,
+        record: MAGE_ARMOR_RECORD,
         casterId: CreatureId("mage"),
         targetId: CreatureId("mage"),
       }),
@@ -51,7 +65,7 @@ describe("projected persistent battle state", () => {
           activeProjectedPersistents: addActiveProjectedPersistent(
             new Set(),
             {
-              record: MAGE_ARMOR_PROJECTION,
+              record: MAGE_ARMOR_RECORD,
               casterId: CreatureId("mage"),
               targetId: CreatureId("mage"),
             },
@@ -74,12 +88,12 @@ describe("projected persistent battle state", () => {
 
   it("removes only matching triggered persistents for the target", () => {
     const targetMageArmor = {
-      record: MAGE_ARMOR_PROJECTION,
+      record: MAGE_ARMOR_RECORD,
       casterId: CreatureId("caster"),
       targetId: CreatureId("target"),
     };
     const otherMageArmor = {
-      record: MAGE_ARMOR_PROJECTION,
+      record: MAGE_ARMOR_RECORD,
       casterId: CreatureId("caster"),
       targetId: CreatureId("other"),
     };
@@ -96,7 +110,7 @@ describe("projected persistent battle state", () => {
 
   it("canonicalizes away Mage Armor when the creature is already wearing armor", () => {
     const active = addActiveProjectedPersistent(new Set(), {
-      record: MAGE_ARMOR_PROJECTION,
+      record: MAGE_ARMOR_RECORD,
       casterId: CreatureId("mage"),
       targetId: CreatureId("mage"),
     });

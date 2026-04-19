@@ -2,10 +2,7 @@ import { Match } from "effect";
 
 import type {
   ProjectedAmount,
-  ProjectedExecutableAction,
   ProjectedExecutableAttachment,
-  ProjectedExecutableNode,
-  ProjectedNodeId,
   ProjectedSaveDc,
   ProjectedSource,
 } from "#/projected-executable.ts";
@@ -18,7 +15,6 @@ import type {
 
 function uniqueTargetIds(
   source: ProjectedSource,
-  nodeId: ProjectedNodeId,
   label: string,
   targetIds: ReadonlyArray<string>,
   fail: (source: ProjectedSource, message: string) => never,
@@ -26,7 +22,7 @@ function uniqueTargetIds(
   const seen = new Set<string>();
   for (const targetId of targetIds) {
     if (seen.has(targetId)) {
-      fail(source, `node ${nodeId} ${label} duplicated target ${targetId}`);
+      fail(source, `${label} duplicated target ${targetId}`);
     }
     seen.add(targetId);
   }
@@ -35,12 +31,11 @@ function uniqueTargetIds(
 
 export function requireTargets(
   source: ProjectedSource,
-  nodeId: ProjectedNodeId,
-  targetIds: ReadonlyArray<string> | undefined,
+  targetIds: ReadonlyArray<string>,
   fail: (source: ProjectedSource, message: string) => never,
 ): ReadonlyArray<string> {
-  if (targetIds == null || targetIds.length === 0) {
-    fail(source, `node ${nodeId} requires at least one resolved target`);
+  if (targetIds.length === 0) {
+    fail(source, "projected action requires at least one resolved target");
   }
   return targetIds;
 }
@@ -48,34 +43,21 @@ export function requireTargets(
 export function validateAttachmentResolution(
   source: ProjectedSource,
   actor: ProjectedInterpreterActor,
-  nodeId: ProjectedNodeId,
   attachment: ProjectedExecutableAttachment,
   resolved: ReadonlyArray<string>,
   fail: (source: ProjectedSource, message: string) => never,
 ): ReadonlyArray<string> {
-  const targetIds = uniqueTargetIds(
-    source,
-    nodeId,
-    "attachment resolution",
-    resolved,
-    fail,
-  );
+  const targetIds = uniqueTargetIds(source, "attachment resolution", resolved, fail);
   return Match.value(attachment.tag).pipe(
     Match.when("PEASelf", () => {
       if (targetIds.length !== 1 || targetIds[0] !== actor.actorId) {
-        fail(
-          source,
-          `node ${nodeId} self attachment must resolve to ${actor.actorId}`,
-        );
+        fail(source, `self attachment must resolve to ${actor.actorId}`);
       }
       return targetIds;
     }),
     Match.when("PEAOneTarget", () => {
       if (targetIds.length !== 1) {
-        fail(
-          source,
-          `node ${nodeId} one-target attachment must resolve exactly one target`,
-        );
+        fail(source, "one-target attachment must resolve exactly one target");
       }
       return targetIds;
     }),
@@ -86,7 +68,6 @@ export function validateAttachmentResolution(
 
 export function validateOutcomeTargets<TOutcome extends string>(
   source: ProjectedSource,
-  nodeId: ProjectedNodeId,
   targetIds: ReadonlyArray<string>,
   outcomes: ReadonlyArray<ProjectedTargetResolution<TOutcome>>,
   fail: (source: ProjectedSource, message: string) => never,
@@ -94,28 +75,23 @@ export function validateOutcomeTargets<TOutcome extends string>(
   const allowed = new Set(targetIds);
   uniqueTargetIds(
     source,
-    nodeId,
     "outcome resolution",
     outcomes.map((outcome) => outcome.targetId),
     fail,
   );
   for (const outcome of outcomes) {
     if (!allowed.has(outcome.targetId)) {
-      fail(
-        source,
-        `node ${nodeId} resolved unknown target ${outcome.targetId}`,
-      );
+      fail(source, `resolved unknown target ${outcome.targetId}`);
     }
   }
   if (outcomes.length !== targetIds.length) {
-    fail(source, `node ${nodeId} must resolve exactly one outcome per target`);
+    fail(source, "must resolve exactly one outcome per target");
   }
   return outcomes;
 }
 
 export function validateAmountResolutions(
   source: ProjectedSource,
-  nodeId: ProjectedNodeId,
   targetIds: ReadonlyArray<string>,
   resolutions: ReadonlyArray<ProjectedAmountResolution>,
   fail: (source: ProjectedSource, message: string) => never,
@@ -123,27 +99,20 @@ export function validateAmountResolutions(
   const allowed = new Set(targetIds);
   uniqueTargetIds(
     source,
-    nodeId,
     "amount resolution",
     resolutions.map((resolution) => resolution.targetId),
     fail,
   );
   for (const resolution of resolutions) {
     if (!allowed.has(resolution.targetId)) {
-      fail(
-        source,
-        `node ${nodeId} resolved amount for unknown target ${resolution.targetId}`,
-      );
+      fail(source, `resolved amount for unknown target ${resolution.targetId}`);
     }
     if (resolution.rolledTotal != null && resolution.rolledTotal < 0) {
-      fail(
-        source,
-        `node ${nodeId} resolved negative rolled total for ${resolution.targetId}`,
-      );
+      fail(source, `resolved negative rolled total for ${resolution.targetId}`);
     }
   }
   if (resolutions.length !== targetIds.length) {
-    fail(source, `node ${nodeId} must resolve exactly one amount per target`);
+    fail(source, "must resolve exactly one amount per target");
   }
   return resolutions;
 }
@@ -215,19 +184,4 @@ export function nextTargetsForOutcome<TOutcome extends string>(
   return outcomes
     .filter((outcome) => outcome.outcome === expected)
     .map((outcome) => outcome.targetId);
-}
-
-export function indexNodes(
-  action: ProjectedExecutableAction,
-  fail: (source: ProjectedSource, message: string) => never,
-): ReadonlyMap<ProjectedNodeId, ProjectedExecutableNode> {
-  const byId = new Map<ProjectedNodeId, ProjectedExecutableNode>();
-  for (const node of action.nodes) {
-    const nodeId = node.value.nodeId;
-    if (byId.has(nodeId)) {
-      fail(action.source, `duplicate node id ${nodeId}`);
-    }
-    byId.set(nodeId, node);
-  }
-  return byId;
 }

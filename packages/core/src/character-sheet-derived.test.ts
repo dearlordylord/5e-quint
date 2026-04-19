@@ -8,8 +8,22 @@ import {
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
 import type { ClassName } from "#/features/class-tables.ts";
-import { MAGE_ARMOR_PROJECTION } from "#/projected-compiler-fixtures.ts";
 import { CreatureId, spellId } from "#/types.ts";
+
+const MAGE_ARMOR_RECORD = {
+  tag: "PPRSetBaseAc" as const,
+  value: {
+    source: {
+      unitId: "mage_armor",
+      unitKind: "PUKSpell" as const,
+      unitName: "Mage Armor",
+    },
+    attachment: "PPAChosenTarget" as const,
+    baseArmorClass: 13,
+    abilityModifier: "dex" as const,
+    earlyEnds: ["PPEETargetDonsArmor"] as const,
+  },
+};
 
 describe("character-sheet-derived", () => {
   const alertFeat = {
@@ -537,7 +551,7 @@ describe("character-sheet-derived", () => {
     const sheet = finalizeSorcererSheet();
     const activeProjectedPersistents = new Set([
       {
-        record: MAGE_ARMOR_PROJECTION,
+        record: MAGE_ARMOR_RECORD,
         casterId: CreatureId("mage"),
         targetId: CreatureId("mage"),
       },

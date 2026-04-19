@@ -1,11 +1,7 @@
 import { Match } from "effect";
 
 import type { BattleCreatureState, CreatureId } from "#/battle-machine-types.ts";
-import {
-  MAGE_ARMOR_ABILITY_MOD,
-  MAGE_ARMOR_BASE_AC,
-  type ProjectedPersistentRecord,
-} from "#/projected-executable.ts";
+import { type ProjectedPersistentRecord } from "#/projected-executable.ts";
 import { armorClass, type Ability, type ArmorClass } from "#/types.ts";
 
 const SHIELD_BONUS = 2;
@@ -54,8 +50,15 @@ export function projectedPersistentEarlyEndTriggers(
   record: ProjectedPersistentRecord,
 ): ReadonlySet<ProjectedEarlyEndTrigger> {
   return Match.value(record).pipe(
-    Match.when({ tag: "PPRSetBaseAc" }, () =>
-      new Set<ProjectedEarlyEndTrigger>(["PEETTargetDonsArmor"])),
+    Match.when({ tag: "PPRSetBaseAc" }, ({ value }) =>
+      new Set<ProjectedEarlyEndTrigger>(
+        value.earlyEnds.map((earlyEnd) =>
+          Match.value(earlyEnd).pipe(
+            Match.when("PPEETargetDonsArmor", () => "PEETTargetDonsArmor" as const),
+            Match.exhaustive,
+          )
+        ),
+      )),
     Match.exhaustive,
   );
 }
@@ -124,11 +127,11 @@ function projectedArmorClassOverride(
   // the only override we apply.
   for (const persistent of creature.activeProjectedPersistents) {
     const override = Match.value(persistent.record).pipe(
-      Match.when({ tag: "PPRSetBaseAc" }, () => {
+      Match.when({ tag: "PPRSetBaseAc" }, ({ value }) => {
         const shieldBonus = battleHasShieldEquipped(creature) ? SHIELD_BONUS : 0;
         return armorClass(
-          MAGE_ARMOR_BASE_AC +
-            creatureAbilityModifier(creature, MAGE_ARMOR_ABILITY_MOD) +
+          value.baseArmorClass +
+            creatureAbilityModifier(creature, value.abilityModifier) +
             shieldBonus,
         );
       }),

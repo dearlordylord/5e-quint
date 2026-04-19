@@ -15,14 +15,23 @@ import {
   type ProjectedInterpreterActor,
 } from "#/projected-mechanic-interpreter.ts";
 import {
-  ACTION_SURGE_PROJECTED_ACTION,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
+  compileProjectedExecutable,
+} from "#/projected-compiler.ts";
 import { canUseProjectedPreparedSpell } from "#/projected-action-bridge.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import { hp, resourceCount } from "#/types.ts";
 import { Match } from "effect";
 import { byTag } from "#/battle-machine-helpers.ts";
+import type { ClassFeatureRecord } from "../../prototype-content-surface/src/surface/types.ts";
+import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
+
+const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(
+  secondWindSurface as unknown as ClassFeatureRecord,
+);
+const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
+  actionSurgeSurface as unknown as ClassFeatureRecord,
+);
 
 interface ReducerAcc {
   readonly context: DndContext;
@@ -147,7 +156,6 @@ function reduceTransition(
       reduceMarkUsageLimit(acc, value.usageLimit, gate),
     ),
     byTag("PITDirect", () => acc),
-    byTag("PITAttackRoll", () => acc),
     byTag("PITSaveGate", () => acc),
     byTag("PITDamage", () => acc),
     byTag("PITHealHp", ({ value }) => reduceHealHp(acc, value.total)),
@@ -207,7 +215,6 @@ function selfRuntime(
   return {
     resolveAttachment: ({ attachment }) =>
       attachment.tag === "PEASelf" ? [actor.actorId] : [],
-    resolveAttackRoll: () => [],
     resolveSaveGate: () => [],
     resolveAmount,
   };
@@ -218,11 +225,14 @@ export function projectedActionLegalForContext(
   context: DndContext,
 ): boolean {
   if (isIncapacitated(context)) return false;
-  return Match.value(action.source.unitId).pipe(
-    Match.when("acid_splash", () =>
-      canUseProjectedPreparedSpell(context, "acid_splash"),
+  return Match.value(action.tag).pipe(
+    Match.when("PEASaveGateDamage", () =>
+      canUseProjectedPreparedSpell(
+        context,
+        action.source.unitId as Parameters<typeof canUseProjectedPreparedSpell>[1],
+      ),
     ),
-    Match.orElse(() => {
+    Match.when("PEADirectHealHp", () => {
       const actor = actorForContext(context);
       const patch = reduceProjectedTransitions(
         context,
@@ -235,6 +245,20 @@ export function projectedActionLegalForContext(
       );
       return patch != null;
     }),
+    Match.when("PEADirectGrantExtraAction", () => {
+      const actor = actorForContext(context);
+      const patch = reduceProjectedTransitions(
+        context,
+        interpretProjectedAction(
+          action,
+          actor,
+          selfRuntime(actor, () => []),
+        ).transitions,
+        action.resourceGate,
+      );
+      return patch != null;
+    }),
+    Match.exhaustive,
   );
 }
 

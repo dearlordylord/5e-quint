@@ -4,11 +4,7 @@ import type { BattleCreatureState } from "#/battle-machine-types.ts";
 import { isIncapacitated as isBattleCreatureIncapacitated } from "#/battle-machine-creature.ts";
 import type { DndContext } from "#/machine-types.ts";
 import { canCastSpells, isIncapacitated } from "#/machine-queries.ts";
-import {
-  ACID_SPLASH_PROJECTED_ACTION,
-  ACTION_SURGE_PROJECTED_ACTION,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
+import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import type { ProjectedExecutableAction } from "#/projected-executable.ts";
 import {
   interpretProjectedAction,
@@ -28,6 +24,20 @@ import {
 } from "#/projected-action-bridge-helpers.ts";
 import { getSpellRecordStrict } from "#/features/spell-registry.ts";
 import { proficiencyBonus, spellId, type SpellName } from "#/types.ts";
+import type {
+  ClassFeatureRecord,
+  SpellRecord,
+} from "../../prototype-content-surface/src/surface/types.ts";
+import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
+import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
+
+const ACID_SPLASH_SURFACE = acidSplashSurface as unknown as SpellRecord;
+const SECOND_WIND_SURFACE = secondWindSurface as unknown as ClassFeatureRecord;
+const ACTION_SURGE_SURFACE = actionSurgeSurface as unknown as ClassFeatureRecord;
+
+const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURFACE);
+const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);
 
 export type ProjectedPreparedSpellRuntime = {
   readonly targetIds: ReadonlyArray<string>;
@@ -41,7 +51,7 @@ function projectedPreparedSpellAction(
   spellName: SpellName,
 ): ProjectedExecutableAction | null {
   return Match.value(spellName).pipe(
-    Match.when("acid_splash", () => ACID_SPLASH_PROJECTED_ACTION),
+    Match.when("acid_splash", () => compileProjectedExecutable(ACID_SPLASH_SURFACE)),
     Match.orElse(() => null),
   );
 }
@@ -261,7 +271,6 @@ export function finalizeProjectedPreparedSpell(
   }
   interpretProjectedAction(action, actor, {
     resolveAttachment: () => runtime.targetIds,
-    resolveAttackRoll: () => [],
     resolveSaveGate: () => runtime.saveOutcomes,
     resolveAmount: () => runtime.amounts,
   });

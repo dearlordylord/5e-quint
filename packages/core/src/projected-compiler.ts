@@ -1,19 +1,20 @@
 import { Match } from "effect";
 
-import {
-  ACID_SPLASH_PROJECTED_ACTION,
-  ACTION_SURGE_PROJECTED_ACTION,
-  MAGE_ARMOR_PROJECTED_RECORD,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
-import {
-  type ProjectedExecutableAction,
-  type ProjectedPersistentRecord,
+import type {
+  ProjectedExecutableAction,
+  ProjectedPersistentRecord,
+  ProjectedSource,
 } from "#/projected-executable.ts";
 
 import type {
   ClassFeatureRecord,
+  DcSource,
+  DiceAmount,
+  DurationEndTrigger,
+  OngoingOperation,
+  ResetCadence,
   SpellRecord,
+  UsageLimit,
 } from "../../prototype-content-surface/src/surface/types.ts";
 
 type ActivationSpellRecord = SpellRecord & {
@@ -37,14 +38,18 @@ type ActivationClassFeatureRecord = ClassFeatureRecord & {
   >;
 };
 
-type SaveGatePhase = ActivationSpellRecord["mechanics"]["phases"][number] & {
-  readonly kind: "save_gate";
-};
-
+type SaveGatePhase = Extract<
+  ActivationSpellRecord["mechanics"]["phases"][number],
+  { readonly kind: "save_gate" }
+>;
 type DirectPhase =
   ActivationClassFeatureRecord["mechanics"]["phases"][number] & {
     readonly kind: "direct";
   };
+type UseCountResource = Extract<
+  NonNullable<ActivationClassFeatureRecord["mechanics"]["resource"]>,
+  { readonly kind: "use_count" }
+>;
 
 export type ProjectableSurfaceUnit = SpellRecord | ClassFeatureRecord;
 
@@ -68,18 +73,6 @@ export class UnsupportedProjectionPatternError extends Error {
   }
 }
 
-const IN_SCOPE_SPELL_IDS = [
-  "acid_splash",
-  "mage_armor",
-] as const satisfies ReadonlyArray<string>;
-const IN_SCOPE_CLASS_FEATURE_IDS = [
-  "fighter_second_wind",
-  "fighter_action_surge_l2",
-] as const satisfies ReadonlyArray<string>;
-
-type InScopeSpellId = (typeof IN_SCOPE_SPELL_IDS)[number];
-type InScopeClassFeatureId = (typeof IN_SCOPE_CLASS_FEATURE_IDS)[number];
-
 function unsupported(unitId: string, reason: string): never {
   throw new UnsupportedProjectionPatternError(unitId, reason);
 }
@@ -92,12 +85,413 @@ function require(
   if (!condition) unsupported(unitId, reason);
 }
 
-function isInScopeSpellId(id: string): id is InScopeSpellId {
-  return (IN_SCOPE_SPELL_IDS as ReadonlyArray<string>).includes(id);
+function projectedSource(
+  unit: ProjectableSurfaceUnit,
+): ProjectedSource {
+  return {
+    unitId: unit.id,
+    unitKind: unit.kind === "spell" ? "PUKSpell" : "PUKClassFeature",
+    unitName: unit.name,
+  };
 }
 
-function isInScopeClassFeatureId(id: string): id is InScopeClassFeatureId {
-  return (IN_SCOPE_CLASS_FEATURE_IDS as ReadonlyArray<string>).includes(id);
+function compileActivationCost(
+  unit: ProjectableSurfaceUnit,
+  activation:
+    | ActivationSpellRecord["mechanics"]["castingTime"]
+    | ActivationClassFeatureRecord["mechanics"]["activationCost"],
+): ProjectedExecutableAction["activationCost"] {
+  return Match.value(activation.kind).pipe(
+    Match.when("action", () => "PACAction" as const),
+    Match.when("bonus_action", () => "PACBonusAction" as const),
+    Match.when("free", () => "PACFree" as const),
+    Match.orElse(() =>
+      unsupported(unit.id, `unsupported activation cost "${activation.kind}"`),
+    ),
+  );
+}
+
+function compileAttachment(
+  unit: ProjectableSurfaceUnit,
+  attachment:
+    | SaveGatePhase["attachment"]
+    | DirectPhase["attachment"]
+    | OngoingSpellRecord["mechanics"]["attachment"],
+): ProjectedExecutableAction["attachment"] {
+  if (attachment.kind === "self") {
+    return { tag: "PEASelf" };
+  }
+  if (attachment.kind === "target") {
+    require(
+      attachment.selection.mode === "one",
+      unit.id,
+      "target attachment must stay a single chosen target",
+    );
+    return { tag: "PEAOneTarget" };
+  }
+  if (attachment.kind === "area") {
+    require(
+      attachment.origin.kind === "point_within_range" &&
+        attachment.shape.kind === "sphere",
+      unit.id,
+      "area attachment must stay a point-within-range sphere",
+    );
+    return {
+      tag: "PEAAreaSpherePointWithinRange",
+      value: {
+        rangeFeet: 0,
+        radiusFeet: attachment.shape.radiusFeet,
+      },
+    };
+  }
+  return unsupported(
+    unit.id,
+    `unsupported projected attachment kind "${attachment.kind}"`,
+  );
+}
+
+function compileSpellAttachment(
+  unit: ActivationSpellRecord,
+  phase: SaveGatePhase,
+): ProjectedExecutableAction["attachment"] {
+  const attachment = compileAttachment(unit, phase.attachment);
+  if (attachment.tag === "PEAAreaSpherePointWithinRange") {
+    require(
+      unit.mechanics.range.kind === "point",
+      unit.id,
+      "area spell range must stay a point range",
+    );
+    return {
+      ...attachment,
+      value: {
+        ...attachment.value,
+        rangeFeet: unit.mechanics.range.feet,
+      },
+    };
+  }
+  return attachment;
+}
+
+function compileUsageLimit(
+  unit: ProjectableSurfaceUnit,
+  usageLimit: UsageLimit | undefined,
+): ProjectedExecutableAction["usageLimit"] {
+  if (usageLimit == null) return "PULNone";
+  return Match.value(usageLimit.kind).pipe(
+    Match.when("once_per_turn", () => "PULOncePerTurn" as const),
+    Match.orElse(() =>
+      unsupported(
+        unit.id,
+        `unsupported projected usage limit "${usageLimit.kind}"`,
+      ),
+    ),
+  );
+}
+
+function compileThresholdCap(
+  unit: ProjectableSurfaceUnit,
+  cap: UseCountResource["cap"],
+): Extract<ProjectedExecutableAction["resourceGate"], { readonly tag: "PRGUseCount" }>["value"]["cap"] {
+  require(
+    cap.kind === "threshold_tiers",
+    unit.id,
+    'resource cap must stay "threshold_tiers"',
+  );
+  require(cap.axis === "class", unit.id, 'resource cap axis must stay "class"');
+  return {
+    tag: "PRCThresholdTiers",
+    value: {
+      axis: "PRAClass",
+      base: cap.base,
+      tiers: cap.tiers.map((tier) => ({
+        atLevel: tier.atLevel,
+        value: tier.value,
+      })),
+    },
+  };
+}
+
+function compileResetCadence(
+  unit: ProjectableSurfaceUnit,
+  cadence: ResetCadence,
+): Extract<ProjectedExecutableAction["resourceGate"], { readonly tag: "PRGUseCount" }>["value"]["resetCadence"] {
+  if (cadence.kind === "partial_short_full_long") {
+    return {
+      tag: "PRCPartialShortFullLong",
+      value: { shortRestRefill: cadence.shortRestRefill },
+    };
+  }
+  if (cadence.kind === "short_or_long_rest") {
+    return { tag: "PRCShortOrLongRest" };
+  }
+  return unsupported(
+    unit.id,
+    `unsupported projected reset cadence "${cadence.kind}"`,
+  );
+}
+
+function compileResourceGate(
+  unit: ActivationClassFeatureRecord,
+  pool:
+    | Extract<
+        ProjectedExecutableAction["resourceGate"],
+        { readonly tag: "PRGUseCount" }
+      >["value"]["pool"]
+    | null,
+): ProjectedExecutableAction["resourceGate"] {
+  const { resource, resetCadence } = unit.mechanics;
+  if (resource == null) return { tag: "PRGNone" };
+  require(
+    pool != null,
+    unit.id,
+    "resource-backed projected feature requires a supported resource pool",
+  );
+  require(
+    resetCadence != null,
+    unit.id,
+    "resource-backed projected feature requires a reset cadence",
+  );
+  return Match.value(resource.kind).pipe(
+    Match.when("use_count", () => ({
+      tag: "PRGUseCount" as const,
+      value: {
+        pool,
+        cap: compileThresholdCap(unit, resource.cap),
+        resetCadence: compileResetCadence(unit, resetCadence),
+      },
+    })),
+    Match.orElse(() =>
+      unsupported(
+        unit.id,
+        `unsupported projected resource kind "${resource.kind}"`,
+      ),
+    ),
+  );
+}
+
+function compileSpellSaveDc(
+  unit: ProjectableSurfaceUnit,
+  dc: DcSource,
+): Extract<ProjectedExecutableAction, { readonly tag: "PEASaveGateDamage" }>["dc"] {
+  if (dc.kind === "caster_spell_save_dc") return "PDCSpellSaveDc";
+  return unsupported(unit.id, `unsupported projected save DC source "${dc.kind}"`);
+}
+
+function compileAmount(
+  unit: ProjectableSurfaceUnit,
+  amount: DiceAmount,
+): Extract<ProjectedExecutableAction, { readonly amount: unknown }>["amount"] {
+  if (amount.kind === "threshold_tiers") {
+    require(
+      amount.axis === "character",
+      unit.id,
+      'threshold-tier amount axis must stay "character"',
+    );
+    return {
+      tag: "PAThresholdDice",
+      value: {
+        axis: "PLACharacterLevel",
+        base: {
+          dice: amount.base.dice,
+          dieSize: amount.base.dieSize,
+          flat: amount.base.flat ?? 0,
+        },
+        tiers: amount.tiers.map((tier) => ({
+          atLevel: tier.atLevel,
+          diceOverride: tier.override.dice ?? amount.base.dice,
+        })),
+      },
+    };
+  }
+  if (amount.kind === "linear_per_level") {
+    require(
+      amount.axis === "class",
+      unit.id,
+      'linear-per-level amount axis must stay "class"',
+    );
+    return {
+      tag: "PALinearDicePlusLevel",
+      value: {
+        axis: "PLAFighterLevel",
+        base: {
+          dice: amount.base.dice,
+          dieSize: amount.base.dieSize,
+          flat: amount.base.flat ?? 0,
+        },
+        perLevelFlat: amount.perLevel.flat ?? 0,
+        startingAtLevel: amount.startingAtLevel,
+      },
+    };
+  }
+  return unsupported(unit.id, `unsupported projected amount kind "${amount.kind}"`);
+}
+
+function compileActivationSaveGateDamageSpell(
+  unit: ActivationSpellRecord,
+): ProjectedExecutableAction | null {
+  if (unit.mechanics.duration.kind !== "instantaneous") return null;
+  if (unit.mechanics.phases.length !== 1) return null;
+  const phase = unit.mechanics.phases[0];
+  if (phase.kind !== "save_gate") return null;
+  if (phase.onSuccess.kind !== "none") return null;
+  if (phase.onFail.kind !== "damage") return null;
+  require(
+    typeof phase.onFail.damageType === "string",
+    unit.id,
+    "projected damage type must stay a concrete damage type",
+  );
+  return {
+    tag: "PEASaveGateDamage",
+    source: projectedSource(unit),
+    activationCost: compileActivationCost(unit, unit.mechanics.castingTime),
+    resourceGate: { tag: "PRGNone" },
+    usageLimit: "PULNone",
+    attachment: compileSpellAttachment(unit, phase),
+    ability: phase.ability,
+    dc: compileSpellSaveDc(unit, phase.dc),
+    damageType: phase.onFail.damageType,
+    amount: compileAmount(unit, phase.onFail.amount),
+  };
+}
+
+function compileDirectFeature(
+  unit: ActivationClassFeatureRecord,
+): ProjectedExecutableAction | null {
+  if (unit.mechanics.phases.length !== 1) return null;
+  const phase = unit.mechanics.phases[0];
+  if (phase.kind !== "direct" || phase.mode !== undefined) return null;
+  if (phase.attachment.kind !== "self") return null;
+  if ((phase.effects?.length ?? 0) !== 1) return null;
+  const effect = phase.effects?.[0];
+  if (effect == null) return null;
+
+  const base = {
+    source: projectedSource(unit),
+    activationCost: compileActivationCost(unit, unit.mechanics.activationCost),
+    usageLimit: compileUsageLimit(unit, unit.mechanics.usageLimit),
+    attachment: compileAttachment(unit, phase.attachment),
+  };
+
+  if (effect.kind === "heal_hp") {
+    return {
+      tag: "PEADirectHealHp",
+      ...base,
+      resourceGate: compileResourceGate(unit, "PRPSecondWind"),
+      amount: compileAmount(unit, effect.amount),
+    };
+  }
+  if (effect.kind === "grant_extra_action") {
+    require(
+      effect.restriction.kind === "exclude" &&
+        effect.restriction.actions.length === 1 &&
+        effect.restriction.actions[0] === "magic",
+      unit.id,
+      "grant_extra_action restriction must stay exclude magic",
+    );
+    return {
+      tag: "PEADirectGrantExtraAction",
+      ...base,
+      resourceGate: compileResourceGate(unit, "PRPActionSurge"),
+      restriction: "PGARExcludeMagicAction",
+    };
+  }
+  return null;
+}
+
+function compilePassiveSetBaseAc(
+  unit: OngoingSpellRecord,
+): ProjectedPersistentRecord | null {
+  if (unit.mechanics.initialPhase !== undefined) return null;
+  if (unit.mechanics.operations.length !== 1) return null;
+  const operation: OngoingOperation = unit.mechanics.operations[0];
+  if (operation.trigger.kind !== "passive") return null;
+  if (operation.predicate != null || operation.usageLimit != null) return null;
+  if (operation.effect.kind !== "modify_ac_set_base") return null;
+  if (unit.mechanics.attachment.kind !== "target") return null;
+  if (unit.mechanics.attachment.selection.mode !== "one") return null;
+  require(
+    unit.mechanics.duration.kind === "timed",
+    unit.id,
+    'persistent base-AC projection requires a timed duration',
+  );
+
+  return {
+    tag: "PPRSetBaseAc",
+    value: {
+      source: projectedSource(unit),
+      attachment: "PPAChosenTarget",
+      baseArmorClass: operation.effect.const,
+      abilityModifier: operation.effect.abilityMod,
+      earlyEnds: (unit.mechanics.duration.earlyEnd ?? []).map((trigger) =>
+        compileEarlyEnd(unit, trigger)
+      ),
+    },
+  };
+}
+
+function compileEarlyEnd(
+  unit: ProjectableSurfaceUnit,
+  trigger: DurationEndTrigger,
+): ProjectedPersistentRecord["value"]["earlyEnds"][number] {
+  return Match.value(trigger.kind).pipe(
+    Match.when("target_dons_armor", () => "PPEETargetDonsArmor" as const),
+    Match.orElse(() =>
+      unsupported(
+        unit.id,
+        `unsupported projected persistent early-end "${trigger.kind}"`,
+      ),
+    ),
+  );
+}
+
+function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
+  require(
+    unit.kind === "spell",
+    unit.id,
+    'projected spell compiler requires kind "spell"',
+  );
+  return Match.value(unit.mechanics.family).pipe(
+    Match.when("activation", () => {
+      const compiled = compileActivationSaveGateDamageSpell(
+        unit as ActivationSpellRecord,
+      );
+      if (compiled == null) {
+        unsupported(unit.id, "activation spell shape is out of projected scope");
+      }
+      return { tag: "CPUExecutable" as const, value: compiled };
+    }),
+    Match.when("ongoing_effect", () => {
+      const compiled = compilePassiveSetBaseAc(unit as OngoingSpellRecord);
+      if (compiled == null) {
+        unsupported(
+          unit.id,
+          "ongoing-effect spell shape is out of projected persistent scope",
+        );
+      }
+      return { tag: "CPUPersistent" as const, value: compiled };
+    }),
+    Match.orElse(() =>
+      unsupported(
+        unit.id,
+        `spell family "${unit.mechanics.family}" is out of projected scope`,
+      ),
+    ),
+  );
+}
+
+function compileProjectedClassFeature(
+  unit: ClassFeatureRecord,
+): CompiledProjectedUnit {
+  require(
+    unit.mechanics.family === "activation",
+    unit.id,
+    'projected class-feature compiler currently supports only "activation"',
+  );
+  const compiled = compileDirectFeature(unit as ActivationClassFeatureRecord);
+  if (compiled == null) {
+    unsupported(unit.id, "class-feature shape is out of projected scope");
+  }
+  return { tag: "CPUExecutable" as const, value: compiled };
 }
 
 export function compileProjectedUnit(
@@ -138,240 +532,4 @@ export function compileProjectedPersistent(
     );
   }
   return compiled.value;
-}
-
-function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
-  if (!isInScopeSpellId(unit.id)) {
-    unsupported(
-      unit.id,
-      "spell is not in the first-slice scope (acid_splash, mage_armor only)",
-    );
-  }
-
-  return Match.value(unit.id).pipe(
-    Match.when("acid_splash", () => {
-      requireAcidSplash(unit);
-      return {
-        tag: "CPUExecutable" as const,
-        value: ACID_SPLASH_PROJECTED_ACTION,
-      };
-    }),
-    Match.when("mage_armor", () => {
-      requireMageArmor(unit);
-      return {
-        tag: "CPUPersistent" as const,
-        value: MAGE_ARMOR_PROJECTED_RECORD,
-      };
-    }),
-    Match.exhaustive,
-  );
-}
-
-function compileProjectedClassFeature(
-  unit: ClassFeatureRecord,
-): CompiledProjectedUnit {
-  if (!isInScopeClassFeatureId(unit.id)) {
-    unsupported(
-      unit.id,
-      "class feature is not in the first-slice scope (fighter_second_wind, fighter_action_surge_l2 only)",
-    );
-  }
-
-  return Match.value(unit.id).pipe(
-    Match.when("fighter_second_wind", () => {
-      requireSecondWind(unit);
-      return {
-        tag: "CPUExecutable" as const,
-        value: SECOND_WIND_PROJECTED_ACTION,
-      };
-    }),
-    Match.when("fighter_action_surge_l2", () => {
-      requireActionSurge(unit);
-      return {
-        tag: "CPUExecutable" as const,
-        value: ACTION_SURGE_PROJECTED_ACTION,
-      };
-    }),
-    Match.exhaustive,
-  );
-}
-
-function requireAcidSplash(unit: SpellRecord): void {
-  require(unit.mechanics.family ===
-    "activation", unit.id, 'Acid Splash must use the "activation" family');
-  const mechanics = (unit as ActivationSpellRecord).mechanics;
-  require(mechanics.castingTime.kind ===
-    "action", unit.id, 'Acid Splash casting time must stay "action"');
-  require(mechanics.duration.kind ===
-    "instantaneous", unit.id, 'Acid Splash duration must stay "instantaneous"');
-  require(mechanics.range.kind === "point" &&
-    mechanics.range.feet ===
-      60, unit.id, "Acid Splash range must stay a 60-foot point");
-  require(mechanics.phases.length ===
-    1, unit.id, "Acid Splash must have exactly one phase");
-
-  require(mechanics.phases[0].kind ===
-    "save_gate", unit.id, 'Acid Splash phase must stay "save_gate"');
-  const phase = mechanics.phases[0] as SaveGatePhase;
-  require(phase.ability ===
-    "dex", unit.id, 'Acid Splash save ability must stay "dex"');
-  require(phase.dc.kind ===
-    "caster_spell_save_dc", unit.id, 'Acid Splash save DC source must stay "caster_spell_save_dc"');
-  require(phase.attachment.kind === "area" &&
-    phase.attachment.origin.kind === "point_within_range" &&
-    phase.attachment.shape.kind === "sphere" &&
-    phase.attachment.shape.radiusFeet ===
-      5, unit.id, "Acid Splash attachment must stay a 5-foot sphere at a point within range");
-  require(phase.onSuccess.kind ===
-    "none", unit.id, 'Acid Splash save success must stay "none"');
-  require(phase.onFail.kind === "damage" &&
-    phase.onFail.damageType === "acid" &&
-    phase.onFail.amount.kind === "threshold_tiers" &&
-    phase.onFail.amount.axis === "character" &&
-    phase.onFail.amount.base.dice === 1 &&
-    phase.onFail.amount.base.dieSize === 6 &&
-    (phase.onFail.amount.base.flat ?? 0) === 0 &&
-    phase.onFail.amount.tiers.length === 3 &&
-    phase.onFail.amount.tiers[0].atLevel === 5 &&
-    phase.onFail.amount.tiers[0].override.dice === 2 &&
-    phase.onFail.amount.tiers[0].override.dieSize === undefined &&
-    phase.onFail.amount.tiers[0].override.flat === undefined &&
-    phase.onFail.amount.tiers[1].atLevel === 11 &&
-    phase.onFail.amount.tiers[1].override.dice === 3 &&
-    phase.onFail.amount.tiers[1].override.dieSize === undefined &&
-    phase.onFail.amount.tiers[1].override.flat === undefined &&
-    phase.onFail.amount.tiers[2].atLevel === 17 &&
-    phase.onFail.amount.tiers[2].override.dice === 4 &&
-    phase.onFail.amount.tiers[2].override.dieSize === undefined &&
-    phase.onFail.amount.tiers[2].override.flat ===
-      undefined, unit.id, "Acid Splash damage must stay the frozen 1d6/2d6/3d6/4d6 acid threshold-tiers shape");
-}
-
-function requireMageArmor(unit: SpellRecord): void {
-  require(unit.mechanics.family ===
-    "ongoing_effect", unit.id, 'Mage Armor must use the "ongoing_effect" family');
-  const mechanics = (unit as OngoingSpellRecord).mechanics;
-  require(mechanics.castingTime.kind ===
-    "action", unit.id, 'Mage Armor casting time must stay "action"');
-  require(mechanics.range.kind ===
-    "touch", unit.id, 'Mage Armor range must stay "touch"');
-  require(mechanics.initialPhase ===
-    undefined, unit.id, "Mage Armor must not gain an initial phase");
-  require(mechanics.attachment.kind === "target" &&
-    mechanics.attachment.selection.mode ===
-      "one", unit.id, "Mage Armor attachment must stay a single chosen target");
-  require(mechanics.duration.kind === "timed" &&
-    mechanics.duration.value.unit === "hour" &&
-    mechanics.duration.value.amount === 8 &&
-    mechanics.duration.earlyEnd?.length === 1 &&
-    mechanics.duration.earlyEnd[0].kind ===
-      "target_dons_armor", unit.id, "Mage Armor duration must stay timed 8 hours with exactly target_dons_armor early-end");
-  require(mechanics.operations.length ===
-    1, unit.id, "Mage Armor must have exactly one ongoing operation");
-
-  const operation = mechanics.operations[0];
-  require(operation.trigger.kind ===
-    "passive", unit.id, 'Mage Armor trigger must stay "passive"');
-  require(operation.predicate ===
-    undefined, unit.id, "Mage Armor must not gain a predicate gate");
-  require(operation.usageLimit ===
-    undefined, unit.id, "Mage Armor must not gain a usage limit");
-  require(operation.effect.kind === "modify_ac_set_base" &&
-    operation.effect.const === 13 &&
-    operation.effect.abilityMod ===
-      "dex", unit.id, "Mage Armor effect must stay modify_ac_set_base(13 + Dex)");
-}
-
-function requireSecondWind(unit: ClassFeatureRecord): void {
-  require(unit.mechanics.family ===
-    "activation", unit.id, 'Second Wind must use the "activation" family');
-  const mechanics = (unit as ActivationClassFeatureRecord).mechanics;
-  require(unit.className ===
-    "fighter", unit.id, 'Second Wind className must stay "fighter"');
-  require(mechanics.activationCost.kind ===
-    "bonus_action", unit.id, 'Second Wind activation cost must stay "bonus_action"');
-  require(mechanics.phases.length ===
-    1, unit.id, "Second Wind must have exactly one phase");
-  require(mechanics.resource.kind ===
-    "use_count", unit.id, 'Second Wind resource must stay "use_count"');
-  require(mechanics.resource.cap.kind === "threshold_tiers" &&
-    mechanics.resource.cap.axis === "class" &&
-    mechanics.resource.cap.base === 2 &&
-    mechanics.resource.cap.tiers.length === 2 &&
-    mechanics.resource.cap.tiers[0].atLevel === 4 &&
-    mechanics.resource.cap.tiers[0].value === 3 &&
-    mechanics.resource.cap.tiers[1].atLevel === 10 &&
-    mechanics.resource.cap.tiers[1].value ===
-      4, unit.id, "Second Wind resource cap must stay the frozen fighter threshold tiers");
-  require(mechanics.resetCadence.kind === "partial_short_full_long" &&
-    mechanics.resetCadence.shortRestRefill ===
-      1, unit.id, "Second Wind reset cadence must stay partial_short_full_long with shortRestRefill 1");
-  require(mechanics.usageLimit ===
-    undefined, unit.id, "Second Wind must not gain a usage limit");
-
-  const phase = mechanics.phases[0] as DirectPhase;
-  require(phase.kind === "direct" &&
-    phase.mode === undefined &&
-    phase.attachment.kind === "self" &&
-    phase.effects?.length ===
-      1, unit.id, "Second Wind phase must stay a direct self attachment with exactly one effect");
-
-  const effects = phase.effects;
-  require(effects !==
-    undefined, unit.id, "Second Wind direct phase must keep its effect list");
-  const effect = effects[0];
-  require(effect.kind === "heal_hp" &&
-    effect.target === "self" &&
-    effect.amount.kind === "linear_per_level" &&
-    effect.amount.axis === "class" &&
-    effect.amount.base.dice === 1 &&
-    effect.amount.base.dieSize === 10 &&
-    effect.amount.base.flat === 1 &&
-    effect.amount.perLevel.flat === 1 &&
-    effect.amount.perLevel.dice === undefined &&
-    effect.amount.perLevel.dieSize === undefined &&
-    effect.amount.startingAtLevel ===
-      1, unit.id, "Second Wind heal amount must stay the frozen 1d10 + fighter level shape");
-}
-
-function requireActionSurge(unit: ClassFeatureRecord): void {
-  require(unit.mechanics.family ===
-    "activation", unit.id, 'Action Surge must use the "activation" family');
-  const mechanics = (unit as ActivationClassFeatureRecord).mechanics;
-  require(unit.className ===
-    "fighter", unit.id, 'Action Surge className must stay "fighter"');
-  require(mechanics.activationCost.kind ===
-    "free", unit.id, 'Action Surge activation cost must stay "free"');
-  require(mechanics.phases.length ===
-    1, unit.id, "Action Surge must have exactly one phase");
-  require(mechanics.resource.kind ===
-    "use_count", unit.id, 'Action Surge resource must stay "use_count"');
-  require(mechanics.resource.cap.kind === "threshold_tiers" &&
-    mechanics.resource.cap.axis === "class" &&
-    mechanics.resource.cap.base === 1 &&
-    mechanics.resource.cap.tiers.length === 1 &&
-    mechanics.resource.cap.tiers[0].atLevel === 17 &&
-    mechanics.resource.cap.tiers[0].value ===
-      2, unit.id, "Action Surge resource cap must stay the frozen fighter threshold tiers");
-  require(mechanics.resetCadence.kind ===
-    "short_or_long_rest", unit.id, 'Action Surge reset cadence must stay "short_or_long_rest"');
-  require(mechanics.usageLimit?.kind ===
-    "once_per_turn", unit.id, 'Action Surge usage limit must stay "once_per_turn"');
-
-  const phase = mechanics.phases[0] as DirectPhase;
-  require(phase.kind === "direct" &&
-    phase.mode === undefined &&
-    phase.attachment.kind === "self" &&
-    phase.effects?.length ===
-      1, unit.id, "Action Surge phase must stay a direct self attachment with exactly one effect");
-
-  const effects = phase.effects;
-  require(effects !==
-    undefined, unit.id, "Action Surge direct phase must keep its effect list");
-  const effect = effects[0];
-  require(effect.kind === "grant_extra_action" &&
-    effect.restriction.kind === "exclude" &&
-    effect.restriction.actions.length === 1 &&
-    effect.restriction.actions[0] ===
-      "magic", unit.id, "Action Surge extra action restriction must stay exclude[magic]");
 }

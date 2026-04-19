@@ -125,13 +125,20 @@ pure def pClearActivePersistentsOnLongRest(
 
 ```qnt
 pure def pProjectedBaseAcOverride(s: CreatureState): Option[int] =
-  val mageArmorHits = s.activePersistents.filter(p =>
+  val setBaseAcHits = s.activePersistents.filter(p =>
     match p.record {
       | PPRSetBaseAc(_) => true
     }
   )
-  if (mageArmorHits.size() == 0) None
-  else Some(MAGE_ARMOR_BASE_AC + abilityModifier(s, MAGE_ARMOR_ABILITY_MOD))
+  if (setBaseAcHits.size() == 0) None
+  else
+    setBaseAcHits.fold(None, (best, p) =>
+      match p.record {
+        | PPRSetBaseAc(payload) =>
+            // Only one projected base-AC override should be active per target.
+            Some(payload.baseArmorClass + abilityModifier(s, payload.abilityModifier))
+      }
+    )
 ```
 
 Battle AC computation consults `pProjectedBaseAcOverride(s)` before falling

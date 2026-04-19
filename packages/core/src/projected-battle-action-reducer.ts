@@ -6,13 +6,19 @@ import type {
   BattleCreatureState,
 } from "#/battle-machine-types.ts";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { ACTION_SURGE_PROJECTED_ACTION } from "#/projected-action-records.ts";
+import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import {
   interpretProjectedAction,
   type ProjectedInterpreterActor,
 } from "#/projected-mechanic-interpreter.ts";
 import { byTag } from "#/battle-machine-helpers.ts";
 import type { ProjectedInterpreterTransition } from "#/projected-mechanic-interpreter-types.ts";
+import type { ClassFeatureRecord } from "../../prototype-content-surface/src/surface/types.ts";
+import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+
+const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
+  actionSurgeSurface as unknown as ClassFeatureRecord,
+);
 
 function actorForBattleCreature(
   actorId: string,
@@ -87,7 +93,6 @@ export function applyProjectedBattleActionSurge(
       actorForBattleCreature(id, actor),
       {
         resolveAttachment: () => [id],
-        resolveAttackRoll: () => [],
         resolveSaveGate: () => [],
         resolveAmount: () => [],
       },
