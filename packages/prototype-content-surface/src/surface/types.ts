@@ -1733,6 +1733,11 @@ export type OngoingOperation = {
   readonly trigger: OngoingTrigger;
   readonly predicate?: OngoingPredicate;
   readonly effect: OngoingEffect;
+  // SRD "A creature makes this save only once per turn" — caps the
+  // operation at one firing per target per turn even when multiple
+  // triggers (enters + ends-turn) would otherwise double up.
+  // Moonbeam, Cloudkill, Spirit Guardians.
+  readonly usageLimit?: UsageLimit;
 };
 
 // Passive / equipped recurring operation — bounded non-spell analogue of
