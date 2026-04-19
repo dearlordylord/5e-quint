@@ -1,4 +1,5 @@
 import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
+import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
 import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
@@ -69,6 +70,7 @@ export interface InitCreatureConfig {
   readonly invisible?: boolean;
   readonly prone?: boolean;
   readonly activeEffects?: ReadonlyArray<ActiveEffect>;
+  readonly activeProjectedPersistents?: ReadonlySet<ActiveProjectedPersistent>;
   readonly baseWalkSpeed?: number;
   readonly initiativeRoll?: number;
   readonly initiativeRollB?: number;

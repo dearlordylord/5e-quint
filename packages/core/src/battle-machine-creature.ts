@@ -967,6 +967,7 @@ export function freshCreature(
     unconscious: false,
     incapacitatedSources: new Set(),
     activeEffects: [],
+    activeProjectedPersistents: new Set(),
     ...FRESH_TURN_STATE,
     movementRemaining: 30,
     effectiveSpeed: 30,

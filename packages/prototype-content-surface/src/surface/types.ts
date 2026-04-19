@@ -1,7 +1,7 @@
 // Closed atom types for the content surface.
 //
-// Widen on demand per red/green loop. Atom names trace to
-// .references/xphb-srd-pairing/TAXONOMY_atoms_graph.md (v4).
+// Live surface vocabulary. Widen only from real red/green authoring
+// pressure in this package.
 
 // Non-empty readonly array. Use wherever an empty list is invalid
 // (closed-enum option sets, list-based EffectAtom bundles, per-spell
@@ -186,8 +186,8 @@ export type FeatCategory =
   | "epic_boon"
   | "origin";
 
-// DiceDelta is a signed numeric delta. v4 adds source variants so content
-// can express bonuses derived from character state — not just fixed dice.
+// DiceDelta is a signed numeric delta. Source variants let content
+// express bonuses derived from character state, not just fixed dice.
 //
 // Variants:
 //   • fixed_dice      — literal Nd(M) bonus (dieSize=1 collapses to flat N).
@@ -604,18 +604,18 @@ export type GrantedSpellDurationOverride = {
   readonly endsWhenGrantedSpellEnds?: string;
 };
 
-// ---------- unified effect atoms (v4 taxonomy) ----------
+// ---------- unified effect atoms ----------
 //
-// Discriminated union covering the v4 effect atoms. Replaces the
+// Discriminated union for the shared effect vocabulary. Replaces the
 // fragmented Effect / ClassFeatureEffect / ReactionEffect /
-// SaveGateRiderResult unions. Widen incrementally as more content
-// lands; the rest of the 36 v4 atoms can be added later.
+// SaveGateRiderResult unions. Widen incrementally as more content lands.
 
 export type EffectAtom =
-  // v4: damage. Optional `timing` defers the damage to a named future
+  // Damage. Optional `timing` defers the damage to a named future
   // window (Acid Arrow: "4d4 Acid damage at the end of its next turn"
   // on hit). Absent = immediate damage on the current resolution step,
-  // which matches every existing authored unit. In v4 this composes as
+  // which matches every existing authored unit. The research taxonomy
+  // decomposed this as
   // persist → window → damage; the prototype surface carries the
   // deferred variant as a single atom because the deferred hit is
   // always (a) a damage instance of the same damageType and (b) gated
@@ -626,14 +626,14 @@ export type EffectAtom =
       readonly amount: DiceAmount;
       readonly timing?: "end_of_next_turn";
     }
-  // v4: heal — JSON discriminant is `heal_hp` for backward compat with
+  // Healing. JSON discriminant is `heal_hp` for backward compat with
   // existing content files.
   | {
       readonly kind: "heal_hp";
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
     }
-  // v4: modify_max_hp — Aid's "Hit Point maximum and current Hit
+  // Max-HP modification — Aid's "Hit Point maximum and current Hit
   // Points increase by 5" (increase variant); Harm's "Hit Point
   // maximum is reduced" (decrease variant). An `increase` delta
   // also heals current HP by the same amount (implicit, matches
@@ -658,7 +658,7 @@ export type EffectAtom =
       readonly delta: DiceAmount;
       readonly floor?: number;
     }
-  // v4: modify_ac. Delta is a DiceDelta to match modify_roll_numeric
+  // AC modification. Delta is a DiceDelta to match modify_roll_numeric
   // (flat bonuses encode as dice=N, dieSize=1). This unification lets
   // multi-grant passive lists (Ring of Protection: +1 AC AND +1 saves)
   // share a single record shape in Dhall's homogeneous-list constraint.
@@ -680,7 +680,7 @@ export type EffectAtom =
       readonly kind: "modify_save_dc";
       readonly delta: DiceDelta;
     }
-  // v4: apply_condition. `condition` is one of:
+  // Condition application. `condition` is one of:
   //   • a bare Condition — unconditional application
   //   • a ReadonlyArray<Condition> — ALL listed conditions applied
   //     together (Hypnotic Pattern would use this if we weren't
@@ -698,7 +698,7 @@ export type EffectAtom =
             readonly from: ReadonlyNonEmptyArray<Condition>;
           };
     }
-  // v4: remove_condition. Same three-shape condition field as
+  // Condition removal. Same three-shape condition field as
   // apply_condition:
   //   • Condition — remove a specific named condition
   //   • ReadonlyArray<Condition> — remove ALL listed (Heal: "ends
@@ -716,7 +716,7 @@ export type EffectAtom =
             readonly from: ReadonlyNonEmptyArray<Condition>;
           };
     }
-  // v4: grant_resistance
+  // Resistance grant.
   | {
       readonly kind: "grant_resistance";
       readonly damageType: DamageTypeRef;
@@ -732,12 +732,12 @@ export type EffectAtom =
       readonly amount: DiceAmount;
       readonly damageType?: DamageTypeRef;
     }
-  // v4: grant_extra_action
+  // Extra-action grant.
   | {
       readonly kind: "grant_extra_action";
       readonly restriction: ActionRestriction;
     }
-  // v4: scale_attack_count. Increases the number of weapon attacks
+  // Attack-count scaling. Increases the number of weapon attacks
   // made as part of a single Attack action (Paladin / Fighter / Ranger
   // / Barbarian Extra Attack: +1). Distinct from grant_extra_action:
   // Extra Attack does not grant a second Action, it widens the
@@ -746,7 +746,7 @@ export type EffectAtom =
       readonly kind: "scale_attack_count";
       readonly additional: number;
     }
-  // v4: modify_roll_numeric — Bless-style additive dice on roll kinds.
+  // Numeric roll modification — Bless-style additive dice on roll kinds.
   // Optional weaponFilter narrows the bonus to a weapon category
   // (Archery Fighting Style: +2 attack rolls with Ranged weapons).
   //
@@ -795,7 +795,7 @@ export type EffectAtom =
   | {
       readonly kind: "suppress_incoming_critical_hit";
     }
-  // v4: modify_roll_advantage — advantage/disadvantage on roll kinds.
+  // Roll-advantage modification — advantage/disadvantage on roll kinds.
   // Optional attackerTypeFilter narrows the effect to rolls made BY a
   // creature of one of the listed types (Protection from Evil and
   // Good: "creatures that are Aberrations, Celestials, Elementals,
@@ -835,14 +835,14 @@ export type EffectAtom =
       readonly count?: number;
       readonly expiresOn?: RiderExpiry;
     }
-  // v4: modify_speed — additive delta to Walking Speed. Blur: "Speed
+  // Speed modification — additive delta to Walking Speed. Blur: "Speed
   // reduced by 10 feet" encodes as delta=-10.
   | {
       readonly kind: "modify_speed";
       readonly delta: number;
       readonly unit: "feet";
     }
-  // v4: set_speed — sets Walking Speed to an absolute value. Hypnotic
+  // Speed setting — sets Walking Speed to an absolute value. Hypnotic
   // Pattern: "Speed of 0" (kept distinct from modify_speed because
   // "set to 0" and "reduce by 0" are different semantics). The
   // Incapacitated condition does NOT imply 0 speed on its own (see
@@ -860,18 +860,18 @@ export type EffectAtom =
       readonly numerator: number;
       readonly denominator: number;
     }
-  // v4: force_move — push, pull, or slide
+  // Forced movement — push, pull, or slide.
   | {
       readonly kind: "force_move";
       readonly direction: "push" | "pull" | "slide";
       readonly distanceFeet: number;
     }
-  // v4: block_targeting — Globe of Invulnerability, Sanctuary, etc.
+  // Targeting block — Globe of Invulnerability, Sanctuary, etc.
   | {
       readonly kind: "block_targeting";
       readonly scope: string;
     }
-  // v4: block_travel — Wall of Force, Forcecage, etc.
+  // Travel block — Wall of Force, Forcecage, etc.
   | {
       readonly kind: "block_travel";
       readonly scope: string;
@@ -935,22 +935,22 @@ export type EffectAtom =
         | "caster_slot_level"
         | "contested_spell_level";
     }
-  // v4: grant_sense — darkvision, blindsight, etc.
+  // Sense grant — darkvision, blindsight, etc.
   | {
       readonly kind: "grant_sense";
       readonly sense: SenseKind;
       readonly rangeFeet: number;
     }
-  // v4: deny_opportunity_attack — Disengage, Mobile feat
+  // Opportunity-attack denial — Disengage, Mobile feat.
   | {
       readonly kind: "deny_opportunity_attack";
     }
-  // v4: grant_temp_hp — false life, Inspiring Leader, etc.
+  // Temporary-HP grant — false life, Inspiring Leader, etc.
   | {
       readonly kind: "grant_temp_hp";
       readonly amount: DiceAmount;
     }
-  // v4 (additive): grant_feat — Ability Score Improvement "you can take a
+  // Feat grant — Ability Score Improvement "you can take a
   // feat instead", Fighter bonus feats, etc. Records the eligibility
   // gate; the actual feat pick is build-time. Some level-up grants
   // allow a feat from a preferred category with an explicit open
@@ -970,13 +970,13 @@ export type EffectAtom =
           readonly openFallback?: "any_qualifying_feat";
         }
     ))
-  // v4: grant_proficiency — permanent grants of skill / weapon / armor
+  // Proficiency grant — permanent grants of skill / weapon / armor
   // proficiency, including counted picks from a closed list.
   | {
       readonly kind: "grant_proficiency";
       readonly proficiency: ProficiencyGrant;
     }
-  // v4 grant_spell_access — class features, species traits, and magic
+  // Spell-access grant — class features, species traits, and magic
   // items that add specific spells to the known / always-prepared pool,
   // or grant the ability to cast a named spell with specified resources.
   // Survey evidence: 4 class_feature + 2 spell/species proposals.
@@ -997,7 +997,7 @@ export type EffectAtom =
       readonly targetRestriction?: GrantedSpellTargetRestriction;
       readonly durationOverride?: GrantedSpellDurationOverride;
     }
-  // v4-adjacent: grant_condition_immunity — Mind Blank, Protection from
+  // Condition-immunity grant — Mind Blank, Protection from
   // Poison, Tiefling "Hellish Resistance" style. Survey evidence: 3 hits.
   // Differentiated from apply_condition (add) and remove_condition (one-shot
   // remove) — this prevents the condition from taking hold at all.
@@ -1019,7 +1019,7 @@ export type EffectAtom =
   | {
       readonly kind: "block_max_hp_reduction";
     }
-  // v4-adjacent: set_ability_score — Amulet of Health "your Con becomes
+  // Ability-score setter — Amulet of Health "your Con becomes
   // 19"; Gauntlets of Ogre Power / Headband of Intellect / Ioun Stone of
   // X all share this shape. Semantics depend on mode: `set` forces the
   // score to `value`, `floor` only raises (no effect if current ≥ value).
@@ -1031,7 +1031,7 @@ export type EffectAtom =
       readonly value: number;
       readonly mode: "set" | "floor";
     }
-  // v4-adjacent: modify_ability_score — Tome / Manual family and other
+  // Ability-score modifier — Tome / Manual family and other
   // permanent ability-score riders that apply a signed delta rather than
   // replacing the score with a fixed value. Optional bounds capture RAW
   // caps such as "to a maximum of 30" without conflating this shape with
@@ -1043,7 +1043,7 @@ export type EffectAtom =
       readonly minimum?: number;
       readonly maximum?: number;
     }
-  // v4-adjacent: persistent modifier to the creature's proficiency
+  // Persistent modifier to the creature's proficiency
   // bonus itself. Distinct from DiceDelta.kind = proficiency_bonus,
   // which references PB as an input when modifying some other number.
   // Pressure case: Ioun Stone of Mastery.
@@ -1053,7 +1053,7 @@ export type EffectAtom =
       readonly minimum?: number;
       readonly maximum?: number;
     }
-  // v4: detect — divination utility. Senses the presence of a named
+  // Detection utility. Senses the presence of a named
   // property within a radius around the caster for the spell's
   // duration (typically concentration). The property vocabulary is
   // closed: widen per unit (Detect Magic, Detect Evil and Good,
@@ -1069,7 +1069,7 @@ export type EffectAtom =
         | "thoughts";
       readonly radiusFeet: number;
     }
-  // v4: grant_speed — adds a NEW speed mode (fly, swim, climb, burrow)
+  // Speed-mode grant — adds a NEW speed mode (fly, swim, climb, burrow)
   // with a specified value. Distinct from modify_speed, which adjusts
   // the existing Walking Speed additively. Fly spell: grants Fly Speed
   // 60 ft with hover. The `hover` flag is fly-only in RAW; keep it
@@ -1092,7 +1092,7 @@ export type EffectAtom =
   | {
       readonly kind: "ignore_web_restrictions";
     }
-  // v4: alter_item_kind — the targeted item/object changes into a
+  // Item-kind change — the targeted item/object changes into a
   // different named form or rules kind. Folding Boat switches between
   // box / rowboat / keelboat forms; glamoured armor uses the same atom
   // for appearance-level item-kind swaps once its activation/lifecycle
@@ -1116,7 +1116,7 @@ export type EffectAtom =
   // Alter Self (Aquatic Adaptation): simple capability flag that the
   // host creature can breathe underwater.
   | { readonly kind: "water_breathing" }
-  // v4: teleport — Misty Step, Thunder Step, Dimension Door. The
+  // Teleportation — Misty Step, Thunder Step, Dimension Door. The
   // destination is a closed descriptor; widen when a unit forces a
   // different destination shape (e.g., "a location you have seen" for
   // Teleport, "same plane" for Plane Shift).
@@ -1125,7 +1125,7 @@ export type EffectAtom =
       readonly maxFeet: number;
       readonly destination: "unoccupied_visible_space";
     }
-  // v4: transport_exile — planar / extradimensional relocation that
+  // Exile transport — planar / extradimensional relocation that
   // removes the subject from the current play space rather than merely
   // repositioning it nearby. Rod of Security and Robe of Stars both
   // pressure this shape. Return semantics remain separate lifecycle
@@ -1346,7 +1346,7 @@ export type DurationEndTrigger =
   | { readonly kind: "target_deals_damage" }
   | { readonly kind: "target_casts_spell" }
   // Mage Armor: "The spell ends early if the target dons armor."
-  // Single SRD instance in our corpus, but worth closing the taxonomy
+  // Single SRD instance in our corpus, but worth closing the trigger vocabulary
   // around rather than deferring — Mage Armor's RAW text now
   // round-trips, and the closed enum stays explicit about which
   // triggers are modeled.
@@ -1491,7 +1491,7 @@ export type AreaShapeSpec =
       readonly options: ReadonlyNonEmptyArray<AreaShapeDescriptor>;
     };
 
-// Mark-transfer grammar (v4 Subgraph E). Hunter's Mark: if the target
+// Mark-transfer grammar. Hunter's Mark: if the target
 // drops to 0 HP before the spell ends, the caster can take a Bonus
 // Action to move the mark to a new creature in range.
 export type MarkTransferEvent = { readonly kind: "target_drops_to_0_hp" };
@@ -1524,7 +1524,7 @@ export type Attachment =
       readonly occupantDispositionFilter?: AreaOccupantDispositionFilter;
       readonly rangeOrigin?: AttachmentRangeOrigin;
     }
-  // v4 `mark` attachment — stateful binding on a creature that effects
+  // `mark` attachment — stateful binding on a creature that effects
   // latch onto, and that can be transferred on a configured event.
   | {
       readonly kind: "mark";
@@ -1893,8 +1893,8 @@ export type ActivationMechanics = SpellMechanicsHeader & {
 
 // Triggered-reaction spell (Shield, Counterspell, Silvery Barbs). The
 // trigger is specified on the CastingTime (see `ReactionTrigger`). The
-// effects fire through the Prepare/Prompt/Commit subgraph (subgraph A
-// from the research): reaction window opens, player decides, effects
+// effects fire through the prepare / prompt / commit flow: reaction
+// window opens, player decides, effects
 // commit (or don't — declining does not consume reaction per
 // UBIQUITOUS_LANGUAGE §Triggers line 31).
 // §C1 unified shape: phases mirror ActivationMechanics. Shield is a
@@ -1914,8 +1914,9 @@ export type TriggeredReactionMechanics = SpellMechanicsHeader & {
 // by closed filter predicates) the stored spell releases a signal
 // effect.
 
-// Where the trigger is planted. Matches v4 attachment atoms `location`
-// and `area`, kept distinct from Attachment since the choice is
+// Where the trigger is planted. Matches the current attachment-style
+// trigger vocabulary for fixed locations and bounded areas, kept distinct
+// from Attachment since the choice is
 // mutually exclusive at cast time.
 export type AnchorTarget =
   | { readonly kind: "location"; readonly description: "door_or_window" }
@@ -1924,7 +1925,7 @@ export type AnchorTarget =
       readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number };
     };
 
-// Closed enum of event kinds (v4 anchored-trigger widening). Widen as
+// Closed enum of anchored event kinds. Widen as
 // more pressure cases land (step_on, approach_within, see_glyph,
 // named_event_signal).
 export type AnchoredEvent =
@@ -2730,14 +2731,14 @@ export type MasteryEffect =
   | SaveGateRider
   | GrantWeaponAttackRider;
 
-// Shared usage-limit taxonomy. Used by masteries (Topple / Cleave —
+// Shared usage-limit vocabulary. Used by masteries (Topple / Cleave —
 // once_per_turn) and by activated class features with a per-turn cap
 // (Action Surge at L17: two uses per rest but only once on a turn).
 // Single variant today; closed to be widened per unit.
 export type UsageLimit = { readonly kind: "once_per_turn" };
 
-// on_hit_trigger — the one mastery family modeled so far. Maps to
-// Subgraph G (On-Hit Rider): attack_roll resolution opens on_hit_window
+// on_hit_trigger — the one mastery family modeled so far. Attack-roll
+// resolution opens an on-hit window
 // which grants the mastery's rider effect.
 export type OnHitTriggerMechanics = {
   readonly family: "on_hit_trigger";

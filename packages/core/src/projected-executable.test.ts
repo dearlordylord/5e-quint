@@ -1,134 +1,66 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  MAGE_ARMOR_ABILITY_MOD,
-  MAGE_ARMOR_BASE_AC,
-  MAGE_ARMOR_DURATION_HOURS,
-  MAGE_ARMOR_EARLY_END,
-  type ProjectedActivationCost,
-  type ProjectedAttackKind,
-  type ProjectedContinuation,
-  type ProjectedExecutableAction,
-  type ProjectedExecutableAttachment,
-  type ProjectedExecutableNode,
-  type ProjectedLevelAxis,
-  type ProjectedPersistentRecord,
-  type ProjectedResourceAxis,
-  type ProjectedResourcePool,
-  type ProjectedSaveDc,
-  type ProjectedUnitKind,
-  type ProjectedUsageLimit,
+import type {
+  ProjectedActivationCost,
+  ProjectedExecutableAction,
+  ProjectedExecutableAttachment,
+  ProjectedLevelAxis,
+  ProjectedPersistentRecord,
+  ProjectedResourceAxis,
+  ProjectedResourcePool,
+  ProjectedSaveDc,
+  ProjectedUnitKind,
+  ProjectedUsageLimit,
 } from "#/projected-executable.ts";
 
-const DONE: ProjectedContinuation = { tag: "PCDone" };
-const toNode = (value: number): ProjectedContinuation => ({
-  tag: "PCNode",
-  value,
-});
-
 const SELF: ProjectedExecutableAttachment = { tag: "PEASelf" };
-const ONE: ProjectedExecutableAttachment = { tag: "PEAOneTarget" };
 const ACID_SPLASH_AREA: ProjectedExecutableAttachment = {
   tag: "PEAAreaSpherePointWithinRange",
   value: { rangeFeet: 60, radiusFeet: 5 },
 };
 
-describe("projected-executable TS mirror", () => {
-  it("represents an attack_roll node with weapon-attack continuations", () => {
-    const node: ProjectedExecutableNode = {
-      tag: "PENAttackRoll",
-      value: {
-        nodeId: 0,
-        attachment: ONE,
-        attackKind: "PAKWeaponAttack",
-        onHit: toNode(1),
-        onMiss: DONE,
-      },
-    };
-
-    expect(node.tag).toBe("PENAttackRoll");
-  });
-
-  it("preserves the frozen acid_splash projection facts", () => {
+describe("projected executable contract", () => {
+  it("represents a save-gate damage action without a node graph", () => {
     const action: ProjectedExecutableAction = {
-      source: { unitId: "acid_splash", unitKind: "PUKSpell" },
+      tag: "PEASaveGateDamage",
+      source: {
+        unitId: "acid_splash",
+        unitKind: "PUKSpell",
+        unitName: "Acid Splash",
+      },
       activationCost: "PACAction",
       resourceGate: { tag: "PRGNone" },
       usageLimit: "PULNone",
-      entryNode: 0,
-      nodes: [
-        {
-          tag: "PENSaveGate",
-          value: {
-            nodeId: 0,
-            ability: "dex",
-            dc: "PDCSpellSaveDc",
-            attachment: ACID_SPLASH_AREA,
-            onFail: toNode(1),
-            onSuccess: DONE,
-          },
+      attachment: ACID_SPLASH_AREA,
+      ability: "dex",
+      dc: "PDCSpellSaveDc",
+      damageType: "acid",
+      amount: {
+        tag: "PAThresholdDice",
+        value: {
+          axis: "PLACharacterLevel",
+          base: { dice: 1, dieSize: 6, flat: 0 },
+          tiers: [
+            { atLevel: 5, diceOverride: 2 },
+            { atLevel: 11, diceOverride: 3 },
+            { atLevel: 17, diceOverride: 4 },
+          ],
         },
-        {
-          tag: "PENDamage",
-          value: {
-            nodeId: 1,
-            damageType: "acid",
-            amount: {
-              tag: "PAThresholdDice",
-              value: {
-                axis: "PLACharacterLevel",
-                base: { dice: 1, dieSize: 6, flat: 0 },
-                tiers: [
-                  { atLevel: 5, diceOverride: 2 },
-                  { atLevel: 11, diceOverride: 3 },
-                  { atLevel: 17, diceOverride: 4 },
-                ],
-              },
-            },
-            next: DONE,
-          },
-        },
-      ],
+      },
     };
 
-    expect(action.nodes).toEqual([
-      {
-        tag: "PENSaveGate",
-        value: {
-          nodeId: 0,
-          ability: "dex",
-          dc: "PDCSpellSaveDc",
-          attachment: ACID_SPLASH_AREA,
-          onFail: toNode(1),
-          onSuccess: DONE,
-        },
-      },
-      {
-        tag: "PENDamage",
-        value: {
-          nodeId: 1,
-          damageType: "acid",
-          amount: {
-            tag: "PAThresholdDice",
-            value: {
-              axis: "PLACharacterLevel",
-              base: { dice: 1, dieSize: 6, flat: 0 },
-              tiers: [
-                { atLevel: 5, diceOverride: 2 },
-                { atLevel: 11, diceOverride: 3 },
-                { atLevel: 17, diceOverride: 4 },
-              ],
-            },
-          },
-          next: DONE,
-        },
-      },
-    ]);
+    expect(action.tag).toBe("PEASaveGateDamage");
+    expect(action.attachment).toEqual(ACID_SPLASH_AREA);
   });
 
-  it("preserves the frozen fighter_second_wind projection facts", () => {
+  it("represents a direct self-heal action", () => {
     const action: ProjectedExecutableAction = {
-      source: { unitId: "fighter_second_wind", unitKind: "PUKClassFeature" },
+      tag: "PEADirectHealHp",
+      source: {
+        unitId: "fighter_second_wind",
+        unitKind: "PUKClassFeature",
+        unitName: "Second Wind",
+      },
       activationCost: "PACBonusAction",
       resourceGate: {
         tag: "PRGUseCount",
@@ -152,59 +84,29 @@ describe("projected-executable TS mirror", () => {
         },
       },
       usageLimit: "PULNone",
-      entryNode: 0,
-      nodes: [
-        {
-          tag: "PENDirect",
-          value: { nodeId: 0, attachment: SELF, next: toNode(1) },
-        },
-        {
-          tag: "PENHealHp",
-          value: {
-            nodeId: 1,
-            amount: {
-              tag: "PALinearDicePlusLevel",
-              value: {
-                axis: "PLAFighterLevel",
-                base: { dice: 1, dieSize: 10, flat: 1 },
-                perLevelFlat: 1,
-                startingAtLevel: 1,
-              },
-            },
-            next: DONE,
-          },
-        },
-      ],
-    };
-
-    expect(action.resourceGate).toEqual({
-      tag: "PRGUseCount",
-      value: {
-        pool: "PRPSecondWind",
-        cap: {
-          tag: "PRCThresholdTiers",
-          value: {
-            axis: "PRAClass",
-            base: 2,
-            tiers: [
-              { atLevel: 4, value: 3 },
-              { atLevel: 10, value: 4 },
-            ],
-          },
-        },
-        resetCadence: {
-          tag: "PRCPartialShortFullLong",
-          value: { shortRestRefill: 1 },
+      attachment: SELF,
+      amount: {
+        tag: "PALinearDicePlusLevel",
+        value: {
+          axis: "PLAFighterLevel",
+          base: { dice: 1, dieSize: 10, flat: 1 },
+          perLevelFlat: 1,
+          startingAtLevel: 1,
         },
       },
-    });
+    };
+
+    expect(action.tag).toBe("PEADirectHealHp");
+    expect(action.attachment).toEqual(SELF);
   });
 
-  it("preserves the frozen fighter_action_surge_l2 projection facts", () => {
+  it("represents a direct extra-action grant", () => {
     const action: ProjectedExecutableAction = {
+      tag: "PEADirectGrantExtraAction",
       source: {
         unitId: "fighter_action_surge_l2",
         unitKind: "PUKClassFeature",
+        unitName: "Action Surge",
       },
       activationCost: "PACFree",
       resourceGate: {
@@ -223,88 +125,36 @@ describe("projected-executable TS mirror", () => {
         },
       },
       usageLimit: "PULOncePerTurn",
-      entryNode: 0,
-      nodes: [
-        {
-          tag: "PENDirect",
-          value: { nodeId: 0, attachment: SELF, next: toNode(1) },
-        },
-        {
-          tag: "PENGrantExtraAction",
-          value: {
-            nodeId: 1,
-            restriction: "PGARExcludeMagicAction",
-            next: DONE,
-          },
-        },
-      ],
+      attachment: SELF,
+      restriction: "PGARExcludeMagicAction",
     };
 
-    expect(action).toEqual({
-      source: {
-        unitId: "fighter_action_surge_l2",
-        unitKind: "PUKClassFeature",
-      },
-      activationCost: "PACFree",
-      resourceGate: {
-        tag: "PRGUseCount",
-        value: {
-          pool: "PRPActionSurge",
-          cap: {
-            tag: "PRCThresholdTiers",
-            value: {
-              axis: "PRAClass",
-              base: 1,
-              tiers: [{ atLevel: 17, value: 2 }],
-            },
-          },
-          resetCadence: { tag: "PRCShortOrLongRest" },
-        },
-      },
-      usageLimit: "PULOncePerTurn",
-      entryNode: 0,
-      nodes: [
-        {
-          tag: "PENDirect",
-          value: { nodeId: 0, attachment: SELF, next: toNode(1) },
-        },
-        {
-          tag: "PENGrantExtraAction",
-          value: {
-            nodeId: 1,
-            restriction: "PGARExcludeMagicAction",
-            next: DONE,
-          },
-        },
-      ],
-    });
+    expect(action.tag).toBe("PEADirectGrantExtraAction");
+    expect(action.restriction).toBe("PGARExcludeMagicAction");
   });
 
-  it("preserves the mage_armor persistent projection and lifecycle constants", () => {
+  it("represents a persistent base-AC override with authored payload", () => {
     const record: ProjectedPersistentRecord = {
       tag: "PPRSetBaseAc",
       value: {
-        source: { unitId: "mage_armor", unitKind: "PUKSpell" },
+        source: {
+          unitId: "mage_armor",
+          unitKind: "PUKSpell",
+          unitName: "Mage Armor",
+        },
         attachment: "PPAChosenTarget",
+        baseArmorClass: 13,
+        abilityModifier: "dex",
+        earlyEnds: ["PPEETargetDonsArmor"],
       },
     };
 
-    expect(record).toEqual({
-      tag: "PPRSetBaseAc",
-      value: {
-        source: { unitId: "mage_armor", unitKind: "PUKSpell" },
-        attachment: "PPAChosenTarget",
-      },
-    });
-    expect(MAGE_ARMOR_BASE_AC).toBe(13);
-    expect(MAGE_ARMOR_ABILITY_MOD).toBe("dex");
-    expect(MAGE_ARMOR_DURATION_HOURS).toBe(8);
-    expect(MAGE_ARMOR_EARLY_END).toBe("PMEETargetDonsArmor");
+    expect(record.value.baseArmorClass).toBe(13);
+    expect(record.value.abilityModifier).toBe("dex");
+    expect(record.value.earlyEnds).toEqual(["PPEETargetDonsArmor"]);
   });
 
   it("keeps unsupported future mechanics unrepresentable without explicit widening", () => {
-    // @ts-expect-error closed attack kind subset
-    const _attackKind: ProjectedAttackKind = "PAKRangedSpellAttack";
     // @ts-expect-error closed save DC subset
     const _saveDc: ProjectedSaveDc = "PDCMonsterSaveDc";
     // @ts-expect-error closed activation-cost subset
@@ -321,23 +171,20 @@ describe("projected-executable TS mirror", () => {
     const _unitKind: ProjectedUnitKind = "PUKFeat";
     // @ts-expect-error closed persistent-record subset
     const _persistentTag: ProjectedPersistentRecord["tag"] = "PPRGrantImmunity";
-    // @ts-expect-error PCNode continuation requires a numeric node id
-    const _continuation: ProjectedContinuation = { tag: "PCNode", value: "n1" };
     // @ts-expect-error area attachment requires geometry payload
     const _attachment: ProjectedExecutableAttachment = {
       tag: "PEAAreaSpherePointWithinRange",
     };
 
     void [
-      _attackKind,
       _saveDc,
       _activation,
       _usage,
       _levelAxis,
       _resourceAxis,
+      _resourcePool,
       _unitKind,
       _persistentTag,
-      _continuation,
       _attachment,
     ];
     expect(true).toBe(true);

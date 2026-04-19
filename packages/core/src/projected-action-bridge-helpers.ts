@@ -27,12 +27,7 @@ export type ProjectedPoolCost = "actionSurge" | "secondWind";
 export type ProjectedQuotaCost = "action" | "bonusAction";
 
 function projectedActionSourceLabel(source: ProjectedSource): string {
-  return Match.value(source.unitId).pipe(
-    Match.when("acid_splash", () => "Acid Splash"),
-    Match.when("fighter_second_wind", () => "Second Wind"),
-    Match.when("fighter_action_surge_l2", () => "Action Surge"),
-    Match.orElse(() => source.unitId),
-  );
+  return source.unitName;
 }
 
 function resolveThresholdCap(
@@ -101,10 +96,11 @@ export function actionCostParts(
 function firstAmount(
   action: ProjectedExecutableAction,
 ): ProjectedAmount | null {
-  const healNode = action.nodes.find((node) => node.tag === "PENHealHp");
-  if (healNode?.tag === "PENHealHp") return healNode.value.amount;
-  const damageNode = action.nodes.find((node) => node.tag === "PENDamage");
-  return damageNode?.tag === "PENDamage" ? damageNode.value.amount : null;
+  return Match.value(action).pipe(
+    Match.when({ tag: "PEADirectHealHp" }, ({ amount }) => amount),
+    Match.when({ tag: "PEASaveGateDamage" }, ({ amount }) => amount),
+    Match.orElse(() => null),
+  );
 }
 
 function formatResolvedAmount(
@@ -151,18 +147,15 @@ export function describeProjectedAction(
   actor: ProjectedInterpreterActor,
 ): string {
   const amount = firstAmount(action);
-  if (amount != null && action.source.unitId === "fighter_second_wind") {
+  if (action.tag === "PEADirectHealHp" && amount != null) {
     return `Heal ${formatResolvedAmount(resolveAmount(actor, amount))} HP`;
   }
-  const grantNode = action.nodes.find(
-    (node) => node.tag === "PENGrantExtraAction",
-  );
-  if (grantNode?.tag === "PENGrantExtraAction") {
+  if (action.tag === "PEADirectGrantExtraAction") {
     const resourcePrefix =
       action.resourceGate.tag === "PRGUseCount"
         ? `Expend one ${projectedPoolLabel(action.resourceGate.value.pool)} use to `
         : "";
-    const extraActionLabel = Match.value(grantNode.value.restriction).pipe(
+    const extraActionLabel = Match.value(action.restriction).pipe(
       Match.when(
         "PGARExcludeMagicAction",
         () => "gain one additional non-Magic action this turn",
@@ -180,7 +173,6 @@ export function selfOnlyRuntime(
 ): ProjectedExecutionRuntime {
   return {
     resolveAttachment: () => [actorId],
-    resolveAttackRoll: () => [],
     resolveSaveGate: () => [],
     resolveAmount: resolveAmounts,
   };

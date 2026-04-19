@@ -1,5 +1,3 @@
-// TS mirror of projected-executable.qnt. Widen both files in lockstep.
-
 import type { Ability, DamageType } from "#/types.ts";
 
 export const PROJECTED_UNIT_KINDS = [
@@ -11,6 +9,7 @@ export type ProjectedUnitKind = (typeof PROJECTED_UNIT_KINDS)[number];
 export interface ProjectedSource {
   readonly unitId: string;
   readonly unitKind: ProjectedUnitKind;
+  readonly unitName: string;
 }
 
 export interface ProjectedAreaSpherePointWithinRange {
@@ -25,11 +24,6 @@ export type ProjectedExecutableAttachment =
       readonly tag: "PEAAreaSpherePointWithinRange";
       readonly value: ProjectedAreaSpherePointWithinRange;
     };
-
-export const PROJECTED_ATTACK_KINDS = [
-  "PAKWeaponAttack",
-] as const satisfies ReadonlyArray<string>;
-export type ProjectedAttackKind = (typeof PROJECTED_ATTACK_KINDS)[number];
 
 export const PROJECTED_SAVE_DCS = [
   "PDCSpellSaveDc",
@@ -145,73 +139,37 @@ export type ProjectedResourceGate =
       };
     };
 
-export type ProjectedNodeId = number;
-
-export type ProjectedContinuation =
-  | { readonly tag: "PCDone" }
-  | { readonly tag: "PCNode"; readonly value: ProjectedNodeId };
-
-export interface ProjectedAttackRollNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly attachment: ProjectedExecutableAttachment;
-  readonly attackKind: ProjectedAttackKind;
-  readonly onHit: ProjectedContinuation;
-  readonly onMiss: ProjectedContinuation;
-}
-
-export interface ProjectedSaveGateNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly ability: Ability;
-  readonly dc: ProjectedSaveDc;
-  readonly attachment: ProjectedExecutableAttachment;
-  readonly onFail: ProjectedContinuation;
-  readonly onSuccess: ProjectedContinuation;
-}
-
-export interface ProjectedDirectNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly attachment: ProjectedExecutableAttachment;
-  readonly next: ProjectedContinuation;
-}
-
-export interface ProjectedDamageNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly damageType: DamageType;
-  readonly amount: ProjectedAmount;
-  readonly next: ProjectedContinuation;
-}
-
-export interface ProjectedHealHpNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly amount: ProjectedAmount;
-  readonly next: ProjectedContinuation;
-}
-
-export interface ProjectedGrantExtraActionNode {
-  readonly nodeId: ProjectedNodeId;
-  readonly restriction: ProjectedGrantedActionRestriction;
-  readonly next: ProjectedContinuation;
-}
-
-export type ProjectedExecutableNode =
-  | { readonly tag: "PENAttackRoll"; readonly value: ProjectedAttackRollNode }
-  | { readonly tag: "PENSaveGate"; readonly value: ProjectedSaveGateNode }
-  | { readonly tag: "PENDirect"; readonly value: ProjectedDirectNode }
-  | { readonly tag: "PENDamage"; readonly value: ProjectedDamageNode }
-  | { readonly tag: "PENHealHp"; readonly value: ProjectedHealHpNode }
-  | {
-      readonly tag: "PENGrantExtraAction";
-      readonly value: ProjectedGrantExtraActionNode;
-    };
-
-export interface ProjectedExecutableAction {
+interface ProjectedExecutableBase {
   readonly source: ProjectedSource;
   readonly activationCost: ProjectedActivationCost;
   readonly resourceGate: ProjectedResourceGate;
   readonly usageLimit: ProjectedUsageLimit;
-  readonly entryNode: ProjectedNodeId;
-  readonly nodes: ReadonlyArray<ProjectedExecutableNode>;
+  readonly attachment: ProjectedExecutableAttachment;
 }
+
+export interface ProjectedSaveGateDamageAction extends ProjectedExecutableBase {
+  readonly tag: "PEASaveGateDamage";
+  readonly ability: Ability;
+  readonly dc: ProjectedSaveDc;
+  readonly damageType: DamageType;
+  readonly amount: ProjectedAmount;
+}
+
+export interface ProjectedDirectHealHpAction extends ProjectedExecutableBase {
+  readonly tag: "PEADirectHealHp";
+  readonly amount: ProjectedAmount;
+}
+
+export interface ProjectedDirectGrantExtraActionAction
+  extends ProjectedExecutableBase {
+  readonly tag: "PEADirectGrantExtraAction";
+  readonly restriction: ProjectedGrantedActionRestriction;
+}
+
+export type ProjectedExecutableAction =
+  | ProjectedSaveGateDamageAction
+  | ProjectedDirectHealHpAction
+  | ProjectedDirectGrantExtraActionAction;
 
 export const PROJECTED_PERSISTENT_ATTACHMENTS = [
   "PPAChosenTarget",
@@ -219,25 +177,21 @@ export const PROJECTED_PERSISTENT_ATTACHMENTS = [
 export type ProjectedPersistentAttachment =
   (typeof PROJECTED_PERSISTENT_ATTACHMENTS)[number];
 
+export const PROJECTED_PERSISTENT_EARLY_ENDS = [
+  "PPEETargetDonsArmor",
+] as const satisfies ReadonlyArray<string>;
+export type ProjectedPersistentEarlyEnd =
+  (typeof PROJECTED_PERSISTENT_EARLY_ENDS)[number];
+
 export interface ProjectedSetBaseAcPayload {
   readonly source: ProjectedSource;
   readonly attachment: ProjectedPersistentAttachment;
+  readonly baseArmorClass: number;
+  readonly abilityModifier: Ability;
+  readonly earlyEnds: ReadonlyArray<ProjectedPersistentEarlyEnd>;
 }
 
 export type ProjectedPersistentRecord = {
   readonly tag: "PPRSetBaseAc";
   readonly value: ProjectedSetBaseAcPayload;
 };
-
-export const MAGE_ARMOR_BASE_AC = 13 as const;
-export const MAGE_ARMOR_ABILITY_MOD: Ability = "dex";
-export const MAGE_ARMOR_DURATION_HOURS = 8 as const;
-
-export const PROJECTED_MAGE_ARMOR_EARLY_ENDS = [
-  "PMEETargetDonsArmor",
-] as const satisfies ReadonlyArray<string>;
-export type ProjectedMageArmorEarlyEnd =
-  (typeof PROJECTED_MAGE_ARMOR_EARLY_ENDS)[number];
-
-export const MAGE_ARMOR_EARLY_END: ProjectedMageArmorEarlyEnd =
-  "PMEETargetDonsArmor";

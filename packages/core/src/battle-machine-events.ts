@@ -170,7 +170,6 @@ export type BattleEvent =
       readonly retDmg: number;
       readonly retDt: DamageType;
       readonly retCrit: boolean;
-      readonly retTgtAc: ArmorClass;
     }
   | {
       readonly type: "BATTLE_CAST_SAVE_SPELL";

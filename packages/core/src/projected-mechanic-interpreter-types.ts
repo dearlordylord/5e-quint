@@ -1,13 +1,10 @@
 import type {
   ProjectedActivationCost,
-  ProjectedAttackRollNode,
+  ProjectedExecutableAction,
   ProjectedExecutableAttachment,
-  ProjectedExecutableNode,
-  ProjectedGrantExtraActionNode,
-  ProjectedNodeId,
+  ProjectedGrantedActionRestriction,
   ProjectedResourceGate,
   ProjectedSaveDc,
-  ProjectedSaveGateNode,
   ProjectedSource,
   ProjectedUsageLimit,
 } from "#/projected-executable.ts";
@@ -39,17 +36,14 @@ export interface ProjectedAmountResolution {
 export interface ProjectedAttachmentRequest {
   readonly source: ProjectedSource;
   readonly actor: ProjectedInterpreterActor;
-  readonly nodeId: ProjectedNodeId;
   readonly attachment: ProjectedExecutableAttachment;
 }
 
-export interface ProjectedAttackRollRequest extends ProjectedAttachmentRequest {
-  readonly attackKind: ProjectedAttackRollNode["attackKind"];
-  readonly targetIds: ReadonlyArray<string>;
-}
-
 export interface ProjectedSaveGateRequest extends ProjectedAttachmentRequest {
-  readonly ability: ProjectedSaveGateNode["ability"];
+  readonly ability: Extract<
+    ProjectedExecutableAction,
+    { readonly tag: "PEASaveGateDamage" }
+  >["ability"];
   readonly dc: number;
   readonly dcSource: ProjectedSaveDc;
   readonly targetIds: ReadonlyArray<string>;
@@ -58,7 +52,6 @@ export interface ProjectedSaveGateRequest extends ProjectedAttachmentRequest {
 export interface ProjectedAmountRequest {
   readonly source: ProjectedSource;
   readonly actor: ProjectedInterpreterActor;
-  readonly nodeId: ProjectedNodeId;
   readonly amount: ProjectedResolvedAmount;
   readonly targetIds: ReadonlyArray<string>;
 }
@@ -67,9 +60,6 @@ export interface ProjectedExecutionRuntime {
   readonly resolveAttachment: (
     request: ProjectedAttachmentRequest,
   ) => ReadonlyArray<string>;
-  readonly resolveAttackRoll: (
-    request: ProjectedAttackRollRequest,
-  ) => ReadonlyArray<ProjectedTargetResolution<"hit" | "miss">>;
   readonly resolveSaveGate: (
     request: ProjectedSaveGateRequest,
   ) => ReadonlyArray<ProjectedTargetResolution<"fail" | "success">>;
@@ -103,29 +93,18 @@ export type ProjectedInterpreterTransition =
   | {
       readonly tag: "PITDirect";
       readonly value: {
-        readonly nodeId: ProjectedNodeId;
         readonly attachment: ProjectedExecutableAttachment;
         readonly targetIds: ReadonlyArray<string>;
-      };
-    }
-  | {
-      readonly tag: "PITAttackRoll";
-      readonly value: {
-        readonly nodeId: ProjectedNodeId;
-        readonly attachment: ProjectedExecutableAttachment;
-        readonly attackKind: ProjectedAttackRollNode["attackKind"];
-        readonly targetIds: ReadonlyArray<string>;
-        readonly outcomes: ReadonlyArray<
-          ProjectedTargetResolution<"hit" | "miss">
-        >;
       };
     }
   | {
       readonly tag: "PITSaveGate";
       readonly value: {
-        readonly nodeId: ProjectedNodeId;
         readonly attachment: ProjectedExecutableAttachment;
-        readonly ability: ProjectedSaveGateNode["ability"];
+        readonly ability: Extract<
+          ProjectedExecutableAction,
+          { readonly tag: "PEASaveGateDamage" }
+        >["ability"];
         readonly dc: number;
         readonly dcSource: ProjectedSaveDc;
         readonly targetIds: ReadonlyArray<string>;
@@ -137,11 +116,10 @@ export type ProjectedInterpreterTransition =
   | {
       readonly tag: "PITDamage";
       readonly value: {
-        readonly nodeId: ProjectedNodeId;
         readonly damageType: Extract<
-          ProjectedExecutableNode,
-          { readonly tag: "PENDamage" }
-        >["value"]["damageType"];
+          ProjectedExecutableAction,
+          { readonly tag: "PEASaveGateDamage" }
+        >["damageType"];
         readonly targetId: string;
         readonly amount: ProjectedResolvedAmount;
         readonly total: number;
@@ -151,7 +129,6 @@ export type ProjectedInterpreterTransition =
   | {
       readonly tag: "PITHealHp";
       readonly value: {
-        readonly nodeId: ProjectedNodeId;
         readonly targetId: string;
         readonly amount: ProjectedResolvedAmount;
         readonly total: number;
@@ -161,9 +138,8 @@ export type ProjectedInterpreterTransition =
   | {
       readonly tag: "PITGrantExtraAction";
       readonly value: {
-        readonly nodeId: ProjectedNodeId;
         readonly targetId: string;
-        readonly restriction: ProjectedGrantExtraActionNode["restriction"];
+        readonly restriction: ProjectedGrantedActionRestriction;
         readonly pendingUntilActionSpend: true;
       };
     };

@@ -28,6 +28,7 @@ import {
 } from "#/features/class-tables.ts";
 import { sneakAttackDice } from "#/features/class-rogue.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
+import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
 import {
   abilityModifier,
@@ -323,6 +324,7 @@ type CharacterBattleProjection = Pick<
   | "caster"
   | "strMod"
   | "dexMod"
+  | "activeProjectedPersistents"
   | "rogueLevel"
   | "monkLevel"
   | "fighterLevel"
@@ -342,6 +344,9 @@ type CharacterBattleProjection = Pick<
 
 export function characterSheetBattleProjection(
   sheet: CharacterSheet,
+  runtime?: {
+    readonly activeProjectedPersistents?: ReadonlySet<ActiveProjectedPersistent>;
+  },
 ): CharacterBattleProjection {
   const projection = characterSheetCreatureProjection(sheet);
   const derived = deriveCharacterSheetNumbers(sheet);
@@ -373,6 +378,9 @@ export function characterSheetBattleProjection(
     pactSlotLevel: derived.spellcasting.pactSlotLevel,
     critRange: projection.critRange,
     sneakAttackDice: sneakAttackDice(sheetClassLevels(sheet).rogue),
+    ...(runtime?.activeProjectedPersistents != null
+      ? { activeProjectedPersistents: runtime.activeProjectedPersistents }
+      : {}),
     ...battleEquipment,
   };
 }

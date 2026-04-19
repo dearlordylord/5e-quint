@@ -1347,6 +1347,7 @@ describe("available actions contract", () => {
   });
 
   test("Acid Splash is absent during Action Surge's non-Magic action", () => {
+    // FIXME: how does it know it has enough stats for that multiclass? I thought we modeled that before (lvlN is lvl1 + 1 + 1 + 1....) - I assume that it actually just the projection we test, not the character creation legality - let me know if that's true
     const actor = makeActorWithInput({
       ...WIZARD_WITH_ACID_SPLASH_INPUT,
       fighterLevel: classLevel(2),

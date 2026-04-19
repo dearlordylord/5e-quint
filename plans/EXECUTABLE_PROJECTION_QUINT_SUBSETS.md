@@ -9,7 +9,7 @@ The Quint owner is
 [projected-executable.qnt](/workspace/typescript/dnd/projected-executable.qnt).
 It complements the scope freeze in
 [plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md)
-and defines the contract EPT4 and EPT5 must mirror.
+and defines the contract the TS mirror must keep in sync with.
 
 ## RAW And Terminology Check
 
@@ -28,28 +28,37 @@ Reviewed against:
 
 Executable surface:
 
-- `ProjectedExecutableNode` is closed to `attack_roll`, `save_gate`, `direct`,
-  `damage`, `heal_hp`, and `grant_extra_action`.
-- `ProjectedExecutableAction` carries only `source`, `activationCost`,
-  `resourceGate`, `usageLimit`, `entryNode`, and `nodes`.
-- `ProjectedExecutableAttachment` is closed to `self`, `one_target`, and the
-  specific `area_sphere_point_within_range` record needed to keep Acid Splash's
-  `rangeFeet` and `radiusFeet` distinct.
-- `ProjectedAttackKind`, `ProjectedSaveDc`, `ProjectedGrantedActionRestriction`,
+- `ProjectedExecutableAction` is now a direct action union, not a graph.
+- The closed executable variants are:
+  - `PEASaveGateDamage`
+  - `PEADirectHealHp`
+  - `PEADirectGrantExtraAction`
+- Every executable variant carries only:
+  - `source`
+  - `activationCost`
+  - `resourceGate`
+  - `usageLimit`
+  - `attachment`
+  - plus the variant-specific payload needed at resolution time
+- `ProjectedExecutableAttachment` remains closed to `self`, `one_target`, and
+  the specific `area_sphere_point_within_range` record needed to keep Acid
+  Splash's `rangeFeet` and `radiusFeet` distinct.
+- `ProjectedSaveDc`, `ProjectedGrantedActionRestriction`,
   `ProjectedActivationCost`, `ProjectedUsageLimit`, `ProjectedResourceCap`, and
-  `ProjectedResetCadence` are all closed variants rather than string tags.
+  `ProjectedResetCadence` are all closed variants rather than open strings.
 
 Persistent surface:
 
-- `ProjectedPersistentRecord` is closed to one record kind: `PPRSetBaseAc`.
-- The payload carries only runtime identity that can vary per record:
-  `source` and `attachment`.
-- Mage Armor's fixed semantics live in module-level constants:
-  `MAGE_ARMOR_BASE_AC = 13`, `MAGE_ARMOR_ABILITY_MOD = Dex`,
-  `MAGE_ARMOR_DURATION_HOURS = 8`, and
-  `MAGE_ARMOR_EARLY_END = PMEETargetDonsArmor`.
-- No second persistent duration form, early-end trigger, or AC formula is
-  representable in EPT3.
+- `ProjectedPersistentRecord` remains closed to one record kind: `PPRSetBaseAc`.
+- Unlike the earlier graph-era subset, the payload now carries the authored
+  persistent semantics directly:
+  - `source`
+  - `attachment`
+  - `baseArmorClass`
+  - `abilityModifier`
+  - `earlyEnds`
+- Mage Armor's fixed semantics are no longer modeled as module-level Quint
+  constants. They ride in the record payload, matching the TS mirror.
 
 Resource and usage surface:
 
@@ -68,18 +77,17 @@ Authored source:
 Compiler target:
 
 - `ProjectedExecutableAction`
-- `source = { unitId: "acid_splash", unitKind: PUKSpell }`
+- variant `PEASaveGateDamage`
+- `source = { unitId: "acid_splash", unitKind: PUKSpell, unitName: "Acid Splash" }`
 - `activationCost = PACAction`
 - `resourceGate = PRGNone`
 - `usageLimit = PULNone`
-- `entryNode` points at a `PENSaveGate`
-- node chain: `save_gate -> damage`
+- `attachment = PEAAreaSpherePointWithinRange({ rangeFeet: 60, radiusFeet: 5 })`
 
 Required preserved authored facts:
 
 - save ability is `Dex`
 - DC source is the caster's spell save DC
-- attachment is `PEAAreaSpherePointWithinRange({ rangeFeet: 60, radiusFeet: 5 })`
 - damage type is `Acid`
 - amount is threshold dice on `PLACharacterLevel` with 1d6 base, then 2d6 at
   level 5, 3d6 at 11, 4d6 at 17
@@ -99,16 +107,15 @@ Authored source:
 Compiler target:
 
 - `ProjectedExecutableAction`
-- `source = { unitId: "fighter_second_wind", unitKind: PUKClassFeature }`
+- variant `PEADirectHealHp`
+- `source = { unitId: "fighter_second_wind", unitKind: PUKClassFeature, unitName: "Second Wind" }`
 - `activationCost = PACBonusAction`
 - `resourceGate = PRGUseCount(...)`
 - `usageLimit = PULNone`
-- `entryNode` points at a `PENDirect`
-- node chain: `direct -> heal_hp`
+- `attachment = PEASelf`
 
 Required preserved authored facts:
 
-- direct attachment is `PEASelf`
 - heal amount is linear dice-plus-level on `PLAFighterLevel`
 - base is `1d10 + 1`
 - `perLevelFlat = 1`
@@ -125,16 +132,15 @@ Authored source:
 Compiler target:
 
 - `ProjectedExecutableAction`
-- `source = { unitId: "fighter_action_surge_l2", unitKind: PUKClassFeature }`
+- variant `PEADirectGrantExtraAction`
+- `source = { unitId: "fighter_action_surge_l2", unitKind: PUKClassFeature, unitName: "Action Surge" }`
 - `activationCost = PACFree`
 - `resourceGate = PRGUseCount(...)`
 - `usageLimit = PULOncePerTurn`
-- `entryNode` points at a `PENDirect`
-- node chain: `direct -> grant_extra_action`
+- `attachment = PEASelf`
 
 Required preserved authored facts:
 
-- direct attachment is `PEASelf`
 - extra action restriction is `PGARExcludeMagicAction`
 - resource cap is threshold tiers on `PRAClass` with base `1`, then `2` at
   level 17
@@ -149,40 +155,30 @@ Compiler target:
 
 - `ProjectedPersistentRecord`
 - variant `PPRSetBaseAc`
-- `source = { unitId: "mage_armor", unitKind: PUKSpell }`
+- `source = { unitId: "mage_armor", unitKind: PUKSpell, unitName: "Mage Armor" }`
 - `attachment = PPAChosenTarget`
 
-Fixed semantics supplied by the EPT3 module, not duplicated per record:
+Required preserved authored facts:
 
 - base AC is `13`
 - ability modifier is `Dex`
-- duration is exactly `8 hour`
-- early end is exactly `target_dons_armor`
-
-## Ordinary Attack Lane
-
-`attack_roll` is part of the closed executable subset even though no authored
-first-slice unit compiles into it. That is intentional.
-
-The tracer-bullet scenario still needs ordinary weapon attacks through the
-existing battle-owned lane. EPT3 therefore reserves a closed `attack_roll`
-payload now:
-
-- attachment `PEAOneTarget`
-- attack kind `PAKWeaponAttack`
-- hit/miss continuations represented through `ProjectedContinuation`
-
-This lets EPT4 and EPT5 describe the existing lane without widening the Quint
-subset later.
+- early end is exactly `[PPEETargetDonsArmor]`
 
 ## Deliberate Boundary
 
-EPT3 closes the projection vocabulary and the first-slice authored mappings. It
-does not hardcode compiled per-unit fixtures in Quint, and it does not yet make
-all graph well-formedness invariants unrepresentable. The `entryNode` plus node
-continuations are the minimal graph-ready structure for this slice; enforcing
-node-reference consistency is left to compiler/interpreter validation in EPT5
-and EPT7.
+EPT3 closes the projection vocabulary and the first-slice authored mappings.
+It does not define a general authored-surface interpreter in Quint, and it does
+not mirror the entire prototype-content surface. It mirrors only the reduced
+runtime-facing subset the TS compiler is allowed to emit.
+
+The direct action union is intentional:
+
+- it keeps runtime attached to a smaller execution contract than the full
+  authoring surface
+- it avoids reintroducing node-graph indirection when the supported slice does
+  not need graph control flow
+- it keeps unsupported shapes fail-closed at compile time rather than forcing
+  runtime to understand the whole surface language
 
 ## Verification
 
@@ -192,12 +188,9 @@ and EPT7.
 
 `/simplify` convergence:
 
-- round 1: kept executable and persistent semantics in a dedicated projection
-  module instead of mixing them into `creature.qnt`, and removed per-unit Quint
-  fixtures so authored JSON remains the sole owner of compiled mechanic details
-- round 2: narrowed Mage Armor to per-record identity plus module-level
-  constants, so no alternate base AC, duration, ability modifier, or early-end
-  trigger is representable in EPT3
-- round 3: merged the stronger resource/reset contract from the Claude attempt
-  with the non-lossy Acid Splash geometry shape from the Codex attempt, leaving
-  no stringly operation slots in the landed subset
+- round 1: removed the stale node-graph mirror (`ProjectedExecutableNode`,
+  `entryNode`, `nodes`) so Quint now matches the direct TS action contract
+- round 2: moved Mage Armor semantics from module-level constants into the
+  persistent record payload, matching the TS runtime owner path
+- round 3: kept the closed subset narrow by mirroring only the three executable
+  action shapes and one persistent shape currently emitted by the compiler

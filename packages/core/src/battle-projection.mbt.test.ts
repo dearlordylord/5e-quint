@@ -14,6 +14,11 @@ import { z } from "zod";
 
 import { effectiveInitRoll } from "#/battle-machine-actions-turn.ts";
 import {
+  freshCaster,
+  freshCreature,
+} from "#/battle-machine-creature.ts";
+import type { BattleCreatureState as RuntimeBattleCreatureState } from "#/battle-machine-types.ts";
+import {
   canDeflectAttacks,
   hasDeflectEnergy,
 } from "#/features/class-monk-features.ts";
@@ -26,6 +31,9 @@ import {
   registerEvaluatorCleanup,
 } from "#/mbt-cleanup.ts";
 import { resolveGrapple, targetTwoSizesSmaller } from "#/machine-combat.ts";
+import {
+  battleCurrentArmorClass,
+} from "#/projected-persistent.ts";
 import {
   compareNormalizedStates,
   computeRechargedAbilities,
@@ -54,6 +62,7 @@ import type {
   SpellName,
 } from "#/types.ts";
 import {
+  armorClass,
   classLevel,
   CreatureId as mkCreatureId,
   healAmount,
@@ -213,6 +222,16 @@ type BattleExcludedKeys = (typeof BATTLE_EXCLUDED_KEYS_ARRAY)[number];
 type BattleCreatureState = Omit<NormalizedState, BattleExcludedKeys> & {
   readonly creatureSize: Size;
 };
+type BattleArmorProjection = Pick<
+  RuntimeBattleCreatureState,
+  | "activeProjectedPersistents"
+  | "baseArmorClass"
+  | "defenseArmorClassBonus"
+  | "dexMod"
+  | "isWearingArmor"
+  | "leftHandUse"
+  | "rightHandUse"
+>;
 const BATTLE_EXCLUDED_KEYS = new Set<string>(BATTLE_EXCLUDED_KEYS_ARRAY);
 
 /** Project NormalizedState to BattleCreatureState by dropping class/turnPhase fields. */
@@ -364,7 +383,6 @@ const battleDriverSchema = {
     retDmg: OI,
     retDt: OV,
     retCrit: OB,
-    retTgtAc: OI,
     reactorId: OS,
   },
   bCastSaveSpell: {
@@ -523,12 +541,14 @@ function createBattleProjectionDriver() {
     const statBlocks = new Map<
       string,
       {
+        ac: number;
         multiattackLength: number;
         rechargeMinRolls: Record<string, number>;
         saveAdvantageContexts?: ReadonlySet<"spell" | "magicalEffect">;
       }
     >();
     const creatureKinds = new Map<string, CreatureKind>();
+    const battleArmorProjections = new Map<string, BattleArmorProjection>();
     let initiative: Array<string> = [];
     let turnIndex = 0;
 
@@ -586,6 +606,24 @@ function createBattleProjectionDriver() {
       const actor = actors.get(mkCreatureId(id));
       if (!actor) throw new Error(`No actor for ${id}`);
       return actor.getSnapshot();
+    }
+
+    function setBattleArmorProjection(
+      id: string,
+      creature: BattleArmorProjection,
+    ) {
+      battleArmorProjections.set(id, creature);
+    }
+
+    function currentArmorClass(id: string): number {
+      const creature = battleArmorProjections.get(id);
+      if (creature == null) {
+        throw new Error(`No battle armor projection for ${id}`);
+      }
+      return (
+        battleCurrentArmorClass(creature) +
+        (creature.isWearingArmor ? creature.defenseArmorClassBonus : 0)
+      );
     }
 
     function activeId(): string {
@@ -766,6 +804,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("A"), actorA);
       creatureKinds.set("A", "PC");
       creatureSizes.set("A", "medium");
+      setBattleArmorProjection("A", freshCaster(hp1, "PC"));
 
       // B: PC caster, barbarian 5 — Fast Movement baked into baseWalkSpeed (30 + 10 = 40)
       const actorB = createActor(creatureMachine, {
@@ -786,9 +825,11 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("B"), actorB);
       creatureKinds.set("B", "PC");
       creatureSizes.set("B", "medium");
+      setBattleArmorProjection("B", freshCaster(hp2, "PC"));
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
       statBlocks.set("C", {
+        ac: 10,
         multiattackLength: 0,
         rechargeMinRolls: { breath_weapon: 5 },
       });
@@ -811,6 +852,10 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("C"), actorC);
       creatureKinds.set("C", "Monster");
       creatureSizes.set("C", "medium");
+      setBattleArmorProjection("C", {
+        ...freshCreature(hp3, "Monster"),
+        baseArmorClass: armorClass(statBlocks.get("C")?.ac ?? 10),
+      });
 
       // D: PC caster, Champion fighter 5 (Action Surge, crit range handled only in battle layer)
       const actorD = createActor(creatureMachine, {
@@ -831,6 +876,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("D"), actorD);
       creatureKinds.set("D", "PC");
       creatureSizes.set("D", "medium");
+      setBattleArmorProjection("D", freshCaster(hp4, "PC"));
 
       const initEntries = [
         {
@@ -1157,11 +1203,14 @@ function createBattleProjectionDriver() {
       const retDmg = pickBigInt(picks, "retDmg") ?? 5;
       const retDt = pickVariant(picks, "retDt") ?? "Slashing";
       const retCrit = pickBool(picks, "retCrit") ?? false;
-      const retTgtAc = pickBigInt(picks, "retTgtAc") ?? 15;
-
+      if (pendingAfterDamage == null) {
+        return;
+      }
       send(reactorId, { type: "USE_REACTION" });
-      const hit = retAtkRoll >= retTgtAc || retAtkRoll === 20;
-      if (hit && pendingAfterDamage) {
+      const hit =
+        retAtkRoll >= currentArmorClass(pendingAfterDamage.damageSource) ||
+        retAtkRoll === 20;
+      if (hit) {
         const target = pendingAfterDamage.damageSource;
         send(target, {
           type: "TAKE_DAMAGE",
@@ -2227,6 +2276,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("E"), actorE);
       creatureKinds.set("E", "PC");
       creatureSizes.set("E", "medium");
+      setBattleArmorProjection("E", freshCaster(hpE, "PC"));
       turnStarted.add("E");
 
       const clampedIdx = Math.max(0, Math.min(insertIdx, initiative.length));
@@ -2286,6 +2336,7 @@ function createBattleProjectionDriver() {
       for (const id of ids) {
         actors.get(mkCreatureId(id))?.stop();
         actors.delete(mkCreatureId(id));
+        battleArmorProjections.delete(id);
         creatureKinds.delete(id);
         creatureSizes.delete(id);
         hiddenDiscoveryDcs.delete(id);

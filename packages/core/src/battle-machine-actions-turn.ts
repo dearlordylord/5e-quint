@@ -75,11 +75,16 @@ import {
   statBlockLegendaryAction,
   statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
+import {
+  applyProjectedDonArmor,
+  canonicalizeActiveProjectedPersistents,
+} from "#/projected-persistent.ts";
 import { SIZE_ORDER } from "#/srd-constants.ts";
 import {
   resourceCount,
   difficultyClass,
   spellId as mkSpellId,
+  type ArmorClass,
   type SpellId,
 } from "#/types.ts";
 
@@ -173,6 +178,14 @@ export function buildCreatureState(
       : canonicalPreparedSpellIds(cfg.preparedSpells);
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
+  const isWearingArmor = cfg.isWearingArmor ?? base.isWearingArmor;
+  const activeProjectedPersistents =
+    cfg.activeProjectedPersistents == null
+      ? base.activeProjectedPersistents
+      : canonicalizeActiveProjectedPersistents({
+          active: cfg.activeProjectedPersistents,
+          isWearingArmor,
+        });
   return {
     ...base,
     ...(cfg.monsterStatBlockId != null
@@ -237,9 +250,7 @@ export function buildCreatureState(
       ? { saveAdvantageContexts: cfg.saveAdvantageContexts }
       : {}),
     ...(cfg.critRange != null ? { critRange: cfg.critRange } : {}),
-    ...(cfg.isWearingArmor != null
-      ? { isWearingArmor: cfg.isWearingArmor }
-      : {}),
+    isWearingArmor,
     ...(cfg.defenseArmorClassBonus != null
       ? { defenseArmorClassBonus: cfg.defenseArmorClassBonus }
       : {}),
@@ -297,6 +308,7 @@ export function buildCreatureState(
     ...(cfg.invisible === true ? { invisible: true } : {}),
     ...(cfg.prone === true ? { prone: true } : {}),
     ...(cfg.activeEffects != null ? { activeEffects: cfg.activeEffects } : {}),
+    activeProjectedPersistents,
     ...(cfg.baseWalkSpeed != null
       ? {
           baseWalkSpeed: cfg.baseWalkSpeed,
@@ -436,6 +448,22 @@ export function battleAddCreature({
         ? c.turnIndex + insertedCount
         : c.turnIndex,
   };
+}
+
+export function battleDonArmorState(
+  c: BattleContext,
+  creatureId: CreatureId,
+  baseArmorClass: ArmorClass,
+): Partial<BattleContext> {
+  const creature = c.creatures.get(creatureId);
+  if (creature == null) return {};
+
+  const creatures = new Map(c.creatures);
+  creatures.set(
+    creatureId,
+    applyProjectedDonArmor(creatureId, creature, baseArmorClass),
+  );
+  return { creatures };
 }
 
 export function battleRemoveCreature({

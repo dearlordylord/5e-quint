@@ -50,7 +50,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 6,  "id": "EPT3",  "status": "done", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "done", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "done", "title": "Build Surface-To-Projection Compiler" },
-    { "number": 9,  "id": "EPT6",  "status": "ready-for-research", "title": "Hook Persistent Projection For Mage Armor" },
+    { "number": 9,  "id": "EPT6",  "status": "done", "title": "Hook Persistent Projection For Mage Armor" },
     { "number": 10, "id": "EPT7",  "status": "done", "title": "Build Projected Mechanic Interpreter" },
     { "number": 11, "id": "EPT8",  "status": "done", "title": "Route Availability And Execution Through Projected Records" },
     { "number": 12, "id": "EPT9",  "status": "blocked", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
@@ -119,7 +119,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | done | EPT1, EPT2 | EPT4, EPT5 | Landed [projected-executable.qnt](/workspace/typescript/dnd/projected-executable.qnt) and [plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md), defining the closed Quint-side executable and persistent subset for the first tracer-bullet slice. The executable contract now covers `attack_roll`, `save_gate`, `direct`, `damage`, `heal_hp`, `grant_extra_action`, and the exact fighter resource/reset shapes from EPT1; the persistent contract narrows `Mage Armor` to record identity plus fixed module-level RAW constants. | Landed on 2026-04-18. EPT4 is unblocked; EPT5 still waits on EPT4. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | done | EPT3 | EPT5 | Landed [projected-executable.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.ts) and [projected-executable.test.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.test.ts), mirroring the EPT3 Quint subset one-for-one in TypeScript with the same closed tags, node shapes, persistent-record payload, and Mage Armor lifecycle constants. Focused tests pin the frozen first-slice facts for Acid Splash, Second Wind, Action Surge, and Mage Armor so EPT5 can compile against the exact contract rather than looser example fixtures. | Landed on 2026-04-19. EPT5 is now unblocked. |
 | 8 | EPT5 - Build Surface-To-Projection Compiler | done | EPT2, EPT3, EPT4 | EPT6, EPT7 | Landed a unit-scoped surface-to-projection compiler plus inspectable fixture constants for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. The compiler now rejects both out-of-scope units and in-scope preserved-fact drift at the EPT5 boundary. | Landed on 2026-04-19. EPT6 and EPT7 are now unblocked. |
-| 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-research | EPT5 | EPT9, EPT10 | Research and pin one owned source for "active Mage Armor" plus one owned lifecycle hook for `target_dons_armor` before implementation. The current seams provide projected records and battle AC reads, but they do not yet provide either stored active persistent state on character sheets or a legal armor-state transition in battle. The eventual owner must thread the existing `ProjectedPersistentRecord` contract from EPT5 directly; auxiliary spell-id or unit-id registries are out of scope because they duplicate the persistent projection boundary. | Re-opened for research on 2026-04-19 after dual attempts showed that deriving activation from prepared spells is wrong, while both a battle-entry `fighterActivePersistentUnits` list and a sheet-level `{ spellId: "mage_armor" }` registry duplicate the EPT5 projection contract instead of owning real active persistent state. |
+| 9 | EPT6 - Hook Persistent Projection For Mage Armor | done | EPT5 | EPT9, EPT10 | Landed a battle-owned active projected-persistent path for `Mage Armor`: the exact `ProjectedPersistentRecord` now threads through `InitCreatureConfig` / `characterSheetBattleProjection(..., { activeProjectedPersistents })`, AC reads use one shared `battleCurrentArmorClass` helper, and internal `BATTLE_DON_ARMOR` removes the persistent on the owned early-end hook without inventing a public battle action. | Landed on 2026-04-19. EPT9 still waits on EPT8; EPT10 still waits on EPT8 + EPT9. |
 | 10 | EPT7 - Build Projected Mechanic Interpreter | done | EPT5 | EPT8 | Land one closed graph walker for the executable first slice that emits reducer-consumable transitions for `Acid Splash`, `Second Wind`, and `Action Surge` without unit-id branches. The projection contract now carries explicit use-count pool identity so resource spend transitions do not need to infer pools from source ids. | Landed on 2026-04-19. EPT8 is now unblocked. |
 | 11 | EPT8 - Route Availability And Execution Through Projected Records | done | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. Use EPT7's transitions as the sole execution contract instead of re-reading legacy payload facts. | Landed on 2026-04-19. The promoted slice now drives legality and execution from shared projected records, and slotless cantrip execution reuses the existing `CAST_PREPARED_SPELL` seam instead of introducing a parallel public action token. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
@@ -348,7 +348,7 @@ Input / Output / Next action / Research note / Verification / Handoff readiness:
 
 ### Task 3 - CSA4 - A14 Relative-To-Stat DiceAmount
 
-Status: `ready-for-research`
+Status: `done`
 
 Depends on: none
 
@@ -655,7 +655,7 @@ Scope:
 - Do not infer an active persistent effect from prepared-spell ownership.
 - Do not invent a combat-legal don-armor action just to satisfy the early-end hook.
 
-Reference design: [plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md). Pins the `ActiveProjectedPersistent` shape, `ProjectedEarlyEndTrigger` vocabulary, `DON_ARMOR` battle event, and AC reader that thread the EPT5 contract directly without a parallel registry.
+Reference design: [plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md). Pins the `ActiveProjectedPersistent` shape, `ProjectedEarlyEndTrigger` vocabulary, internal `DON_ARMOR` runtime seam, and AC reader that thread the EPT5 contract directly without a parallel registry.
 
 Input:
 
@@ -669,10 +669,7 @@ Output:
 
 Next action:
 
-- Research and lock two ownership answers before implementation:
-  - where an active `Mage Armor` state is sourced for the tracer-bullet path;
-  - which existing or newly-owned non-combat/runtime transition will drive `target_dons_armor`.
-- Then narrow EPT6 to the implementation-ready owned path that satisfies both constraints without duplicating AC state or introducing a parallel spell-id / unit-id registry for data EPT5 already projects.
+- Proceed to EPT8/EPT9. EPT6 now provides the active projected-persistent carrier, shared AC reader, and owned `target_dons_armor` lifecycle hook that later tracer-bullet routing can consume.
 
 Verification requirements:
 
@@ -681,11 +678,27 @@ Verification requirements:
 - no duplicate AC source of truth
 - `/simplify` minimum 2 rounds
 
+Verification:
+
+- RAW/terminology check: re-read [Mage Armor RAW](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-M-P.md:5) and `UBIQUITOUS_LANGUAGE.md` for AC / donning terminology before landing the ownership cut.
+- `pnpm --dir packages/core exec vitest run src/projected-persistent.test.ts src/character-sheet-derived.test.ts` - passed.
+- `pnpm --dir packages/core typecheck` - passed.
+- `Mage Armor` now shapes AC through `battleCurrentArmorClass` using active projected records rather than spell-id-specific AC logic.
+- Internal `DON_ARMOR` clears the active projected persistent through the owned early-end trigger path and updates battle AC in the same state transition.
+- No duplicate AC source of truth was added: durable character data still projects base battle facts, while ephemeral `Mage Armor` state lives only on `BattleCreatureState` as the exact EPT5 projected record.
+- `/simplify` round 1 removed the stale event-AC dependency and collapsed the ability-mod reader to the one supported RAW constant; round 2 found no further material simplification in the touched surface.
+
+Plan Impact:
+
+- Status: applied
+- EPT6 marked `done`.
+- No new tasks added.
+- EPT9 and EPT10 remain blocked on EPT8 / integrated tracer-bullet wiring, not on persistent-state ownership anymore.
+
 Handoff readiness:
 
-- EPT5 still provides the projected persistent record contract.
-- Reopened for research on 2026-04-19 because the current seams do not yet define an active persistent-state owner or a real `target_dons_armor` transition.
-- Attempt 2 also proved two tempting ownership shapes are invalid for this task: a `start_battle` unit-id list that rehydrates `mage_armor` later, and a sheet-level `{ spellId: "mage_armor" }` state that must be mapped back to the projection. Both duplicate the projected persistent record contract instead of threading it through one owned path.
+- Ownership decision landed in [plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md): active projected persistents are battle-setup/runtime owned, optionally passed through character battle projection, and are not stored on the canonical sheet.
+- `packages/core/src/projected-persistent.ts` is now the single owned helper surface for active projected persistents and current battle AC.
 
 ### Task 10 - EPT7 - Build Projected Mechanic Interpreter
 

@@ -4,11 +4,7 @@ import type { BattleCreatureState } from "#/battle-machine-types.ts";
 import { isIncapacitated as isBattleCreatureIncapacitated } from "#/battle-machine-creature.ts";
 import type { DndContext } from "#/machine-types.ts";
 import { canCastSpells, isIncapacitated } from "#/machine-queries.ts";
-import {
-  ACID_SPLASH_PROJECTED_ACTION,
-  ACTION_SURGE_PROJECTED_ACTION,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
+import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import type { ProjectedExecutableAction } from "#/projected-executable.ts";
 import {
   interpretProjectedAction,
@@ -28,6 +24,23 @@ import {
 } from "#/projected-action-bridge-helpers.ts";
 import { getSpellRecordStrict } from "#/features/spell-registry.ts";
 import { proficiencyBonus, spellId, type SpellName } from "#/types.ts";
+import type {
+  ClassFeatureRecord,
+  SpellRecord,
+} from "../../prototype-content-surface/src/surface/types.ts";
+import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
+import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
+
+// FIXME - projected-action-bridge.ts... projected WHERE, FROM? bridge WHERE, FROM? at least in comments
+
+// FIXME .jsons are boundary - we always parse boundaries with codecs. use effect-schema. effect-schema will become the master definition of the surface.
+const ACID_SPLASH_SURFACE = acidSplashSurface as unknown as SpellRecord;
+const SECOND_WIND_SURFACE = secondWindSurface as unknown as ClassFeatureRecord;
+const ACTION_SURGE_SURFACE = actionSurgeSurface as unknown as ClassFeatureRecord;
+
+const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURFACE);
+const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);
 
 export type ProjectedPreparedSpellRuntime = {
   readonly targetIds: ReadonlyArray<string>;
@@ -41,7 +54,7 @@ function projectedPreparedSpellAction(
   spellName: SpellName,
 ): ProjectedExecutableAction | null {
   return Match.value(spellName).pipe(
-    Match.when("acid_splash", () => ACID_SPLASH_PROJECTED_ACTION),
+    Match.when("acid_splash", () => compileProjectedExecutable(ACID_SPLASH_SURFACE)),
     Match.orElse(() => null),
   );
 }
@@ -183,6 +196,7 @@ export function canUseProjectedPreparedSpell(
   const spell = getSpellRecordStrict(spellName);
   const isCantrip = spell.level === 0;
   if (
+    // FIXME: factually correct but seems to be abstraction leak, unless explicitly worded in SRD in WRT spellcasting
     context.hp <= 0 ||
     isIncapacitated(context) ||
     context.slotExpendedThisTurn ||
@@ -242,6 +256,7 @@ export function finalizeProjectedPreparedSpell(
   runtime: ProjectedPreparedSpellRuntime,
 ): {
   readonly event: {
+    // FIXME: is there a "non prepared spell" that we can cast? what about spells from ring of spell storing? what about warlock/sorcerer spells? what about cantrips(maybe they considered always-prepared). language IS important
     readonly type: "CAST_PREPARED_SPELL";
     readonly spellName: SpellName;
   };
@@ -253,7 +268,9 @@ export function finalizeProjectedPreparedSpell(
       `No projected prepared spell action exists for ${spellName}.`,
     );
   }
+  // FIXME: much farther down the line, it is checked on "is acttor me if the spell is "self". this is an example of shotgun validation. such validation must be in type sustem, on codecs, or as earlier as possible up the invocation (e.g. here?) (if it doesnt leak abstraction)
   const actor = projectedActorFromCreatureContext(context);
+
   if (actor.spellSaveDc == null) {
     throw new Error(
       `${spellName}: spell save DC is unavailable in this context.`,
@@ -261,7 +278,6 @@ export function finalizeProjectedPreparedSpell(
   }
   interpretProjectedAction(action, actor, {
     resolveAttachment: () => runtime.targetIds,
-    resolveAttackRoll: () => [],
     resolveSaveGate: () => runtime.saveOutcomes,
     resolveAmount: () => runtime.amounts,
   });

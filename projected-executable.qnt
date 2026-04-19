@@ -14,6 +14,7 @@ module projectedExecutable {
   type ProjectedSource = {
     unitId: str,
     unitKind: ProjectedUnitKind,
+    unitName: str,
   }
 
   // ============================================================
@@ -33,9 +34,6 @@ module projectedExecutable {
   // ============================================================
   // 3. EXECUTABLE CLOSED DOMAINS
   // ============================================================
-
-  type ProjectedAttackKind =
-    | PAKWeaponAttack
 
   type ProjectedSaveDc =
     | PDCSpellSaveDc
@@ -130,73 +128,51 @@ module projectedExecutable {
       })
 
   // ============================================================
-  // 6. EXECUTABLE GRAPH SURFACE
+  // 6. DIRECT EXECUTABLE ACTION SURFACE
   // ============================================================
 
-  type ProjectedNodeId = int
-
-  type ProjectedContinuation =
-    | PCDone
-    | PCNode(ProjectedNodeId)
-
-  type ProjectedAttackRollNode = {
-    nodeId: ProjectedNodeId,
-    attachment: ProjectedExecutableAttachment,
-    attackKind: ProjectedAttackKind,
-    onHit: ProjectedContinuation,
-    onMiss: ProjectedContinuation,
-  }
-
-  type ProjectedSaveGateNode = {
-    nodeId: ProjectedNodeId,
-    ability: Ability,
-    dc: ProjectedSaveDc,
-    attachment: ProjectedExecutableAttachment,
-    onFail: ProjectedContinuation,
-    onSuccess: ProjectedContinuation,
-  }
-
-  type ProjectedDirectNode = {
-    nodeId: ProjectedNodeId,
-    attachment: ProjectedExecutableAttachment,
-    next: ProjectedContinuation,
-  }
-
-  type ProjectedDamageNode = {
-    nodeId: ProjectedNodeId,
-    damageType: DamageType,
-    amount: ProjectedAmount,
-    next: ProjectedContinuation,
-  }
-
-  type ProjectedHealHpNode = {
-    nodeId: ProjectedNodeId,
-    amount: ProjectedAmount,
-    next: ProjectedContinuation,
-  }
-
-  type ProjectedGrantExtraActionNode = {
-    nodeId: ProjectedNodeId,
-    restriction: ProjectedGrantedActionRestriction,
-    next: ProjectedContinuation,
-  }
-
-  type ProjectedExecutableNode =
-    | PENAttackRoll(ProjectedAttackRollNode)
-    | PENSaveGate(ProjectedSaveGateNode)
-    | PENDirect(ProjectedDirectNode)
-    | PENDamage(ProjectedDamageNode)
-    | PENHealHp(ProjectedHealHpNode)
-    | PENGrantExtraAction(ProjectedGrantExtraActionNode)
-
-  type ProjectedExecutableAction = {
+  type ProjectedExecutableBase = {
     source: ProjectedSource,
     activationCost: ProjectedActivationCost,
     resourceGate: ProjectedResourceGate,
     usageLimit: ProjectedUsageLimit,
-    entryNode: ProjectedNodeId,
-    nodes: List[ProjectedExecutableNode],
+    attachment: ProjectedExecutableAttachment,
   }
+
+  type ProjectedSaveGateDamageAction = {
+    source: ProjectedSource,
+    activationCost: ProjectedActivationCost,
+    resourceGate: ProjectedResourceGate,
+    usageLimit: ProjectedUsageLimit,
+    attachment: ProjectedExecutableAttachment,
+    ability: Ability,
+    dc: ProjectedSaveDc,
+    damageType: DamageType,
+    amount: ProjectedAmount,
+  }
+
+  type ProjectedDirectHealHpAction = {
+    source: ProjectedSource,
+    activationCost: ProjectedActivationCost,
+    resourceGate: ProjectedResourceGate,
+    usageLimit: ProjectedUsageLimit,
+    attachment: ProjectedExecutableAttachment,
+    amount: ProjectedAmount,
+  }
+
+  type ProjectedDirectGrantExtraActionAction = {
+    source: ProjectedSource,
+    activationCost: ProjectedActivationCost,
+    resourceGate: ProjectedResourceGate,
+    usageLimit: ProjectedUsageLimit,
+    attachment: ProjectedExecutableAttachment,
+    restriction: ProjectedGrantedActionRestriction,
+  }
+
+  type ProjectedExecutableAction =
+    | PEASaveGateDamage(ProjectedSaveGateDamageAction)
+    | PEADirectHealHp(ProjectedDirectHealHpAction)
+    | PEADirectGrantExtraAction(ProjectedDirectGrantExtraActionAction)
 
   // ============================================================
   // 7. PERSISTENT SUBSET
@@ -205,23 +181,17 @@ module projectedExecutable {
   type ProjectedPersistentAttachment =
     | PPAChosenTarget
 
+  type ProjectedPersistentEarlyEnd =
+    | PPEETargetDonsArmor
+
   type ProjectedSetBaseAcPayload = {
     source: ProjectedSource,
     attachment: ProjectedPersistentAttachment,
+    baseArmorClass: int,
+    abilityModifier: Ability,
+    earlyEnds: List[ProjectedPersistentEarlyEnd],
   }
 
   type ProjectedPersistentRecord =
     | PPRSetBaseAc(ProjectedSetBaseAcPayload)
-
-  pure val MAGE_ARMOR_BASE_AC: int = 13
-
-  pure val MAGE_ARMOR_ABILITY_MOD: Ability = Dex
-
-  pure val MAGE_ARMOR_DURATION_HOURS: int = 8
-
-  type ProjectedMageArmorEarlyEnd =
-    | PMEETargetDonsArmor
-
-  pure val MAGE_ARMOR_EARLY_END: ProjectedMageArmorEarlyEnd =
-    PMEETargetDonsArmor
 }

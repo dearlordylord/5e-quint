@@ -1,16 +1,7 @@
 import { Match } from "effect";
 
-import { byTag } from "#/battle-machine-helpers.ts";
-import type {
-  ProjectedContinuation,
-  ProjectedDamageNode,
-  ProjectedExecutableAction,
-  ProjectedHealHpNode,
-  ProjectedNodeId,
-  ProjectedSource,
-} from "#/projected-executable.ts";
+import type { ProjectedExecutableAction, ProjectedSource } from "#/projected-executable.ts";
 import {
-  indexNodes,
   nextTargetsForOutcome,
   requireTargets,
   resolveAmount,
@@ -30,7 +21,6 @@ export type {
   ProjectedAmountRequest,
   ProjectedAmountResolution,
   ProjectedAttachmentRequest,
-  ProjectedAttackRollRequest,
   ProjectedExecutionRuntime,
   ProjectedInterpretation,
   ProjectedInterpreterActor,
@@ -59,7 +49,8 @@ export function interpretProjectedAction(
   actor: ProjectedInterpreterActor,
   runtime: ProjectedExecutionRuntime,
 ): ProjectedInterpretation {
-  const nodes = indexNodes(action, fail);
+
+  // FIXME: what happens when we add surface handling but forget to .push
   const transitions: ProjectedInterpreterTransition[] = [];
 
   if (action.activationCost !== "PACFree") {
@@ -81,274 +72,127 @@ export function interpretProjectedAction(
     });
   }
 
-  const visitContinuation = (
-    continuation: ProjectedContinuation,
-    targetIds: ReadonlyArray<string>,
-    path: ReadonlySet<ProjectedNodeId>,
-  ): void => {
-    if (targetIds.length === 0) {
-      return;
-    }
-    Match.value(continuation).pipe(
-      byTag("PCDone", () => undefined),
-      byTag("PCNode", ({ value }) => visitNode(value, targetIds, path)),
-      Match.exhaustive,
-    );
-  };
+  const targetIds = validateAttachmentResolution(
+    action.source,
+    actor,
+    action.attachment,
+    runtime.resolveAttachment({
+      source: action.source,
+      actor,
+      attachment: action.attachment,
+    }),
+    fail,
+  );
 
-  const resolveAmountTransitions = (
-    params: {
-      readonly nodeId: ProjectedNodeId;
-      readonly targetIds: ReadonlyArray<string>;
-      readonly amount:
-        | ProjectedHealHpNode["amount"]
-        | ProjectedDamageNode["amount"];
-    },
-    buildTransition: (
-      resolution: ReturnType<typeof validateAmountResolutions>[number],
-      amount: ReturnType<typeof resolveAmount>,
-    ) => ProjectedInterpreterTransition,
-  ): void => {
-    const amount = resolveAmount(actor, params.amount);
-    const resolutions = validateAmountResolutions(
-      action.source,
-      params.nodeId,
-      params.targetIds,
-      runtime.resolveAmount({
-        source: action.source,
-        actor,
-        nodeId: params.nodeId,
-        amount,
-        targetIds: params.targetIds,
-      }),
-      fail,
-    );
-    for (const resolution of resolutions) {
-      transitions.push(buildTransition(resolution, amount));
-    }
-  };
-
-  const visitNode = (
-    nodeId: ProjectedNodeId,
-    currentTargets?: ReadonlyArray<string>,
-    path: ReadonlySet<ProjectedNodeId> = new Set(),
-  ): void => {
-    if (path.has(nodeId)) {
-      fail(action.source, `cycle detected at node ${nodeId}`);
-    }
-    const node = nodes.get(nodeId);
-    if (node == null) {
-      fail(action.source, `missing node ${nodeId}`);
-    }
-    const nextPath = new Set(path);
-    nextPath.add(nodeId);
-
-    Match.value(node).pipe(
-      byTag("PENDirect", ({ value }) => {
-        const targetIds = validateAttachmentResolution(
-          action.source,
+  return Match.value(action).pipe(
+    Match.when({ tag: "PEASaveGateDamage" }, (saveAction) => {
+      const resolvedDc = resolveSaveDc(action.source, actor, saveAction.dc, fail);
+      const outcomes = validateOutcomeTargets(
+        action.source,
+        targetIds,
+        runtime.resolveSaveGate({
+          source: action.source,
           actor,
-          nodeId,
-          value.attachment,
-          runtime.resolveAttachment({
-            source: action.source,
-            actor,
-            nodeId,
-            attachment: value.attachment,
-          }),
-          fail,
-        );
-        transitions.push({
-          tag: "PITDirect",
-          value: {
-            nodeId,
-            attachment: value.attachment,
-            targetIds,
-          },
-        });
-        visitContinuation(value.next, targetIds, nextPath);
-      }),
-      byTag("PENSaveGate", ({ value }) => {
-        const targetIds = validateAttachmentResolution(
-          action.source,
-          actor,
-          nodeId,
-          value.attachment,
-          runtime.resolveAttachment({
-            source: action.source,
-            actor,
-            nodeId,
-            attachment: value.attachment,
-          }),
-          fail,
-        );
-        const resolvedDc = resolveSaveDc(action.source, actor, value.dc, fail);
-        const outcomes = validateOutcomeTargets(
-          action.source,
-          nodeId,
+          attachment: saveAction.attachment,
+          ability: saveAction.ability,
+          dc: resolvedDc,
+          dcSource: saveAction.dc,
           targetIds,
-          runtime.resolveSaveGate({
-            source: action.source,
-            actor,
-            nodeId,
-            attachment: value.attachment,
-            ability: value.ability,
-            dc: resolvedDc,
-            dcSource: value.dc,
-            targetIds,
-          }),
-          fail,
-        );
-        transitions.push({
-          tag: "PITSaveGate",
-          value: {
-            nodeId,
-            attachment: value.attachment,
-            ability: value.ability,
-            dc: resolvedDc,
-            dcSource: value.dc,
-            targetIds,
-            outcomes,
-          },
-        });
-        visitContinuation(
-          value.onFail,
-          nextTargetsForOutcome(outcomes, "fail"),
-          nextPath,
-        );
-        visitContinuation(
-          value.onSuccess,
-          nextTargetsForOutcome(outcomes, "success"),
-          nextPath,
-        );
-      }),
-      byTag("PENAttackRoll", ({ value }) => {
-        const targetIds = validateAttachmentResolution(
-          action.source,
-          actor,
-          nodeId,
-          value.attachment,
-          runtime.resolveAttachment({
-            source: action.source,
-            actor,
-            nodeId,
-            attachment: value.attachment,
-          }),
-          fail,
-        );
-        const outcomes = validateOutcomeTargets(
-          action.source,
-          nodeId,
+        }),
+        fail,
+      );
+      transitions.push({
+        tag: "PITSaveGate",
+        value: {
+          attachment: saveAction.attachment,
+          ability: saveAction.ability,
+          dc: resolvedDc,
+          dcSource: saveAction.dc,
           targetIds,
-          runtime.resolveAttackRoll({
+          outcomes,
+        },
+      });
+      const failedTargets = nextTargetsForOutcome(outcomes, "fail");
+      if (failedTargets.length > 0) {
+        const amount = resolveAmount(actor, saveAction.amount);
+        const resolutions = validateAmountResolutions(
+          action.source,
+          failedTargets,
+          runtime.resolveAmount({
             source: action.source,
             actor,
-            nodeId,
-            attachment: value.attachment,
-            attackKind: value.attackKind,
-            targetIds,
+            amount,
+            targetIds: failedTargets,
           }),
           fail,
         );
-        transitions.push({
-          tag: "PITAttackRoll",
-          value: {
-            nodeId,
-            attachment: value.attachment,
-            attackKind: value.attackKind,
-            targetIds,
-            outcomes,
-          },
-        });
-        visitContinuation(
-          value.onHit,
-          nextTargetsForOutcome(outcomes, "hit"),
-          nextPath,
-        );
-        visitContinuation(
-          value.onMiss,
-          nextTargetsForOutcome(outcomes, "miss"),
-          nextPath,
-        );
-      }),
-      byTag("PENDamage", ({ value }) => {
-        const targetIds = requireTargets(
-          action.source,
-          nodeId,
-          currentTargets,
-          fail,
-        );
-        resolveAmountTransitions(
-          { nodeId, targetIds, amount: value.amount },
-          (resolution, amount) => ({
+        for (const resolution of resolutions) {
+          transitions.push({
             tag: "PITDamage",
             value: {
-              nodeId,
-              damageType: value.damageType,
+              damageType: saveAction.damageType,
               targetId: resolution.targetId,
               amount,
               total: resolution.total,
               ...(resolution.rolledTotal == null
                 ? {}
                 : { rolledTotal: resolution.rolledTotal }),
-            },
-          }),
-        );
-        visitContinuation(value.next, targetIds, nextPath);
-      }),
-      byTag("PENHealHp", ({ value }) => {
-        const targetIds = requireTargets(
-          action.source,
-          nodeId,
-          currentTargets,
-          fail,
-        );
-        resolveAmountTransitions(
-          { nodeId, targetIds, amount: value.amount },
-          (resolution, amount) => ({
-            tag: "PITHealHp",
-            value: {
-              nodeId,
-              targetId: resolution.targetId,
-              amount,
-              total: resolution.total,
-              ...(resolution.rolledTotal == null
-                ? {}
-                : { rolledTotal: resolution.rolledTotal }),
-            },
-          }),
-        );
-        visitContinuation(value.next, targetIds, nextPath);
-      }),
-      byTag("PENGrantExtraAction", ({ value }) => {
-        const targetIds = requireTargets(
-          action.source,
-          nodeId,
-          currentTargets,
-          fail,
-        );
-        for (const targetId of targetIds) {
-          transitions.push({
-            tag: "PITGrantExtraAction",
-            value: {
-              nodeId,
-              targetId,
-              restriction: value.restriction,
-              pendingUntilActionSpend: true,
             },
           });
         }
-        visitContinuation(value.next, targetIds, nextPath);
-      }),
-      Match.exhaustive,
-    );
-  };
-
-  visitNode(action.entryNode);
-
-  return {
-    source: action.source,
-    actor,
-    transitions,
-  };
+      }
+      return { source: action.source, actor, transitions };
+    }),
+    Match.when({ tag: "PEADirectHealHp" }, (healAction) => {
+      transitions.push({
+        tag: "PITDirect",
+        value: { attachment: healAction.attachment, targetIds },
+      });
+      const requiredTargets = requireTargets(action.source, targetIds, fail);
+      const amount = resolveAmount(actor, healAction.amount);
+      const resolutions = validateAmountResolutions(
+        action.source,
+        requiredTargets,
+        runtime.resolveAmount({
+          source: action.source,
+          actor,
+          amount,
+          targetIds: requiredTargets,
+        }),
+        fail,
+      );
+      for (const resolution of resolutions) {
+        transitions.push({
+          tag: "PITHealHp",
+          value: {
+            targetId: resolution.targetId,
+            amount,
+            total: resolution.total,
+            ...(resolution.rolledTotal == null
+              ? {}
+              : { rolledTotal: resolution.rolledTotal }),
+          },
+        });
+      }
+      return { source: action.source, actor, transitions };
+    }),
+    Match.when({ tag: "PEADirectGrantExtraAction" }, (grantAction) => {
+      transitions.push({
+        tag: "PITDirect",
+        value: { attachment: grantAction.attachment, targetIds },
+      });
+      for (const targetId of requireTargets(action.source, targetIds, fail)) {
+        transitions.push({
+          tag: "PITGrantExtraAction",
+          value: {
+            targetId,
+            restriction: grantAction.restriction,
+            pendingUntilActionSpend: true,
+          },
+        });
+      }
+      return { source: action.source, actor, transitions };
+    }),
+    Match.exhaustive,
+  );
 }

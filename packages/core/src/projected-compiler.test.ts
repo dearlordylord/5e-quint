@@ -4,12 +4,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
-  ACID_SPLASH_PROJECTED_ACTION,
-  ACTION_SURGE_PROJECTED_ACTION,
-  MAGE_ARMOR_PROJECTED_RECORD,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
-import {
   compileProjectedExecutable,
   compileProjectedPersistent,
   compileProjectedUnit,
@@ -36,44 +30,141 @@ function loadSurfaceUnit<T extends SpellRecord | ClassFeatureRecord>(
 }
 
 describe("projected compiler", () => {
-  it("deterministically compiles acid_splash into the frozen executable projection", () => {
+  it("compiles Acid Splash by surface shape rather than by a hardcoded projection fixture", () => {
     const acidSplash = loadSurfaceUnit<SpellRecord>("acid_splash");
 
-    expect(compileProjectedExecutable(acidSplash)).toEqual(
-      ACID_SPLASH_PROJECTED_ACTION,
-    );
+    expect(compileProjectedExecutable(acidSplash)).toEqual({
+      tag: "PEASaveGateDamage",
+      source: {
+        unitId: "acid_splash",
+        unitKind: "PUKSpell",
+        unitName: "Acid Splash",
+      },
+      activationCost: "PACAction",
+      resourceGate: { tag: "PRGNone" },
+      usageLimit: "PULNone",
+      attachment: {
+        tag: "PEAAreaSpherePointWithinRange",
+        value: { rangeFeet: 60, radiusFeet: 5 },
+      },
+      ability: "dex",
+      dc: "PDCSpellSaveDc",
+      damageType: "acid",
+      amount: {
+        tag: "PAThresholdDice",
+        value: {
+          axis: "PLACharacterLevel",
+          base: { dice: 1, dieSize: 6, flat: 0 },
+          tiers: [
+            { atLevel: 5, diceOverride: 2 },
+            { atLevel: 11, diceOverride: 3 },
+            { atLevel: 17, diceOverride: 4 },
+          ],
+        },
+      },
+    });
   });
 
-  it("deterministically compiles fighter_second_wind into the frozen executable projection", () => {
+  it("compiles Second Wind by direct-effect shape", () => {
     const secondWind = loadSurfaceUnit<ClassFeatureRecord>(
       "fighter_second_wind",
     );
 
-    expect(compileProjectedExecutable(secondWind)).toEqual(
-      SECOND_WIND_PROJECTED_ACTION,
-    );
+    expect(compileProjectedExecutable(secondWind)).toEqual({
+      tag: "PEADirectHealHp",
+      source: {
+        unitId: "fighter_second_wind",
+        unitKind: "PUKClassFeature",
+        unitName: "Second Wind",
+      },
+      activationCost: "PACBonusAction",
+      resourceGate: {
+        tag: "PRGUseCount",
+        value: {
+          pool: "PRPSecondWind",
+          cap: {
+            tag: "PRCThresholdTiers",
+            value: {
+              axis: "PRAClass",
+              base: 2,
+              tiers: [
+                { atLevel: 4, value: 3 },
+                { atLevel: 10, value: 4 },
+              ],
+            },
+          },
+          resetCadence: {
+            tag: "PRCPartialShortFullLong",
+            value: { shortRestRefill: 1 },
+          },
+        },
+      },
+      usageLimit: "PULNone",
+      attachment: { tag: "PEASelf" },
+      amount: {
+        tag: "PALinearDicePlusLevel",
+        value: {
+          axis: "PLAFighterLevel",
+          base: { dice: 1, dieSize: 10, flat: 1 },
+          perLevelFlat: 1,
+          startingAtLevel: 1,
+        },
+      },
+    });
   });
 
-  it("deterministically compiles fighter_action_surge_l2 into the frozen executable projection", () => {
+  it("compiles Action Surge by direct-effect shape", () => {
     const actionSurge = loadSurfaceUnit<ClassFeatureRecord>(
       "fighter_action_surge_l2",
     );
 
-    expect(compileProjectedExecutable(actionSurge)).toEqual(
-      ACTION_SURGE_PROJECTED_ACTION,
-    );
+    expect(compileProjectedExecutable(actionSurge)).toEqual({
+      tag: "PEADirectGrantExtraAction",
+      source: {
+        unitId: "fighter_action_surge_l2",
+        unitKind: "PUKClassFeature",
+        unitName: "Action Surge",
+      },
+      activationCost: "PACFree",
+      resourceGate: {
+        tag: "PRGUseCount",
+        value: {
+          pool: "PRPActionSurge",
+          cap: {
+            tag: "PRCThresholdTiers",
+            value: {
+              axis: "PRAClass",
+              base: 1,
+              tiers: [{ atLevel: 17, value: 2 }],
+            },
+          },
+          resetCadence: { tag: "PRCShortOrLongRest" },
+        },
+      },
+      usageLimit: "PULOncePerTurn",
+      attachment: { tag: "PEASelf" },
+      restriction: "PGARExcludeMagicAction",
+    });
   });
 
-  it("deterministically compiles mage_armor into the frozen persistent projection", () => {
+  it("compiles Mage Armor into a persistent record with authored payload", () => {
     const mageArmor = loadSurfaceUnit<SpellRecord>("mage_armor");
 
-    expect(compileProjectedPersistent(mageArmor)).toEqual(
-      MAGE_ARMOR_PROJECTED_RECORD,
-    );
-    expect(compileProjectedUnit(mageArmor)).toEqual({
-      tag: "CPUPersistent",
-      value: MAGE_ARMOR_PROJECTED_RECORD,
+    expect(compileProjectedPersistent(mageArmor)).toEqual({
+      tag: "PPRSetBaseAc",
+      value: {
+        source: {
+          unitId: "mage_armor",
+          unitKind: "PUKSpell",
+          unitName: "Mage Armor",
+        },
+        attachment: "PPAChosenTarget",
+        baseArmorClass: 13,
+        abilityModifier: "dex",
+        earlyEnds: ["PPEETargetDonsArmor"],
+      },
     });
+    expect(compileProjectedUnit(mageArmor).tag).toBe("CPUPersistent");
   });
 
   it("preserves authored source identity for the in-scope units", () => {
@@ -87,10 +178,12 @@ describe("projected compiler", () => {
     expect(acidSplash.source).toEqual({
       unitId: "acid_splash",
       unitKind: "PUKSpell",
+      unitName: "Acid Splash",
     });
     expect(secondWind.source).toEqual({
       unitId: "fighter_second_wind",
       unitKind: "PUKClassFeature",
+      unitName: "Second Wind",
     });
   });
 
@@ -102,17 +195,17 @@ describe("projected compiler", () => {
     );
   });
 
-  it("fails closed for a real authored spell outside the first-slice scope", () => {
+  it("fails closed for a real authored spell outside the projected shape scope", () => {
     const fireball = loadSurfaceUnit<SpellRecord>("fireball");
 
     expect(() => compileProjectedUnit(fireball)).toThrowError(
-      /spell is not in the first-slice scope/,
+      /out of projected scope|out of projected persistent scope|out of projected scope/,
     );
   });
 });
 
-describe("projected compiler preserved-fact guards", () => {
-  it("rejects Acid Splash save ability drift", () => {
+describe("projected compiler shape-driven widening", () => {
+  it("recompiles Acid Splash when the save ability changes but the supported shape stays the same", () => {
     const acidSplash = loadSurfaceUnit<SpellRecord>("acid_splash");
     if (acidSplash.mechanics.family !== "activation")
       throw new Error("unexpected acid_splash");
@@ -128,12 +221,15 @@ describe("projected compiler preserved-fact guards", () => {
       },
     };
 
-    expect(() => compileProjectedUnit(drifted)).toThrow(
-      UnsupportedProjectionPatternError,
-    );
+    const compiled = compileProjectedExecutable(drifted);
+    expect(compiled.tag).toBe("PEASaveGateDamage");
+    if (compiled.tag !== "PEASaveGateDamage") {
+      throw new Error("unexpected projected action tag");
+    }
+    expect(compiled.ability).toBe("con");
   });
 
-  it("rejects Acid Splash threshold-tier damage drift", () => {
+  it("recompiles Acid Splash when threshold-tier values change within the supported shape", () => {
     const acidSplash = loadSurfaceUnit<SpellRecord>("acid_splash");
     if (acidSplash.mechanics.family !== "activation")
       throw new Error("unexpected acid_splash");
@@ -174,12 +270,18 @@ describe("projected compiler preserved-fact guards", () => {
       },
     };
 
-    expect(() => compileProjectedUnit(drifted)).toThrow(
-      UnsupportedProjectionPatternError,
-    );
+    const compiled = compileProjectedExecutable(drifted);
+    expect(compiled.tag).toBe("PEASaveGateDamage");
+    if (compiled.tag !== "PEASaveGateDamage") {
+      throw new Error("unexpected projected action tag");
+    }
+    if (compiled.amount.tag !== "PAThresholdDice") {
+      throw new Error("unexpected compiled amount kind");
+    }
+    expect(compiled.amount.value.tiers[0].diceOverride).toBe(5);
   });
 
-  it("rejects Second Wind activation-cost drift", () => {
+  it("recompiles Second Wind when activation cost changes within the supported direct-heal shape", () => {
     const secondWind = loadSurfaceUnit<ClassFeatureRecord>(
       "fighter_second_wind",
     );
@@ -194,12 +296,10 @@ describe("projected compiler preserved-fact guards", () => {
       },
     };
 
-    expect(() => compileProjectedUnit(drifted)).toThrow(
-      UnsupportedProjectionPatternError,
-    );
+    expect(compileProjectedExecutable(drifted).activationCost).toBe("PACAction");
   });
 
-  it("rejects Action Surge attachment drift", () => {
+  it("still rejects Action Surge when the shape leaves the supported direct-self projection subset", () => {
     const actionSurge = loadSurfaceUnit<ClassFeatureRecord>(
       "fighter_action_surge_l2",
     );
@@ -227,7 +327,7 @@ describe("projected compiler preserved-fact guards", () => {
     );
   });
 
-  it("rejects Mage Armor base-AC drift", () => {
+  it("recompiles Mage Armor when the authored base-AC payload changes within the supported passive-set-base-ac shape", () => {
     const mageArmor = loadSurfaceUnit<SpellRecord>("mage_armor");
     if (mageArmor.mechanics.family !== "ongoing_effect")
       throw new Error("unexpected mage armor");
@@ -248,18 +348,6 @@ describe("projected compiler preserved-fact guards", () => {
       },
     };
 
-    expect(() => compileProjectedUnit(drifted)).toThrow(
-      UnsupportedProjectionPatternError,
-    );
-  });
-
-  it("rejects the authored fighter_action_surge variant outside the frozen level-2 slice", () => {
-    const actionSurge = loadSurfaceUnit<ClassFeatureRecord>(
-      "fighter_action_surge",
-    );
-
-    expect(() => compileProjectedUnit(actionSurge)).toThrowError(
-      /class feature is not in the first-slice scope/,
-    );
+    expect(compileProjectedPersistent(drifted).value.baseArmorClass).toBe(14);
   });
 });

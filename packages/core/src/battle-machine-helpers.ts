@@ -59,6 +59,7 @@ import {
 } from "#/features/class-monk-features.ts";
 import { hasCuttingWords } from "#/features/class-bard.ts";
 import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts";
+import { battleCurrentArmorClass } from "#/projected-persistent.ts";
 import { canCastShield } from "#/features/spell-abjuration.ts";
 import { getSpellComponentRequirements } from "#/features/spell-available-actions.ts";
 import type {
@@ -575,7 +576,7 @@ export function redirectableAlliesByReactor(
         !candidate.unconscious &&
         isRedirectAlly(c, candidate)
       ) {
-        allies.set(candidateId, candidate.baseArmorClass);
+        allies.set(candidateId, battleCurrentArmorClass(candidate));
       }
     }
     if (allies.size > 0) alliesByReactor.set(id, allies);

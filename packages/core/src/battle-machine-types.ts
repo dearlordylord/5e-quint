@@ -12,6 +12,7 @@ import type {
   TriggerType,
 } from "#/battle-machine-events.ts";
 import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
+import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
 import type {
   MonsterResourceState,
   MonsterBattleBonusActionOption,
@@ -76,6 +77,7 @@ export interface BattleCreatureState extends Pick<
   readonly unconscious: boolean;
   readonly incapacitatedSources: ReadonlySet<IncapSource>;
   readonly activeEffects: ReadonlyArray<ActiveEffect>;
+  readonly activeProjectedPersistents: ReadonlySet<ActiveProjectedPersistent>;
   // TurnState
   readonly movementRemaining: number;
   readonly effectiveSpeed: number;

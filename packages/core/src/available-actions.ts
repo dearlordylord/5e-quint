@@ -88,6 +88,7 @@ import {
   MONSTER_BATTLE_BONUS_ACTION_OPTIONS,
   MONSTER_SAVE_TRIGGER_KINDS,
 } from "#/monster-types.ts";
+import { battleCurrentArmorClass } from "#/projected-persistent.ts";
 import { rootEventHandlers, turnPhaseConfig } from "#/machine-states.ts";
 import type { DndContext, DndEvent } from "#/machine-types.ts";
 import { withinOneSize } from "#/machine-combat.ts";
@@ -410,6 +411,7 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      // FIXME: so we have CreatureActionToken and BattleActionToken. first of all why is the distinction? comes from Quint? secondly, why BATTLE_ACTION_SURGE, BATTLE_ENTER_RAGE etc are Battle action tolens and not Creature action tolens. third, why they exist at all and not are authored content surface?
       readonly type: "BATTLE_ACTION_SURGE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -431,6 +433,7 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      // FIXME: this is a good example of a non-authored content: grapple is a very base of the rules to encode directly into core
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
@@ -1694,6 +1697,9 @@ const BattleInitRawCreatureConfigSchema = Schema.Struct({
   ),
   kind: Schema.Literal(...CREATURE_KINDS),
   creatureSize: Schema.optional(Schema.Literal(...SIZES)),
+  baseArmorClass: Schema.optional(
+    Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  ),
   caster: Schema.optional(Schema.Boolean),
   rogueLevel: Schema.optional(
     Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
@@ -1896,9 +1902,13 @@ export function toBattleInitCreatureConfig(
       surprised: config.surprised,
     });
   }
+  const { baseArmorClass: rawBaseArmorClass, ...rest } = config;
   return {
-    ...config,
+    ...rest,
     id: CreatureId(config.id),
+    ...(rawBaseArmorClass == null
+      ? {}
+      : { baseArmorClass: armorClass(rawBaseArmorClass) }),
   };
 }
 
@@ -4006,6 +4016,7 @@ function hitReactionToken(
 
 function damageReactionToken(
   actorId: string,
+  // FIXME: UncannyDodge, too, is a character ability and was supposed to be a surface...
   reaction: "RUncannyDodge" | "RDeflectAttacks",
 ): BattleActionToken {
   return Match.value(reaction).pipe(
@@ -5923,11 +5934,18 @@ export function finalizeBattleResolution(
         };
       }
       const isMelee = canBattleAttackUseMeleeLane(weapon, attackerWithin5ft);
+      const targetCreature = context.creatures.get(
+        CreatureId(request.token.targetId),
+      );
+      const actualTargetAc =
+        targetCreature == null
+          ? armorClass(targetAc)
+          : battleCurrentArmorClass(targetCreature);
       const commonEvent = {
         targetId: CreatureId(request.token.targetId),
         attackRoll,
         crit: attackRoll >= actor.critRange,
-        tAc: armorClass(targetAc),
+        tAc: actualTargetAc,
         knockOut: request.token.knockOut,
         attackerWithin5ft,
         ...(attackerWithin60ft !== undefined ? { attackerWithin60ft } : {}),
@@ -5973,7 +5991,7 @@ export function finalizeBattleResolution(
                   laDt: weapon.damageType,
                   damageQualifiers: weapon.damageQualifiers ?? new Set(),
                   laCrit: attackRoll >= actor.critRange,
-                  laTgtAc: armorClass(targetAc),
+                  laTgtAc: actualTargetAc,
                   knockOut: request.token.knockOut,
                   isMelee,
                   weaponProperties: weapon.properties,
@@ -6159,6 +6177,9 @@ export function finalizeBattleResolution(
           },
         };
       }
+      const targetCreature = context.creatures.get(
+        CreatureId(request.token.targetId),
+      );
       return {
         ok: true,
         event: {
@@ -6171,7 +6192,10 @@ export function finalizeBattleResolution(
           damageQualifiers:
             actor?.mainHandWeapon?.damageQualifiers ?? new Set(),
           crit: runtimeInputs.values.crit,
-          tgtAc: armorClass(targetAc),
+          tgtAc:
+            targetCreature == null
+              ? armorClass(targetAc)
+              : battleCurrentArmorClass(targetCreature),
           knockOut: runtimeInputs.values.knockOut,
           isMelee: actor?.mainHandWeapon?.isMelee ?? true,
           weaponProperties: actor?.mainHandWeapon?.properties ?? new Set(),
@@ -6536,7 +6560,7 @@ export function finalizeBattleResolution(
       if (runtimeInputs.runtime !== "retaliation") {
         return battleRuntimeMismatch("retaliation", runtimeInputs.runtime);
       }
-      const { attackRoll, damage, targetAc, critical } = runtimeInputs.values;
+      const { attackRoll, damage, critical } = runtimeInputs.values;
       if (attackRoll < 1 || attackRoll > 20) {
         return {
           ok: false,
@@ -6565,7 +6589,6 @@ export function finalizeBattleResolution(
           retDmg: damage,
           retDt: actor?.mainHandWeapon?.damageType ?? "slashing",
           retCrit: critical,
-          retTgtAc: armorClass(targetAc),
         },
         outcome: request.outcome,
       };
@@ -6751,6 +6774,7 @@ export function resolveAction(
   tags: ReadonlySet<string>,
   token: ResolvedActionToken,
 ): ResolutionRequest | ActionResolutionError {
+  // FIXME: why not compile time check in this function at least? quint parity?
   if (token.scope === "battle") {
     return {
       code: "ACTION_NOT_SUPPORTED",
@@ -6759,6 +6783,7 @@ export function resolveAction(
   }
   if (token.type === "CAST_PREPARED_SPELL") {
     if (
+      // FIXME: only null slots?? I don't get it
       token.slotLevel == null &&
       canUseProjectedPreparedSpell(context, token.spellName)
     ) {

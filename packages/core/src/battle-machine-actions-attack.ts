@@ -49,6 +49,7 @@ import {
   aggregateAttackMods,
   hasAttackDisadvantageSource,
 } from "#/machine-combat.ts";
+import { battleCurrentArmorClass } from "#/projected-persistent.ts";
 import type {
   AdvantageDamageDice,
   AttackContext,
@@ -179,7 +180,7 @@ export function resolveAttack(
   attackerId: CreatureId,
   targetId: CreatureId,
   attackRoll: number,
-  targetAc: number,
+  _targetAc: number,
   damage: number,
   damageType: DamageType,
   damageQualifiers: ReadonlySet<DamageQualifier>,
@@ -207,7 +208,8 @@ export function resolveAttack(
     : 0;
   const target = cs0.get(targetId)!;
   const effectiveTargetAc =
-    targetAc + (target.isWearingArmor ? target.defenseArmorClassBonus : 0);
+    battleCurrentArmorClass(target) +
+    (target.isWearingArmor ? target.defenseArmorClassBonus : 0);
   const hit =
     !mods.autoMiss &&
     isHitWithAttackRollBonus(
@@ -697,7 +699,17 @@ export function battleAfterDamageRetaliation({
   const cs1 = setCreature(c.creatures, e.reactorId, spendReaction(reactor));
   const newOffered = new Set(aw.offered);
   newOffered.add(e.reactorId);
-  if (!isHit(e.retAtkRoll, e.retTgtAc))
+  const damageSource = cs1.get(ad.damageSource);
+  const retaliationTargetAc =
+    damageSource == null
+      ? armorClass(10)
+      : armorClass(
+          battleCurrentArmorClass(damageSource) +
+            (damageSource.isWearingArmor
+              ? damageSource.defenseArmorClassBonus
+              : 0),
+        );
+  if (!isHit(e.retAtkRoll, retaliationTargetAc))
     return {
       creatures: cs1,
       ...phaseAwaitReaction({ ...aw, offered: newOffered }),

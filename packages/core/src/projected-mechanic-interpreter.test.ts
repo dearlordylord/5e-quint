@@ -1,16 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  ACID_SPLASH_PROJECTED_ACTION,
-  ACTION_SURGE_PROJECTED_ACTION,
-  SECOND_WIND_PROJECTED_ACTION,
-} from "#/projected-action-records.ts";
+import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import {
   ProjectedInterpreterError,
   interpretProjectedAction,
   type ProjectedExecutionRuntime,
 } from "#/projected-mechanic-interpreter.ts";
-import type { ProjectedExecutableAction } from "#/projected-executable.ts";
+import type {
+  ClassFeatureRecord,
+  SpellRecord,
+} from "../../prototype-content-surface/src/surface/types.ts";
+import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
+import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
+
+const ACID_SPLASH_PROJECTED_ACTION = compileProjectedExecutable(
+  acidSplashSurface as unknown as SpellRecord,
+);
+const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(
+  secondWindSurface as unknown as ClassFeatureRecord,
+);
+const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
+  actionSurgeSurface as unknown as ClassFeatureRecord,
+);
 
 function runtimeForTests(
   overrides: Partial<ProjectedExecutionRuntime> = {},
@@ -18,9 +30,6 @@ function runtimeForTests(
   return {
     resolveAttachment: () => {
       throw new Error("resolveAttachment override required");
-    },
-    resolveAttackRoll: () => {
-      throw new Error("resolveAttackRoll override required");
     },
     resolveSaveGate: () => {
       throw new Error("resolveSaveGate override required");
@@ -67,7 +76,6 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITSaveGate",
         value: {
-          nodeId: 0,
           attachment: {
             tag: "PEAAreaSpherePointWithinRange",
             value: { rangeFeet: 60, radiusFeet: 5 },
@@ -85,7 +93,6 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITDamage",
         value: {
-          nodeId: 1,
           damageType: "acid",
           targetId: "goblin",
           amount: { dice: 3, dieSize: 6, flat: 0 },
@@ -130,7 +137,6 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITDirect",
         value: {
-          nodeId: 0,
           attachment: { tag: "PEASelf" },
           targetIds: ["fighter"],
         },
@@ -138,7 +144,6 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITHealHp",
         value: {
-          nodeId: 1,
           targetId: "fighter",
           amount: { dice: 1, dieSize: 10, flat: 5 },
           total: 6,
@@ -176,7 +181,6 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITDirect",
         value: {
-          nodeId: 0,
           attachment: { tag: "PEASelf" },
           targetIds: ["fighter"],
         },
@@ -184,95 +188,7 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITGrantExtraAction",
         value: {
-          nodeId: 1,
           targetId: "fighter",
-          restriction: "PGARExcludeMagicAction",
-          pendingUntilActionSpend: true,
-        },
-      },
-    ]);
-  });
-
-  it("walks future attack-roll shapes generically without unit-id-specific branching", () => {
-    const attackProjection: ProjectedExecutableAction = {
-      source: { unitId: "synthetic_attack", unitKind: "PUKSpell" },
-      activationCost: "PACAction",
-      resourceGate: { tag: "PRGNone" },
-      usageLimit: "PULNone",
-      entryNode: 0,
-      nodes: [
-        {
-          tag: "PENAttackRoll",
-          value: {
-            nodeId: 0,
-            attachment: { tag: "PEAOneTarget" },
-            attackKind: "PAKWeaponAttack",
-            onHit: { tag: "PCNode", value: 1 },
-            onMiss: { tag: "PCNode", value: 2 },
-          },
-        },
-        {
-          tag: "PENDamage",
-          value: {
-            nodeId: 1,
-            damageType: "acid",
-            amount: {
-              tag: "PAThresholdDice",
-              value: {
-                axis: "PLACharacterLevel",
-                base: { dice: 1, dieSize: 8, flat: 0 },
-                tiers: [],
-              },
-            },
-            next: { tag: "PCDone" },
-          },
-        },
-        {
-          tag: "PENGrantExtraAction",
-          value: {
-            nodeId: 2,
-            restriction: "PGARExcludeMagicAction",
-            next: { tag: "PCDone" },
-          },
-        },
-      ],
-    };
-
-    const interpreted = interpretProjectedAction(
-      attackProjection,
-      {
-        actorId: "caster",
-        characterLevel: 1,
-        fighterLevel: 0,
-        spellSaveDc: 12,
-      },
-      runtimeForTests({
-        resolveAttachment: () => ["target"],
-        resolveAttackRoll: () => [{ targetId: "target", outcome: "miss" }],
-        resolveAmount: () => [{ targetId: "target", total: 4 }],
-      }),
-    );
-
-    expect(interpreted.transitions).toEqual([
-      {
-        tag: "PITSpendActivation",
-        value: { cost: "PACAction" },
-      },
-      {
-        tag: "PITAttackRoll",
-        value: {
-          nodeId: 0,
-          attachment: { tag: "PEAOneTarget" },
-          attackKind: "PAKWeaponAttack",
-          targetIds: ["target"],
-          outcomes: [{ targetId: "target", outcome: "miss" }],
-        },
-      },
-      {
-        tag: "PITGrantExtraAction",
-        value: {
-          nodeId: 2,
-          targetId: "target",
           restriction: "PGARExcludeMagicAction",
           pendingUntilActionSpend: true,
         },
