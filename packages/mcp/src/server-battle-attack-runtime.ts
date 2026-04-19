@@ -190,8 +190,7 @@ function formatExpectedFields(schema: RuntimeSchemaDescriptor): string {
   return Object.entries(schema.valueFields)
     .map(([name, spec]) => {
       const type = (spec as { type: string }).type;
-      const optional =
-        "optional" in spec && spec.optional === true ? "?" : "";
+      const optional = "optional" in spec && spec.optional === true ? "?" : "";
       return `${name}${optional}: ${type}`;
     })
     .join(", ");

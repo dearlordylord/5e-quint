@@ -6052,9 +6052,7 @@ export function finalizeBattleResolution(
         };
       }
       const { provocationKind, threatened } = runtimeInputs.values;
-      const creatureIds = new Set(
-        [...context.creatures.keys()].map(String),
-      );
+      const creatureIds = new Set([...context.creatures.keys()].map(String));
       const unknownThreatener = threatened.find((id) => !creatureIds.has(id));
       if (unknownThreatener != null) {
         return {

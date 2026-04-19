@@ -1,4 +1,4 @@
-import { Effect, JSONSchema, Match, Schema } from "effect";
+import { Effect, JSONSchema, Match } from "effect";
 
 import { encodeDndContext } from "@dnd/core/context-encoding.ts";
 import {
@@ -19,6 +19,8 @@ import {
   type ResourceCost,
   TableEventCommandSchema,
 } from "@dnd/core/available-actions.ts";
+
+import { decodeResolvedActionInput } from "./server-action-decode.ts";
 
 import {
   createBattleHost,
@@ -276,92 +278,6 @@ function executeBattleResolvedAction(
     outcome: finalized.outcome,
     state: encodeBattleRuntimeState(after),
   });
-}
-
-type SchemaAstNode = {
-  readonly _tag: string;
-  readonly types?: ReadonlyArray<SchemaAstNode>;
-  readonly from?: SchemaAstNode;
-  readonly propertySignatures?: ReadonlyArray<{
-    readonly name: PropertyKey;
-    readonly type: SchemaAstNode;
-  }>;
-  readonly literal?: unknown;
-};
-
-function addResolvedActionTypesFromAst(
-  ast: SchemaAstNode,
-  actionTypes: Set<string>,
-): void {
-  if (ast._tag === "Union" && ast.types) {
-    for (const type of ast.types) {
-      addResolvedActionTypesFromAst(type, actionTypes);
-    }
-    return;
-  }
-
-  if (ast._tag === "Transformation" && ast.from) {
-    addResolvedActionTypesFromAst(ast.from, actionTypes);
-    return;
-  }
-
-  if (ast._tag !== "TypeLiteral" || !ast.propertySignatures) {
-    return;
-  }
-
-  for (const property of ast.propertySignatures) {
-    if (property.name !== "type") continue;
-    if (property.type._tag !== "Literal") continue;
-    if (typeof property.type.literal !== "string") continue;
-    actionTypes.add(property.type.literal);
-  }
-}
-
-function resolvedActionTypesFromSchema(): ReadonlySet<string> {
-  const actionTypes = new Set<string>();
-  addResolvedActionTypesFromAst(
-    ResolvedActionTokenSchema.ast as SchemaAstNode,
-    actionTypes,
-  );
-  return actionTypes;
-}
-
-const RESOLVED_ACTION_TYPES = resolvedActionTypesFromSchema();
-
-function unknownActionTypeContent(
-  toolName: "execute_action" | "preview_action",
-  type: unknown,
-) {
-  const messageType =
-    typeof type === "string" ? type : type == null ? "(missing)" : String(type);
-  return errorContent(`Unknown ${toolName} type: ${messageType}`, {
-    code: "UNKNOWN_ACTION_TYPE",
-    type: typeof type === "string" ? type : null,
-  });
-}
-
-function decodeResolvedActionInput(
-  toolName: "execute_action" | "preview_action",
-  args: unknown,
-) {
-  if (typeof args !== "object" || args === null || Array.isArray(args)) {
-    return unknownActionTypeContent(toolName, null);
-  }
-
-  const type = Reflect.get(args, "type");
-  if (typeof type !== "string") {
-    return unknownActionTypeContent(toolName, type);
-  }
-  if (!RESOLVED_ACTION_TYPES.has(type)) {
-    return unknownActionTypeContent(toolName, type);
-  }
-
-  const decoded = Schema.decodeUnknownEither(ResolvedActionTokenSchema)(args);
-  if (decoded._tag === "Left") {
-    return errorContent(`Invalid ${toolName} input`, String(decoded.left));
-  }
-
-  return decoded.right;
 }
 
 function executeResolvedAction(host: SupportedActionHost, args: unknown) {

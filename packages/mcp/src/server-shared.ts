@@ -157,7 +157,9 @@ const CREATURE_CONDITION_KEYS = [
   "unconscious",
 ] as const satisfies ReadonlyArray<keyof BattleCreatureState>;
 
-function activeConditions(creature: BattleCreatureState): ReadonlyArray<string> {
+function activeConditions(
+  creature: BattleCreatureState,
+): ReadonlyArray<string> {
   return CREATURE_CONDITION_KEYS.filter((key) => creature[key] === true);
 }
 
