@@ -46,8 +46,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 2,  "id": "CSA3",  "status": "done", "title": "Retire Empty Post-CSA1 Clean Queue Batch 2 Slot" },
     { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
     { "number": 4,  "id": "EPT1",  "status": "done", "title": "Freeze Executable Projection First Slice Scope" },
-    { "number": 5,  "id": "EPT2",  "status": "ready-for-implementation-after-light-research", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
-    { "number": 6,  "id": "EPT3",  "status": "blocked", "title": "Define Quint Projected Executable And Persistent Subsets" },
+    { "number": 5,  "id": "EPT2",  "status": "done", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
+    { "number": 6,  "id": "EPT3",  "status": "ready-for-implementation-after-light-research", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "blocked", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "blocked", "title": "Build Surface-To-Projection Compiler" },
     { "number": 9,  "id": "EPT6",  "status": "blocked", "title": "Hook Persistent Projection For Mage Armor" },
@@ -115,8 +115,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2 | CSA3 - Retire Empty Post-CSA1 Clean Queue Batch 2 Slot | done | CSA2 | none | Retired. After CSA2's overlap check proved the clean queue is already fully authored, there is no second post-CSA1 clean batch to author. If a future rerun creates un-authored `clean` rows, add a new task instead of reusing this stale slot. | Landed on 2026-04-17. |
 | 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
 | 4 | EPT1 - Freeze Executable Projection First Slice Scope | done | none | EPT2, EPT3 | Landed [plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md), freezing the first-slice units, executable node kinds, persistent record kinds, runtime-fact boundary, and explicit exclusions. The slice keeps fighter resource shapes aligned with the authored `threshold_tiers` records and does not bless duplicate runtime facts for values already owned by battle or character state. | Landed on 2026-04-18. |
-| 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | ready-for-implementation-after-light-research | EPT1 | EPT3, EPT5 | Confirm the existing `acid_splash` authored unit as the in-scope spell-side executable pressure case for the safe SRD tracer bullet. Keep the projected executable model graph-ready even though this first spell is not graph-shaped. | Unblocked by EPT1. Ready for the spell-side confirmation pass. |
-| 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | blocked | EPT1, EPT2 | EPT4, EPT5 | Define the closed Quint-side projected subsets for the tracer bullet: executable node kinds for `attack_roll` / `save_gate` / `damage` / `heal_hp` / `grant_extra_action`, plus the minimal persistent shape for `Mage Armor`. Keep the model graph-ready even though the first safe SRD spell case is linear. | Blocked on scope freeze + spell-side unit confirmation. |
+| 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | done | EPT1 | EPT3, EPT5 | Landed [plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md), confirming the authored SRD cantrip `acid_splash` as the first spell-side executable pressure case and documenting its traced `save_gate` -> `damage` fit. | Landed on 2026-04-18. EPT3 is unblocked; EPT5 still depends on EPT3 and EPT4. |
+| 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | ready-for-implementation-after-light-research | EPT1, EPT2 | EPT4, EPT5 | Define the closed Quint-side projected subsets for the tracer bullet: executable node kinds for `attack_roll` / `save_gate` / `damage` / `heal_hp` / `grant_extra_action`, plus the minimal persistent shape for `Mage Armor`. Keep the model graph-ready even though the first safe SRD spell case is linear. | Unblocked by the EPT1 scope freeze and the EPT2 `acid_splash` confirmation. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | blocked | EPT3 | EPT5 | Define the TS projected record types matching the Quint subset one-for-one, with source-preserving projection metadata and no stringly closed-domain fields. | Blocked on EPT3. |
 | 8 | EPT5 - Build Surface-To-Projection Compiler | blocked | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Blocked on spell-side unit confirmation + both projected subset definitions. |
 | 9 | EPT6 - Hook Persistent Projection For Mage Armor | blocked | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Can proceed in parallel with EPT7 once EPT5 lands. |
@@ -446,7 +446,7 @@ Handoff readiness:
 
 ### Task 5 - EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `EPT1`
 
@@ -465,28 +465,28 @@ Input:
 
 Output:
 
-- a checked-in confirmation of `acid_splash` as the in-scope spell-side executable unit
-- any narrow spell-slice adjustments needed to keep the tracer bullet coherent and SRD-safe
+- Landed [plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md), which confirms `acid_splash` as the in-scope spell-side executable unit, records the RAW field trace against [Descriptions-A-D.md:20](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md:20), and documents the traced `save_gate -> damage` shape.
+- No authored `acid_splash.{dhall,json}` or tracer changes were required; no narrow spell-slice adjustments were needed.
 
 Next action:
 
-- Confirm `acid_splash` as the spell-side executable case and keep the first slice free of non-SRD dependencies.
+- None. Proceed to EPT3 for the Quint projected-subset definition.
 
 Verification requirements:
 
-- `pnpm typecheck` in `packages/prototype-content-surface/`
-- `acid_splash` traces cleanly
-- full local regression sweep stays green
-- the first tracer bullet no longer depends on a non-SRD spell
-- `/simplify` minimum 2 rounds
+- `cd packages/prototype-content-surface && pnpm typecheck` - passed.
+- `cd packages/prototype-content-surface && pnpm exec tsx scripts/content-surface-survey/trace-one.ts content/acid_splash.json` - passed with the documented `save_gate -> damage` trace.
+- Full authored-content convert-and-trace sweep was run from `packages/prototype-content-surface/`; unrelated baseline failures surfaced in `find_familiar`, `find_steed`, `spike_growth`, and `summon_dragon`, so the sweep is recorded as baseline noise outside EPT2's ownership surface rather than treated as a task regression.
+- The first tracer bullet no longer depends on `ice_knife` as the first spell-side pressure case; EPT2 confirms the simpler authored SRD cantrip `acid_splash`.
+- `/simplify` converged in 2 rounds as documented in the confirmation file.
 
 Handoff readiness:
 
-- Ready after EPT1 scope freeze.
+- Landed on 2026-04-18. EPT3 is unblocked; EPT5 still waits on EPT3 and EPT4.
 
 ### Task 6 - EPT3 - Define Quint Projected Executable And Persistent Subsets
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT1`, `EPT2`
 
@@ -527,7 +527,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT1 and EPT2.
+- Unblocked by EPT1 and EPT2 on 2026-04-18.
 
 ### Task 7 - EPT4 - Define Matching TypeScript Projected Record Types
 

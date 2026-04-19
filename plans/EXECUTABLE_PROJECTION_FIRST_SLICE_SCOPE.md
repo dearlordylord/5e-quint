@@ -13,6 +13,10 @@ Primary design sources:
 - [DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md](/workspace/typescript/dnd/DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md)
 - [EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md)
 
+Unit confirmations landed against this scope:
+
+- [EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md) - EPT2 spell-side unit confirmation
+
 Rules and terminology checked against:
 
 - [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md)
