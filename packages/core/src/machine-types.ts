@@ -315,7 +315,7 @@ export type DndEvent =
   | {
       readonly type: "CAST_PREPARED_SPELL";
       readonly spellName: SpellName;
-      readonly slotLevel: SpellSlotLevel;
+      readonly slotLevel?: SpellSlotLevel;
     }
   | {
       readonly type: "GRAPPLE";

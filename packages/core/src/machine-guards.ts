@@ -12,9 +12,7 @@ import {
   hasPeerlessSkill,
 } from "#/features/class-bard.ts";
 import {
-  canUseActionSurge,
   canUseIndomitable,
-  canUseSecondWind,
   canUseTacticalMind,
 } from "#/features/class-fighter.ts";
 import { canUseNaturesVeil, canUseTireless } from "#/features/class-ranger.ts";
@@ -42,7 +40,6 @@ import { getModeledPreparedSpellInfo } from "#/features/spell-available-actions.
 import { dmgR, dsR, fallR } from "#/machine-damage.ts";
 import {
   addDeathFailures,
-  effectiveMaxHp,
   MAX_EXHAUSTION,
   spendHalfSpeed,
   type TakeDamageResult,
@@ -55,6 +52,11 @@ import {
   type DndEvent,
 } from "#/machine-types.ts";
 import type { MetamagicOption } from "#/features/class-sorcerer.ts";
+import {
+  canUseProjectedActionSurge,
+  canUseProjectedPreparedSpell,
+  canUseProjectedSecondWind,
+} from "#/projected-action-bridge.ts";
 import type { SpellName, SpellSlotLevel } from "#/types.ts";
 import { spellId, spellSlotLevel } from "#/types.ts";
 
@@ -333,6 +335,9 @@ export const guards = {
   canConcentrate: ({ context: c }: GuardArg) => !c.dead && !isIncapacitated(c),
   canCastPreparedSpell: ({ context: c, event: e }: GuardArg) => {
     const ev = e as Extract<DndEvent, { readonly type: "CAST_PREPARED_SPELL" }>;
+    if (ev.slotLevel == null) {
+      return canUseProjectedPreparedSpell(c, ev.spellName);
+    }
     return legalPreparedSpellSlotLevels(c, ev.spellName).includes(ev.slotLevel);
   },
   // Monster death at 0 HP: SRD "Monsters and Death" — monsters die instead of entering death save track
@@ -360,31 +365,8 @@ export const guards = {
 
   // ── R2.1: Fighter guards ──
 
-  canSecondWind: ({ context: c }: GuardArg) => {
-    const fs = c.classStates.fighter;
-    if (!fs) return false;
-    return (
-      !isIncapacitated(c) &&
-      canUseSecondWind({
-        hp: c.hp,
-        maxHp: effectiveMaxHp(c.maxHp, c.maxHpReduction),
-        secondWindCharges: fs.secondWindCharges,
-        bonusActionUsed: c.bonusActionUsed,
-      })
-    );
-  },
-  canActionSurge: ({ context: c }: GuardArg) => {
-    const fs = c.classStates.fighter;
-    if (!fs) return false;
-    return (
-      !isIncapacitated(c) &&
-      canUseActionSurge({
-        actionSurgeCharges: fs.actionSurgeCharges,
-        actionSurgeUsedThisTurn: fs.actionSurgeUsedThisTurn,
-        actionsRemaining: c.actionsRemaining,
-      })
-    );
-  },
+  canSecondWind: ({ context: c }: GuardArg) => canUseProjectedSecondWind(c),
+  canActionSurge: ({ context: c }: GuardArg) => canUseProjectedActionSurge(c),
   canIndomitable: ({ context: c }: GuardArg) => {
     const fs = c.classStates.fighter;
     if (!fs) return false;

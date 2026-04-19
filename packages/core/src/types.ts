@@ -654,6 +654,7 @@ type NonEmptyString = string & Brand.Brand<"NonEmptyString">;
 
 export type SpellName = SRDSpellName | (NonEmptyString & {});
 export type SRDSpellName =
+  | "acid_splash"
   | "hold_person"
   | "bless"
   | "haste"

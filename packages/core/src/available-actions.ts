@@ -57,6 +57,23 @@ import {
   legalWildResurgenceChargeLevels,
 } from "#/machine-guards.ts";
 import {
+  canUseProjectedActionSurge,
+  canUseProjectedBattleActionSurge,
+  canUseProjectedPreparedSpell,
+  canUseProjectedSecondWind,
+  finalizeProjectedActionSurge,
+  finalizeProjectedPreparedSpell,
+  finalizeProjectedSecondWind,
+  projectedActionSurgeCost,
+  projectedActionSurgeSummary,
+  projectedBattleActionSurgeSummary,
+  projectedPreparedSpellCost,
+  projectedPreparedSpellSummary,
+  projectedSecondWindCost,
+  projectedSecondWindSummary,
+  type ProjectedPreparedSpellRuntime,
+} from "#/projected-action-bridge.ts";
+import {
   getMonsterStatBlockByStateId,
   MONSTER_STAT_BLOCK_IDS,
   monsterSpellDailyUseId,
@@ -161,6 +178,20 @@ function poolCost(resource: ResourceCostPool): PoolCost {
 
 function costs(...items: ReadonlyArray<ResourceCostItem>): ResourceCost {
   return items;
+}
+
+function projectedCosts(
+  ...parts: ReadonlyArray<
+    "action" | "bonusAction" | "actionSurge" | "secondWind"
+  >
+): ResourceCost {
+  return costs(
+    ...parts.map((part) =>
+      part === "action" || part === "bonusAction"
+        ? quotaCost(part)
+        : poolCost(part),
+    ),
+  );
 }
 
 function actionQuotaCost(actionType: "action" | "bonusAction"): QuotaCost {
@@ -271,7 +302,7 @@ type TokenByType = {
   readonly USE_HEROIC_INSPIRATION: SimpleToken<"USE_HEROIC_INSPIRATION">;
   readonly CAST_PREPARED_SPELL: SimpleToken<"CAST_PREPARED_SPELL"> & {
     readonly spellName: ModeledPreparedSpell;
-    readonly slotLevel: Hole<SpellSlotLevelValue>;
+    readonly slotLevel?: Hole<SpellSlotLevelValue>;
   };
   readonly START_TURN: SimpleToken<"START_TURN">;
   readonly USE_ACTION_SURGE: SimpleToken<"USE_ACTION_SURGE">;
@@ -663,7 +694,7 @@ type ResolvedTokenByType = {
   readonly CAST_PREPARED_SPELL: {
     readonly type: "CAST_PREPARED_SPELL";
     readonly spellName: ModeledPreparedSpell;
-    readonly slotLevel: SpellSlotLevelValue;
+    readonly slotLevel?: SpellSlotLevelValue;
   };
   readonly START_TURN: { readonly type: "START_TURN" };
   readonly USE_ACTION_SURGE: { readonly type: "USE_ACTION_SURGE" };
@@ -1142,7 +1173,7 @@ const UseHeroicInspirationResolvedActionSchema = Schema.Struct({
 const CastPreparedSpellResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("CAST_PREPARED_SPELL"),
   spellName: ModeledPreparedSpellSchema,
-  slotLevel: SpellSlotLevel,
+  slotLevel: Schema.optional(SpellSlotLevel),
 });
 const StartTurnResolvedActionSchema = Schema.Struct({
   type: Schema.Literal("START_TURN"),
@@ -2100,6 +2131,8 @@ export type UseSecondWindRuntimeInputs = {
   readonly d10Roll: number;
 };
 
+export type UseActionSurgeRuntimeInputs = Record<string, never>;
+
 export type UseTacticalMindRuntimeInputs = {
   readonly boostedCheckSucceeds: boolean;
 };
@@ -2159,7 +2192,7 @@ export type ResolutionRequest =
         { readonly type: "CAST_PREPARED_SPELL" }
       >;
       readonly outcome: string;
-      readonly runtime: "none";
+      readonly runtime: "none" | "projectedPreparedSpell";
       readonly event: Extract<
         DndEvent,
         { readonly type: "CAST_PREPARED_SPELL" }
@@ -2179,7 +2212,7 @@ export type ResolutionRequest =
         { readonly type: "USE_ACTION_SURGE" }
       >;
       readonly outcome: string;
-      readonly runtime: "none";
+      readonly runtime: "actionSurge";
       readonly event: Extract<DndEvent, { readonly type: "USE_ACTION_SURGE" }>;
     }
   | {
@@ -2622,6 +2655,14 @@ export type ResolutionRequest =
 export type ResolutionRuntimeInputs =
   | { readonly runtime: "none" }
   | { readonly runtime: "startTurn"; readonly values: StartTurnRuntimeInputs }
+  | {
+      readonly runtime: "actionSurge";
+      readonly values: UseActionSurgeRuntimeInputs;
+    }
+  | {
+      readonly runtime: "projectedPreparedSpell";
+      readonly values: ProjectedPreparedSpellRuntime;
+    }
   | {
       readonly runtime: "tacticalMind";
       readonly values: UseTacticalMindRuntimeInputs;
@@ -3230,8 +3271,20 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
     buildToken: (context) =>
       MODELED_PREPARED_SPELLS.flatMap((spellName) => {
         if (!context.preparedSpells.has(spellId(spellName))) return [];
+        if (canUseProjectedPreparedSpell(context, spellName)) {
+          return [
+            {
+              type: "CAST_PREPARED_SPELL" as const,
+              spellName,
+              cost: projectedCosts(...projectedPreparedSpellCost(spellName)),
+              outcome: {
+                summary: projectedPreparedSpellSummary(context, spellName),
+              },
+            },
+          ];
+        }
         const spell = getModeledPreparedSpellInfo(spellName);
-        if (spell == null) return [];
+        if (spell == null || spell.baseLevel === 0) return [];
         const slotLevels = legalPreparedSpellSlotLevels(context, spellName);
         if (slotLevels.length === 0) return [];
         return [
@@ -3267,13 +3320,12 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
   },
   USE_ACTION_SURGE: {
     buildToken: (context) =>
-      guards.canActionSurge(guardArgs(context))
+      canUseProjectedActionSurge(context)
         ? {
             type: "USE_ACTION_SURGE",
-            cost: costs(poolCost("actionSurge")),
+            cost: projectedCosts(...projectedActionSurgeCost()),
             outcome: {
-              summary:
-                "Expend one Action Surge use to gain one additional action this turn",
+              summary: projectedActionSurgeSummary(context),
             },
           }
         : null,
@@ -3633,12 +3685,12 @@ const ACTION_SPECS: { readonly [K in SupportedActionType]: ActionSpec<K> } = {
   },
   USE_SECOND_WIND: {
     buildToken: (context) =>
-      guards.canSecondWind(guardArgs(context))
+      canUseProjectedSecondWind(context)
         ? {
             type: "USE_SECOND_WIND",
-            cost: costs(quotaCost("bonusAction"), poolCost("secondWind")),
+            cost: projectedCosts(...projectedSecondWindCost()),
             outcome: {
-              summary: `Heal 1d10 + ${context.classStates.fighter?.level ?? 0} HP`,
+              summary: projectedSecondWindSummary(context),
             },
           }
         : null,
@@ -4576,18 +4628,17 @@ export function getAvailableBattleActions(
         }
       }
     }
-    if (
-      activeCreature.actionSurgeCharges > 0 &&
-      !activeCreature.actionSurgeUsedThisTurn
-    ) {
+    if (canUseProjectedBattleActionSurge(activeCreature)) {
       tokens.push(
         battleToken({
           actorId: activeCreatureId,
           type: "BATTLE_ACTION_SURGE",
-          cost: costs(poolCost("actionSurge")),
+          cost: projectedCosts(...projectedActionSurgeCost()),
           outcome: {
-            summary:
-              "Expend one Action Surge use to gain one additional non-Magic action this turn",
+            summary: projectedBattleActionSurgeSummary(
+              activeCreatureId,
+              activeCreature,
+            ),
           },
         }),
       );
@@ -6707,6 +6758,20 @@ export function resolveAction(
     };
   }
   if (token.type === "CAST_PREPARED_SPELL") {
+    if (
+      token.slotLevel == null &&
+      canUseProjectedPreparedSpell(context, token.spellName)
+    ) {
+      return {
+        token,
+        outcome: projectedPreparedSpellSummary(context, token.spellName),
+        runtime: "projectedPreparedSpell",
+        event: {
+          type: "CAST_PREPARED_SPELL",
+          spellName: token.spellName,
+        },
+      };
+    }
     if (!isAcceptedByMachine(token.type, tags)) {
       return {
         code: "ACTION_NOT_AVAILABLE",
@@ -6721,6 +6786,7 @@ export function resolveAction(
       };
     }
     if (
+      token.slotLevel == null ||
       !legalPreparedSpellSlotLevels(context, token.spellName).includes(
         token.slotLevel,
       )
@@ -6777,7 +6843,7 @@ export function resolveAction(
       return {
         token,
         outcome: available.outcome.summary,
-        runtime: "none",
+        runtime: "actionSurge",
         event: { type: "USE_ACTION_SURGE" },
       };
     case "USE_INDOMITABLE":
@@ -7170,6 +7236,33 @@ export function finalizeResolution(
         outcome: resolved.outcome,
       };
     }),
+    Match.when({ runtime: "actionSurge" }, (): FinalizedAction => {
+      if (runtimeInputs.runtime !== "actionSurge")
+        return runtimeMismatch("actionSurge", runtimeInputs.runtime);
+      return {
+        ok: true,
+        ...finalizeProjectedActionSurge(context),
+      };
+    }),
+    Match.when(
+      { runtime: "projectedPreparedSpell" },
+      (resolved): FinalizedAction => {
+        if (runtimeInputs.runtime !== "projectedPreparedSpell") {
+          return runtimeMismatch(
+            "projectedPreparedSpell",
+            runtimeInputs.runtime,
+          );
+        }
+        return {
+          ok: true,
+          ...finalizeProjectedPreparedSpell(
+            context,
+            resolved.token.spellName,
+            runtimeInputs.values,
+          ),
+        };
+      },
+    ),
     Match.when({ runtime: "tacticalMind" }, (): FinalizedAction => {
       if (runtimeInputs.runtime !== "tacticalMind")
         return runtimeMismatch("tacticalMind", runtimeInputs.runtime);
@@ -7244,28 +7337,9 @@ export function finalizeResolution(
     Match.when({ runtime: "secondWind" }, (): FinalizedAction => {
       if (runtimeInputs.runtime !== "secondWind")
         return runtimeMismatch("secondWind", runtimeInputs.runtime);
-      if (
-        runtimeInputs.values.d10Roll < 1 ||
-        runtimeInputs.values.d10Roll > 10
-      ) {
-        return {
-          ok: false as const,
-          error: {
-            code: "INVALID_RUNTIME_INPUT" as const,
-            message: `Second Wind d10 roll must be between 1 and 10, received ${runtimeInputs.values.d10Roll}.`,
-          },
-        };
-      }
-      const fighterLevel = context.classStates.fighter?.level ?? 0;
       return {
-        ok: true as const,
-        event: {
-          type: "USE_SECOND_WIND" as const,
-          d10Roll: runtimeInputs.values.d10Roll,
-        },
-        outcome: `Healed 1d10(${runtimeInputs.values.d10Roll}) + ${fighterLevel} = ${
-          runtimeInputs.values.d10Roll + fighterLevel
-        } HP`,
+        ok: true,
+        ...finalizeProjectedSecondWind(context, runtimeInputs.values.d10Roll),
       };
     }),
     Match.when({ runtime: "tireless" }, (): FinalizedAction => {

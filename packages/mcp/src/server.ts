@@ -33,6 +33,7 @@ import { executeControlCommand } from "./server-control.ts";
 import {
   buildBattleRuntimeInputs,
   buildRuntimeInputs,
+  decodeProjectedPreparedSpellRuntimeInputs,
 } from "./server-runtime.ts";
 import {
   decodeBattleAttackRuntimeInputs,
@@ -185,6 +186,7 @@ export const toolDefinitions = [
 function executeCreatureResolvedAction(
   actor: DndActor,
   token: Extract<ResolvedActionToken, { readonly scope: "creature" }>,
+  args: unknown,
 ) {
   const before = actor.getSnapshot();
   const resolution = resolveAction(before.context, before.tags, token);
@@ -192,9 +194,13 @@ function executeCreatureResolvedAction(
     return errorContent(resolution.message, resolution.code);
   }
 
-  const runtimeInputs = Effect.runSync(
-    buildRuntimeInputs(resolution, before.context),
-  );
+  const runtimeInputs =
+    resolution.runtime === "projectedPreparedSpell"
+      ? decodeProjectedPreparedSpellRuntimeInputs(args, "CAST_PREPARED_SPELL")
+      : Effect.runSync(buildRuntimeInputs(resolution, before.context));
+  if ("code" in runtimeInputs) {
+    return errorContent(runtimeInputs.message, runtimeInputs.code);
+  }
   const finalized = finalizeResolution(
     resolution,
     runtimeInputs,
@@ -291,7 +297,7 @@ function executeResolvedAction(host: SupportedActionHost, args: unknown) {
       if (decoded.scope !== "creature") {
         return scopeMismatchContent(decoded.scope, "creature");
       }
-      return executeCreatureResolvedAction(actor, decoded);
+      return executeCreatureResolvedAction(actor, decoded, args);
     }),
     Match.when({ scope: "battle" }, ({ actor }) => {
       if (decoded.scope !== "battle") {

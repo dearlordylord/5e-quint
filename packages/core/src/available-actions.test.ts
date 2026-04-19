@@ -196,6 +196,11 @@ const WIZARD_4_INPUT: DndMachineInput = {
   effectiveSpeed: 30,
 };
 
+const WIZARD_WITH_ACID_SPLASH_INPUT: DndMachineInput = {
+  ...WIZARD_4_INPUT,
+  preparedSpells: preparedSpellIds("acid_splash"),
+};
+
 const WIZARD_14_INPUT: DndMachineInput = {
   maxHp: 36,
   wizardLevel: classLevel(14),
@@ -1283,6 +1288,86 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.hp).toBe(44);
   });
 
+  test("Acid Splash appears only when legal and resolves through CAST_PREPARED_SPELL without a slot", () => {
+    const actor = makeActorWithInput(WIZARD_WITH_ACID_SPLASH_INPUT);
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ),
+    ).toContainEqual(
+      creatureToken({
+        type: "CAST_PREPARED_SPELL",
+        spellName: "acid_splash",
+        cost: cost(quota("action")),
+        outcome: { summary: "Cast Acid Splash" },
+      }),
+    );
+
+    const request = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({
+          type: "CAST_PREPARED_SPELL",
+          spellName: "acid_splash",
+        }),
+      ),
+    );
+    const finalized = finalizeResolution(
+      request,
+      {
+        runtime: "projectedPreparedSpell",
+        values: {
+          targetIds: ["goblin", "bugbear"],
+          saveOutcomes: [
+            { targetId: "goblin", outcome: "fail" },
+            { targetId: "bugbear", outcome: "success" },
+          ],
+          amounts: [{ targetId: "goblin", total: 7, rolledTotal: 7 }],
+        },
+      },
+      actor.getSnapshot().context,
+    );
+    expect(finalized).toEqual({
+      ok: true,
+      event: { type: "CAST_PREPARED_SPELL", spellName: "acid_splash" },
+      outcome: "Cast Acid Splash",
+    });
+    if (!finalized.ok)
+      throw new Error("expected Acid Splash finalization to succeed");
+    actor.send(finalized.event);
+
+    expect(actor.getSnapshot().context.actionsRemaining).toBe(0);
+    expect(actor.getSnapshot().context.slotExpendedThisTurn).toBe(false);
+    expect(actor.getSnapshot().context.nonCantripActionSpellCast).toBe(false);
+  });
+
+  test("Acid Splash is absent during Action Surge's non-Magic action", () => {
+    const actor = makeActorWithInput({
+      ...WIZARD_WITH_ACID_SPLASH_INPUT,
+      fighterLevel: classLevel(2),
+    });
+    actor.send({ type: "ENTER_COMBAT" });
+    actor.send({ type: "START_TURN" });
+    actor.send({ type: "USE_ACTION_SURGE" });
+
+    expect(
+      getAvailableActions(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+      ).some(
+        (token) =>
+          token.type === "CAST_PREPARED_SPELL" &&
+          "spellName" in token &&
+          token.spellName === "acid_splash",
+      ),
+    ).toBe(false);
+  });
+
   test("EXIT_COMBAT remains available after death while roster teardown is caller-owned", () => {
     const actor = makeActor();
     actor.send({ type: "ENTER_COMBAT" });
@@ -1982,7 +2067,7 @@ describe("available actions contract", () => {
         cost: cost(pool("actionSurge")),
         outcome: {
           summary:
-            "Expend one Action Surge use to gain one additional action this turn",
+            "Expend one Action Surge use to gain one additional non-Magic action this turn",
         },
       }),
     );
@@ -2032,14 +2117,14 @@ describe("available actions contract", () => {
     );
     const actionSurgeFinalized = finalizeResolution(
       actionSurgeRequest,
-      { runtime: "none" },
+      { runtime: "actionSurge", values: {} },
       actor.getSnapshot().context,
     );
     expect(actionSurgeFinalized).toEqual({
       ok: true,
       event: { type: "USE_ACTION_SURGE" },
       outcome:
-        "Expend one Action Surge use to gain one additional action this turn",
+        "Expend one Action Surge use to gain one additional non-Magic action this turn",
     });
     if (!actionSurgeFinalized.ok)
       throw new Error("expected USE_ACTION_SURGE finalization to succeed");

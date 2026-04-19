@@ -4,11 +4,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
-  ACID_SPLASH_PROJECTION,
-  FIGHTER_ACTION_SURGE_L2_PROJECTION,
-  FIGHTER_SECOND_WIND_PROJECTION,
-  MAGE_ARMOR_PROJECTION,
-} from "#/projected-compiler-fixtures.ts";
+  ACID_SPLASH_PROJECTED_ACTION,
+  ACTION_SURGE_PROJECTED_ACTION,
+  MAGE_ARMOR_PROJECTED_RECORD,
+  SECOND_WIND_PROJECTED_ACTION,
+} from "#/projected-action-records.ts";
 import {
   compileProjectedExecutable,
   compileProjectedPersistent,
@@ -40,7 +40,7 @@ describe("projected compiler", () => {
     const acidSplash = loadSurfaceUnit<SpellRecord>("acid_splash");
 
     expect(compileProjectedExecutable(acidSplash)).toEqual(
-      ACID_SPLASH_PROJECTION,
+      ACID_SPLASH_PROJECTED_ACTION,
     );
   });
 
@@ -50,7 +50,7 @@ describe("projected compiler", () => {
     );
 
     expect(compileProjectedExecutable(secondWind)).toEqual(
-      FIGHTER_SECOND_WIND_PROJECTION,
+      SECOND_WIND_PROJECTED_ACTION,
     );
   });
 
@@ -60,7 +60,7 @@ describe("projected compiler", () => {
     );
 
     expect(compileProjectedExecutable(actionSurge)).toEqual(
-      FIGHTER_ACTION_SURGE_L2_PROJECTION,
+      ACTION_SURGE_PROJECTED_ACTION,
     );
   });
 
@@ -68,11 +68,11 @@ describe("projected compiler", () => {
     const mageArmor = loadSurfaceUnit<SpellRecord>("mage_armor");
 
     expect(compileProjectedPersistent(mageArmor)).toEqual(
-      MAGE_ARMOR_PROJECTION,
+      MAGE_ARMOR_PROJECTED_RECORD,
     );
     expect(compileProjectedUnit(mageArmor)).toEqual({
       tag: "CPUPersistent",
-      value: MAGE_ARMOR_PROJECTION,
+      value: MAGE_ARMOR_PROJECTED_RECORD,
     });
   });
 

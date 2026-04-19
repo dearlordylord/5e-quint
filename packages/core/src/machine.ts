@@ -44,6 +44,10 @@ import {
   useRechargeAbilityUpdate,
 } from "#/machine-monster.ts";
 import * as paladin from "#/machine-paladin.ts";
+import {
+  applyProjectedActionSurge,
+  applyProjectedSecondWind,
+} from "#/projected-creature-action-reducer.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import * as ranger from "#/machine-ranger.ts";
 import * as rogue from "#/machine-rogue.ts";
@@ -419,7 +423,11 @@ export const creatureMachine = setup({
       const ev = asCastPreparedSpell(e);
       const spell = getModeledPreparedSpellInfo(ev.spellName);
       if (spell == null) return {};
-      const slotsCurrent = expendSlot(c.slotsCurrent, ev.slotLevel);
+      const isCantrip = spell.baseLevel === 0;
+      const slotsCurrent =
+        isCantrip || ev.slotLevel == null
+          ? c.slotsCurrent
+          : expendSlot(c.slotsCurrent, ev.slotLevel);
       const turnUpdates =
         spell.castingTime === "bonusAction"
           ? {
@@ -428,12 +436,14 @@ export const creatureMachine = setup({
             }
           : {
               actionsRemaining: c.actionsRemaining - 1,
-              nonCantripActionSpellCast: true,
+              nonCantripActionSpellCast: isCantrip
+                ? c.nonCantripActionSpellCast
+                : true,
             };
       if (!spell.concentration || spell.durationTurns == null) {
         return {
           slotsCurrent,
-          slotExpendedThisTurn: true,
+          slotExpendedThisTurn: isCantrip ? c.slotExpendedThisTurn : true,
           pendingResolution: null,
           ...turnUpdates,
         };
@@ -444,7 +454,7 @@ export const creatureMachine = setup({
         : c.activeEffects;
       return {
         slotsCurrent,
-        slotExpendedThisTurn: true,
+        slotExpendedThisTurn: isCantrip ? c.slotExpendedThisTurn : true,
         pendingResolution: null,
         concentrationSpellId: Option.some(nextSpellId),
         activeEffects: addAe(
@@ -658,10 +668,18 @@ export const creatureMachine = setup({
     }),
     applyStarvation: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
     applyDehydration: assign(({ context: c }) => exhaustionWithConcBreak(c, 1)),
-    useSecondWind: assign(({ context: c, event: e }) =>
-      fighter.secondWindUpdate(c, asUseSecondWind(e).d10Roll),
-    ),
-    useActionSurge: assign(({ context: c }) => fighter.actionSurgeUpdate(c)),
+    useSecondWind: assign(({ context: c, event: e }) => {
+      const base = applyProjectedSecondWind(c, asUseSecondWind(e).d10Roll);
+      const fighterLevel = c.classStates.fighter?.level ?? 0;
+      return fighterLevel >= 5
+        ? {
+            ...base,
+            bonusMovementRemaining: Math.floor(c.effectiveSpeed / 2),
+            bonusMovementOAFree: true,
+          }
+        : base;
+    }),
+    useActionSurge: assign(({ context: c }) => applyProjectedActionSurge(c)),
     useIndomitable: assign(({ context: c }) => ({
       ...fighter.indomitableUpdate(c),
       pendingResolution: null,

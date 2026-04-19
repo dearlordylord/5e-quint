@@ -3944,6 +3944,103 @@ describe("MCP server adapter", () => {
     expect(payload.state.pendingResolution).toBeNull();
   });
 
+  test("execute_action runs Acid Splash with explicit projectedPreparedSpell runtime inputs", () => {
+    const host = createDemoHost({
+      maxHp: 30,
+      wizardLevel: classLevel(5),
+      preparedSpells: preparedSpellIds("acid_splash"),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const available = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    );
+    expect(available.action).toContainEqual(
+      creatureToken({
+        type: "CAST_PREPARED_SPELL",
+        spellName: "acid_splash",
+        cost: cost(quota("action")),
+        outcome: { summary: "Cast Acid Splash" },
+      }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      ...creatureResolved({
+        type: "CAST_PREPARED_SPELL",
+        spellName: "acid_splash",
+      }),
+      runtime: {
+        runtime: "projectedPreparedSpell",
+        values: {
+          targetIds: ["goblin", "bugbear"],
+          saveOutcomes: [
+            { targetId: "goblin", outcome: "fail" },
+            { targetId: "bugbear", outcome: "success" },
+          ],
+          amounts: [{ targetId: "goblin", total: 7, rolledTotal: 7 }],
+        },
+      },
+    });
+    expect("isError" in response).toBe(false);
+    const payload = readPayload(response);
+    expect(payload.success).toBe(true);
+    expect(payload.outcome).toBe("Cast Acid Splash");
+    expect(payload.state.actionsRemaining).toBe(0);
+    expect(payload.state.slotExpendedThisTurn).toBe(false);
+    expect(payload.state.nonCantripActionSpellCast).toBe(false);
+  });
+
+  test("execute_action rejects malformed projectedPreparedSpell runtime inputs for Acid Splash", () => {
+    const host = createDemoHost({
+      maxHp: 30,
+      wizardLevel: classLevel(5),
+      preparedSpells: preparedSpellIds("acid_splash"),
+      baseWalkSpeed: 30,
+      effectiveSpeed: 30,
+    });
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "ENTER_COMBAT" }),
+    );
+    handleToolCall(
+      host,
+      "execute_action",
+      creatureResolved({ type: "START_TURN" }),
+    );
+
+    const response = handleToolCall(host, "execute_action", {
+      ...creatureResolved({
+        type: "CAST_PREPARED_SPELL",
+        spellName: "acid_splash",
+      }),
+      runtime: {
+        runtime: "projectedPreparedSpell",
+        values: {
+          targetIds: ["goblin"],
+          saveOutcomes: [{ targetId: "goblin", outcome: "fail" }],
+          amounts: [],
+          extra: true,
+        },
+      },
+    });
+    expect("isError" in response && response.isError).toBe(true);
+    expect(readPayload(response).error).toContain(
+      "requires explicit runtime projectedPreparedSpell inputs on execute_action.",
+    );
+  });
+
   test("execute_action supports USE_INDOMITABLE once the pending trigger exists", () => {
     const host = createDemoHost({
       maxHp: 24,
@@ -4682,7 +4779,7 @@ describe("MCP server adapter", () => {
         cost: cost(pool("actionSurge")),
         outcome: {
           summary:
-            "Expend one Action Surge use to gain one additional action this turn",
+            "Expend one Action Surge use to gain one additional non-Magic action this turn",
         },
       }),
     );
@@ -4871,7 +4968,7 @@ describe("MCP server adapter", () => {
               },
             ],
             "outcome": {
-              "summary": "Expend one Action Surge use to gain one additional action this turn",
+              "summary": "Expend one Action Surge use to gain one additional non-Magic action this turn",
             },
             "scope": "creature",
             "type": "USE_ACTION_SURGE",

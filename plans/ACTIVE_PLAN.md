@@ -52,7 +52,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 8,  "id": "EPT5",  "status": "done", "title": "Build Surface-To-Projection Compiler" },
     { "number": 9,  "id": "EPT6",  "status": "ready-for-research", "title": "Hook Persistent Projection For Mage Armor" },
     { "number": 10, "id": "EPT7",  "status": "done", "title": "Build Projected Mechanic Interpreter" },
-    { "number": 11, "id": "EPT8",  "status": "ready-for-implementation-after-light-research", "title": "Route Availability And Execution Through Projected Records" },
+    { "number": 11, "id": "EPT8",  "status": "done", "title": "Route Availability And Execution Through Projected Records" },
     { "number": 12, "id": "EPT9",  "status": "blocked", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
     { "number": 13, "id": "EPT10", "status": "blocked", "title": "Add Quint And TypeScript Parity Tests For First Slice" },
     { "number": 14, "id": "EPT11", "status": "blocked", "title": "Add End-To-End MCP Tracer-Bullet Tests" },
@@ -121,7 +121,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8 | EPT5 - Build Surface-To-Projection Compiler | done | EPT2, EPT3, EPT4 | EPT6, EPT7 | Landed a unit-scoped surface-to-projection compiler plus inspectable fixture constants for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. The compiler now rejects both out-of-scope units and in-scope preserved-fact drift at the EPT5 boundary. | Landed on 2026-04-19. EPT6 and EPT7 are now unblocked. |
 | 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-research | EPT5 | EPT9, EPT10 | Research and pin one owned source for "active Mage Armor" plus one owned lifecycle hook for `target_dons_armor` before implementation. The current seams provide projected records and battle AC reads, but they do not yet provide either stored active persistent state on character sheets or a legal armor-state transition in battle. The eventual owner must thread the existing `ProjectedPersistentRecord` contract from EPT5 directly; auxiliary spell-id or unit-id registries are out of scope because they duplicate the persistent projection boundary. | Re-opened for research on 2026-04-19 after dual attempts showed that deriving activation from prepared spells is wrong, while both a battle-entry `fighterActivePersistentUnits` list and a sheet-level `{ spellId: "mage_armor" }` registry duplicate the EPT5 projection contract instead of owning real active persistent state. |
 | 10 | EPT7 - Build Projected Mechanic Interpreter | done | EPT5 | EPT8 | Land one closed graph walker for the executable first slice that emits reducer-consumable transitions for `Acid Splash`, `Second Wind`, and `Action Surge` without unit-id branches. The projection contract now carries explicit use-count pool identity so resource spend transitions do not need to infer pools from source ids. | Landed on 2026-04-19. EPT8 is now unblocked. |
-| 11 | EPT8 - Route Availability And Execution Through Projected Records | ready-for-implementation-after-light-research | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. Use EPT7's transitions as the sole execution contract instead of re-reading legacy payload facts. | Unblocked by EPT7 on 2026-04-19. |
+| 11 | EPT8 - Route Availability And Execution Through Projected Records | done | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. Use EPT7's transitions as the sole execution contract instead of re-reading legacy payload facts. | Landed on 2026-04-19. The promoted slice now drives legality and execution from shared projected records, and slotless cantrip execution reuses the existing `CAST_PREPARED_SPELL` seam instead of introducing a parallel public action token. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
 | 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Acid Splash`, `Mage Armor`, `Second Wind`, and `Action Surge`, including spell save-gate assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
 | 14 | EPT11 - Add End-To-End MCP Tracer-Bullet Tests | blocked | EPT9, EPT10 | EPT12 | Add end-to-end MCP tests for character creation/finalization, battle start, action availability, `execute_action` flows, and turn ends for the bounded scenario. | Blocked on parity-tested integrated path. |
@@ -727,7 +727,7 @@ Handoff readiness:
 
 ### Task 11 - EPT8 - Route Availability And Execution Through Projected Records
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `EPT7`
 
@@ -752,7 +752,7 @@ Output:
 
 Next action:
 
-- Replace legacy feature-specific legality and execution where the projected slice now owns the same fact.
+- None. Follow-on work stays in EPT9/EPT10/EPT12.
 
 Verification requirements:
 
@@ -763,8 +763,10 @@ Verification requirements:
 
 Handoff readiness:
 
-- Unblocked by EPT7 on 2026-04-19.
-- Use the projected interpreter transitions as the execution input; do not reconstitute spell or feature behavior from legacy runtime payloads.
+- Landed on 2026-04-19.
+- Availability and execution now read from the same promoted projected records for `Acid Splash`, `Second Wind`, and `Action Surge`.
+- Slotless cantrip execution reuses the existing `CAST_PREPARED_SPELL` seam; EPT8 did not need a parallel public action token.
+- Projected interpreter transitions now serve as the execution input instead of reconstituting spell or feature behavior from legacy runtime payloads.
 
 ### Task 12 - EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario
 

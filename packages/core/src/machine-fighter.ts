@@ -1,91 +1,26 @@
 import { assert } from "#/assert.ts";
 import {
   actionSurgeMaxCharges,
-  canUseActionSurge,
   canUseIndomitable,
-  canUseSecondWind,
   canUseTacticalMind,
   fighterLongRest as tsFighterLongRest,
   fighterShortRest as tsFighterShortRest,
   heroicWarriorInspiration,
   indomitableMaxCharges,
   secondWindMaxCharges,
-  useActionSurge as tsUseActionSurge,
   useIndomitable as tsUseIndomitable,
-  useSecondWind as tsUseSecondWind,
   useTacticalMind as tsUseTacticalMind,
 } from "#/features/class-fighter.ts";
-import { effectiveMaxHp, updateClass } from "#/machine-helpers.ts";
+import { updateClass } from "#/machine-helpers.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import type { DndContext, FighterClassState } from "#/machine-types.ts";
 import type { ClassLevel } from "#/types.ts";
-import { hp, resourceCount } from "#/types.ts";
+import { resourceCount } from "#/types.ts";
 
 // -- Convenience accessor --
 
 function f(c: DndContext) {
   return c.classStates.fighter!;
-}
-
-// -- Action Updates --
-
-export function secondWindUpdate(
-  c: DndContext,
-  d10Roll: number,
-): Partial<DndContext> {
-  const fs = f(c);
-  const swState = {
-    hp: c.hp,
-    maxHp: effectiveMaxHp(c.maxHp, c.maxHpReduction),
-    secondWindCharges: fs.secondWindCharges,
-    bonusActionUsed: c.bonusActionUsed,
-  };
-  assert(
-    canUseSecondWind(swState) && !isIncapacitated(c),
-    "guard: canSecondWind should have prevented this",
-  );
-  const r = tsUseSecondWind(
-    swState,
-    { fighterLevel: fs.level, d10Roll },
-    c.effectiveSpeed,
-  );
-  const bonusMove =
-    fs.level >= 5
-      ? {
-          bonusMovementRemaining: r.tacticalShiftDistance,
-          bonusMovementOAFree: true,
-        }
-      : {};
-  return {
-    hp: hp(r.hp),
-    ...updateClass(c, "fighter", {
-      secondWindCharges: resourceCount(r.secondWindCharges),
-    }),
-    bonusActionUsed: r.bonusActionUsed,
-    ...bonusMove,
-  };
-}
-
-export function actionSurgeUpdate(c: DndContext): Partial<DndContext> {
-  const fs = f(c);
-  const s = {
-    actionSurgeCharges: fs.actionSurgeCharges,
-    actionSurgeUsedThisTurn: fs.actionSurgeUsedThisTurn,
-    actionsRemaining: c.actionsRemaining,
-  };
-  assert(
-    canUseActionSurge(s) && !isIncapacitated(c),
-    "guard: canActionSurge should have prevented this",
-  );
-  const r = tsUseActionSurge(s);
-  return {
-    actionsRemaining: r.actionsRemaining,
-    actionSurgeActionPending: true,
-    ...updateClass(c, "fighter", {
-      actionSurgeCharges: resourceCount(r.actionSurgeCharges),
-      actionSurgeUsedThisTurn: r.actionSurgeUsedThisTurn,
-    }),
-  };
 }
 
 export function indomitableUpdate(c: DndContext): Partial<DndContext> {

@@ -1,4 +1,4 @@
-import { Effect, Match, Random } from "effect";
+import { Effect, Match, Random, Schema } from "effect";
 
 import { battleMainHandDamageDie } from "@dnd/core/battle-machine-creature.ts";
 import type {
@@ -16,6 +16,76 @@ import { classHitDie } from "@dnd/core/features/class-tables.ts";
 import { pMartialArtsDie } from "@dnd/core/features/class-monk.ts";
 import type { DndContext } from "@dnd/core/machine-types.ts";
 
+const ProjectedPreparedSpellRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("projectedPreparedSpell"),
+  values: Schema.Struct({
+    targetIds: Schema.Array(Schema.String),
+    saveOutcomes: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        outcome: Schema.Literal("fail", "success"),
+      }),
+    ),
+    amounts: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        total: Schema.Number.pipe(Schema.int()),
+        rolledTotal: Schema.optional(Schema.Number.pipe(Schema.int())),
+      }),
+    ),
+  }),
+});
+
+function formatProjectedPreparedSpellExpectedFields(): string {
+  return [
+    "targetIds: array<string>",
+    'saveOutcomes: array<{ targetId: string, outcome: "fail" | "success" }>',
+    "amounts: array<{ targetId: string, total: integer, rolledTotal?: integer }>",
+  ].join(", ");
+}
+
+function projectedPreparedSpellRuntimeShapeError(
+  tokenType: "CAST_PREPARED_SPELL",
+) {
+  return {
+    code: "INVALID_RUNTIME_INPUT" as const,
+    message: `${tokenType} requires explicit runtime projectedPreparedSpell inputs on execute_action. Expected shape: { runtime: "projectedPreparedSpell", values: { ${formatProjectedPreparedSpellExpectedFields()} } }.`,
+  };
+}
+
+export function decodeProjectedPreparedSpellRuntimeInputs(
+  args: unknown,
+  tokenType: "CAST_PREPARED_SPELL",
+):
+  | Extract<
+      ResolutionRuntimeInputs,
+      { readonly runtime: "projectedPreparedSpell" }
+    >
+  | { readonly code: "INVALID_RUNTIME_INPUT"; readonly message: string } {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return projectedPreparedSpellRuntimeShapeError(tokenType);
+  }
+
+  const runtime = Reflect.get(args, "runtime");
+  const decoded = Schema.decodeUnknownEither(
+    ProjectedPreparedSpellRuntimeOverrideSchema,
+  )(runtime);
+  if (decoded._tag === "Left") {
+    return projectedPreparedSpellRuntimeShapeError(tokenType);
+  }
+  const values = Reflect.get(runtime as object, "values");
+  if (typeof values !== "object" || values === null || Array.isArray(values)) {
+    return projectedPreparedSpellRuntimeShapeError(tokenType);
+  }
+  const allowedKeys = new Set(["targetIds", "saveOutcomes", "amounts"]);
+  for (const key of Object.keys(values)) {
+    if (!allowedKeys.has(key)) {
+      return projectedPreparedSpellRuntimeShapeError(tokenType);
+    }
+  }
+  return decoded.right;
+}
+
 export function buildRuntimeInputs(
   request: ResolutionRequest,
   context: DndContext,
@@ -29,6 +99,17 @@ export function buildRuntimeInputs(
         runtime: "startTurn" as const,
         values: {},
       }),
+    ),
+    Match.when({ runtime: "actionSurge" }, () =>
+      Effect.succeed({
+        runtime: "actionSurge" as const,
+        values: {},
+      }),
+    ),
+    Match.when({ runtime: "projectedPreparedSpell" }, () =>
+      Effect.die(
+        "projectedPreparedSpell runtime inputs must be supplied explicitly by execute_action.",
+      ),
     ),
     // These actions already have an owned pending trigger window in core state.
     // The current machine/event contract still reduces the underlying reroll/save

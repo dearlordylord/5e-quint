@@ -58,6 +58,7 @@ import {
   rageResistances,
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
+import { applyProjectedBattleActionSurge } from "#/projected-battle-action-reducer.ts";
 import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 import {
   getSpellRecordStrict,
@@ -1347,24 +1348,7 @@ export function battleDodge({
 export function battleActionSurge({
   context: c,
 }: BattleActionArgs<"BATTLE_ACTION_SURGE">): Partial<BattleContext> {
-  if (!c.turnStarted) return {};
-  const id = activeId(c);
-  const ac = c.creatures.get(id)!;
-  if (
-    isIncapacitated(ac) ||
-    ac.actionSurgeCharges <= 0 ||
-    ac.actionSurgeUsedThisTurn
-  )
-    return {};
-  return {
-    creatures: setCreature(c.creatures, id, {
-      ...ac,
-      actionsRemaining: ac.actionsRemaining + 1,
-      actionSurgeActionPending: true,
-      actionSurgeCharges: ac.actionSurgeCharges - 1,
-      actionSurgeUsedThisTurn: true,
-    }),
-  };
+  return applyProjectedBattleActionSurge(c);
 }
 
 export function battleEnterRage({

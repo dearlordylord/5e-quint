@@ -1,11 +1,11 @@
 import { Match } from "effect";
 
 import {
-  ACID_SPLASH_PROJECTION,
-  FIGHTER_ACTION_SURGE_L2_PROJECTION,
-  FIGHTER_SECOND_WIND_PROJECTION,
-  MAGE_ARMOR_PROJECTION,
-} from "#/projected-compiler-fixtures.ts";
+  ACID_SPLASH_PROJECTED_ACTION,
+  ACTION_SURGE_PROJECTED_ACTION,
+  MAGE_ARMOR_PROJECTED_RECORD,
+  SECOND_WIND_PROJECTED_ACTION,
+} from "#/projected-action-records.ts";
 import {
   type ProjectedExecutableAction,
   type ProjectedPersistentRecord,
@@ -153,14 +153,14 @@ function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
       requireAcidSplash(unit);
       return {
         tag: "CPUExecutable" as const,
-        value: ACID_SPLASH_PROJECTION,
+        value: ACID_SPLASH_PROJECTED_ACTION,
       };
     }),
     Match.when("mage_armor", () => {
       requireMageArmor(unit);
       return {
         tag: "CPUPersistent" as const,
-        value: MAGE_ARMOR_PROJECTION,
+        value: MAGE_ARMOR_PROJECTED_RECORD,
       };
     }),
     Match.exhaustive,
@@ -182,14 +182,14 @@ function compileProjectedClassFeature(
       requireSecondWind(unit);
       return {
         tag: "CPUExecutable" as const,
-        value: FIGHTER_SECOND_WIND_PROJECTION,
+        value: SECOND_WIND_PROJECTED_ACTION,
       };
     }),
     Match.when("fighter_action_surge_l2", () => {
       requireActionSurge(unit);
       return {
         tag: "CPUExecutable" as const,
-        value: FIGHTER_ACTION_SURGE_L2_PROJECTION,
+        value: ACTION_SURGE_PROJECTED_ACTION,
       };
     }),
     Match.exhaustive,

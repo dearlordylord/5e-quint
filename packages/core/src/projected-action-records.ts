@@ -3,7 +3,7 @@ import type {
   ProjectedPersistentRecord,
 } from "#/projected-executable.ts";
 
-export const ACID_SPLASH_PROJECTION: ProjectedExecutableAction = {
+export const ACID_SPLASH_PROJECTED_ACTION: ProjectedExecutableAction = {
   source: { unitId: "acid_splash", unitKind: "PUKSpell" },
   activationCost: "PACAction",
   resourceGate: { tag: "PRGNone" },
@@ -47,7 +47,7 @@ export const ACID_SPLASH_PROJECTION: ProjectedExecutableAction = {
   ],
 };
 
-export const FIGHTER_SECOND_WIND_PROJECTION: ProjectedExecutableAction = {
+export const SECOND_WIND_PROJECTED_ACTION: ProjectedExecutableAction = {
   source: { unitId: "fighter_second_wind", unitKind: "PUKClassFeature" },
   activationCost: "PACBonusAction",
   resourceGate: {
@@ -101,7 +101,7 @@ export const FIGHTER_SECOND_WIND_PROJECTION: ProjectedExecutableAction = {
   ],
 };
 
-export const FIGHTER_ACTION_SURGE_L2_PROJECTION: ProjectedExecutableAction = {
+export const ACTION_SURGE_PROJECTED_ACTION: ProjectedExecutableAction = {
   source: { unitId: "fighter_action_surge_l2", unitKind: "PUKClassFeature" },
   activationCost: "PACFree",
   resourceGate: {
@@ -141,7 +141,7 @@ export const FIGHTER_ACTION_SURGE_L2_PROJECTION: ProjectedExecutableAction = {
   ],
 };
 
-export const MAGE_ARMOR_PROJECTION: ProjectedPersistentRecord = {
+export const MAGE_ARMOR_PROJECTED_RECORD: ProjectedPersistentRecord = {
   tag: "PPRSetBaseAc",
   value: {
     source: { unitId: "mage_armor", unitKind: "PUKSpell" },

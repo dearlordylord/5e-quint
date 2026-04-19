@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ACID_SPLASH_PROJECTION,
-  FIGHTER_ACTION_SURGE_L2_PROJECTION,
-  FIGHTER_SECOND_WIND_PROJECTION,
-} from "#/projected-compiler-fixtures.ts";
+  ACID_SPLASH_PROJECTED_ACTION,
+  ACTION_SURGE_PROJECTED_ACTION,
+  SECOND_WIND_PROJECTED_ACTION,
+} from "#/projected-action-records.ts";
 import {
   ProjectedInterpreterError,
   interpretProjectedAction,
@@ -35,7 +35,7 @@ function runtimeForTests(
 describe("projected mechanic interpreter", () => {
   it("interprets Acid Splash into spend, save-gate, and damage transitions", () => {
     const interpreted = interpretProjectedAction(
-      ACID_SPLASH_PROJECTION,
+      ACID_SPLASH_PROJECTED_ACTION,
       {
         actorId: "caster",
         characterLevel: 11,
@@ -98,7 +98,7 @@ describe("projected mechanic interpreter", () => {
 
   it("interprets Second Wind into spend, resource, self, and heal transitions", () => {
     const interpreted = interpretProjectedAction(
-      FIGHTER_SECOND_WIND_PROJECTION,
+      SECOND_WIND_PROJECTED_ACTION,
       {
         actorId: "fighter",
         characterLevel: 5,
@@ -124,7 +124,7 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITSpendResourceUse",
         value: {
-          gate: FIGHTER_SECOND_WIND_PROJECTION.resourceGate,
+          gate: SECOND_WIND_PROJECTED_ACTION.resourceGate,
         },
       },
       {
@@ -150,7 +150,7 @@ describe("projected mechanic interpreter", () => {
 
   it("interprets Action Surge into reducer-consumable extra-action transitions", () => {
     const interpreted = interpretProjectedAction(
-      FIGHTER_ACTION_SURGE_L2_PROJECTION,
+      ACTION_SURGE_PROJECTED_ACTION,
       {
         actorId: "fighter",
         characterLevel: 2,
@@ -166,7 +166,7 @@ describe("projected mechanic interpreter", () => {
       {
         tag: "PITSpendResourceUse",
         value: {
-          gate: FIGHTER_ACTION_SURGE_L2_PROJECTION.resourceGate,
+          gate: ACTION_SURGE_PROJECTED_ACTION.resourceGate,
         },
       },
       {
@@ -283,7 +283,7 @@ describe("projected mechanic interpreter", () => {
   it("fails closed when a self attachment resolves to the wrong creature", () => {
     expect(() =>
       interpretProjectedAction(
-        FIGHTER_SECOND_WIND_PROJECTION,
+        SECOND_WIND_PROJECTED_ACTION,
         {
           actorId: "fighter",
           characterLevel: 1,
@@ -301,7 +301,7 @@ describe("projected mechanic interpreter", () => {
   it("fails closed when runtime omits a required spell save DC", () => {
     expect(() =>
       interpretProjectedAction(
-        ACID_SPLASH_PROJECTION,
+        ACID_SPLASH_PROJECTED_ACTION,
         {
           actorId: "caster",
           characterLevel: 1,
@@ -320,7 +320,7 @@ describe("projected mechanic interpreter", () => {
   it("fails closed when runtime omits an amount resolution for a failed Acid Splash target", () => {
     expect(() =>
       interpretProjectedAction(
-        ACID_SPLASH_PROJECTION,
+        ACID_SPLASH_PROJECTED_ACTION,
         {
           actorId: "caster",
           characterLevel: 5,

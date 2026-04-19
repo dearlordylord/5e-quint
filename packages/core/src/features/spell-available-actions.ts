@@ -17,6 +17,7 @@ import type {
 import { difficultyClass, spellId, spellSlotLevel } from "#/types.ts";
 
 export const MODELED_PREPARED_SPELLS = [
+  "acid_splash",
   "bless",
   "burning_hands",
   "fireball",
@@ -71,9 +72,9 @@ const MODELED_PREPARED_SPELLS_BY_CLASS = {
   paladin: ["bless"],
   ranger: [],
   rogue: [],
-  sorcerer: ["burning_hands", "fireball", "haste"],
+  sorcerer: ["acid_splash", "burning_hands", "fireball", "haste"],
   warlock: [],
-  wizard: ["burning_hands", "fireball", "haste", "hold_person"],
+  wizard: ["acid_splash", "burning_hands", "fireball", "haste", "hold_person"],
 } as const satisfies Readonly<
   Record<ClassName, ReadonlyArray<ModeledPreparedSpell>>
 >;
