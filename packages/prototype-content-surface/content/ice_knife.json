@@ -1,0 +1,97 @@
+{
+  "description": "You create a shard of ice and fling it at one creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 Piercing damage. Hit or miss, the shard then explodes. The target and each creature within 5 feet of it must succeed on a Dexterity saving throw or take 2d6 Cold damage. Using a Higher-Level Spell Slot: The Cold damage increases by 1d6 for each spell slot level above 1.",
+  "id": "ice_knife",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a drop of water or a piece of ice",
+      "s": true,
+      "v": false
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 1,
+                "dieSize": 10
+              },
+              "kind": "fixed"
+            },
+            "damageType": "piercing",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      },
+      {
+        "ability": "dex",
+        "attachment": {
+          "kind": "area",
+          "origin": {
+            "kind": "on_primary_target"
+          },
+          "shape": {
+            "kind": "emanation",
+            "radiusFeet": 5
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "startingAtLevel": 1
+          },
+          "damageType": "cold",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "none"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Ice Knife",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Ice Knife"
+  }
+}

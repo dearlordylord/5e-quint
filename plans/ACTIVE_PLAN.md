@@ -163,7 +163,7 @@ The repo has two parallel per-unit directories that both look like "content" but
 
 | Path | What it is | Unit granularity | Produced by | Consumed by |
 |---|---|---|---|---|
-| `packages/prototype-content-surface/content/<slug>.{dhall,json,trace.md}` | **Authored corpus.** One entry per actually-authored unit (131 entries currently). `.dhall` is the source-of-truth mechanics authoring in Dhall; `.json` is `dhall-to-json --omit-empty` output; `.trace.md` is the tracer's mermaid-renderable dependency graph (gitignored). | Only authored units (subset of all SRD units). | Human author writes `.dhall`; regression sweep produces `.json`; `src/run.ts` produces `.trace.md`. | The tracer validates the atom graph; downstream (Phase D) the `.json` is consumed by the content-driven runtime. |
+| `packages/prototype-content-surface/content/<slug>.{dhall,json,trace.md}` | **Authored corpus.** One entry per actually-authored unit (131 entries currently). `.dhall` is the source-of-truth mechanics authoring in Dhall; `.json` is `dhall-to-json --omit-empty` output; `.trace.md` is the tracer's mermaid-renderable dependency graph (gitignored). | Only authored units (subset of all SRD units). | Human author writes `.dhall`; regression sweep produces `.json`; `src/run.ts` produces `.trace.md`. | The tracer validates the atom graph; downstream the `.json` is consumed by projected-runtime work such as the EPT tracer bullet and later batches. |
 | `scripts/content-surface-survey/results-srd/<slug>/{prompt.md,result.json,codex-out.json,verdict.json}` | **Survey mining outputs.** One subdir per SRD unit SCANNED. Not content — proposals and verdicts from the LLM-sub-agent mining pipeline. | Every SRD unit in the current queue (882 distinct SRD rows as of the 2026-04-17 rerun), plus re-run history. | `run-survey.sh` + `worker.sh` orchestrate; each worker feeds the SRD text to an LLM sub-agent with `prompt-template.md`, records the proposal + verdict. | `aggregate.ts` rolls up into `survey-results-srd.jsonl` + `REPORT_SRD.md`; planners read the report to decide what to author or widen next. |
 
 One-liner: **`packages/prototype-content-surface/content/`** is what we have authored. **`scripts/content-surface-survey/results-srd/`** is what the machine suggests we COULD author + whether the current surface supports it. The mining pipeline is the "what's missing" oracle; the authored corpus is the "what's shipped" artifact.
@@ -209,7 +209,7 @@ Current architecture decisions for this batch:
 Planning notes:
 
 - Prior-batch completion notes remain in git history. Do not re-open monster/spell/character work in this file.
-- The surface owns the vocabulary; Quint integration follows in Phase D. Do not start Phase D work before `CSC2` ships a frozen surface tag — the generator must be driven by a stable types.ts.
+- The surface owns the vocabulary; the active runtime proof now follows through the EPT tracer-bullet batch, not through the deferred whole-core Phase D rehaul.
 - Tasks are sized for 1-2h clean input/output where possible. Class-design tasks (CSB3..CSB8) may legitimately take 3-4h including research; if a task overruns, split into a `-design` sub-task (research + shape) and a `-implement` sub-task rather than widening the single task.
 - Magic-items and feats batches can be parallelized with class tasks if the implementer has agent capacity; they have no inter-batch dependencies.
 - The unattended convergence loop now runs in `.worktrees/auto-close-loop` on branch `auto-close-loop`. Treat its `.output/content-surface-closure/` telemetry and per-batch commits as the operational driver for convergence work; this file remains the roadmap and freeze gate, not the runner control surface.
@@ -247,7 +247,7 @@ Scope:
 - The vocabulary has grown substantially since the last mining run (15+ new widenings landed, including `spawned_creature`, `reanimated_creature`, `templated_multi_spawn`, `transform_target`, `ability_check_gate`, multi-op `operations`, `ReadonlyNonEmptyArray<T>`, `saveAppliesIf`, `autoSuccessIfCasterSlotGte`, `death_saving_throw` RollKind, etc.). A large share of units previously verdict'd `surface_widening` or `atom_widening` are now cleanly encodable.
 - Refresh `scripts/content-surface-survey/survey-results-srd.jsonl` + `scripts/content-surface-survey/REPORT_SRD.md`.
 - Publish the delta — how many units shifted clean / surface / atom / dm-agenda / structural — into a one-page summary note committed under `plans/`.
-- **Iteration model reminder:** this is the FIRST of two scheduled mining passes. CSC1 does the SECOND (post-Phase-B authoring, pre-freeze). A THIRD pass is not scheduled in this plan because Phase D's rehaul should run against a frozen surface; if Phase D runtime exposes new atom pressure, the Phase D Preamble guardrail spawns a CSA-variant fixup task with its own re-mine.
+- **Iteration model reminder:** this is the FIRST of two scheduled mining passes. CSC1 does the SECOND (post-Phase-B authoring, pre-freeze). Additional mining beyond that is not automatically scheduled; if the EPT tracer bullet exposes real new surface pressure, open a targeted widening task instead of assuming a broad whole-plan rerun.
 
 Input:
 
@@ -1530,17 +1530,17 @@ Status: `blocked`
 
 Depends on: `CSC1`
 
-Blocks: `CSD1`
+Blocks: none
 
 Scope:
 
 - If CSC1 declares convergence: tag the current commit as `surface-v1-converged`.
-- Write `plans/SURFACE_V1_HANDOFF.md` — the handoff to Phase D:
+- Write `plans/SURFACE_V1_HANDOFF.md` as a frozen-surface handoff artifact for whatever post-convergence batch comes next:
   - frozen types.ts SHA;
   - authored-corpus summary (count by kind);
   - DM-agenda + structural carveouts explicitly listed;
-  - how the generator should handle the Dhall Optional-field trick in upstream content;
-  - Quint integration order (which types.ts sections become Quint variants first).
+  - the current tracer-bullet-proven projected subset;
+  - notes for any future post-EPT expansion batch.
 
 Input:
 
@@ -1557,7 +1557,7 @@ Next action:
 
 Research note:
 
-- The handoff doc is the single input Phase D operates from. Make it self-contained.
+- The handoff doc is no longer a gate to an immediate whole-core rehaul. It is simply the frozen-surface artifact for later planning.
 
 Verification requirements:
 
@@ -2047,4 +2047,4 @@ Handoff readiness: deferred.
 
 ---
 
-**End of active plan.** When all 31 tasks are `done`, surface-v1 is converged and `packages/core/` is fully content-driven. Next batch (Phase 2+: MCP public casting surface, XPHB authoring lane, engine UX, app integration) is outside this plan's scope — name it in a new batch header when reached.
+**End of active plan.** The active batch is the EPT tracer-bullet path plus continuing surface-convergence work. The deferred CSD tasks are historical placeholders only and must not be picked up unless the owner explicitly revives them in a post-EPT batch.
