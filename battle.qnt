@@ -190,6 +190,8 @@ module battle {
     pCanProvideComponents(prepared.creature, req.requiresVerbal, req.requiresSomatic, battleHasFreeHand(prepared))
   }
 
+  /// FIXME: here and in many other places, those are the facts from the Sufrace. moreover, I think that projected-executable.qnt won't make much sense when battle and character started working with the Surface vocabulary.
+  /// FIXME: we may want t rewrite the whole file. this won't be a drastic decision.
   pure def readyableSpellBaseLevel(spellName: str): int =
     if (spellName == "burning_hands") 1
     else if (spellName == "fireball") 3

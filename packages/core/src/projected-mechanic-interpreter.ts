@@ -49,6 +49,8 @@ export function interpretProjectedAction(
   actor: ProjectedInterpreterActor,
   runtime: ProjectedExecutionRuntime,
 ): ProjectedInterpretation {
+
+  // FIXME: what happens when we add surface handling but forget to .push
   const transitions: ProjectedInterpreterTransition[] = [];
 
   if (action.activationCost !== "PACFree") {

@@ -411,6 +411,7 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      // FIXME: so we have CreatureActionToken and BattleActionToken. first of all why is the distinction? comes from Quint? secondly, why BATTLE_ACTION_SURGE, BATTLE_ENTER_RAGE etc are Battle action tolens and not Creature action tolens. third, why they exist at all and not are authored content surface?
       readonly type: "BATTLE_ACTION_SURGE";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -432,6 +433,7 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
+      // FIXME: this is a good example of a non-authored content: grapple is a very base of the rules to encode directly into core
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
@@ -4014,6 +4016,7 @@ function hitReactionToken(
 
 function damageReactionToken(
   actorId: string,
+  // FIXME: UncannyDodge, too, is a character ability and was supposed to be a surface...
   reaction: "RUncannyDodge" | "RDeflectAttacks",
 ): BattleActionToken {
   return Match.value(reaction).pipe(
@@ -6771,6 +6774,7 @@ export function resolveAction(
   tags: ReadonlySet<string>,
   token: ResolvedActionToken,
 ): ResolutionRequest | ActionResolutionError {
+  // FIXME: why not compile time check in this function at least? quint parity?
   if (token.scope === "battle") {
     return {
       code: "ACTION_NOT_SUPPORTED",
@@ -6779,6 +6783,7 @@ export function resolveAction(
   }
   if (token.type === "CAST_PREPARED_SPELL") {
     if (
+      // FIXME: only null slots?? I don't get it
       token.slotLevel == null &&
       canUseProjectedPreparedSpell(context, token.spellName)
     ) {

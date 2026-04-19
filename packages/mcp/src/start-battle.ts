@@ -17,7 +17,9 @@ const InitiativeRollSchema = Schema.Number.pipe(
 );
 
 export const StartBattleInputSchema = Schema.Struct({
+  // FIXME: why only 1 fighter, we don't want that. we want to add as many fighters as we want
   fighterId: Schema.String,
+  // FIXME: same as above. also, fighter and monster - no difference here. we don't have "fighters" vs "monsters" in dnd. we do have characters of creatures of course, but that in battle is too not that relevant distinction: monsters can battle with monsters, characters with characters...
   monsterId: Schema.String,
   fighterInitiativeRoll: Schema.optional(InitiativeRollSchema),
   fighterInitiativeRollB: Schema.optional(InitiativeRollSchema),
