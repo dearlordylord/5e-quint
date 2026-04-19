@@ -45,8 +45,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 1,  "id": "CSA2",  "status": "done", "title": "Rescope Post-CSA1 Clean Queue Batch 1" },
     { "number": 2,  "id": "CSA3",  "status": "done", "title": "Retire Empty Post-CSA1 Clean Queue Batch 2 Slot" },
     { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
-    { "number": 4,  "id": "EPT1",  "status": "ready-for-implementation-after-light-research", "title": "Freeze Executable Projection First Slice Scope" },
-    { "number": 5,  "id": "EPT2",  "status": "blocked", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
+    { "number": 4,  "id": "EPT1",  "status": "done", "title": "Freeze Executable Projection First Slice Scope" },
+    { "number": 5,  "id": "EPT2",  "status": "ready-for-implementation-after-light-research", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
     { "number": 6,  "id": "EPT3",  "status": "blocked", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "blocked", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "blocked", "title": "Build Surface-To-Projection Compiler" },
@@ -114,8 +114,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 1 | CSA2 - Rescope Post-CSA1 Clean Queue Batch 1 | done | CSA1 | none | Verified the rerun's 116 `clean` rows all already exist under `packages/prototype-content-surface/content/`, so there is no remaining post-CSA1 clean-queue authoring batch to publish. The magic-item-heavy rerun note is still useful for family ownership, but it does not create runnable CSA2 work. | Landed on 2026-04-17. Use `plans/SURVEY_RERUN_2026-04-17.md` only as queue context; do not schedule a clean-batch authoring task without re-checking authored overlap first. |
 | 2 | CSA3 - Retire Empty Post-CSA1 Clean Queue Batch 2 Slot | done | CSA2 | none | Retired. After CSA2's overlap check proved the clean queue is already fully authored, there is no second post-CSA1 clean batch to author. If a future rerun creates un-authored `clean` rows, add a new task instead of reusing this stale slot. | Landed on 2026-04-17. |
 | 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
-| 4 | EPT1 - Freeze Executable Projection First Slice Scope | ready-for-implementation-after-light-research | none | EPT2, EPT3 | Land the first-slice scope file naming the exact units, projected node kinds, persistent record kinds, runtime facts, and out-of-scope items. Use [DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md](/workspace/typescript/dnd-design-domain-model/DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md) and [plans/EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md](/workspace/typescript/dnd-design-domain-model/plans/EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md) as the source design. | Highest priority. This is the new active entry point. |
-| 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | blocked | EPT1 | EPT3, EPT5 | Confirm the existing `acid_splash` authored unit as the in-scope spell-side executable pressure case for the safe SRD tracer bullet. Keep the projected executable model graph-ready even though this first spell is not graph-shaped. | Blocked on EPT1 scope freeze. |
+| 4 | EPT1 - Freeze Executable Projection First Slice Scope | done | none | EPT2, EPT3 | Landed [plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md), freezing the first-slice units, executable node kinds, persistent record kinds, runtime-fact boundary, and explicit exclusions. The slice keeps fighter resource shapes aligned with the authored `threshold_tiers` records and does not bless duplicate runtime facts for values already owned by battle or character state. | Landed on 2026-04-18. |
+| 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | ready-for-implementation-after-light-research | EPT1 | EPT3, EPT5 | Confirm the existing `acid_splash` authored unit as the in-scope spell-side executable pressure case for the safe SRD tracer bullet. Keep the projected executable model graph-ready even though this first spell is not graph-shaped. | Unblocked by EPT1. Ready for the spell-side confirmation pass. |
 | 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | blocked | EPT1, EPT2 | EPT4, EPT5 | Define the closed Quint-side projected subsets for the tracer bullet: executable node kinds for `attack_roll` / `save_gate` / `damage` / `heal_hp` / `grant_extra_action`, plus the minimal persistent shape for `Mage Armor`. Keep the model graph-ready even though the first safe SRD spell case is linear. | Blocked on scope freeze + spell-side unit confirmation. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | blocked | EPT3 | EPT5 | Define the TS projected record types matching the Quint subset one-for-one, with source-preserving projection metadata and no stringly closed-domain fields. | Blocked on EPT3. |
 | 8 | EPT5 - Build Surface-To-Projection Compiler | blocked | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Blocked on spell-side unit confirmation + both projected subset definitions. |
@@ -401,7 +401,7 @@ Handoff readiness:
 
 ### Task 4 - EPT1 - Freeze Executable Projection First Slice Scope
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -432,7 +432,7 @@ Output:
 
 Next action:
 
-- Write the scope file with the closed subset and explicit exclusions.
+- Landed in [plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md).
 
 Verification requirements:
 
@@ -442,11 +442,11 @@ Verification requirements:
 
 Handoff readiness:
 
-- Ready. Highest-priority active task.
+- Landed on 2026-04-18. EPT2 may proceed.
 
 ### Task 5 - EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT1`
 
@@ -470,7 +470,7 @@ Output:
 
 Next action:
 
-- After EPT1 lands, confirm `acid_splash` as the spell-side executable case and keep the first slice free of non-SRD dependencies.
+- Confirm `acid_splash` as the spell-side executable case and keep the first slice free of non-SRD dependencies.
 
 Verification requirements:
 
@@ -482,7 +482,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT1 scope freeze.
+- Ready after EPT1 scope freeze.
 
 ### Task 6 - EPT3 - Define Quint Projected Executable And Persistent Subsets
 
