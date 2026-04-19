@@ -1,0 +1,110 @@
+{
+  "description": "This object appears as a wooden box that measures 12 inches long, 6 inches wide, and 6 inches deep. It weighs 4 pounds and floats. It can be opened to store items inside. This item also has three command words, each requiring a Magic action to use. First Command Word. The box unfolds into a Rowboat. Second Command Word. The box unfolds into a Keelboat. Third Command Word. The Folding Boat folds back into a box if no creatures are aboard. Any objects in the vessel that can't fit inside the box remain outside the box as it folds. Any objects in the vessel that can fit inside the box do so. When the box becomes a vessel, its weight becomes that of a normal vessel its size, and anything that was stored in the box remains in the boat. Statistics for the Rowboat and Keelboat appear in Equipment. If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_folding_boat",
+  "kind": "magic_item",
+  "mechanics": {
+    "family": "composite",
+    "parts": [
+      {
+        "activationCost": {
+          "action": "magic",
+          "kind": "standard_action"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "alter_item_kind",
+                "newKind": "rowboat"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "never"
+        },
+        "resource": {
+          "cap": {
+            "kind": "unlimited"
+          },
+          "kind": "use_count"
+        }
+      },
+      {
+        "activationCost": {
+          "action": "magic",
+          "kind": "standard_action"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "alter_item_kind",
+                "newKind": "keelboat"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "never"
+        },
+        "resource": {
+          "cap": {
+            "kind": "unlimited"
+          },
+          "kind": "use_count"
+        }
+      },
+      {
+        "activationCost": {
+          "action": "magic",
+          "kind": "standard_action"
+        },
+        "family": "activation",
+        "phases": [
+          {
+            "attachment": {
+              "kind": "self"
+            },
+            "effects": [
+              {
+                "kind": "alter_item_kind",
+                "newKind": "box"
+              }
+            ],
+            "kind": "direct"
+          }
+        ],
+        "resetCadence": {
+          "kind": "never"
+        },
+        "resource": {
+          "cap": {
+            "kind": "unlimited"
+          },
+          "kind": "use_count"
+        }
+      }
+    ]
+  },
+  "name": "Folding Boat",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Folding Boat"
+  },
+  "rarity": "rare",
+  "requiresAttunement": false
+}

@@ -5,30 +5,24 @@
   "relations_used": [],
   "proposed_widenings": [
     {
-      "kind": "new_variant",
-      "name": "AreaShapeDescriptor.ring",
-      "justification": "Blade Barrier's ringed form is a hollow ring/annulus (60 ft diameter, 20 ft high, 5 ft thick). No existing AreaShapeDescriptor covers a hollow ring — cylinder is a filled circle, not a ring. The cast-time shape choice between straight and ring requires both shapes to be encodable.",
-      "evidence": "a ringed wall up to 60 feet in diameter, 20 feet high, and 5 feet thick"
-    },
-    {
-      "kind": "new_variant",
-      "name": "AreaShapeDescriptor.wall",
-      "justification": "The straight-wall form (100 ft long, 20 ft high, 5 ft thick) has a height dimension that the existing 'line' shape lacks. The line shape only carries lengthFeet and widthFeet. Wall_of_stone used line as an approximation but noted the height gap; Blade Barrier's 20 ft height is mechanically significant (it determines whether creatures can fly over it).",
-      "evidence": "a straight wall up to 100 feet long, 20 feet high, and 5 feet thick"
-    },
-    {
       "kind": "new_atom",
       "name": "grant_cover",
-      "justification": "Blade Barrier explicitly grants Three-Quarters Cover to creatures using the wall. No existing EffectAtom covers granting a specific cover tier to creatures in or behind an area. This is distinct from block_targeting (which prevents targeting entirely) — Three-Quarters Cover imposes a -5 penalty to attack rolls and saving throws from attacks that pass through it, not a full block.",
+      "justification": "Blade Barrier explicitly grants Three-Quarters Cover to creatures in or behind the wall. Cover is a mechanical effect that modifies attack rolls against affected creatures. No cover-granting atom exists in the v4 taxonomy or the current EffectAtom union.",
       "evidence": "The wall provides Three-Quarters Cover"
     },
     {
       "kind": "new_variant",
-      "name": "OngoingOperation.once_per_turn_dedup",
-      "justification": "The spell fires the same save on three distinct triggers (initial placement, enters area, ends turn in area) but caps the total at one save per creature per turn. The current OngoingOperation surface has no deduplication predicate — multiple operations can fire independently on the same turn. Spirit Guardians has the same gap. A 'once_per_turn' constraint on the operation group is needed.",
+      "name": "AreaShapeDescriptor.ring",
+      "justification": "The spell offers a ringed wall option (60 ft diameter, 20 ft high, 5 ft thick). This is a hollow cylindrical shell — creatures inside the ring are NOT in the wall's space. The existing `cylinder` shape is a solid volume and would incorrectly mark interior creatures as being in the wall. A new area shape variant is needed.",
+      "evidence": "a ringed wall up to 60 feet in diameter, 20 feet high, and 5 feet thick"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.oncePer",
+      "justification": "Blade Barrier fires a save on entry AND at end of turn, but the SRD caps this at once per turn regardless of how many triggers fire. Encoding both `on_creature_enters_area` and `on_creature_ends_turn_in_area` without a deduplication mechanism implies a creature could save twice on the same turn. A new field (e.g., `oncePerTurn: true`) on OngoingOperation is needed to express this cap.",
       "evidence": "A creature makes that save only once per turn."
     }
   ],
   "confidence": "high",
-  "notes": "Blade Barrier fits the ongoing_effect family structurally: area attachment, multiple OngoingTriggers (on_creature_enters_area + on_creature_ends_turn_in_area), save_gate effect with half_damage on success, area_is_difficult_terrain passive. The blocking gaps are: (1) the ring wall shape — no ring/annulus AreaShapeDescriptor variant, only filled cylinder exists; (2) Three-Quarters Cover — no grant_cover atom in v4; (3) once-per-turn deduplication across multiple triggers, noted as a gap in spirit_guardians encoding too. The straight-wall shape could use line (as wall_of_stone did) but the ring alternative requires a new shape variant, so the cast-time shape choice cannot be encoded honestly."
+  "notes": "The core damage mechanic (Dex save, 6d10 Force, half on success), `area_is_difficult_terrain`, and `initialPhase` for creatures already in the wall at cast time all map cleanly to existing surface shapes. The blocking issues are: (1) `grant_cover` is not in v4 and cannot be approximated without a new atom; (2) the ring wall shape requires a new AreaShapeDescriptor variant; (3) encoding both entry and end-of-turn triggers without once-per-turn deduplication would produce a mechanically incorrect trace. Not encoding to avoid a misleading trace."
 }

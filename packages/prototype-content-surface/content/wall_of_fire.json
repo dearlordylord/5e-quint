@@ -1,0 +1,146 @@
+{
+  "description": "You create a wall of fire on a solid surface within range. You can make the wall up to 60 feet long, 20 feet high, and 1 foot thick, or a ringed wall up to 20 feet in diameter, 20 feet high, and 1 foot thick. The wall is opaque and lasts for the duration. When the wall appears, each creature in its area makes a Dexterity saving throw, taking 5d8 Fire damage on a failed save or half as much damage on a successful one. One side of the wall, selected by you when you cast this spell, deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall. A creature takes the same damage when it enters the wall for the first time on a turn or ends its turn there. The other side of the wall deals no damage. Using a Higher-Level Spell Slot: The damage increases by 1d8 for each spell slot level above 4.",
+  "id": "wall_of_fire",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "point_within_range"
+      },
+      "shape": {
+        "kind": "choice",
+        "options": [
+          {
+            "kind": "line",
+            "lengthFeet": 60,
+            "widthFeet": 1
+          },
+          {
+            "heightFeet": 20,
+            "kind": "cylinder",
+            "radiusFeet": 10
+          }
+        ]
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a piece of charcoal",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "line",
+              "lengthFeet": 60,
+              "widthFeet": 1
+            },
+            {
+              "heightFeet": 20,
+              "kind": "cylinder",
+              "radiusFeet": 10
+            }
+          ]
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "amount": {
+          "axis": "slot",
+          "base": {
+            "dice": 5,
+            "dieSize": 8
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 4
+        },
+        "damageType": "fire",
+        "kind": "damage"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 4,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 5,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 4
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 5,
+              "dieSize": 8
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1
+            },
+            "startingAtLevel": 4
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Wall of Fire",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-W#Wall of Fire"
+  }
+}

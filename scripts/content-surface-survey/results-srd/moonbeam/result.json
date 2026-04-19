@@ -1,1 +1,57 @@
-{"unit_slug":"moonbeam","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "moonbeam",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "half_damage",
+    "post_action_window",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "revert_transformation",
+      "justification": "On a failed Con save, a shape-shifted creature (e.g. under Polymorph) reverts to its true form. No existing atom models forced reversion of a transformation effect. The closest candidates — end_ongoing_spells (too broad: ends all spells) and transform_target (applies a polymorph outward, not inward) — do not honestly represent 'undo the current transformation on this target'. Needed as a first-class effect atom targeting the creature's active transformation.",
+      "evidence": "On a failed save, a creature takes 2d10 Radiant damage, and if the creature is shape-shifted (as a result of the Polymorph spell, for example), it reverts to its true form and can't shape-shift until it leaves the Cylinder."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_shapeshifting",
+      "justification": "After reverting, the creature cannot shape-shift again until it exits the cylinder. This is a persistent area-scoped suppressor on the shapeshifting action — distinct from any existing condition (none of the 15 SRD conditions match) and distinct from apply_condition or block_targeting. It is conditional on the creature remaining inside the area attachment.",
+      "evidence": "…it reverts to its true form and can't shape-shift until it leaves the Cylinder."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.usageLimit: once_per_turn",
+      "justification": "Moonbeam (and Cloudkill, Spirit Guardians) fire the save at most once per turn per creature even if multiple triggers (enter + end-of-turn) would both apply on the same turn. There is no rate-limiting field on OngoingOperation. The existing UsageLimit type (once_per_turn) lives on mastery mechanics and ActivatedAbilityMechanics but not on OngoingOperation.",
+      "evidence": "A creature makes this save only once per turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger: on_area_repositioned_onto_creature",
+      "justification": "The save fires when the spell's area moves into a creature's space (not when the creature moves into the area). The existing on_creature_enters_area covers voluntary creature movement; there is no trigger for the symmetric case where the area moves to envelop a stationary creature. The reposition_attachment effect atom exists but no associated trigger fires for creatures newly engulfed by the repositioned area.",
+      "evidence": "A creature also makes this save when the spell's area moves into its space…"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core mechanics (ongoing_effect, cylinder area, Con save, 2d10 radiant with slot scaling, initialPhase) encode cleanly. Two operations authored: on_creature_enters_area and on_creature_ends_turn_in_area — both homogeneous save_gate types. Omitted from Dhall (encodable but require heterogeneous list Optional trick): emit_light (brightRadiusFeet=0, dimAdditionalFeet=5 for dim-light-only) and on_caster_spends_action → reposition_attachment (maxMoveFeet=60). The prototype content surface moonbeam.dhall incorrectly used on_attached_turn_start (fires at turn START) instead of on_creature_ends_turn_in_area (fires at turn END); fixed in this encoding. Tracer note: scale_die_count scaling emitted only for initialPhase damage node; ongoing save_gate branches do not emit scaling nodes (tracer gap, not a content/schema issue)."
+}

@@ -1,126 +1,79 @@
-# Proposal: Blade Barrier surface gaps
+# Proposal: Blade Barrier gaps
 
 ## Unit
 
-**Blade Barrier** — SRD 5.2.1, Level 6 Evocation spell.
+- **Slug**: `blade_barrier`
+- **Kind**: spell / ongoing_effect (Level 6 Evocation, Concentration 10 min)
+- **Outcome**: `atom_widening`
 
-## Outcome
+## What fits
 
-`atom_widening` — Three-Quarters Cover requires a new v4 atom; ring wall shape requires a new `AreaShapeDescriptor` variant; once-per-turn deduplication is a missing surface constraint.
+The following mechanics map cleanly to existing surface shapes:
 
-## Structural fit
+| Mechanic | Surface shape |
+|---|---|
+| Dex save, 6d10 Force damage, half on success | `save_gate` with `damage` + `half_damage` |
+| Initial save for creatures in wall at cast time | `OngoingEffectMechanics.initialPhase` (save_gate) |
+| Save when entering wall | `on_creature_enters_area` trigger + `save_gate` effect |
+| Save when ending turn in wall | `on_creature_ends_turn_in_area` trigger + `save_gate` effect |
+| Wall space is Difficult Terrain | `area_is_difficult_terrain` |
+| Concentration, up to 10 minutes | existing concentration duration |
+| Area attachment, point-within-range origin | `area` attachment |
 
-Blade Barrier is an `ongoing_effect` spell. The mechanics family fits:
+## Blocking gaps (encoding withheld)
 
-- Area attachment (wall footprint)
-- Initial phase: creatures in the wall at cast time make a Dex save
-- Two ongoing triggers: `on_creature_enters_area` and `on_creature_ends_turn_in_area` (both exist in types.ts)
-- Save gate: Dex vs caster spell save DC, 6d10 Force on fail, half on success
-- Passive: `area_is_difficult_terrain` (atom exists)
+### 1. `grant_cover` — new EffectAtom (atom_widening)
 
-The blocking gaps prevent honest encoding.
+**SRD text**: "The wall provides Three-Quarters Cover"
 
-## Gap 1: Ring wall shape (surface_widening)
+Three-Quarters Cover is a mechanical rule that grants +5 to AC and Dexterity saving throws for creatures in the wall or behind it (SRD 5.2.1 Playing-the-Game, Cover). This is not flavor — it directly affects attack roll outcomes. No atom exists in the v4 taxonomy or in `EffectAtom` to express a cover grant.
 
-The spell offers a cast-time choice between two wall forms:
-
-- **Straight**: 100 ft long, 20 ft high, 5 ft thick
-- **Ring**: 60 ft diameter, 20 ft high, 5 ft thick
-
-The cast-time choice is encodable via `AreaShapeSpec.choice`. The straight wall could use `line` (precedent: `wall_of_stone.dhall`, which noted the missing height dimension but used it anyway as an approximation). The **ring wall** has no matching shape. `cylinder` is a filled disk — not a hollow ring/annulus. There is no `ring` or `annulus` variant in `AreaShapeDescriptor`.
-
-### Proposed widening
-
-```typescript
-| {
-    readonly kind: "ring";
-    readonly diameterFeet: number;
-    readonly heightFeet: number;
-    readonly thicknessFeet: number;
-  }
-```
-
-Alternatively, a generic `wall` shape with length/height/thickness covering the straight form, paired with `ring` for the hollow form:
-
-```typescript
-| {
-    readonly kind: "wall";
-    readonly lengthFeet: number;
-    readonly heightFeet: number;
-    readonly thicknessFeet: number;
-  }
-| {
-    readonly kind: "ring";
-    readonly diameterFeet: number;
-    readonly heightFeet: number;
-    readonly thicknessFeet: number;
-  }
-```
-
-The `wall` variant with explicit height also resolves the gap noted in `wall_of_stone.dhall` where the 20 ft height was unrepresentable.
-
-## Gap 2: Three-Quarters Cover (atom_widening)
-
-The wall provides Three-Quarters Cover. No existing `EffectAtom` expresses granting a cover tier. This is distinct from:
-
-- `block_targeting` — prevents targeting entirely
-- `modify_roll_advantage` — imposes disadvantage
-- `modify_roll_numeric` — adds a numeric modifier
-
-Three-Quarters Cover is an environment property of the wall itself that imposes −5 to attack rolls and saving throws for attacks passing through it (SRD Rules Glossary). It applies to creatures using the wall as cover, not creatures in the wall.
-
-### Proposed widening
-
+**Proposed atom**:
 ```typescript
 | {
     readonly kind: "grant_cover";
-    readonly tier: "half" | "three_quarters" | "total";
+    readonly degree: "half" | "three_quarters" | "total";
   }
 ```
 
-Applied as an ongoing passive effect on the area attachment, it marks the area as providing a specified cover tier to creatures sheltering behind it.
+This is the most common pressure point for wall-type spells (Wall of Fire, Wall of Stone, Wall of Ice, Forcecage all also provide cover or blocking). A single cover atom with a `degree` parameter covers all SRD cases.
 
-## Gap 3: Once-per-turn deduplication (surface_widening)
+### 2. `AreaShapeDescriptor.ring` — new area shape variant (surface_widening)
 
-The spell has three triggers that fire the same save:
+**SRD text**: "a ringed wall up to 60 feet in diameter, 20 feet high, and 5 feet thick"
 
-1. Creatures in the wall when it appears (initial phase)
-2. Creature enters the wall's space (`on_creature_enters_area`)
-3. Creature ends its turn in the wall's space (`on_creature_ends_turn_in_area`)
+The ring wall is a **hollow** cylindrical shell. Creatures inside the ring are explicitly NOT in the wall's space — they are enclosed by it. The existing `cylinder` shape is a solid volume; using it would mark interior creatures as occupying the wall, which contradicts the spell. A new descriptor variant is needed.
 
-But: "A creature makes that save only once per turn."
+**Proposed variant**:
+```typescript
+| {
+    readonly kind: "ring";
+    readonly diameterFeet: number;
+    readonly heightFeet: number;
+    readonly thicknessFeet: number;
+  }
+```
 
-The current `OngoingOperation` surface has no mechanism to group multiple operations and cap the total fires per creature per turn. Each operation fires independently. Spirit Guardians (`spirit_guardians.dhall`) documents the same gap — it omitted the `on_creature_enters_area` trigger rather than fire the save twice.
+The cast-time choice between straight wall and ring wall would use the existing `AreaShapeSpec.choice` mechanism once this variant exists.
 
-### Proposed widening
+### 3. Once-per-turn save deduplication — new field on `OngoingOperation` (surface_widening)
 
-A `deduplication` field on `OngoingOperation` or a grouping mechanism:
+**SRD text**: "A creature makes that save only once per turn."
 
+The spell has two ongoing save triggers: `on_creature_enters_area` and `on_creature_ends_turn_in_area`. If a creature enters and ends its turn in the wall on the same turn, only one save fires. The current surface has no mechanism to express this deduplication. Encoding both triggers without it would imply double saves — a false trace.
+
+**Proposed field** on `OngoingOperation`:
 ```typescript
 export type OngoingOperation = {
   readonly trigger: OngoingTrigger;
   readonly predicate?: OngoingPredicate;
   readonly effect: OngoingEffect;
-  readonly deduplication?: { readonly kind: "once_per_turn" };
+  readonly oncePerTurn?: true;  // NEW: deduplicate across triggers within one turn
 };
 ```
 
-When two or more operations in the same spell share `deduplication: { kind: "once_per_turn" }`, the runtime fires the effect at most once per creature per turn regardless of how many triggers activate.
+When `oncePerTurn: true`, the operation fires at most once per creature per turn regardless of how many qualifying triggers fire. This covers Blade Barrier and would also apply to several other wall/area spells that share the same "once per turn" cap idiom (Wall of Fire, Spike Growth, Spirit Guardians).
 
 ## Encoding decision
 
-No `content/blade_barrier.dhall` authored. The ring wall shape has no honest representation, the Three-Quarters Cover atom is missing, and the once-per-turn dedup constraint is absent. Forcing a `line` for both shapes or omitting cover would produce a misleading trace.
-
-If the three widenings above are applied:
-
-1. Add `ring` and `wall` variants to `AreaShapeDescriptor`
-2. Add `grant_cover` to `EffectAtom`
-3. Add `deduplication` to `OngoingOperation`
-
-The spell would encode cleanly as an `ongoing_effect` with:
-
-- `attachment.area.shape.choice` between `{ kind: "wall", ... }` and `{ kind: "ring", ... }`
-- `initialPhase` save_gate for creatures in the wall at cast time
-- Two operations with `on_creature_enters_area` and `on_creature_ends_turn_in_area`, both with `deduplication: { kind: "once_per_turn" }`
-- Passive `area_is_difficult_terrain` operation
-- Passive `grant_cover { tier: "three_quarters" }` operation
+Not encoded. All three gaps are real: (1) omitting `grant_cover` silently drops a mechanical rule that affects attack outcomes; (2) the ring shape cannot be approximated without misrepresenting which creatures are in the wall; (3) encoding both entry and end-of-turn triggers without once-per-turn deduplication produces a mechanically incorrect trace. A partial encoding with these gaps omitted would be misleading rather than merely incomplete.

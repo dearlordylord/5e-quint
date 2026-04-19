@@ -1,108 +1,85 @@
-# Proposal: Ring of Invisibility — Surface Widenings
+# Proposal: Ring of Invisibility — surface_widening
 
 ## Unit
 
-**Ring of Invisibility** — Magic Item, Legendary, Requires Attunement  
-SRD 5.2.1 section: `MagicItems#Ring of Invisibility`
+- **Name**: Ring of Invisibility
+- **Kind**: magic_item
+- **Rarity**: legendary (requires attunement)
+- **Provenance**: SRD 5.2.1 — MagicItems#RingOfInvisibility
 
-## Summary
+## SRD Text
 
-The ring fits the `magic_item` / `activation` family structurally. The effect atom (`apply_condition "invisible"` on self, via a `direct` phase) encodes cleanly. Two surface-level variants block honest encoding.
+> While wearing this ring, you can take a Magic action to give yourself the Invisible condition. You remain Invisible until the ring is removed or until you take a Bonus Action to become visible again.
 
----
+## What fits the current surface
 
-## Gap 1 — Unlimited activation resource
+The ring encodes cleanly in the `activation` family:
 
-### Problem
+| Mechanic | Encoding |
+|---|---|
+| "While wearing this ring" | `condition: { kind: "wearing_item" }` |
+| "take a Magic action" | `activationCost: { kind: "standard_action", action: "magic" }` |
+| Unlimited activations | `resource: { kind: "use_count", cap: { kind: "unlimited" } }` + `resetCadence: { kind: "never" }` |
+| "give yourself the Invisible condition" | `apply_condition: "invisible"` on `attachment: { kind: "self" }` |
+| Requires attunement | `requiresAttunement: true` |
 
-`ActivatedAbilityMechanics` requires `resource: ActivationResource`, which in turn requires a `cap: UseCountCap`. Current variants:
+The tracer ran without errors and produced a well-formed graph.
 
-```typescript
-export type UseCountCap =
-  | { readonly kind: "fixed"; readonly uses: number }
-  | ThresholdTiers<number>
-  | LinearPerLevel<number>
-  | { readonly kind: "proficiency_bonus" }
-  | { readonly kind: "ability_modifier"; readonly ability: Ability };
-```
+## What does NOT fit: missing `DurationEndTrigger` variants
 
-The Ring of Invisibility imposes no per-activation limit. The SRD text gives no charges, no daily limit, no rest reset — the wearer may activate and deactivate freely. Encoding with `fixed: 1` (or any integer) would misrepresent the rule and produce a misleading trace.
+The RAW text specifies two end conditions for the invisible state:
 
-### Proposed widening
+1. **"until the ring is removed"** — item removal as an end trigger
+2. **"until you take a Bonus Action to become visible again"** — voluntary bearer bonus-action deactivation
 
-Add to `UseCountCap`:
+Neither has a matching `DurationEndTrigger` variant. The existing variants are:
 
-```typescript
-| { readonly kind: "unlimited" }
-```
+- `target_makes_attack_roll`
+- `target_deals_damage`
+- `target_casts_spell`
+- `target_dons_armor`
+- `target_damaged_by_caster_or_ally`
+- `target_takes_damage`
+- `caster_recasts_spell`
 
-**Tracer behavior:** When cap is `unlimited`, emit a `use_count` resource node labeled `"unlimited"` with no `persists_until` edge (no reset cadence needed or appropriate).
+None of these covers item removal or a bearer's optional bonus-action toggle.
 
-**Survey evidence:** Ring of Invisibility is the first clear instance, but any "at-will activated" magic item (e.g., a hypothetical Ring of Feather Falling activated on demand) would share this gap.
+The `duration` field was **intentionally omitted** from the encoding rather than falsified. The invisible condition is applied but carries no modeled end trigger in the surface — which is an incomplete-but-honest representation of the gap.
 
----
+## Proposed widenings
 
-## Gap 2 — Wearer-initiated dismissal via Bonus Action
+### 1. `DurationEndTrigger.item_unequipped`
 
-### Problem
-
-The invisibility ends when "you take a Bonus Action to become visible again." This is a deliberate wearer-initiated dismissal — distinct from all current end-condition vocabulary:
-
-- `DurationEndTrigger` (on `timed`/`concentration`) covers externally-caused events: attack roll made, damage taken, spell cast, armor donned, etc.
-- `permanent` duration's `endsOn` accepts only `"dispel" | "damage"`.
-
-The v4 lifecycle atom `self_break` (TAXONOMY_atoms_graph.md §6) models this concept — a deliberate actor-initiated break of a persistent effect — but it is not surfaced by any `Duration` field.
-
-### Proposed widening
-
-**Option A (narrowest):** Add `"wearer_bonus_action"` to the `permanent` duration's `endsOn` enum:
+A new variant of `DurationEndTrigger`:
 
 ```typescript
-readonly endsOn?: ReadonlyNonEmptyArray<"dispel" | "damage" | "wearer_bonus_action">;
+| { readonly kind: "item_unequipped" }
 ```
 
-**Option B (more general):** Add a new `DurationEndTrigger` variant:
+**Justification**: Ring of Invisibility is not the only item where removal ends an active condition. This trigger fires when the bearer removes (doffs) the item that hosts the active effect. It is distinct from:
+- `target_dons_armor` (armoring-up event, not removal)
+- `"dispel"` in `permanent.endsOn` (targets the magical effect, not the equipment state)
+
+**SRD evidence**: "You remain Invisible until the ring is removed"
+
+### 2. `DurationEndTrigger.wearer_spends_bonus_action`
+
+A new variant of `DurationEndTrigger`:
 
 ```typescript
 | { readonly kind: "wearer_spends_bonus_action" }
 ```
 
-This would also apply to `timed` and `concentration` durations if a future spell ends early on the caster's voluntary Bonus Action.
+**Justification**: This covers the toggleable-invisibility pattern: the bearer voluntarily spends a Bonus Action to deactivate the applied condition. It is distinct from existing triggers (which all watch for actions taken on the target by others, or for actions the target takes on their turn as offensive acts). This is a deliberate deactivation cost paid by the bearer.
 
-**Tracer behavior:** Emit a `self_break` lifecycle node connected to the `persist` node via a `persists_until` edge, labeled with the dismissal cost (e.g., `self_break\n(Bonus Action)`).
+**SRD evidence**: "until you take a Bonus Action to become visible again"
 
-**Survey evidence:** Ring of Invisibility. Likely shared by any "toggle" magic item (activate with Action, deactivate with Bonus Action or Action).
+## Classification rationale
 
----
+- **Not `atom_widening`**: The v4 atom `apply_condition` covers the effect. No new effect atom is needed.
+- **Not `structural_widening`**: The `activation` family + `PassiveMechanics` composition is not needed; all mechanics fit `activation`.
+- **`surface_widening`**: Two new variants of an existing surface type (`DurationEndTrigger`) are needed. The ring otherwise encodes completely.
 
-## Proposed encoding (once widenings land)
+## Confidence
 
-```dhall
-{ kind = "magic_item"
-, id = "ring_of_invisibility"
-, name = "Ring of Invisibility"
-, rarity = "legendary"
-, requiresAttunement = True
-, provenance = { kind = "srd-5.2.1", section = "MagicItems#Ring of Invisibility" }
-, description = "While wearing this ring, you can take a Magic action to give yourself the Invisible condition. You remain Invisible until the ring is removed or until you take a Bonus Action to become visible again."
-, mechanics =
-    { family = "activation"
-    , activationCost = { kind = "action" }
-    , resource = { kind = "use_count", cap = { kind = "unlimited" } }  -- Gap 1
-    , resetCadence = { kind = "never" }
-    , duration =
-        { kind = "permanent"
-        , endsOn = [ "wearer_bonus_action" ]  -- Gap 2
-        }
-    , phases =
-        [ { kind = "direct"
-          , attachment = { kind = "self" }
-          , effects = [ { kind = "apply_condition", condition = "invisible" } ]
-          }
-        ]
-    }
-, destruction = { kind = "none" }
-}
-```
-
-Note: `"until ring removed"` is considered implicit in the item/attunement lifecycle and does not require a separate `endsOn` entry.
+**High** — the gap is precisely identified and bounded. The rest of the unit traces cleanly.

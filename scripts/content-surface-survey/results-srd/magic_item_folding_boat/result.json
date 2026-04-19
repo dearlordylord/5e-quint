@@ -1,1 +1,29 @@
-{"unit_slug":"magic_item_folding_boat","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "magic_item_folding_boat",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "alter_item_kind",
+    "direct_apply",
+    "magic_item_root",
+    "self",
+    "use_count"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "ItemDestructionPolicy.zero_hp_vessel",
+      "justification": "The Folding Boat is permanently destroyed when either vessel form is reduced to 0 Hit Points. This is a damage-triggered destruction of the item itself, not a charge-exhaustion event. The current ItemDestructionPolicy discriminants (none / last_charge_roll / permanent_on_empty) are all resource-triggered; none covers HP-triggered item destruction.",
+      "evidence": "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core transformation mechanic (alter_item_kind × 3 in a composite) encodes cleanly — alter_item_kind is cited in types.ts for exactly this item. The three command words are modeled as three unlimited-use Magic-action activations in a CompositeMagicItemMechanics. The 'no creatures aboard' precondition on the third command word and the cargo-handling narrative are omitted as DM-agenda. The only surface gap is the item-destruction-on-0hp policy, encoded as { kind: 'none' } placeholder."
+}

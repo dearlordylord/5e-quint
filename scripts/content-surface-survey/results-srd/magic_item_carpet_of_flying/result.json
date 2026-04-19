@@ -1,1 +1,28 @@
-{"unit_slug":"magic_item_carpet_of_flying","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "magic_item_carpet_of_flying",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "magic_vehicle / item_locomotion",
+      "justification": "The carpet itself gains fly speed and moves as a pilotable vehicle; the rider is a passenger, not the subject of a grant_speed atom. No existing family or atom models an item acquiring its own movement mode and carrying passengers.",
+      "evidence": "You can make this carpet hover and fly by taking a Magic action and using the carpet's command word. It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "item_command_radius on ActivatedAbilityMechanics or a new vehicle family",
+      "justification": "The carpet responds to directional commands only when the commander is within 30 ft. No surface field expresses a remote-control radius for an item's ongoing movement.",
+      "evidence": "It moves according to your directions if you are within 30 feet of it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "weight_capacity predicate for conditional speed modification",
+      "justification": "The carpet's fly speed is halved when carrying more than its normal capacity (up to 2× capacity). No existing EquipmentPredicate or OngoingPredicate models a cargo-weight threshold.",
+      "evidence": "A carpet can carry up to twice the weight shown on the table, but its Fly Speed is halved if it carries more than its normal capacity."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The four size variants (3×5, 4×6, 5×7, 6×9 ft) with different capacities and fly speeds (80/60/40/30 ft) could be expressed via MagicItemRecord.variants once the core vehicle mechanic exists. The d100 GM-random size selection is DM agenda (GM picks or rolls). The fundamental blocker is the item-as-vehicle pattern: grant_speed targets a creature, but the carpet IS the flying entity. Encoding as 'rider gains fly speed' would be dishonest — the carpet can fly without a rider aboard and the speed halving is cargo-weight-based, not rider-weight-based."
+}

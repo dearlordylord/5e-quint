@@ -1,123 +1,112 @@
-# Widening Proposal: Spirit Guardians
+# Surface Widening Proposal: Spirit Guardians
 
-**Outcome:** `surface_widening`  
-**Family:** `ongoing_effect` (correct — no structural change needed)  
-**All required v4 atoms exist** in the taxonomy (`area`, `save_gate`, `damage`, `modify_speed`).
+## Summary
 
----
+Spirit Guardians encodes cleanly as `ongoing_effect` (family fits, JSON typechecks, tracer succeeds) with four surface gaps. Three of the four gaps are pre-existing patterns already documented in Cloudkill, Moonbeam, and Web. One (cast-time creature exclusion) is new pressure from this unit.
 
-## Unit summary
+## Encoded mechanics (clean)
 
-Spirit Guardians (3rd-level Conjuration, Concentration ≤ 10 minutes, Range: Self):
+- **Area attachment**: emanation r=15 ft, origin=self (follows caster)
+- **Duration**: concentration, up to 10 minutes
+- **Speed halved** (`set_speed_ratio` 1/2, passive trigger)
+- **Wis save on creature entry** (`on_creature_enters_area`): fail=3d8 choice dam, success=half
+- **Wis save on turn end in area** (`on_creature_ends_turn_in_area`): same
+- **Upcast scaling**: `linear_per_level` axis=slot, base=3d8, +1d8 per level above 3
+- **Damage type**: encoded as `CastTimeChoice<DamageType>` options=[radiant, necrotic] — see gap 4 below
 
-- Creates a 15-foot **Emanation centered on the caster that moves with them**.
-- Non-exempt creatures in the emanation have their **Speed halved**.
-- When the emanation enters a creature's space, or a creature enters or **ends its turn** in the emanation → **Wisdom save**:  
-  - Fail: 3d8 Radiant (good/neutral caster) or 3d8 Necrotic (evil caster)  
-  - Success: half damage  
-  - Once per turn per creature.
-- Slot scaling: +1d8 per slot above 3rd.
+## Gap 1: `on_area_enters_creature_space` trigger
 
----
+**RAW**: "whenever the Emanation enters a creature's space" — fires when the **caster moves** and the self-centered emanation passes over a stationary creature.
 
-## Gap 1 — `AreaOrigin` missing `on_caster` variant
+**Current surface**: `on_creature_enters_area` captures creature-initiated entry only. No trigger exists for area-initiated overlap (caster-moves-area-into-creature).
 
-**Current type:**
+**Proposed shape**:
 ```typescript
-export type AreaOrigin =
-  | { readonly kind: "point_within_range" }
-  | { readonly kind: "on_primary_target" };
+| { readonly kind: "on_area_enters_creature_space" }
 ```
+Added to `OngoingTrigger`. Semantics: fires when the effect's attached area moves over a creature's space (typically because the attachment's origin is `self` and the caster moved). This is the same widening deferred in Cloudkill and Moonbeam.
 
-**Problem:** A 15-foot Emanation centered on the caster moves with the caster each turn. Neither existing variant covers this:
-- `point_within_range` — a static point chosen at cast time.
-- `on_primary_target` — the area follows a targeted creature.
+## Gap 2: per-operation once-per-turn dedup
 
-The caster IS the origin, and the origin relocates every time the caster moves.
+**RAW**: "A creature makes this save only once per turn." — If the caster moves over a creature AND the creature ends its turn in the area in the same turn, only one save should fire. The two operations independently would both trigger.
 
-**Proposed addition:**
+**Current surface**: `OngoingOperation` has no frequency cap or dedup field.
+
+**Proposed shape** (one of two options):
+
+Option A — field on `OngoingOperation`:
 ```typescript
-| { readonly kind: "on_caster" }
-```
-
-**Evidence:** *"Protective spirits flit around you in a 15-foot Emanation for the duration."*
-
----
-
-## Gap 2 — `OngoingOperation` missing `area_save_gate` variant
-
-**Current type:**
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
-
-**Problem:** Spirit Guardians deals damage via a saving throw triggered by area entry and turn-end — not by the caster making an attack roll. The existing variants model:
-- `roll_modifier` — adds a die to attack or saving throw rolls (Bless pattern).
-- `damage_on_hit` — rider on the caster's own attack-roll hits (Hunter's Mark pattern).
-
-Neither covers: *"a creature enters or ends its turn in the area → save, full damage on fail, half on success."*
-
-**Proposed addition:**
-```typescript
-export type AreaSaveGateOperation = {
-  readonly kind: "area_save_gate";
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onFail: DamageEffect;
-  readonly onSuccess: DamageEffect;          // typically half of onFail
-  readonly triggers: ReadonlyArray<"enter" | "end_of_turn">;
-  readonly usageLimit?: { readonly kind: "once_per_turn" };
+export type OngoingOperation = {
+  readonly trigger: OngoingTrigger;
+  readonly predicate?: OngoingPredicate;
+  readonly effect: OngoingEffect;
+  readonly maxTimesPerCreaturePerTurn?: number;  // NEW
 };
 ```
 
-This would compose with the `area` attachment under `ongoing_effect`, with the area attachment carrying the `on_caster` origin (Gap 1).
-
-**Evidence:** *"whenever the Emanation enters a creature's space and whenever a creature enters the Emanation or ends its turn there, the creature must make a Wisdom saving throw. On a failed save, the creature takes 3d8 Radiant damage... On a successful save, the creature takes half as much damage. A creature makes this save only once per turn."*
-
----
-
-## Gap 3 — `OngoingOperation` missing `modify_speed` variant
-
-**Current type:**
+Option B — shared operation group with dedup semantics:
 ```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
-
-**Problem:** The spell persistently halves Speed for any non-exempt creature while it is in the emanation. The `modify_speed` atom exists in v4, but there is no `OngoingOperation` variant to attach it to an area.
-
-**Proposed addition:**
-```typescript
-export type ModifySpeedOperation = {
-  readonly kind: "modify_speed";
-  readonly multiplier?: number;   // 0.5 for half
-  readonly delta?: number;        // flat reduction alternative
+// Group operations that share a once-per-turn budget
+export type OngoingOperationGroup = {
+  readonly operations: ReadonlyNonEmptyArray<OngoingOperation>;
+  readonly dedup?: { readonly kind: "once_per_creature_per_turn" };
 };
 ```
 
-**Evidence:** *"Any other creature's Speed is halved in the Emanation"*
+Option A is simpler and covers Spirit Guardians + Cloudkill + Moonbeam + Web. Option B is more general (multiple operations sharing a budget). Given the existing pressure, Option A suffices.
 
----
+This is the same blocker that keeps Web's `on_creature_enters_area` sibling deferred.
 
-## Gap 4 (secondary) — Conditional damage type by caster state
+## Gap 3: cast-time creature exclusion on area
 
-The damage type is Radiant if the caster is good/neutral, Necrotic if evil. `DamageEffect` holds a single fixed `DamageType`. This alignment-based conditional is not expressible.
+**RAW**: "When you cast this spell, you can designate creatures to be unaffected by it." — A free-selection exclusion list chosen at the moment of casting. These creatures ignore speed halving and the save gate entirely.
 
-**Note:** Alignment is determined at character-build time, so this could be handled by authoring two variant encodings (one for each). The surface does not currently model "caster character state" as a DamageType selector. This gap is secondary — the unit can't be encoded regardless due to Gaps 1–3.
+**Current surface**: no exclusion mechanism on `Attachment.area`. `AnchoredFilter.creature_exemption_list` exists for anchored triggers (Alarm) but is not applicable here.
 
----
+**Proposed shape**:
+```typescript
+export type Attachment =
+  | { readonly kind: "area"
+    ; readonly shape: AreaShapeSpec
+    ; readonly origin: AreaOrigin
+    ; readonly occupantDispositionFilter?: AreaOccupantDispositionFilter
+    ; readonly castTimeExclusions?: { readonly kind: "creature_list_chosen_at_cast" }  // NEW
+    ; readonly rangeOrigin?: AttachmentRangeOrigin
+    }
+  // ...
+```
 
-## Secondary structural gap: creature exemption at cast time
+The `creature_list_chosen_at_cast` sentinel records that a free exclusion list exists without modeling the list itself (which is runtime state). Downstream phases can observe the flag as a targeting filter.
 
-The caster can designate creatures as unaffected at cast time. The `AnchoredFilter::creature_exemption_list` shape exists for Alarm's grammar but has no equivalent in the `OngoingOperation` / area attachment grammar. A future `area_save_gate` variant would need a `filters?: ReadonlyArray<AnchoredFilter>` field or equivalent.
+Alternatively, this could be expressed as `occupantDispositionFilter` extended with a `cast_time_exclusion_list` variant. The sentinel-vs-extension choice depends on whether alignment-based filters (e.g., Protection from Evil and Good) and cast-time-exclusion lists should share grammar.
 
-**Evidence:** *"you can designate creatures to be unaffected by it"*
+## Gap 4: `DamageTypeRef.alignment_derived`
 
----
+**RAW**: "3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil)." — The damage type is determined by the caster's alignment, a character-sheet property established before the spell is cast. This is distinct from `CastTimeChoice` (player freely picks from options).
 
-## Recommended widening scope
+**Current encoding**: `CastTimeChoice<DamageType>` with options=[radiant, necrotic]. This is the closest available surface primitive but conflates alignment-gating with player agency.
 
-Priority order for encoding Spirit Guardians:
-1. `AreaOrigin::on_caster` — needed for any caster-following emanation (also relevant for Aura of Protection, Aura of Life, Aura of Purity, etc.)
-2. `OngoingOperation::area_save_gate` — core mechanic of Spirit Guardians; also relevant for Cloudkill, Incendiary Cloud, etc.
-3. `OngoingOperation::modify_speed` — needed for Speed reduction in area (also Slow, Web, etc.)
-4. Conditional damage type — lower priority; could be deferred by encoding as a note or single-type simplification.
+**Proposed shape**:
+```typescript
+export type DamageTypeRef =
+  | DamageType
+  | CastTimeChoice<DamageType>
+  | {  // NEW
+      readonly kind: "alignment_derived";
+      readonly onGoodOrNeutral: DamageType;
+      readonly onEvil: DamageType;
+    };
+```
+
+This is the only SRD unit so far with alignment-derived damage type selection. If no other units share this pattern, it may not warrant a new variant in the surface — encoding as `CastTimeChoice` is a defensible approximation for survey purposes.
+
+## Priority assessment
+
+| Gap | Pressure | Pre-existing | Priority |
+|---|---|---|---|
+| once-per-turn dedup | 3+ units (SG, Cloudkill, Moonbeam, Web) | Yes | High |
+| on_area_enters_creature_space | 3+ units (SG, Cloudkill, Moonbeam) | Yes | Medium |
+| cast-time creature exclusion | 1 unit (SG) | No | Medium |
+| alignment_derived damage type | 1 unit (SG) | No | Low |
+
+The dedup field (Gap 2) has the broadest impact: it unblocks all three partially-encoded area-hazard spells from adding their missing entry trigger. Landing it alongside `on_area_enters_creature_space` would allow Cloudkill, Moonbeam, Web, and Spirit Guardians to all go clean.

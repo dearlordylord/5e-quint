@@ -1,1 +1,16 @@
-{"unit_slug":"monk_unarmored_defense_l1","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "monk_unarmored_defense_l1",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "modify_ac_set_base (second ability modifier)",
+      "justification": "The existing modify_ac_set_base shape carries exactly one abilityMod field, encoding formulas like Mage Armor (13 + Dex) and Robe of the Archmagi. Monk Unarmored Defense requires 10 + Dex + Wis — two distinct ability modifiers summed into the base AC formula. No other existing atom or composition honestly expresses this: splitting it into a set_base (one mod) plus an additive modify_ac (second mod) would produce the same number but misrepresent the rule as a set-then-add operation rather than a single base-AC formula. A second optional ability modifier field on ModifyAcSetBaseEffect would cover both the single-mod family (Mage Armor, Robe) and the dual-mod family (Monk, Barbarian Unarmored Defense).",
+      "evidence": "your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The equipment gate fits cleanly: EquipmentPredicate.all_of [ not_wearing_armor { categories: [light, medium, heavy] }, not_wielding_shield ] maps directly to the SRD condition 'while you aren't wearing armor or wielding a Shield'. The only blocking gap is the single-modifier constraint on modify_ac_set_base. A minimal fix is adding an optional secondAbilityMod?: Ability field. This also unblocks Barbarian Unarmored Defense (10 + Dex + Con), which has identical surface pressure."
+}

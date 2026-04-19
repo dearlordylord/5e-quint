@@ -1,103 +1,61 @@
 # Proposal: Cloudkill surface gaps
 
-## Unit
+Unit: Cloudkill (srd-5.2.1, Level 5 Conjuration)
+Outcome: `surface_widening`
 
-**Cloudkill** — SRD 5.2.1, Level 5 Conjuration spell.
+## What was encoded
 
-## Outcome
+The core mechanic encodes cleanly as `ongoing_effect`:
 
-`atom_widening` — partial encoding produced. Typecheck passes, tracer runs. Four mechanics are unrepresentable in the current surface.
+- **Attachment**: `area` — sphere, radius 20 ft, origin `point_within_range`
+- **initialPhase**: `save_gate` — Con vs. spell save DC; onFail = 5d8 Poison (slot-scaled), onSuccess = half damage. Covers creatures already inside the sphere at cast.
+- **Operation**: trigger `on_attached_turn_start` → `save_gate` (same parameters). Covers creatures spending turns inside the sphere.
+- **Upcast**: `linear_per_level`, axis=slot, base 5d8, +1d8/slot above 5.
 
-## What fits
+Typecheck passes. Tracer produces clean output.
 
-The core damage mechanic encodes cleanly as an `ongoing_effect` spell:
+## What was omitted (with justification)
 
-- **Area attachment**: `sphere r=20 ft`, `origin: point_within_range`, range 120 ft.
-- **initialPhase**: `save_gate` Con vs spell save DC → 5d8 Poison / half.
-- **on_creature_enters_area** → `save_gate` (same).
-- **on_creature_ends_turn_in_area** → `save_gate` (same).
-- **Upcast scaling**: `linear_per_level` axis=slot, +1d8/slot above 5.
-
-## Gap 1 — `area_is_heavily_obscured` (new atom)
-
-> "Its area is Heavily Obscured."
-
-SRD 5.2.1 Rules Glossary: creatures inside a Heavily Obscured area have the Blinded condition (disadvantage on attack rolls, attackers have advantage). This is a distinct visibility tier from Difficult Terrain.
-
-`area_is_difficult_terrain` exists but covers movement cost only. There is no atom for area-level heavy obscurement. This is a new `effect` atom needed in the v4 taxonomy.
-
-**Proposed atom:**
-```typescript
-| { readonly kind: "area_is_heavily_obscured" }
-```
-
-Emits alongside `area_is_difficult_terrain` in the same taxonomy bucket. Both are passive area-modifying effect atoms on an area attachment.
-
-## Gap 2 — `drift_area_attachment` (new atom)
+### 1. Cloud drift — caller-owned geometry (ARCHITECTURE.md §1)
 
 > "The Sphere moves 10 feet away from you at the start of each of your turns."
 
-The sphere drifts automatically each caster turn — mandatory, directional ("away from you"), no action cost, no player choice. The existing `reposition_attachment` atom models a caster-initiated optional relocation (Silent Image, Dancing Lights):
+The sphere automatically moves without any caster action. The existing `reposition_attachment` atom is defined as a "mid-duration caster **action**" and cannot represent automatic forced drift. Per ARCHITECTURE.md §1, area movement is caller-owned. Treated the same way as Moonbeam's "Magic action to move the Cylinder" and Spirit Guardians' "whenever the Emanation enters a creature's space."
 
-```typescript
-| {
-    readonly kind: "reposition_attachment";
-    readonly maxMoveFeet?: number;
-  }
-```
+**Proposed widening (if needed):** A new variant on `reposition_attachment` — or a new triggered operation shape — that fires on `on_caster_turn_start` without consuming an action cost and moves the area a fixed distance in a direction relative to the caster.
 
-This does not encode:
-- **Automaticity**: fires unconditionally at start of caster turn, not on caster-action spend.
-- **Direction**: away from the caster is a specific directional constraint, not a free relocation.
+### 2. "Heavily Obscured" — caller-owned visibility (ARCHITECTURE.md §1)
 
-Using `on_caster_turn_start` + `reposition_attachment` would misrepresent the mechanic as a caster-chosen relocation.
+> "Its area is Heavily Obscured."
 
-**Proposed atom (or field on OngoingOperation effect):**
-```typescript
-| {
-    readonly kind: "drift_area";
-    readonly feetPerTurn: number;
-    readonly direction: "away_from_caster";  // widen when other directions surface
-  }
-```
+The existing `area_is_difficult_terrain` atom covers movement geometry only. Heavily Obscured is a distinct SRD Rules-Glossary condition (Disadvantage on Perception checks; creature in it is unseen). Per ARCHITECTURE.md §1, visibility is caller-owned. Treated the same as Moonbeam's "Dim Light fills the Cylinder" (also omitted there).
 
-Alternatively, a `direction` field on `reposition_attachment` combined with a mandatory trigger mode. Drift is a first-class mechanic in area-hazard spells (Cloudkill, Moonbeam shares the same "area moves into creature's space" wording).
+**Proposed widening (if needed):** A new `area_is_heavily_obscured` atom, parallel to `area_is_difficult_terrain`.
 
-## Gap 3 — `OngoingTrigger.on_area_moves_onto_creature` (new trigger variant)
-
-> "A creature must also make this save when the Sphere moves into its space."
-
-This fires when the **area moves** to overlap a **stationary creature** — the inverse of `on_creature_enters_area`. The two are mechanically distinct: a creature standing still in the sphere's drift path triggers this; a creature moving into a static sphere triggers `on_creature_enters_area`.
-
-Without the drift atom (Gap 2), this trigger is unreachable. Both gaps must be resolved together to fully model Cloudkill's hazard.
-
-**Proposed trigger variant:**
-```typescript
-| { readonly kind: "on_area_moves_onto_creature" }
-```
-
-Same gap identified in Moonbeam ("A creature makes this save again when the spell's area moves into its space") and Spirit Guardians ("whenever the Emanation enters a creature's space").
-
-## Gap 4 — `OngoingOperation.once_per_turn_dedup` (new surface field)
+### 3. Once-per-turn save dedup — missing predicate (same gap as Spirit Guardians, Web)
 
 > "A creature makes this save only once per turn."
 
-The three save triggers (initial, enters, ends-turn) can all fire in the same turn for the same creature (e.g., sphere drifts into creature's space AND creature ends its turn there). RAW caps total saves at one per creature per turn. The `OngoingOperation` type has no deduplication mechanism — each operation fires independently.
+RAW triggers the save on initial cast, on the sphere entering a creature's space, on a creature entering the sphere, and on a creature ending its turn there — but only once per turn total. The surface has no per-creature per-turn dedup predicate on `OngoingOperation`. Including both `on_creature_enters_area` and `on_creature_ends_turn_in_area` without the dedup would misrepresent RAW by allowing up to two saves per turn. Encoded as single `on_attached_turn_start` (covers "ends its turn there") with `on_creature_enters_area` deferred, matching the same conservative choice made for Spirit Guardians and Web.
 
-**Proposed field on `OngoingOperation`:**
+**Proposed widening (if needed):** An `oncePerTurn: true` field on `OngoingOperation`, scoped per-creature per-turn, so that multiple operations sharing this flag are deduped at runtime.
+
+### 4. Strong-wind early-end — missing DurationEndTrigger variant
+
+> "The fog lasts for the duration or until strong wind (such as the one created by Gust of Wind) disperses it, ending the spell."
+
+No existing `DurationEndTrigger` variant covers named-spell environmental dispersion. The current vocabulary (`target_makes_attack_roll`, `target_deals_damage`, `target_casts_spell`, `target_dons_armor`, `target_damaged_by_caster_or_ally`, `target_takes_damage`, `caster_recasts_spell`) does not include an environmental / named-spell interaction trigger.
+
+**Proposed widening:** A new `DurationEndTrigger` variant, e.g.:
 ```typescript
-type OngoingOperation = {
-  readonly trigger: OngoingTrigger;
-  readonly predicate?: OngoingPredicate;
-  readonly effect: OngoingEffect;
-  readonly maxPerTurn?: 1;  // "once per turn" rate limit across all operations sharing this tag
-};
+| { readonly kind: "area_dispersed_by_strong_wind" }
 ```
+Or more generally, a named-spell interaction trigger:
+```typescript
+| { readonly kind: "triggered_by_named_spell"; readonly spellId: string }
+```
+(Gust of Wind is the SRD example; other area spells may have similar dispersion rules.)
 
-Same gap noted for Blade Barrier (`OngoingOperation.once_per_turn_dedup`) and Spirit Guardians.
+## Summary
 
-## Tracer note
-
-The tracer does not emit `scale_die_count` nodes for save_gate effects inside ongoing operations (only the initialPhase scaling is traced). This is a tracer limitation, not a surface issue — the JSON encoding is correct.
-
-Also: the ongoing operation `save_gate` branches do not emit a `half_damage` node in the current tracer path (`traceOngoingOpEffect` skips `half_damage` variant of `onSuccess`). Same tracer limitation.
+The encoding faithfully covers the poison-damage core of Cloudkill. All four omissions follow established precedent in the corpus (Moonbeam, Spirit Guardians, Web, Conjure Woodland Beings) and are classified as caller-owned geometry, missing dedup predicate, or missing surface variant — not as unresolvable structural gaps. The `once_per_turn` dedup and the `DurationEndTrigger` for wind dispersal are the two gaps most worth surfacing for a surface-widening pass.

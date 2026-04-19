@@ -1,108 +1,57 @@
-# Proposal: Wall of Fire — structural_widening
+# Proposal: Wall of Fire — surface_widening
 
-## Unit summary
+## Unit
 
-Wall of Fire (4th-level Evocation, concentration 1 min, range 120 ft) creates a persistent fire wall on a solid surface. It has two mechanically distinct effects:
+**Spell**: Wall of Fire (SRD 5.2.1, Level 4 Evocation)
 
-1. **On-cast:** each creature in the wall's area makes a Dex save → 5d8 fire on fail, half on success.
-2. **Ongoing (while concentration holds):** one designated side of the wall deals 5d8 fire to every creature that enters the wall or ends its turn within 10 ft of that side (or inside). The other side deals no damage.
-3. **Slot scaling:** +1d8 fire per slot above 4th (both effects scale together).
+## What was encoded
 
-## Why no existing family fits
+The spell encodes as `ongoing_effect` family with:
 
-### Primary gap: no family covers "initial activation + ongoing area damage"
+- **Initial phase**: `save_gate` on the wall area — Dex save, 5d8 fire on fail, half on success.
+- **Ongoing op 1**: `on_creature_enters_area` → 5d8 fire damage (creature enters the wall's footprint).
+- **Ongoing op 2**: `on_creature_ends_turn_in_area` → 5d8 fire damage (creature ends turn inside the wall).
+- **Slot scaling**: `linear_per_level` (axis=slot, +1d8 per slot above 4) on all three damage instances.
+- **Area shape**: `choice` between `line` (60 ft × 1 ft) and `cylinder` (radius 10 ft, height 20 ft).
 
-The two effects require different families:
+Typecheck passes. Tracer emits a valid mermaid graph.
 
-| Effect | Nearest family | Honest? |
-|---|---|---|
-| On-cast save_gate | `activation` | Yes — but `activation` is one-shot; it cannot express the ongoing component |
-| Ongoing turn-end area damage | `ongoing_effect` | Possible shape — but `ongoing_effect` has no mechanism for an initial activation save |
+## What is missing — two surface widenings
 
-There is no way to compose these two families into a single `SpellMechanics` union member. Forcing the spell into either family alone produces a false trace:
-- `activation`-only: misses the persistent damage zone (the main tactical purpose of the spell).
-- `ongoing_effect`-only: misses the on-cast area save (a real mechanical event the engine must resolve).
+### 1. One-sided wall mechanic
 
-### Secondary gap 1: wall/ring area shapes
+RAW: _"One side of the wall, selected by you when you cast this spell, deals 5d8 Fire damage... The other side of the wall deals no damage."_
 
-`Attachment.area.shape` supports only `{ kind: "sphere"; radiusFeet: number }`. Wall of Fire requires:
+The wall's ongoing damage is **asymmetric** — only one face of the wall (chosen at cast) is the "hot side". Creatures on the cold side of the wall and outside the wall take no damage.
 
-```
-{ kind: "line"; lengthFeet: 60; heightFeet: 20; thickFeet: 1 }
-// OR
-{ kind: "ring"; diameterFeet: 20; heightFeet: 20; thickFeet: 1 }
-```
+The current surface has no concept of a directional sub-region of an area. `Attachment.area` is symmetric: `on_creature_enters_area` and `on_creature_ends_turn_in_area` fire for any creature in the area footprint regardless of which face they approach from.
 
-This gap will recur for every wall spell in the SRD (Wall of Ice, Wall of Stone, Wall of Force, Wall of Thorns, Blade Barrier, Fire Storm).
+**Proposed widening**: A cast-time "hot side" selector on the `ongoing_effect` mechanics, and a corresponding area orientation filter on `OngoingOperation` (something like `{ faceFilter: "hot_side" }`) that restricts which face-approach triggers the operation. This is a new variant of `OngoingOperation` or `AreaOccupantDispositionFilter`-analog for spatial orientation, not a new v4 taxonomy atom.
 
-### Secondary gap 2: turn-end/entry area operation
+### 2. "Within 10 feet of the hot side" proximity zone
 
-`OngoingOperation` supports:
-- `roll_modifier` — adds a dice delta to rolls
-- `damage_on_hit` — deals damage when the caster's attack roll hits a creature in the attachment scope
+RAW: _"deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall"_
 
-Neither covers "deal damage when a creature enters this area for the first time on its turn, or ends its turn inside/within 10 ft". This is a distinct trigger pattern: **spatial proximity at a turn-boundary event**, not an attack resolution.
+The damage zone for the ongoing operation is the **union** of:
+- Inside the wall's 1-foot footprint (covered by `on_creature_ends_turn_in_area`)
+- Within 10 feet of the hot face, outside the wall (not covered)
 
-A new operation variant is needed, tentatively:
+There is no trigger for "ends turn within N feet of one face of the area attachment." The `on_creature_ends_turn_in_area` trigger covers only the wall's own footprint.
 
+**Proposed widening**: A new `OngoingTrigger` variant:
 ```typescript
-export type DamageOnAreaTriggerOperation = {
-  readonly kind: "damage_on_area_trigger";
-  readonly trigger: "enter_or_turn_end";
-  readonly damageType: DamageType;
-  readonly amount: DiceAmount;
-};
+| {
+    readonly kind: "on_creature_ends_turn_near_area_face";
+    readonly distanceFeet: number;
+    readonly face?: "hot_side"; // paired with hot-side selector above
+  }
 ```
+Or alternatively, expand the existing `on_creature_ends_turn_in_area` trigger to accept a `proximityFeet` extension parameter, widening its coverage to "inside OR within N feet."
 
-### Secondary gap 3: directional area damage
+## Minor surface gap (non-blocking)
 
-The wall has a "designated side" (chosen at cast) that deals damage and an opposite side that is inert. This directionality is new — areas in the current surface are symmetric. Modeling it requires either a `directedSide: true` flag on the area attachment, or a narrower `attachment` atom for walls that makes the directional choice explicit.
+The `line` `AreaShapeDescriptor` has no `heightFeet` field. The wall is 20 feet high (RAW), but height does not affect the footprint for 2D grid damage computation — it is relevant only for flying creatures and line-of-sight. The existing encoding omits height without creating a mechanically dishonest trace.
 
-## Proposed widenings
+## Classification
 
-### W1 — New spell family: `activation_plus_ongoing` (or `zoned_activation`)
-
-A new `SpellMechanics` family that combines:
-- A required `phases: ReadonlyArray<ActivationPhase>` (one-shot resolution on cast)
-- A required `ongoingOperation: OngoingOperation` with area attachment and duration
-
-This covers Wall of Fire, and will also cover Flaming Sphere (bonus action move + damage on contact), Moonbeam (initial save + ongoing turn-end save), and Spirit Guardians.
-
-### W2 — New `area.shape` variants: `line` and `ring`
-
-```typescript
-export type AreaShape =
-  | { readonly kind: "sphere"; readonly radiusFeet: number }
-  | { readonly kind: "line"; readonly lengthFeet: number; readonly heightFeet: number; readonly thickFeet?: number }
-  | { readonly kind: "ring"; readonly diameterFeet: number; readonly heightFeet: number; readonly thickFeet?: number }
-  | { readonly kind: "cone"; readonly lengthFeet: number }
-  | { readonly kind: "cube"; readonly sideFeet: number }
-  | { readonly kind: "cylinder"; readonly radiusFeet: number; readonly heightFeet: number };
-```
-
-### W3 — New `OngoingOperation` variant: `damage_on_area_trigger`
-
-```typescript
-export type DamageOnAreaTriggerOperation = {
-  readonly kind: "damage_on_area_trigger";
-  readonly trigger: "enter_or_turn_end" | "turn_end_only" | "enter_only";
-  readonly damageType: DamageType;
-  readonly amount: DiceAmount;
-  readonly directional?: boolean; // wall: only the designated side triggers
-};
-```
-
-### W4 — Directional area modifier
-
-Either extend `AreaOrigin` with a `directional: boolean` flag, or add a `DirectedSideAttachment` variant that makes the "caster chooses one face at cast time" choice explicit. This is lower priority than W1–W3 but needed for honest encoding of Wall of Fire's asymmetric damage.
-
-## What is representable today
-
-- Casting time, range, components, concentration duration — all fit current surface types.
-- Slot scaling (+1d8 per slot above 4) — representable as `DiceAmount` with `kind: "linear_per_level"`, `axis: "slot"`, `base: { dice: 5, dieSize: 8 }`, `perLevel: { dice: 1 }`, `startingAtLevel: 4`.
-- The `save_gate` resolution pattern (Dex save, fail = full, success = half) — representable as an `ActivationPhase` of kind `save_gate` once the family gap is solved.
-- The `damage` effect atom — exists in v4 taxonomy.
-
-## Impact on peer spells
-
-The `activation_plus_ongoing` family gap is shared by at least: Moonbeam, Spirit Guardians, Flaming Sphere, Cloudkill, Incendiary Cloud. The `line`/`ring` area shape gap is shared by: Wall of Ice, Wall of Stone, Wall of Thorns, Blade Barrier, Fire Storm.
+`surface_widening`: both missing mechanics require new variants of existing surface types (`OngoingTrigger`, `AreaShapeDescriptor` or a new area orientation filter). Neither requires a new v4 taxonomy atom — all v4 atoms involved (`damage`, `save_gate`, `area`) already exist.

@@ -1,133 +1,77 @@
-# Proposal: surface_widening for Monk Unarmored Defense (L1)
+# Proposal: Monk Unarmored Defense (L1)
 
-## Unit
+## Outcome: `surface_widening`
 
-**Monk Unarmored Defense (L1)** — `class_feature`, `srd-5.2.1`
+## SRD Text
 
 > While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers.
 
-## Family fit
+---
 
-The unit is clearly `family: "passive"` with:
-- An `EquipmentPredicate` condition (the "while you aren't wearing armor or wielding a Shield" gate)
-- A `modify_ac_set_base`-style effect (10 + DEX + WIS)
+## What fits
 
-Both the `passive` family and the `class_feature` kind exist. Neither is missing. The gaps are in the surface types used within that family.
+**Kind and family**: `class_feature` / `passive` — correct. This is an always-on grant active while an equipment precondition holds.
 
-## Gap 1: Missing `not_wielding_shield` EquipmentPredicate variant
+**Equipment predicate**: The condition "not wearing armor AND not wielding a Shield" maps precisely to the existing `all_of` composition:
 
-**RAW:** "while you aren't wearing armor **or wielding a Shield**"
-
-The condition has two requirements:
-1. Not wearing armor — covered by `{ kind: "unarmored" }`
-2. Not wielding a Shield — **no predicate exists**
-
-A shield is not a weapon, so `wielding_weapon` doesn't apply. The `all_of` combinator exists but needs both parts. The `unarmored` sentinel cannot be widened to include shield-avoidance without breaking Barbarian Unarmored Defense, which reads "while you aren't wearing any armor" — no shield restriction.
-
-### Proposed widening
-
-Add to `NonAlwaysEquipmentPredicate`:
-
-```typescript
-| { readonly kind: "not_wielding_shield" }
+```dhall
+condition =
+  { kind = "all_of"
+  , predicates =
+      [ { kind = "not_wearing_armor"
+        , categories = [ "light", "medium", "heavy" ]
+        }
+      , { kind = "not_wielding_shield" }
+      ]
+  }
 ```
 
-The condition for Monk Unarmored Defense would then be:
+Both `not_wearing_armor` and `not_wielding_shield` are live variants on `NonAlwaysEquipmentPredicate`, and the tracer handles `all_of` by emitting a `requires` edge for each predicate.
 
-```typescript
-condition: {
-  kind: "all_of",
-  predicates: [
-    { kind: "unarmored" },
-    { kind: "not_wielding_shield" }
-  ]
-}
-```
+---
 
-This widening also covers any future feature gated on not holding a shield specifically.
+## What does not fit
 
-## Gap 2: `modify_ac_set_base` supports only one ability modifier
+**Atom**: `modify_ac_set_base`
 
-**RAW:** "base Armor Class equals 10 plus your **Dexterity and Wisdom** modifiers"
+The formula `10 + Dex mod + Wis mod` is a base-AC replacement — not an additive bonus to existing AC. The correct atom is `modify_ac_set_base`, which already serves Mage Armor (`13 + Dex`) and Robe of the Archmagi (set base formula while unarmored).
 
-The current type:
+Current shape:
 
 ```typescript
 export type ModifyAcSetBaseEffect = {
   readonly kind: "modify_ac_set_base";
   readonly const: number;
-  readonly abilityMod: Ability;  // singular
+  readonly abilityMod: Ability;   // ← only one ability modifier
 };
 ```
 
-Monk needs 10 + DEX + WIS — two ability modifiers in the base formula.
+Monk requires **two** ability modifiers: `const = 10`, `abilityMod = "dex"`, plus `"wis"`. There is no honest workaround:
 
-### Why composition doesn't work
+- Splitting into `modify_ac_set_base` (one mod) + `modify_ac` (second mod) misrepresents the formula as a set-then-add operation rather than a unified base replacement.
+- The SRD explicitly states the entire formula is what "your base Armor Class equals" — the two modifiers are not separable layers; they are both inputs to the base.
 
-Composing `modify_ac_set_base { const: 10, abilityMod: "dex" }` plus `modify_ac { delta: +WIS mod }` is numerically equivalent but semantically incorrect. The two atoms express different things:
+---
 
-- `modify_ac_set_base` replaces the base AC formula entirely
-- `modify_ac` adds an additive bonus on top of whatever the base is
+## Proposed widening
 
-If a spell or feature later reads or replaces the base AC (e.g., Mage Armor would say "your base AC is 13 + DEX, regardless"), the composition gives the wrong result. The monk's formula is a unified replacement of the base; the WIS bonus is not a floating addend.
-
-### Proposed widening
-
-Option A — add a second optional ability modifier field:
+**Add an optional `secondAbilityMod` field to `ModifyAcSetBaseEffect`:**
 
 ```typescript
 export type ModifyAcSetBaseEffect = {
   readonly kind: "modify_ac_set_base";
   readonly const: number;
   readonly abilityMod: Ability;
-  readonly abilityMod2?: Ability;  // new: second optional modifier
+  readonly secondAbilityMod?: Ability;  // NEW: for dual-modifier base formulas
 };
 ```
 
-Option B — generalize to a list (more flexible but changes existing call sites):
+All existing callers remain valid (field is optional). The tracer label would extend to `set base = 10 + DEX mod + WIS mod` when `secondAbilityMod` is present.
 
-```typescript
-export type ModifyAcSetBaseEffect = {
-  readonly kind: "modify_ac_set_base";
-  readonly const: number;
-  readonly abilityMods: ReadonlyNonEmptyArray<Ability>;
-};
-```
+**This also unblocks**: Barbarian Unarmored Defense (`10 + Dex + Con`) — identical surface pressure, same proposed fix.
 
-Option A is the minimal widening consistent with the "widen on demand" principle. Option B would unify Barbarian (CON) and Monk (DEX + WIS) cases under the same shape and eliminate the implicit "always includes DEX" assumption baked into the current single-modifier design.
-
-**Note:** Barbarian Unarmored Defense ("10 + DEX + CON") faces the identical gap and would benefit from the same widening.
-
-## Encoding once both gaps are filled
-
-```dhall
-{ kind = "class_feature"
-, id = "monk_unarmored_defense_l1"
-, name = "Unarmored Defense"
-, className = "monk"
-, acquiredAtLevel = 1
-, provenance = { kind = "srd-5.2.1", section = "Classes/Monk#Unarmored Defense" }
-, description = "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
-, mechanics =
-    { family = "passive"
-    , condition =
-        { kind = "all_of"
-        , predicates =
-            [ { kind = "unarmored" }
-            , { kind = "not_wielding_shield" }   -- Gap 1
-            ]
-        }
-    , grants =
-        [ { kind = "modify_ac_set_base"
-          , const = 10
-          , abilityMod = "dex"
-          , abilityMod2 = "wis"                  -- Gap 2
-          }
-        ]
-    }
-}
-```
+---
 
 ## Classification
 
-`surface_widening` — both missing pieces are variants of existing surface types. No new v4 atoms or mechanics families are required.
+`surface_widening` — the atom kind (`modify_ac_set_base`) exists in both the v4 taxonomy and `types.ts`; only the shape needs a new optional field. No new atom concept is required.

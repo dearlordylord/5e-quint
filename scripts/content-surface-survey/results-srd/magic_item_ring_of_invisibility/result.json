@@ -1,1 +1,38 @@
-{"unit_slug":"magic_item_ring_of_invisibility","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "magic_item_ring_of_invisibility",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "apply_condition",
+    "attunement_slot",
+    "direct_apply",
+    "magic_item_root",
+    "self",
+    "use_count",
+    "wearing_item"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "requires",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.wearer_spends_bonus_action",
+      "justification": "The invisible condition granted by the ring ends when the wearer takes a Bonus Action to become visible again. No existing DurationEndTrigger variant covers a voluntary bonus-action deactivation by the bearer.",
+      "evidence": "until you take a Bonus Action to become visible again"
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.item_unequipped",
+      "justification": "The invisible condition ends when the ring is removed. No existing DurationEndTrigger variant covers item removal as an end condition. This is distinct from 'dispel' (which targets magic effects) and from 'target_dons_armor' (which covers donning, not doffing).",
+      "evidence": "You remain Invisible until the ring is removed"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ring encodes cleanly as an activation-family magic item applying the invisible condition to self via a Magic action with unlimited uses. The only gap is the duration end conditions: 'until ring removed' and 'until bonus action to become visible'. Both require new DurationEndTrigger variants. The duration field was intentionally omitted from the encoding rather than falsified with an incorrect permanent/dispel shape. All other mechanics (attunement, wearing_item gate, standard_action/magic cost, unlimited use_count, apply_condition invisible) fit the current surface without widening."
+}

@@ -1,93 +1,64 @@
-# Proposal: Folding Boat — Surface Widening
+# Proposal: magic_item_folding_boat
 
-## Unit
+## Outcome: `surface_widening`
 
-**Folding Boat** — Wondrous Item, Rare (SRD 5.2.1)
-
-## What fits
-
-- `magic_item` record kind ✓
-- `composite` mechanics shape ✓ (three independent command-word activations)
-- `alter_item_kind` effect atom ✓ (added specifically for this form-transformation pattern)
-- `standard_action { action: "magic" }` activation cost ✓
-- No attunement required ✓
-
-## What is missing
-
-### 1. `UseCountCap.unlimited`
-
-**Gap:** `ActivatedAbilityMechanics` requires `resource: ActivationResource`. `UseCountCap` has five variants (`fixed`, `threshold_tiers`, `linear_per_level`, `proficiency_bonus`, `ability_modifier`) but no `unlimited` variant. The Folding Boat's command words carry no stated usage limit — they may be used any number of times, with no cooldown or cadence.
-
-**SRD text:** "This item also has three command words, each requiring a Magic action to use." No further restriction is stated.
-
-**Proposed widening:**
-
-```typescript
-export type UseCountCap =
-  | { readonly kind: "fixed"; readonly uses: number }
-  | ThresholdTiers<number>
-  | LinearPerLevel<number>
-  | { readonly kind: "proficiency_bonus" }
-  | { readonly kind: "ability_modifier"; readonly ability: Ability }
-  // NEW: no usage limit — activation is free to use any number of times.
-  | { readonly kind: "unlimited" };
-```
-
-With `kind: "unlimited"`, `resetCadence` becomes vacuous. A paired `ResetCadence` variant `{ kind: "not_applicable" }` may also be warranted to avoid authors inventing a misleading dawn/rest cadence.
-
-**Pressure:** Multiple SRD magic items have unlimited-use command words (staff passives, wand activations with no charge cost when using a cantrip mode, etc.). This widening will recur.
+The core transformation mechanic encodes cleanly. One secondary mechanic requires a new `ItemDestructionPolicy` variant.
 
 ---
 
-### 2. `EquipmentPredicate` (or new `ActivationPredicate`) — occupancy condition
+## Encoding summary
 
-**Gap:** The third command word ("fold back into box") is conditional: it fires only "if no creatures are aboard." `EquipmentPredicate` covers only equipment-state gates (wearing, wielding, holding, armored/unarmored). It has no variant for item-occupancy state.
+The Folding Boat has three command words (each a Magic action) that switch the item between three forms: box, rowboat, and keelboat. The `alter_item_kind` atom — already in `types.ts` with this item named in its comment — covers each transformation. The three command words are modeled as three separate `ActivatedAbilityMechanics` parts inside a `CompositeMagicItemMechanics`, each with:
 
-**SRD text:** "The Folding Boat folds back into a box if no creatures are aboard."
+- `activationCost = { kind: "standard_action", action: "magic" }`
+- `resource = { kind: "use_count", cap: { kind: "unlimited" } }`
+- `resetCadence = { kind: "never" }` (command words have no resource cost)
+- A single `direct` phase applying `alter_item_kind` to the relevant new form.
 
-**Design options:**
-
-A. Add a narrowly-scoped variant to `EquipmentPredicate`:
-
-```typescript
-| { readonly kind: "item_unoccupied" }
-```
-
-This is item-specific and would only apply to occupiable items (vessels, containers large enough for creatures), but it is consistent with the "equipment gate" framing — the activation condition is about the equipment's current state.
-
-B. Introduce a broader `ActivationPredicate` union distinct from `EquipmentPredicate`, for activation-time runtime conditions that are not equipment-wearing/wielding gates:
-
-```typescript
-export type ActivationPredicate =
-  | EquipmentPredicate
-  | { readonly kind: "item_unoccupied" }
-  // Future: target_in_range, resource_at_threshold, etc.
-```
-
-Option A is narrower and less likely to invite scope creep; option B is more principled if other items require activation-time state checks.
-
-**Pressure:** Unique in SRD 5.2.1 so far, but the pattern (activation gated by a specific runtime state of the item itself) is plausible for other vessels and constructs.
+TypeCheck and tracer pass with no errors.
 
 ---
 
-## Secondary encoding notes
+## Surface widening required
 
-The Folding Boat's **box form** has a passive storage capability ("It can be opened to store items inside"). This could be modeled as a `PassiveMechanics` part in the composite with a `container_storage` atom:
+### `ItemDestructionPolicy.zero_hp_vessel`
 
-```dhall
-{ family = "passive"
-, grants =
-    [ { kind = "container_storage"
-      , storage = { ... }  -- dimensions/weight from box form stats
-      }
-    ]
-}
+**Evidence:** "If either vessel is reduced to 0 Hit Points, the Folding Boat is destroyed."
+
+**Problem:** `ItemDestructionPolicy` currently has three variants:
+- `none` — item is never destroyed by use
+- `last_charge_roll` — probabilistic destruction when the last charge is spent
+- `permanent_on_empty` — deterministic destruction when the resource pool empties
+
+None of these applies here. The Folding Boat is destroyed by **incoming damage to the vessel form**, not by charge exhaustion. The trigger is combat damage (HP depletion), not resource depletion.
+
+**Proposed variant:**
+```typescript
+| { readonly kind: "zero_hp_vessel" }
 ```
 
-However, the SRD does not give explicit cubic-foot or pound-capacity figures for the 12"×6"×6" box, so authoring this part would require estimation. It is secondary to the transformation mechanics.
+This would indicate that the item is destroyed when the currently-active vessel form (rowboat or keelboat) is reduced to 0 HP. The tracer would emit an `item_destruction` lifecycle node triggered by HP depletion of the spawned/transformed vessel.
 
-The vessel forms (Rowboat, Keelboat) reference external stat blocks ("Statistics for the Rowboat and Keelboat appear in 'Equipment'"). These are not inline stat blocks; they are catalog references resolved at play time. No encoding gap here — the `alter_item_kind` atom records only the destination form name.
+**Placeholder used:** `{ kind: "none" }` — semantically incorrect but required for the field. Noted here.
 
-## Classification
+---
 
-`surface_widening` — both missing pieces are new variants of existing surface types, not missing v4 taxonomy atoms.
+## Omissions (DM-agenda)
+
+### "No creatures aboard" precondition (third command word)
+
+**Evidence:** "The Folding Boat folds back into a box if no creatures are aboard."
+
+The third command word (box activation) has a conditional: it only works when the vessel is unoccupied. There is no `EquipmentPredicate` variant or `ActivatedAbilityHeader.condition` for occupant checks. This is DM-resolved at the table (the DM enforces that the command word has no effect if creatures are aboard). Omitted as DM-agenda.
+
+### Cargo handling
+
+**Evidence:** "Any objects in the vessel that can't fit inside the box remain outside the box as it folds. Any objects in the vessel that can fit inside the box do so."
+
+This is a narrative/DM-adjudicated rule about where objects end up when the box closes. No mechanical atom exists for item placement within containers during form transitions. Omitted as DM-agenda.
+
+### Weight change
+
+**Evidence:** "When the box becomes a vessel, its weight becomes that of a normal vessel its size."
+
+The item's carry weight changes based on form. No atom models item-weight-as-state. Omitted as DM-agenda (DM tracks the current form's weight).

@@ -1,1 +1,45 @@
-{"unit_slug":"wall_of_fire","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "wall_of_fire",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "half_damage",
+    "post_action_window",
+    "save_gate",
+    "scale_die_count",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "modifies",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "area_orientation_filter (hot_side selector on OngoingOperation or Attachment)",
+      "justification": "The wall's ongoing damage applies only to creatures on one specific face of the wall (chosen at cast time), not to creatures on the opposite face. The current surface has no concept of a directional sub-region of an area. Both on_creature_enters_area and on_creature_ends_turn_in_area fire symmetrically for the entire area footprint.",
+      "evidence": "One side of the wall, selected by you when you cast this spell, deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall. The other side of the wall deals no damage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "on_creature_ends_turn_within_distance_of_area_face (new OngoingTrigger variant)",
+      "justification": "The ongoing damage zone extends 10 feet beyond the hot face of the wall. The on_creature_ends_turn_in_area trigger covers only creatures inside the wall's 1-foot footprint. There is no trigger for 'creature ends turn within N feet of one face of the area'.",
+      "evidence": "deals 5d8 Fire damage to each creature that ends its turn within 10 feet of that side or inside the wall"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Partial encoding: initial Dex save_gate and inside-wall enter/end-turn damage are fully expressible. The two missing mechanics (one-sided selection and 10-ft proximity zone off the hot face) are both surface-level gaps — no new v4 taxonomy atoms are needed, just new surface grammar for directional area sub-regions and a proximity-to-face trigger. The trace is honest about what it covers: symmetric fire damage to any creature entering or ending a turn inside the wall's footprint, plus the initial appearance save_gate."
+}

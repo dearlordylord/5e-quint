@@ -1,1 +1,55 @@
-{"unit_slug":"spirit_guardians","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "spirit_guardians",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "damage",
+    "expire",
+    "post_action_window",
+    "save_gate",
+    "set_speed_ratio",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "OngoingTrigger.on_area_enters_creature_space",
+      "justification": "The spell triggers when the caster moves and the emanation drags over a creature — the area enters the creature's space, not the creature entering the area. on_creature_enters_area only captures creature-initiated entry. Same gap documented in Cloudkill and Moonbeam.",
+      "evidence": "whenever the Emanation enters a creature's space and whenever a creature enters the Emanation or ends its turn there"
+    },
+    {
+      "kind": "new_variant",
+      "name": "OngoingOperation.maxTimesPerTurn (or dedup predicate)",
+      "justification": "The spell explicitly caps how many times a creature makes the save in one turn. Without this, the two encoded operations (on_creature_enters_area + on_creature_ends_turn_in_area) would each trigger independently, allowing two saves per turn. The same gap blocks Web's second operation.",
+      "evidence": "A creature makes this save only once per turn."
+    },
+    {
+      "kind": "new_variant",
+      "name": "Attachment.area.castTimeExclusionList",
+      "justification": "The caster designates specific creatures at cast time who are completely unaffected by the emanation. No existing surface mechanism on area attachments supports cast-time creature exclusion. AnchoredFilter.creature_exemption_list is the closest art but is anchored-trigger-specific.",
+      "evidence": "When you cast this spell, you can designate creatures to be unaffected by it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DamageTypeRef.alignment_derived",
+      "justification": "The damage type is not a free cast-time player choice — it is determined by the caster's alignment at cast time. This is mechanically distinct from CastTimeChoice (player freely picks from a list) and from a fixed type. A shape like { kind: 'alignment_derived', onGoodOrNeutral: DamageType, onEvil: DamageType } would express this precisely without conflating alignment-gating with player agency.",
+      "evidence": "the creature takes 3d8 Radiant damage (if you are good or neutral) or 3d8 Necrotic damage (if you are evil)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core family (ongoing_effect, area emanation self-origin, concentration) fits cleanly. set_speed_ratio + two save_gate operations typecheck and trace. The damage type is encoded as CastTimeChoice<DamageType> as the closest available primitive, with the alignment_derived gap noted. The on_area_enters_creature_space and once-per-turn dedup gaps are pre-existing (same as Cloudkill/Moonbeam/Web). The creature exclusion gap is Spirit-Guardians-specific in this survey batch."
+}

@@ -1,0 +1,48 @@
+{
+  "description": "While wearing this ring, you can take a Magic action to give yourself the Invisible condition. You remain Invisible until the ring is removed or until you take a Bonus Action to become visible again.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_ring_of_invisibility",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "action": "magic",
+      "kind": "standard_action"
+    },
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "condition": "invisible",
+            "kind": "apply_condition"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "unlimited"
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Ring of Invisibility",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#RingOfInvisibility"
+  },
+  "rarity": "legendary",
+  "requiresAttunement": true
+}

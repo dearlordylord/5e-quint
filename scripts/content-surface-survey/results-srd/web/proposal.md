@@ -1,151 +1,74 @@
-# Web — Surface Widening Proposal
+# Proposal: Web surface gaps
 
-**Unit:** Web (level 2 Conjuration, SRD 5.2.1)
+**Unit:** Web (spell, level 2, conjuration, SRD 5.2.1)
 **Outcome:** `surface_widening`
-**Closest existing family:** `ongoing_effect` (SpellMechanics)
 
----
+## What encodes cleanly
 
-## What fits
+- `ongoing_effect` family with area attachment (20-ft cube, point within range, concentration up to 1 hour)
+- `area_is_difficult_terrain` (passive operation) — the webs create Difficult Terrain
+- `on_creature_enters_area` → `save_gate` (Dex vs spell save DC) → `apply_condition restrained` — first-time-enter save
+- `on_attached_turn_start` → `save_gate` (Dex vs spell save DC) → `apply_condition restrained` — turn-start save
 
-- Top-level `kind: "spell"` ✓
-- `family: "ongoing_effect"` ✓ (concentration, persistent area effect)
-- `attachment: { kind: "area", shape: { kind: "sphere" ... } }` — close, but the area is a **Cube**, not a sphere. Minor shape gap (see note below).
-- `duration: { kind: "concentration", upTo: { unit: "hour", amount: 1 } }` ✓
-- `castingTime: { kind: "action" }` ✓
-- `range: { kind: "point", feet: 60 }` ✓
-- `components: { v: true, s: true, m: "a bit of spiderweb" }` ✓
-- `level: 2`, `school: "conjuration"` ✓
+Typecheck and tracer both pass cleanly.
 
----
+## Gap 1: Escape mechanic (surface_widening — primary)
 
-## Gap 1 — `Condition` type missing `"restrained"`
+**RAW:** "A creature Restrained by the webs can take an action to make a Strength (Athletics) check against your spell save DC. If it succeeds, it is no longer Restrained."
 
-**File:** `src/surface/types.ts`
+**Gap:** There is no `OngoingTrigger` variant for "the attached (restrained) creature spends an Action." The existing `on_caster_spends_action` trigger is caster-scoped; it does not model the *target* creature spending its action economy.
+
+**Proposed widening:** New `OngoingTrigger` variant:
 
 ```typescript
-export type Condition = "prone";
+| {
+    readonly kind: "on_attached_creature_spends_action";
+    readonly cost: { readonly kind: "standard_action"; readonly action: StandardActionKind };
+  }
 ```
 
-Web's core mechanical outcome is applying the **Restrained** condition. This is a hard type-level block — `"restrained"` cannot be expressed in any valid `SaveGateRiderResult` or equivalent.
-
-**Proposed fix:**
+With this, the escape operation would be:
 ```typescript
-export type Condition = "prone" | "restrained";
+{
+  trigger: { kind: "on_attached_creature_spends_action", cost: { kind: "standard_action", action: "utilize" } },
+  effect: {
+    kind: "ability_check_gate",
+    ability: "str",
+    dc: { kind: "caster_spell_save_dc" },
+    onPass: { kind: "remove_condition", condition: "restrained" },
+  }
+}
 ```
 
-This is a closed enum addition; no structural change required.
+Note: the escape is conditioned on the creature being Restrained, but `OngoingPredicate` only supports `at_hp_threshold` today. A `condition_active` predicate variant (analogous to `PassiveSuppressor.conditions`) would also be needed to gate the trigger correctly, but this is a secondary gap.
 
----
+## Gap 2: "First time on a turn" deduplication
 
-## Gap 2 — `OngoingOperation` has no save-gate variant
+**RAW:** "The first time a creature enters the webs on a turn or starts its turn there, it must succeed on a Dexterity saving throw."
 
-**File:** `src/surface/types.ts`
+**Gap:** Two triggers (`on_creature_enters_area` + `on_attached_turn_start`) approximate this rule. However, the "first time on a turn" guard — preventing double-trigger if a creature exits and re-enters the area in the same turn — has no `OngoingPredicate` counterpart.
 
+**Proposed widening:** New `OngoingPredicate` variant:
 ```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+| { readonly kind: "first_time_this_turn" }
 ```
+or, alternatively, a `count` field on `OngoingOperation` analogous to the `count` field on `modify_roll_advantage` effect atoms.
 
-Web's operation is: *when a creature enters the area or starts its turn there → open a DEX save gate → on failure apply Restrained*.
+This is a lower-priority gap since the double-trigger case is rare in normal play.
 
-Neither `roll_modifier` (modifies a roll with a DiceDelta) nor `damage_on_hit` (rider damage when the caster hits) can express this. A new variant is needed:
+## Gap 3: Lightly Obscured (atom_widening)
 
-**Proposed new variant:**
+**RAW:** "the area within them is Lightly Obscured"
+
+**Gap:** No `EffectAtom` exists for area-level obscurement. `area_is_difficult_terrain` handles movement cost; no parallel atom handles visibility reduction. Lightly Obscured has a concrete mechanical consequence (Wisdom (Perception) checks to see into/through the area have Disadvantage per SRD Rules Glossary).
+
+**Proposed widening:** New `EffectAtom`:
 ```typescript
-export type AreaSaveGateOperation = {
-  readonly kind: "area_save_gate";
-  readonly trigger: AreaEventTrigger;
-  readonly ability: Ability;
-  readonly dc: DcSource;
-  readonly onFail: SaveGateRiderResult;
-  readonly onSuccess: SaveGateRiderResult;
-  readonly escapeCheck?: AreaEscapeCheck;
-};
-
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | AreaSaveGateOperation;
+| { readonly kind: "area_is_lightly_obscured" }
 ```
+Paired with a potential `area_is_heavily_obscured` for completeness (Cloudkill and Fog Cloud both create Heavily Obscured areas currently noted as DM agenda).
 
----
+## Omitted as DM agenda (not proposed for encoding)
 
-## Gap 3 — No area-event trigger type for per-creature-per-turn save gates
-
-Web's save gate fires on **two distinct sub-events** per creature per turn:
-- First time the creature **enters** the area on its turn
-- Creature **starts its turn** in the area
-
-The existing `AnchoredEvent` has `enters_area` but is designed for one-shot release from `anchored_trigger`. Ongoing area spells need a different closed enum of per-creature triggers:
-
-**Proposed new type:**
-```typescript
-export type AreaEventTrigger =
-  | { readonly kind: "enter_or_turn_start" }  // Web, Spike Growth, Spirit Guardians
-  | { readonly kind: "enter_only" }
-  | { readonly kind: "turn_start_only" };
-```
-
-This trigger type belongs on `AreaSaveGateOperation` (Gap 2) and potentially other future area operation variants.
-
----
-
-## Gap 4 — No escape-check mechanic
-
-Web includes an active escape option:
-> "A creature Restrained by the webs can take an action to make a Strength (Athletics) check against your spell save DC. If it succeeds, it is no longer Restrained."
-
-This pattern — *spend an action, make an ability/skill check vs. spell DC, remove a condition on success* — appears in several area-control spells (Web, Evard's Black Tentacles, Entangle, etc.) and needs surface representation.
-
-**Proposed new type:**
-```typescript
-export type AreaEscapeCheck = {
-  readonly kind: "ability_check";
-  readonly ability: Ability;
-  readonly skill?: string;       // "athletics", "acrobatics", etc.
-  readonly dc: DcSource;
-  readonly removes: Condition;
-  readonly cost: { readonly kind: "action" } | { readonly kind: "bonus_action" };
-};
-```
-
-This would be an optional field on `AreaSaveGateOperation`.
-
----
-
-## Gap 5 (minor) — Area shape `"cube"` not in `Attachment`
-
-The `area` attachment only supports `{ kind: "sphere" }`:
-```typescript
-readonly shape: { readonly kind: "sphere"; readonly radiusFeet: number };
-```
-
-Web's area is a 20-foot Cube. The `AnchorTarget` type already has a cube shape:
-```typescript
-{ readonly kind: "area"; readonly shape: { readonly kind: "cube"; readonly maxSideFeet: number } }
-```
-
-**Proposed fix:** Add `{ kind: "cube"; sideFeet: number }` to the `shape` discriminated union inside `Attachment.area`.
-
----
-
-## Gap 6 (omitted riders — dm_agenda boundary)
-
-**Terrain effects (Difficult Terrain + Lightly Obscured):** These are positional/environmental state modifiers. Per ARCHITECTURE.md, terrain state is caller-owned, not core mechanics. Omitted as dm_agenda territory.
-
-**Flammability (2d4 fire damage when webs burn):** This is a conditional interaction between the web object and a fire source — a secondary damage rider that fires when the area is subjected to fire. This could eventually be modeled as a conditional `activation` triggered by a fire-exposure event, but it requires:
-- An `object` attachment or `area` + `fire_exposure_event` window (neither in v4)
-- The damage itself (2d4 fixed, fire type) is representable once the trigger is
-- Omitted from this proposal as a deferred gap; not core to the Restrained/save-gate mechanic.
-
----
-
-## v4 Atom coverage
-
-The `area_save_gate` operation would trace through existing v4 atoms cleanly:
-- `activate` procedure → `area` attachment → `area_save_gate` operation (new surface type, not a new atom)
-- `save_gate` resolution atom ✓ (exists in v4)
-- `apply_condition` effect atom ✓ (exists in v4, needs `"restrained"` value)
-- `ability_check` resolution atom ✓ (exists in v4, for the escape check)
-
-No new v4 atoms are proposed. All four gaps are surface-type variants or new surface-type shapes that compose from existing v4 atoms.
+- **Fire damage:** "Any 5-foot Cube of webs exposed to fire burns away in 1 round, dealing 2d4 Fire damage." Fire exposure requires a DM/environment-resolved trigger (what constitutes fire contact, how sections burn, etc.). This is caller-owned spatial agenda.
+- **Web collapse:** "If the webs aren't anchored between two solid masses… the web collapses." Physical anchoring is a DM geometry judgment; no deterministic trigger exists.

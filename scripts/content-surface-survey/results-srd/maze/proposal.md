@@ -1,82 +1,198 @@
-# Maze — Surface Widening Proposal
+# Proposal: Surface Widenings for Maze
 
 ## Unit
 
-- **Name:** Maze
-- **Level:** 8 conjuration
-- **Family:** `ongoing_effect` (concentration, up to 10 minutes, single target)
-- **Outcome:** `surface_widening`
+**Maze** — SRD 5.2.1, Level 8 Conjuration spell  
+Banishes one visible creature to a demiplane for concentration up to 10 minutes. Target may Study to escape (DC 20 Int/Investigation). Returns to original space when spell ends.
 
-## Why it doesn't encode today
+## Outcome
 
-Maze fits the `ongoing_effect` family structurally — it is a concentration spell that applies a persistent state to one target for the duration. The header fields (level, school, castingTime, range, components, duration) all map cleanly. The two mechanics that block encoding are both gaps in `OngoingOperation`.
-
-### Gap 1: No `transport_exile` operation variant
-
-**Rule text:** "You banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes the maze."
-
-The v4 atom `transport_exile` covers this concept. But `OngoingOperation` in `types.ts` only exposes:
-
-```typescript
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
-```
-
-Neither variant can represent "the target is exiled to an extradimensional space and removed from the battlefield for the duration." There is no way to write an `OngoingOperation` that is not a lie.
-
-**Proposed widening:** Add a new variant to `OngoingOperation`:
-
-```typescript
-export type TransportExileOperation = {
-  readonly kind: "transport_exile";
-  readonly destination: "extradimensional_demiplane";   // closed enum, widen as needed
-};
-```
-
-The tracer would emit a `transport_exile` effect atom attached to the target, with a `persist` → `expire` lifecycle chain for the concentration duration.
+`surface_widening` — Three related gaps prevent honest encoding. The `ongoing_effect` family, `transport_exile` atom, and `on_creature_studies` trigger all exist and are correctly applicable; the missing pieces are variants/fields on existing types.
 
 ---
 
-### Gap 2: No escape condition on `OngoingEffectMechanics`
+## Gap 1 — No DurationEndTrigger for target ability-check success
 
-**Rule text:** "The target can take a Study action to try to escape. When it does so, it makes a DC 20 Intelligence (Investigation) check. If it succeeds, it escapes, and the spell ends."
+### Problem
 
-This is a **target-initiated escape condition**: while the ongoing effect holds, the affected creature can spend a specific action to make an ability check; on success the effect ends early. This pattern is distinct from:
-
-- `save_gate` in `ActivationMechanics` — that is a caster-side, cast-time save, not a repeatable target-action
-- `repeat_save` (v4 atom) — covers repeated saves on creature turns, but this is an ability check gated on taking the Study *action*, not a passive save
-
-No surface type exposes this. `OngoingEffectMechanics` has no optional `escapeCondition` field.
-
-**Proposed widening:** Add an optional `escapeCondition` field to `OngoingEffectMechanics`:
+The concentration duration needs an early-end trigger: "target succeeds on DC 20 Int (Investigation) check via Study action." The current `DurationEndTrigger` union covers output-based target actions:
 
 ```typescript
-export type AbilityCheckSpec = {
-  readonly ability: Ability;
-  readonly skill?: string;   // optional named skill ("investigation", etc.)
-};
-
-export type EscapeCondition = {
-  readonly cost: { readonly kind: "action"; readonly actionKind: StandardActionKind };
-  readonly check: AbilityCheckSpec;
-  readonly dc: DcSource;
-  readonly onSuccess: "end_effect";
-};
+export type DurationEndTrigger =
+  | { readonly kind: "target_makes_attack_roll" }
+  | { readonly kind: "target_deals_damage" }
+  | { readonly kind: "target_casts_spell" }
+  | { readonly kind: "target_dons_armor" }
+  | { readonly kind: "target_damaged_by_caster_or_ally" }
+  | { readonly kind: "target_takes_damage" }
+  | { readonly kind: "caster_recasts_spell" };
 ```
 
-The tracer would emit:
-- `ability_check` resolution atom gated by `action_window` (Study action)
-- On success branch: `expire` lifecycle atom ending the ongoing effect
+None captures a target's resolution-success as a termination trigger. Maze is the first spell with "target passes a check → spell ends" semantics.
+
+### Proposed Widening
+
+Add a new `DurationEndTrigger` variant:
+
+```typescript
+| {
+    readonly kind: "target_check_success";
+    readonly ability: Ability;
+    readonly dc: number;
+    readonly skill?: Skill;
+    readonly via?: "study_action";
+  }
+```
+
+This would allow the Maze duration to declare:
+
+```dhall
+earlyEnd = Some
+  [ { kind = "target_check_success"
+    , ability = "int"
+    , dc = 20
+    , skill = Some "investigation"
+    , via = Some "study_action"
+    }
+  ]
+```
+
+This variant could also handle other "target escapes by passing a check" mechanics if they arise in future content.
 
 ---
 
-## What traces cleanly today (if gaps were filled)
+## Gap 2 — transport_exile has no returnOnSpellEnd semantics
 
-- `spell_root` → `activate` → `action_quota` + `spell_slot` (level 8) + `concentration_lock`
-- `concentrate` → `expire` (≤ 10 minutes)
-- `activate` → `attaches_to` → `target` (one, 60 ft)
-- `activate` → `grants` → `transport_exile` effect → `attaches_to` target
-- `transport_exile` → `persist` → `expire` (duration end)
-- escape condition: `action_window` (Study) → `ability_check` (DC 20 Int/Investigation) → on success → `expire`
-- `return_on_end` lifecycle atom (target reappears in original space on spell end)
+### Problem
 
-All atoms used (`transport_exile`, `ability_check`, `return_on_end`, `action_window`) exist in v4 taxonomy. No new atoms required — only new surface variants/fields.
+When Maze ends (concentration broken, duration expires, or target escapes), RAW states:
+
+> "When the spell ends, the target reappears in the space it left or, if that space is occupied, in the nearest unoccupied space."
+
+The `transport_exile` atom encodes only the outbound banishment:
+
+```typescript
+| {
+    readonly kind: "transport_exile";
+    readonly destination: ExileDestination;
+  }
+```
+
+There is no field for the return destination, nor is this behavior captured by the duration lifecycle (which only emits `expire`). The return is a first-class game mechanic — not DM-agenda — and must be representable.
+
+### Proposed Widening
+
+Add an optional `returnOnEnd` field to `transport_exile`:
+
+```typescript
+| {
+    readonly kind: "transport_exile";
+    readonly destination: ExileDestination;
+    readonly returnOnEnd?:
+      | "original_space"
+      | "original_space_or_nearest_unoccupied";
+  }
+```
+
+`original_space_or_nearest_unoccupied` covers Maze's RAW text. `original_space` may be needed for simpler banishment variants. Omitting the field leaves the current meaning unchanged (no explicit return encoding, for items like Rod of Security where return is player-initiated via a command word).
+
+---
+
+## Gap 3 — ability_check_gate (OngoingEffect) has no skillFilter
+
+### Problem
+
+Maze's escape check is "Intelligence (Investigation)" — a sub-skill of Intelligence. The `OngoingEffect.ability_check_gate` type exposes only `ability: Ability`:
+
+```typescript
+| {
+    readonly kind: "ability_check_gate";
+    readonly ability: Ability;
+    readonly dc: DcSource;
+    readonly onPass: EffectAtom;
+    readonly onFail?: EffectAtom;
+  }
+```
+
+The `modify_roll_numeric` effect atom already has `skillFilter?: SkillFilter` for narrowing ability-check riders. The same field should be available on `ability_check_gate` (both the `OngoingEffect` and `ActivationPhase` variants).
+
+### Proposed Widening
+
+Add `skillFilter?: SkillFilter` to both `ability_check_gate` variants:
+
+```typescript
+// OngoingEffect variant
+| {
+    readonly kind: "ability_check_gate";
+    readonly ability: Ability;
+    readonly dc: DcSource;
+    readonly skillFilter?: SkillFilter;   // ← new
+    readonly onPass: EffectAtom;
+    readonly onFail?: EffectAtom;
+  }
+```
+
+This is additive and backward-compatible. When absent, the check is unnarrowed (any check of the stated ability).
+
+---
+
+## Interaction Between Gaps 1 and 2
+
+Gaps 1 and 2 are related: once Gap 1 is resolved (target check success as DurationEndTrigger), Gap 2 determines what happens when that trigger fires (the creature returns). Both must be addressed for Maze to encode completely.
+
+An alternative encoding strategy would keep the escape check in the `operations` block (using the existing `on_creature_studies` trigger and `ability_check_gate` ongoing effect) and add a new EffectAtom `terminate_host_spell` for the `onPass` slot. This would avoid widening `DurationEndTrigger` but introduces a self-referential effect atom. The `DurationEndTrigger` approach is cleaner and more composable.
+
+## Encoding Sketch (after widenings applied)
+
+```dhall
+{ kind = "spell"
+, id = "maze"
+, name = "Maze"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-M#Maze" }
+, description = "..."
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 8
+    , school = "conjuration"
+    , castingTime = { kind = "action" }
+    , range = { kind = "point", feet = 60 }
+    , components = { v = True, s = True, m = False }
+    , duration =
+        { kind = "concentration"
+        , upTo = { unit = "minute", amount = 10 }
+        , earlyEnd = Some
+            [ { kind = "target_check_success"   -- Gap 1
+              , ability = "int"
+              , dc = 20
+              , skill = Some "investigation"
+              , via = Some "study_action"
+              }
+            ]
+        }
+    , attachment = { kind = "target", selection = { mode = "one" } }
+    , initialPhase =
+        Some { kind = "direct"
+             , attachment = { kind = "target", selection = { mode = "one" } }
+             , effects = Some
+                 [ { kind = "transport_exile"
+                   , destination = "demiplane"
+                   , returnOnEnd = Some "original_space_or_nearest_unoccupied"  -- Gap 2
+                   }
+                 ]
+             }
+    , operations =
+        [ { trigger = { kind = "on_creature_studies" }
+          , effect =
+              { kind = "ability_check_gate"
+              , ability = "int"
+              , dc = { kind = "fixed", dc = 20 }
+              , skillFilter = Some { kind = "fixed", skills = [ "investigation" ] }  -- Gap 3
+              , onPass = { kind = "none" }  -- moot: early-end handled by DurationEndTrigger
+              }
+          }
+        ]
+    }
+}
+```
+
+Note: With Gap 1 addressed via `DurationEndTrigger`, the `operations` block's `ability_check_gate` becomes redundant — the escape is modeled entirely by the duration's `earlyEnd`. One or the other encoding should be chosen; `DurationEndTrigger` is preferred as it keeps escape semantics in the duration lifecycle where they belong.

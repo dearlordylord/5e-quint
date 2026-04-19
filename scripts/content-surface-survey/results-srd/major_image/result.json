@@ -1,1 +1,42 @@
-{"unit_slug":"major_image","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "major_image",
+  "outcome": "atom_widening",
+  "atoms_used": [
+    "ability_check_gate",
+    "action_quota",
+    "action_window",
+    "activate",
+    "area",
+    "concentrate",
+    "concentration_lock",
+    "create_illusion",
+    "expire",
+    "reposition_attachment",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "disbelieve_illusion",
+      "justification": "The Study-action Investigation check's onPass effect is that the creature can see through the image and its other sensory qualities become faint. This is a creature-specific perception state change with deterministic mechanical consequences (the creature bypasses the illusion's concealment). No existing EffectAtom captures a creature-local illusion bypass/reveal. { kind: 'none' } was used as a known-gap placeholder to get the gate structure into the trace. Same gap as Silent Image.",
+      "evidence": "If a creature discerns the illusion for what it is, the creature can see through the image, and its other sensory qualities become faint to the creature."
+    },
+    {
+      "kind": "new_variant",
+      "name": "concentration.permanentAtSlot",
+      "justification": "At slot 4+, the duration changes from concentration (up to 10 minutes) to permanent (until dispelled, no concentration). The existing DurationUpcastTier only supports amount changes within the same duration kind; there is no mechanism to change the kind (concentration → permanent) at a slot threshold. The True Polymorph permanentIfMaintainedFull flag is maintenance-based, not slot-based — a different shape is needed.",
+      "evidence": "The spell lasts until dispelled, without requiring Concentration, if cast with a level 4+ spell slot."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Typecheck and tracer both pass. The trace correctly captures: ongoing_effect family; area attachment (cube 20 ft, point_within_range, range 120 ft); create_illusion with all four sensory channels (visual/sound/smell/temperature); reposition_attachment via on_caster_spends_action Magic action; on_creature_studies + ability_check_gate (Int vs caster spell save DC) for disbelief. Two mechanics are omitted: (1) onPass atom for 'sees through illusion' — { kind: none } placeholder, same acknowledged gap as Silent Image; (2) upcast-to-permanent at slot 4+ — no DurationUpcastKindChange mechanism exists. Primary classification atom_widening (missing disbelieve_illusion); secondary surface_widening (slot-based duration kind change)."
+}

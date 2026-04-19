@@ -1,1 +1,28 @@
-{"unit_slug":"maze","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "maze",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.target_study_check_success",
+      "justification": "Maze's concentration ends early when the banished target succeeds on a DC 20 Intelligence (Investigation) check via the Study action. No existing DurationEndTrigger variant captures a target ability-check success as an early-end condition. The closest existing variants (target_makes_attack_roll, target_casts_spell, etc.) are all output-based actions, not resolution outcomes.",
+      "evidence": "The target can take a Study action to try to escape. When it does so, it makes a DC 20 Intelligence (Investigation) check. If it succeeds, it escapes, and the spell ends."
+    },
+    {
+      "kind": "new_variant",
+      "name": "transport_exile returnOnSpellEnd field",
+      "justification": "When Maze ends by any means, the exiled target reappears at its original departure point (or nearest unoccupied space). The transport_exile atom encodes only the outbound banishment; there is no field to encode the return destination semantics. This is a distinct need from teleport (which is caster-initiated repositioning) — here the return is automatic on duration expiry.",
+      "evidence": "When the spell ends, the target reappears in the space it left or, if that space is occupied, in the nearest unoccupied space."
+    },
+    {
+      "kind": "new_variant",
+      "name": "ability_check_gate skillFilter (OngoingEffect variant)",
+      "justification": "Maze's escape check is specifically Intelligence (Investigation), not just any Intelligence check. The OngoingEffect ability_check_gate type exposes only `ability: Ability` with no skillFilter field, so the Investigation sub-spec cannot be encoded. The ActivationPhase ability_check_gate has the same gap.",
+      "evidence": "it makes a DC 20 Intelligence (Investigation) check"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The spell family (ongoing_effect) is correct, the on_creature_studies trigger is explicitly designed for Maze (the tracer comment names it), and transport_exile to demiplane encodes the outbound banishment. Three surface gaps block honest encoding: (1) no DurationEndTrigger variant for 'target succeeds on ability check', so the escape condition cannot terminate concentration; (2) transport_exile has no returnOnSpellEnd field, so the creature's automatic return on duration expiry is unrepresentable; (3) ability_check_gate lacks skillFilter, so Investigation specificity is lost. Gap (1) is the most critical — the ability_check_gate onPass cannot express 'this spell ends' without misusing end_ongoing_spells, which would dispel all spells of level ≤8 on the target rather than just Maze."
+}
