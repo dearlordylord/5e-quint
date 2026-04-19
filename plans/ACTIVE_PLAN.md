@@ -49,9 +49,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 5,  "id": "EPT2",  "status": "done", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
     { "number": 6,  "id": "EPT3",  "status": "done", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "done", "title": "Define Matching TypeScript Projected Record Types" },
-    { "number": 8,  "id": "EPT5",  "status": "ready-for-implementation-after-light-research", "title": "Build Surface-To-Projection Compiler" },
-    { "number": 9,  "id": "EPT6",  "status": "blocked", "title": "Hook Persistent Projection For Mage Armor" },
-    { "number": 10, "id": "EPT7",  "status": "blocked", "title": "Build Projected Mechanic Interpreter" },
+    { "number": 8,  "id": "EPT5",  "status": "done", "title": "Build Surface-To-Projection Compiler" },
+    { "number": 9,  "id": "EPT6",  "status": "ready-for-implementation-after-light-research", "title": "Hook Persistent Projection For Mage Armor" },
+    { "number": 10, "id": "EPT7",  "status": "ready-for-implementation-after-light-research", "title": "Build Projected Mechanic Interpreter" },
     { "number": 11, "id": "EPT8",  "status": "blocked", "title": "Route Availability And Execution Through Projected Records" },
     { "number": 12, "id": "EPT9",  "status": "blocked", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
     { "number": 13, "id": "EPT10", "status": "blocked", "title": "Add Quint And TypeScript Parity Tests For First Slice" },
@@ -118,9 +118,9 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | done | EPT1 | EPT3, EPT5 | Landed [plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md), confirming the authored SRD cantrip `acid_splash` as the first spell-side executable pressure case and documenting its traced `save_gate` -> `damage` fit. | Landed on 2026-04-18. EPT3 is unblocked; EPT5 still depends on EPT3 and EPT4. |
 | 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | done | EPT1, EPT2 | EPT4, EPT5 | Landed [projected-executable.qnt](/workspace/typescript/dnd/projected-executable.qnt) and [plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md), defining the closed Quint-side executable and persistent subset for the first tracer-bullet slice. The executable contract now covers `attack_roll`, `save_gate`, `direct`, `damage`, `heal_hp`, `grant_extra_action`, and the exact fighter resource/reset shapes from EPT1; the persistent contract narrows `Mage Armor` to record identity plus fixed module-level RAW constants. | Landed on 2026-04-18. EPT4 is unblocked; EPT5 still waits on EPT4. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | done | EPT3 | EPT5 | Landed [projected-executable.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.ts) and [projected-executable.test.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.test.ts), mirroring the EPT3 Quint subset one-for-one in TypeScript with the same closed tags, node shapes, persistent-record payload, and Mage Armor lifecycle constants. Focused tests pin the frozen first-slice facts for Acid Splash, Second Wind, Action Surge, and Mage Armor so EPT5 can compile against the exact contract rather than looser example fixtures. | Landed on 2026-04-19. EPT5 is now unblocked. |
-| 8 | EPT5 - Build Surface-To-Projection Compiler | ready-for-implementation-after-light-research | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Unblocked by EPT4 on 2026-04-19. |
-| 9 | EPT6 - Hook Persistent Projection For Mage Armor | blocked | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Can proceed in parallel with EPT7 once EPT5 lands. |
-| 10 | EPT7 - Build Projected Mechanic Interpreter | blocked | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Core execution task. Blocked on compiler output. |
+| 8 | EPT5 - Build Surface-To-Projection Compiler | done | EPT2, EPT3, EPT4 | EPT6, EPT7 | Landed a unit-scoped surface-to-projection compiler plus inspectable fixture constants for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. The compiler now rejects both out-of-scope units and in-scope preserved-fact drift at the EPT5 boundary. | Landed on 2026-04-19. EPT6 and EPT7 are now unblocked. |
+| 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-implementation-after-light-research | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Unblocked by EPT5 on 2026-04-19. Can proceed in parallel with EPT7. |
+| 10 | EPT7 - Build Projected Mechanic Interpreter | ready-for-implementation-after-light-research | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Unblocked by EPT5 on 2026-04-19. |
 | 11 | EPT8 - Route Availability And Execution Through Projected Records | blocked | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. | Blocked on interpreter. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
 | 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Acid Splash`, `Mage Armor`, `Second Wind`, and `Action Surge`, including spell save-gate assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
@@ -601,7 +601,7 @@ Handoff readiness:
 
 ### Task 8 - EPT5 - Build Surface-To-Projection Compiler
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `EPT2`, `EPT3`, `EPT4`
 
@@ -626,7 +626,7 @@ Output:
 
 Next action:
 
-- Build the first inspectable path from authored surface units to projected records.
+- Landed [packages/core/src/projected-compiler.ts](/workspace/typescript/dnd/packages/core/src/projected-compiler.ts), [packages/core/src/projected-compiler-fixtures.ts](/workspace/typescript/dnd/packages/core/src/projected-compiler-fixtures.ts), [packages/core/src/projected-compiler.test.ts](/workspace/typescript/dnd/packages/core/src/projected-compiler.test.ts), and [plans/EXECUTABLE_PROJECTION_COMPILER.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_COMPILER.md).
 
 Verification requirements:
 
@@ -637,11 +637,11 @@ Verification requirements:
 
 Handoff readiness:
 
-- Unblocked by EPT4 on 2026-04-19.
+- Landed on 2026-04-19. EPT6 and EPT7 are unblocked.
 
 ### Task 9 - EPT6 - Hook Persistent Projection For Mage Armor
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT5`
 
@@ -676,11 +676,11 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT5.
+- Unblocked by EPT5 on 2026-04-19.
 
 ### Task 10 - EPT7 - Build Projected Mechanic Interpreter
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT5`
 
@@ -715,7 +715,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT5.
+- Unblocked by EPT5 on 2026-04-19.
 
 ### Task 11 - EPT8 - Route Availability And Execution Through Projected Records
 
