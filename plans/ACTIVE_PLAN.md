@@ -655,6 +655,8 @@ Scope:
 - Do not infer an active persistent effect from prepared-spell ownership.
 - Do not invent a combat-legal don-armor action just to satisfy the early-end hook.
 
+Reference design: [plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACTIVE_PERSISTENT_PRIMITIVE.md). Pins the `ActiveProjectedPersistent` shape, `ProjectedEarlyEndTrigger` vocabulary, `DON_ARMOR` battle event, and AC reader that thread the EPT5 contract directly without a parallel registry.
+
 Input:
 
 - projected persistent records
