@@ -5150,8 +5150,9 @@ describe("MCP server adapter", () => {
   test("battle hosts surface and execute BATTLE_HELP_ATTACK through MCP", () => {
     const host = initBattleHostWithHelpAttackActor();
 
-    const actions = readPayload(handleToolCall(host, "get_available_actions", {}))
-      .action as ReadonlyArray<{ type: string; actorId: string }>;
+    const actions = readPayload(
+      handleToolCall(host, "get_available_actions", {}),
+    ).action as ReadonlyArray<{ type: string; actorId: string }>;
     expect(
       actions.find((t) => t.type === "BATTLE_HELP_ATTACK" && t.actorId === "A"),
     ).toBeDefined();
@@ -5918,7 +5919,8 @@ describe("MCP server adapter", () => {
     ).action as ReadonlyArray<{ type: string; spellId?: string }>;
     expect(
       actions.find(
-        (t) => t.type === "BATTLE_CAST_SAVE_SPELL" && t.spellId === "hold_person",
+        (t) =>
+          t.type === "BATTLE_CAST_SAVE_SPELL" && t.spellId === "hold_person",
       ),
     ).toBeDefined();
 

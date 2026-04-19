@@ -789,7 +789,6 @@ const PICKER_ENTRIES: ReadonlyArray<PickerEntry> = [
   },
 ];
 
-
 function featureChoicePayload(
   context: ResolverContext,
   choice: CharacterOpenChoice,
