@@ -1,12 +1,18 @@
 -- Spike Growth — SRD 5.2.1 Spell, Level 2, Transmutation.
--- Family: ongoing_effect. §A15 validation ref for the
--- `on_creature_moves { perFeet: 5 }` trigger: 2d4 piercing damage per
--- 5 feet of movement through the spiked area.
+-- Family: ongoing_effect. Two passive-duration facts about the area:
+--   * The area IS difficult terrain (area_is_difficult_terrain atom,
+--     passive trigger).
+--   * Moving through costs 2d4 piercing per 5 ft (on_creature_moves).
 --
--- Difficult Terrain and the "Wisdom (Perception or Survival) to
--- recognize the terrain" check are DM agenda (spatial movement
--- geometry and perception rulings are caller-provided per
--- ARCHITECTURE.md §1).
+-- The operations list is heterogeneous (different effect shapes), so
+-- effects are constructed via `_types.dhall`'s superset Effect record
+-- with unused fields set to None. `dhall-to-json --omit-empty` drops
+-- the Nones, so the JSON shape is unchanged.
+--
+-- The "Wisdom (Perception or Survival) to recognize the terrain"
+-- check remains DM agenda (perception rulings are caller-provided).
+
+let T = ./_types.dhall
 
 let spikeGrowth =
       { kind = "spell"
@@ -36,17 +42,25 @@ let spikeGrowth =
               }
           , operations =
               [ { trigger =
-                    { kind = "on_creature_moves"
-                    , perFeet = 5
-                    }
+                    T.defaultTrigger // { kind = "passive" }
                 , effect =
-                    { kind = "damage"
-                    , damageType = "piercing"
-                    , amount =
-                        { kind = "fixed"
-                        , expr = { dice = 2, dieSize = 4 }
-                        }
-                    }
+                    T.defaultEffect // { kind = "area_is_difficult_terrain" }
+                }
+              , { trigger =
+                      T.defaultTrigger
+                  //  { kind = "on_creature_moves"
+                      , perFeet = Some 5
+                      }
+                , effect =
+                      T.defaultEffect
+                  //  { kind = "damage"
+                      , damageType = Some "piercing"
+                      , amount =
+                          Some
+                            { kind = "fixed"
+                            , expr = { dice = 2, dieSize = 4 }
+                            }
+                      }
                 }
               ]
           }
