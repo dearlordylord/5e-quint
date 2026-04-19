@@ -10,7 +10,7 @@ This is not a PRD. It assumes the overall goal is already accepted and narrows t
 
 Define the smallest durable path from authored content surface records to executable battle behavior for one bounded MCP scenario:
 
-- a newly created mage with access to `ice_knife`
+- a newly created mage with access to `acid_splash`
 - a newly created Fighter 2 with `Second Wind` and `Action Surge`
 - goblin and bugbear opponents
 - turn starts and turn ends
@@ -81,8 +81,8 @@ For this slice, the projection layer should split into two projections:
   - derives durable runtime-facing facts from authored passive or ongoing mechanics
   - examples: AC shaping, senses, granted access, lifecycle hooks
 - **executable projection**
-  - derives legal actions and their closed resolution graphs from authored activations and reactions
-  - examples: `ice_knife`, `second_wind`, `action_surge`, attack actions, reaction spells
+  - derives legal actions and their closed resolution structures from authored activations and reactions
+  - examples: `acid_splash`, `second_wind`, `action_surge`, attack actions, reaction spells
 
 This doc is primarily about the executable side.
 
@@ -144,7 +144,7 @@ That interpreter consumes projected executable records across multiple unit kind
 - class-feature activations
 - triggered reactions
 
-So `Ice Knife`, `Second Wind`, and `Action Surge` belong to the same executable world even though they have different provenance and authored unit kinds.
+So `Acid Splash`, `Second Wind`, and `Action Surge` belong to the same executable world even though they have different provenance and authored unit kinds.
 
 The durable split is:
 
@@ -197,7 +197,7 @@ The older sketch terms that should be kept only as guidance, not forced into v1 
 
 The first end-to-end scenario is:
 
-1. create and finalize a mage with access to `ice_knife`
+1. create and finalize a mage with access to `acid_splash`
 2. create and finalize a Fighter 2 with `Second Wind` and `Action Surge`
 3. start a battle against a goblin and a bugbear
 4. run normal turn flow through MCP
@@ -205,7 +205,7 @@ The first end-to-end scenario is:
    - ordinary attack flow
    - `Second Wind`
    - `Action Surge`
-   - `Ice Knife`
+   - `Acid Splash`
    - turn end boundaries
 6. include `Mage Armor` as the first persistent spell shaping AC and early-end lifecycle
 
@@ -234,15 +234,16 @@ It should cover only the executable mechanics needed for the tracer bullet:
 - turn-bound usage limits
 - reaction-free battle action execution for normal turns
 
-It should also support a closed graph structure, not just a flat list of effects.
+It should support closed executable structure for authored activations.
 
-That matters because `ice_knife` is graph-shaped:
+For the first safe SRD slice:
 
-- cast root
-- attack-roll leg against primary target
-- explosion save-gate leg against creatures near the primary target
-- hit gates the piercing damage
-- hit does **not** gate the explosion leg
+- `Acid Splash` pressures `save_gate` + area execution + cantrip scaling
+- ordinary attack flow pressures `attack_roll`
+- `Second Wind` pressures `direct` + `heal_hp`
+- `Action Surge` pressures `grant_extra_action`
+
+This first slice does **not** require graph-shaped spell execution, but the projected executable model should stay ready for it. A later graph-shaped pressure case should widen the model, not replace it.
 
 ### B. Projected Persistent Subset
 
@@ -383,26 +384,22 @@ This is intentionally tiny for v1.
 
 ## Unit-Specific Tracer Bullets
 
-### 1. Ice Knife
+### 1. Acid Splash
 
-Author a new `ice_knife` surface unit.
+Use the existing authored unit in [acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json).
 
-Authoring precedent already exists in the surface notes at [CONTENT_SURFACE_PROTOTYPE.md](/workspace/typescript/dnd-design-domain-model/plans/CONTENT_SURFACE_PROTOTYPE.md:191), but the actual unit still needs to be authored.
+This is the safe SRD spell-side executable pressure case:
 
-It should project to one executable action with a graph like:
-
-```text
-cast_ice_knife
-├── attack_primary_target
-│   └── on_hit -> deal_piercing_to_primary
-└── explode_near_primary_target
-    └── on_failed_save -> deal_cold_to_current_save_target
-```
+- action cantrip
+- area save gate
+- character-level cantrip scaling
+- battle-targeted area execution
 
 Important consequence:
 
-- `Ice Knife` proves the executable projection must support graphs, not only linear phases.
-- the explosion origin must be tied to the primary target or attack impact, not only `point_within_range`
+- `Acid Splash` proves the executable projection must support projected spell activation without requiring a bespoke spell handler
+- the first safe SRD slice does **not** require graph-shaped spell execution
+- the design should still remain graph-ready for a later pressure case
 
 ### 2. Fighter Second Wind
 
@@ -465,12 +462,8 @@ The battle tracer bullet does not require full monster-mechanics promotion.
 
 Before implementation, prepare this exact list:
 
-1. **Author `ice_knife` in `packages/prototype-content-surface/content/`**
-   - Dhall source
-   - generated JSON
-   - use existing patterns from:
-   - [guiding_bolt.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/guiding_bolt.json)
-   - [fireball.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/fireball.json)
+1. **Confirm the existing `acid_splash` unit as the spell-side executable pressure case**
+   - verify the authored unit remains the canonical in-scope spell activation for the first safe SRD slice
 
 2. **Freeze the first projected executable subset**
    - one doc or module that names the exact executable node kinds and resource gates allowed in v1
@@ -534,9 +527,9 @@ MCP should not:
 
 These do not block the design doc, but should be resolved during implementation:
 
-1. whether the `Ice Knife` executable graph should use `primary_target` or a more explicit `impact_locus` as the explosion anchor
-2. whether the first persistent projection for `Mage Armor` should live at character projection time, battle host setup time, or both through one shared query
-3. whether projected records remain purely in memory in v1 or later gain checked-in fixtures for auditability
+1. whether the first persistent projection for `Mage Armor` should live at character projection time, battle host setup time, or both through one shared query
+2. whether projected records remain purely in memory in v1 or later gain checked-in fixtures for auditability
+3. which later SRD-safe pressure case should be used to widen the executable model to explicit graph-shaped spell resolution
 
 ## Recommended File Ownership
 

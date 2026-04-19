@@ -8,7 +8,7 @@ Implement the first end-to-end executable projection slice from authored content
 
 The slice is deliberately narrow:
 
-- mage with `ice_knife` and `mage_armor`
+- mage with `acid_splash` and `mage_armor`
 - Fighter 2 with `Second Wind` and `Action Surge`
 - goblin and bugbear battle participation
 - turn starts and turn ends
@@ -104,34 +104,28 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 ---
 
-## Task 2: Author The Missing `ice_knife` Surface Unit
+## Task 2: Confirm The Existing `acid_splash` Surface Unit As First Spell Pressure Case
 
 **Input**
 
-- existing activation precedents:
-  - [guiding_bolt.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/guiding_bolt.json)
-  - [fireball.json](/workspace/typescript/dnd-design-domain-model/packages/prototype-content-surface/content/fireball.json)
-- the design requirement that `ice_knife` is graph-shaped
+- existing authored spell activation:
+  - [acid_splash.json](/workspace/typescript/dnd/packages/prototype-content-surface/content/acid_splash.json)
+- the design requirement that the first safe SRD slice uses an existing licensed spell rather than a non-SRD pressure case
 
 **Output**
 
-- `packages/prototype-content-surface/content/ice_knife.dhall`
-- generated `packages/prototype-content-surface/content/ice_knife.json`
-- any necessary narrow surface widening needed to represent:
-  - primary-target or impact-centered explosion origin
-  - graph-shaped activation semantics honest to the spell
+- a checked-in note or scope confirmation that `acid_splash` is the in-scope spell-side executable unit
+- any narrow spell-slice adjustments needed to keep the first tracer bullet SRD-safe
 
 **Validation**
 
-- The surface record typechecks.
-- The unit can be traced or otherwise inspected in the same way as existing surface-authored units.
-- The authored encoding makes the explosion independent of hit/miss while keeping piercing damage hit-gated.
-- The authored shape does not require a runtime-only “special Ice Knife branch”.
+- `acid_splash` remains authored, typechecks, and traces cleanly.
+- The first tracer bullet no longer depends on a non-SRD spell.
+- The spell-side executable pressure is still covered by an authored spell unit already in corpus.
 
 **Success criteria**
 
-- `ice_knife` is represented honestly as authored surface content without runtime-only side channels or ad hoc exception logic.
-- The required surface widening is narrow enough that at least one plausible future sibling spell could reuse it.
+- The first tracer bullet uses an SRD-safe authored spell-side executable unit with no licensing ambiguity.
 
 **Dependencies**
 
@@ -145,7 +139,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 - frozen scope from Task 1
 - authored units in scope:
-  - `ice_knife`
+  - `acid_splash`
   - `mage_armor`
   - `fighter_second_wind`
   - `fighter_action_surge_l2`
@@ -164,7 +158,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 - Quint can represent every in-scope mechanic without lossy fallback fields.
 - No projected executable or persistent construct in scope requires a generic stringly operation slot.
-- `Second Wind` and `Action Surge` fit the same executable world as `Ice Knife`.
+- `Second Wind` and `Action Surge` fit the same executable world as `Acid Splash`.
 - `Mage Armor` fits the persistent world without introducing a second unrelated projection model.
 
 **Success criteria**
@@ -231,7 +225,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 **Validation**
 
 - Compilation succeeds for:
-  - `ice_knife`
+  - `acid_splash`
   - `mage_armor`
   - `fighter_second_wind`
   - `fighter_action_surge_l2`
@@ -307,10 +301,10 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 **Validation**
 
-- `Ice Knife`, `Second Wind`, and `Action Surge` all execute through the same interpreter family.
+- `Acid Splash`, `Second Wind`, and `Action Surge` all execute through the same interpreter family.
 - The interpreter consumes explicit runtime facts only at the allowed boundary.
 - The interpreter emits battle events or reducer-consumable state transitions rather than mutating state directly.
-- The interpreter does not branch on specific unit ids like `ice_knife` or `fighter_second_wind`.
+- The interpreter does not branch on specific unit ids like `acid_splash` or `fighter_second_wind`.
 
 **Success criteria**
 
@@ -342,7 +336,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
 
 - `Second Wind` appears only when legal and resolves through projected execution.
 - `Action Surge` appears only when legal, respects once-per-turn and no-Magic restriction, and resolves through projected execution.
-- `Ice Knife` appears as a legal cast option for the mage and resolves through projected execution.
+- `Acid Splash` appears as a legal cast option for the mage and resolves through projected execution.
 - Availability and execution agree on legality; execution is not secretly more permissive than the token emitted by availability.
 
 **Success criteria**
@@ -405,15 +399,15 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
   - `Second Wind`
   - `Action Surge`
   - `Mage Armor`
-  - `Ice Knife`
+  - `Acid Splash`
 - focused tests for graph-shaped execution and early-end lifecycle behavior
 
 **Validation**
 
 - Quint and TS agree on the in-scope semantics.
-- `Ice Knife` tests confirm:
-  - the explosion is not hit-gated
-  - the piercing leg is hit-gated
+- `Acid Splash` tests confirm:
+  - area save-gate execution works through projected spell activation
+  - cantrip scaling remains correct through projected execution
 - `Action Surge` tests confirm:
   - extra action granted
   - Magic excluded
@@ -453,7 +447,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
   - `execute_action` flow for:
     - `Second Wind`
     - `Action Surge`
-    - `Ice Knife`
+    - `Acid Splash`
     - turn end progression
 
 **Validation**
@@ -495,7 +489,7 @@ Task 6 is necessary for the full scenario because `Mage Armor` is in scope, but 
   - `Second Wind`
   - `Action Surge`
   - `Mage Armor`
-  - `Ice Knife`
+  - `Acid Splash`
 - No new permanent adapter, registry, or compatibility layer remains solely to preserve the old path for in-scope mechanics.
 
 **Success criteria**

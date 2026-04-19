@@ -10,7 +10,7 @@ Temporary system-level pipeline map:
 **Batch:** Executable Projection Tracer Bullet + Content-Surface Taxonomy Convergence.
 
 **Batch goal:** two coordinated tracks.
-1. Prove a **narrow executable-projection path** from authored surface content into Quint-owned semantics, TS runtime execution, and MCP battle flow for one bounded scenario: mage (`ice_knife`, `mage_armor`) + Fighter 2 (`Second Wind`, `Action Surge`) vs goblin + bugbear.
+1. Prove a **narrow executable-projection path** from authored surface content into Quint-owned semantics, TS runtime execution, and MCP battle flow for one bounded scenario: mage (`acid_splash`, `mage_armor`) + Fighter 2 (`Second Wind`, `Action Surge`) vs goblin + bugbear.
 2. Continue the content-surface taxonomy convergence loop so the surface can widen deliberately over time from the tracer bullet rather than freezing prematurely.
 
 **Current execution strategy:** land a narrow projected subset now, then grow width from that seed. Do **not** wait for a fully frozen surface tag before proving the runtime path.
@@ -46,7 +46,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 2,  "id": "CSA3",  "status": "done", "title": "Retire Empty Post-CSA1 Clean Queue Batch 2 Slot" },
     { "number": 3,  "id": "CSA4",  "status": "done", "title": "A14 Relative-To-Stat DiceAmount" },
     { "number": 4,  "id": "EPT1",  "status": "ready-for-implementation-after-light-research", "title": "Freeze Executable Projection First Slice Scope" },
-    { "number": 5,  "id": "EPT2",  "status": "blocked", "title": "Author Ice Knife Surface Unit" },
+    { "number": 5,  "id": "EPT2",  "status": "blocked", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
     { "number": 6,  "id": "EPT3",  "status": "blocked", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "blocked", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "blocked", "title": "Build Surface-To-Projection Compiler" },
@@ -115,15 +115,15 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 2 | CSA3 - Retire Empty Post-CSA1 Clean Queue Batch 2 Slot | done | CSA2 | none | Retired. After CSA2's overlap check proved the clean queue is already fully authored, there is no second post-CSA1 clean batch to author. If a future rerun creates un-authored `clean` rows, add a new task instead of reusing this stale slot. | Landed on 2026-04-17. |
 | 3 | CSA4 - A14 Relative-To-Stat DiceAmount | done | none | CSA8 | Land a `LinkedAmount` variant (walk-speed / damage-taken / damage-dealt) on `DiceAmount`; author Vampiric Touch, Harm, and Spider Climb. | Landed in 9bd63c8b; 134/134 regression. |
 | 4 | EPT1 - Freeze Executable Projection First Slice Scope | ready-for-implementation-after-light-research | none | EPT2, EPT3 | Land the first-slice scope file naming the exact units, projected node kinds, persistent record kinds, runtime facts, and out-of-scope items. Use [DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md](/workspace/typescript/dnd-design-domain-model/DESIGN_EXECUTABLE_PROJECTION_TRACER_BULLET.md) and [plans/EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md](/workspace/typescript/dnd-design-domain-model/plans/EXECUTABLE_PROJECTION_TRACER_BULLET_PLAN.md) as the source design. | Highest priority. This is the new active entry point. |
-| 5 | EPT2 - Author Ice Knife Surface Unit | blocked | EPT1 | EPT3, EPT5 | Author `ice_knife.dhall` + generated JSON, plus only the narrow surface widening needed for a primary-target or impact-centered explosion origin and honest graph-shaped activation semantics. | Blocked on EPT1 scope freeze. |
-| 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | blocked | EPT1, EPT2 | EPT4, EPT5 | Define the closed Quint-side projected subsets for the tracer bullet: executable graph nodes for `attack_roll` / `save_gate` / `damage` / `heal_hp` / `grant_extra_action`, plus the minimal persistent shape for `Mage Armor`. | Blocked on scope freeze + `Ice Knife` authored shape. |
+| 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | blocked | EPT1 | EPT3, EPT5 | Confirm the existing `acid_splash` authored unit as the in-scope spell-side executable pressure case for the safe SRD tracer bullet. Keep the projected executable model graph-ready even though this first spell is not graph-shaped. | Blocked on EPT1 scope freeze. |
+| 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | blocked | EPT1, EPT2 | EPT4, EPT5 | Define the closed Quint-side projected subsets for the tracer bullet: executable node kinds for `attack_roll` / `save_gate` / `damage` / `heal_hp` / `grant_extra_action`, plus the minimal persistent shape for `Mage Armor`. Keep the model graph-ready even though the first safe SRD spell case is linear. | Blocked on scope freeze + spell-side unit confirmation. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | blocked | EPT3 | EPT5 | Define the TS projected record types matching the Quint subset one-for-one, with source-preserving projection metadata and no stringly closed-domain fields. | Blocked on EPT3. |
-| 8 | EPT5 - Build Surface-To-Projection Compiler | blocked | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `ice_knife`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Blocked on authored `Ice Knife` + both projected subset definitions. |
+| 8 | EPT5 - Build Surface-To-Projection Compiler | blocked | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Blocked on spell-side unit confirmation + both projected subset definitions. |
 | 9 | EPT6 - Hook Persistent Projection For Mage Armor | blocked | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Can proceed in parallel with EPT7 once EPT5 lands. |
-| 10 | EPT7 - Build Projected Mechanic Interpreter | blocked | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Ice Knife`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. | Core execution task. Blocked on compiler output. |
+| 10 | EPT7 - Build Projected Mechanic Interpreter | blocked | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Core execution task. Blocked on compiler output. |
 | 11 | EPT8 - Route Availability And Execution Through Projected Records | blocked | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. | Blocked on interpreter. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
-| 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Ice Knife`, `Mage Armor`, `Second Wind`, and `Action Surge`, including graph-shape assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
+| 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Acid Splash`, `Mage Armor`, `Second Wind`, and `Action Surge`, including spell save-gate assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
 | 14 | EPT11 - Add End-To-End MCP Tracer-Bullet Tests | blocked | EPT9, EPT10 | EPT12 | Add end-to-end MCP tests for character creation/finalization, battle start, action availability, `execute_action` flows, and turn ends for the bounded scenario. | Blocked on parity-tested integrated path. |
 | 15 | EPT12 - Remove Or Mark Superseded Handwritten Paths In Promoted Slice | blocked | EPT11 | none | Remove or explicitly mark any redundant handwritten execution paths for the in-scope slice so the tracer bullet demonstrates architectural movement rather than parallel infrastructure. | Final task in the active batch. |
 | 16 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. Keep below EPT batch priority. |
@@ -411,7 +411,7 @@ Scope:
 
 - Freeze the first executable-projection slice in one checked-in scope file.
 - The slice is exactly:
-  - mage with `ice_knife` and `mage_armor`
+  - mage with `acid_splash` and `mage_armor`
   - Fighter 2 with `Second Wind` and `Action Surge`
   - goblin and bugbear battle participation
   - turn starts and turn ends
@@ -444,7 +444,7 @@ Handoff readiness:
 
 - Ready. Highest-priority active task.
 
-### Task 5 - EPT2 - Author Ice Knife Surface Unit
+### Task 5 - EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case
 
 Status: `blocked`
 
@@ -454,33 +454,30 @@ Blocks: `EPT3`, `EPT5`
 
 Scope:
 
-- Author `ice_knife` in the content surface as an honest graph-shaped activation.
-- Reuse existing `guiding_bolt` and `fireball` precedents where possible.
-- Land only the narrow surface widening needed for primary-target or impact-centered explosion origin and graph-shaped activation semantics.
+- Confirm `acid_splash` as the first spell-side executable unit in the tracer bullet.
+- Keep the first safe slice SRD-only and avoid depending on a non-SRD spell pressure case.
+- Preserve graph-readiness in the projected executable model even though this first spell case is linear.
 
 Input:
 
-- `packages/prototype-content-surface/content/guiding_bolt.{dhall,json}`
-- `packages/prototype-content-surface/content/fireball.{dhall,json}`
-- `plans/CONTENT_SURFACE_PROTOTYPE.md` `ice_knife` notes
-- local SRD text for `Ice Knife`
+- `packages/prototype-content-surface/content/acid_splash.{dhall,json}`
+- local SRD text for `Acid Splash`
 
 Output:
 
-- `packages/prototype-content-surface/content/ice_knife.dhall`
-- generated `packages/prototype-content-surface/content/ice_knife.json`
-- any required narrow widening in `types.ts`, tracer, and whitelist
+- a checked-in confirmation of `acid_splash` as the in-scope spell-side executable unit
+- any narrow spell-slice adjustments needed to keep the tracer bullet coherent and SRD-safe
 
 Next action:
 
-- After EPT1 lands, author `ice_knife` and prove its authored shape does not require a runtime-only special branch.
+- After EPT1 lands, confirm `acid_splash` as the spell-side executable case and keep the first slice free of non-SRD dependencies.
 
 Verification requirements:
 
 - `pnpm typecheck` in `packages/prototype-content-surface/`
-- unit traces cleanly
+- `acid_splash` traces cleanly
 - full local regression sweep stays green
-- authored shape keeps the explosion independent of hit/miss while piercing damage stays hit-gated
+- the first tracer bullet no longer depends on a non-SRD spell
 - `/simplify` minimum 2 rounds
 
 Handoff readiness:
@@ -519,12 +516,12 @@ Output:
 
 Next action:
 
-- Define the projected subset so `Ice Knife`, `Second Wind`, `Action Surge`, and `Mage Armor` all fit without lossy escape hatches.
+- Define the projected subset so `Acid Splash`, `Second Wind`, `Action Surge`, and `Mage Armor` all fit without lossy escape hatches.
 
 Verification requirements:
 
 - no generic stringly operation slots
-- `Second Wind` and `Action Surge` fit the same executable world as `Ice Knife`
+- `Second Wind` and `Action Surge` fit the same executable world as `Acid Splash`
 - `Mage Armor` fits the persistent world without a separate model
 - `/simplify` minimum 2 rounds
 
@@ -584,7 +581,7 @@ Scope:
 
 Input:
 
-- generated authored JSON for `ice_knife`, `mage_armor`, `fighter_second_wind`, `fighter_action_surge_l2`
+- generated authored JSON for `acid_splash`, `mage_armor`, `fighter_second_wind`, `fighter_action_surge_l2`
 - TS projected types
 - Quint projected subset boundaries
 
@@ -660,7 +657,7 @@ Scope:
 - Build one closed executable interpreter for projected mechanics across:
   - spell activations
   - class-feature activations
-- It must execute `Ice Knife`, `Second Wind`, and `Action Surge` without unit-id-specific branches.
+- It must execute `Acid Splash`, `Second Wind`, and `Action Surge` without unit-id-specific branches.
 
 Input:
 
@@ -677,7 +674,7 @@ Next action:
 
 Verification requirements:
 
-- no `ice_knife` / `fighter_second_wind` / `fighter_action_surge_l2` runtime branch by unit id
+- no `acid_splash` / `fighter_second_wind` / `fighter_action_surge_l2` runtime branch by unit id
 - explicit runtime facts only at the allowed boundary
 - interpreter emits events/transitions rather than mutating state directly
 - `/simplify` minimum 2 rounds
@@ -717,7 +714,7 @@ Next action:
 
 Verification requirements:
 
-- `Second Wind`, `Action Surge`, and `Ice Knife` appear only when legal
+- `Second Wind`, `Action Surge`, and `Acid Splash` appear only when legal
 - execution agrees with emitted availability tokens
 - at least one handwritten legality or execution branch becomes deleted or unreachable
 - `/simplify` minimum 2 rounds
@@ -776,7 +773,7 @@ Blocks: `EPT11`
 Scope:
 
 - Add parity-oriented tests for:
-  - `Ice Knife`
+  - `Acid Splash`
   - `Mage Armor`
   - `Second Wind`
   - `Action Surge`
@@ -795,7 +792,7 @@ Next action:
 
 Verification requirements:
 
-- graph-shape assertions for `Ice Knife`
+- spell save-gate assertions for `Acid Splash`
 - early-end lifecycle assertions for `Mage Armor`
 - resource / once-per-turn / no-Magic assertions for `Action Surge`
 - at least one test asserts projected record shape before battle outcome
@@ -819,7 +816,7 @@ Scope:
   - mage and Fighter 2 creation/finalization
   - battle start vs goblin + bugbear
   - action availability
-  - `execute_action` for `Second Wind`, `Action Surge`, `Ice Knife`
+  - `execute_action` for `Second Wind`, `Action Surge`, `Acid Splash`
   - turn end progression
 
 Input:
