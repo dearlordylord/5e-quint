@@ -1578,6 +1578,8 @@ They are **not active work**. They describe an older strategy that assumed:
 
 That is no longer the active approach. The active approach is the narrower EPT tracer-bullet batch above. Do not start any CSD task unless the owner explicitly revives it in a later batch and rewrites it to fit the post-EPT state.
 
+Read the deferred CSD task bodies only for historical context or salvageable ideas. They are intentionally below the active queue and must not influence task picking while any EPT task remains active.
+
 ---
 
 ### Task 33 - CSD1 - Design Content-Driven Execution Architecture
