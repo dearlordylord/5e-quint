@@ -48,8 +48,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 4,  "id": "EPT1",  "status": "done", "title": "Freeze Executable Projection First Slice Scope" },
     { "number": 5,  "id": "EPT2",  "status": "done", "title": "Confirm Acid Splash Surface Unit As First Spell Pressure Case" },
     { "number": 6,  "id": "EPT3",  "status": "done", "title": "Define Quint Projected Executable And Persistent Subsets" },
-    { "number": 7,  "id": "EPT4",  "status": "ready-for-implementation-after-light-research", "title": "Define Matching TypeScript Projected Record Types" },
-    { "number": 8,  "id": "EPT5",  "status": "blocked", "title": "Build Surface-To-Projection Compiler" },
+    { "number": 7,  "id": "EPT4",  "status": "done", "title": "Define Matching TypeScript Projected Record Types" },
+    { "number": 8,  "id": "EPT5",  "status": "ready-for-implementation-after-light-research", "title": "Build Surface-To-Projection Compiler" },
     { "number": 9,  "id": "EPT6",  "status": "blocked", "title": "Hook Persistent Projection For Mage Armor" },
     { "number": 10, "id": "EPT7",  "status": "blocked", "title": "Build Projected Mechanic Interpreter" },
     { "number": 11, "id": "EPT8",  "status": "blocked", "title": "Route Availability And Execution Through Projected Records" },
@@ -117,8 +117,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 4 | EPT1 - Freeze Executable Projection First Slice Scope | done | none | EPT2, EPT3 | Landed [plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_FIRST_SLICE_SCOPE.md), freezing the first-slice units, executable node kinds, persistent record kinds, runtime-fact boundary, and explicit exclusions. The slice keeps fighter resource shapes aligned with the authored `threshold_tiers` records and does not bless duplicate runtime facts for values already owned by battle or character state. | Landed on 2026-04-18. |
 | 5 | EPT2 - Confirm Acid Splash Surface Unit As First Spell Pressure Case | done | EPT1 | EPT3, EPT5 | Landed [plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_ACID_SPLASH_CONFIRMATION.md), confirming the authored SRD cantrip `acid_splash` as the first spell-side executable pressure case and documenting its traced `save_gate` -> `damage` fit. | Landed on 2026-04-18. EPT3 is unblocked; EPT5 still depends on EPT3 and EPT4. |
 | 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | done | EPT1, EPT2 | EPT4, EPT5 | Landed [projected-executable.qnt](/workspace/typescript/dnd/projected-executable.qnt) and [plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md), defining the closed Quint-side executable and persistent subset for the first tracer-bullet slice. The executable contract now covers `attack_roll`, `save_gate`, `direct`, `damage`, `heal_hp`, `grant_extra_action`, and the exact fighter resource/reset shapes from EPT1; the persistent contract narrows `Mage Armor` to record identity plus fixed module-level RAW constants. | Landed on 2026-04-18. EPT4 is unblocked; EPT5 still waits on EPT4. |
-| 7 | EPT4 - Define Matching TypeScript Projected Record Types | ready-for-implementation-after-light-research | EPT3 | EPT5 | Define the TS projected record types matching the Quint subset one-for-one, with source-preserving projection metadata and no stringly closed-domain fields. | Unblocked by EPT3 on 2026-04-18. |
-| 8 | EPT5 - Build Surface-To-Projection Compiler | blocked | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Blocked on spell-side unit confirmation + both projected subset definitions. |
+| 7 | EPT4 - Define Matching TypeScript Projected Record Types | done | EPT3 | EPT5 | Landed [projected-executable.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.ts) and [projected-executable.test.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.test.ts), mirroring the EPT3 Quint subset one-for-one in TypeScript with the same closed tags, node shapes, persistent-record payload, and Mage Armor lifecycle constants. Focused tests pin the frozen first-slice facts for Acid Splash, Second Wind, Action Surge, and Mage Armor so EPT5 can compile against the exact contract rather than looser example fixtures. | Landed on 2026-04-19. EPT5 is now unblocked. |
+| 8 | EPT5 - Build Surface-To-Projection Compiler | ready-for-implementation-after-light-research | EPT2, EPT3, EPT4 | EPT6, EPT7 | Compile generated surface JSON into projected executable and persistent records in memory. Must fail closed for unsupported authored patterns and produce inspectable fixtures for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. | Unblocked by EPT4 on 2026-04-19. |
 | 9 | EPT6 - Hook Persistent Projection For Mage Armor | blocked | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Can proceed in parallel with EPT7 once EPT5 lands. |
 | 10 | EPT7 - Build Projected Mechanic Interpreter | blocked | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Core execution task. Blocked on compiler output. |
 | 11 | EPT8 - Route Availability And Execution Through Projected Records | blocked | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. | Blocked on interpreter. |
@@ -544,7 +544,7 @@ Handoff readiness:
 
 ### Task 7 - EPT4 - Define Matching TypeScript Projected Record Types
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `EPT3`
 
@@ -565,7 +565,7 @@ Output:
 
 Next action:
 
-- Encode the projected slice in TS without duplicating authored records wholesale.
+- None. Continue with EPT5.
 
 Verification requirements:
 
@@ -574,13 +574,34 @@ Verification requirements:
 - unsupported future mechanics remain unrepresentable without an explicit widening
 - `/simplify` minimum 2 rounds
 
+Plan Impact:
+
+- Status: applied
+- Affected tasks:
+  - `EPT4`: marked `done`
+  - `EPT5`: unblocked to `ready-for-implementation-after-light-research`
+- Notes: the TypeScript runtime layer now has a one-for-one mirror of the EPT3 projected subset, and the focused fixtures pin the frozen first-slice authored facts EPT5 must compile.
+
+Verification:
+
+- RAW/terminology check: reused the EPT3 citations in [plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md) for Acid Splash, Mage Armor, Second Wind, Action Surge, and `UBIQUITOUS_LANGUAGE.md` before landing the TS mirror.
+- `pnpm --dir packages/core exec vitest run src/projected-executable.test.ts`
+- `pnpm --dir packages/core exec tsc -p tsconfig.json --noEmit`
+- `pnpm quality`
+- `git diff --check`
+
+`/simplify` convergence:
+
+- round 1: kept the TS mirror on the same names and closed tags as `projected-executable.qnt`, instead of introducing a parallel renamed vocabulary that EPT5 would need to translate back
+- round 2: corrected the focused fixtures to the frozen EPT3 facts for Acid Splash, Second Wind, and Action Surge so the checked-in verification now protects the real first-slice contract rather than looser examples
+
 Handoff readiness:
 
-- Unblocked by EPT3 on 2026-04-18.
+- Done. EPT5 is now unblocked.
 
 ### Task 8 - EPT5 - Build Surface-To-Projection Compiler
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `EPT2`, `EPT3`, `EPT4`
 
@@ -616,7 +637,7 @@ Verification requirements:
 
 Handoff readiness:
 
-- Blocked on EPT2, EPT3, EPT4.
+- Unblocked by EPT4 on 2026-04-19.
 
 ### Task 9 - EPT6 - Hook Persistent Projection For Mage Armor
 
