@@ -1,1 +1,34 @@
-{"unit_slug":"cleric_channel_divinity","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "cleric_channel_divinity",
+  "outcome": "structural_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_subgraph",
+      "name": "activated_choice_family",
+      "justification": "Channel Divinity is an activated ability that presents N sub-effect procedures (Divine Spark, Turn Undead) sharing a single resource pool. The player chooses one at activation time. No existing mechanics family supports 'choose one of N activation subgraphs consuming a shared resource.' ActivatedAbilityMechanics has a linear phases[] with no top-level branching; CompositeClassFeatureMechanics means simultaneous parts not mutually exclusive choice; CastTimeEffectModeChoice is (a) within a direct phase only and (b) restricted to EffectAtom branches, not full activation phases.",
+      "evidence": "Each time you use this class's Channel Divinity, choose which Channel Divinity effect from this class to create."
+    },
+    {
+      "kind": "new_variant",
+      "name": "CastTimeEffectModeChoice branches into ActivationPhase",
+      "justification": "Divine Spark's caster-time choice between 'heal' and 'save-gated damage' requires one branch to be a save_gate phase. CastTimeEffectModeChoice.options[].effects is ReadonlyNonEmptyArray<EffectAtom>, which cannot contain an ActivationPhase (save_gate). The two branches differ in resolution structure, not just effect atoms.",
+      "evidence": "Roll 1d8 and add your Wisdom modifier. You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.caster_becomes_incapacitated",
+      "justification": "Turn Undead's 1-minute duration ends early if the caster gains the Incapacitated condition. No such caster-state trigger variant exists in DurationEndTrigger. All existing variants are target-side (target_makes_attack_roll, target_deals_damage, target_casts_spell, target_dons_armor, target_damaged_by_caster_or_ally, target_takes_damage, caster_recasts_spell).",
+      "evidence": "This effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if you die."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger.caster_dies",
+      "justification": "Turn Undead's 1-minute duration ends early if the caster dies. No such caster-death trigger variant exists in DurationEndTrigger.",
+      "evidence": "This effect ends early on the creature if it takes any damage, if you have the Incapacitated condition, or if you die."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The dominant gap is structural: Channel Divinity is an 'activated choice' — one activation pool shared across N distinct sub-effect procedures chosen at activation time. This pattern has no existing family; it is distinct from composite (simultaneous parts), from CastTimeEffectModeChoice (EffectAtom branches within a single direct phase), and from linear phases[] (sequential not branching). Secondary gaps: Divine Spark requires a mode choice whose branches differ at the phase level (one is a save_gate, not an EffectAtom); Turn Undead has two DurationEndTrigger variants missing (caster incapacitated, caster dies). The 'tries to move as far away from you as it can on its turns' behavior in Turn Undead is DM agenda (creature AI / movement decisions) and is legitimately out of core regardless of the above gaps. Divine Spark's scaling (1d8 → 4d8 by class level via threshold_tiers) and damage-type choice (Necrotic or Radiant via CastTimeChoice<DamageType>) both fit the existing surface."
+}

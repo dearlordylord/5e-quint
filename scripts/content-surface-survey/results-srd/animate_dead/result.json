@@ -1,1 +1,25 @@
-{"unit_slug":"animate_dead","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "animate_dead",
+  "outcome": "clean",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "choose",
+    "command_companion",
+    "companion",
+    "create_companion",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Fits the existing reanimated_creature family cleanly. targetKind=corpse_or_bones_of_small_or_medium_humanoid covers bones/corpse distinction; slot-tier menu captures Skeleton/Zombie options per slot level; control encodes Bonus Action command within 60 ft with dodge_and_avoid default. Minor authoring limitation: maxReassertPerCast=4 is fixed and does not reflect the higher-slot scaling of reassert count (the higher-level clause scales both animate and reassert by +2/slot above 3). Mixed-composition casts (e.g. 2 skeletons + 1 zombie at slot 4) are not expressible in the single-monsterId options; both are simplifications, not missing surface types. Typecheck and tracer both exit 0."
+}

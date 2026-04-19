@@ -1,0 +1,16 @@
+{
+  "unit_slug": "arcane_eye",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "remote_sensor",
+      "justification": "The spell's core mechanic is creating an invisible floating sensor through which the caster mentally receives visual information. No existing atom models (a) the creation of a persistent remote sensor/eye nor (b) the link that routes the caster's perception through it. grant_sense grants a sense to a creature; detect scans for named properties within a radius; neither covers 'caster perceives visual information from a remote point in space'.",
+      "evidence": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family otherwise fits well: concentration 1 hour, action cast, point-within-range attachment, and the Bonus Action movement maps cleanly to on_caster_spends_action (bonus_action) + reposition_attachment (maxMoveFeet=30). The solid-barrier / 1-inch-opening passage rule is DM-agenda terrain filtering. The missing piece is specifically the remote-vision link: the sensor grants the caster omnidirectional sight (including darkvision 30 ft) from the sensor's location rather than from the caster's own position. This is distinct from both grant_sense and detect."
+}

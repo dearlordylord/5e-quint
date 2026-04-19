@@ -1,153 +1,103 @@
-# Proposal: Antimagic Field — Surface Widening
+# Proposal: Antimagic Field widening gaps
 
-## Outcome: `surface_widening`
+## Classification: `atom_widening`
 
-Antimagic Field fits the `ongoing_effect` family structurally — it is a concentration spell with a persistent area-of-effect operation. Two blockers prevent honest encoding, and a structural tension compounds them.
+## What fits
+
+The structural envelope maps cleanly onto the existing surface:
+
+- **Family**: `ongoing_effect`
+- **Attachment**: `{ kind: "area", shape: { kind: "emanation", radiusFeet: 10 }, origin: { kind: "self" } }`
+- **Duration**: `{ kind: "concentration", upTo: { unit: "hour", amount: 1 } }`
+- **Casting time**: `{ kind: "action" }`
+- **Level / school**: 8 / abjuration
+
+The teleportation/planar-travel clause maps to `block_travel` with an appropriate scope string. The existing `block_targeting` atom could partially cover external effects being unable to target things inside, though the full breadth is wider than its described use cases.
+
+## What is missing
+
+### 1. `suppress_spellcasting` (new atom)
+
+**Gap**: No atom prevents creatures from casting spells or taking Magic actions. The closest surface elements are additive grants (`grant_extra_action`) or targeted blocks (`block_targeting`). Neither prohibits the act of spellcasting from within an area.
+
+**SRD text**: "No one can cast spells, take Magic actions, or create other magical effects inside the aura"
+
+**Proposed shape**:
+```typescript
+| {
+    readonly kind: "suppress_spellcasting";
+    // Optionally scope to specific action types if a future unit demands it.
+    // For Antimagic Field: all spellcasting + Magic action + magical effects.
+  }
+```
+
+**v4 taxonomy position**: Effect atom. Emits a new `suppress` → `spellcasting` edge to the area attachment.
 
 ---
 
-## Blocker 1 — `AreaOrigin` missing `self_centered`
+### 2. `suppress_magic_item_properties` (new atom)
 
-```
-// Current:
-export type AreaOrigin =
-  | { readonly kind: "point_within_range" }
-  | { readonly kind: "on_primary_target" };
-```
+**Gap**: No atom suppresses the ongoing magical properties of magic items borne by creatures/objects inside an area. `block_targeting` is about what can be targeted, not about passive item properties being nullified.
 
-Antimagic Field creates a **10-foot Emanation centered on the caster that moves with the caster**. Neither existing variant expresses this:
+**SRD text**: "Magical properties of magic items don't work inside the aura or on anything inside it."
 
-- `point_within_range` — stationary point chosen at cast time
-- `on_primary_target` — anchored to a target creature, not the caster
-
-### Proposed addition
-
+**Proposed shape**:
 ```typescript
-export type AreaOrigin =
-  | { readonly kind: "point_within_range" }
-  | { readonly kind: "on_primary_target" }
-  | { readonly kind: "self_centered" };  // NEW — moves with caster
+| {
+    readonly kind: "suppress_magic_item_properties";
+  }
 ```
 
-**Evidence:** *"An aura of antimagic surrounds you in a 10-foot Emanation."*
-
-This is the same widening needed by other caster-emanation spells (Aura of Protection, Holy Aura, etc.).
+**v4 taxonomy position**: Effect atom.
 
 ---
 
-## Blocker 2 — `OngoingOperation` missing suppression variants
+### 3. `suppress_ongoing_spells` (new atom — semantically distinct from `end_ongoing_spells`)
 
+**Gap**: `end_ongoing_spells` *terminates* matching spells permanently. Antimagic Field *suspends* them: the spell pauses without ending, and its remaining duration continues draining while suppressed. When the creature leaves the aura the spell resumes. This is a fundamentally different operation with different downstream consequences.
+
+**SRD text**: "Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration."
+
+**Proposed shape**:
 ```typescript
-// Current:
-export type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+| {
+    readonly kind: "suppress_ongoing_spells";
+    // Exception predicate: Antimagic Field carves out Artifact/deity origins.
+    // A closed exception vocabulary matches the SRD's two named exceptions.
+    readonly except?: ReadonlyNonEmptyArray<"artifact_origin" | "deity_origin">;
+  }
 ```
 
-Antimagic Field's core mechanic is a multi-part suppression aura. None of the existing variants can encode it. Three distinct sub-operations are needed:
-
-### 2a — Suppress new magic (block casting, Magic actions, magic item properties)
-
-```typescript
-export type SuppressMagicOperation = {
-  readonly kind: "suppress_magic";
-  // No extra fields needed — the suppression scope is total within the area.
-};
-```
-
-Maps to v4 atoms: `suppress` (procedure) + `block_targeting` (effect).
-
-**Evidence:** *"No one can cast spells, take Magic actions, or create other magical effects inside the aura, and those things can't target or otherwise affect anything inside it. Magical properties of magic items don't work inside the aura or on anything inside it."*
-
-### 2b — Suppress ongoing spells (with Artifact/deity exception)
-
-This is distinct from blocking new casting. Already-active spells are **paused** — they don't function, but their duration still ticks. Artifact and deity spells are exempt.
-
-```typescript
-export type SuppressOngoingSpellsOperation = {
-  readonly kind: "suppress_ongoing_spells";
-  readonly exemptSources?: ReadonlyArray<"artifact" | "deity">;
-};
-```
-
-Maps to v4 atoms: `suppress` (procedure) + `persist` / `expire` (lifecycle — duration still runs while suppressed).
-
-**Evidence:** *"Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration."*
-
-The `exemptSources` field is a named carve-out with no current surface expression anywhere in the schema. It is not DM-agenda (the exemption is deterministic — Artifact vs. non-Artifact is rule-defined).
-
-### 2c — Block transit (teleportation, planar travel, portals)
-
-```typescript
-export type BlockTransitOperation = {
-  readonly kind: "block_transit";
-  readonly modes: ReadonlyArray<"teleportation" | "planar_travel" | "portal">;
-};
-```
-
-Maps to v4 atom: `block_travel` (effect).
-
-**Evidence:** *"No one can teleport into or out of it or use planar travel there. Portals close temporarily while in the aura."*
+**v4 taxonomy position**: Effect atom. The suppression lifecycle belongs to the ongoing_effect's area attachment — while a creature/effect is inside, the suppression is active; when it exits, it lifts.
 
 ---
 
-## Structural Tension — single `operation` field
+### 4. `block_magic_area_ingress` (new atom)
 
-`OngoingEffectMechanics` currently carries one operation:
+**Gap**: `block_targeting` addresses creatures/things being targeted by external spells. No atom addresses external magical *areas of effect* being prevented from extending into a protected region. These are different spatial primitives.
 
+**SRD text**: "Areas of effect created by spells or other magic can't extend into the aura"
+
+**Proposed shape**:
 ```typescript
-export type OngoingEffectMechanics = SpellMechanicsHeader & {
-  readonly family: "ongoing_effect";
-  readonly attachment: Attachment;
-  readonly operation: OngoingOperation;  // singular
-};
+| {
+    readonly kind: "block_magic_area_ingress";
+  }
 ```
 
-Antimagic Field requires all three sub-operations simultaneously. Options:
-
-**Option A — Compound variant:**  Add a single `suppress_magic_aura` variant that bundles all three sub-effects. Simpler surface; loses individual traceability of sub-effects.
-
-**Option B — Array field:**  Change `operation: OngoingOperation` to `operations: ReadonlyArray<OngoingOperation>`. More honest; requires tracer update to iterate operations.
-
-Option A is lower-risk for this spell but would need revisiting if future spells need mixed sub-operations (e.g., suppress-magic + damage). Option B is the honest long-term shape.
+**v4 taxonomy position**: Effect atom. Mirrors `block_targeting` but operates on area boundaries rather than targeting chains.
 
 ---
 
-## Summary of widenings
+## Clauses that could use existing atoms
 
-| # | Kind | Name | Blocking? |
-|---|------|------|-----------|
-| 1 | `new_variant` | `AreaOrigin::self_centered` | Yes |
-| 2a | `new_variant` | `OngoingOperation::suppress_magic` | Yes |
-| 2b | `new_variant` | `OngoingOperation::suppress_ongoing_spells` | Yes |
-| 2c | `new_variant` | `OngoingOperation::block_transit` | Yes |
-| — | structural | Single `operation` → `operations[]` | Compound only |
+| Clause | Existing atom | Notes |
+|---|---|---|
+| "no one can teleport into or out of it or use planar travel" | `block_travel` | `scope: "teleportation_and_planar_travel"` would be honest |
+| "can't target or otherwise affect anything inside" | `block_targeting` | `scope` is a free string; covers the targeting half reasonably |
+| Portals close temporarily | no atom needed | Transient world-state change; arguably DM-agenda/narrative |
+| Dispel Magic has no effect on the aura | `none` sentinel; DM-agenda | This is a meta-rule about the spell's own immunity, not a mechanical effect the spell grants to others |
 
-All underlying v4 atoms (`suppress`, `block_targeting`, `block_travel`) already exist. This is a surface-schema gap, not a taxonomy gap.
+## Summary
 
----
-
-## What honest encoding would look like (sketch)
-
-```dhall
-{ kind = "spell"
-, id = "antimagic_field"
-, family = "ongoing_effect"
-, level = 8
-, school = "abjuration"
-, castingTime = { kind = "action" }
-, range = { kind = "self" }
-, components = { v = True, s = True, m = Some "iron filings" }
-, duration = { kind = "concentration", upTo = { unit = "hour", amount = 1 } }
-, attachment =
-    { kind = "area"
-    , shape = { kind = "sphere", radiusFeet = 10 }
-    , origin = { kind = "self_centered" }   -- NEEDS WIDENING
-    }
-, operations =                              -- NEEDS ARRAY + NEW VARIANTS
-    [ { kind = "suppress_magic" }
-    , { kind = "suppress_ongoing_spells", exemptSources = [ "artifact", "deity" ] }
-    , { kind = "block_transit", modes = [ "teleportation", "planar_travel", "portal" ] }
-    ]
-}
-```
-
-No Dhall or JSON artifact is authored because the schema does not yet support this encoding.
+Four new effect atoms are needed before Antimagic Field can be honestly encoded. The most critical is `suppress_ongoing_spells` — using `end_ongoing_spells` instead would be a factual error (ending ≠ suspending with duration countdown). The suppression semantic (pause-not-end, auto-resume on exit) does not exist anywhere in the current atom vocabulary.

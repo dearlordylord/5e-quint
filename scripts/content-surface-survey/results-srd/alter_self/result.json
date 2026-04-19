@@ -1,1 +1,40 @@
-{"unit_slug":"alter_self","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "alter_self",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "choose",
+    "composite",
+    "concentrate",
+    "concentration_lock",
+    "direct_apply",
+    "expire",
+    "grant_speed",
+    "natural_weapons",
+    "replace",
+    "self",
+    "spell_root",
+    "spell_slot",
+    "water_breathing"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "natural_weapons.damageType → DamageTypeRef",
+      "justification": "Natural Weapons requires a cast-time sub-choice of growth type (claws=Slashing, fangs/horns=Piercing, hooves=Bludgeoning). The current atom fixes damageType as DamageType; it needs DamageTypeRef (= DamageType | CastTimeChoice<DamageType>) to express this player-facing cast-time selection.",
+      "evidence": "You grow claws (Slashing), fangs (Piercing), horns (Piercing), or hooves (Bludgeoning). When you use your Unarmed Strike to deal damage with that new growth, it deals 1d6 damage of the type in parentheses..."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Structural fit is clean: activation family, single direct phase, CastTimeEffectModeChoice with allowsMidDurationSwitchAs=magic_action. Aquatic Adaptation (water_breathing + grant_speed swim/LinkedSpeed) and Change Appearance (no-effects narrative branch) encode fully. The only gap is natural_weapons.damageType needing widening to DamageTypeRef for the cast-time growth-type sub-choice. Encoded with damageType='slashing' as a placeholder. TypeScript typecheck passes; tracer emits a complete graph."
+}

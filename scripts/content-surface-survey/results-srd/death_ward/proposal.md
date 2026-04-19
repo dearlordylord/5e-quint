@@ -1,97 +1,99 @@
-# Proposal: Death Ward — atom_widening
+# Widening Proposal: Death Ward
 
-## Unit
+**Outcome:** `atom_widening`  
+**Family:** `ongoing_effect` (fits — timed 8h, no concentration, single target attachment)
 
-- **Slug**: `death_ward`
-- **Kind**: spell (Level 4 Abjuration)
-- **Source**: srd-5.2.1
-- **Outcome**: `atom_widening`
+## Summary
 
-## What fits
+Death Ward fits the `ongoing_effect` spell family cleanly. The spell header, duration, range, and attachment all express without new surface shapes. The gap is entirely in missing trigger/effect atoms and a missing one-shot operation semantic.
 
-Death Ward's outer structure maps cleanly onto the `ongoing_effect` family:
+## Missing Pieces
 
-| Property | Value | Surface shape |
-|---|---|---|
-| Casting time | Action | `CastingTime { kind: "action" }` |
-| Range | Touch | `Range { kind: "touch" }` |
-| Components | V, S | `Components { v: true, s: true, m: false }` |
-| Duration | 8 hours, non-concentration | `Duration { kind: "timed", value: { unit: "hour", amount: 8 } }` |
-| Attachment | One creature | `Attachment { kind: "target", selection: { mode: "one" } }` |
-| Family | Persistent effect on creature | `ongoing_effect` |
+### 1. `OngoingTrigger.on_attached_would_reach_zero_hp`
 
-All of these shapes exist in `types.ts`. The spell would typecheck and trace up to `traceOngoingEffect`, where it would fail.
+**RAW:** "The first time the target would drop to 0 Hit Points before the spell ends..."
 
-## What is missing
+The existing `on_attached_damaged` trigger fires whenever the creature receives damage, with no predicate for "damage that would reduce HP to exactly 0 or below." Death Ward's trigger is an interception point *before* the 0-HP state is applied — semantically different from responding to any damage event. A threshold-predicate variant (`at_hp_threshold: 0, comparison: lte`) on `on_attached_damaged` could potentially cover this, but the current `OngoingPredicate` only handles `at_hp_threshold` comparisons on current HP, not on *resulting* HP after a damage instance. A dedicated trigger variant is cleaner and unambiguous.
 
-### Gap 1 — `prevent_hp_floor` (new atom)
+### 2. `EffectAtom: stabilize_at_one_hp`
 
-**Text**: "The first time the target would drop to 0 Hit Points before the spell ends, the target instead drops to 1 Hit Point, and the spell ends."
+**RAW:** "...the target instead drops to 1 Hit Point, and the spell ends."
 
-The v4 effect atoms include `damage`, `heal`, `modify_max_hp`, and `negate_named_effect` — none of which captures this mechanic:
+No existing effect atom covers this:
+- `heal_hp` — restores HP after-the-fact, cannot intercept a death event
+- `reduce_damage_taken` — reduces an incoming damage roll; doesn't model the resulting-HP floor
+- `modify_max_hp` — changes maximum HP, not current HP
+- `grant_temp_hp` — adds a separate HP pool, doesn't prevent the current-HP drop
 
-- `heal` restores HP *after* damage is applied; Death Ward intercepts *before* the HP reaches 0 (sets floor, not adds back).
-- `modify_max_hp` changes the HP ceiling, not the floor of a single reduction event.
-- `negate_named_effect` requires a named spell ID; Death Ward applies to *any* HP-reduction that would reach 0 — weapon damage, spell damage, falling, etc.
+This is a death-interception atom: "replace the 0-HP outcome with a 1-HP outcome." Proposed shape:
+```typescript
+| { readonly kind: "stabilize_at_one_hp" }
+```
+Semantics: when the triggering death-threshold event fires, the creature's HP is set to 1 instead of 0, and the host operation is consumed.
 
-This is a **threshold interception on the HP-damage pipeline**: when an incoming reduction event would set HP ≤ 0, substitute the result with 1. It fires exactly once and then the spell self-terminates.
+### 3. `EffectAtom: negate_instant_kill`
 
-Proposed atom: **`prevent_hp_floor`**
-- Category: `effect`
-- Semantic: intercept any event that would reduce the attached creature's HP to ≤ 0, set HP to 1 instead; consumes the effect on firing.
-- Relation pattern: `activate --grants--> prevent_hp_floor --attaches_to--> target`
+**RAW:** "If the spell is still in effect when the target is subjected to an effect that would kill it instantly without dealing damage, that effect is negated against the target, and the spell ends."
 
-### Gap 2 — `negate_instant_death` (new atom)
+No existing effect atom covers open-ended instant-kill negation:
+- `negate_named_effect` requires a specific `spellId`
+- `negate_triggering_spell` is reaction-only (triggered_reaction family)
+- `grant_condition_immunity` / `grant_damage_immunity` don't address the non-damage-kill pattern
 
-**Text**: "If the spell is still in effect when the target is subjected to an effect that would kill it instantly without dealing damage, that effect is negated against the target, and the spell ends."
+Proposed shape:
+```typescript
+| { readonly kind: "negate_instant_kill" }
+```
+Semantics: while the host operation is active, negate any effect applied to the attached target that would kill it without dealing damage (Power Word Kill, Disintegrate at 0 HP, certain monster traits).
 
-This covers instant-kill effects that bypass the HP pipeline entirely — e.g. Power Word Kill when the target has ≤ 50 HP, the death-clause of Disintegrate at 0 HP, and similar. The effect is structurally different from `prevent_hp_floor`:
+### 4. `OngoingOperation.count` (one-shot operations)
 
-- No HP change occurs (no damage was dealt).
-- The trigger is a specific *kill effect class* rather than an HP threshold crossing.
-- `negate_named_effect` does not apply — this negates any qualifying effect regardless of name.
+**RAW:** Both protective clauses fire exactly once and then the spell ends.
 
-Proposed atom: **`negate_instant_death`**
-- Category: `effect`
-- Semantic: negate effects that would kill the attached creature instantly without dealing damage; consumes the effect on firing.
-- Relation pattern: `activate --grants--> negate_instant_death --attaches_to--> target`
+`OngoingOperation` currently has no `count` limiter — it fires for the full duration on every matching trigger event. The "spell ends" behavior for Death Ward is not a target-action `earlyEnd` trigger (the existing `DurationEndTrigger` variants watch for target attacks, damage, spells cast, armor donning, etc.) — it is the *operation itself* that consumes the spell when it resolves.
 
-### Gap 3 — `OngoingOperation / death_guard` variant (surface widening)
-
-The `OngoingOperation` union in `types.ts` currently has two variants:
-```ts
-type OngoingOperation = RollModifierOperation | DamageOnHitOperation;
+Proposed addition to `OngoingOperation`:
+```typescript
+readonly count?: number;  // absent = unlimited; 1 = one-shot (spell ends after first firing)
 ```
 
-Neither variant can carry the Death Ward protection. A new variant is needed:
+This parallels the existing `count` field on `modify_roll_numeric` and `modify_roll_advantage`, which use the same one-shot pattern for single-use roll riders.
 
-```ts
-type DeathGuardOperation = {
-  readonly kind: "death_guard";
-  readonly preventHpDropToZero: true;
-  readonly negateInstantDeath: true;
-};
+## Encoding Sketch (blocked pending surface widening)
+
+```dhall
+{ kind = "spell"
+, id = "death_ward"
+, name = "Death Ward"
+, mechanics =
+    { family = "ongoing_effect"
+    , level = 4
+    , school = "abjuration"
+    , castingTime = { kind = "action" }
+    , range = { kind = "touch" }
+    , components = { v = True, s = True, m = False }
+    , duration =
+        { kind = "timed"
+        , value = { unit = "hour", amount = 8 }
+        }
+    , attachment =
+        { kind = "target"
+        , selection = { mode = "one" }
+        }
+    , operations =
+        [ { trigger = { kind = "on_attached_would_reach_zero_hp" }  -- MISSING
+          , count = 1                                               -- MISSING
+          , effect = { kind = "stabilize_at_one_hp" }             -- MISSING
+          }
+        , { trigger = { kind = "passive" }
+          , count = 1                                               -- MISSING
+          , effect = { kind = "negate_instant_kill" }             -- MISSING
+          }
+        ]
+    }
+}
 ```
 
-Both flags are always true for Death Ward (the SRD defines both protections as one spell). The `oneShot` semantic — fires once then spell ends early — is also not currently expressed in `OngoingEffectMechanics`. Either a `oneShot: boolean` flag on `OngoingEffectMechanics`, or the lifecycle atom `self_break` triggered by the operation, would need to be added.
+## Classification
 
-### Secondary gap — one-shot lifecycle
-
-The current `ongoing_effect` family models operations as persistent for their full duration. Death Ward's protections are explicitly one-shot: the spell ends the moment either protection triggers. The `self_break` lifecycle atom exists in v4 but is not wired into the `OngoingEffectMechanics` shape. A surface addition (e.g. `oneShot: boolean` on the mechanics header, or an explicit `selfBreakOn` field) would be needed to express this accurately.
-
-This is a secondary gap — the primary blocker is the missing effect atoms.
-
-## Summary of proposed widenings
-
-| # | Kind | Name | Needed for |
-|---|---|---|---|
-| 1 | `new_atom` | `prevent_hp_floor` | First trigger: HP-drop interception |
-| 2 | `new_atom` | `negate_instant_death` | Second trigger: instant-kill negation |
-| 3 | `new_variant` | `OngoingOperation / death_guard` | Surface encoding of both protections |
-| 4 | `new_variant` | `OngoingEffectMechanics / oneShot` | One-shot-expire lifecycle (secondary) |
-
-## Why not other families
-
-- **`triggered_reaction`**: Death Ward is cast proactively (1 Action, not Reaction). It doesn't fit the Prepare/Prompt/Commit subgraph.
-- **`anchored_trigger`**: `AnchorTarget` only allows `location` or `area`; Death Ward attaches to a *creature*. The `AnchoredSignal` atoms also have no death-prevention variant.
-- **`activation`**: No phases — Death Ward doesn't roll attack dice or request saves at cast time.
+All missing pieces are effect atoms and trigger/operation variants — none require a new top-level family or UnitRecord kind. This is `atom_widening` (new atoms) plus `surface_widening` (new variant on `OngoingTrigger` and new field on `OngoingOperation`). The dominant classification is `atom_widening` since the effect concepts (`stabilize_at_one_hp`, `negate_instant_kill`) are not in the v4 taxonomy.

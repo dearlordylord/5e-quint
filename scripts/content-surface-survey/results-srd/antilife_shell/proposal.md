@@ -2,93 +2,77 @@
 
 ## Unit
 
-- **Name:** Antilife Shell
-- **Kind:** spell / `ongoing_effect`
-- **Level:** 5 (Abjuration, Concentration up to 1 hour)
+**Antilife Shell** — SRD 5.2.1, Level 5 Abjuration spell  
+Concentration, up to 1 hour; Casting Time: Action; Range: Self (10-ft Emanation); Components: V, S
 
-## Why it doesn't encode
+## What fits
 
-The spell fits the `ongoing_effect` family cleanly in structure (concentration, self-centered persistent aura), but `OngoingOperation` has only two variants: `roll_modifier` and `damage_on_hit`. The spell's entire mechanical payload is a **movement barrier** — it has no roll modifier and deals no damage. The v4 atom `block_travel` exists, but there is no `OngoingOperation` variant that emits it.
+- **Family:** `ongoing_effect` — a persistent area effect while concentration holds. ✓  
+- **Attachment:** `area` with shape `{ kind: "emanation", radiusFeet: 10 }` and `origin: { kind: "self" }`. ✓  
+- **Trigger:** `passive` — the barrier is always active while the spell persists. ✓  
+- **Effect atom:** `block_travel` exists in the surface and represents "prevents passage through". ✓  
+- **Duration:** `concentration, upTo: { unit: "hour", amount: 1 }`. ✓  
 
-Three additional surface gaps compound the primary one.
+## What is missing
 
-## Proposed widenings (all `surface_widening`)
+### 1. Creature-type filter on area occupant effects (surface_widening)
 
-### 1. `OngoingOperation` — new `block_travel` variant
+**The gap:** Antilife Shell blocks passage for most creature types but explicitly exempts Constructs and Undead. The current surface has `occupantDispositionFilter?: "friendly_to_source" | "hostile_to_source"` on area attachments, which distinguishes creatures by relationship to the source — not by creature type.
+
+There is no structured field to say "this area effect applies only to creatures of types [list]" or "excluding creature types [list]". Encoding the exclusion in `block_travel.scope: string` (a freeform label) would be dishonest: the creature-type constraint is load-bearing and needs to be machine-readable for any downstream engine or tracer to behave correctly.
+
+**Proposed addition:** An optional `occupantTypeFilter` on the `area` attachment (or equivalently on the `OngoingOperation` itself), supporting inclusion/exclusion of `CreatureType` values:
 
 ```typescript
-export type BlockTravelOperation = {
-  readonly kind: "block_travel";
-  readonly exemptCreatureTypes?: ReadonlyArray<CreatureType>;
+occupantTypeFilter?: {
+  readonly exclude?: ReadonlyNonEmptyArray<CreatureType>;
+  readonly include?: ReadonlyNonEmptyArray<CreatureType>;
 };
-
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | BlockTravelOperation;   // NEW
 ```
 
-**Evidence:** *"The aura prevents creatures other than Constructs and Undead from passing or reaching through it."*
+For Antilife Shell the encoding would be `exclude: ["construct", "undead"]`.
 
-`block_travel` is already a v4 Effect atom; this widens the surface to expose it through `ongoing_effect`. The `exemptCreatureTypes` field is required for the Constructs/Undead exemption (see §3 below).
+This same filter shape would also serve other area spells that scope by creature type (e.g. Spirit Guardians affecting only creatures of the caster's choice, Forbiddance targeting specific creature categories).
 
-### 2. `AreaOrigin` — new `self_centered` variant
+### 2. DurationEndTrigger: caster movement forces target through barrier (surface_widening)
+
+**The gap:** "If you move so that an affected creature is forced to pass through the barrier, the spell ends." This early termination fires when the **caster's own movement** causes the geometric footprint of the emanation to engulf an existing position, forcing a creature through the boundary. None of the existing `DurationEndTrigger` variants cover it:
+
+| Existing variant | Why it doesn't fit |
+|---|---|
+| `target_makes_attack_roll` | target action, not caster movement |
+| `target_deals_damage` | target action, not caster movement |
+| `target_casts_spell` | target action, not caster movement |
+| `target_dons_armor` | target action, not caster movement |
+| `target_damaged_by_caster_or_ally` | damage event, not movement |
+| `target_takes_damage` | damage event, not movement |
+| `caster_recasts_spell` | recast event, not movement |
+
+**Proposed addition:**
 
 ```typescript
-export type AreaOrigin =
-  | { readonly kind: "point_within_range" }
-  | { readonly kind: "on_primary_target" }
-  | { readonly kind: "self_centered" };   // NEW — SRD "Emanation" area type
+| { readonly kind: "caster_movement_forces_target_through_barrier" }
 ```
 
-**Evidence:** *"An aura extends from you in a 10-foot Emanation for the duration."*
+This variant is narrow and specific to emanation-type barriers, but it's the honest representation of the RAW text. A more general `caster_moves` trigger would also work and might serve future units.
 
-An Emanation in SRD 5.2.1 is an area that moves with the caster. It cannot be expressed as `point_within_range` (static origin) or `on_primary_target` (origin on a creature). The `self_centered` origin pairs with `attachment: { kind: "area", shape: { kind: "sphere", radiusFeet: 10 }, origin: { kind: "self_centered" } }`.
+## Encoding path once widenings land
 
-### 3. `CreatureType` predicate for filter
+With both additions, Antilife Shell encodes as a single `OngoingOperation`:
 
-The `exemptCreatureTypes` field on `BlockTravelOperation` requires a `CreatureType` enum. This enum does not currently exist in `types.ts` (the surface has `ClassName` and `Condition` but not creature types). A minimal closed set is needed:
-
-```typescript
-export type CreatureType =
-  | "aberration" | "beast" | "celestial" | "construct"
-  | "dragon" | "elemental" | "fey" | "fiend" | "giant"
-  | "humanoid" | "monstrosity" | "ooze" | "plant" | "undead";
+```
+family: ongoing_effect
+attachment: area { kind: emanation, radiusFeet: 10, origin: self }
+  + occupantTypeFilter: { exclude: ["construct", "undead"] }
+duration: concentration, upTo: 1 hour
+  + earlyEnd: [{ kind: "caster_movement_forces_target_through_barrier" }]
+operations:
+  - trigger: passive
+    effect: block_travel { scope: "physical_passage_and_reach" }
 ```
 
-**Evidence:** *"creatures other than Constructs and Undead"*
-
-This is narrow pressure but the enum is cheap and will recur (Spirit Guardians, Magic Circle, Protection from Evil and Good all filter by creature type).
-
-### 4. `Duration` — self-break condition on caster movement
-
-The spell carries an unusual termination rule:
-
-> *"If you move so that an affected creature is forced to pass through the barrier, the spell ends."*
-
-This is not covered by the existing `Duration` variants (`concentration.upTo`, `timed.value`, `instantaneous`). The v4 lifecycle atom `self_break` exists, but the surface has no way to attach a trigger condition to it. One approach:
-
-```typescript
-export type ConcentrationDuration = {
-  readonly kind: "concentration";
-  readonly upTo: DurationValue;
-  readonly selfBreakOn?: SelfBreakCondition;  // NEW optional field
-};
-
-export type SelfBreakCondition =
-  | { readonly kind: "caster_moves_into_affected_creature" };
-```
-
-Alternatively, a broader `SelfBreakTrigger` type can be introduced once more pressure cases land (e.g., Blink's random-at-turn-end, Banishment's concentration-break-returns).
-
-## What does encode cleanly
-
-- Casting time: `{ kind: "action" }` ✓
-- Level 5 concentration ✓
-- Range Self, components V S ✓
-- Attachment shape (area sphere 10 ft) — **structurally present** once `self_centered` origin is added
-- `block_travel` atom — **present in v4**, just not surfaced
+The "affected creatures can still cast spells or attack with Ranged/Reach weapons through the barrier" clause is a **negative constraint** (what the barrier does NOT block), not a separate atom. It is clarifying text on `block_travel.scope` rather than a new effect.
 
 ## Classification
 
-`surface_widening` — all four gaps are missing variants of types that already exist in `types.ts`. No new v4 atoms are required. No new payload family is required.
+`surface_widening` — all required v4 atoms exist (`block_travel`, `area` attachment, `ongoing_effect` family). The two missing pieces are new variants of existing surface types (`Attachment.area` filter and `DurationEndTrigger` union).

@@ -1,1 +1,34 @@
-{"unit_slug":"monk_martial_arts","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "monk_martial_arts",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "substitute_ability_for_rolls",
+      "justification": "Dexterous Attacks requires substituting DEX for STR on attack and damage rolls. modify_roll_numeric only adds a signed delta; ability_modifier DiceDelta adds a modifier on top of the existing one rather than replacing which ability governs the roll. The DEX-for-STR substitution is a fundamentally different operation with no existing atom.",
+      "evidence": "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+    },
+    {
+      "kind": "new_atom",
+      "name": "set_damage_die",
+      "justification": "Martial Arts Die replaces the normal damage die of unarmed strikes and monk weapons with a class-level-scaled die (d6→d8→d10→d12). No existing atom models die replacement: modify_damage_numeric adds a numeric delta, natural_weapons is spell-scoped (Alter Self) and does not cover monk weapons. The scale_die_size scaling atom exists but requires a base 'replace die' atom to attach to.",
+      "evidence": "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EquipmentPredicate.unarmed_or_monk_weapons",
+      "justification": "The equipment gate requires 'unarmed OR wielding only Monk weapons.' wielding_weapon covers broad weapon kinds (ranged/melee_one_handed/etc.) but has no 'unarmed' state variant and no 'monk weapons' named category. The predicate surface also has no any_of / disjunction form; all_of exists but OR composition is unrepresentable.",
+      "evidence": "while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield"
+    },
+    {
+      "kind": "new_variant",
+      "name": "AttackKind.melee_weapon_attack",
+      "justification": "Bonus Unarmed Strike grants a bonus-action unarmed strike, which is a melee weapon attack. ActivationPhase.attack_roll.attackKind is constrained to ranged_spell_attack | melee_spell_attack; there is no melee_weapon_attack variant, making it impossible to author a non-spell class-feature activation that resolves as a weapon attack roll.",
+      "evidence": "You can make an Unarmed Strike as a Bonus Action."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The feature is a composite of three sub-benefits under a shared equipment gate. None of the three can be honestly encoded: (1) Bonus Unarmed Strike needs melee_weapon_attack in AttackKind; (2) Martial Arts Die needs a damage-die replacement atom distinct from modify_damage_numeric; (3) Dexterous Attacks needs ability substitution on rolls, not addition. The equipment predicate also cannot express 'unarmed OR monk weapons' due to missing predicate variant and no OR-composition form. No placeholder encoding attempted."
+}

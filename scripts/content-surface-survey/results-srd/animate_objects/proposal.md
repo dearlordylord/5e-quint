@@ -1,125 +1,67 @@
-# Proposal: Surface Widenings for Animate Objects
+# Proposal: Animate Objects — surface_widening
 
-**Unit:** Animate Objects (5th-level Transmutation, concentration 1 min)
-**Outcome:** `surface_widening`
+## Unit
 
-## Summary
+**Animate Objects** — Level 5 Transmutation spell, `templated_multi_spawn` family.
 
-Animate Objects is a **summoning spell** — it animates nonmagical objects into Constructs that the caster commands while concentration holds. The structural family `ongoing_effect` is the correct home (concentration duration, persistent attached state). All required v4 atoms (`create_companion`, `command_companion`) exist in the taxonomy. The blockers are four surface gaps in `types.ts`.
+## What fits
 
----
+The `templated_multi_spawn` family was designed for this spell and covers it well:
 
-## Gap 1 — Missing `OngoingOperation` variant: creature summoning
+- **Size tier menu**: five tiers (tiny/small/medium weight=1, large weight=2, huge weight=3) with per-tier HP and Slam damage.
+- **Concentration 1 minute**, Level 5, 120 ft range — all encoded cleanly.
+- **Bonus Action command within 500 ft**, default Dodge behavior → `control.commandCost: bonus_action`, `commandRangeFeet: 500`, `defaultBehavior: dodge_and_avoid`.
+- **Shared initiative / immediately after caster** → `control.initiative: shared_with_caster`, `control.turnOrder: immediately_after_caster`.
+- **Revert on 0 HP** → `revertOnZeroHp: true`.
+- **Upcast slam damage** encoded per tier as `linear_per_level` with `axis: slot`, `startingAtLevel: 5`, `perLevel: { dice: 1 }` — correctly adds 1d4/1d6/1d12 per slot above 5 for each size tier.
+- **Large/Huge slam adds spellcasting ability mod** → `DiceExpr.spellcastingMod: true` on those tiers' base expressions.
 
-**SRD text:**
-> "Each target animates, sprouts legs, and becomes a Construct that uses the Animated Object stat block; this creature is under your control until the spell ends or until it is reduced to 0 Hit Points."
+Typecheck passes, tracer produces a valid graph.
 
-**Current surface:** `OngoingOperation = RollModifierOperation | DamageOnHitOperation`
+## Gap: TemplatedCapacity requires a specific Ability
 
-Neither variant can express "create N Construct creatures from objects." The v4 atom `create_companion` covers this concept but is not wired into `OngoingOperation`.
+### SRD text
 
-**Proposed widening:**
+> "The maximum number of objects is equal to your spellcasting ability modifier"
+
+### Current schema
+
 ```typescript
-export type SummonCreaturesOperation = {
-  readonly kind: "summon_creatures";
-  readonly statBlock: string;          // e.g. "animated_object"
-  readonly countCap: CountCap;         // see Gap 3 below
-  readonly creatureType: "construct";
-  readonly alliesTo: "caster_and_allies";
-  readonly initiative: "share_caster"; // "In combat, it shares your Initiative count"
-  readonly defaultAction: StandardActionKind; // "dodge" when no command given
+export type TemplatedCapacity = {
+  readonly kind: "caster_ability_modifier";
+  readonly ability: Ability;
 };
 ```
 
----
+`ability` is a required `Ability` enum (`"str" | "dex" | "con" | "int" | "wis" | "cha"`). There is no variant for "whichever ability the class uses for spellcasting."
 
-## Gap 2 — Missing `OngoingOperation` variant: companion command channel
+### Problem
 
-**SRD text:**
-> "Until the spell ends, you can take a Bonus Action to mentally command any creature you made with this spell if the creature is within 500 feet of you."
+Animate Objects appears on the Bard, Sorcerer, and Wizard spell lists. The spellcasting ability differs by class:
+- Bard: CHA
+- Sorcerer: CHA
+- Wizard: INT
 
-**Current surface:** No `OngoingOperation` variant for command-channel mechanics.
+A single hardcoded ability is wrong for at least one primary user. The encoded workaround uses `"cha"` (correct for Bard/Sorcerer, incorrect for Wizard).
 
-The v4 atom `command_companion` covers this but is absent from `types.ts`. This could be folded into the `SummonCreaturesOperation` as a `commandCost` field, or modeled as a second `OngoingOperation` variant.
+### Proposed widening
 
-**Proposed approach (folded into summon variant):**
+Add a new variant to `TemplatedCapacity`:
+
 ```typescript
-export type SummonCreaturesOperation = {
-  // ...fields from Gap 1...
-  readonly commandCost: { readonly kind: "bonus_action"; readonly rangeFeet: number };
-};
+export type TemplatedCapacity =
+  | {
+      readonly kind: "caster_ability_modifier";
+      readonly ability: Ability;
+    }
+  | {
+      readonly kind: "spellcasting_ability_modifier";
+      // no ability field — resolved at runtime from the caster's class
+    };
 ```
 
----
+The tracer would render this as `choose (capacity = spellcasting mod)` instead of `choose (capacity = CHA mod)`.
 
-## Gap 3 — Missing `LevelAxis` variant: ability modifier
+### Scope
 
-**SRD text:**
-> "The maximum number of objects is equal to your spellcasting ability modifier."
-
-**Current surface:**
-```typescript
-export type LevelAxis =
-  | "character" | "class" | "slot" | "subclass" | "proficiency_bonus";
-```
-
-The count cap here is a **runtime value** (caster's spellcasting ability modifier), not a level or PB. None of the existing axes can express it. A new axis or a new `CountCap` union member is required.
-
-**Proposed widening (new axis):**
-```typescript
-export type LevelAxis =
-  | "character" | "class" | "slot" | "subclass" | "proficiency_bonus"
-  | "spellcasting_ability_modifier";   // new
-```
-
-Or, if the ability modifier cap is better modeled as a distinct cap type rather than a scaling axis:
-```typescript
-export type CountCap =
-  | { readonly kind: "fixed"; readonly max: number }
-  | { readonly kind: "spellcasting_ability_modifier" };  // new
-```
-
----
-
-## Gap 4 — Missing scaling shape: per-size-class slot delta
-
-**SRD text:**
-> "The creature's Slam damage increases by 1d4 (Medium or smaller), 1d6 (Large), or 1d12 (Huge) for each spell slot level above 5."
-
-**Current surface:** `DiceAmount` variants are `fixed | threshold_tiers | linear_per_level`. All express a single damage value scaling with level.
-
-Animate Objects' higher-level scaling is **conditional on the animated object's size category** — effectively a separate linear_per_level with a different `perLevel` expression for each size class. No current `DiceAmount` shape can express this.
-
-**Proposed widening:**
-```typescript
-export type SizeClassSlotScaling = {
-  readonly kind: "per_size_class_slot";
-  readonly baseSlotLevel: number;
-  readonly perSlotAboveBase: ReadonlyArray<{
-    readonly sizeClass: "tiny_to_medium" | "large" | "huge";
-    readonly delta: DiceExprDelta;
-  }>;
-};
-```
-
-This would be a new variant on `DiceAmount` or a dedicated type on the `SummonCreaturesOperation`.
-
----
-
-## What Does Not Need Widening
-
-- **`SpellRecord` kind** — fits ✓
-- **`ongoing_effect` family** — correct structural home ✓ (concentration, persists while active, caster-bound)
-- **`CastingTime { kind: "action" }`** — fits ✓
-- **`Range { kind: "point", feet: 120 }`** — fits ✓
-- **`Duration { kind: "concentration", upTo: { unit: "minute", amount: 1 } }`** — fits ✓
-- **`Components { v: true, s: true, m: false }`** — fits ✓ (no material component)
-- **`SpellLevel 5`** — fits ✓
-- **`SpellSchool "transmutation"`** — fits ✓
-- **v4 atoms `create_companion`, `command_companion`** — both present in v4 taxonomy; surface just hasn't exposed them ✓
-
----
-
-## Classification: `surface_widening`
-
-All four gaps are missing variants of existing surface types — not missing top-level families, not missing v4 atoms. The narrowest honest classification is `surface_widening`.
+This is a narrow, one-variant addition to an existing type. No other type or atom is affected. The rest of the encoding is accurate.

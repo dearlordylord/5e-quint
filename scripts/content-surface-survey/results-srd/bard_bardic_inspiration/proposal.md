@@ -1,122 +1,86 @@
-# Proposal: Bardic Inspiration widening gaps
+# Proposal: `bard_bardic_inspiration`
 
-**Unit:** Bardic Inspiration (bard L1)  
-**Outcome:** `atom_widening`
+## Outcome: `atom_widening`
 
-## Summary
+## What fits
 
-Bardic Inspiration has three distinct widenings. The first two are blockers that prevent honest encoding; the third is a secondary surface gap.
+The feature's shell is fully representable:
 
----
+- **Record kind**: `class_feature` ✓
+- **Mechanics family**: `activation` ✓  
+- **Activation cost**: `{ kind: "bonus_action" }` ✓
+- **Resource**: `{ kind: "use_count", cap: { kind: "ability_modifier", ability: "cha" } }` ✓  
+  (types.ts §A12 comment cites Bardic Inspiration as the exact pressure case for this cap variant)
+- **Reset cadence**: `{ kind: "long_rest" }` ✓
+- **Target**: another creature within 60 ft — representable as a `target` attachment
 
-## 1. Missing atom: `grant_die_token`
+## What doesn't fit
 
-**Gap:** No v4 atom represents "grant a held die to a third-party creature."
+### Missing atom: `grant_die_token`
 
-The bard's Bonus Action hands a Bardic Inspiration die to another creature. That creature then *owns* the die — it is not an ongoing effect that the caster maintains, not a buff that attaches to the target from the caster's scope, and not a spell slot. It is a discrete token that:
+Bardic Inspiration's core mechanic cannot be expressed as any existing `EffectAtom`.
 
-- Belongs to the recipient (not the caster)
-- Persists for up to 1 hour
-- Is a specific die size (d6 at level 1, scaling upward)
-- Is consumed when rolled
+The SRD says:
 
-`ClassFeatureEffect` currently holds only `GrantExtraActionEffect` and `HealHpEffect`. Neither can represent this grant. The closest v4 atom in the taxonomy, `mark_target`, is directional from the caster and not a held die resource. There is no "hand off a single-use die token" atom in v4.
+> Once within the next hour when the creature fails a D20 Test, the creature can roll the Bardic Inspiration die and add the number rolled to the d20, potentially turning the failure into a success. A Bardic Inspiration die is expended when it's rolled.
 
-**Proposed atom:** `grant_die_token`
+This is **not** `modify_roll_numeric`. Key differences:
 
-Minimal shape:
-```
-{
-  kind: "grant_die_token"
-  dieAmount: DiceAmount        // size and scaling of the die
-  expiresAfter: DurationValue  // 1 hour
-  maxPerHolder: number         // 1 — "A creature can have only one"
-  target: "target_creature"
-}
-```
+| Property | `modify_roll_numeric` (Bless) | Bardic Inspiration die token |
+|---|---|---|
+| Decision point | Before rolling (or at roll time) | **After failing** — player sees the failed result first |
+| Trigger | Any qualifying roll | Only after a D20 Test **failure** |
+| Cardinality | Applies to all qualifying rolls (or N with `count`) | One token, one use, then gone |
+| Held by | N/A (passive rider on the target) | The **target** holds the token as a discrete resource |
+| Duration | Lives on the host effect's window | Up to 1 hour, or expended, whichever comes first |
 
----
+The retroactive nature is mechanically significant: knowing you failed before deciding to spend the die changes expected value calculations and player strategy entirely.
 
-## 2. Missing subgraph: die-token activation (two-actor post-roll)
+The taxonomy notes (`TAXONOMY_atoms_graph.md §12`) already identify `grant_die_token` as new atom pressure from the survey.
 
-**Gap:** No subgraph models a held-token reactive use by the *recipient* on their own rolls.
+### Proposed atom shape
 
-Once the token is held, the recipient activates it on their own turn/resolution:
-
-> "Once within the next hour when the creature fails a D20 Test, the creature can roll the Bardic Inspiration die and add the number rolled to the d20."
-
-This requires a subgraph rooted on the *holder*, not the caster:
-
-```
-die_token → [holder's post_roll_window: D20 Test failed]
-           → holder chooses to expend token
-           → modify_roll_numeric (add die result to d20)
-           → expire (token consumed)
-```
-
-v4 has `post_roll_window` and `modify_roll_numeric`, but no way to express:
-- A window owned by a creature *other* than the feature's activator
-- A token-gated activation (the holder decides; the token is consumed on use)
-- Cross-actor resource ownership (bard granted it, holder uses it)
-
-This two-actor pattern is fundamentally different from all existing subgraphs (Bless's caster-side `roll_modifier`, Halfling Luck's self-owned reroll, etc.).
-
----
-
-## 3. Missing surface variant: `UseCountCap: ability_score_derived`
-
-**Gap:** Uses = Charisma modifier (minimum 1). `UseCountCap` only supports `fixed` and `ThresholdTiers<number>`.
-
-The ability-score-derived count is a per-character value that changes with character build. It cannot be expressed as a fixed integer without hardcoding, and there is no class-level threshold schedule involved.
-
-**Proposed variant:**
 ```typescript
 | {
-    readonly kind: "ability_score_derived";
-    readonly ability: Ability;
-    readonly minimum: number;
+    readonly kind: "grant_die_token";
+    readonly die: DiceExpr;             // the die expression granted (e.g. 1d6)
+    readonly trigger: "d20_test_failure"; // when the target may spend it
+    readonly durationHours: number;     // how long the token persists unspent (1 hour for BI)
+    readonly maxHeld: number;           // how many tokens the creature can hold (1 for BI)
   }
 ```
 
-This same pattern will likely recur for other features (Paladin's Lay On Hands pool scales with paladin level, Monk Focus points scale, etc.) so widening `UseCountCap` here pays forward.
+The token is held by the target, spent reactively after the failure trigger fires, expended on use, and adds the rolled result to the d20 that failed.
 
----
+### Secondary gap: die size scaling
 
-## What fits without widening
+The Bardic Inspiration die scales by Bard level:
 
-- **Activation cost:** `bonus_action` ✓
-- **Reset cadence:** `long_rest` ✓
-- **Die-size scaling** (d6→d8→d10→d12 at bard levels 5/10/15): expressible as `ThresholdTiers<DiceExprDelta>` with `dieSize` overrides → `scale_die_size` atom. This part has no gap.
+- L1–L4: d6
+- L5–L9: d8  
+- L10–L14: d10
+- L15–L20: d12
 
----
+Once `grant_die_token` exists, the `die` field would need `ThresholdTiers` scaling by class level. The `threshold_tiers` shape already exists in `DiceAmount` and `UseCountCap`; adapting it to `DiceExpr` for the granted die expression is a natural extension.
 
-## Encoding path once gaps are filled
+## Why `modify_roll_numeric` with `count=1` is not an honest encoding
 
-With these three widenings in place, the unit would encode as `class_feature / activation` with:
+One might attempt to encode this as:
 
-```
-activationCost: { kind: "bonus_action" }
-resource: {
-  kind: "use_count",
-  cap: { kind: "ability_score_derived", ability: "cha", minimum: 1 }
-}
-resetCadence: { kind: "long_rest" }
-effect: {
-  kind: "grant_die_token",
-  dieAmount: {
-    kind: "threshold_tiers",
-    axis: "class",
-    base: { dice: 1, dieSize: 6 },
-    tiers: [
-      { atLevel: 5,  override: { dieSize: 8  } },
-      { atLevel: 10, override: { dieSize: 10 } },
-      { atLevel: 15, override: { dieSize: 12 } }
-    ]
-  },
-  expiresAfter: { unit: "hour", amount: 1 },
-  maxPerHolder: 1,
-  target: "target_creature"
+```json
+{
+  "kind": "modify_roll_numeric",
+  "on": ["attack_roll", "saving_throw", "ability_check"],
+  "delta": { "kind": "fixed_dice", "dice": 1, "dieSize": 6, "sign": "+" },
+  "count": 1
 }
 ```
 
-The recipient-side activation subgraph would be a separate authored node rooted on the token itself (analogous to how the mark-transfer subgraph is attached to the `mark` attachment).
+This would be dishonest because:
+
+1. `modify_roll_numeric` adds the bonus *before or at roll time* — the player does not know if they will pass or fail when they decide to apply Bless's d4.  
+2. Bardic Inspiration is spent *after* failure is known. The creature chooses whether to spend it only after seeing a failed result.
+3. The trace would emit `modify_roll_advantage` / `modify_roll_numeric` atoms that misrepresent the actual game mechanic — a future RAW-check would catch the discrepancy.
+4. The token as a creature-held resource ("`A creature can have only one Bardic Inspiration die at a time`") has no representation in the passive-bonus shape.
+
+A misleading trace is worse than no trace.

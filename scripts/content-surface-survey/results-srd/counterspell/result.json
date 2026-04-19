@@ -1,1 +1,39 @@
-{"unit_slug":"counterspell","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "counterspell",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "commit",
+    "interrupt_resolution",
+    "negate_triggering_spell",
+    "prepare",
+    "prompt",
+    "reaction_quota",
+    "reaction_window",
+    "respond",
+    "save_gate",
+    "spell_root",
+    "spell_slot",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "branches_on_save",
+    "commits",
+    "consumes",
+    "grants",
+    "opens_window",
+    "prepares",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "negate_triggering_spell.refundTargetSlot",
+      "justification": "SRD 5.2.1 explicitly states that when Counterspell succeeds, the target's spell slot is not expended. The current negate_triggering_spell atom has no field for this. A game engine needs this to correctly decide whether to refund the countered caster's slot resource.",
+      "evidence": "If that spell was cast with a spell slot, the slot isn't expended."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core structure encodes cleanly: triggered_reaction family, creature_casts_spell trigger (V/S/M), Con save_gate, negate_triggering_spell on fail, autoSuccessIfCasterSlotGte for the upcast auto-success path. The single gap is the slot-refund clause — negate_triggering_spell needs an optional refundTargetSlot: true field to express that the countered caster recovers the expended slot on a successful counterspell."
+}

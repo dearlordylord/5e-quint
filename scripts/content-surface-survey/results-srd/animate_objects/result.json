@@ -1,1 +1,36 @@
-{"unit_slug":"animate_objects","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "animate_objects",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "activate",
+    "choose",
+    "command_companion",
+    "companion",
+    "concentrate",
+    "concentration_lock",
+    "create_companion",
+    "expire",
+    "spell_root",
+    "spell_slot"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "TemplatedCapacity.spellcasting_ability_modifier",
+      "justification": "The SRD says capacity = 'your spellcasting ability modifier', which is class-dependent (CHA for Bard/Sorcerer, INT for Wizard). TemplatedCapacity requires a specific Ability, making it impossible to represent the spell-class-neutral capacity without hardcoding one ability and being wrong for all other classes.",
+      "evidence": "The maximum number of objects is equal to your spellcasting ability modifier"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The templated_multi_spawn family fits Animate Objects structurally — capacity, size tiers (HP + slam damage per tier), concentration duration, bonus-action control, and revertOnZeroHp all encode correctly. The only gap is TemplatedCapacity needing a { kind: 'spellcasting_ability_modifier' } variant instead of a hardcoded Ability. Encoded as 'cha' (valid for Bard/Sorcerer); incorrect for Wizard (INT). All size tiers (tiny/small/medium/large/huge) encoded with correct weights (1/1/1/2/3), HP (10/10/10/20/40), and per-tier slam damage with slot-axis upcast scaling. Large/Huge slam correctly uses spellcastingMod: true for the +mod damage component."
+}

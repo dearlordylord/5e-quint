@@ -1,163 +1,68 @@
-# Proposal: Animal Shapes — atom_widening
+# Proposal: Animal Shapes surface widenings
 
-## Unit
+## Summary
 
-**Animal Shapes** — Level 8 Transmutation, druid spell (SRD 5.2.1)  
-Casting time: Action | Range: 30 ft | Duration: 24 hours (timed, not concentration)
+Animal Shapes encodes cleanly as an `ongoing_effect` spell using the `transform_target` atom and `any_number` target selection. The tracer runs without errors. Three variants of existing surface types are missing that prevent a complete honest encoding.
 
-## Outcome
+## Gap 1: `PolymorphRevertTrigger` — target voluntary Bonus Action revert
 
-`atom_widening` (primary) with secondary `surface_widening` gaps
+**Evidence:** "The transformation lasts for the duration or until the target ends it as a Bonus Action."
 
-## Why no honest encoding is possible
+The target can end its own transformation by spending a Bonus Action. This is a player-owned, target-initiated revert — distinct from `spell_ends` (caster/duration), `zero_hp` (combat), `temp_hp_depleted` (polymorph-family), and `dismissed_by_caster` (caster-initiated). Without this variant, the encoded spell only reverts at the 24-hour boundary or when the target reaches 0 HP.
 
-The spell cannot be encoded without lying. No existing `SpellMechanics` family can express the core effect (stat-block replacement), and three additional surface variants are also missing.
-
----
-
-## Primary gap — missing `polymorph_creature` effect atom
-
-Animal Shapes' defining mechanic: each target's game statistics are replaced by a chosen Beast's, while preserving a specific closed set of original properties.
-
-**Evidence:**
-> "A target's game statistics are replaced by the chosen Beast's statistics, but the target retains its creature type; Hit Points; Hit Point Dice; alignment; ability to communicate; and Intelligence, Wisdom, and Charisma scores."
-
-No v4 effect atom covers this:
-
-| Atom | Why it doesn't fit |
-|---|---|
-| `apply_condition` | Applies a named condition, not a stat-block swap |
-| `alter_item_kind` | Applies to items, not creatures |
-| `modify_*` family | Adjusts individual stats — can't express wholesale replacement with selective preservation |
-| `create_companion` | Creates a new entity; doesn't replace the target's stat block |
-
-A new atom `polymorph_creature` is needed. Tentative payload shape:
-
+**Proposed widening:**
 ```typescript
-export type PolymorphCreatureEffect = {
-  readonly kind: "polymorph_creature";
-  readonly formConstraints: {
-    readonly creatureType: "beast";
-    readonly maxCR: number;
-    readonly maxSize: "large" | "medium" | "small" | "tiny";
-  };
-  // Which original properties the target retains through the transformation
-  readonly preservedProperties: ReadonlyArray<
-    "creature_type" | "hp" | "hp_dice" | "alignment" | "communication_ability" |
-    "int_score" | "wis_score" | "cha_score"
-  >;
-  // Equipment melds; target can't use any equipment while transformed
-  readonly equipmentMelds: true;
-  // Target can end the transformation using a bonus action
-  readonly targetDismiss: "bonus_action";
+export type PolymorphRevertTrigger =
+  | { readonly kind: "zero_hp" }
+  | { readonly kind: "spell_ends" }
+  | { readonly kind: "temp_hp_depleted" }
+  | { readonly kind: "dismissed_by_caster" }
+  | { readonly kind: "target_bonus_action" };  // NEW
+```
+
+This variant covers any transform effect that a willing target can voluntarily undo by spending a Bonus Action — the same mechanism appears in Wild Shape and could appear in future polymorph variants.
+
+## Gap 2: `PolymorphActionRestriction` — `no_spells_only` variant
+
+**Evidence:** "the target retains its... ability to communicate... and it can't cast spells."
+
+Animal Shapes suppresses spellcasting but explicitly preserves the target's ability to speak and be understood. The only existing `PolymorphActionRestriction` value is `"no_speech_no_spells"` (used by Polymorph, True Polymorph), which suppresses both. Using it here would produce a dishonest trace — the encoding omits `actionRestriction` entirely.
+
+**Proposed widening:**
+```typescript
+export type PolymorphActionRestriction =
+  | "no_speech_no_spells"   // existing (Polymorph, True Polymorph)
+  | "no_spells_only";       // NEW: can communicate, cannot cast spells
+```
+
+Note: Polymorph's "can't speak" comes from the beast form's anatomy (most beasts lack humanoid vocal structure). Animal Shapes specifically overrides that by retaining the creature's ability to communicate — the distinction is RAW-relevant and worth capturing in the type.
+
+## Gap 3: `PolymorphFormSource` — `maxSize` constraint
+
+**Evidence:** "Each target shape-shifts into a Large or smaller Beast."
+
+The beast selection is constrained by both CR (≤ 4) and size (Large or smaller). `PolymorphFormSource` only carries `creatureType` and `crBound`; there is no field for a maximum size ceiling.
+
+**Proposed widening:**
+```typescript
+export type PolymorphFormSource = {
+  readonly kind: "catalog_ref";
+  readonly creatureType: CreatureType;
+  readonly crBound: ...;
+  readonly maxSize?: Size;  // NEW: "Large or smaller" → maxSize: "large"
 };
 ```
 
----
+## Minor approximation: `ability to communicate` → `languages`
 
-## Secondary gap 1 — unbounded target selection
+The SRD retained-field "ability to communicate" is broader than linguistic knowledge — it includes the physical and cognitive capacity to speak and be understood. The closest available `PolymorphRetainedField` is `"languages"`. No new field is proposed (the distinction is edge-case) but it is noted for accuracy.
 
-**Evidence:**
-> "Choose any number of willing creatures that you can see within range."
+## Encoded shape (partial)
 
-`TargetSelection` currently:
-
-```typescript
-export type TargetSelection =
-  | { readonly mode: "one" }
-  | { readonly mode: "choose_up_to"; readonly count: SlotScaling<number> };
-```
-
-Neither applies. "Any number of willing creatures" has no upper bound and no slot scaling. Needs a new variant:
-
-```typescript
-| { readonly mode: "any_willing" }
-```
-
-This is distinct from `choose_up_to` because there is no cap — it applies to all willing creatures the caster selects, limited only by the range condition.
-
----
-
-## Secondary gap 2 — temp HP derived from chosen form's HP
-
-**Evidence:**
-> "The target gains a number of Temporary Hit Points equal to the Hit Points of the first form into which it shape-shifts."
-
-`DiceAmount` supports:
-- `fixed` — a dice expression known at cast time
-- `threshold_tiers` — jumps by level
-- `linear_per_level` — scales per level
-
-The temp HP here equals the HP of a specific creature chosen at cast time (DM-adjudicated or player-selected). This is not computable from a formula — it depends on which Beast stat block is chosen. A new `DiceAmount` variant is needed:
-
-```typescript
-| { readonly kind: "equals_chosen_form_stat"; readonly stat: "hp" }
-```
-
-Whether this is a surface concern or a caller-owned concern (the HP value flows from creature data, not from the spell's authored mechanics) is an open design question. Either way the current surface cannot express it.
-
----
-
-## Secondary gap 3 — Magic action re-transformation on later turns
-
-**Evidence:**
-> "On later turns, you can take a Magic action to transform the targets again."
-
-This is a recurring caster action that re-applies the transformation (potentially to different Beast forms). It is:
-- Not the spell's casting time (that was the initial Action)
-- Not covered by `ClassFeatureActivationCost` (which covers `free` and `bonus_action`)
-- Not covered by any existing `CastingTime` variant (which covers the one-time cast)
-
-This is an ongoing maintenance cost — the caster may spend a Magic action each turn to re-transform. The surface has no representation for "caster may spend X action on later turns to update the effect."
-
-A new concept is needed, tentatively `OngoingCost`:
-
-```typescript
-export type OngoingCost = {
-  readonly kind: "magic_action";
-  readonly description: "retransform_targets";
-};
-```
-
----
-
-## Minor gap — target-initiated dismiss not surfaced
-
-The v4 lifecycle atom `dismiss` exists, but `ClassFeatureMechanics` and `SpellMechanics` have no surface field to express "target can dismiss with Bonus Action." This is a minor gap since the atom exists — the mechanics types just don't expose it.
-
----
-
-## Recommended family fit once gaps are filled
-
-If the primary atom `polymorph_creature` were added to `OngoingOperation`:
-
-```typescript
-export type OngoingOperation =
-  | RollModifierOperation
-  | DamageOnHitOperation
-  | PolymorphOperation;  // new
-
-export type PolymorphOperation = {
-  readonly kind: "polymorph_creature";
-  readonly effect: PolymorphCreatureEffect;
-  readonly tempHp: ...; // needs DiceAmount.equals_chosen_form_stat
-  readonly ongoingCost?: OngoingCost; // Magic action re-trigger
-};
-```
-
-Animal Shapes would then encode as `ongoing_effect` with:
-- `attachment.kind = "target"` with `selection.mode = "any_willing"` (new variant)
-- `duration.kind = "timed"`, 24 hours
-- `operation.kind = "polymorph_creature"`
-
----
-
-## Summary of required widenings
-
-| Gap | Classification | Priority |
-|---|---|---|
-| `polymorph_creature` effect atom | `atom_widening` | **Primary blocker** |
-| `TargetSelection.any_willing` | `surface_widening` | Secondary |
-| `DiceAmount.equals_chosen_form_stat` | `surface_widening` | Secondary |
-| Magic action ongoing re-trigger cost | `surface_widening` | Secondary |
-| Target dismiss surfaced in mechanics | Minor / `surface_widening` | Minor |
+The encoding includes:
+- `family: "ongoing_effect"` — 24-hour timed duration, no concentration
+- `attachment`: `any_number` target selection
+- `initialPhase`: `direct` → `transform_target` (beast CR ≤ 4, retained fields, tempHpFromForm=true)
+- `operations`: `on_caster_spends_action(magic)` → `transform_target` (re-transform on later turns; tempHpFromForm omitted since THP is only granted from the first form per RAW)
+- `revertTriggers`: `[spell_ends, zero_hp]` — the `target_bonus_action` trigger is missing (Gap 1 above)
+- `actionRestriction`: omitted — the `no_spells_only` variant is missing (Gap 2 above)

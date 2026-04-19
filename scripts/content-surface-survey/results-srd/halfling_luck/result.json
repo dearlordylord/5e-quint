@@ -1,1 +1,16 @@
-{"unit_slug":"halfling_luck","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "halfling_luck",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "modify_roll_reroll",
+      "justification": "Luck fires only when a natural 1 is rolled on a D20 Test and allows a single reroll that must be kept. This is mechanically distinct from advantage (which rolls 2d20 and takes the higher before the roll resolves) and from modify_roll_numeric (an additive bonus). The trigger is a specific die-face result, not a blanket before-roll enhancement. The v4 taxonomy lists modify_roll_reroll as an effect atom but it is absent from types.ts.",
+      "evidence": "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The mechanic is a conditional reroll gated on a specific die result (natural 1) covering all D20 Tests (attack rolls, saving throws, ability checks). The passive family and species_trait kind both exist and would fit — the only blocker is the missing modify_roll_reroll atom. The proposed atom needs at minimum: a trigger condition (roll_value: 1), the set of roll kinds it applies to (all D20 Tests), and 'must use new roll' semantics (no keep-or-reroll choice). Note: the broader Halfling species entry also includes Brave (encodable as modify_roll_advantage with conditionFilter frightened), Halfling Nimbleness (no atom — special movement through spaces), and Naturally Stealthy (no atom — conditional Hide action grant). Only Luck is surveyed here."
+}

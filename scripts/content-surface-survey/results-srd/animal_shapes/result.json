@@ -1,1 +1,46 @@
-{"unit_slug":"animal_shapes","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "animal_shapes",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "action_quota",
+    "action_window",
+    "activate",
+    "direct_apply",
+    "expire",
+    "persist",
+    "spell_root",
+    "spell_slot",
+    "target",
+    "transform_target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "opens_window",
+    "persists_until",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "PolymorphRevertTrigger: target_bonus_action",
+      "justification": "The target can voluntarily end the transformation as a Bonus Action — a distinct revert trigger not covered by spell_ends or zero_hp. Currently only spell_ends, zero_hp, temp_hp_depleted, and dismissed_by_caster exist.",
+      "evidence": "The transformation lasts for the duration or until the target ends it as a Bonus Action."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PolymorphActionRestriction: no_spells_only",
+      "justification": "The target cannot cast spells but RETAINS its ability to communicate. The only existing variant, no_speech_no_spells, incorrectly suppresses communication. This encoding omits actionRestriction entirely to avoid a dishonest trace.",
+      "evidence": "the target retains its... ability to communicate... and it can't cast spells."
+    },
+    {
+      "kind": "new_variant",
+      "name": "PolymorphFormSource: maxSize field",
+      "justification": "Animal Shapes constrains the beast form to Large or smaller. PolymorphFormSource only supports creatureType and crBound; there is no size ceiling field.",
+      "evidence": "Each target shape-shifts into a Large or smaller Beast of your choice that has a Challenge Rating of 4 or lower."
+    }
+  ],
+  "confidence": "high",
+  "notes": "Core mechanics encode cleanly: ongoing_effect with any_number target selection, initialPhase direct-transform (tempHpFromForm=true), and on_caster_spends_action(magic) re-transform operation (no tempHpFromForm). Typecheck passes; tracer emits a valid graph with no throws. Three surface variants are missing: (1) target Bonus Action voluntary revert, (2) no_spells_only action restriction (communication retained), (3) maxSize on PolymorphFormSource. Additionally, 'ability to communicate' is approximated as the 'languages' retained field — the closest available PolymorphRetainedField."
+}

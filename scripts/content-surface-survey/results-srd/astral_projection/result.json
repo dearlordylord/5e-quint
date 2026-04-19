@@ -1,1 +1,28 @@
-{"unit_slug":"astral_projection","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "astral_projection",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "create_astral_projection",
+      "justification": "The spell projects targets into the Astral Plane while leaving physical bodies behind in suspended animation. This is a dual-entity state: astral form (on Astral Plane, full statistics) and body (on origin plane, Unconscious, no food/air/aging). transport_exile is semantically wrong — it moves the creature entirely. transform_target is semantically wrong — it replaces the form. This projection creates two simultaneous co-existing entities of the same creature, with full isolation between them (damage to one does not affect the other). No v4 atom covers this.",
+      "evidence": "You and up to eight willing creatures within range project your astral bodies into the Astral Plane. Each target's body is left behind in a state of suspended animation; it has the Unconscious condition, doesn't need food or air, and doesn't age. [...] Any damage or other effects that apply to an astral form have no effect on the target's body and vice versa."
+    },
+    {
+      "kind": "new_variant",
+      "name": "permanent.endsOn: caster_magic_action",
+      "justification": "The spell's permanent duration can be ended by the caster taking a Magic action to dismiss it (for all targets simultaneously). The current permanent.endsOn only allows 'dispel' | 'damage'. A 'caster_magic_action' variant is needed for voluntary caster-side termination distinct from Dispel Magic.",
+      "evidence": "The spell ends for all the targets if you take a Magic action to dismiss it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger: target_at_zero_hp (for permanent duration)",
+      "justification": "The spell ends per-target when that target's body or astral form reaches 0 HP. Existing DurationEndTrigger variants (target_takes_damage, target_makes_attack_roll, etc.) are for concentration/timed durations only, and none captures 'drops to 0 HP'. Permanent durations have no earlyEnd field. A per-target zero-HP end trigger on permanent duration spells is a new surface need.",
+      "evidence": "If a target's body or astral form drops to 0 Hit Points, the spell ends for that target."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation spell family structurally fits (direct phase, choose_up_to 9 targets, 1-hour casting time, permanent duration). The core blocker is the absence of any atom for the dual-entity astral projection mechanic. transport_exile to astral_plane would produce a dishonest trace — it implies the creature moves entirely to the Astral Plane with no body remaining. The silver cord and cord-cutting mechanic ('happens only when an effect states it') is DM-agenda by the spell's own text and does not require a new atom. The 'suspended animation' sub-state (no food/air/aging) beyond Unconscious is a secondary surface gap but secondary to the projection atom itself."
+}

@@ -1,204 +1,127 @@
-# Proposal: Atom Widenings for Barbarian Rage
+# Proposal: Barbarian Rage surface widenings
 
-**Unit:** `barbarian_rage` (Barbarian L1 class feature, SRD 5.2.1)  
-**Outcome:** `atom_widening` — tracer threw `unhandled class-feature effect` because `ClassFeatureEffect` has no `ongoing_state` variant.
+## Classification: `surface_widening`
+
+Rage is a Barbarian level-1 class feature. Its overall shape fits the `activation` family (`ClassFeatureMechanics`) and its resource/reset model is expressible today. However, five distinct gaps prevent an honest encoding.
 
 ---
 
-## Root cause
+## Gap 1 (critical): Duration extension mechanism
 
-`ClassFeatureMechanics` currently has a single family, `activation`, whose `effect` field is:
+**Evidence**
+> The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:
+> - Make an attack roll against an enemy.
+> - Force an enemy to make a saving throw.
+> - Take a Bonus Action to extend your Rage.
+> Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.
 
+**Gap**
+The current `Duration` union has three variants: `instantaneous`, `concentration`, and `timed`. Rage is explicitly *not* concentration. A plain `timed: 1 round` duration would imply Rage always expires after one round, which is wrong — in practice Rage runs as long as the barbarian acts aggressively (potentially 10 minutes / 100 rounds).
+
+**Proposed widening**
+Option A — new `Duration` variant:
 ```typescript
-export type ClassFeatureEffect = GrantExtraActionEffect | HealHpEffect;
+| {
+    readonly kind: "maintained";
+    readonly initialWindow: DurationValue;         // "until end of your next turn"
+    readonly extendBy: ReadonlyNonEmptyArray<       // any of these extends another window
+      | { readonly kind: "attack_roll_vs_enemy" }
+      | { readonly kind: "force_enemy_saving_throw" }
+      | { readonly kind: "bonus_action_intent" }
+    >;
+    readonly maxDuration?: DurationValue;           // "up to 10 minutes"
+    readonly earlyEnd?: ReadonlyNonEmptyArray<DurationEndTrigger>;
+  }
 ```
 
-Rage enters a **persistent state** on activation — not a one-shot effect. This
-requires either:
+Option B — compose existing `timed` with a new `OngoingTrigger` kind `on_caster_turn_end_without_extend` that fires the expire path, and a complement trigger that resets the timer. This is less clean because it requires two new triggers and an extend-timer atom.
 
-1. A new `ClassFeatureEffect` variant `ongoing_state` that holds a sub-effect array
-   + duration + termination + renewal; **or**
-2. A new `ClassFeatureMechanics` family `class_feature_ongoing_effect` (analogous to
-   `OngoingEffectMechanics` for spells) that promotes duration/lifecycle to first-class
-   fields on the mechanics header.
-
-Option 2 is preferred because it mirrors the spell surface structure and keeps the
-activation header clean.
+Option A is preferred: the "active-maintenance duration" pattern appears in Rage, and may recur in other features (Monk Flurry-sustained stances, future subclass auras). Naming the pattern explicitly is cleaner than threading it through the ongoing-operation grammar.
 
 ---
 
-## Proposed widenings
+## Gap 2: Strength-based attack filter on `modify_damage_numeric`
 
-### W1 — New `ClassFeatureMechanics` family: `class_feature_ongoing_effect`
+**Evidence**
+> When you make an attack using Strength — with either a weapon or an Unarmed Strike — and deal damage to the target, you gain a bonus to the damage…
 
+**Gap**
+`modify_damage_numeric` accepts `weaponFilter?: WeaponFilter`. `WeaponFilter` has three variants: `weapon_category` (melee/ranged), `weapon_property` (thrown), `specific_item`. None of these expresses "attacks that use Strength as the attack/damage ability." Scoping to `weapon_category: "melee"` would miss thrown-with-Strength attacks; scoping to both melee and thrown would over-include finesse and ranged weapon attacks.
+
+**Proposed widening**
+Add a new `WeaponFilter` variant:
 ```typescript
-export type ClassFeatureOngoingEffectMechanics = ClassFeatureMechanicsHeader & {
-  readonly family: "class_feature_ongoing_effect";
-  readonly duration: Duration;           // reuse existing Duration type
-  readonly effects: ReadonlyArray<ClassFeatureOngoingEffect>;
-  readonly earlyTermination?: ReadonlyArray<EarlyTerminationCondition>;  // see W6
-  readonly renewal?: TurnRenewal;        // see W7
-};
-
-export type ClassFeatureMechanics =
-  | ClassFeatureActivationMechanics     // existing
-  | ClassFeatureOngoingEffectMechanics; // new
+| { readonly kind: "ability_used"; readonly ability: Ability }
 ```
-
-**Tracer:** add `case "class_feature_ongoing_effect"` to `traceClassFeatureMechanics`.
-The tracer should emit a `persist` lifecycle node (from `Duration.timed`) and walk
-each sub-effect through a new `traceClassFeatureOngoingEffect` dispatcher.
+This narrows the rider to attacks made with a specific ability, which is a concept that appears in Rage Damage (Strength) and may recur in class features that key off Dexterity vs. Strength (e.g., finesse disambiguation).
 
 ---
 
-### W2 — New effect atom: `damage_resistance`
+## Gap 3: Ability filter for raw ability checks on `modify_roll_advantage`
 
+**Evidence**
+> You have Advantage on Strength checks and Strength saving throws.
+
+**Gap**
+`modify_roll_advantage` has `saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>` for saving throws and `skillFilter?: SkillFilter` for skill-tagged checks. Raw ability checks (e.g., Strength vs a DC for forced movement, grapple contests) carry no skill tag and cannot be filtered by ability through the existing fields.
+
+**Proposed widening**
+Add `abilityCheckFilter?: ReadonlyNonEmptyArray<Ability>` to `modify_roll_advantage` (and symmetrically to `modify_roll_numeric` if needed by future units):
 ```typescript
-export type DamageResistanceEffect = {
-  readonly kind: "damage_resistance";
-  readonly damageTypes: ReadonlyArray<DamageType>;
-};
+readonly abilityCheckFilter?: ReadonlyNonEmptyArray<Ability>;
 ```
-
-Sourced from: *"You have Resistance to Bludgeoning, Piercing, and Slashing damage."*
-
-Maps to v4 atom `resistance` (if it exists in the full taxonomy) or a new atom of the
-same name. The tracer should emit a `damage_resistance` effect node attached to `self`.
+Only meaningful when `on` contains `"ability_check"`. Completes the parallel with `saveAbilityFilter`.
 
 ---
 
-### W3 — New effect atom: `bonus_damage`
+## Gap 4: `suppress_spellcasting` atom
 
+**Evidence**
+> You can't maintain Concentration, and you can't cast spells.
+
+**Gap**
+No `EffectAtom` variant blocks spellcasting while an effect is active. The v4 taxonomy does not include a `suppress_spellcasting` atom.
+
+**Proposed widening**
 ```typescript
-export type BonusDamageEffect = {
-  readonly kind: "bonus_damage";
-  readonly condition: "strength_attack_or_unarmed";  // enum, widen as needed
-  readonly amount: DiceAmount;   // threshold_tiers by class level for Rage Damage column
-};
+| { readonly kind: "suppress_spellcasting" }
 ```
-
-Sourced from: *"When you make an attack using Strength … you gain a bonus to the damage
-that increases as you gain levels as a Barbarian."*
-
-The Rage Damage column: +2 (L1), +3 (L9), +4 (L16).
-
-Uses `DiceAmount.threshold_tiers` with `axis: "class"` and `flat`-only overrides — the
-existing `DiceAmount` / `DiceExprDelta` types are sufficient for the value representation.
-Only the `bonus_damage` container and the `"strength_attack_or_unarmed"` condition
-discriminant are new.
+Applied as a persistent effect for the rage duration. No parameters needed for the base case.
 
 ---
 
-### W4 — New effect atom: `advantage_on_ability`
+## Gap 5: `block_concentration_maintenance` atom
 
+**Evidence**
+> You can't maintain Concentration, and you can't cast spells.
+
+**Gap**
+Concentration maintenance (the per-turn ability to hold a concentration spell) is distinct from casting. A barbarian who casts a concentration spell before raging loses it on entry. No atom expresses "while this effect is active, the bearer cannot hold Concentration." The existing `concentration_lock` resource atom marks the slot as occupied — it does not *prohibit* using the slot.
+
+**Proposed widening**
 ```typescript
-export type AdvantageOnAbilityEffect = {
-  readonly kind: "advantage_on_ability";
-  readonly ability: Ability;     // "str"
-  readonly on: ReadonlyArray<"ability_check" | "saving_throw">;
-};
+| { readonly kind: "block_concentration_maintenance" }
 ```
-
-Sourced from: *"You have Advantage on Strength checks and Strength saving throws."*
-
-Note: `RollKind` currently only has `"attack_roll" | "saving_throw"`. Ability checks
-require either widening `RollKind` with `"ability_check"` or introducing a separate
-discriminated union for ability-check-rolls. Widening `RollKind` is simpler.
+This atom prevents the bearer from retaining or acquiring concentration spells while the host effect persists.
 
 ---
 
-### W5 — New effect atom: `disable_actions`
+## Encoding status
 
-```typescript
-export type DisableActionsEffect = {
-  readonly kind: "disable_actions";
-  readonly disables: ReadonlyArray<"maintain_concentration" | "cast_spell">;
-};
-```
+No `content/barbarian_rage.dhall` or `content/barbarian_rage.json` produced. A partial encoding (e.g., timed:1-round + resistance only) would misrepresent the feature's core duration semantics and omit the central combat behavior. The trace would be actively misleading.
 
-Sourced from: *"You can't maintain Concentration, and you can't cast spells."*
+## Atoms expressible today (for future clean encoding)
 
-This is a constraint on what the Raging creature may do, not a restriction on action
-*kinds* (Standard Action kinds). `"maintain_concentration"` and `"cast_spell"` are
-new capability discriminants.
+Once the five gaps above are closed:
 
----
-
-### W6 — New type: `EarlyTerminationCondition`
-
-```typescript
-export type EarlyTerminationCondition =
-  | { readonly kind: "equips_heavy_armor" }
-  | { readonly kind: "gains_condition"; readonly condition: Condition };
-```
-
-Sourced from: *"it ends early if you don Heavy armor or have the Incapacitated condition"*
-
-`Condition` currently only has `"prone"` (from mastery surface). Widen with
-`"incapacitated"` (and others as pressure cases land).
-
----
-
-### W7 — New type: `TurnRenewal`
-
-```typescript
-export type TurnRenewalTrigger =
-  | { readonly kind: "make_attack_roll_against_enemy" }
-  | { readonly kind: "force_enemy_saving_throw" }
-  | { readonly kind: "take_bonus_action" };
-
-export type TurnRenewal = {
-  readonly triggers: ReadonlyArray<TurnRenewalTrigger>;
-  readonly expiresAtEndOf: "current_turn" | "next_turn";
-};
-```
-
-Sourced from: *"you can extend the Rage for another round by doing one of the following:
-Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a
-Bonus Action to extend your Rage. Each time the Rage is extended, it lasts until the
-end of your next turn."*
-
-This is a novel lifecycle pattern — a `timed` duration that auto-extends each turn
-the activating creature satisfies any trigger. No current `Duration` variant supports
-this.
-
----
-
-### W8 — New `UseCountCap` variant: `unlimited`
-
-```typescript
-export type UseCountCap =
-  | { readonly kind: "fixed"; readonly uses: number }
-  | ThresholdTiers<number>
-  | { readonly kind: "unlimited" };   // new
-```
-
-Sourced from: Level 17 Barbarian Features table shows "Unlimited" in the Rages column.
-
-The `threshold_tiers` cap can express levels 1–16 (2→3→4→5→6 uses), but cannot
-express the level-17 transition to unlimited. An `unlimited` variant is required.
-
----
-
-## What fits without widening
-
-These parts of Rage's mechanics mapped cleanly to existing surface atoms:
-
-| Mechanic | Existing type | Notes |
-|----------|--------------|-------|
-| Activation cost: Bonus Action | `ClassFeatureActivationCost.bonus_action` | ✓ |
-| Use count with class-level tiers | `UseCountCap.threshold_tiers` (axis=class) | ✓ for L1–L16 |
-| Reset: 1 use/Short Rest, all/Long Rest | `RestResetCadence.partial_short_full_long` | ✓ |
-| Resource + rest windows | `use_count`, `rest_window` atoms | ✓ |
-| Damage type enum (BPS) | `DamageType` | ✓ |
-| Class level scaling axis | `LevelAxis.class` | ✓ |
-| Flat-bonus scaling via `DiceExprDelta.flat` | `DiceExprDelta` | ✓ |
-
----
-
-## Summary
-
-Rage requires 1 new `ClassFeatureMechanics` family (W1), 4 new effect atoms (W2–W5),
-2 new structural types (W6–W7), and 1 new `UseCountCap` variant (W8). The resource
-management layer (activation cost, use count, rest resets) fits the existing surface
-without modification.
+| Mechanic | Atom / type |
+|---|---|
+| Bonus Action activation cost | `activationCost: { kind: "bonus_action" }` |
+| Not wearing Heavy armor gate | `condition: { kind: "not_wearing_armor", categories: ["heavy"] }` |
+| Use count (threshold_tiers by class level) | `resource: { kind: "use_count", cap: ThresholdTiers }` |
+| Partial short / full long rest reset | `resetCadence: { kind: "partial_short_full_long", shortRestRefill: 1 }` |
+| Resistance to Bludgeoning | `grant_resistance { damageType: "bludgeoning" }` |
+| Resistance to Piercing | `grant_resistance { damageType: "piercing" }` |
+| Resistance to Slashing | `grant_resistance { damageType: "slashing" }` |
+| Advantage on Strength saving throws | `modify_roll_advantage { mode: "advantage", on: ["saving_throw"], saveAbilityFilter: ["str"] }` |
+| Early end on Heavy armor / Incapacitated | `earlyEnd` triggers on new maintained duration |

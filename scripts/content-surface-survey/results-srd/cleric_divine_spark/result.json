@@ -1,1 +1,22 @@
-{"unit_slug":"cleric_divine_spark","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "cleric_divine_spark",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "CastTimeEffectModeChoice.options[*].phases",
+      "justification": "Divine Spark lets the caster choose at activation time between (a) a direct heal_hp effect and (b) a save_gate resolution (Con save, then Necrotic/Radiant damage on fail or half on success). The heal branch is a plain EffectAtom; the damage branch requires an ActivationPhase.save_gate. CastTimeEffectModeChoice.options currently only supports ReadonlyNonEmptyArray<EffectAtom> per option, not full ActivationPhase chains. There is no way to express 'choose between a direct effect and a save-gated effect' in the current surface.",
+      "evidence": "you point your Holy Symbol at another creature... Roll 1d8 and add your Wisdom modifier. You either restore Hit Points to the creature equal to that total or force the creature to make a Constitution saving throw. On a failed save, the creature takes Necrotic or Radiant damage (your choice) equal to that total. On a successful save, the creature takes half as much damage (round down)."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DiceAmount threshold_tiers with abilityModifier addend",
+      "justification": "The damage/heal amount is 1d8 + Wisdom modifier, scaling to 2d8/3d8/4d8 by class level. DiceExpr supports abilityModifier and threshold_tiers supports DiceExprDelta overrides, so this composes correctly — the base DiceExpr carries abilityModifier: 'wis' and the tiers override the dice count only. This does FIT the existing surface; recording here for completeness only.",
+      "evidence": "Roll 1d8 and add your Wisdom modifier... You roll an additional d8 when you reach Cleric levels 7 (2d8), 13 (3d8), and 18 (4d8)."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The blocking gap is the cast-time choice between two mechanically distinct resolution paths: heal (direct EffectAtom) vs. damage (ActivationPhase.save_gate). CastTimeEffectModeChoice.options[*].effects is typed as ReadonlyNonEmptyArray<EffectAtom> and cannot carry a save_gate phase. Encoding only the damage branch as a save_gate (ignoring the heal option) or only the heal branch as a direct effect would both be dishonestly incomplete. The damage-type choice (Necrotic or Radiant) fits the existing CastTimeChoice<DamageType> surface. The class-level threshold scaling (1d8 → 4d8) fits threshold_tiers with axis='class'. The Channel Divinity shared pool (shared with Turn Undead, partial_short_full_long reset) is a secondary modeling gap but not the blocking issue."
+}

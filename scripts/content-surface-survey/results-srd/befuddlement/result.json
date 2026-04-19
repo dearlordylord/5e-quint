@@ -1,1 +1,28 @@
-{"unit_slug":"befuddlement","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "befuddlement",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "RepeatSaveSpec.cadence: elapsed_days",
+      "justification": "Befuddlement's repeat save fires every 30 days — a calendar-time cadence. RepeatSaveSpec.cadence only supports 'end_of_target_turn' and 'on_target_takes_damage'. A new variant is needed: { kind: 'elapsed_days', days: number }.",
+      "evidence": "At the end of every 30 days, the target repeats the save, ending the effect on a success."
+    },
+    {
+      "kind": "new_variant",
+      "name": "EffectAtom: restrict_action_set (standalone, target-applied)",
+      "justification": "The spell's on-fail effect prevents the target from casting spells or taking the Magic action. 'restrict_action_set' exists in v4 TAXONOMY §9 but is only surfaced in types.ts as ActionRestriction nested inside grant_extra_action (caster-side). A standalone EffectAtom is needed that restricts specified action kinds on the target creature for the duration of a persistent effect.",
+      "evidence": "the target takes 10d12 Psychic damage and can't cast spells or take the Magic action"
+    },
+    {
+      "kind": "new_variant",
+      "name": "Duration.permanent.endsOn: named_spell_cast_on_target",
+      "justification": "The persistent restriction ends if Greater Restoration, Heal, or Wish is cast on the target. The current permanent.endsOn union only supports 'dispel' | 'damage'. Encoding 'ended by a specific spell cast on target' requires a new endsOn variant (or a closed list of spell IDs).",
+      "evidence": "The effect can also be ended by the Greater Restoration, Heal, or Wish spell."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The damage + Int save + half-on-success backbone fits activation/save_gate cleanly (10d12 psychic, onSuccess: half_damage). Three surface gaps block an honest full encoding: (1) no calendar-time cadence on RepeatSaveSpec, (2) restrict_action_set is not a standalone EffectAtom applicable to targets, (3) permanent.endsOn has no 'named spell cast on target' variant. None of these require new v4 taxonomy atoms — all three are extensions of existing surface shapes."
+}

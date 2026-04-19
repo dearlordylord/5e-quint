@@ -1,1 +1,34 @@
-{"unit_slug":"antimagic_field","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "antimagic_field",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "suppress_spellcasting",
+      "justification": "No existing atom prevents creatures from casting spells or taking Magic actions within an area. grant_extra_action / scale_attack_count are additive grants, not prohibitions. block_targeting addresses spell targeting, not the act of casting.",
+      "evidence": "No one can cast spells, take Magic actions, or create other magical effects inside the aura"
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_magic_item_properties",
+      "justification": "No atom suppresses the active magical properties of magic items. This is distinct from block_targeting (which is about what can be targeted) and from grant_condition_immunity.",
+      "evidence": "Magical properties of magic items don't work inside the aura or on anything inside it."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_ongoing_spells",
+      "justification": "end_ongoing_spells terminates spells permanently. Antimagic Field suppresses them — the spell pauses without ending, and its duration continues ticking down. On leaving the aura the spell resumes. This suppression semantic is absent from the surface.",
+      "evidence": "Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area. While an effect is suppressed, it doesn't function, but the time it spends suppressed counts against its duration."
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_magic_area_ingress",
+      "justification": "block_targeting covers creatures/things being targeted, but no atom prevents external magical areas of effect from extending into a protected region.",
+      "evidence": "Areas of effect created by spells or other magic can't extend into the aura"
+    }
+  ],
+  "confidence": "high",
+  "notes": "Structural fit is strong: ongoing_effect family, area attachment with emanation shape and self-origin, concentration up to 1 hour. The existing block_travel atom could honestly cover the teleportation/planar-travel clause. The portal-closing clause is transient state with DM-adjacent flavor that may not need a dedicated atom. The blocking of magical targeting from outside may stretch into block_targeting with a broad scope string, but the anti-casting and suppression semantics have no honest home in the current surface. The suppression semantic (pause-not-end, duration continues) is the most critical gap — end_ongoing_spells would be factually wrong."
+}

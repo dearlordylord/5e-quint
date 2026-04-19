@@ -1,1 +1,22 @@
-{"unit_slug":"antilife_shell","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "antilife_shell",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "creatureTypeExclusionFilter on area attachment",
+      "justification": "The spell's barrier only affects creatures that are NOT Constructs or Undead. This is the spell's core discriminant. The existing occupantDispositionFilter (friendly_to_source | hostile_to_source) cannot express creature-type exclusion. A new optional field — e.g. occupantTypeFilter: { include?: CreatureType[], exclude?: CreatureType[] } — on the area attachment is required to encode this structurally rather than hiding it in block_travel.scope: string.",
+      "evidence": "The aura prevents creatures other than Constructs and Undead from passing or reaching through it."
+    },
+    {
+      "kind": "new_variant",
+      "name": "DurationEndTrigger: caster_movement_forces_target_through_barrier",
+      "justification": "The spell ends if the caster moves in a way that forces an affected creature to pass through the barrier. This is a unique trigger: caster-movement-sourced, target-relative, contingent on the geometry of the emanation. No existing DurationEndTrigger variant covers it (target_makes_attack_roll, target_deals_damage, target_casts_spell, target_dons_armor, target_damaged_by_caster_or_ally, target_takes_damage, caster_recasts_spell — none match).",
+      "evidence": "If you move so that an affected creature is forced to pass through the barrier, the spell ends."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The ongoing_effect family, area attachment, and block_travel atom all exist and are structurally appropriate. The two blockers are both surface_widening level: (1) a creature-type filter on area occupant effects (only disposition-based filtering currently exists), and (2) a movement-forced-passage early-end trigger for Duration. The spell does NOT fit dm_agenda — the blocking mechanic is deterministic and rule-driven. No dhall authored because encoding the creature-type exclusion in block_travel.scope: string would produce a dishonest trace."
+}

@@ -1,116 +1,104 @@
-# Proposal: Animal Messenger — Widening Requirements
+# Proposal: Animal Messenger widening
 
-**Outcome:** `structural_widening`
-**Unit:** Animal Messenger (SRD 5.2.1, level 2 Enchantment)
+## Classification
 
----
+`atom_widening`
 
-## Why no Dhall was authored
+## What fits
 
-Animal Messenger's core mechanic is:
+The spell maps cleanly onto the `activation` family with a `save_gate` phase:
 
-> Target an existing wild Tiny Beast within range → the beast makes a CHA save (skipped if CR > 0) → on fail, the beast is compelled to autonomously travel to a specified location and deliver a specified message, persisting until the spell's duration ends or the beast arrives.
+- **CastingTime**: `{ kind: "action", ritual: true }` — SRD text reads "Action or Ritual"
+- **Range**: `{ kind: "point", feet: 30 }`
+- **Components**: V, S, M ("a morsel of food")
+- **Duration**: `{ kind: "timed", value: { unit: "hour", amount: 24 }, upcastTiers: [{ atSlot: 3, amount: 72 }, { atSlot: 4, amount: 120 }, ...] }` — "+48 hours for each spell slot level above 2" encodes cleanly via `DurationValue.upcastTiers`
+- **Target**: one Tiny Beast (`selection: { mode: "one", typeFilter: ["beast"] }`)
+- **Save gate**: CHA save, caster spell save DC
 
-This does not fit any existing `SpellMechanics` family honestly:
+## What's missing
 
-| Family | Why it fails |
-|---|---|
-| `activation` | `onFail: Effect` is `damage \| none`; creature compulsion is neither. |
-| `ongoing_effect` | operation is `roll_modifier \| damage_on_hit`; creature task-delegation is neither. |
-| `anchored_trigger` | plants a trigger on a *location*; here the subject is a *creature*. |
-| `triggered_reaction` | caster-reaction-shaped; Animal Messenger is an active cast. |
+### 1. `assign_courier_task` EffectAtom (blocking)
 
-Forcing any of these would produce a graph that lies about what the spell does.
+The `onFail` outcome of the save gate is: the target beast is bound to a courier task for the spell's duration. It will:
+- Travel toward a caster-specified location (previously visited by the caster)
+- Find a recipient matching a caster-provided general description
+- Deliver a verbal message of up to 25 words, mimicking the caster's communication
 
----
+This is a **deterministic mechanical commitment** — the beast will attempt the task until the spell expires or it succeeds. It is not a condition (`charmed`, `paralyzed`, etc.), not a stat modification, and not any existing EffectAtom in the surface.
 
-## Widening 1 — New payload family: `creature_compulsion`
-
-**Kind:** `new_subgraph`
-
-The mechanic pattern:
-
-```
-spell_root → activate → save_gate (target creature)
-  on fail → command_creature (task: travel + deliver)
-           → persist → expire (duration / on delivery)
-```
-
-This is a new top-level payload family, analogous to `anchored_trigger` but creature-targeted rather than location-targeted. The creature-compulsion mechanic appears in several spells (Animal Messenger, Geas, Command, Suggestion, Charm Person/Monster) at varying complexity levels. Animal Messenger is the simplest case.
-
----
-
-## Widening 2 — New `Effect` variant: `command_creature`
-
-**Kind:** `new_variant`
-
-The current `Effect` union is:
+Proposed atom shape:
 ```typescript
-export type Effect = DamageEffect | NoneEffect;
-```
-
-v4 has a `command_companion` atom, but that atom targets an already-bound companion. Animal Messenger targets an *unbound wild beast* chosen at cast time — semantically distinct. A new surface variant is needed:
-
-```typescript
-export type CommandCreatureEffect = {
-  readonly kind: "command_creature";
-  readonly task: "deliver_message"; // closed enum, widen on pressure
-};
-```
-
-The task payload (the message text, the recipient description) is DM-agenda per ARCHITECTURE.md and stays out of core. Only the task *kind* needs to be representable.
-
----
-
-## Widening 3 — Duration slot-scaling variant
-
-**Kind:** `new_variant`
-
-Current `Duration.timed` holds a fixed `DurationValue`:
-```typescript
-| { readonly kind: "timed"; readonly value: DurationValue }
-```
-
-Animal Messenger upcast: *+48 hours per slot above 2.* There is no slot-scaling shape for `Duration`. A new variant is needed, e.g.:
-
-```typescript
-| {
-    readonly kind: "timed_slot_scaled";
-    readonly base: DurationValue;
-    readonly perSlotAboveBase: DurationValue;
-    readonly baseLevel: SpellLevel;
-  }
-```
-
-This same gap will recur for other spells with slot-scaled durations (Suggestion, Hold Person, etc.).
-
----
-
-## Widening 4 — Save gate CR-conditional auto-succeed
-
-**Kind:** `new_variant`
-
-The SRD text: *"if the target's Challenge Rating isn't 0, it automatically succeeds."* This means the save gate is gated on a property of the target (its CR), not on the roll mechanics. No existing surface shape captures a conditional bypass of a saving throw based on target properties.
-
-Candidate shape for `ActivationPhase.save_gate`:
-```typescript
-autoSucceedCondition?: {
-  readonly kind: "target_cr_above";
-  readonly cr: number;
+{
+  readonly kind: "assign_courier_task";
+  // destination and recipient description are caster-specified at cast time;
+  // their resolution is DM-adjudicated, but the task assignment itself is deterministic.
 }
 ```
 
-This pattern (CR/type-conditional save immunity) appears in other spells (e.g., Charm Person only affects Humanoids).
+Compare to Geas (which applies `charmed` — a real mechanical condition) and Animal Friendship (also `charmed`). Animal Messenger applies *no* condition; the beast is behaviorally compelled without any modeled condition.
 
----
+### 2. `saveAppliesIf: "cr_equals_zero"` variant (secondary)
 
-## Notes on DM-agenda boundary
+The SRD text includes: "if the target's Challenge Rating isn't 0, it automatically succeeds." This indicates the CHA saving throw is only made by CR 0 beasts; CR > 0 beasts cooperate automatically (skip the save).
 
-The spell's DM-agenda portions:
-- The message text ("up to twenty-five words") — narrative content
-- The recipient description ("a red-haired dwarf wearing a pointed hat") — fuzzy matching adjudicated by DM
-- Whether the beast successfully finds the recipient before the spell ends — DM adjudication
+The existing `saveAppliesIf` field accepts only `"unwilling_target"` (True Polymorph pattern). A CR-based predicate is a new variant of that surface field:
 
-These are correctly out of core scope. The mechanical frame (save gate → compulsion → travel + delivery lifecycle) is deterministic and belongs in core.
+```typescript
+readonly saveAppliesIf?: "unwilling_target" | { readonly kind: "cr_equals"; readonly cr: 0 };
+```
 
-The unit is **not** classified as `dm_agenda` because the DM-agenda portions are secondary deliverables of a mechanically-grounded compulsion effect, not the entire purpose of the spell.
+## DM agenda boundary
+
+The following elements are DM-adjudicated and correctly excluded from the mechanical surface:
+- Whether the specified location exists and is reachable within the spell duration
+- Whether the beast finds a creature matching the description ("a person dressed in the uniform of the town guard")
+- The 25/50 miles-per-day travel speed (narrative travel pacing, not combat movement)
+- What happens if the message is delivered but the recipient doesn't respond
+
+These are in the same category as Geas's compliance behavior (noted as DM agenda in that unit's encoding).
+
+## Encoding path once widened
+
+With `assign_courier_task` added to `EffectAtom`:
+
+```dhall
+{ kind = "spell"
+, id = "animal_messenger"
+, name = "Animal Messenger"
+, provenance = { kind = "srd-5.2.1", section = "Spells/Descriptions-A-D#Animal Messenger" }
+, mechanics =
+    { family = "activation"
+    , level = 2
+    , school = "enchantment"
+    , castingTime = { kind = "action", ritual = True }
+    , range = { kind = "point", feet = 30 }
+    , components = { v = True, s = True, m = Some "a morsel of food" }
+    , duration =
+        { kind = "timed"
+        , value =
+            { unit = "hour"
+            , amount = 24
+            , upcastTiers =
+                [ { atSlot = 3, amount = 72 }
+                , { atSlot = 4, amount = 120 }
+                , { atSlot = 5, amount = 168 }
+                -- +48h per slot; full tier list omitted for brevity
+                ]
+            }
+        }
+    , phases =
+        [ { kind = "save_gate"
+          , attachment =
+              { kind = "target"
+              , selection = { mode = "one", typeFilter = [ "beast" ] }
+              }
+          , ability = "cha"
+          , dc = { kind = "caster_spell_save_dc" }
+          , saveAppliesIf = Some { kind = "cr_equals", cr = 0 }  -- secondary widening
+          , onFail = { kind = "assign_courier_task" }             -- primary widening
+          , onSuccess = { kind = "none" }
+          }
+        ]
+    }
+}
+```

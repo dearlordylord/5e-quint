@@ -1,126 +1,134 @@
-# Proposal: Widenings required for Befuddlement
+# Proposal: Befuddlement surface widenings
 
-**Unit:** Befuddlement (level 8 enchantment, SRD 5.2.1)  
-**Outcome:** `surface_widening`  
-**Family:** `activation` / `save_gate` (correct; no structural widening needed)
+## Unit
 
----
+- **Slug**: `befuddlement`
+- **Kind**: spell
+- **Level**: 8 Enchantment, Action, 150 ft, Instantaneous duration
+- **Outcome**: `surface_widening`
 
-## What the spell does
+## What fits
 
-Single-target INT save (150 ft range, instantaneous duration):
+The spell's core structure — an Int saving throw with 10d12 Psychic damage on fail and half damage on success — encodes cleanly as an `activation` spell with a single `save_gate` phase:
 
-- **On fail:** 10d12 Psychic damage + indefinite condition ("can't cast spells or take the Magic action"), with a saving throw repeat at the end of every 30 days to end the condition; also ends on Greater Restoration / Heal / Wish.
-- **On success:** half damage only, no condition.
-
----
-
-## Gap 1 — `apply_condition` missing from spell `Effect`
-
-`Effect` in `types.ts` is:
-
-```typescript
-export type Effect = DamageEffect | NoneEffect;
+```dhall
+{ kind = "save_gate"
+, attachment = { kind = "target", selection = { mode = "one" } }
+, ability = "int"
+, dc = { kind = "caster_spell_save_dc" }
+, onFail = <composite: damage + restrict_action_set>
+, onSuccess = { kind = "half_damage" }
+, repeatSave = <30-day calendar cadence — MISSING>
+}
 ```
 
-The on-fail branch needs to apply a condition. `apply_condition` already appears in the mastery layer (`SaveGateRiderResult`) but has never been lifted into the spell `Effect` type.
+The damage atom itself (`10d12 psychic`) and the `half_damage` save-success outcome are both already expressible.
 
-**Proposed widening:**
+## Gap 1 — `RepeatSaveSpec.cadence` missing calendar-time variant
 
-```typescript
-export type ApplyConditionEffect = {
-  readonly kind: "apply_condition";
-  readonly condition: Condition;
-};
+**SRD text**: "At the end of every 30 days, the target repeats the save, ending the effect on a success."
 
-export type Effect = DamageEffect | NoneEffect | ApplyConditionEffect;
-```
+`RepeatSaveSpec.cadence` currently supports:
+- `"end_of_target_turn"` — fires at turn boundary (Hold Person family)
+- `"on_target_takes_damage"` — fires on damage event (Dominate family)
 
----
-
-## Gap 2 — `Condition` enum covers only `"prone"`
+**Proposed widening**: add a calendar-time cadence variant to `RepeatSaveSpec`:
 
 ```typescript
-export type Condition = "prone";
-```
-
-"Can't cast spells or take the Magic action" is not representable. The SRD defines a rich set of conditions (blinded, charmed, frightened, incapacitated, paralyzed, petrified, poisoned, prone, restrained, stunned, unconscious) and Befuddlement's debuff is a named, rule-defined state (described as "Befuddlement" in the Rules Glossary of SRD 5.2.1).
-
-**Proposed widening:**
-
-Expand `Condition` to include at minimum:
-
-```typescript
-export type Condition =
-  | "prone"
-  | "incapacitated"        // suppresses actions/reactions — closest parent
-  | "befuddled";           // SRD 5.2.1 Rules Glossary named condition
-```
-
-The `Befuddlement` condition in SRD 5.2.1 Rules Glossary specifically prevents spellcasting and the Magic action. It is distinct from `incapacitated` (which is broader). A dedicated `"befuddled"` condition value is the honest choice.
-
----
-
-## Gap 3 — Single `onFail: Effect` cannot deliver compound effects
-
-Currently each save-gate branch is:
-
-```typescript
-onFail: Effect   // a single Effect
-```
-
-Befuddlement's on-fail delivers **both** damage and a condition simultaneously. There is no compound or sequence variant in `Effect`.
-
-**Proposed widening (option A — compound variant):**
-
-```typescript
-export type CompoundEffect = {
-  readonly kind: "compound";
-  readonly effects: ReadonlyArray<DamageEffect | ApplyConditionEffect>;
-};
-
-export type Effect = DamageEffect | NoneEffect | ApplyConditionEffect | CompoundEffect;
-```
-
-**Proposed widening (option B — branch restructure):**
-
-Replace `onFail: Effect` with `onFail: ReadonlyArray<Effect>` and let the tracer iterate. This is a more invasive change but avoids a new compound kind.
-
-Option A is preferred: it is additive, keeps the tracer's switch exhaustive, and the `compound` concept is already latent in the v4 subgraph model (multiple effect atoms granted from a single resolution node).
-
----
-
-## Gap 4 — `repeat_save` and non-combat cadence absent from `types.ts`
-
-The v4 taxonomy includes `repeat_save` as a Resolution atom. It is not in `types.ts`. More specifically, Befuddlement's repeat save fires at a calendar interval (end of every 30 days), not at the end of a round or turn. No cadence grammar exists in the surface for out-of-combat intervals.
-
-**Proposed widening:**
-
-Add a `repeat_save` lifecycle shape to the surface. At minimum:
-
-```typescript
-export type RepeatSave = {
-  readonly kind: "repeat_save";
-  readonly ability: Ability;
-  readonly dc: DcSource;
+export type RepeatSaveSpec = {
   readonly cadence:
-    | { readonly kind: "end_of_turn" }
-    | { readonly kind: "end_of_days"; readonly days: number };
-  readonly onSuccess: "end_effect";
+    | "end_of_target_turn"
+    | "on_target_takes_damage"
+    | { readonly kind: "elapsed_days"; readonly days: number };  // NEW
+  readonly onSuccess: "ends_on_target";
+  readonly onFailAgain?: EffectAtom;
 };
 ```
 
-This would attach to the `apply_condition` effect as a termination path alongside the named-spell dispel clause (Greater Restoration / Heal / Wish). The named-spell dispel clause is a separate gap not modeled here (it requires a `dispel_by_named_spell` surface shape or a caller-owned signal — leaning toward caller-owned per ARCHITECTURE.md).
+This is a surface-level extension — no new v4 taxonomy atom is introduced; the existing `repeat_save` resolution atom covers the concept.
 
----
+## Gap 2 — `restrict_action_set` not a standalone EffectAtom
 
-## Summary
+**SRD text**: "the target … can't cast spells or take the Magic action"
 
-| Gap | Kind | Atoms affected |
-|-----|------|----------------|
-| `apply_condition` absent from spell `Effect` | `new_variant` | `apply_condition` (already in v4) |
-| `Condition` too narrow | `new_variant` | `apply_condition` (widened domain) |
-| Compound on-fail not expressible | `new_variant` | new `compound` Effect variant |
-| `repeat_save` and 30-day cadence absent | `new_variant` | `repeat_save` (already in v4) |
+The v4 taxonomy (TAXONOMY_atoms_graph.md §9 Effect Atoms) lists `restrict_action_set`. In `types.ts`, `ActionRestriction` is embedded inside `grant_extra_action` only — it restricts what the *caster's* extra action may be. No standalone EffectAtom applies an action restriction to the *target* creature for the duration of a persistent effect.
 
-No new v4 taxonomy atoms are required. All four gaps can be addressed by adding variants to existing surface types.
+**Proposed widening**: promote `restrict_action_set` to a first-class EffectAtom:
+
+```typescript
+| {
+    readonly kind: "restrict_action_set";
+    readonly exclude: ReadonlyNonEmptyArray<StandardActionKind>;
+    // optionally: also blocks spellcasting regardless of action kind
+    readonly blockSpellcasting?: true;
+  }
+```
+
+Befuddlement requires `exclude: ["magic"]` + `blockSpellcasting: true` (the SRD says "can't cast spells or take the Magic action" — casting spells through non-Magic-action paths, e.g. Quickened Spell, would also be blocked per RAW intent).
+
+This is a `surface_widening` — `restrict_action_set` is already a named v4 taxonomy atom; the TS surface simply hasn't exposed it as a target-applied EffectAtom yet.
+
+## Gap 3 — `Duration.permanent.endsOn` missing spell-dispel variant
+
+**SRD text**: "The effect can also be ended by the Greater Restoration, Heal, or Wish spell."
+
+The persistent action restriction has no natural duration — it lasts until a specific spell removes it. Modeling this as `duration: { kind: "permanent" }` requires an `endsOn` variant for "target receives one of these named spells":
+
+```typescript
+| {
+    readonly kind: "permanent";
+    readonly endsOn?: ReadonlyNonEmptyArray<
+      | "dispel"
+      | "damage"
+      | { readonly kind: "named_spell_cast_on_target"; readonly spellId: string }  // NEW
+    >;
+  }
+```
+
+Alternatively, a shorthand closed list of well-known "restoration spells" (greater_restoration, heal, wish) could be a named variant without spelling out individual spell IDs.
+
+This is again a `surface_widening` — no new v4 atom is needed; the existing `permanent` duration lifecycle atom handles it, but `endsOn` needs a new member.
+
+## Encoding path once gaps are closed
+
+With all three widenings in place:
+
+```dhall
+{ kind = "spell"
+, id = "befuddlement"
+, family = "activation"
+, level = 8
+, school = "enchantment"
+, castingTime = { kind = "action" }
+, range = { kind = "point", feet = 150 }
+, components = { v = True, s = True, m = Some "a key ring with no keys" }
+, duration = { kind = "instantaneous" }
+, phases =
+    [ { kind = "save_gate"
+      , attachment = { kind = "target", selection = { mode = "one" } }
+      , ability = "int"
+      , dc = { kind = "caster_spell_save_dc" }
+      , onFail =
+          { kind = "composite"
+          , effects =
+              [ { kind = "damage"
+                , damageType = "psychic"
+                , amount = { kind = "fixed", expr = { dice = 10, dieSize = 12 } }
+                }
+              , { kind = "restrict_action_set"          -- Gap 2
+                , exclude = [ "magic" ]
+                , blockSpellcasting = True
+                }
+              ]
+          }
+      , onSuccess = { kind = "half_damage" }
+      , repeatSave =
+          { cadence = { kind = "elapsed_days", days = 30 }  -- Gap 1
+          , onSuccess = "ends_on_target"
+          }
+      }
+    ]
+}
+```
+
+The persistent restriction would also need a `duration` wrapper on the `restrict_action_set` atom referencing `permanent.endsOn` (Gap 3). The exact attachment of the persistent effect to the save_gate phase (as a lingering effect after the instantaneous cast) may need an additional surface mechanic for "instantaneous cast but persistent target-applied debuff" — a common D&D 5e pattern (Feeblemind is the archetype for this spell family).

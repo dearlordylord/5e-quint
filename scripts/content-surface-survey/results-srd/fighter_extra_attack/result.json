@@ -1,1 +1,16 @@
-{"unit_slug":"fighter_extra_attack","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "fighter_extra_attack",
+  "outcome": "clean",
+  "atoms_used": [
+    "class_feature_root",
+    "grant",
+    "scale_attack_count"
+  ],
+  "relations_used": [
+    "grants",
+    "roots"
+  ],
+  "proposed_widenings": [],
+  "confidence": "high",
+  "notes": "Maps directly to PassiveMechanics with a single scale_attack_count atom (+1 additional attack per Attack action). The atom was already present in types.ts with this exact use case called out in its comment (Paladin / Fighter / Ranger / Barbarian Extra Attack: +1). Typecheck and tracer both pass cleanly."
+}

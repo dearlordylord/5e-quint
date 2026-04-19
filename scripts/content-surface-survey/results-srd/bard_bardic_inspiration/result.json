@@ -1,1 +1,22 @@
-{"unit_slug":"bard_bardic_inspiration","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "bard_bardic_inspiration",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "grant_die_token",
+      "justification": "The bard gives a die token to another creature. That creature holds it (up to 1 hour) and may spend it after failing a D20 Test to add the rolled die to the d20, retroactively turning a failure into a success. This is distinct from modify_roll_numeric (which adds a bonus before/during rolling with no failure gate) — the player's decision point is post-failure, the token is expended on use, and only one token can be held at a time. The taxonomy notes already identify grant_die_token as new atom pressure. The activation cost (bonus_action), resource (use_count with ability_modifier cap for CHA), and long_rest reset are all representable; the missing piece is the effect atom to model the held die token.",
+      "evidence": "Once within the next hour when the creature fails a D20 Test, the creature can roll the Bardic Inspiration die and add the number rolled to the d20, potentially turning the failure into a success. A Bardic Inspiration die is expended when it's rolled."
+    },
+    {
+      "kind": "new_variant",
+      "name": "grant_die_token die size scaling",
+      "justification": "The Bardic Inspiration die scales by level: d6 → d8 (L5) → d10 (L10) → d12 (L15). This is scale_die_size applied to the granted die token. Once grant_die_token exists as an atom, its die expression would need threshold_tiers<DiceExpr> scaling analogous to other die-size progressions already in the surface.",
+      "evidence": "Your Bardic Inspiration die changes when you reach certain Bard levels... The die becomes a d8 at level 5, a d10 at level 10, and a d12 at level 15."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The resource side (UseCountCap.ability_modifier with ability: 'cha', long_rest reset, bonus_action cost) is already representable — types.ts even cites Bardic Inspiration as the §A12 pressure case for that cap variant. What is missing is the effect atom. The closest existing atom is modify_roll_numeric, but the post-failure timing and player-reactive spend make this a distinct mechanic: the token can only be used after a D20 failure, the creature decides then whether to spend it, and the token is consumed. Pretending this is a count=1 modify_roll_numeric would misrepresent the decision point and timing."
+}

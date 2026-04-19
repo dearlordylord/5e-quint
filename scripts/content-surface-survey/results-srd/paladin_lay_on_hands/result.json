@@ -1,1 +1,37 @@
-{"unit_slug":"paladin_lay_on_hands","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "paladin_lay_on_hands",
+  "outcome": "surface_widening",
+  "atoms_used": [
+    "activate",
+    "bonus_action_quota",
+    "charge",
+    "choose",
+    "class_feature_root",
+    "composite",
+    "direct_apply",
+    "heal",
+    "remove_condition",
+    "rest_window",
+    "scale_numeric_bonus",
+    "target"
+  ],
+  "relations_used": [
+    "attaches_to",
+    "consumes",
+    "grants",
+    "modifies",
+    "persists_until",
+    "prompts",
+    "roots"
+  ],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "CastTimeEffectModeChoice.options[].fixedChargeCost",
+      "justification": "The cure-poison mode always costs exactly 5 charges from the pool, regardless of player choice. The current surface has no way to express a fixed per-option charge cost within a CastTimeEffectModeChoice. Without it, the trace shows remove_condition as a freely choosable mode branch with no cost constraint, which is misleading — the RAW cost is 5, not variable.",
+      "evidence": "You can also expend 5 Hit Points from the pool of healing power to remove the Poisoned condition from the creature; those points don't also restore Hit Points to the creature."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary healing mechanic (charge_pool with linear_per_level cap, heal_hp with resource_spent) fits the surface exactly — types.ts even names Lay on Hands as the canonical pressure case for DiceAmount.resource_spent. The cure-poison secondary mode encodes structurally (remove_condition atom exists, CastTimeEffectModeChoice works in a direct phase) but lacks a fixedChargeCost field on the mode option. That missing field is the sole widening. Outcome is surface_widening, not clean."
+}

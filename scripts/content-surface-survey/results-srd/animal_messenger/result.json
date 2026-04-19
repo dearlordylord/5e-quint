@@ -1,1 +1,22 @@
-{"unit_slug":"animal_messenger","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "animal_messenger",
+  "outcome": "atom_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_atom",
+      "name": "assign_courier_task",
+      "justification": "The spell's primary effect on a failed CHA save is that the target beast is assigned a travel-and-deliver task: it travels to a caster-specified location, finds a recipient matching a caster-provided description, and delivers a 25-word verbal message. This is a distinct, deterministic mechanical outcome (the beast WILL attempt delivery for the spell's duration) that maps to no existing EffectAtom. It is not apply_condition (no condition is gained), not grant_sense, not any behavior-modifying atom currently in the surface. A new atom capturing 'beast is bound to a courier task for the spell duration' is required.",
+      "evidence": "it attempts to deliver a message for you [...] The Beast travels for the duration toward the specified location [...] When the Beast arrives, it delivers your message to the creature that you described, mimicking your communication. If the Beast doesn't reach its destination before the spell ends, the message is lost, and the Beast returns to where you cast the spell."
+    },
+    {
+      "kind": "new_variant",
+      "name": "saveAppliesIf: cr_equals_zero",
+      "justification": "The spell text specifies that the CHA saving throw only applies when the target beast has CR 0; if the target's CR is not 0, it automatically cooperates (the save is skipped). The existing saveAppliesIf field only accepts 'unwilling_target'. A CR-based predicate variant is needed to faithfully represent this exception.",
+      "evidence": "must succeed on a Charisma saving throw, or it attempts to deliver a message for you (if the target's Challenge Rating isn't 0, it automatically succeeds)"
+    }
+  ],
+  "confidence": "high",
+  "notes": "The activation family with a save_gate phase fits the structural shape of this spell cleanly (timed 24h duration with upcast tiers, Tiny Beast typeFilter, CHA save, range 30 ft, ritual casting). The blocking gap is the onFail EffectAtom: the beast does not gain any existing condition (not charmed, not paralyzed, not any modeled condition) — it is bound to a behavioral courier task with a caster-specified destination and recipient description. This is a deterministic mechanical commitment (the beast attempts delivery for the full duration), not DM agenda, but no existing v4 atom covers it. A secondary gap is the CR-based saveAppliesIf predicate. Duration upcast (+48h per slot above 2) is expressible via DurationValue.upcastTiers."
+}

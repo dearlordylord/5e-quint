@@ -1,106 +1,67 @@
-# Proposal: Halfling Luck — structural_widening
+# Proposal: `modify_roll_reroll` atom for Halfling Luck
 
 ## Unit
 
-**Name:** Luck (Halfling)  
-**Kind:** species_trait  
-**Provenance:** srd-5.2.1 — Character-Origins.md §Halfling  
-**Rule text:** "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll."
+**Halfling Luck** (`halfling_luck`) — `species_trait`, SRD 5.2.1
 
-## Why it does not fit
+> When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll.
 
-`UnitRecord` in `types.ts` is:
+## Problem
 
-```typescript
-export type UnitRecord = SpellRecord | ClassFeatureRecord | MasteryRecord;
-```
+The surface has no atom for conditional rerolls. The v4 taxonomy lists `modify_roll_reroll` under Effect Atoms, but it is absent from `types.ts`. The two available roll-modifier atoms do not cover this mechanic:
 
-There is no `kind: "species_trait"` discriminant. The tracer's top-level switch (`traceUnit`) is exhaustive over `"spell" | "class_feature" | "mastery"` and has no `"species_trait"` arm. Any JSON with `"kind": "species_trait"` would fail the TypeScript typecheck before the tracer is even reached.
+- `modify_roll_advantage` — rolls 2d20 and takes the higher result before resolution. This fires on every roll, not on natural 1 specifically.
+- `modify_roll_numeric` — adds a fixed/scaled delta to the d20 result. Has no reroll concept.
 
-## What is missing
+Using either to represent Luck would produce a dishonest trace.
 
-### 1. `SpeciesTraitRecord` (structural)
+## Proposed widening
 
-A new top-level record type analogous to `ClassFeatureRecord` is needed:
+Add `modify_roll_reroll` to `EffectAtom` in `types.ts`:
 
 ```typescript
-export type SpeciesTraitRecord = UnitMetadata & {
-  readonly kind: "species_trait";
-  readonly mechanics: SpeciesTraitMechanics;
-};
+| {
+    readonly kind: "modify_roll_reroll";
+    // Which D20 Test kinds the reroll applies to.
+    // Halfling Luck: all D20 Tests (attack_roll, saving_throw,
+    // ability_check, initiative, death_saving_throw).
+    readonly on: ReadonlyNonEmptyArray<RollKind>;
+    // The die-face result that triggers the reroll.
+    // Halfling Luck: trigger = 1 (natural 1 only).
+    readonly trigger: { readonly kind: "roll_value"; readonly value: number };
+    // Whether the reroller chooses which to keep, or must use the new roll.
+    // Halfling Luck: "must_use_new" (no choice — the reroll replaces the 1).
+    readonly keepPolicy: "must_use_new" | "choose_higher" | "choose_either";
+  }
 ```
 
-`UnitRecord` must be widened to include it.
+### Usage for Halfling Luck (passive species trait)
 
-### 2. `passive_trigger` mechanics family (structural)
-
-Halfling Luck is passive — it requires no activation action, no use count, and no resource. It fires automatically whenever a specific trigger condition is met (d20 result = 1), with a player choice to invoke. No existing mechanics family covers this pattern:
-
-- `ClassFeatureActivationMechanics` requires an activation cost and a use-count resource — not applicable to a always-on passive.
-- `OnHitTriggerMechanics` (mastery) is weapon-hit-specific.
-- `OngoingEffectMechanics` requires a spell header.
-
-A new `passive_trigger` family is needed:
-
-```typescript
-export type PassiveTriggerMechanics = {
-  readonly family: "passive_trigger";
-  readonly trigger: PassiveTriggerCondition;
-  readonly optional: boolean;       // true: player may decline to invoke
-  readonly effect: PassiveTriggerEffect;
-};
+```dhall
+{ kind = "species_trait"
+, id = "halfling_luck"
+, name = "Luck"
+, species = "halfling"
+, provenance = { kind = "srd-5.2.1", section = "Species/Halfling#Luck" }
+, description = "When you roll a 1 on the d20 of a D20 Test, you can reroll the die, and you must use the new roll."
+, mechanics =
+    { family = "passive"
+    , grants =
+        [ { kind = "modify_roll_reroll"
+          , on = [ "attack_roll", "saving_throw", "ability_check"
+                 , "initiative", "death_saving_throw" ]
+          , trigger = { kind = "roll_value", value = 1 }
+          , keepPolicy = "must_use_new"
+          }
+        ]
+    }
+}
 ```
 
-### 3. `PassiveTriggerCondition` with a d20-outcome variant (surface)
+## Classification
 
-The trigger "when you roll a 1 on the d20" requires a predicate on a specific numeric die result. No surface type currently models this. A minimal variant:
+`atom_widening` — `modify_roll_reroll` exists in the v4 taxonomy (TAXONOMY_atoms_graph.md §9 Effect Atoms) but is not present in the authored surface (`types.ts`).
 
-```typescript
-export type PassiveTriggerCondition =
-  | { readonly kind: "d20_result_equals"; readonly value: 1 }
-  // future: d20_result_lte, ability_check, etc.
-  ;
-```
+## Related pressure
 
-The scope of the trigger (which test types: attack rolls, saving throws, ability checks — i.e., any D20 Test) may also need encoding as an optional filter alongside the numeric predicate.
-
-### 4. `PassiveTriggerEffect` (surface)
-
-For Luck the effect is `modify_roll_reroll` (v4 atom, already exists). The surface layer needs a union type to carry it:
-
-```typescript
-export type PassiveTriggerEffect =
-  | { readonly kind: "modify_roll_reroll"; readonly keepNew: true }
-  // future: additional passive effects
-  ;
-```
-
-## Atom inventory
-
-All required v4 atoms exist — no atom widening is needed:
-
-| Atom | Category | Status |
-|---|---|---|
-| `species_trait_root` | source | exists in v4 |
-| `post_roll_window` | window | exists in v4 |
-| `modify_roll_reroll` | effect | exists in v4 |
-
-The graph shape would be:
-
-```
-species_trait_root
-  └─roots─> passive_trigger_procedure
-              └─opens_window─> post_roll_window (d20 = 1, D20 Test)
-                                 └─grants─> modify_roll_reroll (keep new)
-                                              └─attaches_to─> self
-```
-
-## Other Halfling traits (out of scope for this worker)
-
-For reference, the other three Halfling traits each require their own widening analysis:
-
-- **Brave** — advantage on saving throws vs. Frightened: needs species_trait kind + `modify_roll_advantage` rider scoped to a condition-specific save.
-- **Halfling Nimbleness** — movement rule (pass through larger creature's space): purely positional/movement; likely `dm_agenda` or a new movement-rule family.
-- **Naturally Stealthy** — Hide action under specific concealment condition: Hide-action enablement with a context predicate; needs species_trait kind + a new permission-grant effect.
-
-None of these are blockers for Luck; each would be a separate survey entry.
+Other SRD units that share the reroll family include Lucky feat (more complex: 3 uses/long rest, can reroll any D20 Test or force a reroll on an attacker's roll) and Bless of Corellon / Silver Tongue (reroll certain checks). All would benefit from the same atom with different `trigger` and `keepPolicy` values, confirming this is not single-unit pressure.

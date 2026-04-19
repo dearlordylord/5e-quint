@@ -1,97 +1,111 @@
-# Proposal: Antipathy/Sympathy — Structural Widening
+# Proposal: Antipathy/Sympathy widening requirements
 
-## Unit
+## Classification: `atom_widening`
 
-**Antipathy/Sympathy** — SRD 5.2.1, 8th-level Enchantment spell.
+The spell's structure fits the `ongoing_effect` family (10-day timed duration, area trigger around a designated target, per-creature Wis save gate). However five gaps prevent honest encoding; the most fundamental is a missing v4 atom.
 
-## Why no encoding was produced
+---
 
-No existing `SpellMechanics` family can honestly represent this spell. The core mechanic is a **proximity-reactive enchantment**: a timed (10-day, non-concentration) effect planted on a target creature/object that continuously fires a saving throw against approaching creatures of a caster-specified kind, then applies a condition with mandatory movement compulsion, and provides a distance-based repeat-save escape.
+## Gap 1 — `compelled_movement` atom (atom_widening)
 
-Checked families in order:
+**SRD text:**
+> The Frightened creature must use its movement on its turns to get as far away as possible from the target, moving by the safest route.
+> The Charmed creature must use its movement on its turns to get as close as possible to the target.
 
-| Family | Fit? | Reason |
-|---|---|---|
-| `ongoing_effect` | No | Operations limited to `roll_modifier` / `damage_on_hit`. No proximity trigger or condition application. |
-| `activation` | No | Resolves at cast time. No persistent trigger. |
-| `triggered_reaction` | No | Reacts to player-facing events (hit, targeted). Not positional. |
-| `anchored_trigger` | No | Closest candidate. But `AnchoredSignal` is only notifications (audible/mental). No save gate, no condition application, no behavioral compulsion. |
+Standard `apply_condition frightened` imposes "can't willingly move toward the source of fear" (SRD Rules Glossary). Standard `apply_condition charmed` imposes no movement restriction at all. Neither mandates *active* directed movement.
 
-## Gaps identified
+Antipathy/Sympathy add a **compelled movement obligation** — each turn, the affected creature is required to spend its movement fleeing or approaching. This is a distinct behavioral override with no v4 equivalent.
 
-### 1. Missing family: proximity-triggered enchantment (structural)
+**Proposed atom:**
+```typescript
+| {
+    readonly kind: "compelled_movement";
+    readonly direction: "away_from_attachment" | "toward_attachment";
+    // "safest route" is DM-agenda; the surface only records the direction obligation.
+  }
+```
 
-The spell needs a family that combines:
+This atom would appear as an `ongoing_effect` operation effect, paired with the `apply_condition` on the same `on_creature_enters_area` → `save_gate` → `onFail` composite.
 
-- A persistent timed attachment to a creature/object anchor
-- A proximity-detection trigger (creature of kind X enters within N feet)
-- A save gate fired on that trigger
-- Conditional (on fail) condition application with behavioral compulsion
-- A distance-based repeat-save escape
+---
 
-No current family covers this. Even `anchored_trigger` extended to support save gates would need the creature-kind filter, the condition-application signal type, the compulsion effect, and the repeat-save subgraph.
+## Gap 2 — `RepeatSaveSpec.cadence: distance_exceeded` (surface_widening)
 
-### 2. `Condition` type too narrow (surface widening)
+**SRD text:**
+> If the Frightened or Charmed creature ends its turn more than 120 feet away from the target, the creature makes a Wisdom saving throw.
 
-`Condition = "prone"`. Antipathy/Sympathy requires:
+The existing `RepeatSaveSpec.cadence` union only has:
+- `"end_of_target_turn"` — fires unconditionally
+- `"on_target_takes_damage"` — fires on any damage
 
-- `"frightened"` — applied by Antipathy mode on failed save
-- `"charmed"` — applied by Sympathy mode on failed save
+A **distance-gated** cadence is needed:
+```typescript
+| {
+    readonly cadence: "ends_turn_beyond_range_feet";
+    readonly feet: number;
+    readonly onSuccess: "ends_on_target";
+  }
+```
 
-Both are standard SRD conditions with distinct behavioral rules. The closed `Condition` union must be widened.
+---
 
-**Evidence:** *"Antipathy: The creature has the Frightened condition. / Sympathy: The creature has the Charmed condition."*
+## Gap 3 — Open-ended creature kind filter (surface_widening)
 
-### 3. Missing `AnchorTarget` variant: creature_or_object (surface widening)
+**SRD text:**
+> Then specify a kind of creature, such as red dragons, goblins, or vampires.
 
-Current `AnchorTarget`: `location` (door_or_window) and `area` (cube). The spell anchors to a specific creature or object — the locus around which the 120 ft proximity is measured. A mobile creature anchor is fundamentally different from a fixed location or an area shape.
+The trigger at 120 feet fires only for creatures matching a caster-specified open-ended description. The closed 14-entry `CreatureType` enum ("beast", "humanoid", etc.) cannot represent "red dragons" or "goblins" — those are specific monster categories, not SRD creature types.
 
-**Evidence:** *"target one creature or object that is Huge or smaller"*
+**Proposed addition to `OngoingTrigger.on_creature_enters_area`** (or as a filter on the `area` attachment):
+```typescript
+readonly creatureKindFilter?: { readonly kind: "caster_specified_text" };
+```
 
-### 4. Missing `AnchoredFilter` variant: creature_kind_specification (surface widening)
+The `caster_specified_text` sentinel tells the tracer/runtime this is an open-ended DM/player description resolved at cast time rather than a closed enum check. The actual text is runtime-owned (not authored in the unit).
 
-Current `AnchoredFilter`: `creature_exemption_list` — creatures that will NOT trigger. Antipathy/Sympathy uses the dual: specify what kind of creature IS affected (e.g., "red dragons", "vampires"). These are oppositely-scoped predicates; they cannot share a variant.
+---
 
-**Evidence:** *"specify a kind of creature, such as red dragons, goblins, or vampires."*
+## Gap 4 — Post-save temporary immunity (surface_widening)
 
-### 5. Missing signal/effect type: save_gate_with_condition (surface widening on AnchoredSignal)
+**SRD text:**
+> A creature that successfully saves against this effect is immune to it for 1 minute, after which it can be affected again.
 
-`AnchoredSignal` is only `audible` / `mental` — notification outputs. The release of Antipathy/Sympathy must fire a WIS save gate and apply a condition on fail. The tracer has no signal shape for mechanically deterministic effects; this requires a new signal variant or a new family that uses `ActivationPhase`-style resolution for the release.
+After successfully saving, the creature is immune to *this specific effect* for 1 minute. This is distinct from:
+- `grant_condition_immunity` (permanent, broad)
+- spell ending on successful save
 
-### 6. Missing atom or surface concept: behavioral movement compulsion (atom widening)
+**Proposed addition to `RepeatSaveSpec` or `save_gate.onSuccess`:**
+```typescript
+readonly temporaryImmunityMinutes?: number;
+```
 
-The applied conditions carry per-turn mandatory movement behavior — not just status flags:
+When present on the save-gate node, a successful save grants immunity to re-triggering this save gate for the specified duration rather than ending the effect entirely.
 
-- Frightened: *must* use movement to flee as far as possible each turn
-- Charmed: *must* use movement to approach as close as possible each turn; cannot willingly move away within 5 ft
+---
 
-`apply_condition` alone is insufficient; this is a continuous per-turn override of movement choices. The v4 `force_move` atom models a discrete one-time displacement. A new atom or subgraph for continuous behavioral compulsion is needed.
+## Gap 5 — CastingTime: hours (surface_widening, minor)
 
-**Evidence:** *"The Frightened creature must use its movement on its turns to get as far away as possible from the target, moving by the safest route."*
+Casting time is 1 hour. The current surface has `kind: "minutes"` (with `ritual: boolean`) which could accept `amount: 60`, but `hours` is semantically distinct and appears on several 8th-9th level spells. A first-class `hours` variant would be cleaner:
 
-### 7. Missing surface shape: distance-based repeat save with timed immunity (surface widening on repeat_save)
+```typescript
+| { readonly kind: "hours"; readonly amount: number }
+```
 
-The spell has a positional escape mechanism: if the affected creature ends its turn > 120 ft from the target, it makes a WIS save. On success: effect ends + immune for 1 minute.
+---
 
-The v4 `repeat_save` atom exists but the surface has no variant for:
-- Save triggered by positional condition (distance > threshold at turn end)
-- Timed immunity granted on success
+## Secondary omission: Sympathy proximity lock
 
-This needs either a new `AnchoredEvent` variant or a new `repeat_save` surface shape tied to distance evaluation.
+> If the creature is within 5 feet of the target, the creature can't willingly move away.
 
-**Evidence:** *"If the Frightened or Charmed creature ends its turn more than 120 feet away from the target, the creature makes a Wisdom saving throw. On a successful save, the creature is no longer affected by the target. A creature that successfully saves against this effect is immune to it for 1 minute."*
+This "within 5 feet → movement restriction" requires a positional predicate (range ≤ 5 ft) gating a `set_speed` or movement-restriction effect. No surface vocabulary exists for distance-predicated ongoing effects of this kind. It could be modeled as part of the `compelled_movement` atom semantics (implied by "must be as close as possible") rather than as a separate predicate, if the atom captures the "stays adjacent once adjacent" invariant. Recorded here for completeness.
 
-## Recommended widening path
+---
 
-If this spell is to be encoded without a new family, `anchored_trigger` would need:
+## Encoding strategy once gaps are filled
 
-1. `AnchorTarget` gains `creature_or_object` variant
-2. `AnchoredFilter` gains `creature_kind_specification` variant
-3. `AnchoredSignal` gains a `save_gate_result` variant (or is replaced by a richer `AnchoredEffect` type that can host an `ActivationPhase`-style save gate)
-4. A new `compelled_movement` effect atom (continuous per-turn behavioral override)
-5. `AnchoredEvent` gains a `creature_exits_range` / `end_of_turn_beyond_range` variant for the repeat-save escape
-6. A `repeat_save_exit` surface shape with timed immunity
-
-Alternatively, a new `proximity_enchantment` family would be cleaner and avoid overloading `anchored_trigger` with mechanically distinct semantics. The two families share "planted + later triggered" but differ fundamentally in what the trigger does (notification vs. mechanical condition resolution).
-
-The `Condition` type widening (frightened, charmed) is independently required regardless of which path is chosen.
+The spell would encode as `ongoing_effect` with:
+- `attachment: { kind: "target", selection: { mode: "one" } }` — the designated creature/object
+- An `on_creature_enters_area` trigger with a 120-ft sphere centered on the target and a `creatureKindFilter: { kind: "caster_specified_text" }`
+- `save_gate` (Wis, caster spell save DC) with `onFail: composite([apply_condition(choose: frightened|charmed), compelled_movement(...)])` driven by a cast-time choice
+- `repeatSave: { cadence: "ends_turn_beyond_range_feet", feet: 120, onSuccess: "ends_on_target", temporaryImmunityMinutes: 1 }`
+- For Sympathy: an additional `on_attached_damaged` trigger with a Wis save (standard `repeatSave` with `on_target_takes_damage` cadence)

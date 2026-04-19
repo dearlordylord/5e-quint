@@ -1,127 +1,127 @@
-# Widening Proposal: Indomitable (Fighter L9)
+# Proposal: Surface Widenings for Fighter — Indomitable
 
 ## Unit
 
-**Slug:** `fighter_indomitable`  
-**Kind:** `class_feature` (Fighter, acquired at level 9)  
-**Provenance:** `srd-5.2.1`
+- **Name**: Indomitable
+- **Kind**: class_feature / fighter / L9
+- **Outcome**: `surface_widening`
 
-## Outcome
+## SRD Text
 
-`surface_widening` — the v4 atoms `modify_roll_reroll` and `branches_on_save` both exist in the taxonomy. The gap is purely in the surface layer: `ClassFeatureEffect` and `ClassFeatureActivationCost` do not yet expose these atoms.
+> If you fail a saving throw, you can reroll it with a bonus equal to your Fighter level. You must use the new roll, and you can't use this feature again until you finish a Long Rest.
+>
+> You can use this feature twice before a Long Rest starting at level 13 and three times before a Long Rest starting at level 17.
 
-The harness previously recorded `atom_widening` because the tracer threw `unhandled class-feature effect: reroll_saving_throw`. That classification is overcautious: the v4 atoms are present (TAXONOMY_atoms_graph.md §9 and §10). Corrected to `surface_widening`.
+---
 
-## What fits today
+## What fits cleanly
 
-| Component | Status |
-|---|---|
-| `ClassFeatureRecord` kind | ✓ exists |
-| `activation` mechanics family | ✓ exists |
-| `use_count` resource | ✓ exists |
-| `threshold_tiers` use-cap (1→2@L13→3@L17, axis=class) | ✓ exists |
-| `long_rest` reset cadence | ✓ exists |
+| Mechanic | Surface shape | Status |
+|---|---|---|
+| Use count (1@L9, 2@L13, 3@L17) | `ThresholdTiers<number>` with `axis="class"` | ✅ |
+| Long rest reset | `RestResetCadence { kind: "long_rest" }` | ✅ |
+| Activation cost family (reaction) | `ClassFeatureActivationCost { kind: "reaction" }` | ✅ |
+| Mechanics family | `ActivatedAbilityMechanics` (activation) | ✅ |
 
-## What is missing
+---
 
-### Widening 1 — `reroll_saving_throw` in `ClassFeatureEffect`
+## Gap 1 — `modify_roll_reroll` effect atom missing from TS surface
 
-**Source text:** "you can reroll it with a bonus equal to your Fighter level. You must use the new roll"
+**Status**: `surface_widening` — atom is in v4 taxonomy but absent from `types.ts`.
 
-The current `ClassFeatureEffect` union is `GrantExtraActionEffect | HealHpEffect`. Indomitable's effect is a saving-throw reroll with a level-scaling additive bonus and forced-keep semantics. The v4 atom is `modify_roll_reroll` (taxonomy §9).
+The v4 Effect Atom `modify_roll_reroll` (TAXONOMY_atoms_graph.md §9) is the correct atom here. It is mechanically distinct from:
 
-Proposed new variant shape:
+- `modify_roll_advantage` — rolls two dice simultaneously before the result is known; Indomitable fires *after* the failure is established.
+- `modify_roll_numeric` — adds a delta to an existing roll value; does not replace the roll.
 
-```typescript
-export type RerollSavingThrowEffect = {
-  readonly kind: "reroll_saving_throw";
-  // Bonus added to the rerolled result. For Indomitable: LinearPerLevel
-  // with axis=class captures "bonus equal to your Fighter level."
-  readonly bonus: LinearPerLevel<number>;
-  // "You must use the new roll" = forced keep (not keep-higher).
-  readonly keepPolicy: "forced";
-};
-```
-
-The tracer would emit a `modify_roll_reroll` effect node connected via `grants` from the activate procedure, with a `scale_numeric_bonus` scaling node for the class-level bonus.
-
-### Widening 2 — reactive trigger in `ClassFeatureActivationCost`
-
-**Source text:** "If you fail a saving throw, you can reroll it"
-
-The current `ClassFeatureActivationCost` is `{ kind: "free" } | { kind: "bonus_action" }` — both are proactive costs. Indomitable activates reactively at the moment of a save failure. Without a trigger condition, the surface cannot express that this feature is only available in the save-fail event boundary.
-
-Proposed new variant:
+### Proposed shape
 
 ```typescript
-export type ClassFeatureReactionCost = {
-  readonly kind: "reaction";
-  readonly trigger: ClassFeatureTrigger;
-};
-
-export type ClassFeatureTrigger =
-  | { readonly kind: "on_save_fail" };
-
-// Updated union:
-export type ClassFeatureActivationCost =
-  | { readonly kind: "free" }
-  | { readonly kind: "bonus_action" }
-  | ClassFeatureReactionCost;
+| {
+    readonly kind: "modify_roll_reroll";
+    readonly on: ReadonlyNonEmptyArray<RollKind>;
+    readonly delta?: DiceDelta;   // optional bonus applied to the reroll
+    readonly keepNew: true;       // "must use the new roll" — always true in SRD; field makes it explicit
+  }
 ```
 
-The tracer would emit a `reaction_window` node (existing atom) labeled with the trigger, mirroring the spell `triggered_reaction` subgraph but scoped to class features.
+`delta` carries the bonus to the reroll. When absent, the reroll is unmodified (standard Advantage-lite reroll pattern). Here it carries the Fighter-level bonus (see Gap 3).
 
-## What does NOT need widening
+---
 
-- The `on_save_fail` trigger maps to the existing v4 relation `branches_on_save` — no new relation needed.
-- The bonus scaling (`LinearPerLevel<number>`, axis=class) is already representable with the existing `LinearPerLevel` type.
-- The `threshold_tiers` use-cap and `long_rest` reset cadence are already in the surface.
+## Gap 2 — `ReactionTrigger` has no general "fail a saving throw" variant
 
-## Honest encoding (once widened)
+**Status**: `surface_widening` — new variant of existing `ReactionTrigger` type.
 
-```json
-{
-  "id": "fighter_indomitable",
-  "name": "Indomitable",
-  "kind": "class_feature",
-  "className": "fighter",
-  "acquiredAtLevel": 9,
-  "provenance": { "kind": "srd-5.2.1", "section": "Classes/Fighter#Indomitable" },
-  "description": "If you fail a saving throw, you can reroll it with a bonus equal to your Fighter level...",
-  "mechanics": {
-    "family": "activation",
-    "activationCost": {
-      "kind": "reaction",
-      "trigger": { "kind": "on_save_fail" }
-    },
-    "resource": {
-      "kind": "use_count",
-      "cap": {
-        "kind": "threshold_tiers",
-        "axis": "class",
-        "base": 1,
-        "tiers": [
-          { "atLevel": 13, "value": 2 },
-          { "atLevel": 17, "value": 3 }
-        ]
-      }
-    },
-    "resetCadence": { "kind": "long_rest" },
-    "effect": {
-      "kind": "reroll_saving_throw",
-      "bonus": {
-        "kind": "linear_per_level",
-        "axis": "class",
-        "base": 9,
-        "perLevel": 1,
-        "startingAtLevel": 9
-      },
-      "keepPolicy": "forced"
-    }
+`spell_save_outcome` is described as a "Post-save spell reflection / conversion window" narrowed to saves caused by spells. Indomitable fires on **any** saving throw (a dragon's breath weapon Con save, a trap Dex save, a spell Wis save — all qualify).
+
+### Proposed variant
+
+```typescript
+| {
+    readonly kind: "saving_throw_outcome";
+    readonly outcome: "failure";
+    // Optional narrowing if future units need ability/source scoping:
+    // readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
+  }
+```
+
+This fires in the same window as `spell_save_outcome` but without a spell-source constraint.
+
+---
+
+## Gap 3 — `DiceDelta` has no `class_level` variant
+
+**Status**: `surface_widening` — new variant of existing `DiceDelta` type.
+
+Current DiceDelta variants: `fixed_dice`, `proficiency_bonus`, `ability_modifier`, `magic_item_rarity_bonus`. The bonus here is "equal to your Fighter level" — a raw class level, not PB and not an ability modifier.
+
+### Proposed variant
+
+```typescript
+| {
+    readonly kind: "class_level";
+    readonly className: ClassName;
+    readonly sign: "+" | "-";
+  }
+```
+
+Resolved at runtime as the character's current level in the named class.
+
+---
+
+## How the full encoding would look (when surface is widened)
+
+```
+family: "activation"
+activationCost: { kind: "reaction", trigger: { kind: "saving_throw_outcome", outcome: "failure" } }
+resource: {
+  kind: "use_count",
+  cap: {
+    kind: "threshold_tiers",
+    axis: "class",
+    base: 1,
+    tiers: [
+      { atLevel: 13, value: 2 },
+      { atLevel: 17, value: 3 }
+    ]
   }
 }
+resetCadence: { kind: "long_rest" }
+phases: [
+  {
+    kind: "direct",
+    attachment: { kind: "self" },
+    effects: [
+      {
+        kind: "modify_roll_reroll",
+        on: ["saving_throw"],
+        delta: { kind: "class_level", className: "fighter", sign: "+" },
+        keepNew: true
+      }
+    ]
+  }
+]
 ```
 
-## Scope
-
-Both proposed widenings are narrow additions to existing union types. No new family, no new top-level kind, no structural restructuring required. The v4 atom inventory already covers both mechanics.
+All three widenings are variants of existing surface types (no new v4 atom family; `modify_roll_reroll` is already in the v4 taxonomy). The structural skeleton (activation family, threshold-tiered use count, long-rest reset) fits entirely with today's surface.

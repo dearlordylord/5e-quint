@@ -1,1 +1,40 @@
-{"unit_slug":"barbarian_rage","outcome":"refused","atoms_used":[],"relations_used":[],"proposed_widenings":[],"confidence":"low","notes":"claude exited 1"}
+{
+  "unit_slug": "barbarian_rage",
+  "outcome": "surface_widening",
+  "atoms_used": [],
+  "relations_used": [],
+  "proposed_widenings": [
+    {
+      "kind": "new_variant",
+      "name": "Duration.maintained",
+      "justification": "Rage lasts until end of next turn but is extended by performing one of several actions on each subsequent turn (attack roll, force a save, or spend a Bonus Action). Neither 'timed' (fixed window) nor 'concentration' (explicitly prohibited by the feature) can represent this per-turn active-maintenance model. A new Duration variant — e.g. { kind: 'maintained', extendBy: [...triggers], maxMinutes: 10 } — or a new OngoingTrigger family for 'did not extend this turn → expire' is needed.",
+      "evidence": "The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following: Make an attack roll against an enemy. Force an enemy to make a saving throw. Take a Bonus Action to extend your Rage."
+    },
+    {
+      "kind": "new_variant",
+      "name": "WeaponFilter.ability_used",
+      "justification": "Rage Damage applies to attacks made using Strength — melee weapons, unarmed strikes, and thrown weapons when used with Strength. The current WeaponFilter variants (weapon_category, weapon_property, specific_item) cannot express 'attack using Strength'. A new variant { kind: 'ability_used', ability: Ability } is needed on WeaponFilter.",
+      "evidence": "When you make an attack using Strength — with either a weapon or an Unarmed Strike — and deal damage to the target, you gain a bonus to the damage…"
+    },
+    {
+      "kind": "new_variant",
+      "name": "modify_roll_advantage.abilityCheckFilter",
+      "justification": "Rage grants Advantage on Strength checks, which are raw ability checks (not skill-tagged). The surface has saveAbilityFilter for saving throws and skillFilter for skill-tagged checks, but no abilityFilter for raw (non-skill) ability checks. An optional abilityCheckFilter: ReadonlyNonEmptyArray<Ability> field is needed on modify_roll_advantage.",
+      "evidence": "You have Advantage on Strength checks and Strength saving throws."
+    },
+    {
+      "kind": "new_atom",
+      "name": "suppress_spellcasting",
+      "justification": "Rage prevents casting spells entirely while active. No existing EffectAtom blocks the spellcasting action family. The v4 taxonomy has no 'suppress_spellcasting' atom.",
+      "evidence": "You can't maintain Concentration, and you can't cast spells."
+    },
+    {
+      "kind": "new_atom",
+      "name": "block_concentration_maintenance",
+      "justification": "Rage prevents the bearer from maintaining Concentration on spells (distinct from being unable to cast new concentration spells). No existing atom models 'you cannot hold Concentration while this effect is active'. This is distinct from the concentration_lock resource (which marks a slot as occupied) and from remove_condition.",
+      "evidence": "You can't maintain Concentration, and you can't cast spells."
+    }
+  ],
+  "confidence": "high",
+  "notes": "The primary blocker is the duration-extension mechanism: Rage uses an 'active maintenance' duration model with no analog in any current Duration variant or OngoingTrigger. Encoding it as timed:1-round would misrepresent how the feature works (it explicitly supports up to 10 minutes via repeated extension). The resistance and saving-throw advantage atoms exist cleanly; the Rage Damage scoping, ability-check advantage, and the no-concentration/no-spells restrictions each require surface or atom widenings. No Dhall/JSON encoding produced to avoid a misleading trace."
+}

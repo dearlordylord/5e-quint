@@ -1,56 +1,64 @@
-# Proposal: Lay On Hands surface gaps
+# Proposal: Lay On Hands — surface_widening
 
 ## Unit
 
-**Lay On Hands** — Paladin class feature, level 1 (`srd-5.2.1 Classes/Paladin#Lay On Hands`)
+- **Name**: Lay On Hands
+- **Kind**: class_feature (Paladin L1)
+- **Provenance**: SRD 5.2.1, Classes/Paladin#Lay On Hands
 
-## What typechecks and traces cleanly
+## What fits
 
-The primary use — Bonus Action touch heal from the pool — encodes cleanly:
+The primary healing mechanic encodes cleanly:
 
-- `activation` family + `bonus_action` activation cost
-- `charge_pool` resource with `linear_per_level` cap (`base=5, perLevel=5, axis="class"`)
-- `long_rest` reset cadence
-- `direct` phase → `heal_hp` with `amount: { kind: "resource_spent" }` targeting one creature
+- `charge_pool` resource with `LinearPerLevel<number>` cap (`base=5, perLevel=5, axis=class, startingAtLevel=1`) — pool equals 5 × paladin level.
+- `DiceAmount.resource_spent` — amount healed equals player-chosen charges spent, bounded by pool remainder. The `types.ts` comment literally names Lay on Hands as the canonical pressure case for this variant.
+- `ClassFeatureActivationCost.bonus_action` — Bonus Action to activate.
+- `ResetCadence.long_rest` — pool replenishes on Long Rest.
+- `heal_hp` with `target: "target_creature"` — heals the touched creature (not just self).
+- `CastTimeEffectModeChoice` in the `direct` phase — captures mutual exclusivity of the two modes (heal HP vs. remove Poisoned).
 
-The `resource_spent` DiceAmount was explicitly designed for this pattern (the type comment cites Lay on Hands as the pressure case). The `linear_per_level` UseCountCap (type comment also cites Lay on Hands: "5 × your Paladin level") fits without widening. Typecheck passes; tracer runs without error.
+## The gap
 
-## Gap 1 — Shared-pool alternative-mode activation (omitted mechanic)
+### Missing: per-option fixed charge cost on `CastTimeEffectModeChoice`
 
-**RAW text:**
-> You can also expend 5 Hit Points from the pool of healing power to remove the Poisoned condition from the creature; those points don't also restore Hit Points to the creature.
+SRD text:
+> You can also expend **5 Hit Points** from the pool of healing power to remove the Poisoned condition from the creature; those points don't also restore Hit Points to the creature.
 
-**What is needed:**
-The Poisoned-removal use is a second bonus-action activation that draws from the **same** charge pool as the heal use, but at a **fixed cost of 5 charges** instead of a variable player-chosen amount. The two uses are alternatives — on any given bonus action, the paladin chooses one.
+The cure-poison mode always costs **exactly 5 charges**, regardless of player choice. The current `CastTimeEffectModeChoice.options` element has no cost field:
 
-**Why neither existing pattern works:**
+```typescript
+readonly options: ReadonlyNonEmptyArray<{
+  readonly id: string;
+  readonly displayName: string;
+  readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+}>;
+```
 
-1. **`CompositeClassFeatureMechanics` with two `ActivatedAbilityMechanics`**: Each part declares its own `resource` field, implying two separate pools. Dishonest — RAW is one pool shared across both uses.
+There is no `fixedChargeCost?: number` (or similar) to pin an option to a specific charge expenditure. Without it, the trace shows `remove_condition` as a freely-selectable mode branch with no encoded cost constraint. The player could theoretically spend any number of charges when choosing that mode — the RAW constraint (exactly 5) is lost.
 
-2. **`CastTimeEffectModeChoice` inside a `direct` phase**: This lets the player choose between effect bundles at cast time, but all options share the single activation's charge cost. There is no per-option charge-cost field, so "mode A costs variable charges, mode B costs exactly 5" is not representable.
+## Proposed widening
 
-3. **Second `ActivatedAbilityMechanics` that references an existing pool**: No "pool reference" or "shared_pool_id" concept exists in the surface.
+Add an optional `fixedChargeCost` field to `CastTimeEffectModeChoice.options`:
 
-**Proposed widening:**
+```typescript
+readonly options: ReadonlyNonEmptyArray<{
+  readonly id: string;
+  readonly displayName: string;
+  readonly effects?: ReadonlyNonEmptyArray<EffectAtom>;
+  // When present, activating this option always spends exactly this
+  // many charges from the activation's charge_pool resource, regardless
+  // of player choice. Lay On Hands cure-poison mode: fixedChargeCost=5.
+  readonly fixedChargeCost?: number;
+}>;
+```
 
-Add a `fixed_charge_cost: number` field to `CastTimeEffectModeChoice` options, or introduce a dedicated `alternative_activation_mode` variant on `ActivatedAbilityMechanics` that names which pool to draw from and at what fixed cost. The simplest minimal fix: allow `CastTimeEffectModeChoice` options to carry an optional `chargeCost: number` override (absent = variable/resource_spent; present = fixed amount deducted from pool). Then both uses can be expressed inside a single `direct` phase with the existing `charge_pool` resource.
+This is a **surface_widening** (new variant field on an existing type), not an atom_widening — all v4 atoms involved (`charge`, `remove_condition`, `choose`) already exist.
 
-**Classification:** `surface_widening` — the atoms (`heal_hp`, `remove_condition`, `charge`) all exist in v4; the missing piece is the charge-cost-per-mode variant.
+## Classification
 
-## Gap 2 — Range field missing from `ActivatedAbilityMechanics`
-
-**RAW text:**
-> As a Bonus Action, you can **touch** a creature (which could be yourself)...
-
-**What is needed:**
-Lay on Hands has Touch range — the paladin must physically contact the creature. The surface has a `Range` type (`{ kind: "touch" }`) used by spell headers and `TriggeredReactionAbilityMechanics`, but `ActivatedAbilityMechanics` has no `range` field. The tracer hardcodes `range: { kind: "self" }` for all class-feature activations, so the generated trace labels the attachment `range Self` — factually wrong.
-
-**Impact:**
-The trace is misleading for any Touch-range class feature. The type system can't catch it because there's nowhere to put the correct range.
-
-**Proposed widening:**
-Add an optional `range?: Range` field to `ActivatedAbilityHeader` (which `ActivatedAbilityMechanics` extends). Absent = default "self" (preserving all existing encoded content). Present = override used by the tracer when labeling the attachment node.
-
-Precedent: `TriggeredReactionAbilityMechanics` and `MagicItemSpawnedCreatureMechanics` both carry `range: Range`. `ActivatedAbilityMechanics` is the only activation family without it.
-
-**Classification:** `surface_widening` — no new atom or family; the `Range` type already exists.
+| | |
+|---|---|
+| Outcome | `surface_widening` |
+| Missing atom | none |
+| Missing surface shape | `CastTimeEffectModeChoice.options[].fixedChargeCost?: number` |
+| Confidence | high |
