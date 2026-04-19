@@ -50,7 +50,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 6,  "id": "EPT3",  "status": "done", "title": "Define Quint Projected Executable And Persistent Subsets" },
     { "number": 7,  "id": "EPT4",  "status": "done", "title": "Define Matching TypeScript Projected Record Types" },
     { "number": 8,  "id": "EPT5",  "status": "done", "title": "Build Surface-To-Projection Compiler" },
-    { "number": 9,  "id": "EPT6",  "status": "ready-for-implementation-after-light-research", "title": "Hook Persistent Projection For Mage Armor" },
+    { "number": 9,  "id": "EPT6",  "status": "ready-for-research", "title": "Hook Persistent Projection For Mage Armor" },
     { "number": 10, "id": "EPT7",  "status": "ready-for-implementation-after-light-research", "title": "Build Projected Mechanic Interpreter" },
     { "number": 11, "id": "EPT8",  "status": "blocked", "title": "Route Availability And Execution Through Projected Records" },
     { "number": 12, "id": "EPT9",  "status": "blocked", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
@@ -119,7 +119,7 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 6 | EPT3 - Define Quint Projected Executable And Persistent Subsets | done | EPT1, EPT2 | EPT4, EPT5 | Landed [projected-executable.qnt](/workspace/typescript/dnd/projected-executable.qnt) and [plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md](/workspace/typescript/dnd/plans/EXECUTABLE_PROJECTION_QUINT_SUBSETS.md), defining the closed Quint-side executable and persistent subset for the first tracer-bullet slice. The executable contract now covers `attack_roll`, `save_gate`, `direct`, `damage`, `heal_hp`, `grant_extra_action`, and the exact fighter resource/reset shapes from EPT1; the persistent contract narrows `Mage Armor` to record identity plus fixed module-level RAW constants. | Landed on 2026-04-18. EPT4 is unblocked; EPT5 still waits on EPT4. |
 | 7 | EPT4 - Define Matching TypeScript Projected Record Types | done | EPT3 | EPT5 | Landed [projected-executable.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.ts) and [projected-executable.test.ts](/workspace/typescript/dnd/packages/core/src/projected-executable.test.ts), mirroring the EPT3 Quint subset one-for-one in TypeScript with the same closed tags, node shapes, persistent-record payload, and Mage Armor lifecycle constants. Focused tests pin the frozen first-slice facts for Acid Splash, Second Wind, Action Surge, and Mage Armor so EPT5 can compile against the exact contract rather than looser example fixtures. | Landed on 2026-04-19. EPT5 is now unblocked. |
 | 8 | EPT5 - Build Surface-To-Projection Compiler | done | EPT2, EPT3, EPT4 | EPT6, EPT7 | Landed a unit-scoped surface-to-projection compiler plus inspectable fixture constants for `acid_splash`, `mage_armor`, `fighter_second_wind`, and `fighter_action_surge_l2`. The compiler now rejects both out-of-scope units and in-scope preserved-fact drift at the EPT5 boundary. | Landed on 2026-04-19. EPT6 and EPT7 are now unblocked. |
-| 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-implementation-after-light-research | EPT5 | EPT9, EPT10 | Route the first persistent projection through one owned path so `Mage Armor` shapes AC and ends early on `target_dons_armor` without duplicate character-side vs battle-side logic. | Unblocked by EPT5 on 2026-04-19. Can proceed in parallel with EPT7. |
+| 9 | EPT6 - Hook Persistent Projection For Mage Armor | ready-for-research | EPT5 | EPT9, EPT10 | Research and pin one owned source for "active Mage Armor" plus one owned lifecycle hook for `target_dons_armor` before implementation. The current seams provide projected records and battle AC reads, but they do not yet provide either stored active persistent state on character sheets or a legal armor-state transition in battle. | Re-opened for research on 2026-04-19 after dual attempts showed that deriving activation from prepared spells is wrong, while a battle-only cast hook still lacks a real `target_dons_armor` transition. |
 | 10 | EPT7 - Build Projected Mechanic Interpreter | ready-for-implementation-after-light-research | EPT5 | EPT8 | Build one closed executable interpreter for projected mechanics across spell and class-feature activations. `Acid Splash`, `Second Wind`, and `Action Surge` must all execute through it without unit-id-specific branches. Keep the interpreter ready for later graph-shaped spell cases. | Unblocked by EPT5 on 2026-04-19. |
 | 11 | EPT8 - Route Availability And Execution Through Projected Records | blocked | EPT7 | EPT9, EPT10 | Hook action availability and execution to projected records so MCP-visible legality and runtime execution both come from the same projected slice rather than legacy feature-specific branches. | Blocked on interpreter. |
 | 12 | EPT9 - Wire Character And Monster Paths For Tracer Bullet Scenario | blocked | EPT6, EPT8 | EPT10, EPT11 | Use stored character -> battle host seams plus authored goblin and bugbear paths to assemble the mage + Fighter 2 vs goblin + bugbear scenario without tracer-bullet-only schemas. | Blocked on persistent + executable integration. |
@@ -641,7 +641,7 @@ Handoff readiness:
 
 ### Task 9 - EPT6 - Hook Persistent Projection For Mage Armor
 
-Status: `ready-for-implementation-after-light-research`
+Status: `ready-for-research`
 
 Depends on: `EPT5`
 
@@ -652,6 +652,8 @@ Scope:
 - Hook the first persistent projection through one owned path.
 - `Mage Armor` must shape AC and end early on `target_dons_armor`.
 - Record one explicit ownership decision about where persistent projection is applied.
+- Do not infer an active persistent effect from prepared-spell ownership.
+- Do not invent a combat-legal don-armor action just to satisfy the early-end hook.
 
 Input:
 
@@ -665,7 +667,10 @@ Output:
 
 Next action:
 
-- Choose one owned projection path and implement it.
+- Research and lock two ownership answers before implementation:
+  - where an active `Mage Armor` state is sourced for the tracer-bullet path;
+  - which existing or newly-owned non-combat/runtime transition will drive `target_dons_armor`.
+- Then narrow EPT6 to the implementation-ready owned path that satisfies both constraints without duplicating AC state.
 
 Verification requirements:
 
@@ -676,7 +681,8 @@ Verification requirements:
 
 Handoff readiness:
 
-- Unblocked by EPT5 on 2026-04-19.
+- EPT5 still provides the projected persistent record contract.
+- Reopened for research on 2026-04-19 because the current seams do not yet define an active persistent-state owner or a real `target_dons_armor` transition.
 
 ### Task 10 - EPT7 - Build Projected Mechanic Interpreter
 
