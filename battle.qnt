@@ -69,7 +69,7 @@ module battle {
     rogueLevel: int,                         // 0 = not a rogue (B11)
     monkLevel: int,                          // 0 = not a monk (B11)
     dexMod: int,                             // static Dex modifier for battle-owned Monk reaction math
-    preparedSpells: Set[str],                // spells this creature has prepared (SRD 5.2.1 Gaining Spells)
+    preparedSpells: Set[str],                // legacy Spell Access fact: prepared spell definitions available to this creature
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     saveAdvantageContexts: Set[SaveTriggerKind],  // battle-owned save advantage sources such as Magic Resistance
@@ -166,23 +166,243 @@ module battle {
   pure def dropHeldItems(c: Combatant): Combatant =
     c.with("leftHandUse", HFree).with("rightHandUse", HFree)
 
-  /// Component requirements for the currently battle-modeled spell surface.
-  /// This is intentionally separate from hand occupancy itself.
-  pure def battleSpellComponentRequirements(spellName: str): { requiresVerbal: bool, requiresSomatic: bool } =
-    if (spellName == "counterspell") { requiresVerbal: false, requiresSomatic: true }
-    else if (
-      spellName == "shield" or
-      spellName == "hold_person" or
-      spellName == "bless" or
-      spellName == "haste" or
-      spellName == "spirit_guardians" or
-      spellName == "fireball" or
-      spellName == "burning_hands" or
-      spellName == "hellish_rebuke" or
-      spellName == "guiding_bolt" or
-      spellName == "inflict_wounds"
-    ) { requiresVerbal: true, requiresSomatic: true }
-    else { requiresVerbal: false, requiresSomatic: false }
+  type BattleSpellDefinition = {
+    modeled: bool,
+    requiresVerbal: bool,
+    requiresSomatic: bool,
+    readyable: bool,
+    baseLevel: int,
+    damageDiceAtBase: int,
+    damageDicePerExtraSlot: int,
+    halfOnSuccess: bool,
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    saveAbility: Ability,
+    concentration: bool,
+    counterspellReaction: bool,
+    shieldReaction: bool,
+    hellishRebukeReaction: bool,
+  }
+
+  /// Spell Definition facts for the currently battle-modeled spell surface.
+  /// Quint still owns this projection seam directly; TS must not generate it.
+  /// This is an intermediate consolidation seam, not the final ownership
+  /// boundary for spell facts. EPT13's goal here is to keep one Quint-owned
+  /// spell-definition table instead of rediscovering the same facts in
+  /// scattered battle-local name branches while spell facts continue moving
+  /// toward authored/projection ownership.
+  pure def battleSpellDefinition(spellName: str): BattleSpellDefinition =
+    if (spellName == "counterspell") {
+      modeled: true,
+      requiresVerbal: false,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 3,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: true,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "shield") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 1,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: true,
+      hellishRebukeReaction: false,
+    } else if (spellName == "hold_person") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: true,
+      baseLevel: 2,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Psychic,
+      conditionOnFail: CParalyzed,
+      applyCondition: true,
+      saveAbility: Wis,
+      concentration: true,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "bless") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 1,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: true,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "haste") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 3,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: true,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "spirit_guardians") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 3,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: true,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "fireball") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: true,
+      baseLevel: 3,
+      damageDiceAtBase: 8,
+      damageDicePerExtraSlot: 1,
+      halfOnSuccess: true,
+      damageType: Fire,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "burning_hands") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: true,
+      baseLevel: 1,
+      damageDiceAtBase: 3,
+      damageDicePerExtraSlot: 1,
+      halfOnSuccess: true,
+      damageType: Fire,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "hellish_rebuke") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 1,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Fire,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: true,
+    } else if (spellName == "guiding_bolt") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 1,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Radiant,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else if (spellName == "inflict_wounds") {
+      modeled: true,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      readyable: false,
+      baseLevel: 1,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Necrotic,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    } else {
+      modeled: false,
+      requiresVerbal: false,
+      requiresSomatic: false,
+      readyable: false,
+      baseLevel: 0,
+      damageDiceAtBase: 0,
+      damageDicePerExtraSlot: 0,
+      halfOnSuccess: false,
+      damageType: Slashing,
+      conditionOnFail: CBlinded,
+      applyCondition: false,
+      saveAbility: Dex,
+      concentration: false,
+      counterspellReaction: false,
+      shieldReaction: false,
+      hellishRebukeReaction: false,
+    }
+
+  pure def battleSpellComponentRequirements(spellName: str): { requiresVerbal: bool, requiresSomatic: bool } = {
+    val spellDef = battleSpellDefinition(spellName)
+    { requiresVerbal: spellDef.requiresVerbal, requiresSomatic: spellDef.requiresSomatic }
+  }
 
   pure def canProvideBattleSpellComponents(c: Combatant, spellName: str): bool = {
     val req = battleSpellComponentRequirements(spellName)
@@ -190,38 +410,35 @@ module battle {
     pCanProvideComponents(prepared.creature, req.requiresVerbal, req.requiresSomatic, battleHasFreeHand(prepared))
   }
 
-  /// FIXME: here and in many other places, those are the facts from the Sufrace. moreover, I think that projected-executable.qnt won't make much sense when battle and character started working with the Surface vocabulary.
-  /// FIXME: we may want t rewrite the whole file. this won't be a drastic decision.
-  pure def readyableSpellBaseLevel(spellName: str): int =
-    if (spellName == "burning_hands") 1
-    else if (spellName == "fireball") 3
-    else if (spellName == "hold_person") 2
-    else 0
+  pure def hasBattleSpellAccess(c: Combatant, spellName: str): bool =
+    c.preparedSpells.contains(spellName) and battleSpellDefinition(spellName).modeled
 
   pure def isBattleReadyableSpell(spellName: str): bool =
-    readyableSpellBaseLevel(spellName) > 0
+    battleSpellDefinition(spellName).readyable
 
-  pure def readyableSpellDamageOnFail(spellName: str, slotLvl: int): int =
-    if (spellName == "burning_hands") slotLvl * 6
-    else if (spellName == "fireball") (slotLvl + 5) * 6
-    else 0
+  pure def readyableSpellBaseLevel(spellName: str): int =
+    battleSpellDefinition(spellName).baseLevel
+
+  pure def readyableSpellDamageOnFail(spellName: str, slotLvl: int): int = {
+    val spellDef = battleSpellDefinition(spellName)
+    if (not(spellDef.readyable) or slotLvl < spellDef.baseLevel) 0
+    else (spellDef.damageDiceAtBase + (slotLvl - spellDef.baseLevel) * spellDef.damageDicePerExtraSlot) * 6
+  }
 
   pure def readyableSpellHalfOnSuccess(spellName: str): bool =
-    spellName == "burning_hands" or spellName == "fireball"
+    battleSpellDefinition(spellName).halfOnSuccess
 
   pure def readyableSpellDamageType(spellName: str): DamageType =
-    if (spellName == "burning_hands" or spellName == "fireball") Fire
-    else if (spellName == "hold_person") Psychic
-    else Slashing
+    battleSpellDefinition(spellName).damageType
 
   pure def readyableSpellConditionOnFail(spellName: str): Condition =
-    if (spellName == "hold_person") CParalyzed else CBlinded
+    battleSpellDefinition(spellName).conditionOnFail
 
   pure def readyableSpellApplyCondition(spellName: str): bool =
-    spellName == "hold_person"
+    battleSpellDefinition(spellName).applyCondition
 
   pure def readyableSpellSaveAbility(spellName: str): Ability =
-    if (spellName == "hold_person") Wis else Dex
+    battleSpellDefinition(spellName).saveAbility
 
   pure def effectiveSaveRoll(
     rollA: int,
@@ -1242,7 +1459,8 @@ module battle {
   ): Set[CreatureId] =
     eligibleExcluding(cs, excludeId).filter(id =>
       hasCounterspellSlot(cs, id)
-      and cs.get(id).preparedSpells.contains("counterspell")
+      and hasBattleSpellAccess(cs.get(id), "counterspell")
+      and battleSpellDefinition("counterspell").counterspellReaction
       and not(cs.get(id).turn.slotExpendedThisTurn)
       and canProvideBattleSpellComponents(cs.get(id), "counterspell")
     )
@@ -1290,7 +1508,8 @@ module battle {
       val canShield =
         canReact
         and id == atk.target
-        and c.preparedSpells.contains("shield")
+        and hasBattleSpellAccess(c, "shield")
+        and battleSpellDefinition("shield").shieldReaction
         and hasAnySpellSlot(c)
         and not(c.turn.slotExpendedThisTurn)
         and canProvideBattleSpellComponents(c, "shield")
@@ -2160,13 +2379,14 @@ module battle {
                 cs1, ad.damageSource, reactorId,
                 actualDmg, Fire, Set(), false, ad.returnTo, false
               )
-              all {
-                reactorId == ad.damagedCreature,
-                reactor.turn.reactionAvailable,
-                reactor.preparedSpells.contains("hellish_rebuke"),
-                slotLvl > 0,
-                ad.sourceVisibleToDamagedCreature,
-                ad.sourceWithin60ftOfDamagedCreature,
+                all {
+                  reactorId == ad.damagedCreature,
+                  reactor.turn.reactionAvailable,
+                  hasBattleSpellAccess(reactor, "hellish_rebuke"),
+                  battleSpellDefinition("hellish_rebuke").hellishRebukeReaction,
+                  slotLvl > 0,
+                  ad.sourceVisibleToDamagedCreature,
+                  ad.sourceWithin60ftOfDamagedCreature,
                 bCreatures' = result.creatures, bPhase' = result.phase, keepBattle,
               }
             }
@@ -2887,10 +3107,13 @@ module battle {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
+    val concentrationSpells = ac.preparedSpells.filter(spellId =>
+      battleSpellDefinition(spellId).concentration
+    )
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet duration = 1.to(10).oneOf()
-    nondet spellId = Set("hold_person", "bless", "haste", "spirit_guardians").oneOf()
+    nondet spellId = concentrationSpells.oneOf()
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet ritual = Bool.oneOf()
@@ -2906,7 +3129,7 @@ module battle {
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
-      ac.preparedSpells.contains(spellId),    // SRD 5.2.1: must have spell prepared
+      concentrationSpells.size() > 0,
       canProvideBattleSpellComponents(ac, spellId),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,

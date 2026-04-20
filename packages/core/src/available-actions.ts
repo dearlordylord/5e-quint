@@ -1,5 +1,11 @@
-import { Match, Schema } from "effect";
+import { Either, Match, Option, Schema } from "effect";
 
+import {
+  battleSpellIdsWithUnambiguousAccess,
+  hasBattleSpellAccess,
+  singleBattleSpellAccessForSpell,
+  type BattleSpellAccess,
+} from "#/battle-spell-access.ts";
 import { MetamagicOptionSchema } from "#/features/class-sorcerer.ts";
 import {
   getBattleReadyableSpellPayload,
@@ -10,6 +16,7 @@ import {
 } from "#/features/spell-available-actions.ts";
 import {
   getBattleReadyableSpellDelivery,
+  getBattleReadyableSpellMechanics,
   type BattleReadyableSpellPayload,
 } from "#/features/spell-registry.ts";
 import {
@@ -35,10 +42,7 @@ import type {
   InitCreatureConfig,
   MovementProvocationKind,
 } from "#/battle-machine-types.ts";
-import {
-  battleHasFreeHand,
-  isIncapacitated,
-} from "#/battle-machine-creature.ts";
+import { battleHasFreeHand, isIncapacitated } from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts";
 import { counterspellAutoSuccess } from "#/features/spell-abjuration.ts";
@@ -76,7 +80,6 @@ import {
 import {
   getMonsterStatBlockByStateId,
   MONSTER_STAT_BLOCK_IDS,
-  monsterSpellDailyUseId,
   monsterCatalogInitCreatureConfig,
   statBlockAttackBattleProfile,
   statBlockLegendaryAction,
@@ -4073,7 +4076,7 @@ function afterDamageReactionTokens(
     if (
       ad.sourceVisibleToDamagedCreature &&
       ad.sourceWithin60ftOfDamagedCreature &&
-      actor.preparedSpells.has(spellId("hellish_rebuke")) &&
+      hasBattleSpellAccess(actor.spellAccesses, spellId("hellish_rebuke")) &&
       actor.slotsCurrent.some((remaining) => remaining > 0)
     ) {
       tokens.push(
@@ -4143,27 +4146,32 @@ function battleCounterspellSlotLevels(
 function battleCastableSpellSlotOptions(
   actor: BattleCreatureState,
   currentSpellId: SpellId,
-  payload: BattleReadyableSpellPayload | undefined,
 ): ReadonlyArray<SpellSlotLevelValue> {
-  return currentReadyableSpellPayloads(actor, currentSpellId, payload)
-    .map((p) => p.slotLevel)
+  return [...new Set(currentReadyableSpellPayloads(actor, currentSpellId).map((p) => p.slotLevel))]
     .sort((a, b) => a - b);
 }
 
-function isDailyMonsterSpell(
+function primaryBattleSpellAccess(
   actor: BattleCreatureState,
   currentSpellId: SpellId,
-): boolean {
-  return (
-    actor.dailyUsesRemaining[monsterSpellDailyUseId(currentSpellId)] != null
+): BattleSpellAccess | null {
+  const accessResult = singleBattleSpellAccessForSpell(
+    actor.spellAccesses,
+    currentSpellId,
   );
+  if (Either.isLeft(accessResult)) return null;
+  return Option.getOrNull(accessResult.right);
 }
 
 function battleCastableSpellCost(
   actor: BattleCreatureState,
   currentSpellId: SpellId,
 ): ResourceCost {
-  return isDailyMonsterSpell(actor, currentSpellId)
+  // EPT13 quarantine: available-action tokens only collapse to one token when
+  // exactly one Spell Access path exists for the spell. EPT14 widens tokens and
+  // events to carry access identity for multi-path casts.
+  return primaryBattleSpellAccess(actor, currentSpellId)?.resourcePath.kind ===
+    "dailyUse"
     ? costs(quotaCost("action"))
     : costs(quotaCost("action"), poolCost("spellSlot"));
 }
@@ -4172,7 +4180,8 @@ function battleCastableSpellSpend(
   actor: BattleCreatureState,
   currentSpellId: SpellId,
 ): string {
-  return isDailyMonsterSpell(actor, currentSpellId)
+  return primaryBattleSpellAccess(actor, currentSpellId)?.resourcePath.kind ===
+    "dailyUse"
     ? "action and one daily use"
     : "action and a spell slot";
 }
@@ -4181,8 +4190,7 @@ function battleSpellCastBlocked(actor: BattleCreatureState): boolean {
   return (
     actor.actionSurgeActionPending ||
     actor.ragingBlocksSpells ||
-    actor.slotExpendedThisTurn ||
-    actor.readyableSpellPayloads.size === 0
+    actor.slotExpendedThisTurn
   );
 }
 
@@ -4194,14 +4202,11 @@ function battleActiveAoeSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_CAST_AOE" }>
   > = [];
-  for (const [currentSpellId, payload] of actor.readyableSpellPayloads) {
-    if (!actor.preparedSpells.has(currentSpellId)) continue;
+  for (const currentSpellId of battleSpellIdsWithUnambiguousAccess(
+    actor.spellAccesses,
+  )) {
     if (getBattleReadyableSpellDelivery(currentSpellId) !== "aoe") continue;
-    const slotOptions = battleCastableSpellSlotOptions(
-      actor,
-      currentSpellId,
-      payload,
-    );
+    const slotOptions = battleCastableSpellSlotOptions(actor, currentSpellId);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4238,15 +4243,12 @@ function battleActiveSaveSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_CAST_SAVE_SPELL" }>
   > = [];
-  for (const [currentSpellId, payload] of actor.readyableSpellPayloads) {
-    if (!actor.preparedSpells.has(currentSpellId)) continue;
+  for (const currentSpellId of battleSpellIdsWithUnambiguousAccess(
+    actor.spellAccesses,
+  )) {
     if (getBattleReadyableSpellDelivery(currentSpellId) !== "singleTarget")
       continue;
-    const slotOptions = battleCastableSpellSlotOptions(
-      actor,
-      currentSpellId,
-      payload,
-    );
+    const slotOptions = battleCastableSpellSlotOptions(actor, currentSpellId);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4284,14 +4286,11 @@ function battleActiveReadyableSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_READY_SPELL" }>
   > = [];
-  for (const [spellName, payload] of actor.readyableSpellPayloads) {
-    if (!actor.preparedSpells.has(spellName)) continue;
+  for (const spellName of battleSpellIdsWithUnambiguousAccess(
+    actor.spellAccesses,
+  )) {
     if (getBattleReadyableSpellDelivery(spellName) === "aoe") continue;
-    const slotOptions = battleCastableSpellSlotOptions(
-      actor,
-      spellName,
-      payload,
-    );
+    const slotOptions = battleCastableSpellSlotOptions(actor, spellName);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4410,20 +4409,37 @@ function battleAttackTargetGroups(params: {
 function currentReadyableSpellPayloads(
   actor: BattleCreatureState,
   spellName: string,
-  storedPayload: BattleReadyableSpellPayload | undefined,
 ): ReadonlyArray<BattleReadyableSpellPayload> {
-  if (storedPayload == null) return [];
-  const monsterDailyUses =
-    actor.dailyUsesRemaining[monsterSpellDailyUseId(spellId(spellName))];
-  if (monsterDailyUses != null) {
-    return monsterDailyUses > 0 ? [storedPayload] : [];
+  // Spell definition fact: static mechanics still come from the spell registry.
+  // Spell access fact: creature-owned permission/resource path lives on the actor.
+  // Invocation input: the concrete slot level is chosen here from the access path.
+  const currentSpellId = spellId(spellName);
+  const mechanics = getBattleReadyableSpellMechanics(currentSpellId);
+  if (mechanics == null) return [];
+  const accessResult = singleBattleSpellAccessForSpell(
+    actor.spellAccesses,
+    currentSpellId,
+  );
+  if (Either.isLeft(accessResult) || Option.isNone(accessResult.right)) return [];
+  const access = accessResult.right.value;
+  if (access.resourcePath.kind === "dailyUse") {
+    const remaining = actor.dailyUsesRemaining[access.resourcePath.usageId];
+    if (remaining == null || remaining <= 0) return [];
+    const payload = getBattleReadyableSpellPayload(
+      spellName as SpellName,
+      access.resourcePath.fixedCastLevel,
+      access.spellSaveDC,
+    );
+    return payload == null ? [] : [payload];
   }
   return actor.slotsCurrent.flatMap((remaining, index) => {
+    if (remaining <= 0) return [];
     const slotLevel = spellSlotLevel(index + 1);
-    if (slotLevel < storedPayload.baseLevel || remaining <= 0) return [];
+    if (slotLevel < mechanics.baseLevel) return [];
     const payload = getBattleReadyableSpellPayload(
       spellName as SpellName,
       slotLevel,
+      access.spellSaveDC,
     );
     return payload == null ? [] : [payload];
   });
@@ -4434,9 +4450,8 @@ function currentReadyableSpellPayload(
   spellName: string,
   slotLevel: SpellSlotLevelValue,
 ): BattleReadyableSpellPayload | null {
-  const storedPayload = actor.readyableSpellPayloads.get(spellId(spellName));
   return (
-    currentReadyableSpellPayloads(actor, spellName, storedPayload).find(
+    currentReadyableSpellPayloads(actor, spellName).find(
       (payload) => payload.slotLevel === slotLevel,
     ) ?? null
   );
@@ -5414,7 +5429,7 @@ export function resolveBattleAction(
     if (payload == null) {
       return {
         code: "ACTION_NOT_AVAILABLE",
-        message: `${token.spellId} has no battle-owned AoE spell payload for ${token.actorId}.`,
+        message: `${token.spellId} has no derived AoE spell payload for ${token.actorId}.`,
       };
     }
     return {
@@ -5626,7 +5641,7 @@ export function resolveBattleAction(
     if (payload == null) {
       return {
         code: "ACTION_NOT_AVAILABLE",
-        message: `${token.spellName} has no battle-owned ready spell payload for ${token.actorId}.`,
+        message: `${token.spellName} has no derived ready spell payload for ${token.actorId}.`,
       };
     }
     return {

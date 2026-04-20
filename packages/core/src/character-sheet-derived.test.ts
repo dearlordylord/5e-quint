@@ -8,7 +8,7 @@ import {
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
 import type { ClassName } from "#/features/class-tables.ts";
-import { CreatureId, spellId } from "#/types.ts";
+import { CreatureId } from "#/types.ts";
 
 const MAGE_ARMOR_RECORD = {
   tag: "PPRSetBaseAc" as const,
@@ -532,19 +532,17 @@ describe("character-sheet-derived", () => {
     expect(battleProjection.strMod).toBe(-1);
     expect(battleProjection.dexMod).toBe(2);
     expect(battleProjection.caster).toBe(true);
-    expect(battleProjection.preparedSpells).toEqual(
-      derived.spellcasting.preparedSpells,
+    expect(battleProjection.spellAccesses).toEqual(
+      [...derived.spellcasting.preparedSpells].map((currentSpellId) => ({
+        tag: "prepared",
+        spellId: currentSpellId,
+        spellSaveDC:
+          derived.spellcasting.preparedSpellSaveDCs.get(currentSpellId)!,
+        resourcePath: { kind: "spellSlotLadder" },
+      })),
     );
     expect(battleProjection.slotsMax).toEqual(derived.spellcasting.slotsMax);
     expect(battleProjection.mainHandWeapon?.name).toBe("Quarterstaff");
-    expect(
-      battleProjection.readyableSpellPayloads!.get(spellId("fireball"))?.release
-        .saveDC,
-    ).toBe(15);
-    expect(
-      battleProjection.readyableSpellPayloads!.get(spellId("hold_person"))
-        ?.release.saveDC,
-    ).toBe(15);
   });
 
   it("threads active projected persistents through battle projection without storing them on the sheet", () => {

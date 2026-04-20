@@ -1,4 +1,6 @@
+import { Either, Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
+import { singleBattleSpellAccessForSpell } from "#/battle-spell-access.ts";
 import {
   activeId,
   breakConcentrationAndPropagate,
@@ -11,10 +13,7 @@ import {
   setCreature,
   spendAction,
 } from "#/battle-machine-helpers.ts";
-import {
-  getSpellRecord,
-  resolveBattleReadyableSpellPayload,
-} from "#/features/spell-registry.ts";
+import { getSpellRecord, resolveBattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import { resolveConcentration } from "#/battle-machine-spells.ts";
 import type {
   BattleActionArgs,
@@ -26,6 +25,7 @@ import {
   PHASE_ACTIVE,
   phaseAwaitReaction,
 } from "#/battle-machine-types.ts";
+import { spellId } from "#/types.ts";
 
 export function battleCastSaveSpell({
   context: c,
@@ -48,24 +48,17 @@ export function battleCastSaveSpell({
     if (ac.actionsRemaining <= 0) return {};
     if (ac.slotExpendedThisTurn && !e.ritual) return {};
   }
+  // EPT13 quarantine: this event does not yet carry Spell Access identity.
+  // Reject multi-access same-spell casts until EPT14 widens the event seam.
+  const access = singleBattleSpellAccessForSpell(
+    ac.spellAccesses,
+    spellId(e.spellName),
+  );
+  if (Either.isLeft(access) || Option.isNone(access.right)) return {};
   const payload = resolveBattleReadyableSpellPayload(
     e.spellName,
     e.slotLvl,
-    e.saveDC,
-    {
-      baseLevel: e.slotLvl,
-      slotLevel: e.slotLvl,
-      release: {
-        kind: "save",
-        saveAbility: e.saveAbility,
-        saveDC: e.saveDC,
-        halfOnSuccess: e.halfOnSave,
-        damageType: e.dt,
-        damageOnFail: e.dmgOnFail,
-        conditionOnFail: e.cond,
-        applyCondition: e.applyCond,
-      },
-    },
+    access.right.value.spellSaveDC,
   );
   if (payload == null) return {};
   let cs = e.bonusAction

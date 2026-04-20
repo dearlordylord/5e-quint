@@ -4,6 +4,7 @@
  */
 import { Match, Option } from "effect";
 
+import { hasBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
   addEffect,
   advanceEffectsForOwner,
@@ -613,7 +614,7 @@ export function legalHitReactions(
     if (
       id === atk.target &&
       canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
-      c.preparedSpells.has(spellId("shield")) &&
+      hasBattleSpellAccess(c.spellAccesses, spellId("shield")) &&
       !c.slotExpendedThisTurn &&
       canProvideBattleSpellComponents(c, "shield")
     ) {
@@ -737,7 +738,7 @@ export function eligibleForCounterspell(
     }
     if (
       hasSlot &&
-      c.preparedSpells.has(spellId("counterspell")) &&
+      hasBattleSpellAccess(c.spellAccesses, spellId("counterspell")) &&
       !c.slotExpendedThisTurn &&
       canProvideBattleSpellComponents(c, "counterspell")
     )

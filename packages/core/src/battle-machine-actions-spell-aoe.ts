@@ -1,5 +1,6 @@
+import { Either, Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { monsterSpellDailyUseId } from "#/monster-catalog.ts";
+import { singleBattleSpellAccessForSpell } from "#/battle-spell-access.ts";
 import {
   activeId,
   effectiveBattleSaveRollForCreature,
@@ -35,15 +36,21 @@ function expendMonsterSpellDailyUse(
   actor: BattleCreatureState,
   spellName: string,
 ): BattleCreatureState | "unavailable" | null {
-  const usageId = monsterSpellDailyUseId(spellId(spellName));
-  const current = actor.dailyUsesRemaining[usageId];
+  const access = singleBattleSpellAccessForSpell(
+    actor.spellAccesses,
+    spellId(spellName),
+  );
+  if (Either.isLeft(access) || Option.isNone(access.right)) return null;
+  const spellAccess = access.right.value;
+  if (spellAccess.resourcePath.kind !== "dailyUse") return null;
+  const current = actor.dailyUsesRemaining[spellAccess.resourcePath.usageId];
   if (current == null) return null;
   if (current <= 0) return "unavailable";
   return {
     ...actor,
     dailyUsesRemaining: {
       ...actor.dailyUsesRemaining,
-      [usageId]: current - 1,
+      [spellAccess.resourcePath.usageId]: current - 1,
     },
   };
 }

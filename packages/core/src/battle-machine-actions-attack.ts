@@ -1,5 +1,6 @@
 import { Match } from "effect";
 
+import { hasBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
   battleMainHandDamageDie,
   endHidden,
@@ -646,7 +647,7 @@ export function battleAfterDamageSpellReaction({
     e.reactorId !== ad.damagedCreature ||
     !ad.sourceVisibleToDamagedCreature ||
     !ad.sourceWithin60ftOfDamagedCreature ||
-    !reactor.preparedSpells.has(spellId("hellish_rebuke")) ||
+    !hasBattleSpellAccess(reactor.spellAccesses, spellId("hellish_rebuke")) ||
     !reactor.slotsCurrent.some((remaining) => remaining > 0)
   ) {
     return {};

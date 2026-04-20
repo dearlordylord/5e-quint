@@ -16,6 +16,10 @@ import {
   toBattleInitCreatureConfig,
   type ResolutionRequest,
 } from "#/available-actions.ts";
+import {
+  preparedBattleSpellAccess,
+  statBlockActionGrantedBattleSpellAccess,
+} from "#/battle-spell-access.ts";
 import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import { creatureMachine } from "#/machine.ts";
@@ -4749,7 +4753,7 @@ describe("available actions contract", () => {
     });
   });
 
-  test("battle discovery resolves ready-spell setup from battle-owned payload facts", () => {
+  test("battle discovery resolves ready-spell setup from derived spell facts", () => {
     const actor = initBattleForReadySpellDiscovery();
 
     expect(
@@ -4807,7 +4811,7 @@ describe("available actions contract", () => {
     });
   });
 
-  test("battle discovery resolves AoE spell setup from canonical spell payload facts", () => {
+  test("battle discovery resolves AoE spell setup from derived spell facts", () => {
     const actor = initBattleForAoeSpellDiscovery();
 
     expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual(
@@ -4934,6 +4938,30 @@ describe("available actions contract", () => {
         (token) => token.type,
       ),
     ).not.toContain("BATTLE_READY_SPELL");
+  });
+
+  test("battle discovery quarantines ambiguous multi-access same-spell casts until EPT14 widens token identity", () => {
+    const actor = initBattleForReadySpellDiscovery({
+      spellAccesses: [
+        preparedBattleSpellAccess({
+          spellId: spellId("hold_person"),
+          spellSaveDC: difficultyClass(13),
+        }),
+        statBlockActionGrantedBattleSpellAccess({
+          spellId: spellId("hold_person"),
+          spellSaveDC: difficultyClass(15),
+          usageId: "monster-spell:hold_person",
+          fixedCastLevel: spellSlotLevel(2),
+        }),
+      ],
+    });
+
+    const tokenTypes = getAvailableBattleActions(actor.getSnapshot().context).map(
+      (token) => token.type,
+    );
+
+    expect(tokenTypes).not.toContain("BATTLE_CAST_SAVE_SPELL");
+    expect(tokenTypes).not.toContain("BATTLE_READY_SPELL");
   });
 
   test("battle discovery does not surface ready-spell setup while rage blocks spellcasting", () => {
@@ -5486,15 +5514,25 @@ describe("available actions contract", () => {
   test("battle resolution requires runtime-owned save results when CAST_COUNTERSPELL does not auto-succeed", () => {
     const actor = initBattleForCounterspellRuntimeDiscovery();
 
-    const request = resolveBattleAction(actor.getSnapshot().context, {
-      scope: "battle",
-      actorId: "B",
-      type: "CAST_COUNTERSPELL",
-      slotLevel: spellSlotLevel(3),
-    });
-    expect("code" in request ? request.code : "ok").toBe(
-      "ACTION_NOT_AVAILABLE",
+    const request = expectBattleRequest(
+      resolveBattleAction(actor.getSnapshot().context, {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_COUNTERSPELL",
+        slotLevel: spellSlotLevel(3),
+      }),
     );
+    expect(request).toEqual({
+      token: {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_COUNTERSPELL",
+        slotLevel: spellSlotLevel(3),
+      },
+      outcome:
+        "Use your reaction to cast Counterspell against the triggering spell",
+      runtime: "counterspell",
+    });
   });
 
   test("battle resolution executes CAST_SHIELD only when that hit-reaction token is currently available", () => {

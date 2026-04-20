@@ -1,4 +1,5 @@
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
+import { preparedBattleSpellAccess } from "#/battle-spell-access.ts";
 import { characterBattleEquipmentProjection } from "#/character-equipment.ts";
 import {
   characterProficiencySummary,
@@ -27,7 +28,6 @@ import {
   type HitDiceRemaining,
 } from "#/features/class-tables.ts";
 import { sneakAttackDice } from "#/features/class-rogue.ts";
-import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
 import {
@@ -330,8 +330,9 @@ type CharacterBattleProjection = Pick<
   | "fighterLevel"
   | "barbarianLevel"
   | "bardLevel"
+  | "spellAccesses"
   | "preparedSpells"
-  | "readyableSpellPayloads"
+  | "spellSaveDCs"
   | "slotsMax"
   | "slotsCurrent"
   | "pactSlotsMax"
@@ -365,12 +366,18 @@ export function characterSheetBattleProjection(
     fighterLevel: projection.classLevels.fighter,
     barbarianLevel: projection.classLevels.barbarian,
     bardLevel: projection.classLevels.bard,
-    preparedSpells: derived.spellcasting.preparedSpells,
-    readyableSpellPayloads: battleReadyableSpellPayloadsFromPreparedSpells(
-      derived.spellcasting.preparedSpells,
-      derived.spellcasting.slotsCurrent,
-      derived.spellcasting.preparedSpellSaveDCs,
+    // Spell access facts: creature-owned prepared access paths derived from
+    // sheet spellcasting state. Spell definitions stay in authored spell data.
+    spellAccesses: [...derived.spellcasting.preparedSpells].map(
+      (currentSpellId) =>
+        preparedBattleSpellAccess({
+          spellId: currentSpellId,
+          spellSaveDC:
+            derived.spellcasting.preparedSpellSaveDCs.get(currentSpellId)!,
+        }),
     ),
+    preparedSpells: derived.spellcasting.preparedSpells,
+    spellSaveDCs: derived.spellcasting.preparedSpellSaveDCs,
     slotsMax: derived.spellcasting.slotsMax,
     slotsCurrent: derived.spellcasting.slotsCurrent,
     pactSlotsMax: derived.spellcasting.pactSlotsMax,

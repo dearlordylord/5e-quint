@@ -57,34 +57,41 @@ The Ralph harness reads this machine-readable index for task order and status. K
     { "number": 13, "id": "EPT10", "status": "blocked", "title": "Add Quint And TypeScript Parity Tests For First Slice" },
     { "number": 14, "id": "EPT11", "status": "blocked", "title": "Add End-To-End MCP Tracer-Bullet Tests" },
     { "number": 15, "id": "EPT12", "status": "blocked", "title": "Remove Or Mark Superseded Handwritten Paths In Promoted Slice" },
-    { "number": 16, "id": "CSA5",  "status": "ready-for-research", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
-    { "number": 17, "id": "CSA6",  "status": "ready-for-research", "title": "C4g Object-Target Attachment And True Polymorph Object Modes" },
-    { "number": 18, "id": "CSA7",  "status": "ready-for-research", "title": "Shapechange Multi-Type Filter And Form Switch" },
-    { "number": 19, "id": "CSA8",  "status": "blocked", "title": "Convergence Checkpoint A" },
-    { "number": 20, "id": "CSB1",  "status": "ready-for-implementation-after-light-research", "title": "Species Traits Batch" },
-    { "number": 21, "id": "CSB2",  "status": "ready-for-implementation-after-light-research", "title": "Feats Batch" },
-    { "number": 22, "id": "CSB3",  "status": "ready-for-research", "title": "Fighter And Rogue Class Features" },
-    { "number": 23, "id": "CSB4",  "status": "ready-for-research", "title": "Paladin And Cleric Class Features" },
-    { "number": 24, "id": "CSB5",  "status": "ready-for-research", "title": "Barbarian And Monk Class Features" },
-    { "number": 25, "id": "CSB6",  "status": "ready-for-research", "title": "Druid And Ranger Class Features" },
-    { "number": 26, "id": "CSB7",  "status": "ready-for-research", "title": "Wizard And Sorcerer Class Features" },
-    { "number": 27, "id": "CSB8",  "status": "ready-for-research", "title": "Warlock And Bard Class Features" },
-    { "number": 28, "id": "CSB9",  "status": "ready-for-implementation-after-light-research", "title": "Magic Items Attunement-Passive Batch" },
-    { "number": 29, "id": "CSB10", "status": "ready-for-implementation-after-light-research", "title": "Magic Items Charge-Wand Batch" },
-    { "number": 30, "id": "CSB11", "status": "ready-for-research", "title": "Magic Items Sentient Cursed Artifact Batch" },
-    { "number": 31, "id": "CSC1",  "status": "blocked", "title": "Final Mining Pass And Convergence Measurement" },
-    { "number": 32, "id": "CSC2",  "status": "blocked", "title": "Surface-v1 Convergence Tag And Handoff Doc" },
-    { "number": 33, "id": "CSD1",  "status": "deferred", "title": "Design Content-Driven Execution Architecture (Superseded By EPT Batch)" },
-    { "number": 34, "id": "CSD2",  "status": "deferred", "title": "Implement Quint-Variant Generator (Superseded By EPT Batch)" },
-    { "number": 35, "id": "CSD3",  "status": "deferred", "title": "Inventory Hardcoded Abilities And Migration Plan (Superseded By EPT Batch)" },
-    { "number": 36, "id": "CSD4",  "status": "deferred", "title": "Rehaul Save-Spell Family To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 37, "id": "CSD5",  "status": "deferred", "title": "Rehaul Attack-Roll Spell Family To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 38, "id": "CSD6",  "status": "deferred", "title": "Rehaul Ongoing-Effect Spell Family To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 39, "id": "CSD7",  "status": "deferred", "title": "Rehaul Triggered-Reaction Family To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 40, "id": "CSD8",  "status": "deferred", "title": "Rehaul Summon/Polymorph Families To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 41, "id": "CSD9",  "status": "deferred", "title": "Rehaul Class Features And Monster Abilities To Content-Driven (Superseded By EPT Batch)" },
-    { "number": 42, "id": "CSD10", "status": "deferred", "title": "Tier 3 MBT Convergence And Core Hardcode Cleanup (Superseded By EPT Batch)" },
-    { "number": 43, "id": "CSD11", "status": "deferred", "title": "End-To-End Demo And Batch Closeout (Superseded By EPT Batch)" }
+    { "number": 16, "id": "EPT13", "status": "in-progress", "title": "Move Battle Spell Facts To Surface-Owned Inputs" },
+    { "number": 17, "id": "EPT14", "status": "blocked", "title": "Generalize Spellcasting Event And Provenance" },
+    { "number": 18, "id": "EPT15", "status": "ready-for-research", "title": "Split Engine Primitives From Authored Ability Actions" },
+    { "number": 19, "id": "EPT16", "status": "ready-for-implementation-after-light-research", "title": "Generalize MCP Battle Participants Schema" },
+    { "number": 20, "id": "EPT17", "status": "ready-for-implementation-after-light-research", "title": "Decode Authored Surface JSON Through Schemas" },
+    { "number": 21, "id": "EPT18", "status": "ready-for-implementation-after-light-research", "title": "Make Projected Interpreter Transition Construction Total" },
+    { "number": 22, "id": "EPT19", "status": "ready-for-implementation-after-light-research", "title": "Clarify Projection Tests Versus Build-Legality Scope" },
+    { "number": 23, "id": "CSA5",  "status": "ready-for-research", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
+    { "number": 24, "id": "CSA6",  "status": "ready-for-research", "title": "C4g Object-Target Attachment And True Polymorph Object Modes" },
+    { "number": 25, "id": "CSA7",  "status": "ready-for-research", "title": "Shapechange Multi-Type Filter And Form Switch" },
+    { "number": 26, "id": "CSA8",  "status": "blocked", "title": "Convergence Checkpoint A" },
+    { "number": 27, "id": "CSB1",  "status": "ready-for-implementation-after-light-research", "title": "Species Traits Batch" },
+    { "number": 28, "id": "CSB2",  "status": "ready-for-implementation-after-light-research", "title": "Feats Batch" },
+    { "number": 29, "id": "CSB3",  "status": "ready-for-research", "title": "Fighter And Rogue Class Features" },
+    { "number": 30, "id": "CSB4",  "status": "ready-for-research", "title": "Paladin And Cleric Class Features" },
+    { "number": 31, "id": "CSB5",  "status": "ready-for-research", "title": "Barbarian And Monk Class Features" },
+    { "number": 32, "id": "CSB6",  "status": "ready-for-research", "title": "Druid And Ranger Class Features" },
+    { "number": 33, "id": "CSB7",  "status": "ready-for-research", "title": "Wizard And Sorcerer Class Features" },
+    { "number": 34, "id": "CSB8",  "status": "ready-for-research", "title": "Warlock And Bard Class Features" },
+    { "number": 35, "id": "CSB9",  "status": "ready-for-implementation-after-light-research", "title": "Magic Items Attunement-Passive Batch" },
+    { "number": 36, "id": "CSB10", "status": "ready-for-implementation-after-light-research", "title": "Magic Items Charge-Wand Batch" },
+    { "number": 37, "id": "CSB11", "status": "ready-for-research", "title": "Magic Items Sentient Cursed Artifact Batch" },
+    { "number": 38, "id": "CSC1",  "status": "blocked", "title": "Final Mining Pass And Convergence Measurement" },
+    { "number": 39, "id": "CSC2",  "status": "blocked", "title": "Surface-v1 Convergence Tag And Handoff Doc" },
+    { "number": 40, "id": "CSD1",  "status": "deferred", "title": "Design Content-Driven Execution Architecture (Superseded By EPT Batch)" },
+    { "number": 41, "id": "CSD2",  "status": "deferred", "title": "Implement Quint-Variant Generator (Superseded By EPT Batch)" },
+    { "number": 42, "id": "CSD3",  "status": "deferred", "title": "Inventory Hardcoded Abilities And Migration Plan (Superseded By EPT Batch)" },
+    { "number": 43, "id": "CSD4",  "status": "deferred", "title": "Rehaul Save-Spell Family To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 44, "id": "CSD5",  "status": "deferred", "title": "Rehaul Attack-Roll Spell Family To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 45, "id": "CSD6",  "status": "deferred", "title": "Rehaul Ongoing-Effect Spell Family To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 46, "id": "CSD7",  "status": "deferred", "title": "Rehaul Triggered-Reaction Family To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 47, "id": "CSD8",  "status": "deferred", "title": "Rehaul Summon/Polymorph Families To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 48, "id": "CSD9",  "status": "deferred", "title": "Rehaul Class Features And Monster Abilities To Content-Driven (Superseded By EPT Batch)" },
+    { "number": 49, "id": "CSD10", "status": "deferred", "title": "Tier 3 MBT Convergence And Core Hardcode Cleanup (Superseded By EPT Batch)" },
+    { "number": 50, "id": "CSD11", "status": "deferred", "title": "End-To-End Demo And Batch Closeout (Superseded By EPT Batch)" }
   ]
 }
 -->
@@ -126,34 +133,96 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 13 | EPT10 - Add Quint And TypeScript Parity Tests For First Slice | blocked | EPT6, EPT8, EPT9 | EPT11 | Add parity-oriented tests for `Acid Splash`, `Mage Armor`, `Second Wind`, and `Action Surge`, including spell save-gate assertions and early-end lifecycle assertions. | Blocked on integrated runtime path. |
 | 14 | EPT11 - Add End-To-End MCP Tracer-Bullet Tests | blocked | EPT9, EPT10 | EPT12 | Add end-to-end MCP tests for character creation/finalization, battle start, action availability, `execute_action` flows, and turn ends for the bounded scenario. | Blocked on parity-tested integrated path. |
 | 15 | EPT12 - Remove Or Mark Superseded Handwritten Paths In Promoted Slice | blocked | EPT11 | none | Remove or explicitly mark any redundant handwritten execution paths for the in-scope slice so the tracer bullet demonstrates architectural movement rather than parallel infrastructure. | Final task in the active batch. |
-| 16 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. Keep below EPT batch priority. |
-| 17 | CSA6 - C4g Object-Target Attachment And True Polymorph Object Modes | ready-for-research | none | CSA8 | Add `Attachment.object` kind; extend `transform_target` to cover object-to-creature and creature-to-object; author the True Polymorph object branches. | Ready. True Polymorph already partial-authored (creature branch only). |
-| 18 | CSA7 - Shapechange Multi-Type Filter And Form Switch | ready-for-research | CSA6 | CSA8 | Widen `PolymorphFormSource.creatureTypeFilter` to support "any except X"; add `Duration.concentration.allowsFormSwitchAs: "magic_action"`; author Shapechange. | Blocked on CSA6 for shared PolymorphFormSource shape review. |
-| 19 | CSA8 - Convergence Checkpoint A | blocked | CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11, CSC1 | Run the isolated auto-close loop against the remaining widening queue; use its weighted-debt history, failed-attempt log, and per-batch reruns to prove the remaining pressure is collapsing. Convergence declared for Phase A when the loop shows sustained downward weighted debt and the follow-up authoring streak resumes without new widenings. | Blocked on upstream widenings, but now measured by the auto loop rather than a manual random sample. |
-| 20 | CSB1 - Species Traits Batch | ready-for-implementation-after-light-research | none | CSC1 | Author the 17 SRD 5.2.1 species traits (Dragonborn, Elf, Dwarf, Halfling, etc.); most are `grant_sense` / `grant_resistance` / size / speed. | Ready. Existing grammar covers the common cases; any outliers become flagged partials. |
-| 21 | CSB2 - Feats Batch | ready-for-implementation-after-light-research | none | CSC1 | Author origin feats, epic boons, remaining fighting styles. ~10-15 units. | Ready. FeatMechanics already covers passive + activated patterns. |
-| 22 | CSB3 - Fighter And Rogue Class Features | ready-for-research | none | CSC1 | Research both classes; author ~20 class_feature units. Simplest martial classes; no new widenings expected beyond Sneak Attack dice scaling (already covered). | Ready for research. Lower priority than EPT because Fighter 2 is already covered by the tracer bullet. |
-| 23 | CSB4 - Paladin And Cleric Class Features | ready-for-research | CSB3 | CSC1 | Channel Divinity resource, Lay on Hands pool, Divine Smite (reuses damage atom), Destroy Undead, Aura of Protection. ~25 units. | Blocked on CSB3 to confirm class-feature patterns hold for half-caster martials. |
-| 24 | CSB5 - Barbarian And Monk Class Features | ready-for-research | CSB3 | CSC1 | Rage (state-flag resource — may need widening), Reckless Attack, Martial Arts, Ki/Focus Points, Flurry, Stunning Strike. ~25 units. | Blocked on CSB3. Likely surfaces a "state-flag resource" or "once-per-rage" widening. |
-| 25 | CSB6 - Druid And Ranger Class Features | ready-for-research | CSB5 | CSC1 | Wild Shape (reuses `transform_target`), Favored Enemy, Natural Explorer, druid spell prep. ~20 units. | Blocked on CSB5 for shared resource patterns. |
-| 26 | CSB7 - Wizard And Sorcerer Class Features | ready-for-research | CSB3 | CSC1 | Full spellcasting progression, Arcane Recovery, Font of Magic, Metamagic, Sorcerous Origin. ~25 units. Metamagic is the risky piece — effect-modifier widening. | Blocked on CSB3. Metamagic likely forces a new "spell-effect modifier" surface. |
-| 27 | CSB8 - Warlock And Bard Class Features | ready-for-research | CSB7 | CSC1 | Pact Magic, Eldritch Invocations, Pact Boon, Bardic Inspiration (already uses `UseCountCap.ability_modifier`), Jack of All Trades, Magical Secrets. ~20 units. | Blocked on CSB7 for spellcasting scaffold reuse. |
-| 28 | CSB9 - Magic Items Attunement-Passive Batch | ready-for-implementation-after-light-research | none | CSC1 | 20 attunement-gated passive items (Cloak of Protection family). `PassiveMechanics` + `EquipmentPredicate` already covers this. | Ready. |
-| 29 | CSB10 - Magic Items Charge-Wand Batch | ready-for-implementation-after-light-research | none | CSC1 | 15 charge-pool wands (Wand of Magic Missiles family). `ChargePoolResource` + `grant_spell_access.charge_cast` already covers this. | Ready. |
-| 30 | CSB11 - Magic Items Sentient Cursed Artifact Batch | ready-for-research | CSB9, CSB10 | CSC1 | 10 complex items. Sentience / curse / artifact tiers likely need widenings. | Blocked on CSB9, CSB10. |
-| 31 | CSC1 - Final Mining Pass And Convergence Measurement | blocked | CSA8, CSB1..CSB11 | CSC2 | Finish the isolated auto-close-loop pass, snapshot its weighted-debt / per-cluster telemetry, then run the second exhaustive mining pass against the fully-authored post-Phase-B surface. Regenerate `REPORT_SRD.md`; measure the consecutive-clean streak; confirm zero `surface_widening` or `atom_widening` verdicts outside already-DEFERRED structural carveouts. If not converged, spawn follow-up widening tasks and rerun. | Blocked on all Phase A + Phase B tasks; auto-loop telemetry is now part of the acceptance evidence. |
-| 32 | CSC2 - Surface-v1 Convergence Tag And Handoff Doc | blocked | CSC1 | none | If CSC1 shows convergence: tag the commit as `surface-v1-converged`, write a short handoff doc summarizing the frozen atom vocabulary + authored corpus + known partial carveouts. This no longer gates the tracer-bullet execution path. | Blocked on CSC1. |
-| 33 | CSD1 - Design Content-Driven Execution Architecture | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not pick up unless the owner explicitly revives a post-EPT whole-core rehaul task. | Deferred by owner direction on 2026-04-18. |
-| 34 | CSD2 - Implement Quint-Variant Generator | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Delete or rewrite only if a later post-EPT batch still needs generated Quint variants. | Deferred. |
-| 35 | CSD3 - Inventory Hardcoded Abilities And Migration Plan | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. A new inventory task may be reintroduced later if the tracer bullet proves the path. | Deferred. |
-| 36 | CSD4 - Rehaul Save-Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 37 | CSD5 - Rehaul Attack-Roll Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 38 | CSD6 - Rehaul Ongoing-Effect Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 39 | CSD7 - Rehaul Triggered-Reaction Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 40 | CSD8 - Rehaul Summon/Polymorph Families To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 41 | CSD9 - Rehaul Class Features And Monster Abilities To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 42 | CSD10 - Tier 3 MBT Convergence And Core Hardcode Cleanup | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
-| 43 | CSD11 - End-To-End Demo And Batch Closeout | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 16 | EPT13 - Move Battle Spell Facts To Surface-Owned Inputs | in-progress | EPT12 | EPT14 | Remove remaining hardcoded Unit facts from `battle.qnt` and battle TS helpers by compiling authored units into a shared executable/runtime-facing record shape. Keep authored unit kinds domain-true (`spell`, `class_feature`, monster spellcasting source, item-granted access, etc.), but project component/casting/payload facts into one battle-consumable bundle. Treat save DC, slot availability, chosen targets, and rolled outcomes as actor/runtime facts rather than authored facts. Prefer a single owned Unit-access / executable source over battle-owned `readyableSpellPayloads` caches; if a temporary derived cache remains, mark it as a migration seam only. Re-evaluate `projected-executable.qnt` as a durable small executable IR, not as a second taxonomy that duplicates the surface one-for-one. Include all currently hardcoded Unit lanes in scope (`fireball`, `counterspell`, `shield`, `hellish_rebuke`, `hold_person`, `action_surge`, and similar shipped lanes) so no battle-local hardcoded Unit facts remain. | 2026-04-19: battle-facing TS now uses creature-owned `spellAccesses` as the single owned Spell Access source, and ambiguous multi-access same-spell casts are explicitly quarantined until EPT14 widens token/event identity. Quint now centralizes modeled spell definition facts through one `battleSpellDefinition` seam, but those facts are still hardcoded in Quint and the default caster fixture still names modeled spells directly. Quint may re-express only the modeled subset it needs for traces, invariants, and proofs; that seam is acceptable as a Quint-owned semantic/testing projection, but it must not become an independent general content catalog. Quint must continue to own Quint-facing authored/projection handling; do not generate `.qnt` from TS. |
+| 17 | EPT14 - Generalize Spellcasting Event And Provenance | blocked | EPT13 | EPT9, EPT10, EPT11 | Replace the narrow `CAST_PREPARED_SPELL` seam with a durable spell-casting model that separates event name from spell provenance (`prepared`, item-granted, innate, pact-slot, slotless, stat-block action-granted, etc.) and adds projected spell-slot/resource ownership so slotted spells do not fall through legacy runtime branches. Keep interrupt-window wiring engine-owned where needed, but make `counterspell`, `shield`, and related Unit facts surface/projection-owned rather than hardcoded. When multiple access paths can grant the same spell to one creature, EPT14 must model access identity explicitly enough to avoid silently collapsing distinct provenance/resource paths or generating duplicate slot options/tokens from flattened access lists. | Still blocked on finishing EPT13 on the Quint side and removing the remaining battle-local membership tables. |
+| 18 | EPT15 - Split Engine Primitives From Authored Ability Actions | ready-for-research | EPT12 | EPT11 | Audit `CreatureActionToken` versus `BattleActionToken`, keep universal combat primitives (grapple and similar rules actions) in engine-owned battle vocabulary, and move character ability actions (`Action Surge`, `Rage`, `Uncanny Dodge`, etc.) toward authored/projected handling. Tighten resolver APIs so creature-side resolution cannot even accept battle-scoped tokens. | Ready for research. Independent of the spell-fact work. |
+| 19 | EPT16 - Generalize MCP Battle Participants Schema | ready-for-implementation-after-light-research | EPT11 | none | Replace the demo-era `fighterId` / `monsterId` start-battle schema with a general participant list that can admit multiple characters and monsters without baking role names into the API. Keep initiative and surprise as per-participant inputs rather than fixed-slot fields. | Ready after a short blast-radius check across MCP callers. |
+| 20 | EPT17 - Decode Authored Surface JSON Through Schemas | ready-for-implementation-after-light-research | none | EPT13, EPT14 | Remove `as unknown as SpellRecord/ClassFeatureRecord` JSON boundary casts in projection entry code and decode authored surface JSON through Effect Schema helpers instead, so malformed authored artifacts fail loudly at import boundaries. | Ready. Narrow cleanup with low semantic risk. |
+| 21 | EPT18 - Make Projected Interpreter Transition Construction Total | ready-for-implementation-after-light-research | none | EPT10 | Refactor the projected interpreter away from mutable `.push` assembly so each action branch returns a complete transition list and newly-added projected shapes cannot silently forget to emit required transitions. | Ready. Local cleanup with focused tests. |
+| 22 | EPT19 - Clarify Projection Tests Versus Build-Legality Scope | ready-for-implementation-after-light-research | none | none | Document and, if needed, rename helpers so projection/action-availability tests that use synthetic multiclass contexts are clearly testing runtime legality and not full character-build legality. Remove the current ambiguous FIXME once the scope is explicit in test helpers or comments. | Ready. Tiny cleanup. |
+| 23 | CSA5 - C4e Alter Self Mode Picker And Adjacent Atoms | ready-for-research | none | CSA8 | Pressure case: Alter Self picks one of three modes at cast + can switch mid-duration. Needs effect-mode picker + `natural_weapons` + `water_breathing` atoms. | Ready. RAW text available. Keep below EPT batch priority. |
+| 24 | CSA6 - C4g Object-Target Attachment And True Polymorph Object Modes | ready-for-research | none | CSA8 | Add `Attachment.object` kind; extend `transform_target` to cover object-to-creature and creature-to-object; author the True Polymorph object branches. | Ready. True Polymorph already partial-authored (creature branch only). |
+| 25 | CSA7 - Shapechange Multi-Type Filter And Form Switch | ready-for-research | CSA6 | CSA8 | Widen `PolymorphFormSource.creatureTypeFilter` to support "any except X"; add `Duration.concentration.allowsFormSwitchAs: "magic_action"`; author Shapechange. | Blocked on CSA6 for shared PolymorphFormSource shape review. |
+| 26 | CSA8 - Convergence Checkpoint A | blocked | CSA4, CSA5, CSA6, CSA7 | CSB1..CSB11, CSC1 | Run the isolated auto-close loop against the remaining widening queue; use its weighted-debt history, failed-attempt log, and per-batch reruns to prove the remaining pressure is collapsing. Convergence declared for Phase A when the loop shows sustained downward weighted debt and the follow-up authoring streak resumes without new widenings. | Blocked on upstream widenings, but now measured by the auto loop rather than a manual random sample. |
+| 27 | CSB1 - Species Traits Batch | ready-for-implementation-after-light-research | none | CSC1 | Author the 17 SRD 5.2.1 species traits (Dragonborn, Elf, Dwarf, Halfling, etc.); most are `grant_sense` / `grant_resistance` / size / speed. | Ready. Existing grammar covers the common cases; any outliers become flagged partials. |
+| 28 | CSB2 - Feats Batch | ready-for-implementation-after-light-research | none | CSC1 | Author origin feats, epic boons, remaining fighting styles. ~10-15 units. | Ready. FeatMechanics already covers passive + activated patterns. |
+| 29 | CSB3 - Fighter And Rogue Class Features | ready-for-research | none | CSC1 | Research both classes; author ~20 class_feature units. Simplest martial classes; no new widenings expected beyond Sneak Attack dice scaling (already covered). | Ready for research. Lower priority than EPT because Fighter 2 is already covered by the tracer bullet. |
+| 30 | CSB4 - Paladin And Cleric Class Features | ready-for-research | CSB3 | CSC1 | Channel Divinity resource, Lay on Hands pool, Divine Smite (reuses damage atom), Destroy Undead, Aura of Protection. ~25 units. | Blocked on CSB3 to confirm class-feature patterns hold for half-caster martials. |
+| 31 | CSB5 - Barbarian And Monk Class Features | ready-for-research | CSB3 | CSC1 | Rage (state-flag resource — may need widening), Reckless Attack, Martial Arts, Ki/Focus Points, Flurry, Stunning Strike. ~25 units. | Blocked on CSB3. Likely surfaces a "state-flag resource" or "once-per-rage" widening. |
+| 32 | CSB6 - Druid And Ranger Class Features | ready-for-research | CSB5 | CSC1 | Wild Shape (reuses `transform_target`), Favored Enemy, Natural Explorer, druid spell prep. ~20 units. | Blocked on CSB5 for shared resource patterns. |
+| 33 | CSB7 - Wizard And Sorcerer Class Features | ready-for-research | CSB3 | CSC1 | Full spellcasting progression, Arcane Recovery, Font of Magic, Metamagic, Sorcerous Origin. ~25 units. Metamagic is the risky piece — effect-modifier widening. | Blocked on CSB3. Metamagic likely forces a new "spell-effect modifier" surface. |
+| 34 | CSB8 - Warlock And Bard Class Features | ready-for-research | CSB7 | CSC1 | Pact Magic, Eldritch Invocations, Pact Boon, Bardic Inspiration (already uses `UseCountCap.ability_modifier`), Jack of All Trades, Magical Secrets. ~20 units. | Blocked on CSB7 for spellcasting scaffold reuse. |
+| 35 | CSB9 - Magic Items Attunement-Passive Batch | ready-for-implementation-after-light-research | none | CSC1 | 20 attunement-gated passive items (Cloak of Protection family). `PassiveMechanics` + `EquipmentPredicate` already covers this. | Ready. |
+| 36 | CSB10 - Magic Items Charge-Wand Batch | ready-for-implementation-after-light-research | none | CSC1 | 15 charge-pool wands (Wand of Magic Missiles family). `ChargePoolResource` + `grant_spell_access.charge_cast` already covers this. | Ready. |
+| 37 | CSB11 - Magic Items Sentient Cursed Artifact Batch | ready-for-research | CSB9, CSB10 | CSC1 | 10 complex items. Sentience / curse / artifact tiers likely need widenings. | Blocked on CSB9, CSB10. |
+| 38 | CSC1 - Final Mining Pass And Convergence Measurement | blocked | CSA8, CSB1..CSB11 | CSC2 | Finish the isolated auto-close-loop pass, snapshot its weighted-debt / per-cluster telemetry, then run the second exhaustive mining pass against the fully-authored post-Phase-B surface. Regenerate `REPORT_SRD.md`; measure the consecutive-clean streak; confirm zero `surface_widening` or `atom_widening` verdicts outside already-DEFERRED structural carveouts. If not converged, spawn follow-up widening tasks and rerun. | Blocked on all Phase A + Phase B tasks; auto-loop telemetry is now part of the acceptance evidence. |
+| 39 | CSC2 - Surface-v1 Convergence Tag And Handoff Doc | blocked | CSC1 | none | If CSC1 shows convergence: tag the commit as `surface-v1-converged`, write a short handoff doc summarizing the frozen atom vocabulary + authored corpus + known partial carveouts. This no longer gates the tracer-bullet execution path. | Blocked on CSC1. |
+| 40 | CSD1 - Design Content-Driven Execution Architecture | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not pick up unless the owner explicitly revives a post-EPT whole-core rehaul task. | Deferred by owner direction on 2026-04-18. |
+| 41 | CSD2 - Implement Quint-Variant Generator | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Delete or rewrite only if a later post-EPT batch still needs generated Quint variants. | Deferred. |
+| 42 | CSD3 - Inventory Hardcoded Abilities And Migration Plan | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. A new inventory task may be reintroduced later if the tracer bullet proves the path. | Deferred. |
+| 43 | CSD4 - Rehaul Save-Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 44 | CSD5 - Rehaul Attack-Roll Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 45 | CSD6 - Rehaul Ongoing-Effect Spell Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 46 | CSD7 - Rehaul Triggered-Reaction Family To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 47 | CSD8 - Rehaul Summon/Polymorph Families To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 48 | CSD9 - Rehaul Class Features And Monster Abilities To Content-Driven | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 49 | CSD10 - Tier 3 MBT Convergence And Core Hardcode Cleanup | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+| 50 | CSD11 - End-To-End Demo And Batch Closeout | deferred | none | none | Superseded by the narrower executable-projection tracer-bullet batch. Do not execute as written. | Deferred. |
+
+## EPT13 Research Resolution
+
+Date: 2026-04-19
+
+This note records the queue-shaping research for `EPT13` and the scope split into
+`EPT14`.
+
+Key decision:
+
+- keep one shared executable/runtime-facing projection path for Units when they
+  share execution semantics
+- keep authored Unit kinds source-preserving and domain-true rather than
+  collapsing everything into one spell-only or ability-only bucket
+- do not let battle own duplicated spell catalog facts
+
+Spell facts now classified:
+
+- authored / projected facts:
+  - casting-time class
+  - component requirements
+  - base slot level or slotless-ness
+  - executable delivery/resolution payload
+  - spell-specific lifecycle / reaction facts
+- actor-owned runtime facts:
+  - current save DC
+  - available slots / pact slots / other spendable resources
+  - chosen targets / chosen point in area
+  - save outcomes, attack outcomes, damage/heal rolls
+- true engine primitives:
+  - interrupt-window sequencing
+  - action/bonus-action/reaction timing windows
+  - concentration ownership / battle turn-flow mechanics
+
+Implementation direction frozen by this research:
+
+- `battle.qnt` and TS battle helpers should stop hardcoding per-Unit component,
+  level, damage, save-ability, and fail-condition facts
+- battle should consume one owned Unit-access / executable source rather than a
+  second independent `readyableSpellPayloads` fact store
+- if an interim cache is kept for migration simplicity, it must be explicitly
+  derived from the single owned source and commented as temporary
+- `projected-executable.qnt` remains in scope only if it stays a small
+  executable IR shared across Units; it should not turn into a duplicate of the
+  surface taxonomy
+- monster spellcasting and character spellcasting should converge on the same
+  execution-facing spell bundle shape wherever battle does not need a RAW-backed
+  distinction
+
+Task-boundary consequence:
+
+- `EPT13` owns moving Unit facts to surface/projection ownership, including
+  `counterspell`, `shield`, and other currently hardcoded Unit fact lanes
+- `EPT14` owns the cast-event/provenance/resource-path generalization after the
+  spell facts themselves stop being hardcoded
 
 ## Current Integrated Baseline
 

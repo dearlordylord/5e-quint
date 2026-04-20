@@ -1,3 +1,19 @@
+/**
+ * Compiler from authored unit definitions to execution projections.
+ *
+ * Responsibility split:
+ * - authored unit definition: rich content-surface truth, including fields
+ *   needed for authoring fidelity, provenance, validation, and future width
+ * - execution projection: smaller runtime-facing IR used only for promoted
+ *   executable/persistent semantics
+ * - runtime invocation: targets, chosen slot level or equivalent spend,
+ *   save/attack outcomes, and rolled amounts
+ * - spell/feature effect state: battle-owned live state after application
+ *
+ * This compiler is intentionally a narrowing step. Unsupported authored shapes
+ * fail closed here instead of leaking partially-handled surface language into
+ * runtime reducers.
+ */
 import { Match } from "effect";
 
 import type {

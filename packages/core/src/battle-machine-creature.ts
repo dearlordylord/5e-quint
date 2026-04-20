@@ -4,6 +4,10 @@
  */
 import { Match, Option } from "effect";
 
+import {
+  legacyBattleSpellAccessViews,
+  preparedBattleSpellAccess,
+} from "#/battle-spell-access.ts";
 import type {
   BattleCreatureState,
   CreatureId,
@@ -28,8 +32,7 @@ import type {
   QualifiedPhysicalBypass,
   SpellId,
 } from "#/types.ts";
-import { armorClass, resourceCount, spellId } from "#/types.ts";
-import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
+import { armorClass, difficultyClass, resourceCount, spellId } from "#/types.ts";
 
 function activeEffectId(effect: ActiveEffect): string {
   return effect.spellId;
@@ -936,10 +939,19 @@ const CASTER_PREPARED_SPELLS: ReadonlySet<SpellId> = new Set(
   ].map(spellId),
 );
 
+const CASTER_SPELL_ACCESSES = [...CASTER_PREPARED_SPELLS].map((currentSpellId) =>
+  preparedBattleSpellAccess({
+    spellId: currentSpellId,
+    spellSaveDC: difficultyClass(13),
+  }),
+);
+
 export function freshCreature(
   maxHp: number,
   kind: CreatureKind,
 ): BattleCreatureState {
+  const spellAccesses = [] as const;
+  const spellAccessViews = legacyBattleSpellAccessViews(spellAccesses);
   return {
     hp: maxHp,
     maxHp,
@@ -991,8 +1003,10 @@ export function freshCreature(
     monkLevel: 0,
     strMod: 0,
     dexMod: 0,
-    preparedSpells: new Set(),
-    readyableSpellPayloads: new Map(),
+    spellAccesses,
+    preparedSpells: spellAccessViews.preparedSpells,
+    spellSaveDCs: spellAccessViews.spellSaveDCs,
+    spellCastLevels: spellAccessViews.spellCastLevels,
     hasEvasion: false,
     saveMiscBonus: 0,
     saveAdvantageContexts: new Set(),
@@ -1035,14 +1049,14 @@ export function freshCaster(
   maxHp: number,
   kind: CreatureKind,
 ): BattleCreatureState {
+  const spellAccessViews = legacyBattleSpellAccessViews(CASTER_SPELL_ACCESSES);
   return {
     ...freshCreature(maxHp, kind),
     slotsMax: CASTER_SLOTS,
     slotsCurrent: CASTER_SLOTS,
-    preparedSpells: CASTER_PREPARED_SPELLS,
-    readyableSpellPayloads: battleReadyableSpellPayloadsFromPreparedSpells(
-      CASTER_PREPARED_SPELLS,
-      CASTER_SLOTS,
-    ),
+    spellAccesses: CASTER_SPELL_ACCESSES,
+    preparedSpells: spellAccessViews.preparedSpells,
+    spellSaveDCs: spellAccessViews.spellSaveDCs,
+    spellCastLevels: spellAccessViews.spellCastLevels,
   };
 }

@@ -11,8 +11,8 @@ import type {
   PendingInterrupt,
   TriggerType,
 } from "#/battle-machine-events.ts";
-import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
+import type { BattleSpellAccess } from "#/battle-spell-access.ts";
 import type {
   MonsterResourceState,
   MonsterBattleBonusActionOption,
@@ -116,13 +116,14 @@ export interface BattleCreatureState extends Pick<
   // Static combatant modifiers owned by battle when battle-resolved rules need them.
   readonly strMod: number;
   readonly dexMod: number;
-  // Prepared spells (for CS eligibility)
+  // Spell access fact: creature-owned permission/resource path for each spell.
+  readonly spellAccesses: ReadonlyArray<BattleSpellAccess>;
+  // Temporary derived compatibility mirrors. Single owned source is
+  // `spellAccesses`; these must stay derived-only and should be removed after
+  // EPT13 callers stop depending on them.
   readonly preparedSpells: ReadonlySet<SpellId>;
-  // Battle-owned payload facts for readyable action-casting-time spells.
-  readonly readyableSpellPayloads: ReadonlyMap<
-    SpellId,
-    BattleReadyableSpellPayload
-  >;
+  readonly spellSaveDCs: ReadonlyMap<SpellId, DifficultyClass>;
+  readonly spellCastLevels: ReadonlyMap<SpellId, SpellSlotLevel>;
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
   readonly hasEvasion: boolean;
   // Misc save bonus (Paladin Aura, Ring of Protection, etc.)

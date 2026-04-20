@@ -60,7 +60,7 @@ import {
   WARRIOR_INFANTRY,
   WARRIOR_VETERAN,
 } from "#/monster-catalog.ts";
-import { CreatureId, abilityModifier, spellId } from "#/types.ts";
+import { CreatureId, abilityModifier, spellId, spellSlotLevel } from "#/types.ts";
 
 describe("monster catalog", () => {
   it("documents the core-owned SRD provenance rules", () => {
@@ -835,23 +835,20 @@ describe("monster catalog", () => {
       statBlockId: "mage",
     });
 
-    expect(config.preparedSpells).toEqual(new Set(["fireball"]));
+    expect(config.spellAccesses).toEqual([
+      {
+        tag: "statBlockActionGranted",
+        spellId: spellId("fireball"),
+        spellSaveDC: 14,
+        resourcePath: {
+          kind: "dailyUse",
+          usageId: monsterSpellDailyUseId(spellId("fireball")),
+          fixedCastLevel: spellSlotLevel(4),
+        },
+      },
+    ]);
     expect(config.dailyUsesRemaining).toMatchObject({
       [monsterSpellDailyUseId(spellId("fireball"))]: 2,
-    });
-    expect(config.readyableSpellPayloads?.get(spellId("fireball"))).toEqual({
-      baseLevel: 3,
-      slotLevel: 4,
-      release: {
-        kind: "save",
-        saveAbility: "dex",
-        saveDC: 14,
-        halfOnSuccess: true,
-        damageType: "fire",
-        damageOnFail: 54,
-        conditionOnFail: "blinded",
-        applyCondition: false,
-      },
     });
   });
 

@@ -1,5 +1,5 @@
-import type { BattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
+import type { BattleSpellAccess } from "#/battle-spell-access.ts";
 import type {
   MonsterBattleBonusActionOption,
   MonsterBattleReactionOption,
@@ -11,9 +11,11 @@ import type {
   BattleWeaponProfile,
   CreatureId,
   CreatureKind,
+  DifficultyClass,
   QualifiedPhysicalBypass,
   Size,
   SpellId,
+  SpellSlotLevel,
 } from "#/types.ts";
 import type { BattlePosition } from "#/battle-machine-types.ts";
 
@@ -40,11 +42,14 @@ export interface InitCreatureConfig {
   readonly rechargeAvailable?: Readonly<Record<string, boolean>>;
   readonly rechargeMinRolls?: Readonly<Record<string, number>>;
   readonly dailyUsesRemaining?: Readonly<Record<string, number>>;
+  // Spell access fact: creature-owned permission/resource path for this spell.
+  readonly spellAccesses?: ReadonlyArray<BattleSpellAccess>;
+  // Temporary migration seam: callers may still pass split spell-access pieces
+  // until all battle-init paths construct `spellAccesses` directly. These are
+  // derived compatibility inputs, not a second owned source.
   readonly preparedSpells?: ReadonlySet<string>;
-  readonly readyableSpellPayloads?: ReadonlyMap<
-    SpellId,
-    BattleReadyableSpellPayload
-  >;
+  readonly spellSaveDCs?: ReadonlyMap<SpellId, DifficultyClass>;
+  readonly spellCastLevels?: ReadonlyMap<SpellId, SpellSlotLevel>;
   readonly slotsMax?: ReadonlyArray<number>;
   readonly slotsCurrent?: ReadonlyArray<number>;
   readonly pactSlotsMax?: number;

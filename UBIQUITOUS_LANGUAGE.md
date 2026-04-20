@@ -192,6 +192,26 @@ This table is a support-layer projection of the SRD condition text. Quint remain
 | **Ritual**          | A spell cast with 10 extra minutes of casting time, without expending a spell slot; requires a feature that allows ritual casting                                                                                                   | —                                                  |
 | **Spell Component** | A physical requirement to cast a spell: Verbal (V) = spoken words; Somatic (S) = gestures, requires a free hand; Material (M) = specific objects, replaceable by a focus unless the component has a cost                            | Ingredient (only partially overlaps with Material) |
 
+### Spell Ownership Terms
+
+Use the narrower term whenever the distinction matters. Avoid using `spell`
+alone for multiple different ownership layers in the same discussion.
+
+| Term | Definition | Aliases to avoid |
+| ---- | ---------- | ---------------- |
+| **Spell Definition** | The static authored rules content for a spell: printed/mechanical facts such as level, components, casting time, and modeled execution payload | Spell (too broad) |
+| **Spell Access** | A creature-owned relationship to a spell definition: prepared, always prepared, innate, item-granted, stat-block action-granted, pact-magic access, and similar paths | Known spell, owned spell (too ambiguous) |
+| **Spell Invocation** | One concrete cast attempt at runtime: chosen slot level or equivalent spend, chosen targets or point, applied save DC, and rolled outcomes | Cast (too broad when effect/state is also in play) |
+| **Spell Effect** | Battle/runtime state created or carried by a spell: concentration ownership, active effects, readied-spell state, interrupt-stack entries, and similar execution artifacts | Spell (too broad), buff (too narrow) |
+
+Ownership guideline:
+
+- spell definitions are authored/static
+- spell access is creature-owned
+- spell invocations are runtime-owned
+- spell effects are battle/execution-owned
+
+
 ### Hand Occupancy Terminology
 
 Use SRD terms in rules-facing prose:
@@ -265,7 +285,7 @@ Avoid these as domain-language terms because the SRD does not define them:
 | Term                      | Definition                                                                                                                                                                                                                                                                                                                                                                                               | Aliases to avoid                                                                                                          |
 | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **Creature**              | Any being in the game — PCs, monsters, NPCs, summoned entities. All combat rules are written in terms of creatures ("the creature's AC", "the creature has resistance to..."). The universal participant type in combat; both characters and monsters are creatures.                                                                                                                                     | Character (too narrow — only PCs), monster (too narrow — only non-PCs)                                                    |
-| **Stat Block**            | A rules record containing all game statistics of a **monster**: Size, Creature Type, AC, Initiative, HP (with Hit Dice), Speed, Ability Scores, Saving Throws, Skills, Resistances, Vulnerabilities, Immunities, Senses, Languages, CR, Traits, Actions, Bonus Actions, Reactions, and (for powerful monsters) Legendary Actions. Stat blocks are for monsters only — PCs use a Character Sheet instead. | Character sheet (different concept for PCs)                                                                               |
+| **Stat Block**            | A rules record containing all game statistics of a **monster**: Size, Creature Type, AC, Initiative, HP (with Hit Dice), Speed, Ability Scores, Saving Throws, Skills, Resistances, Vulnerabilities, Immunities, Senses, Languages, CR, Traits, Actions, Bonus Actions, Reactions, and (for powerful monsters) Legendary Actions. In SRD terms, **monster** means any GM-controlled creature, even if benevolent; it can be an NPC, friendly, hostile, humanoid, beast, dragon, and so on. Stat blocks are therefore for monsters in the SRD sense, not just enemies. PCs use a Character Sheet instead. | Character sheet (different concept for PCs)                                                                               |
 | **Character Sheet**       | A record tracking a player character's information — derived from class, level, species, background, equipment, and features. Produces the same creature-level combat statistics (AC, HP, Speed, etc.) that a Stat Block provides for monsters, but through a derivation process rather than direct authoring.                                                                                           | Stat block (stat blocks are for monsters)                                                                                 |
 | **Creature Type**         | The family of beings a monster belongs to: Aberration, Beast, Celestial, Construct, Dragon, Elemental, Fey, Fiend, Giant, Humanoid, Monstrosity, Ooze, Plant, or Undead. Appears in monster stat blocks. PCs are Humanoid by default.                                                                                                                                                                    | Race (different concept — Species is the PC equivalent)                                                                   |
 | **Challenge Rating (CR)** | A monster-specific rating (0 to 30) indicating the monster's threat level; determines the monster's Proficiency Bonus and XP reward. PCs do not have CR — their Proficiency Bonus is derived from level.                                                                                                                                                                                                 | Level (CR and character level are distinct concepts)                                                                      |
@@ -306,6 +326,7 @@ Avoid these as domain-language terms because the SRD does not define them:
 - **Unarmored Defense** replaces the default **AC** formula; a creature can only benefit from one source of **Unarmored Defense**.
 - A **Stat Block** and a **Character Sheet** both produce creature-level combat statistics (AC, HP, Speed, Ability Scores, damage modifiers, etc.). Combat rules reference these as **creature** properties — they never distinguish between PC-derived and monster-authored values. A monster's **Stat Block** is authored directly; a PC's equivalent is derived from **Class**, level, species, and equipment via the **Character Sheet**.
 - **Legendary Actions**, **Recharge** abilities, and **Creature Type** are **Stat Block**-only concepts — PCs do not have them. Conversely, **Class**, level, **Hit Dice** recovery, and **Ability Score Improvement** are **Character Sheet**-only concepts — monsters do not have them.
+- In SRD language, **monster** does not mean hostile, non-NPC, or non-humanoid. A friendly named humanoid controlled by the GM is still a **monster** and therefore still uses a **Stat Block** rather than a **Character Sheet**.
 
 ## Example dialogue
 

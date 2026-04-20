@@ -5,6 +5,13 @@ import {
   resolveAttack,
 } from "#/battle-machine-actions-attack.ts";
 import {
+  battleSpellAccessesForSpell,
+  legacyBattleSpellAccessViews,
+  preparedBattleSpellAccess,
+  statBlockActionGrantedBattleSpellAccess,
+  type BattleSpellAccess,
+} from "#/battle-spell-access.ts";
+import {
   battleExpendSlot,
   battleHasFreeHand,
   deriveBattleHandUses,
@@ -59,7 +66,6 @@ import {
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
 import { applyProjectedBattleActionSurge } from "#/projected-battle-action-reducer.ts";
-import { battleReadyableSpellPayloadsFromPreparedSpells } from "#/features/spell-available-actions.ts";
 import {
   getSpellRecordStrict,
   resolveBattleReadyableSpellPayload,
@@ -72,6 +78,7 @@ import {
 } from "#/machine-combat.ts";
 import {
   getMonsterStatBlockByStateId,
+  monsterSpellDailyUseId,
   statBlockLegendaryAction,
   statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
@@ -123,6 +130,46 @@ function canonicalPreparedSpellIds(
   );
 }
 
+function deriveBattleSpellAccesses(params: {
+  readonly cfg: InitCreatureConfig;
+  readonly base: BattleCreatureState;
+}): ReadonlyArray<BattleSpellAccess> {
+  if (params.cfg.spellAccesses != null) return params.cfg.spellAccesses;
+  const preparedSpells =
+    params.cfg.preparedSpells == null
+      ? params.base.preparedSpells
+      : canonicalPreparedSpellIds(params.cfg.preparedSpells);
+  return [...preparedSpells].map((currentSpellId) => {
+    const saveDC =
+      params.cfg.spellSaveDCs?.get(currentSpellId) ??
+      params.base.spellSaveDCs.get(currentSpellId) ??
+      // Temporary migration seam: raw battle fixtures that only provide legacy
+      // prepared-spell inputs still get a stable access-scoped DC until every
+      // caller builds spell access directly.
+      difficultyClass(13);
+    const fixedCastLevel =
+      params.cfg.spellCastLevels?.get(currentSpellId) ??
+      params.base.spellCastLevels.get(currentSpellId);
+    const dailyUseId =
+      (params.cfg.dailyUsesRemaining ?? {})[
+        monsterSpellDailyUseId(currentSpellId)
+      ] != null
+        ? monsterSpellDailyUseId(currentSpellId)
+        : undefined;
+    return fixedCastLevel != null && dailyUseId != null
+      ? statBlockActionGrantedBattleSpellAccess({
+          spellId: currentSpellId,
+          spellSaveDC: saveDC,
+          usageId: dailyUseId,
+          fixedCastLevel,
+        })
+      : preparedBattleSpellAccess({
+          spellId: currentSpellId,
+          spellSaveDC: saveDC,
+        });
+  });
+}
+
 /** Check for ready-eligible creatures, enter ready window or advance turn. */
 function readyWindowOrAdvance(
   cs: ReadonlyMap<CreatureId, BattleCreatureState>,
@@ -172,10 +219,9 @@ export function buildCreatureState(
     hasShieldEquipped: cfg.hasShieldEquipped ?? false,
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
-  const preparedSpells =
-    cfg.preparedSpells == null
-      ? base.preparedSpells
-      : canonicalPreparedSpellIds(cfg.preparedSpells);
+  const spellAccesses = deriveBattleSpellAccesses({ cfg, base });
+  const spellAccessViews = legacyBattleSpellAccessViews(spellAccesses);
+  const preparedSpells = spellAccessViews.preparedSpells;
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   const isWearingArmor = cfg.isWearingArmor ?? base.isWearingArmor;
@@ -230,6 +276,7 @@ export function buildCreatureState(
     ...(cfg.dailyUsesRemaining != null
       ? { dailyUsesRemaining: cfg.dailyUsesRemaining }
       : {}),
+    spellAccesses,
     preparedSpells,
     slotsMax,
     slotsCurrent,
@@ -238,12 +285,8 @@ export function buildCreatureState(
       ? { pactSlotsCurrent: cfg.pactSlotsCurrent }
       : {}),
     ...(cfg.pactSlotLevel != null ? { pactSlotLevel: cfg.pactSlotLevel } : {}),
-    readyableSpellPayloads:
-      cfg.readyableSpellPayloads ??
-      battleReadyableSpellPayloadsFromPreparedSpells(
-        preparedSpells,
-        slotsCurrent,
-      ),
+    spellSaveDCs: spellAccessViews.spellSaveDCs,
+    spellCastLevels: spellAccessViews.spellCastLevels,
     ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
     ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
     ...(cfg.saveAdvantageContexts != null
@@ -1427,30 +1470,15 @@ export function battleReadySpell({
     ac.slotExpendedThisTurn
   )
     return {};
-  if (ac.preparedSpells.size === 0) return {};
-  const readyableDefinition = ac.readyableSpellPayloads.get(
+  const access = battleSpellAccessesForSpell(
+    ac.spellAccesses,
     mkSpellId(e.spellName),
-  );
+  )[0];
+  if (access == null) return {};
   const readyablePayload = resolveBattleReadyableSpellPayload(
     e.spellName,
     e.slotLvl,
-    e.saveDC,
-    readyableDefinition == null
-      ? undefined
-      : {
-          baseLevel: readyableDefinition.baseLevel,
-          slotLevel: e.slotLvl,
-          release: {
-            kind: "save",
-            saveAbility: e.saveAbility,
-            saveDC: e.saveDC,
-            halfOnSuccess: e.halfOnSave,
-            damageType: e.dt,
-            damageOnFail: e.dmgOnFail,
-            conditionOnFail: e.cond,
-            applyCondition: e.applyCond,
-          },
-        },
+    access.spellSaveDC,
   );
   if (readyablePayload == null) return {};
   if (e.slotLvl !== readyablePayload.slotLevel) return {};
@@ -1471,13 +1499,13 @@ export function battleReadySpell({
     readiedSpellParams: {
       caster: id,
       target: e.targetId,
-      saveDC: e.saveDC,
-      damageOnFail: e.dmgOnFail,
-      halfOnSuccess: e.halfOnSave,
-      damageType: e.dt,
-      conditionOnFail: e.cond,
-      applyCondition: e.applyCond,
-      saveAbility: e.saveAbility,
+      saveDC: readyablePayload.release.saveDC,
+      damageOnFail: readyablePayload.release.damageOnFail,
+      halfOnSuccess: readyablePayload.release.halfOnSuccess,
+      damageType: readyablePayload.release.damageType,
+      conditionOnFail: readyablePayload.release.conditionOnFail,
+      applyCondition: readyablePayload.release.applyCondition,
+      saveAbility: readyablePayload.release.saveAbility,
       spellName: e.spellName,
       slotLvl: e.slotLvl,
     },

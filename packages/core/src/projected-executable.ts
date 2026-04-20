@@ -1,3 +1,27 @@
+/**
+ * Execution projection vocabulary.
+ *
+ * This is not a fifth ownership layer alongside spell definition, spell
+ * access, spell invocation, and spell effect.
+ *
+ * Instead, it is a compiled execution-facing view of a unit definition
+ * (spell definition, class feature definition, and similar authored units).
+ *
+ * Why this exists:
+ * - runtime does not need every authored field to execute a promoted unit
+ * - the compiler can fail closed on unsupported authored shapes
+ * - TS and Quint can share a smaller execution contract than the full surface
+ *
+ * Why this is not just "parse the useful fields":
+ * - simply decoding a subset still leaves runtime coupled to the authored
+ *   surface vocabulary and family structure
+ * - this layer intentionally normalizes multiple authored unit kinds into one
+ *   smaller execution IR where their execution semantics align
+ *
+ * If this file ever becomes a parallel taxonomy that mostly mirrors the full
+ * authored surface, delete it and consume the authored execution surface
+ * directly instead.
+ */
 import type { Ability, DamageType } from "#/types.ts";
 
 export const PROJECTED_UNIT_KINDS = [

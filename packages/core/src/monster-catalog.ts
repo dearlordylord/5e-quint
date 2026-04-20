@@ -1,5 +1,6 @@
 import { Match } from "effect";
 
+import { statBlockActionGrantedBattleSpellAccess } from "#/battle-spell-access.ts";
 import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import {
@@ -179,8 +180,10 @@ function parseMonsterSpellDailyUses(usage: string): number | null {
 
 function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
   const dailyUsesRemaining: Record<string, number> = {};
-  const preparedSpells = new Set<string>();
-  const readyableSpellPayloads = new Map();
+  // Spell access facts: creature-owned stat-block action-granted paths
+  // projected from the stat block. Spell definitions remain in authored spell
+  // records.
+  const spellAccesses = [];
 
   for (const action of statBlock.actions) {
     if (action.kind !== "spellcasting" || action.saveDc == null) continue;
@@ -198,17 +201,22 @@ function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
         difficultyClass(action.saveDc),
       );
       if (payload == null) continue;
-      preparedSpells.add(String(spell.spellId));
-      readyableSpellPayloads.set(makeSpellId(String(spell.spellId)), payload);
-      dailyUsesRemaining[monsterSpellDailyUseId(spell.spellId)] = dailyUses;
+      const currentSpellId = makeSpellId(String(spell.spellId));
+      const usageId = monsterSpellDailyUseId(spell.spellId);
+      spellAccesses.push(
+        statBlockActionGrantedBattleSpellAccess({
+          spellId: currentSpellId,
+          spellSaveDC: payload.release.saveDC,
+          usageId,
+          fixedCastLevel: payload.slotLevel,
+        }),
+      );
+      dailyUsesRemaining[usageId] = dailyUses;
     }
   }
 
   return {
-    preparedSpells:
-      preparedSpells.size > 0 ? new Set(preparedSpells) : undefined,
-    readyableSpellPayloads:
-      readyableSpellPayloads.size > 0 ? readyableSpellPayloads : undefined,
+    spellAccesses: spellAccesses.length > 0 ? spellAccesses : undefined,
     dailyUsesRemaining:
       Object.keys(dailyUsesRemaining).length > 0
         ? dailyUsesRemaining
@@ -219,11 +227,10 @@ function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
 export function statBlockProjectedBattleReadyableMonsterSpells(
   statBlock: StatBlock,
 ): ReadonlySet<SpellId> {
-  const projected =
-    statBlockModeledActionSpellcasting(statBlock).preparedSpells;
+  const projected = statBlockModeledActionSpellcasting(statBlock).spellAccesses;
   return projected == null
     ? new Set()
-    : new Set([...projected].map((spellRef) => makeSpellId(spellRef)));
+    : new Set(projected.map((access) => access.spellId));
 }
 
 /**
@@ -374,14 +381,8 @@ export function statBlockToInitCreatureConfig(params: {
       ...(modeledActionSpellcasting.dailyUsesRemaining ?? {}),
     },
     rechargeMinRolls: statBlockRechargeMinRolls(params.statBlock),
-    ...(modeledActionSpellcasting.preparedSpells != null
-      ? { preparedSpells: modeledActionSpellcasting.preparedSpells }
-      : {}),
-    ...(modeledActionSpellcasting.readyableSpellPayloads != null
-      ? {
-          readyableSpellPayloads:
-            modeledActionSpellcasting.readyableSpellPayloads,
-        }
+    ...(modeledActionSpellcasting.spellAccesses != null
+      ? { spellAccesses: modeledActionSpellcasting.spellAccesses }
       : {}),
     ...(saveAdvantageContexts.size > 0 ? { saveAdvantageContexts } : {}),
     baseWalkSpeed: params.statBlock.speeds.walk,
