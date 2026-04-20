@@ -10,6 +10,7 @@ import {
   getAvailableBattleActions,
   previewAction,
   previewBattleAction,
+  resolveAuthoredBattleAction,
   resolveBattleAction,
   resolveAction,
   TableEventCommandSchema,
@@ -3011,6 +3012,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_DISENGAGE",
+          activation: "action",
           cost: cost(quota("action")),
           outcome: {
             summary:
@@ -3751,9 +3753,9 @@ describe("available actions contract", () => {
     expect(getAvailableBattleActions(context)).toEqual(
       expect.arrayContaining([
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_ACTION_SURGE",
+          type: "USE_ACTION_SURGE",
           cost: cost(pool("actionSurge")),
           outcome: {
             summary:
@@ -3761,9 +3763,9 @@ describe("available actions contract", () => {
           },
         },
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_ENTER_RAGE",
+          type: "ENTER_RAGE",
           cost: cost(quota("bonusAction"), pool("rage")),
           outcome: {
             summary:
@@ -3771,9 +3773,9 @@ describe("available actions contract", () => {
           },
         },
         {
-          scope: "battle",
+          scope: "authoredBattle",
           actorId: "A",
-          type: "BATTLE_DECLARE_RECKLESS",
+          type: "DECLARE_RECKLESS",
           cost: cost(),
           outcome: { summary: "Declare Reckless Attack for this turn" },
         },
@@ -3781,13 +3783,17 @@ describe("available actions contract", () => {
     );
 
     expect(
-      resolveBattleAction(context, {
-        scope: "battle",
+      resolveAuthoredBattleAction(context, {
+        scope: "authoredBattle",
         actorId: "A",
-        type: "BATTLE_ACTION_SURGE",
+        type: "USE_ACTION_SURGE",
       }),
     ).toEqual({
-      token: { scope: "battle", actorId: "A", type: "BATTLE_ACTION_SURGE" },
+      token: {
+        scope: "authoredBattle",
+        actorId: "A",
+        type: "USE_ACTION_SURGE",
+      },
       outcome:
         "Expend one Action Surge use to gain one additional non-Magic action this turn",
       runtime: "none",
@@ -3795,9 +3801,9 @@ describe("available actions contract", () => {
     });
     expect(
       previewBattleAction(context, {
-        scope: "battle",
+        scope: "authoredBattle",
         actorId: "A",
-        type: "BATTLE_ENTER_RAGE",
+        type: "ENTER_RAGE",
       }),
     ).toEqual({
       ok: true,
@@ -3821,9 +3827,9 @@ describe("available actions contract", () => {
       ),
     ).not.toEqual(
       expect.arrayContaining([
-        "BATTLE_ACTION_SURGE",
-        "BATTLE_ENTER_RAGE",
-        "BATTLE_DECLARE_RECKLESS",
+        "USE_ACTION_SURGE",
+        "ENTER_RAGE",
+        "DECLARE_RECKLESS",
       ]),
     );
   });
@@ -3842,7 +3848,7 @@ describe("available actions contract", () => {
       getAvailableBattleActions({ ...context, creatures }).map(
         (token) => token.type,
       ),
-    ).not.toContain("BATTLE_ENTER_RAGE");
+    ).not.toContain("ENTER_RAGE");
   });
 
   test("battle discovery hides BATTLE_DECLARE_RECKLESS after the first attack", () => {
@@ -3864,7 +3870,7 @@ describe("available actions contract", () => {
       getAvailableBattleActions(actor.getSnapshot().context).map(
         (token) => token.type,
       ),
-    ).not.toContain("BATTLE_DECLARE_RECKLESS");
+    ).not.toContain("DECLARE_RECKLESS");
   });
 
   test("battle discovery and resolution expose grapple with explicit save outcome", () => {
@@ -4121,6 +4127,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_HIDE",
+        activation: "action",
         stealthTotal: 35,
         hasCoverOrObscurement: true,
         outOfEnemyLineOfSight: true,
@@ -4130,6 +4137,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_HIDE",
+        activation: "action",
         stealthTotal: 35,
         hasCoverOrObscurement: true,
         outOfEnemyLineOfSight: true,
@@ -4150,6 +4158,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_HIDE",
+        activation: "action",
         stealthTotal: 18.5,
         hasCoverOrObscurement: true,
         outOfEnemyLineOfSight: true,
@@ -4168,13 +4177,15 @@ describe("available actions contract", () => {
         expect.objectContaining({
           scope: "battle",
           actorId: "A",
-          type: "BATTLE_BONUS_DISENGAGE",
+          type: "BATTLE_DISENGAGE",
+          activation: "bonusAction",
           cost: cost(quota("bonusAction")),
         }),
         expect.objectContaining({
           scope: "battle",
           actorId: "A",
-          type: "BATTLE_BONUS_HIDE",
+          type: "BATTLE_HIDE",
+          activation: "bonusAction",
           cost: cost(quota("bonusAction")),
         }),
       ]),
@@ -4189,13 +4200,15 @@ describe("available actions contract", () => {
       resolveBattleAction(context, {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_BONUS_DISENGAGE",
+        type: "BATTLE_DISENGAGE",
+        activation: "bonusAction",
       }),
     ).toEqual({
       token: {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_BONUS_DISENGAGE",
+        type: "BATTLE_DISENGAGE",
+        activation: "bonusAction",
       },
       outcome:
         "Spend your bonus action so your movement does not provoke opportunity attacks this turn",
@@ -4207,7 +4220,8 @@ describe("available actions contract", () => {
       resolveBattleAction(context, {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_BONUS_HIDE",
+        type: "BATTLE_HIDE",
+        activation: "bonusAction",
         stealthTotal: 19,
         hasCoverOrObscurement: true,
         outOfEnemyLineOfSight: true,
@@ -4216,7 +4230,8 @@ describe("available actions contract", () => {
       token: {
         scope: "battle",
         actorId: "A",
-        type: "BATTLE_BONUS_HIDE",
+        type: "BATTLE_HIDE",
+        activation: "bonusAction",
         stealthTotal: 19,
         hasCoverOrObscurement: true,
         outOfEnemyLineOfSight: true,
@@ -5151,7 +5166,7 @@ describe("available actions contract", () => {
 
     expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
       {
-        scope: "battle",
+        scope: "authoredBattle",
         actorId: "B",
         type: "USE_UNCANNY_DODGE",
         cost: cost(quota("reaction")),
@@ -5167,8 +5182,8 @@ describe("available actions contract", () => {
     const actor = initBattleForDamageDiscovery();
 
     expect(
-      resolveBattleAction(actor.getSnapshot().context, {
-        scope: "battle",
+      resolveAuthoredBattleAction(actor.getSnapshot().context, {
+        scope: "authoredBattle",
         actorId: "B",
         type: "USE_UNCANNY_DODGE",
       }),
@@ -5198,14 +5213,18 @@ describe("available actions contract", () => {
     });
 
     const request = expectBattleRequest(
-      resolveBattleAction(actor.getSnapshot().context, {
-        scope: "battle",
+      resolveAuthoredBattleAction(actor.getSnapshot().context, {
+        scope: "authoredBattle",
         actorId: "B",
         type: "USE_UNCANNY_DODGE",
       }),
     );
     expect(request).toEqual({
-      token: { scope: "battle", actorId: "B", type: "USE_UNCANNY_DODGE" },
+      token: {
+        scope: "authoredBattle",
+        actorId: "B",
+        type: "USE_UNCANNY_DODGE",
+      },
       outcome:
         "Use your reaction to halve the triggering attack's damage against you",
       runtime: "none",

@@ -210,7 +210,7 @@ export type OutcomeDescription = {
   readonly summary: string;
 };
 
-export const ACTION_SCOPES = ["creature", "battle"] as const;
+export const ACTION_SCOPES = ["creature", "battle", "authoredBattle"] as const;
 export type ActionScope = (typeof ACTION_SCOPES)[number];
 
 export type Hole<T> = { readonly options: ReadonlyArray<T> };
@@ -379,7 +379,7 @@ type TokenByType = {
   readonly EXIT_COMBAT: SimpleToken<"EXIT_COMBAT">;
 };
 
-type CreatureActionToken = TokenByType[SupportedActionType] & {
+export type CreatureActionToken = TokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 export type BattleActionToken =
@@ -414,29 +414,6 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      // FIXME: so we have CreatureActionToken and BattleActionToken. first of all why is the distinction? comes from Quint? secondly, why BATTLE_ACTION_SURGE, BATTLE_ENTER_RAGE etc are Battle action tolens and not Creature action tolens. third, why they exist at all and not are authored content surface?
-      readonly type: "BATTLE_ACTION_SURGE";
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_ENTER_RAGE";
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_DECLARE_RECKLESS";
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      // FIXME: this is a good example of a non-authored content: grapple is a very base of the rules to encode directly into core
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
@@ -468,13 +445,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DISENGAGE";
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_BONUS_DISENGAGE";
+      readonly activation: "action" | "bonusAction";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -489,16 +460,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_HIDE";
-      readonly stealthTotal: Hole<number>;
-      readonly hasCoverOrObscurement: Hole<boolean>;
-      readonly outOfEnemyLineOfSight: Hole<boolean>;
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_BONUS_HIDE";
+      readonly activation: "action" | "bonusAction";
       readonly stealthTotal: Hole<number>;
       readonly hasCoverOrObscurement: Hole<boolean>;
       readonly outOfEnemyLineOfSight: Hole<boolean>;
@@ -661,13 +623,6 @@ export type BattleActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      readonly type: "USE_UNCANNY_DODGE";
-      readonly cost: ResourceCost;
-      readonly outcome: OutcomeDescription;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
       readonly type: "USE_DEFLECT_ATTACKS";
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -693,7 +648,83 @@ export type BattleActionToken =
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     };
-export type ActionToken = CreatureActionToken | BattleActionToken;
+
+export const ENGINE_BATTLE_ACTION_TYPES = [
+  "BATTLE_ATTACK",
+  "BATTLE_OFF_HAND_ATTACK",
+  "BATTLE_LEGENDARY_ATTACK",
+  "BATTLE_GRAPPLE",
+  "BATTLE_RELEASE_GRAPPLE",
+  "BATTLE_ESCAPE_GRAPPLE",
+  "BATTLE_DASH",
+  "BATTLE_DISENGAGE",
+  "BATTLE_DODGE",
+  "BATTLE_HIDE",
+  "BATTLE_SEARCH",
+  "BATTLE_WAKE_EFFECT",
+  "BATTLE_HELP_ATTACK",
+  "BATTLE_MOVE",
+  "BATTLE_READY",
+  "BATTLE_READY_PASS",
+  "BATTLE_READY_RELEASE",
+  "STAND_FROM_PRONE",
+] as const satisfies ReadonlyArray<BattleActionToken["type"]>;
+export type EngineBattleActionType =
+  (typeof ENGINE_BATTLE_ACTION_TYPES)[number];
+export type EngineBattleActionToken = Extract<
+  BattleActionToken,
+  { readonly type: EngineBattleActionType }
+>;
+
+/**
+ * Transitional quarantine for authored mechanics that are invoked during battle
+ * but should not become permanent battle primitives.
+ *
+ * Litmus test:
+ * - if a type here helps us delete or quarantine hardcoded battle-owned names,
+ *   it belongs in EPT15;
+ * - if it merely codifies a durable second category inside battle, delete it.
+ *
+ * The goal is to shrink this union over time by moving these actions behind
+ * authored/projected identities, not to bless these names as stable core
+ * vocabulary.
+ */
+export type AuthoredBattleActionToken =
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "USE_ACTION_SURGE";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "ENTER_RAGE";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "DECLARE_RECKLESS";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "USE_UNCANNY_DODGE";
+      readonly cost: ResourceCost;
+      readonly outcome: OutcomeDescription;
+    };
+export type ActionToken =
+  | CreatureActionToken
+  | BattleActionToken
+  | AuthoredBattleActionToken;
+export type AvailableBattleActionToken =
+  | BattleActionToken
+  | AuthoredBattleActionToken;
 type ResolvedTokenByType = {
   readonly ENTER_COMBAT: { readonly type: "ENTER_COMBAT" };
   readonly USE_HEROIC_INSPIRATION: { readonly type: "USE_HEROIC_INSPIRATION" };
@@ -786,7 +817,8 @@ type ResolvedTokenByType = {
   };
   readonly EXIT_COMBAT: { readonly type: "EXIT_COMBAT" };
 };
-type CreatureResolvedActionToken = ResolvedTokenByType[SupportedActionType] & {
+export type CreatureResolvedActionToken =
+  ResolvedTokenByType[SupportedActionType] & {
   readonly scope: "creature";
 };
 type SpecificBattleResolvedActionToken =
@@ -815,21 +847,6 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      readonly type: "BATTLE_ACTION_SURGE";
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_ENTER_RAGE";
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_DECLARE_RECKLESS";
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
       readonly type: "BATTLE_GRAPPLE";
       readonly targetId: string;
     }
@@ -853,11 +870,7 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_DISENGAGE";
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_BONUS_DISENGAGE";
+      readonly activation: "action" | "bonusAction";
     }
   | {
       readonly scope: "battle";
@@ -868,14 +881,7 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_HIDE";
-      readonly stealthTotal: number;
-      readonly hasCoverOrObscurement: boolean;
-      readonly outOfEnemyLineOfSight: boolean;
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
-      readonly type: "BATTLE_BONUS_HIDE";
+      readonly activation: "action" | "bonusAction";
       readonly stealthTotal: number;
       readonly hasCoverOrObscurement: boolean;
       readonly outOfEnemyLineOfSight: boolean;
@@ -998,11 +1004,6 @@ type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
       readonly actorId: string;
-      readonly type: "USE_UNCANNY_DODGE";
-    }
-  | {
-      readonly scope: "battle";
-      readonly actorId: string;
       readonly type: "USE_DEFLECT_ATTACKS";
     }
   | {
@@ -1022,9 +1023,35 @@ type SpecificBattleResolvedActionToken =
     };
 
 export type BattleResolvedActionToken = SpecificBattleResolvedActionToken;
+export type AuthoredBattleResolvedActionToken =
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "USE_ACTION_SURGE";
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "ENTER_RAGE";
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "DECLARE_RECKLESS";
+    }
+  | {
+      readonly scope: "authoredBattle";
+      readonly actorId: string;
+      readonly type: "USE_UNCANNY_DODGE";
+    };
+export type EngineBattleResolvedActionToken = Extract<
+  BattleResolvedActionToken,
+  { readonly type: EngineBattleActionType }
+>;
 export type ResolvedActionToken =
   | CreatureResolvedActionToken
-  | BattleResolvedActionToken;
+  | BattleResolvedActionToken
+  | AuthoredBattleResolvedActionToken;
 
 export const CREATURE_CONTROL_COMMAND_TYPES = [
   "END_TURN",
@@ -1409,20 +1436,20 @@ const BattleLegendaryAttackResolvedActionSchema = Schema.Struct({
   knockOut: Schema.Boolean,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
-const BattleActionSurgeResolvedActionSchema = Schema.Struct({
+const AuthoredBattleActionSurgeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
-  type: Schema.Literal("BATTLE_ACTION_SURGE"),
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
+  type: Schema.Literal("USE_ACTION_SURGE"),
+}).pipe(Schema.attachPropertySignature("scope", "authoredBattle"));
 
-const BattleEnterRageResolvedActionSchema = Schema.Struct({
+const AuthoredBattleEnterRageResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
-  type: Schema.Literal("BATTLE_ENTER_RAGE"),
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
+  type: Schema.Literal("ENTER_RAGE"),
+}).pipe(Schema.attachPropertySignature("scope", "authoredBattle"));
 
-const BattleDeclareRecklessResolvedActionSchema = Schema.Struct({
+const AuthoredBattleDeclareRecklessResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
-  type: Schema.Literal("BATTLE_DECLARE_RECKLESS"),
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
+  type: Schema.Literal("DECLARE_RECKLESS"),
+}).pipe(Schema.attachPropertySignature("scope", "authoredBattle"));
 
 const BattleGrappleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
@@ -1449,11 +1476,7 @@ const BattleDashResolvedActionSchema = Schema.Struct({
 const BattleDisengageResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_DISENGAGE"),
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
-
-const BattleBonusDisengageResolvedActionSchema = Schema.Struct({
-  actorId: Schema.String,
-  type: Schema.Literal("BATTLE_BONUS_DISENGAGE"),
+  activation: Schema.Literal("action", "bonusAction"),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const BattleDodgeResolvedActionSchema = Schema.Struct({
@@ -1464,14 +1487,7 @@ const BattleDodgeResolvedActionSchema = Schema.Struct({
 const BattleHideResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_HIDE"),
-  stealthTotal: Schema.Number,
-  hasCoverOrObscurement: Schema.Boolean,
-  outOfEnemyLineOfSight: Schema.Boolean,
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
-
-const BattleBonusHideResolvedActionSchema = Schema.Struct({
-  actorId: Schema.String,
-  type: Schema.Literal("BATTLE_BONUS_HIDE"),
+  activation: Schema.Literal("action", "bonusAction"),
   stealthTotal: Schema.Number,
   hasCoverOrObscurement: Schema.Boolean,
   outOfEnemyLineOfSight: Schema.Boolean,
@@ -1586,10 +1602,10 @@ const UseRedirectAttackBattleResolvedActionSchema = Schema.Struct({
   allyId: Schema.String,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
-const UseUncannyDodgeBattleResolvedActionSchema = Schema.Struct({
+const UseUncannyDodgeAuthoredBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("USE_UNCANNY_DODGE"),
-}).pipe(Schema.attachPropertySignature("scope", "battle"));
+}).pipe(Schema.attachPropertySignature("scope", "authoredBattle"));
 
 const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
@@ -1615,18 +1631,13 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   BattleAttackResolvedActionSchema,
   BattleOffHandAttackResolvedActionSchema,
   BattleLegendaryAttackResolvedActionSchema,
-  BattleActionSurgeResolvedActionSchema,
-  BattleEnterRageResolvedActionSchema,
-  BattleDeclareRecklessResolvedActionSchema,
   BattleGrappleResolvedActionSchema,
   BattleReleaseGrappleResolvedActionSchema,
   BattleEscapeGrappleResolvedActionSchema,
   BattleDashResolvedActionSchema,
   BattleDisengageResolvedActionSchema,
-  BattleBonusDisengageResolvedActionSchema,
   BattleDodgeResolvedActionSchema,
   BattleHideResolvedActionSchema,
-  BattleBonusHideResolvedActionSchema,
   BattleSearchResolvedActionSchema,
   BattleCastAoeResolvedActionSchema,
   BattleCastSaveSpellResolvedActionSchema,
@@ -1646,22 +1657,30 @@ const BattleResolvedActionTokenSchema = Schema.Union(
   UseParryBattleResolvedActionSchema,
   UseCuttingWordsBattleResolvedActionSchema,
   UseRedirectAttackBattleResolvedActionSchema,
-  UseUncannyDodgeBattleResolvedActionSchema,
   UseDeflectAttacksBattleResolvedActionSchema,
   CastHellishRebukeBattleResolvedActionSchema,
   UseRetaliationBattleResolvedActionSchema,
   TriggerFireShieldBattleResolvedActionSchema,
 );
 
+const AuthoredBattleResolvedActionTokenSchema = Schema.Union(
+  AuthoredBattleActionSurgeResolvedActionSchema,
+  AuthoredBattleEnterRageResolvedActionSchema,
+  AuthoredBattleDeclareRecklessResolvedActionSchema,
+  UseUncannyDodgeAuthoredBattleResolvedActionSchema,
+);
+
 export const RESOLVED_ACTION_SCHEMAS = [
   PrimaryCreatureResolvedActionTokenSchema,
   SecondaryCreatureResolvedActionTokenSchema,
   BattleResolvedActionTokenSchema,
+  AuthoredBattleResolvedActionTokenSchema,
 ] as const;
 export const ResolvedActionTokenSchema = Schema.Union(
   PrimaryCreatureResolvedActionTokenSchema,
   SecondaryCreatureResolvedActionTokenSchema,
   BattleResolvedActionTokenSchema,
+  AuthoredBattleResolvedActionTokenSchema,
 );
 
 const CreatureEndTurnControlSchema = Schema.Struct({
@@ -2735,8 +2754,8 @@ export type BattleResolutionRequest =
     }
   | {
       readonly token: Extract<
-        BattleResolvedActionToken,
-        { readonly type: "BATTLE_ACTION_SURGE" }
+        AuthoredBattleResolvedActionToken,
+        { readonly type: "USE_ACTION_SURGE" }
       >;
       readonly outcome: string;
       readonly runtime: "none";
@@ -2747,8 +2766,8 @@ export type BattleResolutionRequest =
     }
   | {
       readonly token: Extract<
-        BattleResolvedActionToken,
-        { readonly type: "BATTLE_ENTER_RAGE" }
+        AuthoredBattleResolvedActionToken,
+        { readonly type: "ENTER_RAGE" }
       >;
       readonly outcome: string;
       readonly runtime: "none";
@@ -2759,8 +2778,8 @@ export type BattleResolutionRequest =
     }
   | {
       readonly token: Extract<
-        BattleResolvedActionToken,
-        { readonly type: "BATTLE_DECLARE_RECKLESS" }
+        AuthoredBattleResolvedActionToken,
+        { readonly type: "DECLARE_RECKLESS" }
       >;
       readonly outcome: string;
       readonly runtime: "none";
@@ -2811,19 +2830,7 @@ export type BattleResolutionRequest =
       readonly runtime: "none";
       readonly event: Extract<
         BattleEvent,
-        { readonly type: "BATTLE_DISENGAGE" }
-      >;
-    }
-  | {
-      readonly token: Extract<
-        BattleResolvedActionToken,
-        { readonly type: "BATTLE_BONUS_DISENGAGE" }
-      >;
-      readonly outcome: string;
-      readonly runtime: "none";
-      readonly event: Extract<
-        BattleEvent,
-        { readonly type: "BATTLE_BONUS_DISENGAGE" }
+        { readonly type: "BATTLE_DISENGAGE" | "BATTLE_BONUS_DISENGAGE" }
       >;
     }
   | {
@@ -2842,18 +2849,9 @@ export type BattleResolutionRequest =
       >;
       readonly outcome: string;
       readonly runtime: "none";
-      readonly event: Extract<BattleEvent, { readonly type: "BATTLE_HIDE" }>;
-    }
-  | {
-      readonly token: Extract<
-        BattleResolvedActionToken,
-        { readonly type: "BATTLE_BONUS_HIDE" }
-      >;
-      readonly outcome: string;
-      readonly runtime: "none";
       readonly event: Extract<
         BattleEvent,
-        { readonly type: "BATTLE_BONUS_HIDE" }
+        { readonly type: "BATTLE_HIDE" | "BATTLE_BONUS_HIDE" }
       >;
     }
   | {
@@ -3016,7 +3014,7 @@ export type BattleResolutionRequest =
     }
   | {
       readonly token: Extract<
-        BattleResolvedActionToken,
+        AuthoredBattleResolvedActionToken,
         { readonly type: "USE_UNCANNY_DODGE" }
       >;
       readonly outcome: string;
@@ -3946,7 +3944,7 @@ export const EXPOSED_ACTION_TYPES = SUPPORTED_ACTION_TYPES;
 export function getAvailableActions(
   context: DndContext,
   tags: ReadonlySet<string>,
-): ReadonlyArray<ActionToken> {
+): ReadonlyArray<CreatureActionToken> {
   return SUPPORTED_ACTION_TYPES.flatMap((type) => {
     if (!isAcceptedByMachine(type, tags)) return [];
     const builtToken = ACTION_SPECS[type].buildToken(context);
@@ -4019,12 +4017,12 @@ function hitReactionToken(
 
 function damageReactionToken(
   actorId: string,
-  // FIXME: UncannyDodge, too, is a character ability and was supposed to be a surface...
   reaction: "RUncannyDodge" | "RDeflectAttacks",
-): BattleActionToken {
+): AvailableBattleActionToken {
   return Match.value(reaction).pipe(
     Match.when("RUncannyDodge", () =>
-      battleToken({
+      ({
+        scope: "authoredBattle",
         actorId,
         type: "USE_UNCANNY_DODGE",
         cost: costs(quotaCost("reaction")),
@@ -4032,7 +4030,7 @@ function damageReactionToken(
           summary:
             "Use your reaction to halve the triggering attack's damage against you",
         },
-      }),
+      }) satisfies AuthoredBattleActionToken,
     ),
     Match.when("RDeflectAttacks", () =>
       battleToken({
@@ -4051,7 +4049,7 @@ function damageReactionToken(
 
 function afterDamageReactionTokens(
   context: BattleContext,
-): ReadonlyArray<BattleActionToken> {
+): ReadonlyArray<AvailableBattleActionToken> {
   // TODO: This generic token enumerator currently recomputes rule-specific
   // legality for Hellish Rebuke, Retaliation, and Fire Shield. Keep parity, but
   // move those checks closer to the owning spell/feature surfaces instead of
@@ -4060,7 +4058,7 @@ function afterDamageReactionTokens(
   const interrupt = awaitCtx?.interrupt;
   if (awaitCtx == null || interrupt?.tag !== "PIAfterDamage") return [];
   const ad = interrupt.ctx;
-  const tokens: Array<BattleActionToken> = [];
+  const tokens: Array<AvailableBattleActionToken> = [];
   for (const actorId of awaitCtx.eligible) {
     if (awaitCtx.offered.has(actorId)) continue;
     if (actorId !== ad.damagedCreature) continue;
@@ -4459,7 +4457,7 @@ function currentReadyableSpellPayload(
 
 export function getAvailableBattleActions(
   context: BattleContext,
-): ReadonlyArray<BattleActionToken> {
+): ReadonlyArray<AvailableBattleActionToken> {
   if (context.readyCtx != null) {
     const activeReadyTokens: Array<BattleActionToken> = [];
     for (const actorId of context.readyCtx.eligibleCreatures) {
@@ -4586,7 +4584,7 @@ export function getAvailableBattleActions(
     ) {
       return [];
     }
-    const tokens: Array<BattleActionToken> = [];
+    const tokens: Array<AvailableBattleActionToken> = [];
     if (canUseBattleAttack(activeCreature)) {
       const targetOptions = [...context.creatures.entries()]
         .filter(
@@ -4656,9 +4654,10 @@ export function getAvailableBattleActions(
     }
     if (canUseProjectedBattleActionSurge(activeCreature)) {
       tokens.push(
-        battleToken({
+        {
+          scope: "authoredBattle",
           actorId: activeCreatureId,
-          type: "BATTLE_ACTION_SURGE",
+          type: "USE_ACTION_SURGE",
           cost: projectedCosts(...projectedActionSurgeCost()),
           outcome: {
             summary: projectedBattleActionSurgeSummary(
@@ -4666,7 +4665,7 @@ export function getAvailableBattleActions(
               activeCreature,
             ),
           },
-        }),
+        },
       );
     }
     if (
@@ -4676,15 +4675,16 @@ export function getAvailableBattleActions(
       activeCreature.rageCharges > 0
     ) {
       tokens.push(
-        battleToken({
+        {
+          scope: "authoredBattle",
           actorId: activeCreatureId,
-          type: "BATTLE_ENTER_RAGE",
+          type: "ENTER_RAGE",
           cost: costs(quotaCost("bonusAction"), poolCost("rage")),
           outcome: {
             summary:
               "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
           },
-        }),
+        },
       );
     }
     if (
@@ -4693,10 +4693,11 @@ export function getAvailableBattleActions(
     ) {
       tokens.push(
         battleToken<
-          Extract<BattleActionToken, { readonly type: "BATTLE_BONUS_HIDE" }>
+          Extract<BattleActionToken, { readonly type: "BATTLE_HIDE" }>
         >({
           actorId: activeCreatureId,
-          type: "BATTLE_BONUS_HIDE",
+          type: "BATTLE_HIDE",
+          activation: "bonusAction",
           stealthTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
           hasCoverOrObscurement: { options: [true, false] },
           outOfEnemyLineOfSight: { options: [true, false] },
@@ -4713,9 +4714,12 @@ export function getAvailableBattleActions(
       activeCreature.battleBonusActionOptions.includes("disengage")
     ) {
       tokens.push(
-        battleToken({
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "BATTLE_DISENGAGE" }>
+        >({
           actorId: activeCreatureId,
-          type: "BATTLE_BONUS_DISENGAGE",
+          type: "BATTLE_DISENGAGE",
+          activation: "bonusAction",
           cost: costs(quotaCost("bonusAction")),
           outcome: {
             summary:
@@ -4731,14 +4735,15 @@ export function getAvailableBattleActions(
       !activeCreature.recklessThisTurn
     ) {
       tokens.push(
-        battleToken({
+        {
+          scope: "authoredBattle",
           actorId: activeCreatureId,
-          type: "BATTLE_DECLARE_RECKLESS",
+          type: "DECLARE_RECKLESS",
           cost: FREE_COST,
           outcome: {
             summary: "Declare Reckless Attack for this turn",
           },
-        }),
+        },
       );
     }
     if (
@@ -4812,6 +4817,7 @@ export function getAvailableBattleActions(
         >({
           actorId: activeCreatureId,
           type: "BATTLE_HIDE",
+          activation: "action",
           stealthTotal: { options: SUGGESTED_D20_CHECK_TOTAL_OPTIONS },
           hasCoverOrObscurement: { options: [true, false] },
           outOfEnemyLineOfSight: { options: [true, false] },
@@ -4854,9 +4860,12 @@ export function getAvailableBattleActions(
         }),
       );
       tokens.push(
-        battleToken({
+        battleToken<
+          Extract<BattleActionToken, { readonly type: "BATTLE_DISENGAGE" }>
+        >({
           actorId: activeCreatureId,
           type: "BATTLE_DISENGAGE",
+          activation: "action",
           cost: costs(quotaCost("action")),
           outcome: {
             summary:
@@ -5139,7 +5148,7 @@ export function getAvailableBattleActions(
   }
 
   if (interrupt.tag === "PIAttackDamage") {
-    const tokens: Array<BattleActionToken> = [];
+    const tokens: Array<AvailableBattleActionToken> = [];
     for (const [actorId, legalReactions] of interrupt.ctx
       .legalReactionsByCreature) {
       if (!awaitCtx.eligible.has(actorId)) continue;
@@ -5151,7 +5160,7 @@ export function getAvailableBattleActions(
   }
 
   if (interrupt.tag === "PISpellCast") {
-    const tokens: Array<BattleActionToken> = [];
+    const tokens: Array<AvailableBattleActionToken> = [];
     for (const actorId of awaitCtx.eligible) {
       const slotLevels = battleCounterspellSlotLevels(actorId, context);
       if (slotLevels.length === 0) continue;
@@ -5184,9 +5193,20 @@ function availableBattleTokenForResolved(
   context: BattleContext,
   token: BattleResolvedActionToken,
 ): BattleActionToken | undefined {
-  return getAvailableBattleActions(context).find((candidate) => {
-    if (candidate.type !== token.type || candidate.actorId !== token.actorId)
-      return false;
+  return getAvailableBattleActions(context).find(
+    (candidate): candidate is BattleActionToken => {
+      if (candidate.scope !== "battle") return false;
+      if (candidate.type !== token.type || candidate.actorId !== token.actorId)
+        return false;
+    if (
+      candidate.type === "BATTLE_DISENGAGE" &&
+      token.type === "BATTLE_DISENGAGE"
+    ) {
+      return candidate.activation === token.activation;
+    }
+    if (candidate.type === "BATTLE_HIDE" && token.type === "BATTLE_HIDE") {
+      return candidate.activation === token.activation;
+    }
     if (
       candidate.type === "BATTLE_READY_SPELL" &&
       token.type === "BATTLE_READY_SPELL"
@@ -5273,8 +5293,24 @@ function availableBattleTokenForResolved(
     ) {
       return candidate.allyId.options.includes(token.allyId);
     }
-    return true;
-  });
+      return true;
+    },
+  );
+}
+
+function availableAuthoredBattleTokenForResolved(
+  context: BattleContext,
+  token: AuthoredBattleResolvedActionToken,
+): AuthoredBattleActionToken | undefined {
+  return getAvailableBattleActions(context).find(
+    (candidate): candidate is AuthoredBattleActionToken => {
+      return (
+        candidate.scope === "authoredBattle" &&
+        candidate.type === token.type &&
+        candidate.actorId === token.actorId
+      );
+    },
+  );
 }
 
 export function resolveBattleAction(
@@ -5286,15 +5322,6 @@ export function resolveBattleAction(
     return {
       code: "ACTION_NOT_AVAILABLE",
       message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
-    };
-  }
-
-  if (token.type === "BATTLE_ACTION_SURGE") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: { type: "BATTLE_ACTION_SURGE" },
     };
   }
   if (
@@ -5313,22 +5340,6 @@ export function resolveBattleAction(
       token,
       outcome: availableToken.outcome.summary,
       runtime: "battleGrapple",
-    };
-  }
-  if (token.type === "BATTLE_ENTER_RAGE") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: { type: "BATTLE_ENTER_RAGE" },
-    };
-  }
-  if (token.type === "BATTLE_DECLARE_RECKLESS") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: { type: "BATTLE_DECLARE_RECKLESS" },
     };
   }
   if (token.type === "BATTLE_RELEASE_GRAPPLE") {
@@ -5350,16 +5361,10 @@ export function resolveBattleAction(
       },
     };
   }
-  if (
-    (token.type === "BATTLE_HIDE" || token.type === "BATTLE_BONUS_HIDE") &&
-    !isResolvedD20CheckTotal(token.stealthTotal)
-  ) {
+  if (token.type === "BATTLE_HIDE" && !isResolvedD20CheckTotal(token.stealthTotal)) {
     return {
       code: "INVALID_RUNTIME_INPUT",
-      message:
-        token.type === "BATTLE_HIDE"
-          ? "Hide Stealth total must be an integer."
-          : "Bonus Hide Stealth total must be an integer.",
+      message: "Hide Stealth total must be an integer.",
     };
   }
   if (
@@ -5377,20 +5382,10 @@ export function resolveBattleAction(
       outcome: availableToken.outcome.summary,
       runtime: "none",
       event: {
-        type: "BATTLE_HIDE",
-        stealthTotal: token.stealthTotal,
-        hasCoverOrObscurement: token.hasCoverOrObscurement,
-        outOfEnemyLineOfSight: token.outOfEnemyLineOfSight,
-      },
-    };
-  }
-  if (token.type === "BATTLE_BONUS_HIDE") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: {
-        type: "BATTLE_BONUS_HIDE",
+        type:
+          token.activation === "bonusAction"
+            ? "BATTLE_BONUS_HIDE"
+            : "BATTLE_HIDE",
         stealthTotal: token.stealthTotal,
         hasCoverOrObscurement: token.hasCoverOrObscurement,
         outOfEnemyLineOfSight: token.outOfEnemyLineOfSight,
@@ -5568,15 +5563,12 @@ export function resolveBattleAction(
       token,
       outcome: availableToken.outcome.summary,
       runtime: "none",
-      event: { type: "BATTLE_DISENGAGE" },
-    };
-  }
-  if (token.type === "BATTLE_BONUS_DISENGAGE") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: { type: "BATTLE_BONUS_DISENGAGE" },
+      event: {
+        type:
+          token.activation === "bonusAction"
+            ? "BATTLE_BONUS_DISENGAGE"
+            : "BATTLE_DISENGAGE",
+      },
     };
   }
   if (token.type === "BATTLE_DODGE") {
@@ -5721,18 +5713,6 @@ export function resolveBattleAction(
       runtime: "counterspell",
     };
   }
-  if (token.type === "USE_UNCANNY_DODGE") {
-    return {
-      token,
-      outcome: availableToken.outcome.summary,
-      runtime: "none",
-      event: {
-        type: "BATTLE_RESOLVE_DMG_REACTION",
-        reactorId: CreatureId(token.actorId),
-        decision: { tag: "RUncannyDodge" },
-      },
-    };
-  }
   if (token.type === "CAST_SHIELD") {
     return {
       token,
@@ -5808,6 +5788,53 @@ export function resolveBattleAction(
     token,
     outcome: availableToken.outcome.summary,
     runtime: "fireShield",
+  };
+}
+
+export function resolveAuthoredBattleAction(
+  context: BattleContext,
+  token: AuthoredBattleResolvedActionToken,
+): BattleResolutionRequest | ActionResolutionError {
+  const availableToken = availableAuthoredBattleTokenForResolved(context, token);
+  if (availableToken == null) {
+    return {
+      code: "ACTION_NOT_AVAILABLE",
+      message: `${token.type} is not currently available for ${token.actorId} in this battle state.`,
+    };
+  }
+  if (token.type === "USE_ACTION_SURGE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_ACTION_SURGE" },
+    };
+  }
+  if (token.type === "ENTER_RAGE") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_ENTER_RAGE" },
+    };
+  }
+  if (token.type === "DECLARE_RECKLESS") {
+    return {
+      token,
+      outcome: availableToken.outcome.summary,
+      runtime: "none",
+      event: { type: "BATTLE_DECLARE_RECKLESS" },
+    };
+  }
+  return {
+    token,
+    outcome: availableToken.outcome.summary,
+    runtime: "none",
+    event: {
+      type: "BATTLE_RESOLVE_DMG_REACTION",
+      reactorId: CreatureId(token.actorId),
+      decision: { tag: "RUncannyDodge" },
+    },
   };
 }
 
@@ -6652,11 +6679,17 @@ export function finalizeBattleResolution(
 
 export function previewBattleAction(
   context: BattleContext,
-  token: BattleResolvedActionToken,
+  token: BattleResolvedActionToken | AuthoredBattleResolvedActionToken,
 ): PreviewedBattleAction {
-  const request = resolveBattleAction(context, token);
+  const request =
+    token.scope === "authoredBattle"
+      ? resolveAuthoredBattleAction(context, token)
+      : resolveBattleAction(context, token);
   if ("code" in request) return { ok: false, error: request };
-  const availableToken = availableBattleTokenForResolved(context, token);
+  const availableToken =
+    token.scope === "authoredBattle"
+      ? availableAuthoredBattleTokenForResolved(context, token)
+      : availableBattleTokenForResolved(context, token);
   return {
     ok: true,
     summary: availableToken?.outcome.summary ?? token.type,
@@ -6787,18 +6820,11 @@ function isLegalShortRestSpendPlan(
 export function resolveAction(
   context: DndContext,
   tags: ReadonlySet<string>,
-  token: ResolvedActionToken,
+  token: CreatureResolvedActionToken,
 ): ResolutionRequest | ActionResolutionError {
-  // FIXME: why not compile time check in this function at least? quint parity?
-  if (token.scope === "battle") {
-    return {
-      code: "ACTION_NOT_SUPPORTED",
-      message: `${token.type} is battle-scoped and cannot execute through the creature action pipeline.`,
-    };
-  }
   if (token.type === "CAST_PREPARED_SPELL") {
     if (
-      // FIXME: only null slots?? I don't get it
+      // Slotless projected spells use the projected execution bridge.
       token.slotLevel == null &&
       canUseProjectedPreparedSpell(context, token.spellName)
     ) {
@@ -7502,7 +7528,7 @@ export function finalizeResolution(
 export function previewAction(
   context: DndContext,
   tags: ReadonlySet<string>,
-  token: ResolvedActionToken,
+  token: CreatureResolvedActionToken,
 ): PreviewedAction {
   const request = resolveAction(context, tags, token);
   if ("code" in request) return { ok: false, error: request };
