@@ -30,6 +30,49 @@ module battle {
 
   type BattleBonusActionOption = | BADisengage | BAHide
 
+  type BattleSpellCastingTime =
+    | BSCTAction
+    | BSCTBonusAction
+    | BSCTReaction
+
+  type BattleReactionTrigger =
+    | BSRTNone
+    | BSRTHitByAttackRoll
+    | BSRTCreatureCastsSpell
+    | BSRTAfterDamageMeleeWithin5ft
+
+  type BattleSpellSavePayload = {
+    damageDiceAtBase: int,
+    damageDicePerExtraSlot: int,
+    halfOnSuccess: bool,
+    damageType: DamageType,
+    conditionOnFail: Condition,
+    applyCondition: bool,
+    saveAbility: Ability,
+  }
+
+  type BattleSpellDelivery =
+    | BSDNone
+    | BSDSingleTargetSave(BattleSpellSavePayload)
+    | BSDAoESave(BattleSpellSavePayload)
+
+  type BattleReactionEffect =
+    | BRXNone
+    | BRXShieldArmorClassBonus(int)
+
+  type BattleSpellAccess = {
+    sourceId: str,                 // bookkeeping/provenance only; battle semantics must not branch on this id
+    requiresVerbal: bool,
+    requiresSomatic: bool,
+    castingTime: BattleSpellCastingTime,
+    reactionTrigger: BattleReactionTrigger,
+    interruptsTrigger: bool,
+    baseLevel: int,
+    concentration: bool,
+    delivery: BattleSpellDelivery,
+    reactionEffect: BattleReactionEffect,
+  }
+
   type MovementProvocationKind =
     | MPProvokesOpportunityAttacks
     | MPDoesNotProvokeOpportunityAttacks
@@ -69,7 +112,7 @@ module battle {
     rogueLevel: int,                         // 0 = not a rogue (B11)
     monkLevel: int,                          // 0 = not a monk (B11)
     dexMod: int,                             // static Dex modifier for battle-owned Monk reaction math
-    preparedSpells: Set[str],                // legacy Spell Access fact: prepared spell definitions available to this creature
+    spellAccesses: Set[BattleSpellAccess],   // authored-unit execution access facts; sourceId is bookkeeping only
     hasEvasion: bool,                        // Evasion feature (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
     saveMiscBonus: int,                      // misc save bonus (Paladin Aura, Ring of Protection, etc.)
     saveAdvantageContexts: Set[SaveTriggerKind],  // battle-owned save advantage sources such as Magic Resistance
@@ -110,7 +153,7 @@ module battle {
   }
 
   /// Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready action).
-  /// slotLvl == 0 is the sentinel for "no readied spell".
+  /// slotLvl == 0 means the combatant is not currently holding a readied spell.
   type ReadiedSpellParams = {
     caster: CreatureId,
     target: CreatureId,
@@ -121,15 +164,21 @@ module battle {
     conditionOnFail: Condition,
     applyCondition: bool,
     saveAbility: Ability,
-    spellName: str,
+    sourceId: str,                 // bookkeeping only; ready-release semantics use the projected fields below
+    requiresVerbal: bool,
+    requiresSomatic: bool,
     slotLvl: int,
   }
 
-  val NO_READIED_SPELL: ReadiedSpellParams = {
+  /// Runtime-empty storage sentinel for "no readied spell held".
+  /// The payload-like fields below are inert because `slotLvl == 0` means
+  /// `hasReadiedSpell(...)` is false, so ready-release semantics never read
+  /// them as spell meaning.
+  val EMPTY_READIED_SPELL_SLOT: ReadiedSpellParams = {
     caster: "", target: "", saveDC: 0, damageOnFail: 0,
     halfOnSuccess: false, damageType: Slashing,
     conditionOnFail: CBlinded, applyCondition: false,
-    saveAbility: Dex, spellName: "", slotLvl: 0,
+    saveAbility: Dex, sourceId: "", requiresVerbal: false, requiresSomatic: false, slotLvl: 0,
   }
 
   /// Check if a combatant has a readied spell.
@@ -166,279 +215,273 @@ module battle {
   pure def dropHeldItems(c: Combatant): Combatant =
     c.with("leftHandUse", HFree).with("rightHandUse", HFree)
 
-  type BattleSpellDefinition = {
-    modeled: bool,
-    requiresVerbal: bool,
-    requiresSomatic: bool,
-    readyable: bool,
-    baseLevel: int,
-    damageDiceAtBase: int,
-    damageDicePerExtraSlot: int,
-    halfOnSuccess: bool,
-    damageType: DamageType,
-    conditionOnFail: Condition,
-    applyCondition: bool,
-    saveAbility: Ability,
-    concentration: bool,
-    counterspellReaction: bool,
-    shieldReaction: bool,
-    hellishRebukeReaction: bool,
-  }
-
-  /// Spell Definition facts for the currently battle-modeled spell surface.
-  /// Quint still owns this projection seam directly; TS must not generate it.
-  /// This is an intermediate consolidation seam, not the final ownership
-  /// boundary for spell facts. EPT13's goal here is to keep one Quint-owned
-  /// spell-definition table instead of rediscovering the same facts in
-  /// scattered battle-local name branches while spell facts continue moving
-  /// toward authored/projection ownership.
-  pure def battleSpellDefinition(spellName: str): BattleSpellDefinition =
-    if (spellName == "counterspell") {
-      modeled: true,
+  /// Fixture-only authored-unit projection for the currently modeled spell
+  /// subset. Battle semantics must consume `BattleSpellAccess` fields rather
+  /// than branching on `sourceId`.
+  pure def battleFixtureSpellAccessById(sourceId: str): BattleSpellAccess =
+    if (sourceId == "counterspell") {
+      sourceId: sourceId,
       requiresVerbal: false,
       requiresSomatic: true,
-      readyable: false,
+      castingTime: BSCTReaction,
+      reactionTrigger: BSRTCreatureCastsSpell,
+      interruptsTrigger: true,
       baseLevel: 3,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
       concentration: false,
-      counterspellReaction: true,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "shield") {
-      modeled: true,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
+    } else if (sourceId == "shield") {
+      sourceId: sourceId,
       requiresVerbal: true,
       requiresSomatic: true,
-      readyable: false,
+      castingTime: BSCTReaction,
+      reactionTrigger: BSRTHitByAttackRoll,
+      interruptsTrigger: true,
       baseLevel: 1,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
       concentration: false,
-      counterspellReaction: false,
-      shieldReaction: true,
-      hellishRebukeReaction: false,
-    } else if (spellName == "hold_person") {
-      modeled: true,
+      delivery: BSDNone,
+      reactionEffect: BRXShieldArmorClassBonus(5),
+    } else if (sourceId == "hellish_rebuke") {
+      sourceId: sourceId,
       requiresVerbal: true,
       requiresSomatic: true,
-      readyable: true,
+      castingTime: BSCTReaction,
+      reactionTrigger: BSRTAfterDamageMeleeWithin5ft,
+      interruptsTrigger: true,
+      baseLevel: 1,
+      concentration: false,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
+    } else if (sourceId == "fireball") {
+      sourceId: sourceId,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
+      baseLevel: 3,
+      concentration: false,
+      delivery: BSDAoESave({
+        damageDiceAtBase: 8,
+        damageDicePerExtraSlot: 1,
+        halfOnSuccess: true,
+        damageType: Fire,
+        conditionOnFail: CBlinded,
+        applyCondition: false,
+        saveAbility: Dex,
+      }),
+      reactionEffect: BRXNone,
+    } else if (sourceId == "burning_hands") {
+      sourceId: sourceId,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
+      baseLevel: 1,
+      concentration: false,
+      delivery: BSDAoESave({
+        damageDiceAtBase: 3,
+        damageDicePerExtraSlot: 1,
+        halfOnSuccess: true,
+        damageType: Fire,
+        conditionOnFail: CBlinded,
+        applyCondition: false,
+        saveAbility: Dex,
+      }),
+      reactionEffect: BRXNone,
+    } else if (sourceId == "hold_person") {
+      sourceId: sourceId,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
       baseLevel: 2,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Psychic,
-      conditionOnFail: CParalyzed,
-      applyCondition: true,
-      saveAbility: Wis,
       concentration: true,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "bless") {
-      modeled: true,
+      delivery: BSDSingleTargetSave({
+        damageDiceAtBase: 0,
+        damageDicePerExtraSlot: 0,
+        halfOnSuccess: false,
+        damageType: Psychic,
+        conditionOnFail: CParalyzed,
+        applyCondition: true,
+        saveAbility: Wis,
+      }),
+      reactionEffect: BRXNone,
+    } else if (sourceId == "guiding_bolt") {
+      sourceId: sourceId,
       requiresVerbal: true,
       requiresSomatic: true,
-      readyable: false,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
       baseLevel: 1,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: true,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "haste") {
-      modeled: true,
+      concentration: false,
+      delivery: BSDSingleTargetSave({
+        damageDiceAtBase: 0,
+        damageDicePerExtraSlot: 0,
+        halfOnSuccess: false,
+        damageType: Radiant,
+        conditionOnFail: CBlinded,
+        applyCondition: false,
+        saveAbility: Dex,
+      }),
+      reactionEffect: BRXNone,
+    } else if (sourceId == "inflict_wounds") {
+      sourceId: sourceId,
       requiresVerbal: true,
       requiresSomatic: true,
-      readyable: false,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
+      baseLevel: 1,
+      concentration: false,
+      delivery: BSDSingleTargetSave({
+        damageDiceAtBase: 0,
+        damageDicePerExtraSlot: 0,
+        halfOnSuccess: false,
+        damageType: Necrotic,
+        conditionOnFail: CBlinded,
+        applyCondition: false,
+        saveAbility: Dex,
+      }),
+      reactionEffect: BRXNone,
+    } else if (sourceId == "bless") {
+      sourceId: sourceId,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
+      baseLevel: 1,
+      concentration: true,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
+    } else if (sourceId == "haste") {
+      sourceId: sourceId,
+      requiresVerbal: true,
+      requiresSomatic: true,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
       baseLevel: 3,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
       concentration: true,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "spirit_guardians") {
-      modeled: true,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
+    } else if (sourceId == "spirit_guardians") {
+      sourceId: sourceId,
       requiresVerbal: true,
       requiresSomatic: true,
-      readyable: false,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
       baseLevel: 3,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
       concentration: true,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "fireball") {
-      modeled: true,
-      requiresVerbal: true,
-      requiresSomatic: true,
-      readyable: true,
-      baseLevel: 3,
-      damageDiceAtBase: 8,
-      damageDicePerExtraSlot: 1,
-      halfOnSuccess: true,
-      damageType: Fire,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "burning_hands") {
-      modeled: true,
-      requiresVerbal: true,
-      requiresSomatic: true,
-      readyable: true,
-      baseLevel: 1,
-      damageDiceAtBase: 3,
-      damageDicePerExtraSlot: 1,
-      halfOnSuccess: true,
-      damageType: Fire,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "hellish_rebuke") {
-      modeled: true,
-      requiresVerbal: true,
-      requiresSomatic: true,
-      readyable: false,
-      baseLevel: 1,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Fire,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: true,
-    } else if (spellName == "guiding_bolt") {
-      modeled: true,
-      requiresVerbal: true,
-      requiresSomatic: true,
-      readyable: false,
-      baseLevel: 1,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Radiant,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
-    } else if (spellName == "inflict_wounds") {
-      modeled: true,
-      requiresVerbal: true,
-      requiresSomatic: true,
-      readyable: false,
-      baseLevel: 1,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Necrotic,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
-      concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
     } else {
-      modeled: false,
+      sourceId: sourceId,
       requiresVerbal: false,
       requiresSomatic: false,
-      readyable: false,
+      castingTime: BSCTAction,
+      reactionTrigger: BSRTNone,
+      interruptsTrigger: false,
       baseLevel: 0,
-      damageDiceAtBase: 0,
-      damageDicePerExtraSlot: 0,
-      halfOnSuccess: false,
-      damageType: Slashing,
-      conditionOnFail: CBlinded,
-      applyCondition: false,
-      saveAbility: Dex,
       concentration: false,
-      counterspellReaction: false,
-      shieldReaction: false,
-      hellishRebukeReaction: false,
+      delivery: BSDNone,
+      reactionEffect: BRXNone,
     }
 
-  pure def battleSpellComponentRequirements(spellName: str): { requiresVerbal: bool, requiresSomatic: bool } = {
-    val spellDef = battleSpellDefinition(spellName)
-    { requiresVerbal: spellDef.requiresVerbal, requiresSomatic: spellDef.requiresSomatic }
-  }
+  pure def battleSpellComponentRequirements(access: BattleSpellAccess): { requiresVerbal: bool, requiresSomatic: bool } =
+    { requiresVerbal: access.requiresVerbal, requiresSomatic: access.requiresSomatic }
 
-  pure def canProvideBattleSpellComponents(c: Combatant, spellName: str): bool = {
-    val req = battleSpellComponentRequirements(spellName)
+  pure def canProvideBattleSpellComponentsForAccess(c: Combatant, access: BattleSpellAccess): bool = {
+    val req = battleSpellComponentRequirements(access)
     val prepared = if (req.requiresSomatic) prepareHandsForSpellComponents(c) else c
     pCanProvideComponents(prepared.creature, req.requiresVerbal, req.requiresSomatic, battleHasFreeHand(prepared))
   }
 
-  pure def hasBattleSpellAccess(c: Combatant, spellName: str): bool =
-    c.preparedSpells.contains(spellName) and battleSpellDefinition(spellName).modeled
+  pure def canProvideAnyBattleSpellComponents(c: Combatant, accesses: Set[BattleSpellAccess]): bool =
+    accesses.exists(access => canProvideBattleSpellComponentsForAccess(c, access))
 
-  pure def isBattleReadyableSpell(spellName: str): bool =
-    battleSpellDefinition(spellName).readyable
+  pure def actionSaveSpellAccesses(c: Combatant): Set[BattleSpellAccess] =
+    c.spellAccesses.filter(access =>
+      access.castingTime == BSCTAction and match access.delivery {
+        | BSDSingleTargetSave(_) => true
+        | _ => false
+      }
+    )
 
-  pure def readyableSpellBaseLevel(spellName: str): int =
-    battleSpellDefinition(spellName).baseLevel
+  pure def actionAoESpellAccesses(c: Combatant): Set[BattleSpellAccess] =
+    c.spellAccesses.filter(access =>
+      access.castingTime == BSCTAction and match access.delivery {
+        | BSDAoESave(_) => true
+        | _ => false
+      }
+    )
 
-  pure def readyableSpellDamageOnFail(spellName: str, slotLvl: int): int = {
-    val spellDef = battleSpellDefinition(spellName)
-    if (not(spellDef.readyable) or slotLvl < spellDef.baseLevel) 0
-    else (spellDef.damageDiceAtBase + (slotLvl - spellDef.baseLevel) * spellDef.damageDicePerExtraSlot) * 6
-  }
+  pure def concentrationSpellAccesses(c: Combatant): Set[BattleSpellAccess] =
+    c.spellAccesses.filter(access =>
+      access.castingTime == BSCTAction and access.concentration
+    )
 
-  pure def readyableSpellHalfOnSuccess(spellName: str): bool =
-    battleSpellDefinition(spellName).halfOnSuccess
+  pure def bonusActionSpellAccesses(c: Combatant): Set[BattleSpellAccess] =
+    c.spellAccesses.filter(access => access.castingTime == BSCTBonusAction)
 
-  pure def readyableSpellDamageType(spellName: str): DamageType =
-    battleSpellDefinition(spellName).damageType
+  pure def reactionSpellAccesses(c: Combatant, trigger: BattleReactionTrigger): Set[BattleSpellAccess] =
+    c.spellAccesses.filter(access =>
+      access.castingTime == BSCTReaction and access.reactionTrigger == trigger
+    )
 
-  pure def readyableSpellConditionOnFail(spellName: str): Condition =
-    battleSpellDefinition(spellName).conditionOnFail
+  pure def readyableSpellBaseLevel(access: BattleSpellAccess): int =
+    access.baseLevel
 
-  pure def readyableSpellApplyCondition(spellName: str): bool =
-    battleSpellDefinition(spellName).applyCondition
+  pure def readyableSpellDamageOnFail(access: BattleSpellAccess, slotLvl: int): int =
+    match access.delivery {
+      | BSDNone => 0
+      | BSDSingleTargetSave(payload) =>
+        if (slotLvl < access.baseLevel) 0
+        else (payload.damageDiceAtBase + (slotLvl - access.baseLevel) * payload.damageDicePerExtraSlot) * 6
+      | BSDAoESave(payload) =>
+        if (slotLvl < access.baseLevel) 0
+        else (payload.damageDiceAtBase + (slotLvl - access.baseLevel) * payload.damageDicePerExtraSlot) * 6
+    }
 
-  pure def readyableSpellSaveAbility(spellName: str): Ability =
-    battleSpellDefinition(spellName).saveAbility
+  pure def readyableSpellHalfOnSuccess(access: BattleSpellAccess): bool =
+    match access.delivery {
+      | BSDNone => false
+      | BSDSingleTargetSave(payload) => payload.halfOnSuccess
+      | BSDAoESave(payload) => payload.halfOnSuccess
+    }
+
+  pure def readyableSpellDamageType(access: BattleSpellAccess): DamageType =
+    match access.delivery {
+      | BSDNone => Slashing
+      | BSDSingleTargetSave(payload) => payload.damageType
+      | BSDAoESave(payload) => payload.damageType
+    }
+
+  pure def readyableSpellConditionOnFail(access: BattleSpellAccess): Condition =
+    match access.delivery {
+      | BSDNone => CBlinded
+      | BSDSingleTargetSave(payload) => payload.conditionOnFail
+      | BSDAoESave(payload) => payload.conditionOnFail
+    }
+
+  pure def readyableSpellApplyCondition(access: BattleSpellAccess): bool =
+    match access.delivery {
+      | BSDNone => false
+      | BSDSingleTargetSave(payload) => payload.applyCondition
+      | BSDAoESave(payload) => payload.applyCondition
+    }
+
+  pure def readyableSpellSaveAbility(access: BattleSpellAccess): Ability =
+    match access.delivery {
+      | BSDNone => Dex
+      | BSDSingleTargetSave(payload) => payload.saveAbility
+      | BSDAoESave(payload) => payload.saveAbility
+    }
 
   pure def effectiveSaveRoll(
     rollA: int,
@@ -611,14 +654,16 @@ module battle {
     endsEarlyOnWakeActionWithinFeet: int,
   }
 
-  pure val NO_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
+  /// Runtime-empty sentinel for "no condition duration is attached to this save".
+  val EMPTY_SAVE_FAILURE_CONDITION_DURATION: SaveFailureConditionDuration = {
     effectId: "",
     turnsRemaining: 0,
     expiresAt: AtEndOfTurn,
     expiryOwnerId: "",
   }
 
-  pure val NO_SAVE_FAILURE_BAND_CONDITION: SaveFailureBandCondition = {
+  /// Runtime-empty sentinel for "no failure-band rider applies".
+  val EMPTY_SAVE_FAILURE_BAND_CONDITION: SaveFailureBandCondition = {
     minimumMargin: 0,
     condition: CBlinded,
     whileCondition: CBlinded,
@@ -635,8 +680,8 @@ module battle {
     damageOnFail: int,         // 0 if no damage
     halfOnSuccess: bool,       // true for spells like Fireball (half damage on save)
     damageType: DamageType,
-    conditionOnFail: Condition, // CBlinded etc. Use CBlinded as "none" placeholder
-    applyCondition: bool,       // true if spell actually applies a condition on fail
+    conditionOnFail: Condition, // only meaningful when applyCondition is true
+    applyCondition: bool,       // false means conditionOnFail is inert runtime storage
     saveAbility: Ability,       // which ability the save targets (Dex, Con, etc.)
     saveTriggerKind: SaveTriggerKind,
     conditionDurationOnFail: SaveFailureConditionDuration,
@@ -871,14 +916,28 @@ module battle {
   // Stat block sentinel for PCs (all fields zero/empty — never read in PC mode).
   // Imported from creature.qnt as NULL_STAT_BLOCK.
 
-  // Default prepared spell list for test casters. Covers all spell shapes used
-  // by bCastSaveSpell, bCastAoE, bCastConcentrationSpell, and Counterspell.
-  val CASTER_PREPARED_SPELLS: Set[str] = Set(
+  // Default authored-unit ids for test casters. These ids are fixture metadata;
+  // battle semantics must consume the projected `BattleSpellAccess` fields.
+  val CASTER_SPELL_SOURCE_IDS: Set[str] = Set(
     "hold_person", "bless", "haste", "spirit_guardians",  // concentration spells
     "fireball", "burning_hands",                           // AoE / save spells
     "hellish_rebuke",
     "guiding_bolt", "inflict_wounds",                      // single-target save spells
     "counterspell", "shield"                               // reaction spells
+  )
+
+  val CASTER_SPELL_ACCESSES: Set[BattleSpellAccess] = Set(
+    battleFixtureSpellAccessById("hold_person"),
+    battleFixtureSpellAccessById("bless"),
+    battleFixtureSpellAccessById("haste"),
+    battleFixtureSpellAccessById("spirit_guardians"),
+    battleFixtureSpellAccessById("fireball"),
+    battleFixtureSpellAccessById("burning_hands"),
+    battleFixtureSpellAccessById("hellish_rebuke"),
+    battleFixtureSpellAccessById("guiding_bolt"),
+    battleFixtureSpellAccessById("inflict_wounds"),
+    battleFixtureSpellAccessById("counterspell"),
+    battleFixtureSpellAccessById("shield"),
   )
 
   pure def mkCombatant(maxHp: int, k: CreatureKind): Combatant = {
@@ -891,7 +950,7 @@ module battle {
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
-    preparedSpells: Set(),
+    spellAccesses: Set(),
     hasEvasion: false,
     saveMiscBonus: 0,
     saveAdvantageContexts: Set(),
@@ -914,7 +973,7 @@ module battle {
     qualifiedPhysicalImmunities: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
-    readiedSpellParams: NO_READIED_SPELL,
+    readiedSpellParams: EMPTY_READIED_SPELL_SLOT,
     grappledBy: "",
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
@@ -947,7 +1006,7 @@ module battle {
     monsterResources: EMPTY_MONSTER_RESOURCES,
     statBlock: NULL_STAT_BLOCK,
     rogueLevel: 0, monkLevel: 0, dexMod: 0,
-    preparedSpells: CASTER_PREPARED_SPELLS,
+    spellAccesses: CASTER_SPELL_ACCESSES,
     hasEvasion: false,
     saveMiscBonus: 0,
     saveAdvantageContexts: Set(),
@@ -970,7 +1029,7 @@ module battle {
     qualifiedPhysicalImmunities: Set(),
     sneakAttackDice: 0,
     sneakAttackUsedThisTurn: false,
-    readiedSpellParams: NO_READIED_SPELL,
+    readiedSpellParams: EMPTY_READIED_SPELL_SLOT,
     grappledBy: "",
     grapplingTarget: "",
     grappledTargetTwoSizesSmaller: false,
@@ -1004,7 +1063,7 @@ module battle {
         .with("legendaryResistancesRemaining", sb.legendaryResistanceUses),
       statBlock: sb,
       rogueLevel: 0, monkLevel: 0, dexMod: abilityModifier(sb.abilityScores.get(Dex)),
-      preparedSpells: Set(),
+      spellAccesses: Set(),
       hasEvasion: false,
       saveMiscBonus: 0,
       saveAdvantageContexts: sb.saveAdvantageContexts,
@@ -1027,7 +1086,7 @@ module battle {
       qualifiedPhysicalImmunities: Set(),
       sneakAttackDice: 0,
       sneakAttackUsedThisTurn: false,
-      readiedSpellParams: NO_READIED_SPELL,
+      readiedSpellParams: EMPTY_READIED_SPELL_SLOT,
       grappledBy: "",
       grapplingTarget: "",
       grappledTargetTwoSizesSmaller: false,
@@ -1169,7 +1228,7 @@ module battle {
       // Clear readied spell params (concentration break = spell fizzles)
       val caster1 = cs1.get(casterId)
       val cs1b = if (hasReadiedSpell(caster1))
-        cs1.set(casterId, caster1.with("readiedSpellParams", NO_READIED_SPELL))
+        cs1.set(casterId, caster1.with("readiedSpellParams", EMPTY_READIED_SPELL_SLOT))
       else cs1
       cs.keys().exclude(Set(casterId)).fold(cs1b, (acc, id) =>
         val c = acc.get(id)
@@ -1451,7 +1510,8 @@ module battle {
     else if (bardLevel < 15) 10
     else 12
 
-  /// Eligible Counterspell reactors: base eligible + has level 3+ slot + counterspell prepared
+  /// Eligible Counterspell reactors: base eligible + has level 3+ slot +
+  /// matching reaction-trigger spell access
   /// + hasn't already expended a spell slot this turn (SRD 5.2.1 "One Spell with a Spell Slot per Turn").
   /// All spell-casting actions also guard on slotExpendedThisTurn at the action level.
   pure def eligibleForCounterspell(
@@ -1459,10 +1519,9 @@ module battle {
   ): Set[CreatureId] =
     eligibleExcluding(cs, excludeId).filter(id =>
       hasCounterspellSlot(cs, id)
-      and hasBattleSpellAccess(cs.get(id), "counterspell")
-      and battleSpellDefinition("counterspell").counterspellReaction
+      and reactionSpellAccesses(cs.get(id), BSRTCreatureCastsSpell).size() > 0
       and not(cs.get(id).turn.slotExpendedThisTurn)
-      and canProvideBattleSpellComponents(cs.get(id), "counterspell")
+      and canProvideAnyBattleSpellComponents(cs.get(id), reactionSpellAccesses(cs.get(id), BSRTCreatureCastsSpell))
     )
 
   pure def legalDamageReactionsByCreature(cs: CreatureId -> Combatant, atk: AttackDamageCtx): CreatureId -> Set[str] = {
@@ -1508,11 +1567,10 @@ module battle {
       val canShield =
         canReact
         and id == atk.target
-        and hasBattleSpellAccess(c, "shield")
-        and battleSpellDefinition("shield").shieldReaction
+        and reactionSpellAccesses(c, BSRTHitByAttackRoll).size() > 0
         and hasAnySpellSlot(c)
         and not(c.turn.slotExpendedThisTurn)
-        and canProvideBattleSpellComponents(c, "shield")
+        and canProvideAnyBattleSpellComponents(c, reactionSpellAccesses(c, BSRTHitByAttackRoll))
       val canParry =
         canReact
         and id == atk.target
@@ -1879,13 +1937,13 @@ module battle {
       // 4c. Clear readied spell; if one was held, break its concentration (SRD 5.2.1:
       // "Concentration, which you can maintain up to the start of your next turn")
       val cs2a = if (hasReadiedSpell(ac4))
-        breakConcentrationAndPropagate(cs2.set(activeId, ac4.with("readiedSpellParams", NO_READIED_SPELL)), activeId)
+        breakConcentrationAndPropagate(cs2.set(activeId, ac4.with("readiedSpellParams", EMPTY_READIED_SPELL_SLOT)), activeId)
       else cs2
       val ac4b = cs2a.get(activeId)
       val cs2b = cs2a.set(activeId, ac4b.with("fighterState", pFighterStartTurn(ac4b.fighterState, ac4b.fighterLevel))
                                             .with("recklessThisTurn", false)
                                             .with("sneakAttackUsedThisTurn", false)
-                                            .with("readiedSpellParams", NO_READIED_SPELL))
+                                            .with("readiedSpellParams", EMPTY_READIED_SPELL_SLOT))
       // 5. Monster-specific: refresh LA + recharge rolls
       val cs3 = if (c0.kind == Monster) {
         val sb = c0.statBlock
@@ -2004,8 +2062,8 @@ module battle {
         .with("creature", c.creature.with("invisible", hasActiveInvisibleEffect(c.creature)))
     else c
 
-  pure def revealHiddenForVerbalSpell(c: Combatant, spellName: str): Combatant =
-    if (battleSpellComponentRequirements(spellName).requiresVerbal) endHidden(c) else c
+  pure def revealHiddenForVerbalSpellAccess(c: Combatant, access: BattleSpellAccess): Combatant =
+    if (battleSpellComponentRequirements(access).requiresVerbal) endHidden(c) else c
 
   /// Shared attack resolution: determines hit, enters reaction chain or deals damage.
   /// Called by bAttack, bMovementOAAttack, bLegendaryAttack, bReadyRelease.
@@ -2216,6 +2274,15 @@ module battle {
               val reactor = bCreatures.get(reactorId)
               val legal = atk.legalReactionsByCreature.get(reactorId)
               val parryBonus = reactor.parryAcBonus
+              val shieldAccesses = reactionSpellAccesses(reactor, BSRTHitByAttackRoll)
+              nondet shieldAccess = shieldAccesses.oneOf()
+              val shieldBonus =
+                if (shieldAccesses.size() > 0)
+                  match shieldAccess.reactionEffect {
+                    | BRXShieldArmorClassBonus(bonus) => bonus
+                    | BRXNone => 0
+                  }
+                else 0
               val maxCwReduction = intMax(1, battleBardicInspirationDie(reactor.bardLevel))
               nondet cwReduction = 1.to(maxCwReduction).oneOf()
               nondet decision = Set(RPass)
@@ -2228,7 +2295,7 @@ module battle {
               // Retroactive reactions: spend reaction, modify atk, stay in hit phase.
               // RPass leaves atk unchanged; retroactive reactions modify it.
               val retroAtk = match decision {
-                | RShield => atk.with("targetAc", atk.targetAc + 5)
+                | RShield => atk.with("targetAc", atk.targetAc + shieldBonus)
                 | RParry(bonus) => atk.with("targetAc", atk.targetAc + bonus)
                 | RCuttingWords(reduction) => atk.with("attackRoll", atk.attackRoll - reduction)
                 | _ => atk
@@ -2237,7 +2304,7 @@ module battle {
                 val cs1 = match decision {
                   | RShield =>
                     val slotLvl = firstSpellSlotLevel(reactor)
-                    val preparedReactor = prepareHandsForSpellComponents(reactor)
+                    val preparedReactor = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(reactor), shieldAccess)
                     val cs0 = bCreatures.set(reactorId, preparedReactor)
                     expendSlot(spendReaction(cs0, reactorId), reactorId, slotLvl)
                   | RParry(_) => spendReaction(bCreatures, reactorId)
@@ -2382,8 +2449,7 @@ module battle {
                 all {
                   reactorId == ad.damagedCreature,
                   reactor.turn.reactionAvailable,
-                  hasBattleSpellAccess(reactor, "hellish_rebuke"),
-                  battleSpellDefinition("hellish_rebuke").hellishRebukeReaction,
+                  reactionSpellAccesses(reactor, BSRTAfterDamageMeleeWithin5ft).size() > 0,
                   slotLvl > 0,
                   ad.sourceVisibleToDamagedCreature,
                   ad.sourceWithin60ftOfDamagedCreature,
@@ -2501,21 +2567,22 @@ module battle {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
-    val saveSpells = ac.preparedSpells.filter(isBattleReadyableSpell)
+    val saveSpells = actionSaveSpellAccesses(ac)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
-    nondet spellName = saveSpells.oneOf()
-    nondet slotLvl = readyableSpellBaseLevel(spellName).to(9).oneOf()
+    nondet spellAccess = saveSpells.oneOf()
+    nondet slotLvl = readyableSpellBaseLevel(spellAccess).to(9).oneOf()
+    val spellName = spellAccess.sourceId
     val saveDC = 13
     nondet saveRoll = 1.to(20).oneOf()
     nondet saveRollB = 1.to(20).oneOf()
-    val dmgOnFail = readyableSpellDamageOnFail(spellName, slotLvl)
-    val halfOnSave = readyableSpellHalfOnSuccess(spellName)
-    val dt = readyableSpellDamageType(spellName)
-    val cond = readyableSpellConditionOnFail(spellName)
-    val applyCond = readyableSpellApplyCondition(spellName)
-    val saveAb = readyableSpellSaveAbility(spellName)
+    val dmgOnFail = readyableSpellDamageOnFail(spellAccess, slotLvl)
+    val halfOnSave = readyableSpellHalfOnSuccess(spellAccess)
+    val dt = readyableSpellDamageType(spellAccess)
+    val cond = readyableSpellConditionOnFail(spellAccess)
+    val applyCond = readyableSpellApplyCondition(spellAccess)
+    val saveAb = readyableSpellSaveAbility(spellAccess)
     val ritual = false
-    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
+    val preparedCaster = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(ac), spellAccess)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -2528,8 +2595,8 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       saveSpells.size() > 0,                  // chosen save-spell family only
-      canProvideBattleSpellComponents(ac, spellName),
-      slotLvl >= readyableSpellBaseLevel(spellName),
+      canProvideBattleSpellComponentsForAccess(ac, spellAccess),
+      slotLvl >= readyableSpellBaseLevel(spellAccess),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
@@ -2547,8 +2614,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
-        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
-        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
+        conditionDurationOnFail: EMPTY_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: EMPTY_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -2927,6 +2994,8 @@ module battle {
               nondet decision = Set(RPass, RCounterspell(true), RCounterspell(false)).oneOf()
               nondet csSlotLvl = 3.to(9).oneOf()
               val newOffered = ctx.offered.union(Set(reactorId))
+              val counterspellAccesses = reactionSpellAccesses(bCreatures.get(reactorId), BSRTCreatureCastsSpell)
+              nondet counterspellAccess = counterspellAccesses.oneOf()
               match decision {
                 | RPass => all {
                     bCreatures' = bCreatures,
@@ -2939,10 +3008,16 @@ module battle {
                     bSpellStack.length() < 2,
                     // Guard: reactor must have a slot of level csSlotLvl
                     bCreatures.get(reactorId).slots.slotsCurrent.get(csSlotLvl) > 0,
-                    canProvideBattleSpellComponents(bCreatures.get(reactorId), "counterspell"),
+                    counterspellAccesses.size() > 0,
+                    canProvideBattleSpellComponentsForAccess(bCreatures.get(reactorId), counterspellAccess),
                     // Spend reaction + slot
                     val cs1 = spendReaction(
-                      bCreatures.set(reactorId, prepareHandsForSpellComponents(bCreatures.get(reactorId))),
+                      bCreatures.set(reactorId,
+                        revealHiddenForVerbalSpellAccess(
+                          prepareHandsForSpellComponents(bCreatures.get(reactorId)),
+                          counterspellAccess,
+                        )
+                      ),
                       reactorId
                     )
                     val cs2 = expendSlot(cs1, reactorId, csSlotLvl)
@@ -2963,7 +3038,7 @@ module battle {
                     }
                     val csSpell: SpellCastCtx = {
                       caster: reactorId,
-                      spellName: "counterspell",
+                      spellName: counterspellAccess.sourceId,
                       postCast: PCECounterspell(csEffect),
                       slotLvl: csSlotLvl,  // CS slot spent at cast time; carried for refund if counter-counterspelled
                       ritual: false,  // Counterspell is a reaction, never ritual
@@ -3107,17 +3182,16 @@ module battle {
     val activeId = bInitiative[bTurnIndex]
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
-    val concentrationSpells = ac.preparedSpells.filter(spellId =>
-      battleSpellDefinition(spellId).concentration
-    )
+    val concentrationSpells = concentrationSpellAccesses(ac)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
     nondet duration = 1.to(10).oneOf()
-    nondet spellId = concentrationSpells.oneOf()
+    nondet spellAccess = concentrationSpells.oneOf()
+    val spellId = spellAccess.sourceId
     nondet cond = Set(CParalyzed, CCharmed, CRestrained).oneOf()
     nondet applyCond = Bool.oneOf()
     nondet ritual = Bool.oneOf()
-    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellId)
+    val preparedCaster = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(ac), spellAccess)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -3130,7 +3204,8 @@ module battle {
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
       concentrationSpells.size() > 0,
-      canProvideBattleSpellComponents(ac, spellId),
+      canProvideBattleSpellComponentsForAccess(ac, spellAccess),
+      slotLvl >= spellAccess.baseLevel,
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
@@ -3208,19 +3283,19 @@ module battle {
     val liveTargets = allIds.exclude(Set(activeId)).filter(id =>
       not(bCreatures.get(id).creature.dead)
     )
+    val aoeSpells = actionAoESpellAccesses(ac)
+    nondet spellAccess = aoeSpells.oneOf()
     nondet saveDC = 10.to(18).oneOf()
-    nondet dmgOnFail = 1.to(20).oneOf()
-    nondet halfOnSave = Bool.oneOf()
-    nondet dt = ALL_DAMAGE_TYPES.oneOf()
-    nondet cond = Set(CBlinded, CCharmed, CFrightened, CParalyzed, CStunned).oneOf()
-    nondet applyCond = Bool.oneOf()
-    // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
-    // Full 6-way set would multiply state space 3x for no coverage gain.
-    nondet saveAb = Set(Dex, Con).oneOf()
-    nondet slotLvl = 1.to(9).oneOf()
-    nondet spellName = ac.preparedSpells.oneOf()
+    nondet slotLvl = spellAccess.baseLevel.to(9).oneOf()
+    val spellName = spellAccess.sourceId
+    val dmgOnFail = readyableSpellDamageOnFail(spellAccess, slotLvl)
+    val halfOnSave = readyableSpellHalfOnSuccess(spellAccess)
+    val dt = readyableSpellDamageType(spellAccess)
+    val cond = readyableSpellConditionOnFail(spellAccess)
+    val applyCond = readyableSpellApplyCondition(spellAccess)
+    val saveAb = readyableSpellSaveAbility(spellAccess)
     nondet ritual = Bool.oneOf()
-    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
+    val preparedCaster = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(ac), spellAccess)
     all {
       bPhase == BPActiveTurn,
       bTurnStarted,
@@ -3231,8 +3306,8 @@ module battle {
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be Magic
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn) or ritual,  // SRD 5.2.1 one slot per turn
-      ac.preparedSpells.size() > 0,           // must have at least one prepared spell
-      canProvideBattleSpellComponents(ac, spellName),
+      aoeSpells.size() > 0,
+      canProvideBattleSpellComponentsForAccess(ac, spellAccess),
       // Ritual: no slot needed (SRD 5.2.1). Normal: slot required.
       if (ritual) true else ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AMagic)
@@ -3323,8 +3398,8 @@ module battle {
               evDmgOnFail, aoe.halfOnSuccess, aoe.damageType,
               aoe.conditionOnFail, aoe.applyCondition,
               aoe.saveDC - (effectiveRoll + tgt.saveMiscBonus),
-              NO_SAVE_FAILURE_CONDITION_DURATION,
-              NO_SAVE_FAILURE_BAND_CONDITION
+              EMPTY_SAVE_FAILURE_CONDITION_DURATION,
+              EMPTY_SAVE_FAILURE_BAND_CONDITION
             )
             val elig = eligibleForLR(bCreatures, targetId)
             if (elig.size() > 0) {
@@ -3800,11 +3875,20 @@ module battle {
         val releaser = bCreatures.get(releaserId)
         all {
           hasReadiedSpell(releaser),  // spell release only
-          canProvideBattleSpellComponents(releaser, releaser.readiedSpellParams.spellName),
+          pCanProvideComponents(
+            if (releaser.readiedSpellParams.requiresSomatic) prepareHandsForSpellComponents(releaser).creature else releaser.creature,
+            releaser.readiedSpellParams.requiresVerbal,
+            releaser.readiedSpellParams.requiresSomatic,
+            battleHasFreeHand(if (releaser.readiedSpellParams.requiresSomatic) prepareHandsForSpellComponents(releaser) else releaser),
+          ),
           // Spend reaction, clear readiedAction and readiedSpellParams
           val updatedTurn = prepareHandsForSpellComponents(releaser).turn.with("reactionAvailable", false).with("readiedAction", false)
           val cs1 = bCreatures.set(releaserId,
-            prepareHandsForSpellComponents(releaser).with("turn", updatedTurn).with("readiedSpellParams", NO_READIED_SPELL))
+            (if (releaser.readiedSpellParams.requiresVerbal)
+              endHidden(prepareHandsForSpellComponents(releaser))
+            else
+              prepareHandsForSpellComponents(releaser)
+            ).with("turn", updatedTurn).with("readiedSpellParams", EMPTY_READIED_SPELL_SLOT))
           // Break concentration (spell energy is being released)
           val cs2 = breakConcentrationAndPropagate(cs1, releaserId)
           val readyReturn = ADRAwaitingReadiedAction(readyCtx)
@@ -3816,12 +3900,12 @@ module battle {
             conditionOnFail: releaser.readiedSpellParams.conditionOnFail, applyCondition: releaser.readiedSpellParams.applyCondition,
             saveAbility: releaser.readiedSpellParams.saveAbility,
             saveTriggerKind: STKSpell,
-            conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
-            failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
+            conditionDurationOnFail: EMPTY_SAVE_FAILURE_CONDITION_DURATION,
+            failureBandCondition: EMPTY_SAVE_FAILURE_BAND_CONDITION,
           }
           val spellCtx: SpellCastCtx = {
             caster: releaser.readiedSpellParams.caster,
-            spellName: releaser.readiedSpellParams.spellName,
+            spellName: releaser.readiedSpellParams.sourceId,
             postCast: PCESave(saveCtx),
             slotLvl: 0,   // slot already spent at ready time — no refund on counterspell
             ritual: false, // readied spells cannot be rituals
@@ -4250,15 +4334,17 @@ module battle {
     val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
     nondet slotLvl = 1.to(9).oneOf()
-    nondet spellName = ac.preparedSpells.oneOf()
+    val readyableSpells = actionSaveSpellAccesses(ac).union(actionAoESpellAccesses(ac))
+    nondet spellAccess = readyableSpells.oneOf()
+    val spellName = spellAccess.sourceId
     val saveDC = 13
-    val dmgOnFail = readyableSpellDamageOnFail(spellName, slotLvl)
-    val halfOnSave = readyableSpellHalfOnSuccess(spellName)
-    val dt = readyableSpellDamageType(spellName)
-    val cond = readyableSpellConditionOnFail(spellName)
-    val applyCond = readyableSpellApplyCondition(spellName)
-    val saveAb = readyableSpellSaveAbility(spellName)
-    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
+    val dmgOnFail = readyableSpellDamageOnFail(spellAccess, slotLvl)
+    val halfOnSave = readyableSpellHalfOnSuccess(spellAccess)
+    val dt = readyableSpellDamageType(spellAccess)
+    val cond = readyableSpellConditionOnFail(spellAccess)
+    val applyCond = readyableSpellApplyCondition(spellAccess)
+    val saveAb = readyableSpellSaveAbility(spellAccess)
+    val preparedCaster = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(ac), spellAccess)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -4270,10 +4356,9 @@ module battle {
       not(ac.turn.actionSurgeActionPending),  // Action Surge cannot be used for spell-readying
       not(ac.ragingBlocksSpells),
       not(ac.turn.slotExpendedThisTurn),  // readied spells cost a slot
-      ac.preparedSpells.size() > 0,
-      isBattleReadyableSpell(spellName),
-      canProvideBattleSpellComponents(ac, spellName),
-      slotLvl >= readyableSpellBaseLevel(spellName),
+      readyableSpells.size() > 0,
+      canProvideBattleSpellComponentsForAccess(ac, spellAccess),
+      slotLvl >= readyableSpellBaseLevel(spellAccess),
       ac.slots.slotsCurrent.get(slotLvl) > 0,
       val newTurn = pUseAction(preparedCaster.turn, preparedCaster.creature, AReady)
       // Spend slot immediately (SRD 5.2.1: "expending any resources")
@@ -4292,7 +4377,9 @@ module battle {
         saveDC: saveDC, damageOnFail: dmgOnFail,
         halfOnSuccess: halfOnSave, damageType: dt,
         conditionOnFail: cond, applyCondition: applyCond,
-        saveAbility: saveAb, spellName: spellName,
+        saveAbility: saveAb, sourceId: spellName,
+        requiresVerbal: spellAccess.requiresVerbal,
+        requiresSomatic: spellAccess.requiresSomatic,
         slotLvl: slotLvl,
       }
       val cs5 = cs4.set(activeId, cs4.get(activeId).with("readiedSpellParams", rsp))
@@ -4410,6 +4497,8 @@ module battle {
     val allIds = bCreatures.keys()
     val ac = bCreatures.get(activeId)
     nondet targetId = allIds.exclude(Set(activeId)).oneOf()
+    val bonusActionSpells = bonusActionSpellAccesses(ac)
+    nondet spellAccess = bonusActionSpells.oneOf()
     nondet saveDC = 10.to(18).oneOf()
     nondet saveRoll = 1.to(20).oneOf()
     nondet saveRollB = 1.to(20).oneOf()
@@ -4421,9 +4510,9 @@ module battle {
     // Only Dex and Con matter for behavior (Evasion checks == Dex); others are identical.
     // Full 6-way set would multiply state space 3x for no coverage gain.
     nondet saveAb = Set(Dex, Con).oneOf()
-    nondet slotLvl = 1.to(9).oneOf()
-    nondet spellName = ac.preparedSpells.oneOf()
-    val preparedCaster = revealHiddenForVerbalSpell(prepareHandsForSpellComponents(ac), spellName)
+    nondet slotLvl = spellAccess.baseLevel.to(9).oneOf()
+    val spellName = spellAccess.sourceId
+    val preparedCaster = revealHiddenForVerbalSpellAccess(prepareHandsForSpellComponents(ac), spellAccess)
     val tc = bCreatures.get(targetId)
     all {
       bPhase == BPActiveTurn,
@@ -4434,8 +4523,8 @@ module battle {
       not(ac.turn.bonusActionUsed),
       not(ac.ragingBlocksSpells),             // Rage blocks spell casting
       not(ac.turn.slotExpendedThisTurn),        // SRD 5.2.1 one slot per turn
-      ac.preparedSpells.size() > 0,
-      canProvideBattleSpellComponents(ac, spellName),
+      bonusActionSpells.size() > 0,
+      canProvideBattleSpellComponentsForAccess(ac, spellAccess),
       ac.slots.slotsCurrent.get(slotLvl) > 0,   // BA spells cannot be rituals
       val newTurn = pUseBonusAction(preparedCaster.turn, preparedCaster.creature)
                       .with("bonusActionSpellCast", true)
@@ -4451,8 +4540,8 @@ module battle {
         conditionOnFail: cond, applyCondition: applyCond,
         saveAbility: saveAb,
         saveTriggerKind: STKSpell,
-        conditionDurationOnFail: NO_SAVE_FAILURE_CONDITION_DURATION,
-        failureBandCondition: NO_SAVE_FAILURE_BAND_CONDITION,
+        conditionDurationOnFail: EMPTY_SAVE_FAILURE_CONDITION_DURATION,
+        failureBandCondition: EMPTY_SAVE_FAILURE_BAND_CONDITION,
       }
       val spellCtx: SpellCastCtx = {
         caster: activeId,
@@ -4580,7 +4669,7 @@ module battle {
         // Caveat 2: Rage blocks spell casting but not all Magic actions (non-spell magic
         // items are out of spec scope). Both safe within current modeled domain.
         val turnAc = bCreatures.get(bInitiative[bTurnIndex])
-        val canCastSpells = turnAc.preparedSpells.size() > 0 and not(turnAc.ragingBlocksSpells)
+        val canCastSpells = turnAc.spellAccesses.size() > 0 and not(turnAc.ragingBlocksSpells)
         if (canCastSpells) any {
           bAttack, bOffHandAttack, bHelpAttack, bCastSaveSpell, bCastAoE,
           bCastConcentrationSpell, bCastBonusActionSpell, bConcentrationCheck,

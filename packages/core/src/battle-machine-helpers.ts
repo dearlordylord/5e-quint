@@ -478,6 +478,10 @@ export function canProvideBattleSpellComponents(
   c: BattleCreatureState,
   spellName: string,
 ): boolean {
+  // Temporary TS seam: component requirements still come from spell registry
+  // lookup by SRD spell id. This is compatibility logic, not battle-owned
+  // semantic authority; Quint/main ownership now lives on the common-lingo
+  // execution surface.
   const requirements = getSpellComponentRequirements(spellName);
   if (requirements == null) return true;
   if (requirements.requiresVerbal && !canBattleSpeak(c)) return false;
@@ -590,10 +594,10 @@ export function legalHitReactions(
   atk: AttackHitCtx,
   candidates: ReadonlySet<CreatureId>,
 ) {
-  // TODO: This generic helper currently owns hit-reaction legality for Shield,
-  // Parry, Cutting Words, and Goblin Boss Redirect Attack. Keep parity, but
-  // split rule-specific eligibility back toward the owning spell/feature/
-  // monster reaction surfaces instead of growing this helper further.
+  // TODO: This helper still carries a TS compatibility seam for some
+  // spell-named reactions (`shield`) while Quint/main semantics already route
+  // through access/projection fields. Keep parity, but continue moving
+  // rule-specific spell eligibility out of id-based helper branches.
   const legalByCreature = new Map<
     CreatureId,
     Set<"RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack">
@@ -721,10 +725,9 @@ export function eligibleForCounterspell(
   cs: Creatures,
   excludeId: CreatureId,
 ): Set<CreatureId> {
-  // TODO: This generic helper currently owns Counterspell-specific eligibility
-  // (spell known/prepared, level 3+ slot, one-slot-per-turn gating, and
-  // component checks). Keep parity, but move this closer to the Counterspell
-  // reaction surface when we refactor helper ownership.
+  // TODO: This remains a TS compatibility seam. It still recognizes the
+  // reaction by SRD spell id while Quint/main semantics use access/projection
+  // fields. Preserve parity for now, but do not widen id-based logic here.
   const result = new Set<CreatureId>();
   for (const [id, c] of cs) {
     if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious)

@@ -118,12 +118,6 @@ export interface BattleCreatureState extends Pick<
   readonly dexMod: number;
   // Spell access fact: creature-owned permission/resource path for each spell.
   readonly spellAccesses: ReadonlyArray<BattleSpellAccess>;
-  // Temporary derived compatibility mirrors. Single owned source is
-  // `spellAccesses`; these must stay derived-only and should be removed after
-  // EPT13 callers stop depending on them.
-  readonly preparedSpells: ReadonlySet<SpellId>;
-  readonly spellSaveDCs: ReadonlyMap<SpellId, DifficultyClass>;
-  readonly spellCastLevels: ReadonlyMap<SpellId, SpellSlotLevel>;
   // Evasion (Rogue 7, Monk 7): DEX save success = 0 dmg, fail = half
   readonly hasEvasion: boolean;
   // Misc save bonus (Paladin Aura, Ring of Protection, etc.)

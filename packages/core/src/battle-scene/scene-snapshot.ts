@@ -3,6 +3,7 @@
  * No coordinates (pixels), no time, no animation. Grid positions and game-unit measurements only.
  */
 import { Option } from "effect";
+import { battleSpellIds } from "#/battle-spell-access.ts";
 
 import { isIncapacitated } from "#/battle-machine-creature.ts";
 import type {
@@ -147,7 +148,7 @@ function deriveCreature(
     deathSaves: cs.deathSaves,
     isActive: id === activeId,
     conditions: extractConditions(cs),
-    preparedSpells: [...cs.preparedSpells].sort(),
+    preparedSpells: [...battleSpellIds(cs.spellAccesses)].sort(),
   };
 }
 

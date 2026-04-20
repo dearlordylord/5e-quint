@@ -5,7 +5,6 @@
 import { Match, Option } from "effect";
 
 import {
-  legacyBattleSpellAccessViews,
   preparedBattleSpellAccess,
 } from "#/battle-spell-access.ts";
 import type {
@@ -951,7 +950,6 @@ export function freshCreature(
   kind: CreatureKind,
 ): BattleCreatureState {
   const spellAccesses = [] as const;
-  const spellAccessViews = legacyBattleSpellAccessViews(spellAccesses);
   return {
     hp: maxHp,
     maxHp,
@@ -1004,9 +1002,6 @@ export function freshCreature(
     strMod: 0,
     dexMod: 0,
     spellAccesses,
-    preparedSpells: spellAccessViews.preparedSpells,
-    spellSaveDCs: spellAccessViews.spellSaveDCs,
-    spellCastLevels: spellAccessViews.spellCastLevels,
     hasEvasion: false,
     saveMiscBonus: 0,
     saveAdvantageContexts: new Set(),
@@ -1049,14 +1044,10 @@ export function freshCaster(
   maxHp: number,
   kind: CreatureKind,
 ): BattleCreatureState {
-  const spellAccessViews = legacyBattleSpellAccessViews(CASTER_SPELL_ACCESSES);
   return {
     ...freshCreature(maxHp, kind),
     slotsMax: CASTER_SLOTS,
     slotsCurrent: CASTER_SLOTS,
     spellAccesses: CASTER_SPELL_ACCESSES,
-    preparedSpells: spellAccessViews.preparedSpells,
-    spellSaveDCs: spellAccessViews.spellSaveDCs,
-    spellCastLevels: spellAccessViews.spellCastLevels,
   };
 }

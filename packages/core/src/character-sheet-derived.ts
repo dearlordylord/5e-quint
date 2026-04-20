@@ -331,8 +331,6 @@ type CharacterBattleProjection = Pick<
   | "barbarianLevel"
   | "bardLevel"
   | "spellAccesses"
-  | "preparedSpells"
-  | "spellSaveDCs"
   | "slotsMax"
   | "slotsCurrent"
   | "pactSlotsMax"
@@ -376,8 +374,6 @@ export function characterSheetBattleProjection(
             derived.spellcasting.preparedSpellSaveDCs.get(currentSpellId)!,
         }),
     ),
-    preparedSpells: derived.spellcasting.preparedSpells,
-    spellSaveDCs: derived.spellcasting.preparedSpellSaveDCs,
     slotsMax: derived.spellcasting.slotsMax,
     slotsCurrent: derived.spellcasting.slotsCurrent,
     pactSlotsMax: derived.spellcasting.pactSlotsMax,

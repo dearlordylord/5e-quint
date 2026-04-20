@@ -1,4 +1,4 @@
-import { Either, Match, Option } from "effect";
+import { Either, Option } from "effect";
 
 import type {
   DifficultyClass,
@@ -11,6 +11,8 @@ import type {
 export type BattleSpellAccess =
   | {
       readonly tag: "prepared";
+      // Bookkeeping/provenance only. Battle semantics should consume access
+      // shape and projected spell facts rather than branching on the id.
       readonly spellId: SpellId;
       // Access-scoped invocation default: invocations through this access use
       // this creature-owned spell save DC unless a later path widens it.
@@ -21,6 +23,8 @@ export type BattleSpellAccess =
     }
   | {
       readonly tag: "statBlockActionGranted";
+      // Bookkeeping/provenance only. Battle semantics should consume access
+      // shape and projected spell facts rather than branching on the id.
       readonly spellId: SpellId;
       // Access-scoped invocation default for this stat-block action-granted path.
       readonly spellSaveDC: DifficultyClass;
@@ -106,31 +110,12 @@ export function hasBattleSpellAccess(
   return accesses.some((access) => access.spellId === spellId);
 }
 
-export function legacyBattleSpellAccessViews(
+export function battleSpellIds(
   accesses: ReadonlyArray<BattleSpellAccess>,
-): {
-  readonly preparedSpells: ReadonlySet<SpellId>;
-  readonly spellSaveDCs: ReadonlyMap<SpellId, DifficultyClass>;
-  readonly spellCastLevels: ReadonlyMap<SpellId, SpellSlotLevel>;
-} {
-  const preparedSpells = new Set<SpellId>();
-  const spellSaveDCs = new Map<SpellId, DifficultyClass>();
-  const spellCastLevels = new Map<SpellId, SpellSlotLevel>();
-
-  // Temporary derived compatibility mirrors. Single owned source is
-  // `spellAccesses`; remove this view once all battle callers read access facts
-  // directly instead of split spell mirrors.
+): ReadonlySet<SpellId> {
+  const spellIds = new Set<SpellId>();
   for (const access of accesses) {
-    preparedSpells.add(access.spellId);
-    spellSaveDCs.set(access.spellId, access.spellSaveDC);
-    Match.value(access).pipe(
-      Match.when({ tag: "prepared" }, () => undefined),
-      Match.when({ tag: "statBlockActionGranted" }, ({ resourcePath }) => {
-        spellCastLevels.set(access.spellId, resourcePath.fixedCastLevel);
-      }),
-      Match.exhaustive,
-    );
+    spellIds.add(access.spellId);
   }
-
-  return { preparedSpells, spellSaveDCs, spellCastLevels };
+  return spellIds;
 }

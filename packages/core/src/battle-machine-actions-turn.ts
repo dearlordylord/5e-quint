@@ -6,7 +6,6 @@ import {
 } from "#/battle-machine-actions-attack.ts";
 import {
   battleSpellAccessesForSpell,
-  legacyBattleSpellAccessViews,
   preparedBattleSpellAccess,
   statBlockActionGrantedBattleSpellAccess,
   type BattleSpellAccess,
@@ -132,24 +131,21 @@ function canonicalPreparedSpellIds(
 
 function deriveBattleSpellAccesses(params: {
   readonly cfg: InitCreatureConfig;
-  readonly base: BattleCreatureState;
 }): ReadonlyArray<BattleSpellAccess> {
   if (params.cfg.spellAccesses != null) return params.cfg.spellAccesses;
   const preparedSpells =
     params.cfg.preparedSpells == null
-      ? params.base.preparedSpells
+      ? new Set<SpellId>()
       : canonicalPreparedSpellIds(params.cfg.preparedSpells);
   return [...preparedSpells].map((currentSpellId) => {
     const saveDC =
       params.cfg.spellSaveDCs?.get(currentSpellId) ??
-      params.base.spellSaveDCs.get(currentSpellId) ??
       // Temporary migration seam: raw battle fixtures that only provide legacy
       // prepared-spell inputs still get a stable access-scoped DC until every
       // caller builds spell access directly.
       difficultyClass(13);
     const fixedCastLevel =
-      params.cfg.spellCastLevels?.get(currentSpellId) ??
-      params.base.spellCastLevels.get(currentSpellId);
+      params.cfg.spellCastLevels?.get(currentSpellId);
     const dailyUseId =
       (params.cfg.dailyUsesRemaining ?? {})[
         monsterSpellDailyUseId(currentSpellId)
@@ -219,9 +215,7 @@ export function buildCreatureState(
     hasShieldEquipped: cfg.hasShieldEquipped ?? false,
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
-  const spellAccesses = deriveBattleSpellAccesses({ cfg, base });
-  const spellAccessViews = legacyBattleSpellAccessViews(spellAccesses);
-  const preparedSpells = spellAccessViews.preparedSpells;
+  const spellAccesses = deriveBattleSpellAccesses({ cfg });
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   const isWearingArmor = cfg.isWearingArmor ?? base.isWearingArmor;
@@ -277,7 +271,6 @@ export function buildCreatureState(
       ? { dailyUsesRemaining: cfg.dailyUsesRemaining }
       : {}),
     spellAccesses,
-    preparedSpells,
     slotsMax,
     slotsCurrent,
     ...(cfg.pactSlotsMax != null ? { pactSlotsMax: cfg.pactSlotsMax } : {}),
@@ -285,8 +278,6 @@ export function buildCreatureState(
       ? { pactSlotsCurrent: cfg.pactSlotsCurrent }
       : {}),
     ...(cfg.pactSlotLevel != null ? { pactSlotLevel: cfg.pactSlotLevel } : {}),
-    spellSaveDCs: spellAccessViews.spellSaveDCs,
-    spellCastLevels: spellAccessViews.spellCastLevels,
     ...(cfg.hasEvasion != null ? { hasEvasion: cfg.hasEvasion } : {}),
     ...(cfg.saveMiscBonus != null ? { saveMiscBonus: cfg.saveMiscBonus } : {}),
     ...(cfg.saveAdvantageContexts != null
