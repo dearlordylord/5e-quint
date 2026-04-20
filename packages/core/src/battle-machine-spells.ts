@@ -141,7 +141,8 @@ export function returnToCSWindow(
   if (remaining.size > 0) {
     const spell: SpellCastCtx = {
       caster: entry.spellCasterId,
-      spellName: entry.spellName,
+      accessId: entry.spellAccessId,
+      spellId: entry.spellId,
       postCast: entry.spellPostCast,
       slotLvl: entry.slotLvl,
       ritual: entry.ritual,
@@ -178,7 +179,8 @@ export function returnToCSWindow(
         if (setDifference(fe2, gp.top.offered).size > 0) {
           const sp2: SpellCastCtx = {
             caster: gp.top.spellCasterId,
-            spellName: gp.top.spellName,
+            accessId: gp.top.spellAccessId,
+            spellId: gp.top.spellId,
             postCast: gp.top.spellPostCast,
             slotLvl: gp.top.slotLvl,
             ritual: gp.top.ritual,
@@ -202,7 +204,8 @@ export function returnToCSWindow(
     if (setDifference(fe2, popped.top.offered).size > 0) {
       const sp2: SpellCastCtx = {
         caster: popped.top.spellCasterId,
-        spellName: popped.top.spellName,
+        accessId: popped.top.spellAccessId,
+        spellId: popped.top.spellId,
         postCast: popped.top.spellPostCast,
         slotLvl: popped.top.slotLvl,
         ritual: popped.top.ritual,

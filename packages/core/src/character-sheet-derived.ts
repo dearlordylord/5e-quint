@@ -28,6 +28,7 @@ import {
   type HitDiceRemaining,
 } from "#/features/class-tables.ts";
 import { sneakAttackDice } from "#/features/class-rogue.ts";
+import type { SpellLibrary } from "#/features/spell-registry.ts";
 import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
 import type { DndMachineInput } from "#/machine-types.ts";
 import {
@@ -343,6 +344,7 @@ type CharacterBattleProjection = Pick<
 
 export function characterSheetBattleProjection(
   sheet: CharacterSheet,
+  spellLibrary: SpellLibrary,
   runtime?: {
     readonly activeProjectedPersistents?: ReadonlySet<ActiveProjectedPersistent>;
   },
@@ -369,6 +371,7 @@ export function characterSheetBattleProjection(
     spellAccesses: [...derived.spellcasting.preparedSpells].map(
       (currentSpellId) =>
         preparedBattleSpellAccess({
+          spellDictionary: spellLibrary,
           spellId: currentSpellId,
           spellSaveDC:
             derived.spellcasting.preparedSpellSaveDCs.get(currentSpellId)!,

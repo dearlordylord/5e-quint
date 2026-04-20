@@ -8,7 +8,10 @@ import {
   deriveCharacterSheetNumbers,
 } from "#/character-sheet-derived.ts";
 import type { ClassName } from "#/features/class-tables.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import { CreatureId } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 const MAGE_ARMOR_RECORD = {
   tag: "PPRSetBaseAc" as const,
@@ -451,7 +454,7 @@ describe("character-sheet-derived", () => {
     const derived = deriveCharacterSheetNumbers(sheet);
     const projection = characterSheetCreatureProjection(sheet);
     const machineInput = characterSheetMachineInput(sheet);
-    const battleProjection = characterSheetBattleProjection(sheet);
+    const battleProjection = characterSheetBattleProjection(sheet, SPELL_LIBRARY);
 
     expect(derived).toMatchObject({
       proficiencyBonus: 3,
@@ -535,6 +538,10 @@ describe("character-sheet-derived", () => {
     expect(battleProjection.spellAccesses).toEqual(
       [...derived.spellcasting.preparedSpells].map((currentSpellId) => ({
         tag: "prepared",
+        accessId: `prepared:${currentSpellId}`,
+        projection: expect.objectContaining({
+          reactionResolution: "none",
+        }),
         spellId: currentSpellId,
         spellSaveDC:
           derived.spellcasting.preparedSpellSaveDCs.get(currentSpellId)!,
@@ -555,7 +562,7 @@ describe("character-sheet-derived", () => {
       },
     ]);
 
-    const battleProjection = characterSheetBattleProjection(sheet, {
+    const battleProjection = characterSheetBattleProjection(sheet, SPELL_LIBRARY, {
       activeProjectedPersistents,
     });
 

@@ -4,7 +4,8 @@
  */
 import { Match, Option } from "effect";
 
-import { hasBattleSpellAccess } from "#/battle-spell-access.ts";
+import type { BattleSpellAccess } from "#/battle-spell-access.ts";
+import { sameBattleCreatureReactionTrigger } from "#/battle-spell-access.ts";
 import {
   addEffect,
   advanceEffectsForOwner,
@@ -61,8 +62,6 @@ import {
 import { hasCuttingWords } from "#/features/class-bard.ts";
 import { canUncannyDodge, evasionDamage } from "#/features/class-rogue.ts";
 import { battleCurrentArmorClass } from "#/projected-persistent.ts";
-import { canCastShield } from "#/features/spell-abjuration.ts";
-import { getSpellComponentRequirements } from "#/features/spell-available-actions.ts";
 import type {
   ActiveEffect,
   ArmorClass,
@@ -72,7 +71,7 @@ import type {
   ExpiryPhase,
   SpellId,
 } from "#/types.ts";
-import { resourceCount, spellId } from "#/types.ts";
+import { resourceCount } from "#/types.ts";
 
 function activeEffectId(effect: ActiveEffect): string {
   return effect.spellId;
@@ -463,42 +462,65 @@ export function eligibleExcluding(
   return result;
 }
 
-function hasAnySpellSlot(c: BattleCreatureState, minimumLevel = 1): boolean {
-  for (let i = Math.max(0, minimumLevel - 1); i < c.slotsCurrent.length; i++) {
-    if (c.slotsCurrent[i]! > 0) return true;
-  }
-  return false;
-}
-
 function canBattleSpeak(c: BattleCreatureState): boolean {
   return !c.paralyzed && !c.petrified && !c.unconscious;
 }
 
-export function canProvideBattleSpellComponents(
+export function canProvideBattleSpellComponentsForAccess(
   c: BattleCreatureState,
-  spellName: string,
+  access: BattleSpellAccess,
 ): boolean {
-  // Temporary TS seam: component requirements still come from spell registry
-  // lookup by SRD spell id. This is compatibility logic, not battle-owned
-  // semantic authority; Quint/main ownership now lives on the common-lingo
-  // execution surface.
-  const requirements = getSpellComponentRequirements(spellName);
-  if (requirements == null) return true;
-  if (requirements.requiresVerbal && !canBattleSpeak(c)) return false;
-  if (!requirements.requiresHandComponent) return true;
+  if (access.projection.requiresVerbal && !canBattleSpeak(c)) return false;
+  if (!access.projection.requiresHandComponent) return true;
   return battleHasFreeHand(prepareHandsForSpellComponents(c));
 }
 
-export function prepareBattleCasterForSpell(
+export function prepareBattleCasterForSpellAccess(
   c: BattleCreatureState,
-  spellName: string,
+  access: BattleSpellAccess,
 ): BattleCreatureState {
-  const requirements = getSpellComponentRequirements(spellName);
-  const prepared =
-    requirements == null || !requirements.requiresHandComponent
-      ? c
-      : prepareHandsForSpellComponents(c);
-  return requirements?.requiresVerbal === true ? endHidden(prepared) : prepared;
+  const prepared = access.projection.requiresHandComponent
+    ? prepareHandsForSpellComponents(c)
+    : c;
+  return access.projection.requiresVerbal ? endHidden(prepared) : prepared;
+}
+
+export function battleSpellAccessHasAvailableResource(
+  c: BattleCreatureState,
+  access: BattleSpellAccess,
+): boolean {
+  if (access.resourcePath.kind === "dailyUse") {
+    const remaining = c.dailyUsesRemaining[access.resourcePath.usageId];
+    return remaining != null && remaining > 0;
+  }
+  if (access.projection.baseLevel === 0) return true;
+  return firstAvailableSpellSlotLevel(c, access.projection.baseLevel) != null;
+}
+
+export function battleReactionSpellAccesses(
+  c: BattleCreatureState,
+  params: {
+    readonly trigger: NonNullable<
+      BattleSpellAccess["projection"]["creatureReactionTrigger"]
+    >;
+    readonly resolution?: BattleSpellAccess["projection"]["reactionResolution"];
+  },
+): ReadonlyArray<BattleSpellAccess> {
+  return c.spellAccesses.filter(
+    (access) => {
+      const trigger = access.projection.creatureReactionTrigger;
+      return (
+        access.projection.activation === "reaction" &&
+        trigger != null &&
+      sameBattleCreatureReactionTrigger(
+        trigger,
+        params.trigger,
+      ) &&
+      (params.resolution == null ||
+        access.projection.reactionResolution === params.resolution)
+      );
+    },
+  );
 }
 
 export function firstAvailableSpellSlotLevel(
@@ -594,10 +616,6 @@ export function legalHitReactions(
   atk: AttackHitCtx,
   candidates: ReadonlySet<CreatureId>,
 ) {
-  // TODO: This helper still carries a TS compatibility seam for some
-  // spell-named reactions (`shield`) while Quint/main semantics already route
-  // through access/projection fields. Keep parity, but continue moving
-  // rule-specific spell eligibility out of id-based helper branches.
   const legalByCreature = new Map<
     CreatureId,
     Set<"RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack">
@@ -615,12 +633,18 @@ export function legalHitReactions(
     const legal = new Set<
       "RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack"
     >();
+    const shieldAccesses = battleReactionSpellAccesses(c, {
+      trigger: { kind: "hitByAttackRoll" },
+      resolution: "shieldArmorClassBonus",
+    }).filter(
+      (access) =>
+        !c.slotExpendedThisTurn &&
+        canProvideBattleSpellComponentsForAccess(c, access) &&
+        battleSpellAccessHasAvailableResource(c, access),
+    );
     if (
       id === atk.target &&
-      canCastShield(c.reactionAvailable, hasAnySpellSlot(c)) &&
-      hasBattleSpellAccess(c.spellAccesses, spellId("shield")) &&
-      !c.slotExpendedThisTurn &&
-      canProvideBattleSpellComponents(c, "shield")
+      shieldAccesses.length > 0
     ) {
       legal.add("RShield");
     }
@@ -725,27 +749,22 @@ export function eligibleForCounterspell(
   cs: Creatures,
   excludeId: CreatureId,
 ): Set<CreatureId> {
-  // TODO: This remains a TS compatibility seam. It still recognizes the
-  // reaction by SRD spell id while Quint/main semantics use access/projection
-  // fields. Preserve parity for now, but do not widen id-based logic here.
   const result = new Set<CreatureId>();
   for (const [id, c] of cs) {
     if (id === excludeId || !c.reactionAvailable || c.dead || c.unconscious)
       continue;
-    let hasSlot = false;
-    for (let i = 2; i < c.slotsCurrent.length; i++) {
-      if (c.slotsCurrent[i] > 0) {
-        hasSlot = true;
-        break;
-      }
-    }
-    if (
-      hasSlot &&
-      hasBattleSpellAccess(c.spellAccesses, spellId("counterspell")) &&
-      !c.slotExpendedThisTurn &&
-      canProvideBattleSpellComponents(c, "counterspell")
-    )
+    const counterspellAccesses = battleReactionSpellAccesses(c, {
+      trigger: { kind: "creatureCastsSpell" },
+      resolution: "counterspell",
+    }).filter(
+      (access) =>
+        !c.slotExpendedThisTurn &&
+        canProvideBattleSpellComponentsForAccess(c, access) &&
+        battleSpellAccessHasAvailableResource(c, access),
+    );
+    if (counterspellAccesses.length > 0) {
       result.add(id);
+    }
   }
   return result;
 }

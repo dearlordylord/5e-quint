@@ -4,11 +4,14 @@ import type {
   CreatureId,
   DamageType,
   DifficultyClass,
+  SpellId,
   SpellSlotLevel,
 } from "#/types.ts";
+import type { BattleSpellAccessId } from "#/battle-spell-access.ts";
 
 /** Parameters for a readied spell held with Concentration (SRD 5.2.1 Ready). */
 export interface ReadiedSpellParams {
+  readonly accessId: BattleSpellAccessId;
   readonly caster: CreatureId;
   readonly target: CreatureId;
   readonly saveDC: DifficultyClass;
@@ -18,6 +21,6 @@ export interface ReadiedSpellParams {
   readonly conditionOnFail: Condition;
   readonly applyCondition: boolean;
   readonly saveAbility: Ability;
-  readonly spellName: string;
+  readonly spellId: SpellId;
   readonly slotLvl: SpellSlotLevel;
 }

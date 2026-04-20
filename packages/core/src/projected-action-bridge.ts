@@ -22,7 +22,11 @@ import {
   type ProjectedPoolCost,
   type ProjectedQuotaCost,
 } from "#/projected-action-bridge-helpers.ts";
-import { getSpellRecordStrict } from "#/features/spell-registry.ts";
+import {
+  getSpellRecordStrict,
+  makeSpellLibrary,
+  SRD_SPELLS,
+} from "#/features/spell-registry.ts";
 import { proficiencyBonus, spellId, type SpellName } from "#/types.ts";
 import type {
   ClassFeatureRecord,
@@ -41,6 +45,7 @@ const ACTION_SURGE_SURFACE = actionSurgeSurface as unknown as ClassFeatureRecord
 
 const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURFACE);
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 export type ProjectedPreparedSpellRuntime = {
   readonly targetIds: ReadonlyArray<string>;
@@ -193,7 +198,7 @@ export function canUseProjectedPreparedSpell(
   const action = projectedPreparedSpellAction(spellName);
   if (action == null) return false;
   if (!context.preparedSpells.has(spellId(spellName))) return false;
-  const spell = getSpellRecordStrict(spellName);
+  const spell = getSpellRecordStrict(SPELL_LIBRARY, spellName);
   const isCantrip = spell.level === 0;
   if (
     // FIXME: factually correct but seems to be abstraction leak, unless explicitly worded in SRD in WRT spellcasting

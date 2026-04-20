@@ -157,7 +157,7 @@ export function directorStep(
   ) {
     const casterId = snapshot.activeCreatureId;
     if (casterId) {
-      const visual = getSpellVisual(event.spellName);
+      const visual = getSpellVisual(event.spellId ?? event.spellName ?? "spell");
       castBar = { casterId, spellName: visual.label, progress: 1 };
       applyCue(creatureCues, casterId, {
         castingGlow: true,
@@ -274,7 +274,10 @@ function deriveDiceRolls(event: BattleEvent): ReadonlyArray<DiceRollCue> {
     event.type === "BATTLE_CAST_AOE" ||
     event.type === "BATTLE_CAST_SAVE_SPELL"
   ) {
-    const expr = getSpellDamageDice(event.spellName, event.slotLvl);
+    const expr = getSpellDamageDice(
+      event.spellId ?? event.spellName ?? "spell",
+      event.slotLvl,
+    );
     if (expr) {
       const results = decomposeDice(event.dmgOnFail, expr.dice, expr.dieSize);
       if (results)

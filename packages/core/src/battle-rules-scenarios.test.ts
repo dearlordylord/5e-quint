@@ -2,6 +2,7 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
+import { preparedBattleSpellAccesses } from "#/battle-spell-access.ts";
 import { battleMachine } from "#/battle-machine.ts";
 import { battleMainHandDamageDie } from "#/battle-machine-creature.ts";
 import {
@@ -10,6 +11,7 @@ import {
 } from "#/battle-machine-helpers.ts";
 import { ADR_ACTIVE_TURN, type BattleEvent } from "#/battle-machine-types.ts";
 import { fightingStyleBattleModifiers } from "#/features/class-fighter.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import {
   ABOLETH,
   CENTAUR_TROOPER,
@@ -32,6 +34,18 @@ import {
   spellId,
   spellSlotLevel,
 } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
+
+function battlePreparedSpellAccesses(
+  ...spells: ReadonlyArray<string>
+) {
+  return preparedBattleSpellAccesses({
+    spellDictionary: SPELL_LIBRARY,
+    spellIds: spells.map(spellId),
+    sharedSpellSaveDC: difficultyClass(13),
+  });
+}
 
 const DEFAULT_ATTACK_CONTEXT = {
   knockOut: false,
@@ -199,7 +213,7 @@ function initHitReactionBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["shield"]),
+        spellAccesses: battlePreparedSpellAccesses("shield"),
         initiativeRoll: 15,
       },
       {
@@ -256,7 +270,7 @@ function initRedirectAttackBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["shield"]),
+        spellAccesses: battlePreparedSpellAccesses("shield"),
         initiativeRoll: 15,
         battleSide: "goblins",
         battlePosition: { row: 1, col: 1 },
@@ -353,14 +367,14 @@ function initTwoCasterBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
       {
         id: CreatureId("B"),
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
     ],
   });
@@ -378,21 +392,21 @@ function initThreeCasterBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
       {
         id: CreatureId("B"),
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
       {
         id: CreatureId("C"),
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
     ],
   });
@@ -410,7 +424,7 @@ function initCounterspellBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -418,7 +432,7 @@ function initCounterspellBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["counterspell"]),
+        spellAccesses: battlePreparedSpellAccesses("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -438,7 +452,7 @@ function initHandOccupancyBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person", "shield"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person", "shield"),
         mainHandWeapon: GREATSWORD,
         mainHandUsesTwoHands: true,
         initiativeRoll: 20,
@@ -465,7 +479,7 @@ function initShieldHandOccupancyBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         mainHandWeapon: MACE,
         hasShieldEquipped: true,
         initiativeRoll: 20,
@@ -515,6 +529,7 @@ function initLegendaryBattle() {
     creatures: [
       { id: CreatureId("A"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
       statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
         id: CreatureId("C"),
         statBlock: ABOLETH,
         statBlockId: "aboleth",
@@ -537,7 +552,7 @@ function initLegendaryResistanceBattle(legendaryResistances: number) {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -582,7 +597,7 @@ function initAoEBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["burning_hands"]),
+        spellAccesses: battlePreparedSpellAccesses("burning_hands"),
         initiativeRoll: 15,
       },
       {
@@ -629,14 +644,14 @@ function initFighterCasterBattle(fighterLevel: number) {
         kind: "PC",
         caster: true,
         fighterLevel,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
       {
         id: CreatureId("B"),
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
       },
     ],
   });
@@ -674,7 +689,7 @@ function initBarbarianCasterBattle(barbarianLevel: number) {
         kind: "PC",
         caster: true,
         barbarianLevel,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -682,7 +697,7 @@ function initBarbarianCasterBattle(barbarianLevel: number) {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 10,
       },
     ],
@@ -791,7 +806,7 @@ function initDodgeLossBattle() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: new Set(["hold_person"]),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 10,
       },
       {
@@ -967,6 +982,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 18,
         },
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("goblin-warrior-1"),
           statBlock: GOBLIN_WARRIOR,
           statBlockId: "goblinWarrior",
@@ -992,6 +1008,7 @@ describe("battle rules scenario regressions", () => {
       insertAtIndex: 1,
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("goblin-minion-1"),
           statBlock: GOBLIN_MINION,
           statBlockId: "goblinMinion",
@@ -1058,7 +1075,7 @@ describe("battle rules scenario regressions", () => {
             maxHp: 20,
             kind: "PC",
             caster: true,
-            preparedSpells: new Set(["shield"]),
+            spellAccesses: battlePreparedSpellAccesses("shield"),
             initiativeRoll: 10,
           },
         ],
@@ -1157,7 +1174,7 @@ describe("battle rules scenario regressions", () => {
           kind: "PC",
           caster: true,
           initiativeRoll: 20,
-          preparedSpells: new Set(["hold_person"]),
+          spellAccesses: battlePreparedSpellAccesses("hold_person"),
         },
         {
           id: CreatureId("B"),
@@ -1846,6 +1863,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: ABOLETH,
           statBlockId: "aboleth",
@@ -1853,6 +1871,7 @@ describe("battle rules scenario regressions", () => {
         }),
         { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("C"),
           statBlock: CENTAUR_TROOPER,
           statBlockId: "centaurTrooper",
@@ -1950,6 +1969,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("C"),
           statBlock: CENTAUR_TROOPER,
           initiativeRoll: 20,
@@ -2181,7 +2201,7 @@ describe("battle rules scenario regressions", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
-          preparedSpells: new Set(["thunderwave"]),
+          spellAccesses: battlePreparedSpellAccesses("thunderwave"),
           initiativeRoll: 20,
         },
         {
@@ -2735,6 +2755,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -3569,7 +3590,7 @@ describe("battle rules scenario regressions", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
-          preparedSpells: new Set(["hold_person"]),
+          spellAccesses: battlePreparedSpellAccesses("hold_person"),
           mainHandWeapon: LONGSWORD,
           mainHandUsesTwoHands: true,
           initiativeRoll: 20,
@@ -3963,6 +3984,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 15,
         },
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("B"),
           statBlock: PSEUDODRAGON,
           initiativeRoll: 10,
@@ -4008,6 +4030,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 15,
         },
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("B"),
           statBlock: PSEUDODRAGON,
           initiativeRoll: 10,
@@ -4391,6 +4414,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: MAGE,
           statBlockId: "mage",
@@ -5792,6 +5816,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -5832,6 +5857,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -5873,6 +5899,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           primaryAttackName: "shortbow",
@@ -5918,6 +5945,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -5995,6 +6023,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -6110,7 +6139,7 @@ describe("battle rules scenario regressions", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
-          preparedSpells: new Set(["hold_person"]),
+          spellAccesses: battlePreparedSpellAccesses("hold_person"),
           initiativeRoll: 20,
           hiddenDiscoveryDc: 18,
         },
@@ -6149,7 +6178,7 @@ describe("battle rules scenario regressions", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
-          preparedSpells: new Set(["guiding_bolt"]),
+          spellAccesses: battlePreparedSpellAccesses("guiding_bolt"),
           initiativeRoll: 20,
           hiddenDiscoveryDc: 18,
         },

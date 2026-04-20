@@ -4358,22 +4358,38 @@ export const SRD_SPELLS = SRD_SPELL_METADATA.map((spell) => ({
   ...spell,
 })) as ReadonlyArray<SRDSpellRecord>;
 
-export const SPELLS_BY_ID = new Map(
-  SRD_SPELLS.map((spell) => [spell.id, spell] as const),
-);
-
-export const SPELLS_BY_NAME = new Map(
-  SRD_SPELLS.map((spell) => [normalizeSpellName(spell.name), spell] as const),
-);
-
-export function getSpellRecord(idOrName: string): SpellRecord | null {
-  const byId = SPELLS_BY_ID.get(spellId(idOrName));
-  if (byId != null) return byId;
-  return SPELLS_BY_NAME.get(normalizeSpellName(idOrName)) ?? null;
+export interface SpellLibrary {
+  readonly byId: ReadonlyMap<SpellId, SpellRecord>;
+  readonly byName: ReadonlyMap<string, SpellRecord>;
 }
 
-export function getSpellRecordStrict(idOrName: string): SpellRecord {
-  const record = getSpellRecord(idOrName);
+export function makeSpellLibrary(
+  records: ReadonlyArray<SpellRecord>,
+): SpellLibrary {
+  return {
+    byId: new Map(records.map((spell) => [spell.id, spell] as const)),
+    byName: new Map(
+      records.map((spell) => [normalizeSpellName(spell.name), spell] as const),
+    ),
+  };
+}
+
+const SRD_SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
+
+export function getSpellRecord(
+  library: SpellLibrary,
+  idOrName: string,
+): SpellRecord | null {
+  const byId = library.byId.get(spellId(idOrName));
+  if (byId != null) return byId;
+  return library.byName.get(normalizeSpellName(idOrName)) ?? null;
+}
+
+export function getSpellRecordStrict(
+  library: SpellLibrary,
+  idOrName: string,
+): SpellRecord {
+  const record = getSpellRecord(library, idOrName);
   if (record == null) {
     throw new Error(`Unknown SRD spell ${idOrName}`);
   }
@@ -4383,7 +4399,7 @@ export function getSpellRecordStrict(idOrName: string): SpellRecord {
 export function getBattleReadyableSpellMechanics(
   idOrName: string,
 ): BattleReadyableSaveSpellMechanics | null {
-  const mechanics = getSpellRecord(idOrName)?.modeling.mechanics;
+  const mechanics = getSpellRecord(SRD_SPELL_LIBRARY, idOrName)?.modeling.mechanics;
   return mechanics?.family === "battleReadyableSave" ? mechanics : null;
 }
 
@@ -4399,7 +4415,7 @@ export function projectBattleReadyableSpellPayload(
   saveDC: DifficultyClass,
 ): BattleReadyableSpellPayload | null {
   return (
-    getSpellRecord(idOrName)?.projections.toBattleReadyablePayload?.(
+    getSpellRecord(SRD_SPELL_LIBRARY, idOrName)?.projections.toBattleReadyablePayload?.(
       slotLevel,
       saveDC,
     ) ?? null
@@ -4437,7 +4453,7 @@ export function resolveBattleReadyableSpellPayload(
 export function spellReferenceProjection(
   idOrName: string,
 ): SpellReferenceProjection | null {
-  const record = getSpellRecord(idOrName);
+  const record = getSpellRecord(SRD_SPELL_LIBRARY, idOrName);
   if (record == null) return null;
   return {
     spellId: record.id,

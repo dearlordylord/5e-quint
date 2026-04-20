@@ -12,7 +12,10 @@ import type {
   TriggerType,
 } from "#/battle-machine-events.ts";
 import type { ActiveProjectedPersistent } from "#/projected-persistent.ts";
-import type { BattleSpellAccess } from "#/battle-spell-access.ts";
+import type {
+  BattleSpellAccess,
+  BattleSpellAccessId,
+} from "#/battle-spell-access.ts";
 import type {
   MonsterResourceState,
   MonsterBattleBonusActionOption,
@@ -321,7 +324,8 @@ export interface ConcentrationCtx {
 
 export interface SpellCastCtx {
   readonly caster: CreatureId;
-  readonly spellName: string;
+  readonly accessId: BattleSpellAccessId;
+  readonly spellId: SpellId;
   readonly postCast: PostCastEffect;
   // TODO encode readied spell release more properly
   readonly slotLvl: SpellSlotLevel | 0; // 0 = slot already spent (readied spell release)
@@ -341,12 +345,13 @@ export interface CounterspellEffect {
 }
 
 export interface SpellStackEntry {
+  readonly spellAccessId: BattleSpellAccessId;
   readonly spellCasterId: CreatureId;
   readonly spellPostCast: PostCastEffect;
   readonly offered: ReadonlySet<CreatureId>;
   // TODO encode readied spell release more properly
   readonly slotLvl: SpellSlotLevel | 0; // 0 = slot already spent (readied spell release)
-  readonly spellName: string;
+  readonly spellId: SpellId;
   readonly ritual: boolean;
 }
 

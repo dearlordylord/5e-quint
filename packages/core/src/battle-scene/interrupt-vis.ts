@@ -133,19 +133,19 @@ function counterspellInternals(
       awaiting: {
         on: {
           COUNTERSPELL: "counterWindow",
-          PASS: `${entry.spellName}_resolves`,
+          PASS: `${entry.spellId}_resolves`,
         },
       },
       counterWindow: {
         on: {
           CHECK_SUCCEEDS: "spellCountered",
-          CHECK_FAILS: `${entry.spellName}_resolves`,
+          CHECK_FAILS: `${entry.spellId}_resolves`,
           COUNTER_COUNTERSPELL: "chainDeeper",
         },
       },
       chainDeeper: {},
       spellCountered: { type: "final" as const },
-      [`${entry.spellName}_resolves`]: { type: "final" as const },
+      [`${entry.spellId}_resolves`]: { type: "final" as const },
     },
   };
 }

@@ -1,7 +1,9 @@
+import { Option } from "effect";
+import { battleSpellAccessById } from "#/battle-spell-access.ts";
 import {
   applyFailEffects,
   awaitingReaction,
-  canProvideBattleSpellComponents,
+  canProvideBattleSpellComponentsForAccess,
   eligibleForCounterspell,
   expendSlot,
   mkAwait,
@@ -9,7 +11,7 @@ import {
   piSaveFailedAoE,
   piSaveFailedTraversal,
   piSpellCast,
-  prepareBattleCasterForSpell,
+  prepareBattleCasterForSpellAccess,
   setCreature,
   setDifference,
   spendLR,
@@ -97,8 +99,24 @@ export function battleResolveCounterspell({
     return { ...phaseAwaitReaction({ ...aw, offered: newOffered }) };
   }
   const reactor = c.creatures.get(e.reactorId)!;
-  if (!canProvideBattleSpellComponents(reactor, "counterspell")) return {};
-  const preparedReactor = prepareBattleCasterForSpell(reactor, "counterspell");
+  const counterspellAccess =
+    e.accessId == null
+      ? reactor.spellAccesses.find(
+          (access) => access.projection.reactionResolution === "counterspell",
+        )
+      : Option.getOrNull(battleSpellAccessById(reactor.spellAccesses, e.accessId));
+  if (counterspellAccess == null) return {};
+  if (
+    counterspellAccess.projection.reactionResolution !== "counterspell"
+  ) {
+    return {};
+  }
+  if (!canProvideBattleSpellComponentsForAccess(reactor, counterspellAccess))
+    return {};
+  const preparedReactor = prepareBattleCasterForSpellAccess(
+    reactor,
+    counterspellAccess,
+  );
   let cs = setCreature(
     c.creatures,
     e.reactorId,
@@ -111,16 +129,18 @@ export function battleResolveCounterspell({
   );
   const conSaveSucceeded = e.decision.saveSucceeded;
   const stackEntry: SpellStackEntry = {
+    spellAccessId: spell.accessId,
     spellCasterId: spell.caster,
     spellPostCast: spell.postCast,
     offered: newOffered,
     slotLvl: spell.slotLvl,
-    spellName: spell.spellName,
+    spellId: spell.spellId,
     ritual: spell.ritual,
   };
   const csSpell: SpellCastCtx = {
     caster: e.reactorId,
-    spellName: "counterspell",
+    accessId: counterspellAccess.accessId,
+    spellId: counterspellAccess.spellId,
     postCast: {
       tag: "PCECounterspell",
       cs: { targetCasterId: spell.caster, conSaveSucceeded },

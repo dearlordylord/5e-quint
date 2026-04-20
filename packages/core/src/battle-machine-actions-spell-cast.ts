@@ -1,19 +1,24 @@
-import { Either, Option } from "effect";
+import { Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { singleBattleSpellAccessForSpell } from "#/battle-spell-access.ts";
+import { battleSpellAccessId, resolveBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
   activeId,
   breakConcentrationAndPropagate,
-  canProvideBattleSpellComponents,
+  canProvideBattleSpellComponentsForAccess,
   eligibleForCounterspell,
   expendSlot,
   mkAwait,
-  prepareBattleCasterForSpell,
+  prepareBattleCasterForSpellAccess,
   resolveSave,
   setCreature,
   spendAction,
 } from "#/battle-machine-helpers.ts";
-import { getSpellRecord, resolveBattleReadyableSpellPayload } from "#/features/spell-registry.ts";
+import {
+  getSpellRecord,
+  makeSpellLibrary,
+  resolveBattleReadyableSpellPayload,
+  SRD_SPELLS,
+} from "#/features/spell-registry.ts";
 import { resolveConcentration } from "#/battle-machine-spells.ts";
 import type {
   BattleActionArgs,
@@ -27,6 +32,8 @@ import {
 } from "#/battle-machine-types.ts";
 import { spellId } from "#/types.ts";
 
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
+
 export function battleCastSaveSpell({
   context: c,
   event: e,
@@ -36,11 +43,27 @@ export function battleCastSaveSpell({
   const ac = c.creatures.get(id)!;
   if (ac.dead || isIncapacitated(ac)) return {};
   if (ac.ragingBlocksSpells) return {};
-  const spellRecord = getSpellRecord(e.spellName);
+  const currentSpellId = e.spellId ?? spellId(e.spellName ?? "");
+  const spellRecord = getSpellRecord(SPELL_LIBRARY, currentSpellId);
   if (spellRecord == null) return {};
   if (e.ritual && !spellRecord.ritual) return {};
-  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
-  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
+  const access = resolveBattleSpellAccess({
+    accesses: ac.spellAccesses,
+    accessId: e.accessId,
+    spellId: currentSpellId,
+  });
+  const resolvedAccess = Option.getOrNull(access);
+  if (e.accessId != null && resolvedAccess == null) return {};
+  if (
+    resolvedAccess != null &&
+    !canProvideBattleSpellComponentsForAccess(ac, resolvedAccess)
+  ) {
+    return {};
+  }
+  const preparedCaster =
+    resolvedAccess == null
+      ? ac
+      : prepareBattleCasterForSpellAccess(ac, resolvedAccess);
   if (e.bonusAction) {
     if (ac.bonusActionUsed || ac.slotExpendedThisTurn) return {};
   } else {
@@ -48,17 +71,10 @@ export function battleCastSaveSpell({
     if (ac.actionsRemaining <= 0) return {};
     if (ac.slotExpendedThisTurn && !e.ritual) return {};
   }
-  // EPT13 quarantine: this event does not yet carry Spell Access identity.
-  // Reject multi-access same-spell casts until EPT14 widens the event seam.
-  const access = singleBattleSpellAccessForSpell(
-    ac.spellAccesses,
-    spellId(e.spellName),
-  );
-  if (Either.isLeft(access) || Option.isNone(access.right)) return {};
   const payload = resolveBattleReadyableSpellPayload(
-    e.spellName,
+    currentSpellId,
     e.slotLvl,
-    access.right.value.spellSaveDC,
+    resolvedAccess?.spellSaveDC ?? e.saveDC,
   );
   if (payload == null) return {};
   let cs = e.bonusAction
@@ -85,7 +101,10 @@ export function battleCastSaveSpell({
   };
   const spellCtx: SpellCastCtx = {
     caster: id,
-    spellName: e.spellName,
+    accessId:
+      resolvedAccess?.accessId ??
+      battleSpellAccessId(`rawSave:${currentSpellId}`),
+    spellId: currentSpellId,
     postCast: { tag: "PCESave", save: saveCtx },
     slotLvl: e.slotLvl,
     ritual: e.ritual,
@@ -117,8 +136,14 @@ export function battleCastConcentrationSpell({
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {};
   if (ac.slotExpendedThisTurn && !e.ritual) return {};
-  if (!canProvideBattleSpellComponents(ac, e.spellId)) return {};
-  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellId);
+  const access = resolveBattleSpellAccess({
+    accesses: ac.spellAccesses,
+    accessId: e.accessId,
+    spellId: e.spellId,
+  });
+  if (Option.isNone(access)) return {};
+  if (!canProvideBattleSpellComponentsForAccess(ac, access.value)) return {};
+  const preparedCaster = prepareBattleCasterForSpellAccess(ac, access.value);
   let cs = setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
   if (!e.ritual) cs = setCreature(cs, id, expendSlot(cs.get(id)!, e.slotLvl));
   const concCtx = {
@@ -131,7 +156,8 @@ export function battleCastConcentrationSpell({
   };
   const spellCtx: SpellCastCtx = {
     caster: id,
-    spellName: e.spellId,
+    accessId: access.value.accessId,
+    spellId: e.spellId,
     postCast: { tag: "PCEConcentration" as const, conc: concCtx },
     slotLvl: e.slotLvl,
     ritual: e.ritual,

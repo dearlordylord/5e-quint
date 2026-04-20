@@ -17,6 +17,8 @@ import type { ClassName } from "#/features/class-tables.ts";
 import {
   getSpellRecord,
   getSpellRecordStrict,
+  makeSpellLibrary,
+  SRD_SPELLS,
 } from "#/features/spell-registry.ts";
 import type {
   Ability,
@@ -48,6 +50,8 @@ export const CHARACTER_SPELLCASTING_ISSUE_CODES = [
   "wizardSpellbookSpellLevelNotCastableForClass",
   "wizardPreparedSpellNotInSpellbook",
 ] as const;
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 export type CharacterSpellcastingIssueCode =
   (typeof CHARACTER_SPELLCASTING_ISSUE_CODES)[number];
 
@@ -126,7 +130,9 @@ function duplicateSpells(values: ReadonlyArray<string>): ReadonlyArray<string> {
 function canonicalSpellIds(
   spells: ReadonlyArray<string> | undefined,
 ): ReadonlyArray<SpellId> {
-  return (spells ?? []).map((spellRef) => getSpellRecordStrict(spellRef).id);
+  return (spells ?? []).map((spellRef) =>
+    getSpellRecordStrict(SPELL_LIBRARY, spellRef).id,
+  );
 }
 
 function validateSpellList(params: {
@@ -165,7 +171,7 @@ function validateSpellList(params: {
     });
   }
   for (const spellId of params.spells) {
-    const spell = getSpellRecord(spellId);
+    const spell = getSpellRecord(SPELL_LIBRARY, spellId);
     if (spell == null) {
       issues.push({
         code: params.codes.invalid,

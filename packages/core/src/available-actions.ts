@@ -1,9 +1,8 @@
-import { Either, Match, Option, Schema } from "effect";
+import { Match, Option, Schema } from "effect";
 
 import {
-  battleSpellIdsWithUnambiguousAccess,
-  hasBattleSpellAccess,
-  singleBattleSpellAccessForSpell,
+  battleSpellAccessById,
+  battleSpellAccessId,
   type BattleSpellAccess,
 } from "#/battle-spell-access.ts";
 import { MetamagicOptionSchema } from "#/features/class-sorcerer.ts";
@@ -109,7 +108,6 @@ import {
   UNARMED_STRIKE_PROFILE,
   WEAPON_PROPERTIES,
   type D20Roll,
-  type SpellId,
   type SpellName,
   type SpellSlotLevel as SpellSlotLevelValue,
 } from "#/types.ts";
@@ -480,6 +478,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_CAST_AOE";
+      readonly accessId?: string;
       readonly spellId: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly cost: ResourceCost;
@@ -489,6 +488,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_CAST_SAVE_SPELL";
+      readonly accessId?: string;
       readonly spellId: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly targetId: Hole<string>;
@@ -563,7 +563,9 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_READY_SPELL";
-      readonly spellName: string;
+      readonly accessId?: string;
+      readonly spellId?: string;
+      readonly spellName?: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly targetId: Hole<string>;
       readonly cost: ResourceCost;
@@ -587,6 +589,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_COUNTERSPELL";
+      readonly accessId?: string;
       readonly slotLevel: Hole<SpellSlotLevelValue>;
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
@@ -595,6 +598,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_SHIELD";
+      readonly accessId?: string;
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -631,6 +635,7 @@ export type BattleActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_HELLISH_REBUKE";
+      readonly accessId?: string;
       readonly cost: ResourceCost;
       readonly outcome: OutcomeDescription;
     }
@@ -897,6 +902,7 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_CAST_AOE";
+      readonly accessId?: string;
       readonly spellId: string;
       readonly slotLevel: SpellSlotLevelValue;
     }
@@ -904,6 +910,7 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_CAST_SAVE_SPELL";
+      readonly accessId?: string;
       readonly spellId: string;
       readonly slotLevel: SpellSlotLevelValue;
       readonly targetId: string;
@@ -960,7 +967,9 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "BATTLE_READY_SPELL";
-      readonly spellName: string;
+      readonly accessId?: string;
+      readonly spellId?: string;
+      readonly spellName?: string;
       readonly slotLevel: SpellSlotLevelValue;
       readonly targetId: string;
     }
@@ -978,12 +987,14 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_COUNTERSPELL";
+      readonly accessId?: string;
       readonly slotLevel: SpellSlotLevelValue;
     }
   | {
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_SHIELD";
+      readonly accessId?: string;
     }
   | {
       readonly scope: "battle";
@@ -1010,6 +1021,7 @@ type SpecificBattleResolvedActionToken =
       readonly scope: "battle";
       readonly actorId: string;
       readonly type: "CAST_HELLISH_REBUKE";
+      readonly accessId?: string;
     }
   | {
       readonly scope: "battle";
@@ -1411,6 +1423,7 @@ const SecondaryCreatureResolvedActionTokenSchema = Schema.Union(
 const CastCounterspellBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("CAST_COUNTERSPELL"),
+  accessId: Schema.optional(Schema.String),
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
@@ -1503,6 +1516,7 @@ const BattleSearchResolvedActionSchema = Schema.Struct({
 const BattleCastAoeResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_CAST_AOE"),
+  accessId: Schema.optional(Schema.String),
   spellId: Schema.String,
   slotLevel: SpellSlotLevel,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
@@ -1510,6 +1524,7 @@ const BattleCastAoeResolvedActionSchema = Schema.Struct({
 const BattleCastSaveSpellResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_CAST_SAVE_SPELL"),
+  accessId: Schema.optional(Schema.String),
   spellId: Schema.String,
   slotLevel: SpellSlotLevel,
   targetId: Schema.String,
@@ -1566,7 +1581,9 @@ const BattleReadyReleaseResolvedActionSchema = Schema.Struct({
 const BattleReadySpellResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("BATTLE_READY_SPELL"),
-  spellName: Schema.String,
+  accessId: Schema.optional(Schema.String),
+  spellId: Schema.optional(Schema.String),
+  spellName: Schema.optional(Schema.String),
   slotLevel: SpellSlotLevel,
   targetId: Schema.String,
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
@@ -1584,6 +1601,7 @@ const StandFromProneBattleResolvedActionSchema = Schema.Struct({
 const CastShieldBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("CAST_SHIELD"),
+  accessId: Schema.optional(Schema.String),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const UseParryBattleResolvedActionSchema = Schema.Struct({
@@ -1615,6 +1633,7 @@ const UseDeflectAttacksBattleResolvedActionSchema = Schema.Struct({
 const CastHellishRebukeBattleResolvedActionSchema = Schema.Struct({
   actorId: Schema.String,
   type: Schema.Literal("CAST_HELLISH_REBUKE"),
+  accessId: Schema.optional(Schema.String),
 }).pipe(Schema.attachPropertySignature("scope", "battle"));
 
 const UseRetaliationBattleResolvedActionSchema = Schema.Struct({
@@ -3964,12 +3983,14 @@ function hitReactionToken(
   actorId: string,
   reaction: "RShield" | "RParry" | "RCuttingWords" | "RRedirectAttack",
   redirectOptions: ReadonlyArray<string> = [],
+  accessId?: string,
 ): BattleActionToken {
   return Match.value(reaction).pipe(
     Match.when("RShield", () =>
       battleToken({
         actorId,
         type: "CAST_SHIELD",
+        ...(accessId == null ? {} : { accessId }),
         cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
         outcome: {
           summary:
@@ -4071,11 +4092,15 @@ function afterDamageReactionTokens(
     ) {
       continue;
     }
+    const hellishRebukeAccesses = actor.spellAccesses.filter(
+      (access) =>
+        access.projection.reactionResolution === "hellishRebuke" &&
+        battleSpellAccessSlotLevels(actor, access).length > 0,
+    );
     if (
       ad.sourceVisibleToDamagedCreature &&
       ad.sourceWithin60ftOfDamagedCreature &&
-      hasBattleSpellAccess(actor.spellAccesses, spellId("hellish_rebuke")) &&
-      actor.slotsCurrent.some((remaining) => remaining > 0)
+      hellishRebukeAccesses.length > 0
     ) {
       tokens.push(
         battleToken<
@@ -4083,6 +4108,7 @@ function afterDamageReactionTokens(
         >({
           actorId,
           type: "CAST_HELLISH_REBUKE",
+          accessId: hellishRebukeAccesses[0]!.accessId,
           cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
           outcome: {
             summary:
@@ -4130,55 +4156,44 @@ function afterDamageReactionTokens(
   return tokens;
 }
 
-function battleCounterspellSlotLevels(
-  actorId: string,
-  context: BattleContext,
+function battleSpellAccessSlotLevels(
+  actor: BattleCreatureState,
+  access: BattleSpellAccess,
 ): ReadonlyArray<SpellSlotLevelValue> {
-  const reactor = context.creatures.get(CreatureId(actorId));
-  if (reactor == null) return [];
-  return reactor.slotsCurrent.flatMap((remaining, index) =>
-    index >= 2 && remaining > 0 ? [spellSlotLevel(index + 1)] : [],
+  if (access.resourcePath.kind === "dailyUse") {
+    const remaining = actor.dailyUsesRemaining[access.resourcePath.usageId];
+    return remaining != null && remaining > 0
+      ? [access.resourcePath.fixedCastLevel]
+      : [];
+  }
+  if (access.projection.baseLevel <= 0) return [];
+  return actor.slotsCurrent.flatMap((remaining, index) =>
+    remaining > 0 && index + 1 >= access.projection.baseLevel
+      ? [spellSlotLevel(index + 1)]
+      : [],
   );
 }
 
 function battleCastableSpellSlotOptions(
   actor: BattleCreatureState,
-  currentSpellId: SpellId,
+  access: BattleSpellAccess,
 ): ReadonlyArray<SpellSlotLevelValue> {
-  return [...new Set(currentReadyableSpellPayloads(actor, currentSpellId).map((p) => p.slotLevel))]
-    .sort((a, b) => a - b);
+  return [
+    ...new Set(
+      currentReadyableSpellPayloads(actor, access).map((payload) => payload.slotLevel),
+    ),
+  ].sort((a, b) => a - b);
 }
 
-function primaryBattleSpellAccess(
-  actor: BattleCreatureState,
-  currentSpellId: SpellId,
-): BattleSpellAccess | null {
-  const accessResult = singleBattleSpellAccessForSpell(
-    actor.spellAccesses,
-    currentSpellId,
-  );
-  if (Either.isLeft(accessResult)) return null;
-  return Option.getOrNull(accessResult.right);
-}
-
-function battleCastableSpellCost(
-  actor: BattleCreatureState,
-  currentSpellId: SpellId,
-): ResourceCost {
-  // EPT13 quarantine: available-action tokens only collapse to one token when
-  // exactly one Spell Access path exists for the spell. EPT14 widens tokens and
-  // events to carry access identity for multi-path casts.
-  return primaryBattleSpellAccess(actor, currentSpellId)?.resourcePath.kind ===
+function battleCastableSpellCost(access: BattleSpellAccess): ResourceCost {
+  return access.resourcePath.kind ===
     "dailyUse"
     ? costs(quotaCost("action"))
     : costs(quotaCost("action"), poolCost("spellSlot"));
 }
 
-function battleCastableSpellSpend(
-  actor: BattleCreatureState,
-  currentSpellId: SpellId,
-): string {
-  return primaryBattleSpellAccess(actor, currentSpellId)?.resourcePath.kind ===
+function battleCastableSpellSpend(access: BattleSpellAccess): string {
+  return access.resourcePath.kind ===
     "dailyUse"
     ? "action and one daily use"
     : "action and a spell slot";
@@ -4200,11 +4215,9 @@ function battleActiveAoeSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_CAST_AOE" }>
   > = [];
-  for (const currentSpellId of battleSpellIdsWithUnambiguousAccess(
-    actor.spellAccesses,
-  )) {
-    if (getBattleReadyableSpellDelivery(currentSpellId) !== "aoe") continue;
-    const slotOptions = battleCastableSpellSlotOptions(actor, currentSpellId);
+  for (const access of actor.spellAccesses) {
+    if (getBattleReadyableSpellDelivery(access.spellId) !== "aoe") continue;
+    const slotOptions = battleCastableSpellSlotOptions(actor, access);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4212,19 +4225,20 @@ function battleActiveAoeSpellTokens(
       >({
         actorId,
         type: "BATTLE_CAST_AOE",
-        spellId: currentSpellId,
+        accessId: access.accessId,
+        spellId: access.spellId,
         slotLevel: { options: slotOptions },
-        cost: battleCastableSpellCost(actor, currentSpellId),
+        cost: battleCastableSpellCost(access),
         outcome: {
-          summary: `Spend your ${battleCastableSpellSpend(actor, currentSpellId)} to cast ${displaySpellName(
-            currentSpellId as SpellName,
+          summary: `Spend your ${battleCastableSpellSpend(access)} to cast ${displaySpellName(
+            access.spellId as SpellName,
           )} through the battle-owned area save loop`,
         },
       }),
     );
   }
   return tokens.sort((a, b) =>
-    String(a.spellId).localeCompare(String(b.spellId)),
+    `${a.spellId}:${a.accessId}`.localeCompare(`${b.spellId}:${b.accessId}`),
   );
 }
 
@@ -4241,12 +4255,10 @@ function battleActiveSaveSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_CAST_SAVE_SPELL" }>
   > = [];
-  for (const currentSpellId of battleSpellIdsWithUnambiguousAccess(
-    actor.spellAccesses,
-  )) {
-    if (getBattleReadyableSpellDelivery(currentSpellId) !== "singleTarget")
+  for (const access of actor.spellAccesses) {
+    if (getBattleReadyableSpellDelivery(access.spellId) !== "singleTarget")
       continue;
-    const slotOptions = battleCastableSpellSlotOptions(actor, currentSpellId);
+    const slotOptions = battleCastableSpellSlotOptions(actor, access);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4254,20 +4266,21 @@ function battleActiveSaveSpellTokens(
       >({
         actorId,
         type: "BATTLE_CAST_SAVE_SPELL",
-        spellId: currentSpellId,
+        accessId: access.accessId,
+        spellId: access.spellId,
         slotLevel: { options: slotOptions },
         targetId: { options: targetOptions },
-        cost: battleCastableSpellCost(actor, currentSpellId),
+        cost: battleCastableSpellCost(access),
         outcome: {
-          summary: `Spend your ${battleCastableSpellSpend(actor, currentSpellId)} to cast ${displaySpellName(
-            currentSpellId as SpellName,
+          summary: `Spend your ${battleCastableSpellSpend(access)} to cast ${displaySpellName(
+            access.spellId as SpellName,
           )} against the chosen target with an explicit save roll`,
         },
       }),
     );
   }
   return tokens.sort((a, b) =>
-    String(a.spellId).localeCompare(String(b.spellId)),
+    `${a.spellId}:${a.accessId}`.localeCompare(`${b.spellId}:${b.accessId}`),
   );
 }
 
@@ -4284,11 +4297,9 @@ function battleActiveReadyableSpellTokens(
   const tokens: Array<
     Extract<BattleActionToken, { readonly type: "BATTLE_READY_SPELL" }>
   > = [];
-  for (const spellName of battleSpellIdsWithUnambiguousAccess(
-    actor.spellAccesses,
-  )) {
-    if (getBattleReadyableSpellDelivery(spellName) === "aoe") continue;
-    const slotOptions = battleCastableSpellSlotOptions(actor, spellName);
+  for (const access of actor.spellAccesses) {
+    if (getBattleReadyableSpellDelivery(access.spellId) === "aoe") continue;
+    const slotOptions = battleCastableSpellSlotOptions(actor, access);
     if (slotOptions.length === 0) continue;
     tokens.push(
       battleToken<
@@ -4296,19 +4307,22 @@ function battleActiveReadyableSpellTokens(
       >({
         actorId,
         type: "BATTLE_READY_SPELL",
-        spellName: spellName as SpellName,
+        accessId: access.accessId,
+        spellId: access.spellId,
         slotLevel: { options: slotOptions },
         targetId: { options: targetOptions },
         cost: costs(quotaCost("action"), poolCost("spellSlot")),
         outcome: {
           summary: `Spend your action and a spell slot to Ready ${displaySpellName(
-            spellName as SpellName,
+            access.spellId as SpellName,
           )} and hold it with Concentration`,
         },
       }),
     );
   }
-  return tokens.sort((a, b) => a.spellName.localeCompare(b.spellName));
+  return tokens.sort((a, b) =>
+    `${a.spellId}:${a.accessId}`.localeCompare(`${b.spellId}:${b.accessId}`),
+  );
 }
 
 function canUseBattleAttack(actor: BattleCreatureState): boolean {
@@ -4406,25 +4420,18 @@ function battleAttackTargetGroups(params: {
 
 function currentReadyableSpellPayloads(
   actor: BattleCreatureState,
-  spellName: string,
+  access: BattleSpellAccess,
 ): ReadonlyArray<BattleReadyableSpellPayload> {
   // Spell definition fact: static mechanics still come from the spell registry.
   // Spell access fact: creature-owned permission/resource path lives on the actor.
   // Invocation input: the concrete slot level is chosen here from the access path.
-  const currentSpellId = spellId(spellName);
-  const mechanics = getBattleReadyableSpellMechanics(currentSpellId);
+  const mechanics = getBattleReadyableSpellMechanics(access.spellId);
   if (mechanics == null) return [];
-  const accessResult = singleBattleSpellAccessForSpell(
-    actor.spellAccesses,
-    currentSpellId,
-  );
-  if (Either.isLeft(accessResult) || Option.isNone(accessResult.right)) return [];
-  const access = accessResult.right.value;
   if (access.resourcePath.kind === "dailyUse") {
     const remaining = actor.dailyUsesRemaining[access.resourcePath.usageId];
     if (remaining == null || remaining <= 0) return [];
     const payload = getBattleReadyableSpellPayload(
-      spellName as SpellName,
+      access.spellId as SpellName,
       access.resourcePath.fixedCastLevel,
       access.spellSaveDC,
     );
@@ -4435,7 +4442,7 @@ function currentReadyableSpellPayloads(
     const slotLevel = spellSlotLevel(index + 1);
     if (slotLevel < mechanics.baseLevel) return [];
     const payload = getBattleReadyableSpellPayload(
-      spellName as SpellName,
+      access.spellId as SpellName,
       slotLevel,
       access.spellSaveDC,
     );
@@ -4445,11 +4452,15 @@ function currentReadyableSpellPayloads(
 
 function currentReadyableSpellPayload(
   actor: BattleCreatureState,
-  spellName: string,
+  accessId: string,
   slotLevel: SpellSlotLevelValue,
 ): BattleReadyableSpellPayload | null {
+  const access = Option.getOrNull(
+    battleSpellAccessById(actor.spellAccesses, battleSpellAccessId(accessId)),
+  );
+  if (access == null) return null;
   return (
-    currentReadyableSpellPayloads(actor, spellName).find(
+    currentReadyableSpellPayloads(actor, access).find(
       (payload) => payload.slotLevel === slotLevel,
     ) ?? null
   );
@@ -5131,6 +5142,7 @@ export function getAvailableBattleActions(
     for (const [actorId, legalReactions] of interrupt.ctx
       .legalReactionsByCreature) {
       if (!awaitCtx.eligible.has(actorId)) continue;
+      const actor = context.creatures.get(CreatureId(actorId));
       for (const reaction of legalReactions) {
         tokens.push(
           hitReactionToken(
@@ -5140,6 +5152,13 @@ export function getAvailableBattleActions(
               interrupt.ctx.redirectableAlliesByReactor.get(actorId)?.keys() ??
                 [],
             ),
+            reaction === "RShield"
+              ? actor?.spellAccesses.find(
+                  (access) =>
+                    access.projection.reactionResolution ===
+                    "shieldArmorClassBonus",
+                )?.accessId
+              : undefined,
           ),
         );
       }
@@ -5162,22 +5181,28 @@ export function getAvailableBattleActions(
   if (interrupt.tag === "PISpellCast") {
     const tokens: Array<AvailableBattleActionToken> = [];
     for (const actorId of awaitCtx.eligible) {
-      const slotLevels = battleCounterspellSlotLevels(actorId, context);
-      if (slotLevels.length === 0) continue;
-      tokens.push(
-        battleToken<
-          Extract<BattleActionToken, { readonly type: "CAST_COUNTERSPELL" }>
-        >({
-          actorId,
-          type: "CAST_COUNTERSPELL",
-          slotLevel: { options: slotLevels },
-          cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
-          outcome: {
-            summary:
-              "Use your reaction to cast Counterspell against the triggering spell",
-          },
-        }),
-      );
+      const actor = context.creatures.get(CreatureId(actorId));
+      if (actor == null) continue;
+      for (const access of actor.spellAccesses) {
+        if (access.projection.reactionResolution !== "counterspell") continue;
+        const slotLevels = battleSpellAccessSlotLevels(actor, access);
+        if (slotLevels.length === 0) continue;
+        tokens.push(
+          battleToken<
+            Extract<BattleActionToken, { readonly type: "CAST_COUNTERSPELL" }>
+          >({
+            actorId,
+            type: "CAST_COUNTERSPELL",
+            accessId: access.accessId,
+            slotLevel: { options: slotLevels },
+            cost: costs(quotaCost("reaction"), poolCost("spellSlot")),
+            outcome: {
+              summary:
+                "Use your reaction to cast Counterspell against the triggering spell",
+            },
+          }),
+        );
+      }
     }
     return tokens;
   }
@@ -5193,6 +5218,11 @@ function availableBattleTokenForResolved(
   context: BattleContext,
   token: BattleResolvedActionToken,
 ): BattleActionToken | undefined {
+  const sameAccessOrCompat = (
+    candidateAccessId: string | undefined,
+    tokenAccessId: string | undefined,
+  ) => tokenAccessId == null || candidateAccessId === tokenAccessId;
+
   return getAvailableBattleActions(context).find(
     (candidate): candidate is BattleActionToken => {
       if (candidate.scope !== "battle") return false;
@@ -5211,7 +5241,10 @@ function availableBattleTokenForResolved(
       candidate.type === "BATTLE_READY_SPELL" &&
       token.type === "BATTLE_READY_SPELL"
     ) {
-      return candidate.spellName === token.spellName;
+      return (
+        sameAccessOrCompat(candidate.accessId, token.accessId) &&
+        candidate.spellId === token.spellId
+      );
     }
     if (candidate.type === "BATTLE_SEARCH" && token.type === "BATTLE_SEARCH") {
       return candidate.targetId.options.includes(token.targetId);
@@ -5243,6 +5276,7 @@ function availableBattleTokenForResolved(
       token.type === "BATTLE_CAST_AOE"
     ) {
       return (
+        sameAccessOrCompat(candidate.accessId, token.accessId) &&
         candidate.spellId === token.spellId &&
         candidate.slotLevel.options.includes(token.slotLevel)
       );
@@ -5252,10 +5286,29 @@ function availableBattleTokenForResolved(
       token.type === "BATTLE_CAST_SAVE_SPELL"
     ) {
       return (
+        sameAccessOrCompat(candidate.accessId, token.accessId) &&
         candidate.spellId === token.spellId &&
         candidate.slotLevel.options.includes(token.slotLevel) &&
         candidate.targetId.options.includes(token.targetId)
       );
+    }
+    if (
+      candidate.type === "CAST_COUNTERSPELL" &&
+      token.type === "CAST_COUNTERSPELL"
+    ) {
+      return (
+        sameAccessOrCompat(candidate.accessId, token.accessId) &&
+        candidate.slotLevel.options.includes(token.slotLevel)
+      );
+    }
+    if (candidate.type === "CAST_SHIELD" && token.type === "CAST_SHIELD") {
+      return sameAccessOrCompat(candidate.accessId, token.accessId);
+    }
+    if (
+      candidate.type === "CAST_HELLISH_REBUKE" &&
+      token.type === "CAST_HELLISH_REBUKE"
+    ) {
+      return sameAccessOrCompat(candidate.accessId, token.accessId);
     }
     if (
       candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
@@ -5318,6 +5371,10 @@ export function resolveBattleAction(
   token: BattleResolvedActionToken,
 ): BattleResolutionRequest | ActionResolutionError {
   const availableToken = availableBattleTokenForResolved(context, token);
+  const sameAccessOrCompat = (
+    availableAccessId: string | undefined,
+    tokenAccessId: string | undefined,
+  ) => tokenAccessId == null || availableAccessId === tokenAccessId;
   if (availableToken == null) {
     return {
       code: "ACTION_NOT_AVAILABLE",
@@ -5407,6 +5464,7 @@ export function resolveBattleAction(
   if (token.type === "BATTLE_CAST_AOE") {
     if (
       !("spellId" in availableToken) ||
+      !sameAccessOrCompat(availableToken.accessId, token.accessId) ||
       availableToken.spellId !== token.spellId ||
       !("slotLevel" in availableToken) ||
       !availableToken.slotLevel.options.includes(token.slotLevel)
@@ -5417,10 +5475,14 @@ export function resolveBattleAction(
       };
     }
     const actor = context.creatures.get(CreatureId(token.actorId));
+    const chosenAccessId =
+      ("accessId" in availableToken ? availableToken.accessId : undefined) ??
+      token.accessId ??
+      "";
     const payload =
       actor == null
         ? null
-        : currentReadyableSpellPayload(actor, token.spellId, token.slotLevel);
+        : currentReadyableSpellPayload(actor, chosenAccessId, token.slotLevel);
     if (payload == null) {
       return {
         code: "ACTION_NOT_AVAILABLE",
@@ -5440,8 +5502,9 @@ export function resolveBattleAction(
         cond: payload.release.conditionOnFail,
         applyCond: payload.release.applyCondition,
         saveAbility: payload.release.saveAbility,
+        accessId: battleSpellAccessId(chosenAccessId),
         slotLvl: payload.slotLevel,
-        spellName: token.spellId,
+        spellId: spellId(token.spellId),
         ritual: false,
       },
     };
@@ -5449,6 +5512,7 @@ export function resolveBattleAction(
   if (token.type === "BATTLE_CAST_SAVE_SPELL") {
     if (
       availableToken.type !== "BATTLE_CAST_SAVE_SPELL" ||
+      !sameAccessOrCompat(availableToken.accessId, token.accessId) ||
       availableToken.spellId !== token.spellId ||
       !availableToken.slotLevel.options.includes(token.slotLevel) ||
       !availableToken.targetId.options.includes(token.targetId)
@@ -5459,7 +5523,10 @@ export function resolveBattleAction(
       };
     }
     return {
-      token,
+      token: {
+        ...token,
+        accessId: token.accessId ?? availableToken.accessId,
+      },
       outcome: availableToken.outcome.summary,
       runtime: "battleSaveSpell",
     };
@@ -5612,9 +5679,17 @@ export function resolveBattleAction(
     };
   }
   if (token.type === "BATTLE_READY_SPELL") {
+    const tokenSpellId = token.spellId ?? token.spellName;
+    if (tokenSpellId == null) {
+      return {
+        code: "ACTION_NOT_AVAILABLE",
+        message: `${token.type} is missing spell identity for ${token.actorId}.`,
+      };
+    }
     if (
-      !("spellName" in availableToken) ||
-      availableToken.spellName !== token.spellName ||
+      !("spellId" in availableToken) ||
+      !sameAccessOrCompat(availableToken.accessId, token.accessId) ||
+      availableToken.spellId !== tokenSpellId ||
       !("slotLevel" in availableToken) ||
       !availableToken.slotLevel.options.includes(token.slotLevel) ||
       !("targetId" in availableToken) ||
@@ -5622,18 +5697,22 @@ export function resolveBattleAction(
     ) {
       return {
         code: "ACTION_NOT_AVAILABLE",
-        message: `${token.type} ${token.spellName} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
+        message: `${token.type} ${tokenSpellId} against ${token.targetId} is not currently available for ${token.actorId} in this battle state.`,
       };
     }
     const actor = context.creatures.get(CreatureId(token.actorId));
+    const chosenAccessId =
+      ("accessId" in availableToken ? availableToken.accessId : undefined) ??
+      token.accessId ??
+      "";
     const payload =
       actor == null
         ? null
-        : currentReadyableSpellPayload(actor, token.spellName, token.slotLevel);
+        : currentReadyableSpellPayload(actor, chosenAccessId, token.slotLevel);
     if (payload == null) {
       return {
         code: "ACTION_NOT_AVAILABLE",
-        message: `${token.spellName} has no derived ready spell payload for ${token.actorId}.`,
+        message: `${tokenSpellId} has no derived ready spell payload for ${token.actorId}.`,
       };
     }
     return {
@@ -5650,8 +5729,9 @@ export function resolveBattleAction(
         cond: payload.release.conditionOnFail,
         applyCond: payload.release.applyCondition,
         saveAbility: payload.release.saveAbility,
+        accessId: battleSpellAccessId(chosenAccessId),
         slotLvl: payload.slotLevel,
-        spellName: token.spellName,
+        spellId: spellId(tokenSpellId),
       },
     };
   }
@@ -5672,6 +5752,8 @@ export function resolveBattleAction(
   }
   if (token.type === "CAST_COUNTERSPELL") {
     if (
+      availableToken.type !== "CAST_COUNTERSPELL" ||
+      !sameAccessOrCompat(availableToken.accessId, token.accessId) ||
       !("slotLevel" in availableToken) ||
       !availableToken.slotLevel.options.includes(token.slotLevel)
     ) {
@@ -5691,18 +5773,22 @@ export function resolveBattleAction(
     if (targetSpellLevel == null) {
       return {
         code: "ACTION_NOT_SUPPORTED",
-        message: `Counterspell cannot resolve ${interrupt.ctx.spellName} because its spell level is not modeled yet.`,
+        message: `Counterspell cannot resolve ${interrupt.ctx.spellId} because its spell level is not modeled yet.`,
       };
     }
     if (counterspellAutoSuccess(targetSpellLevel, token.slotLevel)) {
+      const chosenAccessId = token.accessId ?? availableToken.accessId;
       return {
-        token,
+        token: { ...token, accessId: chosenAccessId },
         outcome: availableToken.outcome.summary,
         runtime: "none",
         event: {
           type: "BATTLE_RESOLVE_COUNTERSPELL",
           reactorId: CreatureId(token.actorId),
           decision: { tag: "RCounterspell", saveSucceeded: false },
+          ...(chosenAccessId == null
+            ? {}
+            : { accessId: battleSpellAccessId(chosenAccessId) }),
           csSlotLvl: token.slotLevel,
         },
       };
@@ -5714,14 +5800,25 @@ export function resolveBattleAction(
     };
   }
   if (token.type === "CAST_SHIELD") {
+    const chosenAccessId =
+      token.accessId ??
+      ("accessId" in availableToken ? availableToken.accessId : undefined);
     return {
-      token,
+      token: {
+        ...token,
+        accessId:
+          token.accessId ??
+          ("accessId" in availableToken ? availableToken.accessId : undefined),
+      },
       outcome: availableToken.outcome.summary,
       runtime: "none",
       event: {
         type: "BATTLE_RESOLVE_HIT_REACTION",
         reactorId: CreatureId(token.actorId),
         decision: { tag: "RShield" },
+        ...(chosenAccessId == null
+          ? {}
+          : { spellAccessId: battleSpellAccessId(chosenAccessId) }),
       },
     };
   }
@@ -5771,8 +5868,11 @@ export function resolveBattleAction(
     };
   }
   if (token.type === "CAST_HELLISH_REBUKE") {
+    const chosenAccessId =
+      token.accessId ??
+      ("accessId" in availableToken ? availableToken.accessId : undefined);
     return {
-      token,
+      token: chosenAccessId == null ? token : { ...token, accessId: chosenAccessId },
       outcome: availableToken.outcome.summary,
       runtime: "hellishRebuke",
     };
@@ -6116,7 +6216,7 @@ export function finalizeBattleResolution(
           ? null
           : currentReadyableSpellPayload(
               actor,
-              request.token.spellId,
+              request.token.accessId ?? "",
               request.token.slotLevel,
             );
       if (payload == null) {
@@ -6142,8 +6242,11 @@ export function finalizeBattleResolution(
           cond: payload.release.conditionOnFail,
           applyCond: payload.release.applyCondition,
           saveAbility: payload.release.saveAbility,
+          ...(request.token.accessId == null
+            ? {}
+            : { accessId: battleSpellAccessId(request.token.accessId) }),
           slotLvl: payload.slotLevel,
-          spellName: request.token.spellId,
+          spellId: spellId(request.token.spellId),
           ritual: false,
         },
         outcome: request.outcome,
@@ -6509,6 +6612,13 @@ export function finalizeBattleResolution(
               tag: "RCounterspell",
               saveSucceeded: runtimeInputs.values.saveSucceeded,
             },
+            ...(counterspellRequest.token.accessId == null
+              ? {}
+              : {
+                  accessId: battleSpellAccessId(
+                    counterspellRequest.token.accessId,
+                  ),
+                }),
             csSlotLvl: counterspellRequest.token.slotLevel,
           },
           outcome: counterspellRequest.outcome,
@@ -6576,6 +6686,15 @@ export function finalizeBattleResolution(
       if (runtimeInputs.runtime !== "hellishRebuke") {
         return battleRuntimeMismatch("hellishRebuke", runtimeInputs.runtime);
       }
+      if (request.token.type !== "CAST_HELLISH_REBUKE") {
+        return {
+          ok: false,
+          error: {
+            code: "ACTION_NOT_SUPPORTED",
+            message: `Hellish Rebuke runtime cannot finalize ${request.token.type}.`,
+          },
+        };
+      }
       const damage = runtimeInputs.values.damage;
       if (damage < 0) {
         return {
@@ -6591,6 +6710,9 @@ export function finalizeBattleResolution(
         event: {
           type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION",
           reactorId: CreatureId(request.token.actorId),
+          ...(request.token.accessId == null
+            ? {}
+            : { accessId: battleSpellAccessId(request.token.accessId) }),
           reactionDmg: damage,
           reactionSaved: runtimeInputs.values.saveSucceeded,
           reactionDt: "fire",

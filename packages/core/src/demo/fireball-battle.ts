@@ -15,13 +15,16 @@ import type {
   BattleEvent,
   InitCreatureConfig,
 } from "#/battle-machine-types.ts";
+import { preparedBattleSpellAccesses } from "#/battle-spell-access.ts";
 import type { ScenarioMeta } from "#/battle-scene/scene-snapshot.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import type { DamageType } from "#/types.ts";
-import { CreatureId as cid, difficultyClass, spellSlotLevel } from "#/types.ts";
+import { CreatureId as cid, difficultyClass, spellId, spellSlotLevel } from "#/types.ts";
 
 const WIZARD_HP = 50;
 const FIREBALL_DMG = 28;
 const FIREBALL_DC = 15;
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 const WITH_CS: ReadonlySet<string> = new Set([
   "hold_person",
@@ -40,48 +43,58 @@ const NO_CS: ReadonlySet<string> = new Set([
   "shield",
 ]);
 
+function battlePreparedSpellAccessesForDemo(
+  spells: ReadonlySet<string>,
+) {
+  return preparedBattleSpellAccesses({
+    spellDictionary: SPELL_LIBRARY,
+    spellIds: [...spells].map(spellId),
+    sharedSpellSaveDC: difficultyClass(15),
+  });
+}
+
 const CREATURES: ReadonlyArray<InitCreatureConfig> = [
   {
     id: cid("A"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: NO_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(NO_CS),
   },
   {
     id: cid("D"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: NO_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(NO_CS),
   },
   {
     id: cid("B"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: WITH_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(WITH_CS),
   },
   {
     id: cid("E"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: WITH_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(WITH_CS),
   },
   {
     id: cid("C"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: WITH_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(WITH_CS),
   },
   {
     id: cid("F"),
     maxHp: WIZARD_HP,
     kind: "PC",
     caster: true,
-    preparedSpells: WITH_CS,
+    spellAccesses: battlePreparedSpellAccessesForDemo(WITH_CS),
   },
 ];
 

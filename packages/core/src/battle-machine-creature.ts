@@ -7,6 +7,11 @@ import { Match, Option } from "effect";
 import {
   preparedBattleSpellAccess,
 } from "#/battle-spell-access.ts";
+import {
+  makeSpellLibrary,
+  SRD_SPELLS,
+  type SpellLibrary,
+} from "#/features/spell-registry.ts";
 import type {
   BattleCreatureState,
   CreatureId,
@@ -32,6 +37,8 @@ import type {
   SpellId,
 } from "#/types.ts";
 import { armorClass, difficultyClass, resourceCount, spellId } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 function activeEffectId(effect: ActiveEffect): string {
   return effect.spellId;
@@ -940,6 +947,7 @@ const CASTER_PREPARED_SPELLS: ReadonlySet<SpellId> = new Set(
 
 const CASTER_SPELL_ACCESSES = [...CASTER_PREPARED_SPELLS].map((currentSpellId) =>
   preparedBattleSpellAccess({
+    spellDictionary: SPELL_LIBRARY,
     spellId: currentSpellId,
     spellSaveDC: difficultyClass(13),
   }),
@@ -1043,11 +1051,21 @@ export function freshCreature(
 export function freshCaster(
   maxHp: number,
   kind: CreatureKind,
+  spellLibrary: SpellLibrary = SPELL_LIBRARY,
 ): BattleCreatureState {
   return {
     ...freshCreature(maxHp, kind),
     slotsMax: CASTER_SLOTS,
     slotsCurrent: CASTER_SLOTS,
-    spellAccesses: CASTER_SPELL_ACCESSES,
+    spellAccesses:
+      spellLibrary === SPELL_LIBRARY
+        ? CASTER_SPELL_ACCESSES
+        : [...CASTER_PREPARED_SPELLS].map((currentSpellId) =>
+            preparedBattleSpellAccess({
+              spellDictionary: spellLibrary,
+              spellId: currentSpellId,
+              spellSaveDC: difficultyClass(13),
+            }),
+          ),
   };
 }

@@ -10,6 +10,7 @@ import {
   MONSTER_CATALOG_UNSUPPORTED_AUDIT,
   MONSTER_CATALOG_UNSUPPORTED_REPORT,
 } from "#/monster-catalog-audit.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import {
   CANONICAL_SRD_MONSTER_PROVENANCE,
   ABOLETH,
@@ -61,6 +62,8 @@ import {
   WARRIOR_VETERAN,
 } from "#/monster-catalog.ts";
 import { CreatureId, abilityModifier, spellId, spellSlotLevel } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 describe("monster catalog", () => {
   it("documents the core-owned SRD provenance rules", () => {
@@ -838,6 +841,14 @@ describe("monster catalog", () => {
     expect(config.spellAccesses).toEqual([
       {
         tag: "statBlockActionGranted",
+        accessId: "statBlockActionGranted:spell:fireball:fireball:4",
+        projection: {
+          baseLevel: 3,
+          activation: "action",
+          requiresVerbal: true,
+          requiresHandComponent: true,
+          reactionResolution: "none",
+        },
         spellId: spellId("fireball"),
         spellSaveDC: 14,
         resourcePath: {
@@ -1269,6 +1280,7 @@ describe("monster catalog", () => {
 
   it("can project a selected named stat-block attack into the battle attack lane", () => {
     const config = statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
       id: CreatureId("goblin-warrior-1"),
       statBlock: GOBLIN_WARRIOR,
       primaryAttackName: "shortbow",
@@ -1476,6 +1488,7 @@ describe("monster catalog", () => {
 
     expect(statBlockInitiativeScore(synthetic)).toBe(22);
     const config = statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
       id: CreatureId("dragon-1"),
       statBlock: synthetic,
     });

@@ -1,18 +1,19 @@
-import { Match } from "effect";
+import { Match, Option } from "effect";
 
-import { hasBattleSpellAccess } from "#/battle-spell-access.ts";
+import { battleSpellAccessById } from "#/battle-spell-access.ts";
 import {
   battleMainHandDamageDie,
   endHidden,
-  prepareHandsForSpellComponents,
   isIncapacitated,
 } from "#/battle-machine-creature.ts";
 import {
   activeId,
   advanceFromHitPhase,
   awaitingReaction,
+  battleSpellAccessHasAvailableResource,
   byTag,
   applyDamageWithAfterReactions,
+  canProvideBattleSpellComponentsForAccess,
   expendSlot,
   firstAvailableSpellSlotLevel,
   isHit,
@@ -29,6 +30,7 @@ import {
   returnToState,
   setCreature,
   setDifference,
+  prepareBattleCasterForSpellAccess,
   spendAction,
   spendExtraAttack,
   spendReaction,
@@ -60,7 +62,7 @@ import type {
   FullAttackMods,
   WeaponProperty,
 } from "#/types.ts";
-import { armorClass, spellId, UNARMED_STRIKE_PROFILE } from "#/types.ts";
+import { armorClass, UNARMED_STRIKE_PROFILE } from "#/types.ts";
 
 type Creatures = ReadonlyMap<CreatureId, BattleCreatureState>;
 
@@ -181,7 +183,7 @@ export function resolveAttack(
   attackerId: CreatureId,
   targetId: CreatureId,
   attackRoll: number,
-  _targetAc: number,
+  targetAc: number,
   damage: number,
   damageType: DamageType,
   damageQualifiers: ReadonlySet<DamageQualifier>,
@@ -209,8 +211,7 @@ export function resolveAttack(
     : 0;
   const target = cs0.get(targetId)!;
   const effectiveTargetAc =
-    battleCurrentArmorClass(target) +
-    (target.isWearingArmor ? target.defenseArmorClassBonus : 0);
+    targetAc + (target.isWearingArmor ? target.defenseArmorClassBonus : 0);
   const hit =
     !mods.autoMiss &&
     isHitWithAttackRollBonus(
@@ -456,13 +457,46 @@ export function battleResolveHitReaction({
     const reactor = c.creatures.get(e.reactorId)!;
     const updatedReactor = Match.value(e.decision).pipe(
       byTag("RShield", () => {
-        const slotLevel = firstAvailableSpellSlotLevel(reactor);
+        const access = e.spellAccessId
+          ? Option.getOrNull(
+              battleSpellAccessById(reactor.spellAccesses, e.spellAccessId),
+            )
+          : reactor.spellAccesses.find(
+              (entry) =>
+                entry.projection.reactionResolution === "shieldArmorClassBonus",
+            ) ?? null;
+        if (
+          access == null ||
+          access.projection.reactionResolution !== "shieldArmorClassBonus"
+        ) {
+          return reactor;
+        }
+        if (
+          !canProvideBattleSpellComponentsForAccess(reactor, access) ||
+          !battleSpellAccessHasAvailableResource(reactor, access)
+        ) {
+          return reactor;
+        }
+        const preparedReactor = prepareBattleCasterForSpellAccess(reactor, access);
+        if (access.resourcePath.kind === "dailyUse") {
+          const remaining =
+            preparedReactor.dailyUsesRemaining[access.resourcePath.usageId];
+          if (remaining == null || remaining <= 0) return reactor;
+          return {
+            ...spendReaction(preparedReactor),
+            dailyUsesRemaining: {
+              ...preparedReactor.dailyUsesRemaining,
+              [access.resourcePath.usageId]: remaining - 1,
+            },
+          };
+        }
+        const slotLevel = firstAvailableSpellSlotLevel(
+          preparedReactor,
+          access.projection.baseLevel,
+        );
         return slotLevel == null
           ? reactor
-          : expendSlot(
-              spendReaction(prepareHandsForSpellComponents(reactor)),
-              slotLevel,
-            );
+          : expendSlot(spendReaction(preparedReactor), slotLevel);
       }),
       byTag("RParry", (d) =>
         d.bonus === reactor.parryAcBonus ? spendReaction(reactor) : reactor,
@@ -646,18 +680,51 @@ export function battleAfterDamageSpellReaction({
     !reactor.reactionAvailable ||
     e.reactorId !== ad.damagedCreature ||
     !ad.sourceVisibleToDamagedCreature ||
-    !ad.sourceWithin60ftOfDamagedCreature ||
-    !hasBattleSpellAccess(reactor.spellAccesses, spellId("hellish_rebuke")) ||
-    !reactor.slotsCurrent.some((remaining) => remaining > 0)
+    !ad.sourceWithin60ftOfDamagedCreature
   ) {
     return {};
   }
-  const slotLevel = firstAvailableSpellSlotLevel(reactor);
-  if (slotLevel == null) return {};
+  const access = Option.getOrNull(
+    e.accessId == null
+      ? Option.fromNullable(
+          reactor.spellAccesses.find(
+            (entry) => entry.projection.reactionResolution === "hellishRebuke",
+          ),
+        )
+      : battleSpellAccessById(reactor.spellAccesses, e.accessId),
+  );
+  if (access == null || access.projection.reactionResolution !== "hellishRebuke")
+    return {};
+  if (
+    !canProvideBattleSpellComponentsForAccess(reactor, access) ||
+    !battleSpellAccessHasAvailableResource(reactor, access)
+  ) {
+    return {};
+  }
+  const preparedReactor = prepareBattleCasterForSpellAccess(reactor, access);
+  let updatedReactor: BattleCreatureState;
+  if (access.resourcePath.kind === "dailyUse") {
+    const remaining = preparedReactor.dailyUsesRemaining[access.resourcePath.usageId];
+    if (remaining == null || remaining <= 0) return {};
+    updatedReactor = {
+      ...spendReaction(preparedReactor),
+      dailyUsesRemaining: {
+        ...preparedReactor.dailyUsesRemaining,
+        [access.resourcePath.usageId]: remaining - 1,
+      },
+    };
+  } else {
+    const slotLevel = firstAvailableSpellSlotLevel(
+      preparedReactor,
+      access.projection.baseLevel,
+    );
+    if (slotLevel == null) return {};
+    updatedReactor = expendSlot(spendReaction(preparedReactor), slotLevel);
+  }
   const cs1 = setCreature(
     c.creatures,
     e.reactorId,
-    expendSlot(spendReaction(reactor), slotLevel),
+    updatedReactor,
   );
   const actualDmg = e.reactionSaved
     ? Math.trunc(e.reactionDmg / 2)

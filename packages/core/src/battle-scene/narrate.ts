@@ -17,9 +17,9 @@ export function narrate(event: BattleEvent, meta: ScenarioMeta): string {
     case "BATTLE_START_TURN":
       return "A new turn begins.";
     case "BATTLE_CAST_AOE":
-      return `Casts ${event.spellName} (level ${event.slotLvl} slot) — DC ${event.saveDC}, ${event.dmgOnFail} ${event.dt} damage.`;
+      return `Casts ${event.spellId ?? event.spellName ?? "spell"} (level ${event.slotLvl} slot) — DC ${event.saveDC}, ${event.dmgOnFail} ${event.dt} damage.`;
     case "BATTLE_CAST_SAVE_SPELL":
-      return `Casts ${event.spellName} on ${name(event.targetId, meta)} — DC ${event.saveDC}, ${event.dmgOnFail} ${event.dt} damage.`;
+      return `Casts ${event.spellId ?? event.spellName ?? "spell"} on ${name(event.targetId, meta)} — DC ${event.saveDC}, ${event.dmgOnFail} ${event.dt} damage.`;
     case "BATTLE_RESOLVE_COUNTERSPELL":
       if (!event.reactorId)
         return "No more counterspellers — spell chain resolves.";

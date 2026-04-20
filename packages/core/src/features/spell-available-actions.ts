@@ -6,9 +6,12 @@ import {
   getSpellRecord,
   getBattleReadyableSpellMechanics,
   getSpellRecordStrict,
+  makeSpellLibrary,
   projectBattleReadyableSpellPayload,
+  SRD_SPELLS,
 } from "#/features/spell-registry.ts";
 import type {
+  ActivationTiming,
   DifficultyClass,
   SpellId,
   SpellName,
@@ -38,7 +41,7 @@ export const ModeledPreparedSpellSchema = Schema.Literal(
 export type ModeledPreparedSpellInfo = {
   readonly name: ModeledPreparedSpell;
   readonly baseLevel: number;
-  readonly castingTime: "action" | "bonusAction";
+  readonly castingTime: Exclude<ActivationTiming, "reaction">;
   readonly concentration: boolean;
   readonly requiresVerbal: boolean;
   readonly requiresSomatic: boolean;
@@ -54,6 +57,7 @@ export type SpellComponentRequirements = {
 };
 
 const DEFAULT_BATTLE_SPELL_SAVE_DC = difficultyClass(13);
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 const MODELED_PREPARED_SPELLS_BY_CLASS = {
   barbarian: [],
@@ -79,11 +83,13 @@ const MODELED_PREPARED_SPELLS_BY_CLASS = {
   Record<ClassName, ReadonlyArray<ModeledPreparedSpell>>
 >;
 
-function normalizeCastingTime(
+export function normalizeCastingTime(
   castingTime: string,
-): "action" | "bonusAction" | null {
+): ActivationTiming | null {
   if (castingTime === "Action") return "action";
+  if (castingTime === "Action or Ritual") return "action";
   if (castingTime === "Bonus Action") return "bonusAction";
+  if (castingTime.startsWith("Reaction")) return "reaction";
   return null;
 }
 
@@ -117,9 +123,9 @@ function parseSpellComponentRequirements(
 function requireSpellInfo(
   spellName: ModeledPreparedSpell,
 ): ModeledPreparedSpellInfo {
-  const entry = getSpellRecordStrict(spellName);
+  const entry = getSpellRecordStrict(SPELL_LIBRARY, spellName);
   const castingTime = normalizeCastingTime(entry.castingTime);
-  if (castingTime == null)
+  if (castingTime == null || castingTime === "reaction")
     throw new Error(
       `Unsupported casting time for modeled prepared spell ${spellName}: ${entry.castingTime}`,
     );
@@ -154,7 +160,7 @@ export const MODELED_PREPARED_SPELL_INFO: Readonly<
 function canonicalModeledPreparedSpell(
   idOrName: string | SpellId,
 ): ModeledPreparedSpell | null {
-  const record = getSpellRecord(idOrName);
+  const record = getSpellRecord(SPELL_LIBRARY, idOrName);
   if (record == null) return null;
   const modeledName =
     record.id in MODELED_PREPARED_SPELL_INFO
@@ -173,7 +179,7 @@ export function getModeledPreparedSpellInfo(
 export function getSpellComponentRequirements(
   spellName: string | SpellId,
 ): SpellComponentRequirements | null {
-  const entry = getSpellRecord(spellName);
+  const entry = getSpellRecord(SPELL_LIBRARY, spellName);
   return entry == null
     ? null
     : parseSpellComponentRequirements(entry.components);

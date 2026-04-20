@@ -5,7 +5,10 @@ import type { InitCreatureConfig } from "#/battle-machine-types.ts";
 export { CANONICAL_SRD_MONSTER_PROVENANCE } from "#/monster-catalog-helpers.ts";
 import {
   getBattleReadyableSpellMechanics,
+  makeSpellLibrary,
   projectBattleReadyableSpellPayload,
+  SRD_SPELLS,
+  type SpellLibrary,
 } from "#/features/spell-registry.ts";
 export * from "#/monster-catalog-registry.ts";
 import {
@@ -33,6 +36,8 @@ import {
   spellId as makeSpellId,
   spellSlotLevel,
 } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 export function getMonsterStatBlockByStateId(
   id: string | undefined,
@@ -178,7 +183,10 @@ function parseMonsterSpellDailyUses(usage: string): number | null {
   return match == null ? null : Number(match[1]);
 }
 
-function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
+function statBlockModeledActionSpellcasting(
+  statBlock: StatBlock,
+  spellLibrary: SpellLibrary,
+) {
   const dailyUsesRemaining: Record<string, number> = {};
   // Spell access facts: creature-owned stat-block action-granted paths
   // projected from the stat block. Spell definitions remain in authored spell
@@ -205,6 +213,7 @@ function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
       const usageId = monsterSpellDailyUseId(spell.spellId);
       spellAccesses.push(
         statBlockActionGrantedBattleSpellAccess({
+          spellDictionary: spellLibrary,
           spellId: currentSpellId,
           spellSaveDC: payload.release.saveDC,
           usageId,
@@ -227,7 +236,10 @@ function statBlockModeledActionSpellcasting(statBlock: StatBlock) {
 export function statBlockProjectedBattleReadyableMonsterSpells(
   statBlock: StatBlock,
 ): ReadonlySet<SpellId> {
-  const projected = statBlockModeledActionSpellcasting(statBlock).spellAccesses;
+  const projected = statBlockModeledActionSpellcasting(
+    statBlock,
+    SPELL_LIBRARY,
+  ).spellAccesses;
   return projected == null
     ? new Set()
     : new Set(projected.map((access) => access.spellId));
@@ -334,6 +346,7 @@ function statBlockPrimaryWeaponProfile(
 export function statBlockToInitCreatureConfig(params: {
   readonly id: CreatureIdT;
   readonly statBlock: StatBlock;
+  readonly spellLibrary: SpellLibrary;
   readonly statBlockId?: MonsterStatBlockId;
   readonly primaryAttackName?: string;
   readonly initiativeRoll?: number;
@@ -346,6 +359,7 @@ export function statBlockToInitCreatureConfig(params: {
   );
   const modeledActionSpellcasting = statBlockModeledActionSpellcasting(
     params.statBlock,
+    params.spellLibrary,
   );
   const saveAdvantageContexts = statBlockSaveAdvantageContexts(
     params.statBlock,
@@ -408,6 +422,7 @@ export function monsterCatalogInitCreatureConfig(params: {
 }): InitCreatureConfig {
   return statBlockToInitCreatureConfig({
     ...params,
+    spellLibrary: SPELL_LIBRARY,
     statBlock: getMonsterStatBlock(params.statBlockId),
   });
 }

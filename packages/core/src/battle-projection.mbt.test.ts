@@ -23,6 +23,7 @@ import {
   hasDeflectEnergy,
 } from "#/features/class-monk-features.ts";
 import { canUncannyDodge } from "#/features/class-rogue.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
@@ -70,6 +71,8 @@ import {
   spellId as mkSpellId,
   spellSlotLevel,
 } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
@@ -804,7 +807,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("A"), actorA);
       creatureKinds.set("A", "PC");
       creatureSizes.set("A", "medium");
-      setBattleArmorProjection("A", freshCaster(hp1, "PC"));
+      setBattleArmorProjection("A", freshCaster(hp1, "PC", SPELL_LIBRARY));
 
       // B: PC caster, barbarian 5 — Fast Movement baked into baseWalkSpeed (30 + 10 = 40)
       const actorB = createActor(creatureMachine, {
@@ -825,7 +828,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("B"), actorB);
       creatureKinds.set("B", "PC");
       creatureSizes.set("B", "medium");
-      setBattleArmorProjection("B", freshCaster(hp2, "PC"));
+      setBattleArmorProjection("B", freshCaster(hp2, "PC", SPELL_LIBRARY));
 
       // C: Monster with TEST_MONSTER_STAT_BLOCK (3 LA, 3 LR, breath_weapon recharge 5)
       statBlocks.set("C", {
@@ -876,7 +879,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("D"), actorD);
       creatureKinds.set("D", "PC");
       creatureSizes.set("D", "medium");
-      setBattleArmorProjection("D", freshCaster(hp4, "PC"));
+      setBattleArmorProjection("D", freshCaster(hp4, "PC", SPELL_LIBRARY));
 
       const initEntries = [
         {
@@ -2276,7 +2279,7 @@ function createBattleProjectionDriver() {
       actors.set(mkCreatureId("E"), actorE);
       creatureKinds.set("E", "PC");
       creatureSizes.set("E", "medium");
-      setBattleArmorProjection("E", freshCaster(hpE, "PC"));
+      setBattleArmorProjection("E", freshCaster(hpE, "PC", SPELL_LIBRARY));
       turnStarted.add("E");
 
       const clampedIdx = Math.max(0, Math.min(insertIdx, initiative.length));

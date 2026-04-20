@@ -19,10 +19,12 @@ import {
 } from "#/available-actions.ts";
 import {
   preparedBattleSpellAccess,
+  preparedBattleSpellAccesses,
   statBlockActionGrantedBattleSpellAccess,
 } from "#/battle-spell-access.ts";
 import { battleMachine } from "#/battle-machine.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import { creatureMachine } from "#/machine.ts";
 import {
   monsterCatalogInitCreatureConfig,
@@ -42,6 +44,8 @@ import {
   spellId,
   spellSlotLevel,
 } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 function quota(resource: "action" | "bonusAction" | "reaction") {
   return { kind: "quota" as const, resource };
@@ -69,6 +73,16 @@ function preparedSpellIds(
   ...spells: ReadonlyArray<string>
 ): ReadonlySet<ReturnType<typeof spellId>> {
   return new Set(spells.map(spellId));
+}
+
+function battlePreparedSpellAccesses(
+  ...spells: ReadonlyArray<string>
+) {
+  return preparedBattleSpellAccesses({
+    spellDictionary: SPELL_LIBRARY,
+    spellIds: spells.map(spellId),
+    sharedSpellSaveDC: difficultyClass(13),
+  });
 }
 
 const FIGHTER_5_INPUT: DndMachineInput = {
@@ -394,7 +408,7 @@ function initBattleForHitDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("shield"),
+        spellAccesses: battlePreparedSpellAccesses("shield"),
         initiativeRoll: 15,
       },
       {
@@ -711,6 +725,7 @@ function initBattleForMonsterBonusActionDiscovery() {
     type: "BATTLE_INIT",
     creatures: [
       statBlockToInitCreatureConfig({
+        spellLibrary: SPELL_LIBRARY,
         id: CreatureId("A"),
         statBlock: GOBLIN_WARRIOR,
         initiativeRoll: 15,
@@ -735,7 +750,7 @@ function initBattleForReadySpellDiscovery(
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hold_person"),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
         ...actorConfig,
       },
@@ -759,7 +774,7 @@ function initBattleForAoeSpellDiscovery(
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("burning_hands", "fireball"),
+        spellAccesses: battlePreparedSpellAccesses("burning_hands", "fireball"),
         initiativeRoll: 15,
         ...actorConfig,
       },
@@ -816,7 +831,7 @@ function initBattleForCounterspellDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hold_person"),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         slotsMax: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         slotsCurrent: [4, 3, 3, 1, 0, 0, 0, 0, 0],
         initiativeRoll: 15,
@@ -826,7 +841,7 @@ function initBattleForCounterspellDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("counterspell"),
+        spellAccesses: battlePreparedSpellAccesses("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -860,7 +875,7 @@ function initBattleForCounterspellRuntimeDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("hold_person"),
+        spellAccesses: battlePreparedSpellAccesses("hold_person"),
         initiativeRoll: 15,
       },
       {
@@ -868,7 +883,7 @@ function initBattleForCounterspellRuntimeDiscovery() {
         maxHp: 20,
         kind: "PC",
         caster: true,
-        preparedSpells: preparedSpellIds("counterspell"),
+        spellAccesses: battlePreparedSpellAccesses("counterspell"),
         initiativeRoll: 10,
       },
       { id: CreatureId("C"), maxHp: 20, kind: "PC", initiativeRoll: 5 },
@@ -2945,6 +2960,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_SHIELD",
+        accessId: "prepared:shield",
         cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
@@ -4733,6 +4749,7 @@ describe("available actions contract", () => {
       scope: "battle",
       actorId: "A",
       type: "BATTLE_CAST_SAVE_SPELL",
+      accessId: "prepared:hold_person",
       spellId: "hold_person",
       slotLevel: { options: [spellSlotLevel(2), spellSlotLevel(3)] },
       targetId: { options: ["B"] },
@@ -4745,6 +4762,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_CAST_SAVE_SPELL",
+        accessId: "prepared:hold_person",
         spellId: "hold_person",
         slotLevel: spellSlotLevel(2),
         targetId: "B",
@@ -4763,7 +4781,8 @@ describe("available actions contract", () => {
         type: "BATTLE_CAST_SAVE_SPELL",
         targetId: CreatureId("B"),
         saveRoll: 5,
-        spellName: "hold_person",
+        accessId: "prepared:hold_person",
+        spellId: "hold_person",
       },
     });
   });
@@ -4777,7 +4796,8 @@ describe("available actions contract", () => {
       scope: "battle",
       actorId: "A",
       type: "BATTLE_READY_SPELL",
-      spellName: "hold_person",
+      accessId: "prepared:hold_person",
+      spellId: "hold_person",
       slotLevel: { options: [spellSlotLevel(2), spellSlotLevel(3)] },
       targetId: { options: ["B"] },
       cost: cost(quota("action"), pool("spellSlot")),
@@ -4792,7 +4812,8 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_READY_SPELL",
-        spellName: "hold_person",
+        accessId: "prepared:hold_person",
+        spellId: "hold_person",
         slotLevel: spellSlotLevel(2),
         targetId: "B",
       }),
@@ -4803,7 +4824,8 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_READY_SPELL",
-        spellName: "hold_person",
+        accessId: "prepared:hold_person",
+        spellId: "hold_person",
         slotLevel: spellSlotLevel(2),
         targetId: "B",
       },
@@ -4820,8 +4842,9 @@ describe("available actions contract", () => {
         cond: "paralyzed",
         applyCond: true,
         saveAbility: "wis",
+        accessId: "prepared:hold_person",
         slotLvl: spellSlotLevel(2),
-        spellName: "hold_person",
+        spellId: "hold_person",
       },
     });
   });
@@ -4835,6 +4858,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_CAST_AOE",
+          accessId: "prepared:burning_hands",
           spellId: spellId("burning_hands"),
           slotLevel: {
             options: [spellSlotLevel(1), spellSlotLevel(2), spellSlotLevel(3)],
@@ -4849,6 +4873,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_CAST_AOE",
+          accessId: "prepared:fireball",
           spellId: spellId("fireball"),
           slotLevel: { options: [spellSlotLevel(3)] },
           cost: cost(quota("action"), pool("spellSlot")),
@@ -4865,6 +4890,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_CAST_AOE",
+        accessId: "prepared:fireball",
         spellId: spellId("fireball"),
         slotLevel: spellSlotLevel(3),
       }),
@@ -4875,6 +4901,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "A",
         type: "BATTLE_CAST_AOE",
+        accessId: "prepared:fireball",
         spellId: spellId("fireball"),
         slotLevel: spellSlotLevel(3),
       },
@@ -4890,8 +4917,9 @@ describe("available actions contract", () => {
         cond: "blinded",
         applyCond: false,
         saveAbility: "dex",
+        accessId: "prepared:fireball",
         slotLvl: spellSlotLevel(3),
-        spellName: "fireball",
+        spellId: "fireball",
         ritual: false,
       },
     });
@@ -4921,6 +4949,7 @@ describe("available actions contract", () => {
           scope: "battle",
           actorId: "A",
           type: "BATTLE_CAST_AOE",
+          accessId: "statBlockActionGranted:spell:fireball:fireball:4",
           spellId: spellId("fireball"),
           slotLevel: { options: [spellSlotLevel(4)] },
           cost: cost(quota("action")),
@@ -4945,7 +4974,7 @@ describe("available actions contract", () => {
 
   test("battle discovery does not surface ready-spell setup without a modeled payload", () => {
     const actor = initBattleForReadySpellDiscovery({
-      preparedSpells: preparedSpellIds("hellish_rebuke"),
+      spellAccesses: battlePreparedSpellAccesses("hellish_rebuke"),
     });
 
     expect(
@@ -4955,28 +4984,39 @@ describe("available actions contract", () => {
     ).not.toContain("BATTLE_READY_SPELL");
   });
 
-  test("battle discovery quarantines ambiguous multi-access same-spell casts until EPT14 widens token identity", () => {
+  test("battle discovery surfaces ambiguous same-spell accesses as distinct access-scoped tokens after EPT14", () => {
     const actor = initBattleForReadySpellDiscovery({
       spellAccesses: [
         preparedBattleSpellAccess({
+          spellDictionary: SPELL_LIBRARY,
           spellId: spellId("hold_person"),
           spellSaveDC: difficultyClass(13),
         }),
         statBlockActionGrantedBattleSpellAccess({
+          spellDictionary: SPELL_LIBRARY,
           spellId: spellId("hold_person"),
           spellSaveDC: difficultyClass(15),
           usageId: "monster-spell:hold_person",
           fixedCastLevel: spellSlotLevel(2),
         }),
       ],
+      dailyUsesRemaining: { "monster-spell:hold_person": 1 },
     });
 
-    const tokenTypes = getAvailableBattleActions(actor.getSnapshot().context).map(
-      (token) => token.type,
-    );
+    const spellTokens = getAvailableBattleActions(actor.getSnapshot().context)
+      .filter(
+        (token) =>
+          token.type === "BATTLE_CAST_SAVE_SPELL" ||
+          token.type === "BATTLE_READY_SPELL",
+      )
+      .map((token) => ("accessId" in token ? token.accessId : undefined));
 
-    expect(tokenTypes).not.toContain("BATTLE_CAST_SAVE_SPELL");
-    expect(tokenTypes).not.toContain("BATTLE_READY_SPELL");
+    expect(spellTokens).toEqual(
+      expect.arrayContaining([
+        "prepared:hold_person",
+        "statBlockActionGranted:monster-spell:hold_person:hold_person:2",
+      ]),
+    );
   });
 
   test("battle discovery does not surface ready-spell setup while rage blocks spellcasting", () => {
@@ -5255,7 +5295,7 @@ describe("available actions contract", () => {
   test("after-damage discovery exposes Hellish Rebuke only from owned visible and within-60 trigger facts", () => {
     const actor = initBattleForAfterDamageDiscovery({
       caster: true,
-      preparedSpells: preparedSpellIds("hellish_rebuke"),
+      spellAccesses: battlePreparedSpellAccesses("hellish_rebuke"),
     });
 
     expect(getAvailableBattleActions(actor.getSnapshot().context)).toEqual([
@@ -5263,6 +5303,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_HELLISH_REBUKE",
+        accessId: "prepared:hellish_rebuke",
         cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
@@ -5272,7 +5313,7 @@ describe("available actions contract", () => {
     ]);
 
     const hiddenActor = initBattleForAfterDamageDiscovery(
-      { caster: true, preparedSpells: preparedSpellIds("hellish_rebuke") },
+      { caster: true, spellAccesses: battlePreparedSpellAccesses("hellish_rebuke") },
       { ...DEFAULT_BATTLE_ATTACK_CONTEXT, targetCanSeeAttacker: false },
     );
     expect(
@@ -5280,7 +5321,7 @@ describe("available actions contract", () => {
     ).toEqual([]);
 
     const rangedActor = initBattleForAfterDamageDiscovery(
-      { caster: true, preparedSpells: preparedSpellIds("hellish_rebuke") },
+      { caster: true, spellAccesses: battlePreparedSpellAccesses("hellish_rebuke") },
       {
         ...DEFAULT_BATTLE_ATTACK_CONTEXT,
         isMelee: false,
@@ -5295,6 +5336,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_HELLISH_REBUKE",
+        accessId: "prepared:hellish_rebuke",
         cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
           summary:
@@ -5473,6 +5515,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_COUNTERSPELL",
+        accessId: "prepared:counterspell",
         slotLevel: { options: [spellSlotLevel(3)] },
         cost: cost(quota("reaction"), pool("spellSlot")),
         outcome: {
@@ -5491,6 +5534,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_COUNTERSPELL",
+        accessId: "prepared:counterspell",
         slotLevel: spellSlotLevel(3),
       }),
     );
@@ -5499,6 +5543,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_COUNTERSPELL",
+        accessId: "prepared:counterspell",
         slotLevel: spellSlotLevel(3),
       },
       outcome:
@@ -5508,6 +5553,7 @@ describe("available actions contract", () => {
         type: "BATTLE_RESOLVE_COUNTERSPELL",
         reactorId: "B",
         decision: { tag: "RCounterspell", saveSucceeded: false },
+        accessId: "prepared:counterspell",
         csSlotLvl: spellSlotLevel(3),
       },
     });
@@ -5523,6 +5569,7 @@ describe("available actions contract", () => {
         type: "BATTLE_RESOLVE_COUNTERSPELL",
         reactorId: "B",
         decision: { tag: "RCounterspell", saveSucceeded: false },
+        accessId: "prepared:counterspell",
         csSlotLvl: spellSlotLevel(3),
       },
       outcome:
@@ -5538,6 +5585,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_COUNTERSPELL",
+        accessId: "prepared:counterspell",
         slotLevel: spellSlotLevel(3),
       }),
     );
@@ -5546,6 +5594,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_COUNTERSPELL",
+        accessId: "prepared:counterspell",
         slotLevel: spellSlotLevel(3),
       },
       outcome:
@@ -5562,6 +5611,7 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_SHIELD",
+        accessId: "prepared:shield",
       }),
     ).toEqual({
       code: "ACTION_NOT_AVAILABLE",
@@ -5589,16 +5639,23 @@ describe("available actions contract", () => {
         scope: "battle",
         actorId: "B",
         type: "CAST_SHIELD",
+        accessId: "prepared:shield",
       }),
     );
     expect(request).toEqual({
-      token: { scope: "battle", actorId: "B", type: "CAST_SHIELD" },
+      token: {
+        scope: "battle",
+        actorId: "B",
+        type: "CAST_SHIELD",
+        accessId: "prepared:shield",
+      },
       outcome: "Use your reaction to cast Shield against the triggering attack",
       runtime: "none",
       event: {
         type: "BATTLE_RESOLVE_HIT_REACTION",
         reactorId: "B",
         decision: { tag: "RShield" },
+        spellAccessId: "prepared:shield",
       },
     });
     expect(
@@ -5613,6 +5670,7 @@ describe("available actions contract", () => {
         type: "BATTLE_RESOLVE_HIT_REACTION",
         reactorId: "B",
         decision: { tag: "RShield" },
+        spellAccessId: "prepared:shield",
       },
       outcome: "Use your reaction to cast Shield against the triggering attack",
     });

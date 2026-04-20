@@ -9,6 +9,9 @@ import type {
   SpellCastCtx,
 } from "#/battle-machine-types.ts";
 import type {
+  BattleSpellAccessId,
+} from "#/battle-spell-access.ts";
+import type {
   BattleMonsterSaveEffectEvent,
   BattleMonsterTraversalEvent,
   BattleMoveEvent,
@@ -140,6 +143,7 @@ export type BattleEvent =
       readonly type: "BATTLE_RESOLVE_HIT_REACTION";
       readonly reactorId: CreatureId | null;
       readonly decision: HitReactionDecision;
+      readonly spellAccessId?: BattleSpellAccessId;
     }
   | {
       readonly type: "BATTLE_RESOLVE_DMG_REACTION";
@@ -153,6 +157,7 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_AFTER_DAMAGE_SPELL_REACTION";
       readonly reactorId: CreatureId | null;
+      readonly accessId?: BattleSpellAccessId;
       readonly reactionDmg: number;
       readonly reactionSaved: boolean;
       readonly reactionDt: DamageType;
@@ -183,8 +188,10 @@ export type BattleEvent =
       readonly cond: Condition;
       readonly applyCond: boolean;
       readonly saveAbility: Ability;
+      readonly accessId?: BattleSpellAccessId;
       readonly slotLvl: SpellSlotLevel;
-      readonly spellName: string;
+      readonly spellId?: SpellId;
+      readonly spellName?: string;
       readonly ritual: boolean;
       readonly bonusAction?: boolean;
     }
@@ -198,6 +205,7 @@ export type BattleEvent =
       readonly type: "BATTLE_RESOLVE_COUNTERSPELL";
       readonly reactorId: CreatureId | null;
       readonly decision: CSDecision;
+      readonly accessId?: BattleSpellAccessId;
       readonly csSlotLvl: SpellSlotLevel;
     }
   | {
@@ -209,6 +217,7 @@ export type BattleEvent =
       readonly type: "BATTLE_CAST_CONCENTRATION_SPELL";
       readonly targetId: CreatureId;
       readonly slotLvl: SpellSlotLevel;
+      readonly accessId?: BattleSpellAccessId;
       readonly duration: number;
       readonly spellId: SpellId;
       readonly cond: Condition;
@@ -229,8 +238,10 @@ export type BattleEvent =
       readonly cond: Condition;
       readonly applyCond: boolean;
       readonly saveAbility: Ability;
+      readonly accessId?: BattleSpellAccessId;
       readonly slotLvl: SpellSlotLevel;
-      readonly spellName: string;
+      readonly spellId?: SpellId;
+      readonly spellName?: string;
       readonly ritual: boolean;
     }
   | {
@@ -359,8 +370,10 @@ export type BattleEvent =
       readonly cond: Condition;
       readonly applyCond: boolean;
       readonly saveAbility: Ability;
+      readonly accessId?: BattleSpellAccessId;
       readonly slotLvl: SpellSlotLevel;
-      readonly spellName: string;
+      readonly spellId?: SpellId;
+      readonly spellName?: string;
     }
   | { readonly type: "BATTLE_READY_PASS" }
   | {

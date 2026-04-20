@@ -7,10 +7,14 @@
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
+import { preparedBattleSpellAccesses } from "#/battle-spell-access.ts";
 import { battleMachine } from "#/battle-machine.ts";
+import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import type { BattleEvent } from "#/battle-machine-types.ts";
 import type { CreatureId as CreatureIdT } from "#/types.ts";
-import { armorClass, CreatureId } from "#/types.ts";
+import { armorClass, CreatureId, difficultyClass, spellId } from "#/types.ts";
+
+const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
 function send(
   actor: ReturnType<typeof createActor<typeof battleMachine>>,
@@ -224,7 +228,11 @@ describe("Spec Gap 2: Reaction windows for unconscious creatures", () => {
           maxHp: 20,
           kind: "PC",
           caster: true,
-          preparedSpells: new Set(["shield"]),
+          spellAccesses: preparedBattleSpellAccesses({
+            spellDictionary: SPELL_LIBRARY,
+            spellIds: [spellId("shield")],
+            sharedSpellSaveDC: difficultyClass(13),
+          }),
         },
       ],
     });

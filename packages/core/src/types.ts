@@ -201,6 +201,13 @@ export const ACTION_TYPES = [
 ] as const;
 export type ActionType = (typeof ACTION_TYPES)[number];
 
+export const ACTIVATION_TIMINGS = [
+  "action",
+  "bonusAction",
+  "reaction",
+] as const;
+export type ActivationTiming = (typeof ACTIVATION_TIMINGS)[number];
+
 export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const;
 export type CoverType = (typeof COVER_TYPES)[number];
 

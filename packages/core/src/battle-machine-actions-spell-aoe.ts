@@ -1,17 +1,17 @@
-import { Either, Option } from "effect";
+import { Option } from "effect";
 import { isIncapacitated } from "#/battle-machine-creature.ts";
-import { singleBattleSpellAccessForSpell } from "#/battle-spell-access.ts";
+import { battleSpellAccessById, resolveBattleSpellAccess } from "#/battle-spell-access.ts";
 import {
   activeId,
   effectiveBattleSaveRollForCreature,
   applyDamageWithAfterReactions,
   applyFailEffects,
-  canProvideBattleSpellComponents,
+  canProvideBattleSpellComponentsForAccess,
   eligibleForCounterspell,
   eligibleForLR,
   expendSlot,
   mkAwait,
-  prepareBattleCasterForSpell,
+  prepareBattleCasterForSpellAccess,
   setCreature,
   spendAction,
 } from "#/battle-machine-helpers.ts";
@@ -31,17 +31,16 @@ import {
 } from "#/battle-machine-types.ts";
 import { evasionDamage } from "#/features/class-rogue.ts";
 import { spellId } from "#/types.ts";
+import { battleSpellAccessId } from "#/battle-spell-access.ts";
 
 function expendMonsterSpellDailyUse(
   actor: BattleCreatureState,
-  spellName: string,
+  accessId: BattleActionArgs<"BATTLE_CAST_AOE">["event"]["accessId"],
 ): BattleCreatureState | "unavailable" | null {
-  const access = singleBattleSpellAccessForSpell(
-    actor.spellAccesses,
-    spellId(spellName),
-  );
-  if (Either.isLeft(access) || Option.isNone(access.right)) return null;
-  const spellAccess = access.right.value;
+  if (accessId == null) return null;
+  const access = battleSpellAccessById(actor.spellAccesses, accessId);
+  if (Option.isNone(access)) return null;
+  const spellAccess = access.value;
   if (spellAccess.resourcePath.kind !== "dailyUse") return null;
   const current = actor.dailyUsesRemaining[spellAccess.resourcePath.usageId];
   if (current == null) return null;
@@ -65,10 +64,34 @@ export function battleCastAoE({
   if (ac.dead || isIncapacitated(ac) || ac.actionsRemaining <= 0) return {};
   if (ac.actionSurgeActionPending || ac.ragingBlocksSpells) return {};
   if (ac.slotExpendedThisTurn && !e.ritual) return {};
-  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
-  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
+  const currentSpellId = e.spellId ?? spellId(e.spellName ?? "");
+  const access = resolveBattleSpellAccess({
+    accesses: ac.spellAccesses,
+    accessId: e.accessId,
+    spellId: currentSpellId,
+  });
+  const resolvedAccess = Option.getOrNull(access);
+  if (
+    e.accessId != null &&
+    resolvedAccess == null
+  ) {
+    return {};
+  }
+  if (
+    resolvedAccess != null &&
+    !canProvideBattleSpellComponentsForAccess(ac, resolvedAccess)
+  ) {
+    return {};
+  }
+  const preparedCaster =
+    resolvedAccess == null
+      ? ac
+      : prepareBattleCasterForSpellAccess(ac, resolvedAccess);
   let cs = setCreature(c.creatures, id, spendAction(preparedCaster, "magic"));
-  const monsterDailyUser = expendMonsterSpellDailyUse(cs.get(id)!, e.spellName);
+  const monsterDailyUser = expendMonsterSpellDailyUse(
+    cs.get(id)!,
+    resolvedAccess?.accessId ?? e.accessId,
+  );
   if (monsterDailyUser === "unavailable") {
     return {};
   }
@@ -95,7 +118,14 @@ export function battleCastAoE({
   };
   const spellCtx: SpellCastCtx = {
     caster: id,
-    spellName: e.spellName,
+    // Raw generic AoE events may exercise the battle lane without a modeled
+    // authored access. Keep a bookkeeping-only synthetic id there so the
+    // interrupt stack can still point at the invocation without implying a
+    // semantic access path.
+    accessId:
+      resolvedAccess?.accessId ??
+      battleSpellAccessId(`rawAoE:${currentSpellId}`),
+    spellId: currentSpellId,
     postCast: { tag: "PCEAoE", aoe: aoeCtx },
     slotLvl: e.slotLvl,
     ritual: e.ritual,

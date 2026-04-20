@@ -5,10 +5,8 @@ import {
   resolveAttack,
 } from "#/battle-machine-actions-attack.ts";
 import {
-  battleSpellAccessesForSpell,
-  preparedBattleSpellAccess,
-  statBlockActionGrantedBattleSpellAccess,
-  type BattleSpellAccess,
+  battleSpellAccessById,
+  resolveBattleSpellAccess,
 } from "#/battle-spell-access.ts";
 import {
   battleExpendSlot,
@@ -23,8 +21,8 @@ import {
 import {
   activeId,
   breakConcentrationAndPropagate,
-  canProvideBattleSpellComponents,
-  prepareBattleCasterForSpell,
+  canProvideBattleSpellComponentsForAccess,
+  prepareBattleCasterForSpellAccess,
   consumeHelp,
   eligibleForCounterspell,
   escapeBattleGrapple,
@@ -65,10 +63,7 @@ import {
 } from "#/features/class-barbarian.ts";
 import { actionSurgeMaxCharges } from "#/features/class-fighter.ts";
 import { applyProjectedBattleActionSurge } from "#/projected-battle-action-reducer.ts";
-import {
-  getSpellRecordStrict,
-  resolveBattleReadyableSpellPayload,
-} from "#/features/spell-registry.ts";
+import { resolveBattleReadyableSpellPayload } from "#/features/spell-registry.ts";
 import {
   aggregateAttackMods,
   hasAttackDisadvantageSource,
@@ -77,7 +72,6 @@ import {
 } from "#/machine-combat.ts";
 import {
   getMonsterStatBlockByStateId,
-  monsterSpellDailyUseId,
   statBlockLegendaryAction,
   statBlockSaveEffectAction,
 } from "#/monster-catalog.ts";
@@ -91,7 +85,6 @@ import {
   difficultyClass,
   spellId as mkSpellId,
   type ArmorClass,
-  type SpellId,
 } from "#/types.ts";
 
 // TODO style: combinators
@@ -119,51 +112,6 @@ function squaresBetween(
     Math.abs(a.battlePosition.row - b.battlePosition.row),
     Math.abs(a.battlePosition.col - b.battlePosition.col),
   );
-}
-
-function canonicalPreparedSpellIds(
-  spellRefs: ReadonlySet<string>,
-): ReadonlySet<SpellId> {
-  return new Set(
-    [...spellRefs].map((spellRef) => getSpellRecordStrict(spellRef).id),
-  );
-}
-
-function deriveBattleSpellAccesses(params: {
-  readonly cfg: InitCreatureConfig;
-}): ReadonlyArray<BattleSpellAccess> {
-  if (params.cfg.spellAccesses != null) return params.cfg.spellAccesses;
-  const preparedSpells =
-    params.cfg.preparedSpells == null
-      ? new Set<SpellId>()
-      : canonicalPreparedSpellIds(params.cfg.preparedSpells);
-  return [...preparedSpells].map((currentSpellId) => {
-    const saveDC =
-      params.cfg.spellSaveDCs?.get(currentSpellId) ??
-      // Temporary migration seam: raw battle fixtures that only provide legacy
-      // prepared-spell inputs still get a stable access-scoped DC until every
-      // caller builds spell access directly.
-      difficultyClass(13);
-    const fixedCastLevel =
-      params.cfg.spellCastLevels?.get(currentSpellId);
-    const dailyUseId =
-      (params.cfg.dailyUsesRemaining ?? {})[
-        monsterSpellDailyUseId(currentSpellId)
-      ] != null
-        ? monsterSpellDailyUseId(currentSpellId)
-        : undefined;
-    return fixedCastLevel != null && dailyUseId != null
-      ? statBlockActionGrantedBattleSpellAccess({
-          spellId: currentSpellId,
-          spellSaveDC: saveDC,
-          usageId: dailyUseId,
-          fixedCastLevel,
-        })
-      : preparedBattleSpellAccess({
-          spellId: currentSpellId,
-          spellSaveDC: saveDC,
-        });
-  });
 }
 
 /** Check for ready-eligible creatures, enter ready window or advance turn. */
@@ -215,7 +163,7 @@ export function buildCreatureState(
     hasShieldEquipped: cfg.hasShieldEquipped ?? false,
     mainHandUsesTwoHands: cfg.mainHandUsesTwoHands ?? false,
   });
-  const spellAccesses = deriveBattleSpellAccesses({ cfg });
+  const spellAccesses = cfg.spellAccesses ?? [];
   const slotsMax = cfg.slotsMax ?? base.slotsMax;
   const slotsCurrent = cfg.slotsCurrent ?? base.slotsCurrent;
   const isWearingArmor = cfg.isWearingArmor ?? base.isWearingArmor;
@@ -404,7 +352,10 @@ export function battleInit({
   const sorted = [...scored].sort((a, b) => b.score - a.score);
   const initiative: Array<CreatureId> = [];
   for (const { cfg } of sorted) {
-    creatures.set(cfg.id, buildCreatureState(cfg, initiative.length));
+    creatures.set(
+      cfg.id,
+      buildCreatureState(cfg, initiative.length),
+    );
     initiative.push(cfg.id);
   }
   return {
@@ -471,7 +422,10 @@ export function battleAddCreature({
   }
 
   for (const [offset, { cfg }] of sorted.entries()) {
-    creatures.set(cfg.id, buildCreatureState(cfg, e.insertAtIndex + offset));
+    creatures.set(
+      cfg.id,
+      buildCreatureState(cfg, e.insertAtIndex + offset),
+    );
   }
 
   return {
@@ -1461,21 +1415,25 @@ export function battleReadySpell({
     ac.slotExpendedThisTurn
   )
     return {};
-  const access = battleSpellAccessesForSpell(
-    ac.spellAccesses,
-    mkSpellId(e.spellName),
-  )[0];
+  const currentSpellId = e.spellId ?? mkSpellId(e.spellName ?? "");
+  const access = Option.getOrNull(
+    resolveBattleSpellAccess({
+      accesses: ac.spellAccesses,
+      accessId: e.accessId,
+      spellId: currentSpellId,
+    }),
+  );
   if (access == null) return {};
   const readyablePayload = resolveBattleReadyableSpellPayload(
-    e.spellName,
+    currentSpellId,
     e.slotLvl,
     access.spellSaveDC,
   );
   if (readyablePayload == null) return {};
   if (e.slotLvl !== readyablePayload.slotLevel) return {};
   if ((ac.slotsCurrent[e.slotLvl - 1] ?? 0) <= 0) return {};
-  if (!canProvideBattleSpellComponents(ac, e.spellName)) return {};
-  const preparedCaster = prepareBattleCasterForSpell(ac, e.spellName);
+  if (!canProvideBattleSpellComponentsForAccess(ac, access)) return {};
+  const preparedCaster = prepareBattleCasterForSpellAccess(ac, access);
   const afterAction = spendAction(preparedCaster, "ready");
   let cs = setCreature(
     c.creatures,
@@ -1486,8 +1444,9 @@ export function battleReadySpell({
   cs = breakConcentrationAndPropagate(cs, id);
   // Start concentration + store params in one setCreature
   cs = setCreature(cs, id, {
-    ...startConcentration(cs.get(id)!, mkSpellId(e.spellName)),
+    ...startConcentration(cs.get(id)!, currentSpellId),
     readiedSpellParams: {
+      accessId: access.accessId,
       caster: id,
       target: e.targetId,
       saveDC: readyablePayload.release.saveDC,
@@ -1497,7 +1456,7 @@ export function battleReadySpell({
       conditionOnFail: readyablePayload.release.conditionOnFail,
       applyCondition: readyablePayload.release.applyCondition,
       saveAbility: readyablePayload.release.saveAbility,
-      spellName: e.spellName,
+      spellId: currentSpellId,
       slotLvl: e.slotLvl,
     },
   });
@@ -1512,8 +1471,12 @@ export function battleReadySpellRelease({
   const releaser = c.creatures.get(e.releaserId)!;
   const rsp = releaser.readiedSpellParams;
   if (!rsp) return {}; // no readied spell
-  if (!canProvideBattleSpellComponents(releaser, rsp.spellName)) return {};
-  const preparedReleaser = prepareBattleCasterForSpell(releaser, rsp.spellName);
+  const access = Option.getOrNull(
+    battleSpellAccessById(releaser.spellAccesses, rsp.accessId),
+  );
+  if (access == null || access.spellId !== rsp.spellId) return {};
+  if (!canProvideBattleSpellComponentsForAccess(releaser, access)) return {};
+  const preparedReleaser = prepareBattleCasterForSpellAccess(releaser, access);
   // Spend reaction, clear readiedAction and readiedSpellParams
   let cs = setCreature(c.creatures, e.releaserId, {
     ...preparedReleaser,
@@ -1543,7 +1506,8 @@ export function battleReadySpellRelease({
   };
   const spellCtx = {
     caster: rsp.caster,
-    spellName: rsp.spellName,
+    accessId: rsp.accessId,
+    spellId: rsp.spellId,
     postCast: { tag: "PCESave" as const, save: saveCtx },
     slotLvl: 0 as const, // slot already spent at ready time — 0 skips expenditure in resolveSpellEntry
     ritual: false,
