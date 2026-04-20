@@ -285,6 +285,22 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/toy-surface-hydration:
+    dependencies:
+      '@dnd/prototype-content-surface':
+        specifier: workspace:*
+        version: link:../prototype-content-surface
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
+    devDependencies:
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.5
+        version: 3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
+
 packages:
 
   '@acemir/cssom@0.9.31':

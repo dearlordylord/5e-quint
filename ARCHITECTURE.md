@@ -118,7 +118,7 @@ This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and a
 2. **DM rulings.** D&D is a tabletop game where the DM (Dungeon Master) has final authority over many decisions that RAW leaves open. The spec models what RAW *prescribes* -- mechanical rules with deterministic outcomes. When RAW says "the DM decides," that decision is a **caller-provided input**, not something the spec resolves. The spec proves that *given any DM decision*, the mechanical consequences are correct.
 
 Examples of DM rulings treated as caller inputs:
-- **Battle start/end**: The DM decides when combat begins and ends (not all creatures need to be dead; sides aren't defined in RAW).
+- **Battle start/end**: The DM ("Table") decides when combat begins and ends (not all creatures need to be dead; there are no "sides" in RAW so we don't model it).
 - **Ready action triggers**: The DM confirms when a trigger circumstance occurs ("the zombie steps next to me"). The spec models the action/reaction economy of readying and releasing; the trigger itself is DM agenda.
 - **Surprise**: The DM determines who is surprised (the spec receives surprise as an initiative modifier).
 - **Cover level**: The DM judges cover from geometry (the spec receives cover as a typed input).
