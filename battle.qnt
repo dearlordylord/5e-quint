@@ -105,6 +105,7 @@ module battle {
     turn: TurnState,
     slots: SpellSlotState,
     kind: CreatureKind,
+    spellSaveDC: int,                       // battle-owned spell save DC for fixture spell access resolution
     creatureSize: Size,
     baseArmorClass: int,                    // battle-owned base AC fact for hit resolution
     monsterResources: MonsterResourceState,  // legendary actions/resistances (B10)
@@ -919,6 +920,7 @@ module battle {
   // Default authored-unit ids for test casters. These ids are fixture metadata;
   // battle semantics must consume the projected `BattleSpellAccess` fields.
   val CASTER_SPELL_SOURCE_IDS: Set[str] = Set(
+    "acid_splash",
     "hold_person", "bless", "haste", "spirit_guardians",  // concentration spells
     "fireball", "burning_hands",                           // AoE / save spells
     "hellish_rebuke",
@@ -927,6 +929,7 @@ module battle {
   )
 
   val CASTER_SPELL_ACCESSES: Set[BattleSpellAccess] = Set(
+    battleFixtureSpellAccessById("acid_splash"),
     battleFixtureSpellAccessById("hold_person"),
     battleFixtureSpellAccessById("bless"),
     battleFixtureSpellAccessById("haste"),
@@ -945,6 +948,7 @@ module battle {
     turn: FRESH_TURN,
     slots: FRESH_SPELL_SLOTS,
     kind: k,
+    spellSaveDC: 0,
     creatureSize: Medium,
     baseArmorClass: 10,
     monsterResources: EMPTY_MONSTER_RESOURCES,
@@ -1001,6 +1005,7 @@ module battle {
       concentrationSpellId: "",
     },
     kind: k,
+    spellSaveDC: 13,
     creatureSize: Medium,
     baseArmorClass: 10,
     monsterResources: EMPTY_MONSTER_RESOURCES,
@@ -1056,6 +1061,7 @@ module battle {
         .with("effectiveSpeed", walkSpeed),
       slots: FRESH_SPELL_SLOTS,
       kind: Monster,
+      spellSaveDC: 0,
       creatureSize: sb.creatureSize,
       baseArmorClass: sb.ac,
       monsterResources: EMPTY_MONSTER_RESOURCES

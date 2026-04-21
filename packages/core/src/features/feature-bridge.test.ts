@@ -137,6 +137,7 @@ function makeCtx(overrides: Partial<DndContext> = {}): DndContext {
     pactSlotLevel: 0,
     concentrationSpellId: Option.none(),
     preparedSpells: new Set(),
+    preparedSpellSaveDCs: new Map(),
     wearingArmorWithoutTraining: false,
     hitDiceRemaining: singleClassHitDice("fighter", 5),
     activeEffects: [],

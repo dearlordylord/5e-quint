@@ -63,6 +63,7 @@ import {
   canUseProjectedActionSurge,
   canUseProjectedBattleActionSurge,
   canUseProjectedPreparedSpell,
+  discoverProjectedPreparedSpellPrompt,
   canUseProjectedSecondWind,
   finalizeProjectedActionSurge,
   finalizeProjectedPreparedSpell,
@@ -74,8 +75,11 @@ import {
   projectedPreparedSpellSummary,
   projectedSecondWindCost,
   projectedSecondWindSummary,
-  type ProjectedPreparedSpellRuntime,
 } from "#/projected-action-bridge.ts";
+import type {
+  ProjectedPreparedSpellPrompt,
+  ProjectedPreparedSpellPromptAnswer,
+} from "#/projected-action-bridge-prepared-spell.ts";
 import {
   getMonsterStatBlockByStateId,
   MONSTER_STAT_BLOCK_IDS,
@@ -2243,11 +2247,20 @@ export type ResolutionRequest =
         { readonly type: "CAST_PREPARED_SPELL" }
       >;
       readonly outcome: string;
-      readonly runtime: "none" | "projectedPreparedSpell";
+      readonly runtime: "none";
       readonly event: Extract<
         DndEvent,
         { readonly type: "CAST_PREPARED_SPELL" }
       >;
+    }
+  | {
+      readonly token: Extract<
+        ResolvedActionToken,
+        { readonly type: "CAST_PREPARED_SPELL" }
+      >;
+      readonly outcome: string;
+      readonly runtime: "projectedPreparedSpell";
+      readonly prompt: ProjectedPreparedSpellPrompt;
     }
   | {
       readonly token: Extract<
@@ -2712,7 +2725,7 @@ export type ResolutionRuntimeInputs =
     }
   | {
       readonly runtime: "projectedPreparedSpell";
-      readonly values: ProjectedPreparedSpellRuntime;
+      readonly values: ProjectedPreparedSpellPromptAnswer;
     }
   | {
       readonly runtime: "tacticalMind";
@@ -6950,14 +6963,21 @@ export function resolveAction(
       token.slotLevel == null &&
       canUseProjectedPreparedSpell(context, token.spellName)
     ) {
+      const prompt = discoverProjectedPreparedSpellPrompt(
+        context,
+        token.spellName,
+      );
+      if (prompt == null) {
+        return {
+          code: "ACTION_NOT_AVAILABLE",
+          message: `${token.spellName} is not currently available in this state.`,
+        };
+      }
       return {
         token,
         outcome: projectedPreparedSpellSummary(context, token.spellName),
         runtime: "projectedPreparedSpell",
-        event: {
-          type: "CAST_PREPARED_SPELL",
-          spellName: token.spellName,
-        },
+        prompt,
       };
     }
     if (!isAcceptedByMachine(token.type, tags)) {
@@ -7441,14 +7461,27 @@ export function finalizeResolution(
             runtimeInputs.runtime,
           );
         }
-        return {
-          ok: true,
-          ...finalizeProjectedPreparedSpell(
-            context,
-            resolved.token.spellName,
-            runtimeInputs.values,
-          ),
-        };
+        try {
+          return {
+            ok: true,
+            ...finalizeProjectedPreparedSpell(
+              context,
+              resolved.prompt,
+              runtimeInputs.values,
+            ),
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            error: {
+              code: "INVALID_RUNTIME_INPUT",
+              message:
+                error instanceof Error
+                  ? error.message
+                  : "Projected prepared spell resolution rejected the provided prompt answer.",
+            },
+          };
+        }
       },
     ),
     Match.when({ runtime: "tacticalMind" }, (): FinalizedAction => {

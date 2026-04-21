@@ -15,6 +15,7 @@ import type {
   D20Roll,
   DamageType,
   DeathSaves,
+  DifficultyClass,
   ExhaustionLevel,
   ExpiryPhase,
   HealAmount,
@@ -140,6 +141,7 @@ export interface DndMachineInput {
   readonly slotsMax?: ReadonlyArray<number>;
   readonly slotsCurrent?: ReadonlyArray<number>;
   readonly preparedSpells?: ReadonlySet<SpellId>;
+  readonly preparedSpellSaveDCs?: ReadonlyMap<SpellId, DifficultyClass>;
   readonly wearingArmorWithoutTraining?: boolean;
 }
 
@@ -217,6 +219,7 @@ export interface DndContext {
   readonly concentrationSpellId: Option.Option<SpellId>;
   readonly hitDiceRemaining: HitDiceRemaining;
   readonly preparedSpells: ReadonlySet<SpellId>;
+  readonly preparedSpellSaveDCs: ReadonlyMap<SpellId, DifficultyClass>;
   readonly wearingArmorWithoutTraining: boolean;
   readonly activeEffects: ReadonlyArray<ActiveEffect>;
   readonly pendingResolution: PendingResolution;

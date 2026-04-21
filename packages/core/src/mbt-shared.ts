@@ -158,6 +158,10 @@ export function parseDamageTypeSet(raw: unknown): ReadonlySet<string> {
   return result;
 }
 
+function parseSpellSaveDcRecord(raw: unknown): Readonly<Record<string, number>> {
+  return quintMapToRecord(raw, Number);
+}
+
 export function variantToString(v: unknown): string {
   if (typeof v === "string") return v;
   if (typeof v === "object" && v !== null) {
@@ -373,6 +377,10 @@ export const QuintCreatureState = z.object({
   stunned: z.boolean(),
   unconscious: z.boolean(),
   incapacitatedSources: QuintIncapSourceSet,
+  preparedSpellSaveDCs: z
+    .unknown()
+    .optional()
+    .transform((raw) => parseSpellSaveDcRecord(raw)),
   hitDiceRemaining: QuintClassLevelMap,
   activeEffects: z.any().transform((raw: unknown) => {
     const items: Array<{
@@ -751,6 +759,7 @@ export interface NormalizedState {
   readonly pactSlotsCurrent: number;
   readonly pactSlotLevel: number;
   readonly concentrationSpellId: string;
+  readonly preparedSpellSaveDCs: Readonly<Record<string, number>>;
   // FighterState
   readonly secondWindCharges: number;
   readonly secondWindMax: number;
@@ -1021,6 +1030,11 @@ export function snapshotToNormalized(snap: DndSnapshot): NormalizedState {
     pactSlotsCurrent: c.pactSlotsCurrent,
     pactSlotLevel: c.pactSlotLevel,
     concentrationSpellId: Option.getOrElse(c.concentrationSpellId, () => ""),
+    preparedSpellSaveDCs: Object.fromEntries(
+      [...c.preparedSpellSaveDCs.entries()].sort(([left], [right]) =>
+        left.localeCompare(right),
+      ),
+    ),
     creatureKind: c.creatureKind,
     legendaryActionsRemaining: c.legendaryActionsRemaining,
     legendaryResistancesRemaining: c.legendaryResistancesRemaining,
@@ -1089,6 +1103,7 @@ export function quintParsedToNormalized(
     pactSlotsCurrent: Number(ss.pactSlotsCurrent),
     pactSlotLevel: Number(ss.pactSlotLevel),
     concentrationSpellId: ss.concentrationSpellId,
+    preparedSpellSaveDCs: s.preparedSpellSaveDCs,
     secondWindCharges: Number(raw.fighterState.secondWindCharges),
     secondWindMax: Number(raw.fighterState.secondWindMax),
     actionSurgeCharges: Number(raw.fighterState.actionSurgeCharges),

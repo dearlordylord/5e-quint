@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
 import { creatureMachine } from "#/machine.ts";
-import { classLevel, CreatureId, spellId as mkSpellId } from "#/types.ts";
+import {
+  classLevel,
+  CreatureId,
+  difficultyClass,
+  spellId as mkSpellId,
+} from "#/types.ts";
 
 import { encodeDndContext, encodeDndSnapshot } from "./context-encoding.ts";
 
@@ -30,6 +35,10 @@ describe("context encoding", () => {
       ...base,
       concentrationSpellId: Option.some(mkSpellId("hold_person")),
       preparedSpells: preparedSpellIds("hold_person", "bless"),
+      preparedSpellSaveDCs: new Map([
+        [mkSpellId("hold_person"), difficultyClass(15)],
+        [mkSpellId("bless"), difficultyClass(14)],
+      ]),
       incapacitatedSources: new Set(["direct", "paralyzed"]),
       activeEffects: [
         {
@@ -67,6 +76,10 @@ describe("context encoding", () => {
 
     expect(encoded.concentrationSpellId).toBe("hold_person");
     expect(encoded.preparedSpells).toEqual(["bless", "hold_person"]);
+    expect(encoded.preparedSpellSaveDCs).toEqual({
+      bless: difficultyClass(14),
+      hold_person: difficultyClass(15),
+    });
     expect(encoded.incapacitatedSources).toEqual(["paralyzed", "direct"]);
     expect(encoded.activeEffects[0]?.grantedConditions).toEqual([
       "blinded",
@@ -119,6 +132,10 @@ describe("context encoding", () => {
       context: {
         ...base,
         incapacitatedSources: new Set(["direct", "paralyzed"]),
+        preparedSpellSaveDCs: new Map([
+          [mkSpellId("hold_person"), difficultyClass(15)],
+          [mkSpellId("bless"), difficultyClass(14)],
+        ]),
         rechargeAvailable: { zeta: true, alpha: false },
         dailyUsesRemaining: { zeta: 1, alpha: 2 },
         dailyUsesMax: { zeta: 3, alpha: 4 },
@@ -130,6 +147,10 @@ describe("context encoding", () => {
       context: {
         ...base,
         incapacitatedSources: new Set(["paralyzed", "direct"]),
+        preparedSpellSaveDCs: new Map([
+          [mkSpellId("bless"), difficultyClass(14)],
+          [mkSpellId("hold_person"), difficultyClass(15)],
+        ]),
         rechargeAvailable: { alpha: false, zeta: true },
         dailyUsesRemaining: { alpha: 2, zeta: 1 },
         dailyUsesMax: { alpha: 4, zeta: 3 },

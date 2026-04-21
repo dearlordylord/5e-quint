@@ -25,6 +25,10 @@ import {
 import { canUncannyDodge } from "#/features/class-rogue.ts";
 import { makeSpellLibrary, SRD_SPELLS } from "#/features/spell-registry.ts";
 import { getBattleReadyableSpellPayload } from "#/features/spell-available-actions.ts";
+import {
+  finalizeResolution,
+  resolveAction,
+} from "#/available-actions.ts";
 import { creatureMachine, type DndEvent, type DndSnapshot } from "#/machine.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import {
@@ -66,6 +70,7 @@ import {
   armorClass,
   classLevel,
   CreatureId as mkCreatureId,
+  difficultyClass,
   healAmount,
   resourceCount,
   spellId as mkSpellId,
@@ -73,6 +78,9 @@ import {
 } from "#/types.ts";
 
 const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
+const PROJECTED_PREPARED_SPELL_NAME = "acid_splash" as const;
+const PROJECTED_PREPARED_SPELL_DC = difficultyClass(13);
+const PROJECTED_PREPARED_SPELL_TARGET = "mbt-target";
 
 // ============================================================
 // Battle-level Zod schemas (B14.2)
@@ -87,6 +95,7 @@ const QuintCombatant = z.object({
   turn: QuintTurnState,
   slots: QuintSpellSlotState,
   kind: z.any().transform(variantToString),
+  spellSaveDC: z.bigint().optional(),
   creatureSize: z
     .unknown()
     .optional()
@@ -246,6 +255,24 @@ function projectToBattle(full: NormalizedState): BattleCreatureState {
   return result as BattleCreatureState;
 }
 
+function projectedPreparedSpellSaveDCsForCombatant(
+  combatant: ParsedCombatant,
+): Readonly<Record<string, number>> {
+  const explicitSaveDC = combatant.spellSaveDC;
+  if (explicitSaveDC != null && Number(explicitSaveDC) > 0) {
+    return {
+      [PROJECTED_PREPARED_SPELL_NAME]: difficultyClass(Number(explicitSaveDC)),
+    };
+  }
+  const hasSpellSlots =
+    combatant.slots.slotsMax.some((count) => count > 0) ||
+    Number(combatant.slots.pactSlotsMax) > 0;
+  if (combatant.kind !== "PC" || !hasSpellSlots) return {};
+  return {
+    [PROJECTED_PREPARED_SPELL_NAME]: PROJECTED_PREPARED_SPELL_DC,
+  };
+}
+
 function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
   const s = c.creature;
   const t = c.turn;
@@ -298,6 +325,7 @@ function quintCombatantToNormalized(c: ParsedCombatant): BattleCreatureState {
     pactSlotsCurrent: Number(ss.pactSlotsCurrent),
     pactSlotLevel: Number(ss.pactSlotLevel),
     concentrationSpellId: ss.concentrationSpellId,
+    preparedSpellSaveDCs: projectedPreparedSpellSaveDCsForCombatant(c),
     legendaryActionsRemaining: Number(
       c.monsterResources.legendaryActionsRemaining,
     ),
@@ -326,6 +354,74 @@ const OV = ITFVariant.optional();
 const OB = z.boolean().optional();
 const OS = z.string().optional();
 const OSA = z.array(z.string()).optional();
+
+function projectedPreparedSpellInput() {
+  return {
+    preparedSpells: new Set([mkSpellId(PROJECTED_PREPARED_SPELL_NAME)]),
+    preparedSpellSaveDCs: new Map([
+      [mkSpellId(PROJECTED_PREPARED_SPELL_NAME), PROJECTED_PREPARED_SPELL_DC],
+    ]),
+  };
+}
+
+function assertProjectedPreparedSpellResolution(snapshot: DndSnapshot): void {
+  const expectedSaveDC = snapshot.context.preparedSpellSaveDCs.get(
+    mkSpellId(PROJECTED_PREPARED_SPELL_NAME),
+  );
+  const resolved = resolveAction(snapshot.context, snapshot.tags, {
+    scope: "creature",
+    type: "CAST_PREPARED_SPELL",
+    spellName: PROJECTED_PREPARED_SPELL_NAME,
+  });
+  if ("code" in resolved) {
+    return;
+  }
+  if (resolved.runtime !== "projectedPreparedSpell") {
+    throw new Error(
+      `${PROJECTED_PREPARED_SPELL_NAME}: expected projected runtime, received ${resolved.runtime}.`,
+    );
+  }
+  if (expectedSaveDC == null) {
+    throw new Error(
+      `${PROJECTED_PREPARED_SPELL_NAME}: missing prepared spell save DC in replayed snapshot.`,
+    );
+  }
+  if (resolved.prompt.save.dc !== expectedSaveDC) {
+    throw new Error(
+      `${PROJECTED_PREPARED_SPELL_NAME}: prompt used save DC ${resolved.prompt.save.dc}, expected ${expectedSaveDC}.`,
+    );
+  }
+  const finalized = finalizeResolution(
+    resolved,
+    {
+      runtime: "projectedPreparedSpell",
+      values: {
+        tag: "chooseAreaEffect",
+        targetResults: [
+          {
+            targetId: PROJECTED_PREPARED_SPELL_TARGET,
+            saveOutcome: "failure",
+          },
+        ],
+        total: 7,
+      },
+    },
+    snapshot.context,
+  );
+  if (!finalized.ok) {
+    throw new Error(
+      `${PROJECTED_PREPARED_SPELL_NAME}: projected finalization failed: ${finalized.error.message}`,
+    );
+  }
+  if (
+    finalized.event.type !== "CAST_PREPARED_SPELL" ||
+    finalized.event.spellName !== PROJECTED_PREPARED_SPELL_NAME
+  ) {
+    throw new Error(
+      `${PROJECTED_PREPARED_SPELL_NAME}: projected finalization returned the wrong event payload.`,
+    );
+  }
+}
 
 const battleDriverSchema = {
   bInit: {
@@ -800,6 +896,7 @@ function createBattleProjectionDriver() {
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots,
+          ...projectedPreparedSpellInput(),
         },
       });
       actorA.start();
@@ -821,6 +918,7 @@ function createBattleProjectionDriver() {
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots,
+          ...projectedPreparedSpellInput(),
         },
       });
       actorB.start();
@@ -872,6 +970,7 @@ function createBattleProjectionDriver() {
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots,
+          ...projectedPreparedSpellInput(),
         },
       });
       actorD.start();
@@ -2271,6 +2370,7 @@ function createBattleProjectionDriver() {
           creatureKind: "PC",
           slotsMax: casterSlots,
           slotsCurrent: casterSlots,
+          ...projectedPreparedSpellInput(),
         },
       });
       actorE.start();
@@ -2561,9 +2661,9 @@ function createBattleProjectionDriver() {
       getState: () => {
         const result = new Map<string, BattleCreatureState>();
         for (const [id, actor] of actors) {
-          const base = projectToBattle(
-            snapshotToNormalized(actor.getSnapshot()),
-          );
+          const snapshot = actor.getSnapshot();
+          assertProjectedPreparedSpellResolution(snapshot);
+          const base = projectToBattle(snapshotToNormalized(snapshot));
           result.set(id, {
             ...base,
             creatureSize: creatureSizes.get(id) ?? "medium",

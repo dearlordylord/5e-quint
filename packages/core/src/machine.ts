@@ -988,6 +988,7 @@ export const creatureMachine = setup({
         },
         slotsMax,
       );
+    const preparedSpellSaveDCs = i.preparedSpellSaveDCs ?? new Map();
     return {
       ...INITIAL_CONDITIONS,
       ...INITIAL_TURN_STATE,
@@ -1015,6 +1016,7 @@ export const creatureMachine = setup({
       pactSlotsCurrent: derivedSlots.pactSlotsCurrent,
       pactSlotsMax: derivedSlots.pactSlotsMax,
       preparedSpells,
+      preparedSpellSaveDCs,
       wearingArmorWithoutTraining: i.wearingArmorWithoutTraining ?? false,
       slotsCurrent: i.slotsCurrent ?? derivedSlots.slotsCurrent,
       slotsMax,

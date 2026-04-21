@@ -7,10 +7,8 @@ import { canCastSpells, isIncapacitated } from "#/machine-queries.ts";
 import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import type { ProjectedExecutableAction } from "#/projected-executable.ts";
 import {
-  interpretProjectedAction,
-  type ProjectedAmountResolution,
   type ProjectedInterpreterActor,
-  type ProjectedTargetResolution,
+  interpretProjectedAction,
 } from "#/projected-mechanic-interpreter.ts";
 import {
   actionCostParts,
@@ -23,11 +21,17 @@ import {
   type ProjectedQuotaCost,
 } from "#/projected-action-bridge-helpers.ts";
 import {
+  interpretProjectedPreparedSpellAnswer,
+  promptForProjectedPreparedSpell,
+  type ProjectedPreparedSpellPrompt,
+  type ProjectedPreparedSpellPromptAnswer,
+} from "#/projected-action-bridge-prepared-spell.ts";
+import {
   getSpellRecordStrict,
   makeSpellLibrary,
   SRD_SPELLS,
 } from "#/features/spell-registry.ts";
-import { proficiencyBonus, spellId, type SpellName } from "#/types.ts";
+import { spellId, type SpellName } from "#/types.ts";
 import {
   decodeClassFeatureRecordSync,
   decodeSpellRecordSync,
@@ -52,14 +56,6 @@ const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURF
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);
 const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
-export type ProjectedPreparedSpellRuntime = {
-  readonly targetIds: ReadonlyArray<string>;
-  readonly saveOutcomes: ReadonlyArray<
-    ProjectedTargetResolution<"fail" | "success">
-  >;
-  readonly amounts: ReadonlyArray<ProjectedAmountResolution>;
-};
-
 function projectedPreparedSpellAction(
   spellName: SpellName,
 ): ProjectedExecutableAction | null {
@@ -76,25 +72,33 @@ function projectedCharacterLevel(context: DndContext): number {
   );
 }
 
-function projectedSpellSaveDc(context: DndContext): number | null {
-  const characterLevel = projectedCharacterLevel(context);
-  if (characterLevel <= 0) return null;
-  // EPT8 only validates caller-supplied save/damage resolutions against the
-  // projected action graph. The current creature context does not yet own all
-  // spellcasting-ability modifiers for every caster path, so the bridge uses a
-  // proficiency-only save DC placeholder until the owned spellcasting surface
-  // widens in the later parity tasks.
-  return 8 + proficiencyBonus(characterLevel);
+function projectedSpellSaveDc(
+  context: DndContext,
+  spellName: SpellName,
+): number | null {
+  return context.preparedSpellSaveDCs.get(spellId(spellName)) ?? null;
 }
 
 function projectedActorFromCreatureContext(
+  context: DndContext,
+  spellName: SpellName,
+): ProjectedInterpreterActor {
+  return {
+    actorId: context.selfId ?? "self",
+    characterLevel: projectedCharacterLevel(context),
+    fighterLevel: context.classStates.fighter?.level ?? 0,
+    spellSaveDc: projectedSpellSaveDc(context, spellName),
+  };
+}
+
+function projectedNonSpellActorFromCreatureContext(
   context: DndContext,
 ): ProjectedInterpreterActor {
   return {
     actorId: context.selfId ?? "self",
     characterLevel: projectedCharacterLevel(context),
     fighterLevel: context.classStates.fighter?.level ?? 0,
-    spellSaveDc: projectedSpellSaveDc(context),
+    spellSaveDc: null,
   };
 }
 
@@ -149,21 +153,36 @@ export function projectedPreparedSpellSummary(
   }
   return describeProjectedAction(
     action,
-    projectedActorFromCreatureContext(context),
+    projectedActorFromCreatureContext(context, spellName),
+  );
+}
+
+export function discoverProjectedPreparedSpellPrompt(
+  context: DndContext,
+  spellName: SpellName,
+): ProjectedPreparedSpellPrompt | null {
+  const action = projectedPreparedSpellAction(spellName);
+  if (action == null || !canUseProjectedPreparedSpell(context, spellName)) {
+    return null;
+  }
+  return promptForProjectedPreparedSpell(
+    spellName,
+    action,
+    projectedActorFromCreatureContext(context, spellName),
   );
 }
 
 export function projectedSecondWindSummary(context: DndContext): string {
   return describeProjectedAction(
     SECOND_WIND_PROJECTED_ACTION,
-    projectedActorFromCreatureContext(context),
+    projectedNonSpellActorFromCreatureContext(context),
   );
 }
 
 export function projectedActionSurgeSummary(context: DndContext): string {
   return describeProjectedAction(
     ACTION_SURGE_PROJECTED_ACTION,
-    projectedActorFromCreatureContext(context),
+    projectedNonSpellActorFromCreatureContext(context),
   );
 }
 
@@ -262,8 +281,8 @@ export function canUseProjectedBattleActionSurge(
 
 export function finalizeProjectedPreparedSpell(
   context: DndContext,
-  spellName: SpellName,
-  runtime: ProjectedPreparedSpellRuntime,
+  prompt: ProjectedPreparedSpellPrompt,
+  answer: ProjectedPreparedSpellPromptAnswer,
 ): {
   readonly event: {
     // FIXME: is there a "non prepared spell" that we can cast? what about spells from ring of spell storing? what about warlock/sorcerer spells? what about cantrips(maybe they considered always-prepared). language IS important
@@ -272,27 +291,22 @@ export function finalizeProjectedPreparedSpell(
   };
   readonly outcome: string;
 } {
-  const action = projectedPreparedSpellAction(spellName);
+  const action = projectedPreparedSpellAction(prompt.spellName);
   if (action == null) {
     throw new Error(
-      `No projected prepared spell action exists for ${spellName}.`,
+      `No projected prepared spell action exists for ${prompt.spellName}.`,
     );
   }
-  // FIXME: much farther down the line, it is checked on "is acttor me if the spell is "self". this is an example of shotgun validation. such validation must be in type sustem, on codecs, or as earlier as possible up the invocation (e.g. here?) (if it doesnt leak abstraction)
-  const actor = projectedActorFromCreatureContext(context);
+  const actor = projectedActorFromCreatureContext(context, prompt.spellName);
 
   if (actor.spellSaveDc == null) {
     throw new Error(
-      `${spellName}: spell save DC is unavailable in this context.`,
+      `${prompt.spellName}: spell save DC is unavailable in this context.`,
     );
   }
-  interpretProjectedAction(action, actor, {
-    resolveAttachment: () => runtime.targetIds,
-    resolveSaveGate: () => runtime.saveOutcomes,
-    resolveAmount: () => runtime.amounts,
-  });
+  interpretProjectedPreparedSpellAnswer({ action, actor, prompt, answer });
   return {
-    event: { type: "CAST_PREPARED_SPELL", spellName },
+    event: { type: "CAST_PREPARED_SPELL", spellName: prompt.spellName },
     outcome: describeProjectedAction(action, actor),
   };
 }
@@ -312,7 +326,7 @@ export function finalizeProjectedSecondWind(
       `Second Wind d10 roll must be between 1 and 10, received ${d10Roll}.`,
     );
   }
-  const actor = projectedActorFromCreatureContext(context);
+  const actor = projectedNonSpellActorFromCreatureContext(context);
   const interpretation = interpretProjectedAction(
     SECOND_WIND_PROJECTED_ACTION,
     actor,
@@ -334,7 +348,7 @@ export function finalizeProjectedActionSurge(context: DndContext): {
   readonly event: { readonly type: "USE_ACTION_SURGE" };
   readonly outcome: string;
 } {
-  const actor = projectedActorFromCreatureContext(context);
+  const actor = projectedNonSpellActorFromCreatureContext(context);
   interpretProjectedAction(
     ACTION_SURGE_PROJECTED_ACTION,
     actor,

@@ -218,6 +218,7 @@ const WIZARD_4_INPUT: DndMachineInput = {
 const WIZARD_WITH_ACID_SPLASH_INPUT: DndMachineInput = {
   ...WIZARD_4_INPUT,
   preparedSpells: preparedSpellIds("acid_splash"),
+  preparedSpellSaveDCs: new Map([[spellId("acid_splash"), difficultyClass(15)]]),
 };
 
 const WIZARD_14_INPUT: DndMachineInput = {
@@ -1337,17 +1338,39 @@ describe("available actions contract", () => {
         }),
       ),
     );
+    expect(request).toMatchObject({
+      runtime: "projectedPreparedSpell",
+      prompt: {
+        tag: "chooseAreaEffect",
+        spellName: "acid_splash",
+        targeting: {
+          tag: "pointWithinRangeSphere",
+          rangeFeet: 60,
+          radiusFeet: 5,
+        },
+        save: {
+          ability: "dex",
+          dc: 15,
+        },
+        effect: {
+          tag: "damage",
+          damageType: "acid",
+          onSuccess: "none",
+        },
+      },
+    });
     const finalized = finalizeResolution(
       request,
       {
         runtime: "projectedPreparedSpell",
         values: {
-          targetIds: ["goblin", "bugbear"],
-          saveOutcomes: [
-            { targetId: "goblin", outcome: "fail" },
-            { targetId: "bugbear", outcome: "success" },
+          tag: "chooseAreaEffect",
+          targetResults: [
+            { targetId: "goblin", saveOutcome: "failure" },
+            { targetId: "bugbear", saveOutcome: "success" },
           ],
-          amounts: [{ targetId: "goblin", total: 7, rolledTotal: 7 }],
+          total: 7,
+          rolledTotal: 7,
         },
       },
       actor.getSnapshot().context,
@@ -1364,6 +1387,45 @@ describe("available actions contract", () => {
     expect(actor.getSnapshot().context.actionsRemaining).toBe(0);
     expect(actor.getSnapshot().context.slotExpendedThisTurn).toBe(false);
     expect(actor.getSnapshot().context.nonCantripActionSpellCast).toBe(false);
+  });
+
+  test("projected prepared spell finalization rejects duplicate target answers", () => {
+    const actor = makeActorWithInput(WIZARD_WITH_ACID_SPLASH_INPUT);
+
+    const request = expectRequest(
+      resolveAction(
+        actor.getSnapshot().context,
+        actor.getSnapshot().tags,
+        creatureResolved({
+          type: "CAST_PREPARED_SPELL",
+          spellName: "acid_splash",
+        }),
+      ),
+    );
+
+    expect(
+      finalizeResolution(
+        request,
+        {
+          runtime: "projectedPreparedSpell",
+          values: {
+            tag: "chooseAreaEffect",
+            targetResults: [
+              { targetId: "goblin", saveOutcome: "failure" },
+              { targetId: "goblin", saveOutcome: "success" },
+            ],
+            total: 7,
+          },
+        },
+        actor.getSnapshot().context,
+      ),
+    ).toEqual({
+      ok: false,
+      error: {
+        code: "INVALID_RUNTIME_INPUT",
+        message: "acid_splash: attachment resolution duplicated target goblin",
+      },
+    });
   });
 
   test("Acid Splash is absent during Action Surge's non-Magic action", () => {

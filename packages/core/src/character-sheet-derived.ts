@@ -313,6 +313,7 @@ export function characterSheetMachineInput(
     slotsMax: derived.spellcasting.slotsMax,
     slotsCurrent: derived.spellcasting.slotsCurrent,
     preparedSpells: derived.spellcasting.preparedSpells,
+    preparedSpellSaveDCs: derived.spellcasting.preparedSpellSaveDCs,
     wearingArmorWithoutTraining: false,
   };
 }

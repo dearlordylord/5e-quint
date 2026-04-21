@@ -87,7 +87,7 @@ The coding loop should treat this file as the active queue. Do not start a task 
     {
       "number": 8,
       "id": "SRC8",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Integrate Correction Slice Back Into Core"
     }
   ]
@@ -118,7 +118,7 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 | 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | done | SRC5 | SRC6, SRC7, SRC8 | Froze the discovered TS-first slice in the design note, rewrote the next-batch tasks from the landed contract, and recorded the handoff back to Quint-led work. | Done. Verification: docs/plan diff reviewed against landed `surface-runtime-correction` code; RAW and `UBIQUITOUS_LANGUAGE.md` sources checked for the rewritten follow-up tasks; `/simplify` converged in 2 rounds. |
 | 6 | SRC6 - Add Quint Spec For Correction Slice | done | SRC5.5 | SRC7, SRC8 | Landed a dedicated Quint module and deterministic Quint tests for the frozen correction slice, plus a mapping note that ties the modeled terms back to the TS contract and the cited RAW / ubiquitous-language sources. `grantExtraAction` stays structural in Quint by carrying restriction, use-count-cap, and once-per-turn facts rather than collapsing into an Action Surge-only tag. | Done. Verification: `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt` and `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt` passed; `pnpm quality` stopped in an unrelated repo-wide lint bootstrap path because `/workspace/typescript/dnd/node_modules/eslint/bin/eslint.js` was missing before it reached the touched files. `/simplify` converged in 2 rounds while tightening the extra-action model and RAW trace note. |
 | 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | done | SRC6 | SRC8 | Landed a dedicated correction-slice MBT bridge in `packages/surface-runtime-correction`, replaying both the opening wizard turn and the later cleric follow-up prompt slice against `surfaceRuntimeCorrectionMbt.qnt`. The bridge compares initiative-owned battle state, full prompt payloads, open-prompt ownership, and resolved-action payloads instead of only prompt tags. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck`, `pnpm --filter @dnd/surface-runtime-correction test`, `pnpm exec quint typecheck surfaceRuntimeCorrectionMbt.qnt`, `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt`, `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt`, and `pnpm --filter @dnd/surface-runtime-correction exec vitest run src/surface-runtime-correction.mbt.test.ts` passed. `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`). |
-| 8 | SRC8 - Integrate Correction Slice Back Into Core | ready-for-implementation-after-light-research | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path now that Quint parity and correction-slice MBT replay both exist. | Ready now. Start from the frozen prompt lifecycle proved in `packages/surface-runtime-correction`, re-read the Quint mapping note, and keep the integration bounded to one `core` entry path. |
+| 8 | SRC8 - Integrate Correction Slice Back Into Core | done | SRC6, SRC7 | none | Landed the first bounded `core` integration on the slotless `acid_splash` prepared-spell path by deriving an explicit `chooseAreaEffect` prompt from owned spell-access state, accepting only complete prompt answers, and finalizing only after prompt validation succeeds. The core context now threads real `preparedSpellSaveDCs` from character-sheet derivation instead of the earlier proficiency-only placeholder. | Done. Verification: `pnpm --filter @dnd/core exec tsc --noEmit`, `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/context-encoding.test.ts src/character-sheet-derived.test.ts src/features/feature-bridge.test.ts`, a live Tier 1 battle MBT run (`MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/battle-projection.mbt.test.ts`, with the checked-in replay fixture temporarily disabled), and the default replay-backed `npx vitest run src/battle-projection.mbt.test.ts` passed. `pnpm quality` again stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`). |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
 
 ### Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
@@ -680,7 +680,7 @@ after `SRC6` lands.
 
 ### Task 8 - SRC8 - Integrate Correction Slice Back Into Core
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC6`, `SRC7`
 
@@ -730,6 +730,33 @@ The first integration should reuse the frozen prompt lifecycle:
 - bounded `core` tests
 - relevant Quint/MBT parity checks
 - `/simplify` minimum two rounds
+
+### Outcome
+
+- Landed the bounded `core` integration on the slotless `acid_splash`
+  prepared-spell path rather than attempting a broader reducer rewrite.
+- Replaced the previous ad hoc projected-spell runtime payload with a real
+  correction-slice prompt contract:
+  `resolveAction` now returns a `chooseAreaEffect` prompt for the supported
+  slotless prepared spell, and `finalizeResolution` accepts only the complete
+  prompt answer shape.
+- Threaded `preparedSpellSaveDCs` from owned character-sheet derivation into
+  `DndMachineInput`, `DndContext`, context encoding, and MBT normalization so
+  the core prompt uses existing spellcasting ownership data instead of a
+  separate placeholder source of truth.
+- Added a focused helper for projected prepared-spell prompt discovery and
+  validation, keeping the prompt contract explicit without duplicating the
+  derived prompt object in machine state.
+- Extended the battle MBT lane so live Quint-generated caster combatants expose
+  the bounded save-DC fact needed for this path, while keeping a compatibility
+  fallback for the older checked-in replay trace fixture.
+- `/simplify` round 1: split the projected prepared-spell prompt logic into its
+  own helper file so the bridge now carries one explicit responsibility per
+  runtime seam instead of mixing prompt-shape validation with second-wind and
+  action-surge helpers.
+- `/simplify` round 2: re-checked the core path for duplicated save-DC or prompt
+  state and found no further material simplification beyond the owned
+  `preparedSpellSaveDCs` threading and the replay-fixture compatibility shim.
 
 ## Deferred Historical Queue
 

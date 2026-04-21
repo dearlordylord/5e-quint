@@ -167,6 +167,14 @@ function canonicalizeBooleanRecord(
   );
 }
 
+function canonicalizeSpellSaveDcMap(
+  values: ReadonlyMap<string, number>,
+): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    [...values.entries()].sort(([left], [right]) => left.localeCompare(right)),
+  );
+}
+
 function canonicalizeClassStates(
   classStates: DndContext["classStates"],
 ): DndContext["classStates"] {
@@ -206,12 +214,15 @@ function canonicalizeClassStates(
   };
 }
 
-function canonicalizeContext(context: DndContext): DndContext {
+function canonicalizeContext(context: DndContext) {
   return {
     ...context,
     concentrationSpellId: context.concentrationSpellId,
     hitDiceRemaining: canonicalizeHitDiceRemaining(context.hitDiceRemaining),
     preparedSpells: new Set([...context.preparedSpells].sort()),
+    preparedSpellSaveDCs: canonicalizeSpellSaveDcMap(
+      context.preparedSpellSaveDCs,
+    ),
     activeEffects: context.activeEffects.map(canonicalizeEffect),
     incapacitatedSources: new Set(
       sortReadonlySet(context.incapacitatedSources, compareIncapSource),
@@ -519,6 +530,10 @@ export const DndContextEncodedSchema = Schema.Struct({
   concentrationSpellId: Schema.OptionFromNullOr(Schema.String),
   hitDiceRemaining: HitDiceRemainingSchema,
   preparedSpells: Schema.ReadonlySet(Schema.String),
+  preparedSpellSaveDCs: Schema.Record({
+    key: Schema.String,
+    value: Schema.Number,
+  }),
   wearingArmorWithoutTraining: Schema.Boolean,
   activeEffects: Schema.Array(ActiveEffectSchema),
   pendingResolution: PendingResolutionSchema,

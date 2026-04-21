@@ -524,6 +524,9 @@ describe("character-sheet-derived", () => {
     expect(machineInput.preparedSpells).toEqual(
       derived.spellcasting.preparedSpells,
     );
+    expect(machineInput.preparedSpellSaveDCs).toEqual(
+      derived.spellcasting.preparedSpellSaveDCs,
+    );
     expect(machineInput.slotsMax).toEqual(derived.spellcasting.slotsMax);
     expect(machineInput.slotsCurrent).toEqual(
       derived.spellcasting.slotsCurrent,
