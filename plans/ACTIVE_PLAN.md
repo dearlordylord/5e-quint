@@ -105,6 +105,8 @@ Do **not**:
 ### Input
 
 - [plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md](/workspace/typescript/dnd/plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md:1)
+- [plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)
+- [plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md:1)
 - current package under `packages/toy-surface-hydration/`
 - real surface types from `@dnd/prototype-content-surface/surface/types`
 
@@ -164,6 +166,8 @@ It must be designed so future mid-battle joins are straightforward.
 ### Input
 
 - `SRC1` battle types
+- [plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)
+- [plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md:1)
 - SRD combat initiative text:
   - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:482)
   - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:494)
@@ -225,6 +229,8 @@ The model must **not** allow:
 - `SRC1` type layer
 - `SRC2` battle state and turn ownership
 - design rule from [plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md](/workspace/typescript/dnd/plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md:1)
+- [plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)
+- [plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md:1)
 
 ### Output
 
@@ -291,6 +297,8 @@ The important design constraint is:
 - current authored-unit service boundary
 - real `Surface` schema/types
 - `SRC3` prompt/resolution flow
+- [plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_MANUAL_DIAGRAM.md:1)
+- [plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md](/workspace/typescript/dnd/plans/SURFACE_TO_BATTLE_VERTICAL_DRAFT.md:1)
 
 ### Output
 
