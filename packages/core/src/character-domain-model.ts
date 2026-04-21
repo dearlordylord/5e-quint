@@ -100,7 +100,7 @@ export interface CharacterSheet {
   readonly spellcasting: CharacterSheetSpellcastingChoices;
 }
 
-export type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
+export type NonEmptyReadonlyArray<T> = ReadonlyNonEmptyArray<T>;
 
 export const CHARACTER_FINALIZATION_ISSUE_CODES = [
   "missingPrimaryClass",
@@ -188,3 +188,4 @@ export type CharacterFinalizationResult =
       readonly openChoices: ReadonlyArray<CharacterFinalizationIssue>;
       readonly issues: NonEmptyReadonlyArray<CharacterFinalizationIssue>;
     };
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";

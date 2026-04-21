@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@dnd/shared": "workspace:*",
     "@dnd/prototype-content-surface": "workspace:*",
     "@firfi/quint-connect": "^0.8.2",
     "@statelyai/graph": "^0.8.0",

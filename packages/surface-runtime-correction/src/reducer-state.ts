@@ -1,0 +1,28 @@
+import type { InitiativeStack } from '#/initiative-algebra.ts';
+import type { CreatureId, Hp, SpellSlots } from '@dnd/shared/types';
+import type { UnitRecord } from '@dnd/prototype-content-surface/surface/types';
+
+export type CreatureState = {
+  // invariant: hp can't be more than maxHp. for temp hp, there is a field
+  readonly hp: Hp
+  readonly maxHp: Hp
+  readonly tempHp: Hp
+  // FIXME: see conditions in core. is there a condition algebra? they dependent or flat? is there a closed set of conditions? are they a part of thar list?
+  // readonly conditions: ReadonlySet<string>
+  // carried through the rounds, into the next turn
+  hasReaction: boolean
+  readonly units: ReadonlyArray<UnitRecord>
+  readonly spellSlots: SpellSlots
+  // invariant: current spell slots can't be larger than max
+  readonly spellSlotsMax: SpellSlots
+}
+
+export type State = {
+  // round and turn encoded into initiative
+  initiative: InitiativeStack<CreatureId>;
+  combatants: ReadonlyMap<CreatureId, CreatureState>;
+
+  // action economy
+  readonly currentHasAction: boolean
+  readonly currentHasBonusAction: boolean
+};

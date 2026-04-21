@@ -1,6 +1,9 @@
 import { Brand, Schema } from "effect";
+import type { Condition, SpellSlots } from "@dnd/shared/types";
 
-import type { ClassName } from "#/features/class-tables.ts";
+export { CONDITIONS } from "@dnd/shared/types";
+export { CASTER_CLASSES, CASTER_CLASS_TO_TYPE, CASTER_TYPES } from "@dnd/shared/types";
+export type { CasterClass, CasterType, Condition, SpellSlots } from "@dnd/shared/types";
 
 // --- Domain constants + derived types ---
 // Convention: define const array first, derive union type with typeof X[number].
@@ -62,24 +65,6 @@ export const HAND_USES = [
   "grapple",
 ] as const;
 export type HandUse = (typeof HAND_USES)[number];
-
-export const CONDITIONS = [
-  "blinded",
-  "charmed",
-  "deafened",
-  "frightened",
-  "grappled",
-  "incapacitated",
-  "invisible",
-  "paralyzed",
-  "petrified",
-  "poisoned",
-  "prone",
-  "restrained",
-  "stunned",
-  "unconscious",
-] as const;
-export type Condition = (typeof CONDITIONS)[number];
 
 export interface ConditionConsequences {
   readonly ownAttackDisadvantage: boolean;
@@ -250,18 +235,6 @@ export const SPELL_SCHOOLS = [
   "transmutation",
 ] as const;
 export type SpellSchool = (typeof SPELL_SCHOOLS)[number];
-
-export const CASTER_CLASSES = [
-  "bard",
-  "cleric",
-  "druid",
-  "paladin",
-  "ranger",
-  "sorcerer",
-  "warlock",
-  "wizard",
-] as const satisfies ReadonlyArray<ClassName>;
-export type CasterClass = (typeof CASTER_CLASSES)[number];
 
 export interface EffectTurnHook {
   readonly healAmount?: number;
@@ -694,11 +667,6 @@ export type SRDAttackName = string & Brand.Brand<"SRDAttackName">;
 export type MonsterAbilityName = SRDMonsterAbilityName | (NonEmptyString & {});
 export type SRDMonsterAbilityName = string &
   Brand.Brand<"SRDMonsterAbilityName">;
-
-export const CASTER_TYPES = ["full", "half", "third"] as const;
-export type CasterType = (typeof CASTER_TYPES)[number];
-
-export type SpellSlots = ReadonlyArray<number>;
 
 export const SPELL_SLOT_LEVELS = 9;
 export const EMPTY_SLOTS: SpellSlots = new Array(SPELL_SLOT_LEVELS).fill(

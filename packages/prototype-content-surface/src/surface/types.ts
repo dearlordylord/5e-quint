@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import * as SurfaceSchema from "./schema.ts";
 
 // Runtime literal sets kept as values; concrete surface types derive from the Effect schemas.
@@ -10,7 +11,6 @@ export const ILLUSION_SENSORY_CHANNELS = ["visual", "sound", "smell", "temperatu
 export const OBJECT_MATERIALS = ["metal", "flammable"] as const satisfies ReadonlyArray<ObjectMaterial>;
 
 // Generic type-level utilities retained for authored-surface helper composition.
-export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 export type CastTimeChoice<T> = { readonly kind: "choice"; readonly label: string; readonly options: ReadonlyNonEmptyArray<T>; };
 export type LinearPerLevel<T> = { readonly kind: "linear_per_level"; readonly axis: LevelAxis; readonly base: T; readonly perLevel: T; readonly startingAtLevel: number; };
 export type ThresholdTiers<T> = { readonly kind: "threshold_tiers"; readonly axis: LevelAxis; readonly base: T; readonly tiers: ReadonlyNonEmptyArray<{ readonly atLevel: number; readonly value: T; }>; };

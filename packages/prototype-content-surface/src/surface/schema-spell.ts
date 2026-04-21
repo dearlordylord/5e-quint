@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   AbilitySchema,
   ConditionSchema,
@@ -109,8 +110,6 @@ export const ActionRestrictionSchema = Schema.Union(
     actions: nonEmpty(StandardActionKindSchema),
   }),
 );
-
-type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 
 type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;

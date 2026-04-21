@@ -1,0 +1,25 @@
+{
+  "name": "@dnd/surface-runtime-correction",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dnd/prototype-content-surface": "workspace:*",
+    "@dnd/shared": "workspace:*",
+    "@firfi/quint-connect": "^0.8.2",
+    "effect": "^3.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.5",
+    "zod": "^4.3.6"
+  }
+}
