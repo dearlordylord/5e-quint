@@ -2,7 +2,7 @@ import { Either } from "effect";
 
 import { InvalidBattlePromptAnswerError } from "#/errors.ts";
 import type {
-  AvailableBattleAction,
+  AvailableTurnOption,
   AvailableBattlePrompt,
   BattleUnitAccessId,
   BattlePromptAnswer,
@@ -39,14 +39,7 @@ function duplicateIds(ids: ReadonlyArray<CreatureId>): ReadonlyArray<CreatureId>
 }
 
 function currentCombatant(state: BattleState) {
-  if (state.turnActorId === null) {
-    return null;
-  }
-
-  return (
-    state.combatants.find((combatant) => combatant.id === state.turnActorId) ??
-    null
-  );
+  return state.turnOrder[0]?.combatant ?? null;
 }
 
 function clearOpenPrompt(state: BattleState): BattleState {
@@ -67,8 +60,8 @@ function stateWithOpenPrompt(
 }
 
 function actorOwnsChoice(
-  availableChoices: ReadonlyArray<AvailableBattleAction>,
-  choice: AvailableBattleAction,
+  availableChoices: ReadonlyArray<AvailableTurnOption>,
+  choice: AvailableTurnOption,
 ): boolean {
   return availableChoices.some((availableChoice) => {
     if (availableChoice.tag !== choice.tag) {
@@ -88,14 +81,15 @@ function actorOwnsChoice(
 }
 
 function combatantIds(state: BattleState): ReadonlyArray<CreatureId> {
-  return state.combatants.map((combatant) => combatant.id);
+  return state.turnOrder.map((participant) => participant.combatant.id);
 }
 
 function attackTargetIds(
   state: BattleState,
   actorId: CreatureId,
 ): ReadonlyArray<CreatureId> {
-  return state.combatants
+  return state.turnOrder
+    .map((participant) => participant.combatant)
     .filter((combatant) => combatant.id !== actorId)
     .map((combatant) => combatant.id);
 }
@@ -106,7 +100,7 @@ function canTakeMagicAction(state: BattleState): boolean {
 
 function canTakeNonMagicAction(state: BattleState): boolean {
   return (
-    state.standardActionsRemaining > 0 || state.restrictedActionsRemaining > 0
+    state.standardActionsRemaining > 0 || state.nonMagicActionsRemaining > 0
   );
 }
 
@@ -115,7 +109,9 @@ function unitAccessForCombatant(
   actorId: CreatureId,
   unitAccessId: BattleUnitAccessId,
 ): RuntimeUnitAccess | null {
-  const combatant = state.combatants.find((candidate) => candidate.id === actorId);
+  const combatant = state.turnOrder
+    .map((participant) => participant.combatant)
+    .find((candidate) => candidate.id === actorId);
   if (combatant === undefined) {
     return null;
   }
@@ -151,13 +147,13 @@ function unitActionAvailable(
 
 function actorActionChoices(
   state: BattleState,
-): ReadonlyArray<AvailableBattleAction> {
+): ReadonlyArray<AvailableTurnOption> {
   const combatant = currentCombatant(state);
   if (combatant === null) {
     return [];
   }
 
-  const choices: Array<AvailableBattleAction> = [
+  const choices: Array<AvailableTurnOption> = [
     { tag: "coreAction", action: "endTurn" },
     ...combatant.units
       .filter((unit) => unitActionAvailable(state, unit))
@@ -166,7 +162,7 @@ function actorActionChoices(
           ({
             tag: "unit",
             unitAccessId: unit.accessId,
-          }) satisfies AvailableBattleAction,
+          }) satisfies AvailableTurnOption,
       ),
   ];
 
@@ -222,7 +218,6 @@ function deriveOpenBattlePrompt(
       tag: "chooseAttackTarget",
       actorId: combatant.id,
       availableTargetIds,
-      damageLabel: "attack_damage",
     });
   }
 
@@ -353,10 +348,6 @@ function openPromptForUnit(
 export function discoverAvailableBattlePrompt(
   state: BattleState,
 ): AvailableBattlePrompt | null {
-  if (state.turnActorId === null) {
-    return null;
-  }
-
   if (state.openPrompt !== null) {
     const openPrompt = deriveOpenBattlePrompt(state, state.openPrompt);
     return Either.isRight(openPrompt) ? openPrompt.right : null;
@@ -442,7 +433,6 @@ function answerDerivedBattlePrompt(
       tag: "chooseAttackTarget",
       actorId: prompt.actorId,
       availableTargetIds,
-      damageLabel: "attack_damage",
     };
     return Either.right({
       tag: "openedPrompt",
@@ -494,7 +484,7 @@ function answerDerivedBattlePrompt(
         actorId: prompt.actorId,
         unitAccessId: prompt.unitAccessId,
         targetId: answer.targetId,
-        total: answer.total,
+        healing: answer.amount,
       },
     });
   }
@@ -517,12 +507,12 @@ function answerDerivedBattlePrompt(
   return Either.right({
     tag: "resolvedAction",
     state: clearOpenPrompt(state),
-    action: {
-      tag: "areaSaveDamage",
-      actorId: prompt.actorId,
-      unitAccessId: prompt.unitAccessId,
-      targetResults: answer.targetResults,
-      total: answer.total,
-    },
+      action: {
+        tag: "areaSaveDamage",
+        actorId: prompt.actorId,
+        unitAccessId: prompt.unitAccessId,
+        targetResults: answer.targetResults,
+        damage: answer.amount,
+      },
   });
 }

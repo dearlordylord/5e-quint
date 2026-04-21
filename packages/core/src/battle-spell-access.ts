@@ -239,8 +239,7 @@ function projectBattleSpellAccess(
     );
   }
   switch (String(currentSpellId)) {
-    // FIXME: we have authored ids here, is it the intent? we gonna be fixing it? is this fix documented in the plan?
-    // EXPLANATION: yes, this is a known remaining seam. The battle spell access
+    // EXPLANATION: this is a known remaining seam. The battle spell access
     // projection still recognizes a few shipped SRD ids to attach the current
     // reaction-trigger / reaction-resolution surface. This is documented in
     // `plans/ACTIVE_PLAN.md` under the remaining EPT14 scope, and should be

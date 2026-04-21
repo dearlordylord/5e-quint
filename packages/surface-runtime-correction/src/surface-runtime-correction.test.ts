@@ -33,6 +33,36 @@ const ACTION_SURGE_ACCESS_ID = runtimeUnitAccessId(
   "characterSheet:fighter:fighter_action_surge_l2",
 );
 
+function combatants(state: BattleState) {
+  return state.turnOrder.map((participant) => participant.combatant);
+}
+
+function initiativeCounts(state: BattleState) {
+  return canonicalTurnOrder(state).map((participant) => ({
+    actorId: participant.combatant.id,
+    count: participant.initiativeCount,
+  }));
+}
+
+function initiativeOrder(state: BattleState) {
+  return canonicalTurnOrder(state).map((participant) => participant.combatant.id);
+}
+
+function currentActorId(state: BattleState) {
+  return state.turnOrder[0].combatant.id;
+}
+
+function canonicalTurnOrder(state: BattleState) {
+  const offset = (state.turnNumber - 1) % state.turnOrder.length;
+  if (offset === 0) {
+    return [...state.turnOrder];
+  }
+  return [
+    ...state.turnOrder.slice(state.turnOrder.length - offset),
+    ...state.turnOrder.slice(0, state.turnOrder.length - offset),
+  ];
+}
+
 describe("surface runtime correction", () => {
   it("exposes authored surface units without compiling a second execution ir", async () => {
     const program = Effect.gen(function* () {
@@ -84,25 +114,25 @@ describe("surface runtime correction", () => {
         ],
         tieResolutions: [],
       });
-      const fighter = battle.combatants.find(
+      const fighter = combatants(battle).find(
         (combatant) => combatant.id === "fighter",
       );
-      const cleric = battle.combatants.find(
+      const cleric = combatants(battle).find(
         (combatant) => combatant.id === "cleric",
       );
 
       expect(CORE_BATTLE_ACTIONS).toEqual(["attack", "endTurn"]);
-      expect(battle.initiativeCounts).toEqual([
+      expect(initiativeCounts(battle)).toEqual([
         { actorId: "fighter", count: 18 },
         { actorId: "cleric", count: 12 },
         { actorId: "ogre", count: 9 },
       ]);
-      expect(battle.initiativeOrder).toEqual(["fighter", "cleric", "ogre"]);
+      expect(initiativeOrder(battle)).toEqual(["fighter", "cleric", "ogre"]);
       expect(battle.round).toBe(1);
       expect(battle.turnNumber).toBe(1);
-      expect(battle.turnActorId).toBe("fighter");
+      expect(currentActorId(battle)).toBe("fighter");
       expect(battle.standardActionsRemaining).toBe(1);
-      expect(battle.restrictedActionsRemaining).toBe(0);
+      expect(battle.nonMagicActionsRemaining).toBe(0);
       expect(fighter?.units).toEqual([
         {
           accessId: ACTION_SURGE_ACCESS_ID,
@@ -267,27 +297,27 @@ describe("surface runtime correction", () => {
       const afterCleric = advanceBattleTurn(afterFighter);
       const afterOgre = advanceBattleTurn(afterCleric);
 
-      expect(afterFighter.initiativeOrder).toEqual([
+      expect(initiativeOrder(afterFighter)).toEqual([
         "fighter",
         "cleric",
         "ogre",
       ]);
       expect(afterFighter.round).toBe(1);
       expect(afterFighter.turnNumber).toBe(2);
-      expect(afterFighter.turnActorId).toBe("cleric");
+      expect(currentActorId(afterFighter)).toBe("cleric");
       expect(afterFighter.openPrompt).toBeNull();
       expect(afterFighter.standardActionsRemaining).toBe(1);
-      expect(afterFighter.restrictedActionsRemaining).toBe(0);
+      expect(afterFighter.nonMagicActionsRemaining).toBe(0);
 
       expect(afterCleric.round).toBe(1);
       expect(afterCleric.turnNumber).toBe(3);
-      expect(afterCleric.turnActorId).toBe("ogre");
+      expect(currentActorId(afterCleric)).toBe("ogre");
       expect(afterCleric.openPrompt).toBeNull();
 
-      expect(afterOgre.initiativeOrder).toEqual(["fighter", "cleric", "ogre"]);
+      expect(initiativeOrder(afterOgre)).toEqual(["fighter", "cleric", "ogre"]);
       expect(afterOgre.round).toBe(2);
       expect(afterOgre.turnNumber).toBe(4);
-      expect(afterOgre.turnActorId).toBe("fighter");
+      expect(currentActorId(afterOgre)).toBe("fighter");
       expect(afterOgre.openPrompt).toBeNull();
     }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer));
 
@@ -358,7 +388,6 @@ describe("surface runtime correction", () => {
           tag: "chooseAttackTarget",
           actorId: "wizard",
           availableTargetIds: ["fighter", "cleric", "ogre"],
-          damageLabel: "attack_damage",
         },
       }),
     );
@@ -394,15 +423,18 @@ describe("surface runtime correction", () => {
       resolvedAttack.right.action,
     );
     expect(reduced).toEqual(
-      Either.right({
-        ...battle,
-        openPrompt: null,
-        standardActionsRemaining: 0,
-        restrictedActionsRemaining: 0,
-        combatants: expect.arrayContaining([
-          expect.objectContaining({ id: "ogre", currentHp: 52 }),
-        ]),
-      }),
+      Either.right(
+        expect.objectContaining({
+          openPrompt: null,
+          standardActionsRemaining: 0,
+          nonMagicActionsRemaining: 0,
+          turnOrder: expect.arrayContaining([
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "ogre", currentHp: 52 }),
+            }),
+          ]),
+        }),
+      ),
     );
   });
 
@@ -473,7 +505,7 @@ describe("surface runtime correction", () => {
 
     const nextTurn = advanceBattleTurn(chooseAttack.right.state);
 
-    expect(nextTurn.turnActorId).toBe("fighter");
+    expect(currentActorId(nextTurn)).toBe("fighter");
     expect(nextTurn.openPrompt).toBeNull();
     expect(discoverAvailableBattlePrompt(nextTurn)).toEqual({
       tag: "chooseAction",
@@ -529,13 +561,15 @@ describe("surface runtime correction", () => {
     expect(reduced).toEqual(
       Either.right(
         expect.objectContaining({
-          turnActorId: "fighter",
           standardActionsRemaining: 1,
-          restrictedActionsRemaining: 0,
+          nonMagicActionsRemaining: 0,
           openPrompt: null,
         }),
       ),
     );
+    if (Either.isRight(reduced)) {
+      expect(currentActorId(reduced.right)).toBe("fighter");
+    }
   });
 
   it("runs the cure wounds flow through structural single-target healing", async () => {
@@ -584,7 +618,7 @@ describe("surface runtime correction", () => {
     const resolvedHeal = answerBattlePrompt(chooseUnit.right.state, {
       tag: "chooseSingleTargetUnit",
       targetId: "fighter",
-      total: 8,
+      amount: 8,
     });
     expect(Either.isRight(resolvedHeal)).toBe(true);
     if (Either.isLeft(resolvedHeal) || resolvedHeal.right.tag !== "resolvedAction") {
@@ -599,8 +633,10 @@ describe("surface runtime correction", () => {
       Either.right(
         expect.objectContaining({
           standardActionsRemaining: 0,
-          combatants: expect.arrayContaining([
-            expect.objectContaining({ id: "fighter", currentHp: 17 }),
+          turnOrder: expect.arrayContaining([
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "fighter", currentHp: 17 }),
+            }),
           ]),
         }),
       ),
@@ -646,7 +682,7 @@ describe("surface runtime correction", () => {
         { targetId: "cleric", saveOutcome: "success" },
         { targetId: "ogre", saveOutcome: "failure" },
       ],
-      total: 10,
+      amount: 10,
     });
     expect(Either.isRight(resolvedFireball)).toBe(true);
     if (
@@ -664,10 +700,16 @@ describe("surface runtime correction", () => {
       Either.right(
         expect.objectContaining({
           standardActionsRemaining: 0,
-          combatants: expect.arrayContaining([
-            expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            expect.objectContaining({ id: "cleric", currentHp: 4 }),
-            expect.objectContaining({ id: "ogre", currentHp: 49 }),
+          turnOrder: expect.arrayContaining([
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "fighter", currentHp: 10 }),
+            }),
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "cleric", currentHp: 4 }),
+            }),
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "ogre", currentHp: 49 }),
+            }),
           ]),
         }),
       ),
@@ -733,7 +775,7 @@ describe("surface runtime correction", () => {
         { targetId: "cleric", saveOutcome: "success" },
         { targetId: "ogre", saveOutcome: "failure" },
       ],
-      total: 10,
+      amount: 10,
     });
     expect(Either.isRight(resolvedFireball)).toBe(true);
     if (
@@ -750,14 +792,19 @@ describe("surface runtime correction", () => {
     expect(afterFireball).toEqual(
       Either.right(
         expect.objectContaining({
-          turnActorId: "wizard",
           openPrompt: null,
           standardActionsRemaining: 0,
-          restrictedActionsRemaining: 0,
-          combatants: expect.arrayContaining([
-            expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            expect.objectContaining({ id: "cleric", currentHp: 4 }),
-            expect.objectContaining({ id: "ogre", currentHp: 49 }),
+          nonMagicActionsRemaining: 0,
+          turnOrder: expect.arrayContaining([
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "fighter", currentHp: 10 }),
+            }),
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "cleric", currentHp: 4 }),
+            }),
+            expect.objectContaining({
+              combatant: expect.objectContaining({ id: "ogre", currentHp: 49 }),
+            }),
           ]),
         }),
       ),
@@ -765,6 +812,7 @@ describe("surface runtime correction", () => {
     if (Either.isLeft(afterFireball)) {
       return;
     }
+    expect(currentActorId(afterFireball.right)).toBe("wizard");
 
     expect(discoverAvailableBattlePrompt(afterFireball.right)).toEqual({
       tag: "chooseAction",
@@ -791,18 +839,18 @@ describe("surface runtime correction", () => {
     expect(nextTurn).toEqual(
       Either.right(
         expect.objectContaining({
-          turnActorId: "fighter",
           round: 1,
           turnNumber: 2,
           openPrompt: null,
           standardActionsRemaining: 1,
-          restrictedActionsRemaining: 0,
+          nonMagicActionsRemaining: 0,
         }),
       ),
     );
     if (Either.isLeft(nextTurn)) {
       return;
     }
+    expect(currentActorId(nextTurn.right)).toBe("fighter");
 
     expect(discoverAvailableBattlePrompt(nextTurn.right)).toEqual({
       tag: "chooseAction",
@@ -853,17 +901,19 @@ describe("surface runtime correction", () => {
       Either.right(
         expect.objectContaining({
           standardActionsRemaining: 1,
-          restrictedActionsRemaining: 1,
-          combatants: expect.arrayContaining([
+          nonMagicActionsRemaining: 1,
+          turnOrder: expect.arrayContaining([
             expect.objectContaining({
-              id: "fighter",
-              unitResourceStates: [
-                {
-                  unitAccessId: ACTION_SURGE_ACCESS_ID,
-                  expendedUses: 1,
-                  usedThisTurn: true,
-                },
-              ],
+              combatant: expect.objectContaining({
+                id: "fighter",
+                unitResourceStates: [
+                  {
+                    unitAccessId: ACTION_SURGE_ACCESS_ID,
+                    expendedUses: 1,
+                    usedThisTurn: true,
+                  },
+                ],
+              }),
             }),
           ]),
         }),

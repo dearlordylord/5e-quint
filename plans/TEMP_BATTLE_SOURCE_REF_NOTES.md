@@ -21,15 +21,16 @@ the surface-runtime-correction walkthrough.
    remaining follow-up is to remove the temporary projected bridge from that
    migrated path.
 
-4. `RuntimeUnitAccess.ownerId` + `RuntimeUnitAccess.sourceKind` is a weak model.
-   It names a real domain distinction but still allows contradictory states.
+4. `surface-runtime-correction` already landed the stronger source/access split.
+   `RuntimeUnitAccess` now carries `battleSourceRef` plus `accessId`, and battle
+   resource state keys by `unitAccessId`.
 
 5. `characterSheet` vs `statBlock` must remain first-class domain language.
    This distinction is not just an implementation detail; it is a real
    source-to-battle projection boundary.
 
-6. That distinction should not be modeled as a parallel field pair.
-   The better direction is one qualified source reference value rather than
+6. That distinction should not regress back into a parallel field pair.
+   The better direction remains one qualified source reference value rather than
    separate `ownerId` and `sourceKind` fields.
 
 7. A closed typed isomorphism fits this source boundary well.
@@ -45,12 +46,34 @@ the surface-runtime-correction walkthrough.
    It reads better than `RuntimeOwnerRef` and matches the architecture language
    around source-specific projectors and battle-facing projections.
 
-10. Unit access likely also needs a concrete `accessId`.
-    This mirrors the same split already present in core spell access:
+10. Unit access needs a concrete `accessId`.
+    That is already landed in `surface-runtime-correction`, and it mirrors the
+    same split already present in core spell access:
     - authored identity: `unit.id`
     - projection/source identity: `BattleSourceRef`
     - runtime/access-path identity: `accessId`
 
 11. Unit resource state should key by `accessId`, not `unit.id`.
-    Otherwise distinct runtime access paths to the same authored unit collapse
-    incorrectly.
+    That is already landed in `surface-runtime-correction`; the same ownership
+    rule should hold anywhere else the pattern is adopted.
+
+12. Core already treats the source distinction as first-class in places, but
+    not yet as one shared concept.
+    Current examples:
+    - `BattleSpellAccess.tag` distinguishes prepared vs stat-block-granted spell
+      access.
+    - `BattleCreatureState.monsterStatBlockId` keeps stat-block identity
+      explicit.
+    - character-sheet battle projection is a named compile path, not an
+      incidental derivation.
+    The follow-up direction should preserve that first-class distinction while
+    unifying the representation so core catches up to the correction package.
+
+13. The earlier generic slot-filling design was not a broken concept.
+    The important invariant was already: fully answer the current slot set, then
+    either resolve or open a further prompt/slot set.
+
+14. The later explicit prompt split should therefore be judged as a tradeoff,
+    not as a rescue from a failed model.
+    What it changed was the frozen contract shape, not the underlying
+    possibility of multi-step prompting.

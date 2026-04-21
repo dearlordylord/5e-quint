@@ -3,15 +3,12 @@ module surfaceRuntimeCorrectionMbt {
   import surfaceRuntimeCorrection.* from "./surfaceRuntimeCorrection"
 
   pure val EMPTY_BATTLE_STATE: BattleState = {
-    combatants: List(),
-    initiativeCounts: List(),
-    initiativeOrder: List(),
+    turnOrder: List(),
     round: 0,
     turnNumber: 0,
-    turnActorId: NoTurnActor,
     openPrompt: NoOpenPrompt,
     standardActionsRemaining: 0,
-    restrictedActionsRemaining: 0,
+    nonMagicActionsRemaining: 0,
   }
 
   pure val PROMPT_COMBATANTS: List[BattleCombatant] = [
@@ -98,7 +95,7 @@ module surfaceRuntimeCorrectionMbt {
     }
 
   pure def endTurnResult(state: BattleState): PromptAnswerResult =
-    answerBattlePrompt(state, BAChooseAction(BACEndTurn))
+    answerBattlePrompt(state, BAChooseAction(ATOCoreActionEndTurn))
 
   pure def endTurnReduced(state: BattleState): BattleStateReduceResult = {
     val result = endTurnResult(state)
@@ -193,7 +190,7 @@ module surfaceRuntimeCorrectionMbt {
           }
     }
 
-  pure def promptOptions(promptResult: PromptDiscoveryResult): List[AvailableBattleAction] =
+  pure def promptOptions(promptResult: PromptDiscoveryResult): List[AvailableTurnOption] =
     match promptResult {
       | NoPromptAvailable => List()
       | PromptAvailable(prompt) =>
@@ -210,16 +207,6 @@ module surfaceRuntimeCorrectionMbt {
           match prompt {
             | BPChooseAttackTarget(payload) => payload.availableTargetIds
             | _ => List()
-          }
-    }
-
-  pure def promptDamageLabel(promptResult: PromptDiscoveryResult): str =
-    match promptResult {
-      | NoPromptAvailable => ""
-      | PromptAvailable(prompt) =>
-          match prompt {
-            | BPChooseAttackTarget(_) => "attack_damage"
-            | _ => ""
           }
     }
 
@@ -382,8 +369,8 @@ module surfaceRuntimeCorrectionMbt {
     match result {
       | AnswerResolved(payload) =>
           match payload.resolvedAction {
-            | RASingleTargetHeal(resolved) => resolved.total
-            | RAAreaSaveDamage(resolved) => resolved.total
+            | RASingleTargetHeal(resolved) => resolved.healing
+            | RAAreaSaveDamage(resolved) => resolved.damage
             | _ => 0
           }
       | _ => 0
@@ -408,14 +395,11 @@ module surfaceRuntimeCorrectionMbt {
   pure def promptUnitIdForBattle(battle: BattleState): str =
     promptUnitId(discoverAvailableBattlePrompt(battle))
 
-  pure def promptOptionsForBattle(battle: BattleState): List[AvailableBattleAction] =
+  pure def promptOptionsForBattle(battle: BattleState): List[AvailableTurnOption] =
     promptOptions(discoverAvailableBattlePrompt(battle))
 
   pure def promptAvailableTargetIdsForBattle(battle: BattleState): List[str] =
     promptAvailableTargetIds(discoverAvailableBattlePrompt(battle))
-
-  pure def promptDamageLabelForBattle(battle: BattleState): str =
-    promptDamageLabel(discoverAvailableBattlePrompt(battle))
 
   pure def promptTargetingTagForBattle(battle: BattleState): str =
     promptTargetingTag(discoverAvailableBattlePrompt(battle))
@@ -442,7 +426,7 @@ module surfaceRuntimeCorrectionMbt {
     promptOnSuccess(discoverAvailableBattlePrompt(battle))
 
   pure def attackChoiceResult(state: BattleState): PromptAnswerResult =
-    answerBattlePrompt(state, BAChooseAction(BACAttack))
+    answerBattlePrompt(state, BAChooseAction(ATOCoreActionAttack))
 
   pure def attackTargetResult(state: BattleState): PromptAnswerResult =
     answerBattlePrompt(
@@ -459,7 +443,7 @@ module surfaceRuntimeCorrectionMbt {
   }
 
   pure def fireballChoiceResult(state: BattleState): PromptAnswerResult =
-    answerBattlePrompt(state, BAChooseAction(BACUseUnit("fireball")))
+    answerBattlePrompt(state, BAChooseAction(ATOUnit("fireball")))
 
   pure def fireballAreaResult(state: BattleState): PromptAnswerResult =
     answerBattlePrompt(
@@ -470,7 +454,7 @@ module surfaceRuntimeCorrectionMbt {
           { targetId: "cleric", saveOutcome: SaveSuccess },
           { targetId: "ogre", saveOutcome: SaveFailure },
         ],
-        total: 10,
+        amount: 10,
       }),
     )
 
@@ -480,14 +464,14 @@ module surfaceRuntimeCorrectionMbt {
   }
 
   pure def cureWoundsChoiceResult(state: BattleState): PromptAnswerResult =
-    answerBattlePrompt(state, BAChooseAction(BACUseUnit("cure_wounds")))
+    answerBattlePrompt(state, BAChooseAction(ATOUnit("cure_wounds")))
 
   pure def cureWoundsTargetResult(state: BattleState): PromptAnswerResult =
     answerBattlePrompt(
       state,
       BAChooseSingleTargetUnit({
         targetId: "fighter",
-        total: 8,
+        amount: 8,
       }),
     )
 
@@ -497,7 +481,7 @@ module surfaceRuntimeCorrectionMbt {
   }
 
   pure def actionSurgeResult(state: BattleState): PromptAnswerResult =
-    answerBattlePrompt(state, BAChooseAction(BACUseUnit("fighter_action_surge_l2")))
+    answerBattlePrompt(state, BAChooseAction(ATOUnit("fighter_action_surge_l2")))
 
   pure def actionSurgeReduced(state: BattleState): BattleStateReduceResult = {
     val result = actionSurgeResult(state)
@@ -508,9 +492,8 @@ module surfaceRuntimeCorrectionMbt {
   var srcPromptTag: str
   var srcPromptActorId: str
   var srcPromptUnitId: str
-  var srcPromptOptions: List[AvailableBattleAction]
+  var srcPromptOptions: List[AvailableTurnOption]
   var srcPromptAvailableTargetIds: List[str]
-  var srcPromptDamageLabel: str
   var srcPromptTargetingTag: str
   var srcPromptRangeFeet: int
   var srcPromptRadiusFeet: int
@@ -536,7 +519,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(PROMPT_BATTLE),
     srcPromptOptions' = promptOptionsForBattle(PROMPT_BATTLE),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(PROMPT_BATTLE),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(PROMPT_BATTLE),
     srcPromptTargetingTag' = promptTargetingTagForBattle(PROMPT_BATTLE),
     srcPromptRangeFeet' = promptRangeFeetForBattle(PROMPT_BATTLE),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(PROMPT_BATTLE),
@@ -563,7 +545,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(CLERIC_PROMPT_BATTLE),
     srcPromptOptions' = promptOptionsForBattle(CLERIC_PROMPT_BATTLE),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(CLERIC_PROMPT_BATTLE),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(CLERIC_PROMPT_BATTLE),
     srcPromptTargetingTag' = promptTargetingTagForBattle(CLERIC_PROMPT_BATTLE),
     srcPromptRangeFeet' = promptRangeFeetForBattle(CLERIC_PROMPT_BATTLE),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(CLERIC_PROMPT_BATTLE),
@@ -594,7 +575,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(reducedState(endTurnReduced(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(reducedState(endTurnReduced(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(reducedState(endTurnReduced(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(reducedState(endTurnReduced(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(reducedState(endTurnReduced(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(reducedState(endTurnReduced(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(reducedState(endTurnReduced(srcBattle))),
@@ -624,7 +604,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(promptState(attackChoiceResult(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(promptState(attackChoiceResult(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(promptState(attackChoiceResult(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(promptState(attackChoiceResult(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(promptState(attackChoiceResult(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(promptState(attackChoiceResult(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(promptState(attackChoiceResult(srcBattle))),
@@ -655,7 +634,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(reducedState(attackTargetReduced(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(reducedState(attackTargetReduced(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(reducedState(attackTargetReduced(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(reducedState(attackTargetReduced(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(reducedState(attackTargetReduced(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(reducedState(attackTargetReduced(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(reducedState(attackTargetReduced(srcBattle))),
@@ -685,7 +663,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(promptState(fireballChoiceResult(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(promptState(fireballChoiceResult(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(promptState(fireballChoiceResult(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(promptState(fireballChoiceResult(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(promptState(fireballChoiceResult(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(promptState(fireballChoiceResult(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(promptState(fireballChoiceResult(srcBattle))),
@@ -717,7 +694,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(reducedState(fireballAreaReduced(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(reducedState(fireballAreaReduced(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(reducedState(fireballAreaReduced(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(reducedState(fireballAreaReduced(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(reducedState(fireballAreaReduced(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(reducedState(fireballAreaReduced(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(reducedState(fireballAreaReduced(srcBattle))),
@@ -747,7 +723,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(promptState(cureWoundsChoiceResult(srcBattle))),
@@ -779,7 +754,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(reducedState(cureWoundsTargetReduced(srcBattle))),
@@ -810,7 +784,6 @@ module surfaceRuntimeCorrectionMbt {
     srcPromptUnitId' = promptUnitIdForBattle(reducedState(actionSurgeReduced(srcBattle))),
     srcPromptOptions' = promptOptionsForBattle(reducedState(actionSurgeReduced(srcBattle))),
     srcPromptAvailableTargetIds' = promptAvailableTargetIdsForBattle(reducedState(actionSurgeReduced(srcBattle))),
-    srcPromptDamageLabel' = promptDamageLabelForBattle(reducedState(actionSurgeReduced(srcBattle))),
     srcPromptTargetingTag' = promptTargetingTagForBattle(reducedState(actionSurgeReduced(srcBattle))),
     srcPromptRangeFeet' = promptRangeFeetForBattle(reducedState(actionSurgeReduced(srcBattle))),
     srcPromptRadiusFeet' = promptRadiusFeetForBattle(reducedState(actionSurgeReduced(srcBattle))),

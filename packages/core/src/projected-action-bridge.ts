@@ -44,7 +44,9 @@ import acidSplashSurface from "../../prototype-content-surface/content/acid_spla
 import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
 import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
 
-// FIXME - projected-action-bridge.ts... projected WHERE, FROM? bridge WHERE, FROM? at least in comments
+// Bridge from the legacy projected-executable seam into the current
+// available-actions / machine runtime. This file is a bounded compatibility
+// layer, not the target architecture for migrated correction-pattern flows.
 
 const ACID_SPLASH_SURFACE: SpellRecord = decodeSpellRecordSync(acidSplashSurface);
 const SECOND_WIND_SURFACE: ClassFeatureRecord =
@@ -225,7 +227,8 @@ export function canUseProjectedPreparedSpell(
   const spell = getSpellRecordStrict(SPELL_LIBRARY, spellName);
   const isCantrip = spell.level === 0;
   if (
-    // FIXME: factually correct but seems to be abstraction leak, unless explicitly worded in SRD in WRT spellcasting
+    // These are runtime spellcasting gates owned by creature context rather than
+    // by the projected executable itself.
     context.hp <= 0 ||
     isIncapacitated(context) ||
     context.slotExpendedThisTurn ||
@@ -285,7 +288,8 @@ export function finalizeProjectedPreparedSpell(
   answer: ProjectedPreparedSpellPromptAnswer,
 ): {
   readonly event: {
-    // FIXME: is there a "non prepared spell" that we can cast? what about spells from ring of spell storing? what about warlock/sorcerer spells? what about cantrips(maybe they considered always-prepared). language IS important
+    // This bounded bridge currently finalizes through the prepared-spell event
+    // lane only. Broader spell-access/event naming remains a core follow-up.
     readonly type: "CAST_PREPARED_SPELL";
     readonly spellName: SpellName;
   };

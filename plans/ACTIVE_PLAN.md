@@ -125,7 +125,7 @@ The JSON index tracks only the active `SRC1`-`SRC9` batch. Deferred historical w
 | 6 | SRC6 - Add Quint Spec For Correction Slice | done | SRC5.5 | SRC7, SRC8 | Landed a dedicated Quint module and deterministic Quint tests for the frozen correction slice, plus a mapping note that ties the modeled terms back to the TS contract and the cited RAW / ubiquitous-language sources. `grantExtraAction` stays structural in Quint by carrying restriction, use-count-cap, and once-per-turn facts rather than collapsing into an Action Surge-only tag. | Done. Verification: `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt` and `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt` passed; `pnpm quality` stopped in an unrelated repo-wide lint bootstrap path because `/workspace/typescript/dnd/node_modules/eslint/bin/eslint.js` was missing before it reached the touched files. `/simplify` converged in 2 rounds while tightening the extra-action model and RAW trace note. |
 | 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | done | SRC6 | SRC8 | Landed a dedicated correction-slice MBT bridge in `packages/surface-runtime-correction`, replaying both the opening wizard turn and the later cleric follow-up prompt slice against `surfaceRuntimeCorrectionMbt.qnt`. The bridge compares initiative-owned battle state, full prompt payloads, open-prompt ownership, and resolved-action payloads instead of only prompt tags. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck`, `pnpm --filter @dnd/surface-runtime-correction test`, `pnpm exec quint typecheck surfaceRuntimeCorrectionMbt.qnt`, `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt`, `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt`, and `pnpm --filter @dnd/surface-runtime-correction exec vitest run src/surface-runtime-correction.mbt.test.ts` passed. `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`). |
 | 8 | SRC8 - Integrate Correction Slice Back Into Core | done | SRC6, SRC7 | SRC9 | Landed the first bounded `core` integration on the slotless `acid_splash` prepared-spell path by deriving an explicit `chooseAreaEffect` prompt from owned spell-access state, accepting only complete prompt answers, and finalizing only after prompt validation succeeds. The core context now threads real `preparedSpellSaveDCs` from character-sheet derivation instead of the earlier proficiency-only placeholder. | Done. Verification: `pnpm --filter @dnd/core exec tsc --noEmit`, `pnpm --filter @dnd/core exec vitest run src/available-actions.test.ts src/context-encoding.test.ts src/character-sheet-derived.test.ts src/features/feature-bridge.test.ts`, a live Tier 1 battle MBT run (`MBT_TRACES=1 MBT_MAX_SAMPLES=1 npx vitest run src/battle-projection.mbt.test.ts`, with the checked-in replay fixture temporarily disabled), and the default replay-backed `npx vitest run src/battle-projection.mbt.test.ts` passed. `pnpm quality` again stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`). |
-| 9 | SRC9 - Replace The Temporary Projected Core Bridge With The Correction Pattern | ready-for-implementation-after-light-research | SRC8 | none | Remove the temporary projected-execution bridge from the bounded `acid_splash` prepared-spell path and port that path to the frozen correction pattern directly. Do not preserve `projected-compiler` / `projected-executable` / `projected-action-bridge` as the steady-state architecture for migrated surface-driven prompt flows. | Ready once the implementer has read the correction-slice docs and the current core path, confirmed the bounded blast radius, and is prepared to delete the temporary bridge instead of layering another adapter on top. |
+| 9 | SRC9 - Replace The Temporary Projected Core Bridge With The Correction Pattern | ready-for-implementation-after-light-research | SRC8 | none | Delete the temporary projected-execution bridge from the bounded `acid_splash` prepared-spell path and move that path onto the frozen correction pattern directly. Do not leave `projected-compiler` / `projected-executable` / `projected-action-bridge` alive on any migrated hot path, and do not add another adapter to keep them alive indirectly. | Ready once the implementer has read the correction-slice docs and the current core path, confirmed the bounded blast radius, and is prepared to cut the old bridge out of the migrated branch rather than preserve it behind another wrapper. |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
 
 ### Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
@@ -775,15 +775,17 @@ Blocks: none
 
 ### Scope
 
-Remove the temporary projected-execution bridge from the bounded
+Delete the temporary projected-execution bridge from the bounded
 `acid_splash` prepared-spell path and re-land that path on the correction
 pattern itself.
 
 This task must:
 
-- derive the prompt from owned runtime state without routing through
+- remove the bounded migrated path from
   `projected-compiler.ts`, `projected-executable.ts`, or
   `projected-action-bridge.ts`
+- derive the prompt from owned runtime state directly from the correction
+  pattern, without routing through the old projected-execution seam
 - accept only complete prompt answers for the bounded prepared-spell path
 - finalize only from the correction-pattern resolved action / prompt contract
 - delete or bypass the old projected-execution seam for every migrated branch in
@@ -823,7 +825,8 @@ contract, but it did so by leaning on the older projected-execution structure.
 That was acceptable only as a temporary landing step to keep the blast radius
 bounded.
 
-That temporary structure is not the target architecture. Do not preserve it.
+That temporary structure is not the target architecture. Delete it from the
+migrated branch. Do not preserve it.
 Do not treat `projected-compiler.ts`, `projected-executable.ts`, or
 `projected-action-bridge.ts` as the long-term home of migrated surface-runtime
 prompt flows. Replace the migrated branch with direct correction-pattern code,
@@ -842,6 +845,8 @@ then remove the old bridge from that branch.
   branching instead of structural interpretation.
 - Prefer moving needed structural prompt derivation closer to the owning
   spell-access/runtime layer rather than compiling `Surface` into a second IR.
+- If a direct correction-pattern hook is missing in `core`, add it. Do not keep
+  the projected bridge alive just because the current core seam is incomplete.
 
 ### Acceptance criteria
 

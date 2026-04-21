@@ -9,6 +9,10 @@ import type {
 } from "#/types.ts";
 import type { BattleSourceRef } from "#/battle-source-ref.ts";
 
+// This correction slice models only the minimal built-in battle verbs needed to
+// prove the prompt lifecycle. Authored mechanics such as spells and class
+// features flow through `unit` actions instead of widening this list toward the
+// full core engine action surface.
 export const CORE_BATTLE_ACTIONS = ["attack", "endTurn"] as const;
 export type CoreBattleAction = (typeof CORE_BATTLE_ACTIONS)[number];
 export type BattleUnitAccessId = RuntimeUnitAccess["accessId"];
@@ -19,7 +23,9 @@ export type BattleUnitResourceState = {
   readonly usedThisTurn: boolean;
 };
 
-export type BattleCombatant = {
+// Reducer-owned battle-state record, projected from a roster creature plus its
+// resolved owned units.
+export type Combatant = {
   readonly id: CreatureId;
   readonly name: string;
   readonly battleSourceRef: BattleSourceRef;
@@ -47,7 +53,15 @@ export type BattleInit = {
   readonly tieResolutions: ReadonlyArray<BattleInitiativeTieResolution>;
 };
 
-export type AvailableBattleAction =
+export type BattleParticipant = {
+  readonly combatant: Combatant;
+  readonly initiativeCount: number;
+  readonly projectionOrder: number;
+};
+
+// A prompt-visible turn option in this slice: either one built-in battle verb or
+// one authored unit access chosen for use on the current turn.
+export type AvailableTurnOption =
   | {
       readonly tag: "coreAction";
       readonly action: CoreBattleAction;
@@ -60,14 +74,15 @@ export type AvailableBattleAction =
 export type ChooseActionPrompt = {
   readonly tag: "chooseAction";
   readonly actorId: CreatureId;
-  readonly options: ReadonlyArray<AvailableBattleAction>;
+  readonly options: ReadonlyArray<AvailableTurnOption>;
 };
 
+// This prompt is specific to the built-in core `attack` verb in the correction
+// slice. Surface-derived unit prompts use their own structural prompt shapes.
 export type ChooseAttackTargetPrompt = {
   readonly tag: "chooseAttackTarget";
   readonly actorId: CreatureId;
   readonly availableTargetIds: ReadonlyArray<CreatureId>;
-  readonly damageLabel: "attack_damage";
 };
 
 export type ChooseSingleTargetUnitPrompt = {
@@ -122,10 +137,12 @@ export type OpenBattlePromptState =
 
 export type AvailableBattlePrompt = ChooseActionPrompt | OpenBattlePrompt;
 
+// Complete table answer for the currently open prompt. Multi-step interactions
+// are represented by returning `openedPrompt`, not by partial answers.
 export type BattlePromptAnswer =
   | {
       readonly tag: "chooseAction";
-      readonly choice: AvailableBattleAction;
+      readonly choice: AvailableTurnOption;
     }
   | {
       readonly tag: "chooseAttackTarget";
@@ -135,7 +152,7 @@ export type BattlePromptAnswer =
   | {
       readonly tag: "chooseSingleTargetUnit";
       readonly targetId: CreatureId;
-      readonly total: number;
+      readonly amount: number;
     }
   | {
       readonly tag: "chooseAreaEffect";
@@ -143,7 +160,7 @@ export type BattlePromptAnswer =
         readonly targetId: CreatureId;
         readonly saveOutcome: "success" | "failure";
       }>;
-      readonly total: number;
+      readonly amount: number;
     };
 
 export type ResolvedBattleAction =
@@ -162,7 +179,7 @@ export type ResolvedBattleAction =
       readonly actorId: CreatureId;
       readonly unitAccessId: BattleUnitAccessId;
       readonly targetId: CreatureId;
-      readonly total: number;
+      readonly healing: number;
     }
   | {
       readonly tag: "areaSaveDamage";
@@ -172,7 +189,7 @@ export type ResolvedBattleAction =
         readonly targetId: CreatureId;
         readonly saveOutcome: "success" | "failure";
       }>;
-      readonly total: number;
+      readonly damage: number;
     }
   | {
       readonly tag: "grantExtraAction";
@@ -193,13 +210,12 @@ export type BattleResolutionResult =
     };
 
 export type BattleState = {
-  readonly combatants: ReadonlyArray<BattleCombatant>;
-  readonly initiativeCounts: ReadonlyArray<BattleInitiativeCount>;
-  readonly initiativeOrder: ReadonlyArray<CreatureId>;
+  readonly turnOrder: readonly [BattleParticipant, ...BattleParticipant[]];
   readonly round: number;
   readonly turnNumber: number;
-  readonly turnActorId: CreatureId | null;
+  // This slice models at most one unresolved prompt window at a time.
   readonly openPrompt: OpenBattlePromptState | null;
   readonly standardActionsRemaining: number;
-  readonly restrictedActionsRemaining: number;
+  // Extra non-Magic actions granted by effects such as Action Surge.
+  readonly nonMagicActionsRemaining: number;
 };

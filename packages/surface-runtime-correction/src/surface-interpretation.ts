@@ -8,7 +8,7 @@ import type {
 } from "@dnd/prototype-content-surface/surface/types";
 
 import type {
-  BattleCombatant,
+  Combatant,
   BattleUnitAccessId,
   BattleUnitResourceState,
 } from "#/battle-types.ts";
@@ -168,7 +168,7 @@ export function interpretRuntimeUnit(
 }
 
 export function resourceStateForUnit(
-  combatant: BattleCombatant,
+  combatant: Combatant,
   unitAccessId: BattleUnitAccessId,
 ): BattleUnitResourceState | null {
   return (
@@ -180,7 +180,7 @@ export function resourceStateForUnit(
 }
 
 export function maxUsesForCombatant(
-  combatant: BattleCombatant,
+  combatant: Combatant,
   interpretation: Extract<
     SurfaceUnitInterpretation,
     { readonly tag: "grantExtraAction" }

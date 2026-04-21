@@ -2,7 +2,7 @@ import { Either } from "effect";
 
 import { advanceBattleTurn } from "#/battle-init.ts";
 import type {
-  BattleCombatant,
+  Combatant,
   BattleState,
   BattleUnitAccessId,
   ResolvedBattleAction,
@@ -17,6 +17,13 @@ import {
   resourceStateForUnit,
 } from "#/surface-interpretation.ts";
 
+function mapTurnOrder(
+  state: BattleState,
+  update: (participant: BattleState["turnOrder"][number]) => BattleState["turnOrder"][number],
+): BattleState["turnOrder"] {
+  return state.turnOrder.map(update) as unknown as BattleState["turnOrder"];
+}
+
 function missingCombatant(
   combatantId: string,
 ): Either.Either<never, MissingCombatantError> {
@@ -30,7 +37,7 @@ function invalidBattleAction(
 }
 
 function unitForCombatant(
-  combatant: BattleCombatant,
+  combatant: Combatant,
   unitAccessId: BattleUnitAccessId,
 ) {
   return combatant.units.find((unit) => unit.accessId === unitAccessId) ?? null;
@@ -39,17 +46,24 @@ function unitForCombatant(
 function updateCombatant(
   state: BattleState,
   combatantId: string,
-  update: (combatant: BattleCombatant) => BattleCombatant,
+  update: (combatant: Combatant) => Combatant,
 ) {
-  const combatant = state.combatants.find((candidate) => candidate.id === combatantId);
+  const combatant = state.turnOrder
+    .map((participant) => participant.combatant)
+    .find((candidate) => candidate.id === combatantId);
   if (combatant === undefined) {
     return missingCombatant(combatantId);
   }
 
   return Either.right({
     ...state,
-    combatants: state.combatants.map((candidate) =>
-      candidate.id === combatantId ? update(candidate) : candidate,
+    turnOrder: mapTurnOrder(state, (participant) =>
+      participant.combatant.id !== combatantId
+        ? participant
+        : {
+            ...participant,
+            combatant: update(participant.combatant),
+          },
     ),
   } satisfies BattleState);
 }
@@ -59,10 +73,10 @@ function clampHp(currentHp: number, maxHp: number) {
 }
 
 function spendNonMagicAction(state: BattleState) {
-  if (state.restrictedActionsRemaining > 0) {
+  if (state.nonMagicActionsRemaining > 0) {
     return Either.right({
       ...state,
-      restrictedActionsRemaining: state.restrictedActionsRemaining - 1,
+      nonMagicActionsRemaining: state.nonMagicActionsRemaining - 1,
     } satisfies BattleState);
   }
 
@@ -113,7 +127,7 @@ function reduceSingleTargetHeal(
 
   return updateCombatant(spent.right, action.targetId, (combatant) => ({
     ...combatant,
-    currentHp: clampHp(combatant.currentHp + action.total, combatant.maxHp),
+    currentHp: clampHp(combatant.currentHp + action.healing, combatant.maxHp),
   }));
 }
 
@@ -135,17 +149,21 @@ function reduceAreaSaveDamage(
 
   return Either.right({
     ...spent.right,
-    combatants: spent.right.combatants.map((combatant) => {
+    turnOrder: mapTurnOrder(spent.right, (participant) => {
+      const combatant = participant.combatant;
       if (!affectedIds.has(combatant.id)) {
-        return combatant;
+        return participant;
       }
 
       const damage = successfulIds.has(combatant.id)
-        ? Math.floor(action.total / 2)
-        : action.total;
+        ? Math.floor(action.damage / 2)
+        : action.damage;
       return {
-        ...combatant,
-        currentHp: clampHp(combatant.currentHp - damage, combatant.maxHp),
+        ...participant,
+        combatant: {
+          ...combatant,
+          currentHp: clampHp(combatant.currentHp - damage, combatant.maxHp),
+        },
       };
     }),
   } satisfies BattleState);
@@ -155,7 +173,9 @@ function reduceGrantExtraAction(
   state: BattleState,
   action: Extract<ResolvedBattleAction, { readonly tag: "grantExtraAction" }>,
 ) {
-  const actor = state.combatants.find((combatant) => combatant.id === action.actorId);
+  const actor = state.turnOrder
+    .map((participant) => participant.combatant)
+    .find((combatant) => combatant.id === action.actorId);
   if (actor === undefined) {
     return missingCombatant(action.actorId);
   }
@@ -204,7 +224,7 @@ function reduceGrantExtraAction(
 
   return Either.right({
     ...updated.right,
-    restrictedActionsRemaining: updated.right.restrictedActionsRemaining + 1,
+    nonMagicActionsRemaining: updated.right.nonMagicActionsRemaining + 1,
   } satisfies BattleState);
 }
 
@@ -212,7 +232,7 @@ export function reduceBattleState(
   state: BattleState,
   action: ResolvedBattleAction,
 ): Either.Either<BattleState, MissingCombatantError | InvalidBattleActionError> {
-  if (state.turnActorId !== action.actorId) {
+  if (state.turnOrder[0].combatant.id !== action.actorId) {
     return invalidBattleAction("resolved action does not belong to the current turn actor");
   }
 

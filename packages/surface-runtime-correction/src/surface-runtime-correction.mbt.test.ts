@@ -41,7 +41,6 @@ type NormalizedPrompt = {
   readonly unitId: string;
   readonly options: ReadonlyArray<string>;
   readonly availableTargetIds: ReadonlyArray<string>;
-  readonly damageLabel: string;
   readonly targetingTag: string;
   readonly rangeFeet: number;
   readonly radiusFeet: number;
@@ -58,7 +57,7 @@ type NormalizedResolvedAction = {
   readonly unitId: string;
   readonly targetId: string;
   readonly damage: number;
-  readonly total: number;
+  readonly amount: number;
   readonly targetResults: ReadonlyArray<string>;
 };
 
@@ -70,33 +69,31 @@ type NormalizedOutcome = {
 
 type NormalizedState = {
   readonly battle: {
-    readonly combatants: ReadonlyArray<{
-      readonly id: string;
-      readonly level: number;
-      readonly currentHp: number;
-      readonly maxHp: number;
-      readonly spellSaveDc: number | null;
-      readonly unitIds: ReadonlyArray<string>;
-      readonly unitResourceStates: ReadonlyArray<{
-        readonly unitId: string;
-        readonly expendedUses: number;
-        readonly usedThisTurn: boolean;
-      }>;
+    readonly turnOrder: ReadonlyArray<{
+      readonly initiativeCount: number;
+      readonly projectionOrder: number;
+      readonly combatant: {
+        readonly id: string;
+        readonly level: number;
+        readonly currentHp: number;
+        readonly maxHp: number;
+        readonly spellSaveDc: number | null;
+        readonly unitIds: ReadonlyArray<string>;
+        readonly unitResourceStates: ReadonlyArray<{
+          readonly unitId: string;
+          readonly expendedUses: number;
+          readonly usedThisTurn: boolean;
+        }>;
+      };
     }>;
-    readonly initiativeCounts: ReadonlyArray<{
-      readonly actorId: string;
-      readonly count: number;
-    }>;
-    readonly initiativeOrder: ReadonlyArray<string>;
     readonly round: number;
     readonly turnNumber: number;
-    readonly turnActorId: string | null;
     readonly openPrompt: {
       readonly tag: PromptTag;
       readonly unitId: string;
     };
     readonly standardActionsRemaining: number;
-    readonly restrictedActionsRemaining: number;
+    readonly nonMagicActionsRemaining: number;
   };
   readonly prompt: NormalizedPrompt;
   readonly outcome: NormalizedOutcome;
@@ -233,19 +230,13 @@ function normalizeOpenPrompt(value: unknown): { tag: PromptTag; unitId: string }
   };
 }
 
-function normalizeTurnActorId(value: unknown): string | null {
-  return variantToString(value) === "NoTurnActor"
-    ? null
-    : String(variantValue(value) ?? "");
-}
-
 function normalizeResolvedAction(value: {
   tag?: string;
   actorId?: string;
   unitId?: string;
   targetId?: string;
   damage?: number;
-  total?: number;
+  amount?: number;
   targetResults?: ReadonlyArray<string>;
 } = {}): NormalizedResolvedAction {
   return {
@@ -254,7 +245,7 @@ function normalizeResolvedAction(value: {
     unitId: value.unitId ?? "",
     targetId: value.targetId ?? "",
     damage: value.damage ?? 0,
-    total: value.total ?? 0,
+    amount: value.amount ?? 0,
     targetResults: value.targetResults ?? [],
   };
 }
@@ -263,7 +254,7 @@ function unitIdForAccess(
   state: BattleState,
   unitAccessId: string,
 ): string {
-  for (const combatant of state.combatants) {
+  for (const combatant of state.turnOrder.map((participant) => participant.combatant)) {
     const unit = combatant.units.find((candidate) => candidate.accessId === unitAccessId);
     if (unit != null) {
       return unit.unit.id;
@@ -274,10 +265,10 @@ function unitIdForAccess(
 
 function normalizeActionChoiceFromRaw(value: unknown): string {
   const tag = variantToString(value);
-  if (tag === "BACAttack") {
+  if (tag === "ATOCoreActionAttack") {
     return "core:attack";
   }
-  if (tag === "BACEndTurn") {
+  if (tag === "ATOCoreActionEndTurn") {
     return "core:endTurn";
   }
   return `unit:${String(variantValue(value) ?? "")}`;
@@ -293,48 +284,42 @@ function normalizeModelState(raw: unknown): NormalizedState {
   const battle = recordOf(state["srcBattle"]);
   return {
     battle: {
-      combatants: arrayOf(battle["combatants"]).map((entry) => {
-        const combatant = recordOf(entry);
+      turnOrder: arrayOf(battle["turnOrder"]).map((entry) => {
+        const participant = recordOf(entry);
+        const combatant = recordOf(participant["combatant"]);
         return {
-          id: String(combatant["id"] ?? ""),
-          level: bigintToNumber(combatant["level"]),
-          currentHp: bigintToNumber(combatant["currentHp"]),
-          maxHp: bigintToNumber(combatant["maxHp"]),
-          spellSaveDc: normalizeSpellSaveDc(combatant["spellSaveDc"]),
-          unitIds: arrayOf(combatant["units"]).map((unit) =>
-            String(recordOf(unit)["unitId"] ?? ""),
-          ),
-          unitResourceStates: arrayOf(combatant["unitResourceStates"]).map(
-            (resourceState) => {
-              const parsed = recordOf(resourceState);
-              return {
-                unitId: String(parsed["unitId"] ?? ""),
-                expendedUses: bigintToNumber(parsed["expendedUses"]),
-                usedThisTurn: Boolean(parsed["usedThisTurn"]),
-              };
-            },
-          ),
+          initiativeCount: bigintToNumber(participant["initiativeCount"]),
+          projectionOrder: bigintToNumber(participant["projectionOrder"]),
+          combatant: {
+            id: String(combatant["id"] ?? ""),
+            level: bigintToNumber(combatant["level"]),
+            currentHp: bigintToNumber(combatant["currentHp"]),
+            maxHp: bigintToNumber(combatant["maxHp"]),
+            spellSaveDc: normalizeSpellSaveDc(combatant["spellSaveDc"]),
+            unitIds: arrayOf(combatant["units"]).map((unit) =>
+              String(recordOf(unit)["unitId"] ?? ""),
+            ),
+            unitResourceStates: arrayOf(combatant["unitResourceStates"]).map(
+              (resourceState) => {
+                const parsed = recordOf(resourceState);
+                return {
+                  unitId: String(parsed["unitId"] ?? ""),
+                  expendedUses: bigintToNumber(parsed["expendedUses"]),
+                  usedThisTurn: Boolean(parsed["usedThisTurn"]),
+                };
+              },
+            ),
+          },
         };
       }),
-      initiativeCounts: arrayOf(battle["initiativeCounts"]).map((entry) => {
-        const count = recordOf(entry);
-        return {
-          actorId: String(count["actorId"] ?? ""),
-          count: bigintToNumber(count["count"]),
-        };
-      }),
-      initiativeOrder: arrayOf(battle["initiativeOrder"]).map((entry) =>
-        String(entry),
-      ),
       round: bigintToNumber(battle["round"]),
       turnNumber: bigintToNumber(battle["turnNumber"]),
-      turnActorId: normalizeTurnActorId(battle["turnActorId"]),
       openPrompt: normalizeOpenPrompt(battle["openPrompt"]),
       standardActionsRemaining: bigintToNumber(
         battle["standardActionsRemaining"],
       ),
-      restrictedActionsRemaining: bigintToNumber(
-        battle["restrictedActionsRemaining"],
+      nonMagicActionsRemaining: bigintToNumber(
+        battle["nonMagicActionsRemaining"],
       ),
     },
     prompt: {
@@ -347,7 +332,6 @@ function normalizeModelState(raw: unknown): NormalizedState {
       availableTargetIds: arrayOf(state["srcPromptAvailableTargetIds"]).map(
         String,
       ),
-      damageLabel: String(state["srcPromptDamageLabel"] ?? ""),
       targetingTag: String(state["srcPromptTargetingTag"] ?? ""),
       rangeFeet: bigintToNumber(state["srcPromptRangeFeet"]),
       radiusFeet: bigintToNumber(state["srcPromptRadiusFeet"]),
@@ -366,7 +350,7 @@ function normalizeModelState(raw: unknown): NormalizedState {
         unitId: String(state["srcLastResolvedUnitId"] ?? ""),
         targetId: String(state["srcLastResolvedTargetId"] ?? ""),
         damage: bigintToNumber(state["srcLastResolvedDamage"]),
-        total: bigintToNumber(state["srcLastResolvedTotal"]),
+        amount: bigintToNumber(state["srcLastResolvedTotal"]),
         targetResults: arrayOf(state["srcLastResolvedTargetResults"]).map(
           normalizeTargetResultFromRaw,
         ),
@@ -382,7 +366,6 @@ function emptyPrompt(): NormalizedPrompt {
     unitId: "",
     options: [],
     availableTargetIds: [],
-    damageLabel: "",
     targetingTag: "",
     rangeFeet: 0,
     radiusFeet: 0,
@@ -421,7 +404,6 @@ function normalizePrompt(
       tag: prompt.tag,
       actorId: prompt.actorId,
       availableTargetIds: [...prompt.availableTargetIds],
-      damageLabel: prompt.damageLabel,
     };
   }
 
@@ -483,7 +465,7 @@ function normalizeResolvedActionPayload(
       actorId: action.actorId,
       unitId: unitIdForAccess(state, action.unitAccessId),
       targetId: action.targetId,
-      total: action.total,
+      amount: action.healing,
     });
   }
   if (action.tag === "areaSaveDamage") {
@@ -491,7 +473,7 @@ function normalizeResolvedActionPayload(
       tag: action.tag,
       actorId: action.actorId,
       unitId: unitIdForAccess(state, action.unitAccessId),
-      total: action.total,
+      amount: action.damage,
       targetResults: action.targetResults.map(normalizeTargetResult),
     });
   }
@@ -504,24 +486,27 @@ function normalizeResolvedActionPayload(
 
 function normalizeTsBattle(state: BattleState): NormalizedState["battle"] {
   return {
-    combatants: state.combatants.map((combatant) => ({
-      id: combatant.id,
-      level: combatant.level,
-      currentHp: combatant.currentHp,
-      maxHp: combatant.maxHp,
-      spellSaveDc: combatant.spellSaveDc,
-      unitIds: combatant.units.map((unit) => unit.unit.id),
-      unitResourceStates: combatant.unitResourceStates.map((resourceState) => ({
-        unitId: unitIdForAccess(state, resourceState.unitAccessId),
-        expendedUses: resourceState.expendedUses,
-        usedThisTurn: resourceState.usedThisTurn,
-      })),
+    turnOrder: state.turnOrder.map((participant) => ({
+      initiativeCount: participant.initiativeCount,
+      projectionOrder: participant.projectionOrder,
+      combatant: {
+        id: participant.combatant.id,
+        level: participant.combatant.level,
+        currentHp: participant.combatant.currentHp,
+        maxHp: participant.combatant.maxHp,
+        spellSaveDc: participant.combatant.spellSaveDc,
+        unitIds: participant.combatant.units.map((unit) => unit.unit.id),
+        unitResourceStates: participant.combatant.unitResourceStates.map(
+          (resourceState) => ({
+            unitId: unitIdForAccess(state, resourceState.unitAccessId),
+            expendedUses: resourceState.expendedUses,
+            usedThisTurn: resourceState.usedThisTurn,
+          }),
+        ),
+      },
     })),
-    initiativeCounts: [...state.initiativeCounts],
-    initiativeOrder: [...state.initiativeOrder],
     round: state.round,
     turnNumber: state.turnNumber,
-    turnActorId: state.turnActorId,
     openPrompt:
       state.openPrompt === null
         ? { tag: "", unitId: "" }
@@ -533,7 +518,7 @@ function normalizeTsBattle(state: BattleState): NormalizedState["battle"] {
                 : "",
           },
     standardActionsRemaining: state.standardActionsRemaining,
-    restrictedActionsRemaining: state.restrictedActionsRemaining,
+    nonMagicActionsRemaining: state.nonMagicActionsRemaining,
   };
 }
 
@@ -650,7 +635,7 @@ function createSurfaceRuntimeCorrectionDriver() {
             { targetId: "cleric", saveOutcome: "success" },
             { targetId: "ogre", saveOutcome: "failure" },
           ],
-          total: 10,
+          amount: 10,
         });
       },
       srcChooseCureWounds: () => {
@@ -660,7 +645,7 @@ function createSurfaceRuntimeCorrectionDriver() {
         step({
           tag: "chooseSingleTargetUnit",
           targetId: "fighter",
-          total: 8,
+          amount: 8,
         });
       },
       srcChooseActionSurge: () => {

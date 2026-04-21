@@ -2,13 +2,20 @@ import { Either } from "effect";
 
 import { InvalidBattleInitError } from "#/errors.ts";
 import type {
-  BattleCombatant,
+  Combatant,
+  BattleParticipant,
   BattleInit,
   BattleInitiativeCount,
   BattleInitiativeTieResolution,
   BattleState,
 } from "#/battle-types.ts";
 import type { CreatureId } from "#/types.ts";
+
+function asTurnOrder(
+  participants: ReadonlyArray<BattleParticipant>,
+): readonly [BattleParticipant, ...BattleParticipant[]] {
+  return participants as readonly [BattleParticipant, ...BattleParticipant[]];
+}
 
 function duplicateIds(ids: ReadonlyArray<CreatureId>): ReadonlyArray<CreatureId> {
   const seen = new Set<CreatureId>();
@@ -142,24 +149,44 @@ function validateInitiativeCounts(
 }
 
 function resetTurnScopedUnitUsage(
-  combatants: ReadonlyArray<BattleCombatant>,
-  actorId: CreatureId | null,
-): ReadonlyArray<BattleCombatant> {
-  if (actorId === null) {
-    return combatants;
+  participants: ReadonlyArray<BattleParticipant>,
+): ReadonlyArray<BattleParticipant> {
+  const [current, ...rest] = participants;
+  if (current === undefined) {
+    return participants;
   }
 
-  return combatants.map((combatant) =>
-    combatant.id !== actorId
-      ? combatant
-      : {
-          ...combatant,
-          unitResourceStates: combatant.unitResourceStates.map((resourceState) => ({
-            ...resourceState,
-            usedThisTurn: false,
-          })),
-        },
+  return [
+    {
+      ...current,
+      combatant: {
+        ...current.combatant,
+        unitResourceStates: current.combatant.unitResourceStates.map((resourceState) => ({
+          ...resourceState,
+          usedThisTurn: false,
+        })),
+      },
+    },
+    ...rest,
+  ];
+}
+
+function orderParticipants(
+  combatants: ReadonlyArray<Combatant>,
+  initiativeOrder: ReadonlyArray<CreatureId>,
+  initiativeCounts: ReadonlyMap<CreatureId, number>,
+): ReadonlyArray<BattleParticipant> {
+  const combatantsById = new Map(
+    combatants.map((combatant, projectionOrder) => [
+      combatant.id,
+      { combatant, projectionOrder },
+    ]),
   );
+  return initiativeOrder.map((actorId) => ({
+    combatant: combatantsById.get(actorId)!.combatant,
+    initiativeCount: initiativeCounts.get(actorId)!,
+    projectionOrder: combatantsById.get(actorId)!.projectionOrder,
+  }));
 }
 
 export function createInitiativeOrder(
@@ -183,10 +210,6 @@ export function createInitiativeOrder(
     return Either.left(validatedTieResolutions.left);
   }
 
-  if (combatantIds.length === 0) {
-    return Either.right([]);
-  }
-
   return Either.right(
     [...combatantIds].sort((leftActorId, rightActorId) => {
       const leftCount = validatedInitiativeCounts.right.get(leftActorId)!;
@@ -203,60 +226,79 @@ export function createInitiativeOrder(
   );
 }
 
+function validatedInitiativeCountsById(
+  combatantIds: ReadonlyArray<CreatureId>,
+  init: BattleInit,
+): Either.Either<ReadonlyMap<CreatureId, number>, InvalidBattleInitError> {
+  const validatedInitiativeCounts = validateInitiativeCounts(
+    combatantIds,
+    init.initiativeCounts,
+  );
+  if (Either.isLeft(validatedInitiativeCounts)) {
+    return Either.left(validatedInitiativeCounts.left);
+  }
+
+  const validatedTieResolutions = validateTieResolutions(
+    combatantIds,
+    validatedInitiativeCounts.right,
+    init.tieResolutions,
+  );
+  if (Either.isLeft(validatedTieResolutions)) {
+    return Either.left(validatedTieResolutions.left);
+  }
+
+  return Either.right(validatedInitiativeCounts.right);
+}
+
 export function initializeBattleState(
-  combatants: ReadonlyArray<BattleCombatant>,
+  combatants: ReadonlyArray<Combatant>,
   init: BattleInit,
 ): Either.Either<BattleState, InvalidBattleInitError> {
   const combatantIds = combatants.map((combatant) => combatant.id);
+  if (combatantIds.length === 0) {
+    return invalidBattleInit("battle init requires at least one combatant");
+  }
+
   const initiativeOrder = createInitiativeOrder(combatantIds, init);
   if (Either.isLeft(initiativeOrder)) {
     return Either.left(initiativeOrder.left);
   }
 
-  const turnActorId = initiativeOrder.right[0] ?? null;
+  const initiativeCounts = validatedInitiativeCountsById(combatantIds, init);
+  if (Either.isLeft(initiativeCounts)) {
+    return Either.left(initiativeCounts.left);
+  }
+
+  const orderedParticipants = orderParticipants(
+    combatants,
+    initiativeOrder.right,
+    initiativeCounts.right,
+  );
+  const turnOrder = asTurnOrder(resetTurnScopedUnitUsage(orderedParticipants));
+
   return Either.right({
-    combatants: resetTurnScopedUnitUsage(combatants, turnActorId),
-    initiativeCounts: init.initiativeCounts,
-    initiativeOrder: initiativeOrder.right,
-    round: initiativeOrder.right.length === 0 ? 0 : 1,
-    turnNumber: initiativeOrder.right.length === 0 ? 0 : 1,
-    turnActorId,
+    turnOrder,
+    round: 1,
+    turnNumber: 1,
     openPrompt: null,
-    standardActionsRemaining: initiativeOrder.right.length === 0 ? 0 : 1,
-    restrictedActionsRemaining: 0,
+    standardActionsRemaining: 1,
+    nonMagicActionsRemaining: 0,
   });
 }
 
 export function advanceBattleTurn(state: BattleState): BattleState {
-  if (state.initiativeOrder.length === 0 || state.turnActorId === null) {
-    return state;
-  }
-
-  const turnIndex = state.initiativeOrder.indexOf(state.turnActorId);
-  if (turnIndex === -1) {
-    const turnActorId = state.initiativeOrder[0] ?? null;
-    return {
-      ...state,
-      combatants: resetTurnScopedUnitUsage(state.combatants, turnActorId),
-      turnActorId,
-      openPrompt: null,
-      standardActionsRemaining: turnActorId === null ? 0 : 1,
-      restrictedActionsRemaining: 0,
-    };
-  }
-
-  const nextTurnIndex = (turnIndex + 1) % state.initiativeOrder.length;
-  const wrapsRound = nextTurnIndex === 0;
-  const turnActorId = state.initiativeOrder[nextTurnIndex] ?? null;
+  const [current, ...rest] = state.turnOrder;
+  const nextTurnOrderBase = asTurnOrder([...rest, current]);
+  const nextTurnOrder = asTurnOrder(resetTurnScopedUnitUsage(nextTurnOrderBase));
+  const wrapsRound = state.turnNumber % state.turnOrder.length === 0;
 
   return {
     ...state,
-    combatants: resetTurnScopedUnitUsage(state.combatants, turnActorId),
+    turnOrder: nextTurnOrder,
     round: wrapsRound ? state.round + 1 : state.round,
     turnNumber: state.turnNumber + 1,
-    turnActorId,
     openPrompt: null,
-    standardActionsRemaining: turnActorId === null ? 0 : 1,
-    restrictedActionsRemaining: 0,
+    standardActionsRemaining: 1,
+    nonMagicActionsRemaining: 0,
   };
 }

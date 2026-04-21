@@ -14,15 +14,12 @@ module surfaceRuntimeCorrectionTest::Impl {
   }
 
   pure val EMPTY_BATTLE_STATE: BattleState = {
-    combatants: List(),
-    initiativeCounts: List(),
-    initiativeOrder: List(),
+    turnOrder: List(),
     round: 0,
     turnNumber: 0,
-    turnActorId: NoTurnActor,
     openPrompt: NoOpenPrompt,
     standardActionsRemaining: 0,
-    restrictedActionsRemaining: 0,
+    nonMagicActionsRemaining: 0,
   }
 
   pure def battleStateOrEmpty(result: BattleStateInitResult): BattleState =
@@ -151,6 +148,23 @@ module surfaceRuntimeCorrectionTest::Impl {
   pure val PROMPT_BATTLE: BattleState =
     battleStateOrEmpty(initializeBattleState(PROMPT_COMBATANTS, PROMPT_INIT))
 
+  pure def currentActorId(state: BattleState): CreatureId =
+    state.turnOrder[0].combatant.id
+
+  pure def replaceCombatantInState(
+    state: BattleState,
+    updatedCombatant: BattleCombatant,
+  ): BattleState =
+    state.with(
+      "turnOrder",
+      state.turnOrder.foldl([], (acc, participant) =>
+        acc.append(
+          if (participant.combatant.id != updatedCombatant.id) participant
+          else participant.with("combatant", updatedCombatant)
+        )
+      )
+    )
+
   run test_createInitiativeOrder_uses_table_supplied_tie_order = {
     val order = createInitiativeOrder(
       ["fighter", "cleric", "ogre"],
@@ -171,14 +185,14 @@ module surfaceRuntimeCorrectionTest::Impl {
     val battle = battleStateOrEmpty(initResult)
     all {
       assert(initResult == BattleStateOk(battle)),
-      assert(battle.initiativeCounts == INITIAL_INIT.initiativeCounts),
-      assert(battle.initiativeOrder == ["fighter", "cleric", "ogre"]),
+      assert(battle.turnOrder.foldl([], (acc, participant) => acc.append(participant.initiativeCount)) == [18, 12, 9]),
+      assert(battle.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
       assert(battle.round == 1),
       assert(battle.turnNumber == 1),
-      assert(battle.turnActorId == TurnActor("fighter")),
+      assert(currentActorId(battle) == "fighter"),
       assert(battle.openPrompt == NoOpenPrompt),
       assert(battle.standardActionsRemaining == 1),
-      assert(battle.restrictedActionsRemaining == 0),
+      assert(battle.nonMagicActionsRemaining == 0),
     }
   }
 
@@ -204,15 +218,15 @@ module surfaceRuntimeCorrectionTest::Impl {
     val afterCleric = advanceBattleTurn(afterFighter)
     val afterOgre = advanceBattleTurn(afterCleric)
     all {
-      assert(afterFighter.initiativeOrder == ["fighter", "cleric", "ogre"]),
+      assert(afterFighter.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["cleric", "ogre", "fighter"]),
       assert(afterFighter.round == 1),
       assert(afterFighter.turnNumber == 2),
-      assert(afterFighter.turnActorId == TurnActor("cleric")),
-      assert(afterCleric.turnActorId == TurnActor("ogre")),
-      assert(afterOgre.initiativeOrder == ["fighter", "cleric", "ogre"]),
+      assert(currentActorId(afterFighter) == "cleric"),
+      assert(currentActorId(afterCleric) == "ogre"),
+      assert(afterOgre.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
       assert(afterOgre.round == 2),
       assert(afterOgre.turnNumber == 4),
-      assert(afterOgre.turnActorId == TurnActor("fighter")),
+      assert(currentActorId(afterOgre) == "fighter"),
     }
   }
 
@@ -222,7 +236,7 @@ module surfaceRuntimeCorrectionTest::Impl {
       discoverAvailableBattlePrompt(battle) ==
       PromptAvailable(BPChooseAction({
         actorId: "wizard",
-        options: [BACAttack, BACEndTurn, BACUseUnit("fireball")],
+        options: [ATOCoreActionAttack, ATOCoreActionEndTurn, ATOUnit("fireball")],
       }))
     )
   }
@@ -230,7 +244,7 @@ module surfaceRuntimeCorrectionTest::Impl {
   run test_answerBattlePrompt_end_turn_resolves_immediately = {
     val battle = PROMPT_BATTLE
     assert(
-      answerBattlePrompt(battle, BAChooseAction(BACEndTurn)) ==
+      answerBattlePrompt(battle, BAChooseAction(ATOCoreActionEndTurn)) ==
       AnswerResolved({
         state: battle.with("openPrompt", NoOpenPrompt),
         resolvedAction: RAEndTurn({
@@ -243,13 +257,12 @@ module surfaceRuntimeCorrectionTest::Impl {
   run test_answerBattlePrompt_attack_opens_choose_attack_target = {
     val battle = PROMPT_BATTLE
     assert(
-      answerBattlePrompt(battle, BAChooseAction(BACAttack)) ==
+      answerBattlePrompt(battle, BAChooseAction(ATOCoreActionAttack)) ==
       AnswerOpened({
         state: battle.with("openPrompt", OPChooseAttackTarget),
         prompt: BPChooseAttackTarget({
           actorId: "wizard",
           availableTargetIds: ["fighter", "cleric", "ogre"],
-          damageLabel: AttackDamageLabel,
         }),
       })
     )
@@ -257,7 +270,7 @@ module surfaceRuntimeCorrectionTest::Impl {
 
   run test_attack_flow_reduces_hp_and_spends_one_non_magic_action = {
     val battle = PROMPT_BATTLE
-    val chooseAttack = answerBattlePrompt(battle, BAChooseAction(BACAttack))
+    val chooseAttack = answerBattlePrompt(battle, BAChooseAction(ATOCoreActionAttack))
     val attackPromptState = promptResultStateOrEmpty(chooseAttack)
     val resolvedAttack = answerBattlePrompt(
       attackPromptState,
@@ -281,50 +294,49 @@ module surfaceRuntimeCorrectionTest::Impl {
         prompt: BPChooseAttackTarget({
           actorId: "wizard",
           availableTargetIds: ["fighter", "cleric", "ogre"],
-          damageLabel: AttackDamageLabel,
         }),
       })),
       assert(reduced == BattleStateReduced(reducedState)),
       assert(ogreHp == 52),
       assert(reducedState.openPrompt == NoOpenPrompt),
       assert(reducedState.standardActionsRemaining == 0),
-      assert(reducedState.restrictedActionsRemaining == 0),
+      assert(reducedState.nonMagicActionsRemaining == 0),
     }
   }
 
   run test_attack_prompt_keeps_zero_hp_target_available_in_this_slice = {
-    val zeroHpCombatants = PROMPT_BATTLE.combatants.foldl([], (acc, combatant) =>
-      acc.append(
-        if (combatant.id != "ogre") combatant
-        else combatant.with("currentHp", 0)
-      )
+    val ogre = match combatantById(PROMPT_BATTLE, "ogre") {
+      | FoundCombatant(combatant) => combatant
+      | _ => EMPTY_COMBATANT
+    }
+    val zeroHpBattle = replaceCombatantInState(
+      PROMPT_BATTLE,
+      ogre.with("currentHp", 0),
     )
-    val zeroHpBattle = PROMPT_BATTLE.with("combatants", zeroHpCombatants)
     assert(
-      answerBattlePrompt(zeroHpBattle, BAChooseAction(BACAttack)) ==
+      answerBattlePrompt(zeroHpBattle, BAChooseAction(ATOCoreActionAttack)) ==
       AnswerOpened({
         state: zeroHpBattle.with("openPrompt", OPChooseAttackTarget),
         prompt: BPChooseAttackTarget({
           actorId: "wizard",
           availableTargetIds: ["fighter", "cleric", "ogre"],
-          damageLabel: AttackDamageLabel,
         }),
       })
     )
   }
 
   run test_cure_wounds_flow_opens_single_target_prompt_and_clamps_healing = {
-    val battle = PROMPT_BATTLE.with("turnActorId", TurnActor("cleric"))
+    val battle = advanceBattleTurn(advanceBattleTurn(PROMPT_BATTLE))
       .with("standardActionsRemaining", 1)
-      .with("restrictedActionsRemaining", 0)
-    val chooseHeal = answerBattlePrompt(battle, BAChooseAction(BACUseUnit("cure_wounds")))
+      .with("nonMagicActionsRemaining", 0)
+    val chooseHeal = answerBattlePrompt(battle, BAChooseAction(ATOUnit("cure_wounds")))
     val healed = match chooseHeal {
       | AnswerOpened(payload) =>
           val resolved = answerBattlePrompt(
             payload.state,
             BAChooseSingleTargetUnit({
               targetId: "cleric",
-              total: 20,
+              amount: 20,
             }),
           )
           match resolved {
@@ -357,7 +369,7 @@ module surfaceRuntimeCorrectionTest::Impl {
 
   run test_fireball_flow_uses_one_damage_roll_for_all_targets_and_halves_successes = {
     val battle = PROMPT_BATTLE
-    val chooseFireball = answerBattlePrompt(battle, BAChooseAction(BACUseUnit("fireball")))
+    val chooseFireball = answerBattlePrompt(battle, BAChooseAction(ATOUnit("fireball")))
     val burned = match chooseFireball {
       | AnswerOpened(payload) =>
           val resolved = answerBattlePrompt(
@@ -368,7 +380,7 @@ module surfaceRuntimeCorrectionTest::Impl {
                 { targetId: "cleric", saveOutcome: SaveSuccess },
                 { targetId: "ogre", saveOutcome: SaveFailure },
               ],
-              total: 12,
+              amount: 12,
             }),
           )
           match resolved {
@@ -417,19 +429,19 @@ module surfaceRuntimeCorrectionTest::Impl {
 
   run test_advanceBattleTurn_clears_open_prompt_and_derives_next_actor_prompt = {
     val battle = PROMPT_BATTLE
-    val opened = answerBattlePrompt(battle, BAChooseAction(BACAttack))
+    val opened = answerBattlePrompt(battle, BAChooseAction(ATOCoreActionAttack))
     val nextTurn = match opened {
       | AnswerOpened(payload) => advanceBattleTurn(payload.state)
       | _ => EMPTY_BATTLE_STATE
     }
     all {
-      assert(nextTurn.turnActorId == TurnActor("fighter")),
+      assert(currentActorId(nextTurn) == "fighter"),
       assert(nextTurn.openPrompt == NoOpenPrompt),
       assert(
         discoverAvailableBattlePrompt(nextTurn) ==
         PromptAvailable(BPChooseAction({
           actorId: "fighter",
-          options: [BACAttack, BACEndTurn, BACUseUnit("fighter_action_surge_l2")],
+          options: [ATOCoreActionAttack, ATOCoreActionEndTurn, ATOUnit("fighter_action_surge_l2")],
         }))
       ),
     }
@@ -449,16 +461,16 @@ module surfaceRuntimeCorrectionTest::Impl {
       discoverAvailableBattlePrompt(soloBattle) ==
       PromptAvailable(BPChooseAction({
         actorId: "wizard",
-        options: [BACEndTurn, BACUseUnit("fireball")],
+        options: [ATOCoreActionEndTurn, ATOUnit("fireball")],
       }))
     )
   }
 
   run test_action_surge_grants_one_restricted_non_magic_action_and_marks_unit_used = {
-    val battle = PROMPT_BATTLE.with("turnActorId", TurnActor("fighter"))
+    val battle = advanceBattleTurn(PROMPT_BATTLE)
       .with("standardActionsRemaining", 0)
-      .with("restrictedActionsRemaining", 0)
-    val granted = answerBattlePrompt(battle, BAChooseAction(BACUseUnit("fighter_action_surge_l2")))
+      .with("nonMagicActionsRemaining", 0)
+    val granted = answerBattlePrompt(battle, BAChooseAction(ATOUnit("fighter_action_surge_l2")))
     val grantedState = match granted {
       | AnswerResolved(payload) =>
           reducedStateOrEmpty(reduceBattleState(payload.state, payload.resolvedAction))
@@ -481,10 +493,10 @@ module surfaceRuntimeCorrectionTest::Impl {
       ),
       assert(discoverAvailableBattlePrompt(grantedState) == PromptAvailable(BPChooseAction({
         actorId: "fighter",
-        options: [BACAttack, BACEndTurn],
+        options: [ATOCoreActionAttack, ATOCoreActionEndTurn],
       }))),
       assert(grantedState.standardActionsRemaining == 0),
-      assert(grantedState.restrictedActionsRemaining == 1),
+      assert(grantedState.nonMagicActionsRemaining == 1),
       assert(fighter.unitResourceStates == [{
         unitId: "fighter_action_surge_l2",
         expendedUses: 1,
@@ -510,14 +522,15 @@ module surfaceRuntimeCorrectionTest::Impl {
         ),
         PROMPT_INIT,
       )
-    ).with("turnActorId", TurnActor("fighter"))
+    )
+    val fighterTurnBattle = advanceBattleTurn(veteranBattle)
       .with("standardActionsRemaining", 0)
-      .with("restrictedActionsRemaining", 0)
+      .with("nonMagicActionsRemaining", 0)
     assert(
-      discoverAvailableBattlePrompt(veteranBattle) ==
+      discoverAvailableBattlePrompt(fighterTurnBattle) ==
       PromptAvailable(BPChooseAction({
         actorId: "fighter",
-        options: [BACAttack, BACEndTurn, BACUseUnit("fighter_action_surge_l2")],
+        options: [ATOCoreActionAttack, ATOCoreActionEndTurn, ATOUnit("fighter_action_surge_l2")],
       }))
     )
   }

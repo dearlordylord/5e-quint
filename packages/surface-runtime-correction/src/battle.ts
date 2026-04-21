@@ -2,7 +2,7 @@ import { Effect, Either, Option, pipe } from "effect";
 
 import { battleSourceRefForCreature } from "#/battle-source-ref.ts";
 import { initializeBattleState } from "#/battle-init.ts";
-import type { BattleCombatant, BattleInit } from "#/battle-types.ts";
+import type { Combatant, BattleInit } from "#/battle-types.ts";
 import { effectFromEither, optionToEither } from "#/effect-helpers.ts";
 import { MissingRuntimeUnitError } from "#/errors.ts";
 import { SurfaceUnitLibrary } from "#/services.ts";
@@ -72,7 +72,7 @@ export function projectRosterToBattle(
                   expendedUses: 0,
                   usedThisTurn: false,
                 })),
-              }) satisfies BattleCombatant,
+              }) satisfies Combatant,
           ),
         ),
       ),

@@ -34,9 +34,9 @@ Initiative follows the SRD combat shape in `.references/srd-5.2.1/Playing-the-Ga
 initiative counts are supplied per combatant, initiative order is ranked from
 highest to lowest and stays stable across rounds. Only tied cohorts require
 table-supplied ordering input; non-tied combatants are not repeated in battle
-init input. The resulting battle state makes turn ownership explicit with
-`turnActorId`, `round`, and `turnNumber`, while keeping the ordering layer easy
-to extend for later mid-battle participant insertion.
+init input. The resulting battle state stores one ordered `turnOrder`
+participant list; current turn ownership is derived from `turnOrder[0]`, while
+`round` and `turnNumber` remain first-class battle facts.
 
 The current prompt lifecycle is explicit:
 
@@ -51,11 +51,18 @@ That distinction matters for this slice:
 - `chooseAction -> fireball` opens `chooseAreaEffect`
 - `chooseAction -> cure_wounds` opens `chooseSingleTargetUnit`
 
+Parity notes:
+
+- TS and Quint now share the same participant-owned battle state shape: `turnOrder`, `round`, `turnNumber`, action-economy counters, and open-prompt ownership
+- current turn ownership is derived from `turnOrder[0]`; there is no separate nullable turn-actor field in either layer
+- TS keeps nested prompt payload records for `targeting`, `save`, and `effect`, while Quint flattens those fields into prompt variants because the variant tag already fixes the prompt kind
+- TS `openPrompt` uses `null | { tag: ... }`; Quint uses explicit variants for the same ownership boundary
+- TS runtime helpers interpret authored `Surface` units structurally through `SurfaceUnitInterpretation`; Quint mirrors the same semantic categories as `SupportedBattleUnit`
+
 The TS-first discovery phase is now frozen into the matching Quint slice in:
 
 - [surfaceRuntimeCorrection.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrection.qnt:1)
 - [surfaceRuntimeCorrectionTest.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrectionTest.qnt:1)
-- [QUINT_MAPPING.md](/workspace/typescript/dnd/packages/surface-runtime-correction/QUINT_MAPPING.md:1)
 
 The correction slice now includes a dedicated MBT bridge. It replays the
 frozen prompt/action flow against
@@ -64,7 +71,7 @@ using one opening-turn init and one later cleric-turn init, so the default file
 run reaches both the wizard opening slice and the later `cure_wounds`
 follow-up prompt. It compares:
 
-- initiative-owned battle state
+- participant-owned battle state
 - derived prompt discovery
 - open-prompt ownership
 - whether a complete answer produced a `resolvedAction` or an `openedPrompt`

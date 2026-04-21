@@ -4,10 +4,6 @@ module surfaceRuntimeCorrection {
   type CreatureId = str
   type BattleUnitId = str
 
-  type TurnActorId =
-    | NoTurnActor
-    | TurnActor(CreatureId)
-
   type SpellSaveDc =
     | NoSpellSaveDc
     | HasSpellSaveDc(int)
@@ -64,6 +60,12 @@ module surfaceRuntimeCorrection {
     unitResourceStates: List[BattleUnitResourceState],
   }
 
+  type BattleParticipant = {
+    combatant: BattleCombatant,
+    initiativeCount: int,
+    projectionOrder: int,
+  }
+
   type BattleInitiativeCount = {
     actorId: CreatureId,
     count: int,
@@ -74,10 +76,10 @@ module surfaceRuntimeCorrection {
     tieResolutions: List[List[CreatureId]],
   }
 
-  type AvailableBattleAction =
-    | BACAttack
-    | BACEndTurn
-    | BACUseUnit(BattleUnitId)
+  type AvailableTurnOption =
+    | ATOCoreActionAttack
+    | ATOCoreActionEndTurn
+    | ATOUnit(BattleUnitId)
 
   type OpenPromptState =
     | NoOpenPrompt
@@ -85,19 +87,16 @@ module surfaceRuntimeCorrection {
     | OPChooseSingleTargetUnit(BattleUnitId)
     | OPChooseAreaEffect(BattleUnitId)
 
-  type DamageLabel = | AttackDamageLabel
-
   type HalfDamageOnSuccess = | HalfDamage
 
   type AvailableBattlePrompt =
     | BPChooseAction({
         actorId: CreatureId,
-        options: List[AvailableBattleAction],
+        options: List[AvailableTurnOption],
       })
     | BPChooseAttackTarget({
         actorId: CreatureId,
         availableTargetIds: List[CreatureId],
-        damageLabel: DamageLabel,
       })
     | BPChooseSingleTargetUnit({
         actorId: CreatureId,
@@ -124,18 +123,18 @@ module surfaceRuntimeCorrection {
   }
 
   type BattlePromptAnswer =
-    | BAChooseAction(AvailableBattleAction)
+    | BAChooseAction(AvailableTurnOption)
     | BAChooseAttackTarget({
         targetId: CreatureId,
         damage: int,
       })
     | BAChooseSingleTargetUnit({
         targetId: CreatureId,
-        total: int,
+        amount: int,
       })
     | BAChooseAreaEffect({
         targetResults: List[AreaTargetResult],
-        total: int,
+        amount: int,
       })
 
   type EndTurnAction = {
@@ -152,14 +151,14 @@ module surfaceRuntimeCorrection {
     actorId: CreatureId,
     unitId: BattleUnitId,
     targetId: CreatureId,
-    total: int,
+    healing: int,
   }
 
   type AreaSaveDamageAction = {
     actorId: CreatureId,
     unitId: BattleUnitId,
     targetResults: List[AreaTargetResult],
-    total: int,
+    damage: int,
   }
 
   type GrantExtraActionAction = {
@@ -175,15 +174,12 @@ module surfaceRuntimeCorrection {
     | RAGrantExtraAction(GrantExtraActionAction)
 
   type BattleState = {
-    combatants: List[BattleCombatant],
-    initiativeCounts: List[BattleInitiativeCount],
-    initiativeOrder: List[CreatureId],
+    turnOrder: List[BattleParticipant],
     round: int,
     turnNumber: int,
-    turnActorId: TurnActorId,
     openPrompt: OpenPromptState,
     standardActionsRemaining: int,
-    restrictedActionsRemaining: int,
+    nonMagicActionsRemaining: int,
   }
 
   type InitiativeOrderResult =
@@ -254,16 +250,12 @@ module surfaceRuntimeCorrection {
     left.length() == right.length()
       and left.foldl(true, (acc, actorId) => acc and listContains(right, actorId))
 
-  pure def currentCombatant(state: BattleState): MaybeBattleCombatant = match state.turnActorId {
-      | NoTurnActor => NoCombatant
-      | TurnActor(actorId) =>
-          val matches = state.combatants.select(combatant => combatant.id == actorId)
-          if (matches.length() == 0) NoCombatant else FoundCombatant(matches[0])
-    }
+  pure def currentCombatant(state: BattleState): BattleCombatant =
+    state.turnOrder[0].combatant
 
   pure def combatantById(state: BattleState, actorId: CreatureId): MaybeBattleCombatant = {
-    val matches = state.combatants.select(combatant => combatant.id == actorId)
-    if (matches.length() == 0) NoCombatant else FoundCombatant(matches[0])
+    val matches = state.turnOrder.select(participant => participant.combatant.id == actorId)
+    if (matches.length() == 0) NoCombatant else FoundCombatant(matches[0].combatant)
   }
 
   pure def unitById(combatant: BattleCombatant, unitId: BattleUnitId): MaybeBattleUnit = {
@@ -291,12 +283,12 @@ module surfaceRuntimeCorrection {
     state.with("openPrompt", openPrompt)
 
   pure def combatantIds(state: BattleState): List[CreatureId] =
-    state.combatants.foldl([], (acc, combatant) => acc.append(combatant.id))
+    state.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id))
 
   pure def attackTargetIds(state: BattleState, actorId: CreatureId): List[CreatureId] =
-    state.combatants
-      .select(combatant => combatant.id != actorId)
-      .foldl([], (acc, combatant) => acc.append(combatant.id))
+    state.turnOrder
+      .select(participant => participant.combatant.id != actorId)
+      .foldl([], (acc, participant) => acc.append(participant.combatant.id))
 
   pure def initiativeCountFor(
     initiativeCounts: List[BattleInitiativeCount],
@@ -396,93 +388,88 @@ module surfaceRuntimeCorrection {
   }
 
   pure def resetTurnScopedUnitUsage(
-    combatants: List[BattleCombatant],
-    turnActorId: TurnActorId,
-  ): List[BattleCombatant] =
-    if (turnActorId == NoTurnActor) combatants
-    else {
-      val actorId = match turnActorId {
-        | TurnActor(id) => id
-        | _ => ""
-      }
-      combatants.foldl([], (acc, combatant) =>
+    participants: List[BattleParticipant],
+  ): List[BattleParticipant] =
+    if (participants.length() == 0) participants
+    else
+      participants.foldl([], (acc, participant) =>
         acc.append(
-          if (combatant.id != actorId) combatant
-          else combatant.with(
-            "unitResourceStates",
-            combatant.unitResourceStates.foldl([], (resourceAcc, resourceState) =>
-              resourceAcc.append(resourceState.with("usedThisTurn", false))
+          if (participant.combatant.id != participants[0].combatant.id) participant
+          else participant.with(
+            "combatant",
+            participant.combatant.with(
+              "unitResourceStates",
+              participant.combatant.unitResourceStates.foldl([], (resourceAcc, resourceState) =>
+                resourceAcc.append(resourceState.with("usedThisTurn", false))
+              )
             )
           )
         )
       )
-    }
+
+  pure def orderedParticipants(
+    combatants: List[BattleCombatant],
+    initiativeOrder: List[CreatureId],
+    initiativeCounts: List[BattleInitiativeCount],
+  ): List[BattleParticipant] =
+    initiativeOrder.foldl([], (acc, actorId) => {
+      val participantMatches = combatants
+        .select(combatant => combatant.id == actorId)
+        .foldl([], (combatantAcc, combatant) =>
+          combatantAcc.append({
+            combatant: combatant,
+            initiativeCount: initiativeCountFor(initiativeCounts, actorId),
+            projectionOrder: listIndexOf(combatants.foldl([], (ids, candidate) => ids.append(candidate.id)), actorId),
+          })
+        )
+      acc.concat(participantMatches)
+    })
 
   pure def initializeBattleState(
     combatants: List[BattleCombatant],
     init: BattleInit,
   ): BattleStateInitResult = {
+    if (combatants.length() == 0) BattleStateInvalid("battle init requires at least one combatant")
+    else {
     val orderResult = createInitiativeOrder(combatants.foldl([], (acc, combatant) => acc.append(combatant.id)), init)
     match orderResult {
       | InitiativeOrderInvalid(message) => BattleStateInvalid(message)
       | InitiativeOrderOk(order) =>
-          val turnActorId = if (order.length() == 0) NoTurnActor else TurnActor(order[0])
+          val turnOrder = resetTurnScopedUnitUsage(orderedParticipants(combatants, order, init.initiativeCounts))
           BattleStateOk({
-            combatants: resetTurnScopedUnitUsage(combatants, turnActorId),
-            initiativeCounts: init.initiativeCounts,
-            initiativeOrder: order,
-            round: if (order.length() == 0) 0 else 1,
-            turnNumber: if (order.length() == 0) 0 else 1,
-            turnActorId: turnActorId,
+            turnOrder: turnOrder,
+            round: 1,
+            turnNumber: 1,
             openPrompt: NoOpenPrompt,
-            standardActionsRemaining: if (order.length() == 0) 0 else 1,
-            restrictedActionsRemaining: 0,
+            standardActionsRemaining: 1,
+            nonMagicActionsRemaining: 0,
           })
+    }
     }
   }
 
   pure def advanceBattleTurn(state: BattleState): BattleState =
-    if (state.initiativeOrder.length() == 0) state
-    else match state.turnActorId {
-      | NoTurnActor => state
-      | TurnActor(actorId) =>
-          val turnIndex = listIndexOf(state.initiativeOrder, actorId)
-          if (turnIndex == -1) {
-            val nextActor = TurnActor(state.initiativeOrder[0])
-            {
-              combatants: resetTurnScopedUnitUsage(state.combatants, nextActor),
-              initiativeCounts: state.initiativeCounts,
-              initiativeOrder: state.initiativeOrder,
-              round: state.round,
-              turnNumber: state.turnNumber,
-              turnActorId: nextActor,
-              openPrompt: NoOpenPrompt,
-              standardActionsRemaining: 1,
-              restrictedActionsRemaining: 0,
-            }
-          } else {
-            val nextTurnIndex = (turnIndex + 1) % state.initiativeOrder.length()
-            val wrapsRound = nextTurnIndex == 0
-            val nextActor = TurnActor(state.initiativeOrder[nextTurnIndex])
-            {
-              combatants: resetTurnScopedUnitUsage(state.combatants, nextActor),
-              initiativeCounts: state.initiativeCounts,
-              initiativeOrder: state.initiativeOrder,
-              round: if (wrapsRound) state.round + 1 else state.round,
-              turnNumber: state.turnNumber + 1,
-              turnActorId: nextActor,
-              openPrompt: NoOpenPrompt,
-              standardActionsRemaining: 1,
-              restrictedActionsRemaining: 0,
-            }
-          }
+    if (state.turnOrder.length() == 0) state
+    else {
+      val current = state.turnOrder[0]
+      val rest = state.turnOrder.slice(1, state.turnOrder.length())
+      val nextTurnOrder = resetTurnScopedUnitUsage(rest.append(current))
+      val wrapsRound = state.turnNumber % state.turnOrder.length() == 0
+      {
+        turnOrder: nextTurnOrder,
+        round: if (wrapsRound) state.round + 1 else state.round,
+        turnNumber: state.turnNumber + 1,
+        openPrompt: NoOpenPrompt,
+        standardActionsRemaining: 1,
+        nonMagicActionsRemaining: 0,
+      }
     }
 
   pure def canTakeMagicAction(state: BattleState): bool =
     state.standardActionsRemaining > 0
 
   pure def canTakeNonMagicAction(state: BattleState): bool =
-    state.standardActionsRemaining > 0 or state.restrictedActionsRemaining > 0
+    state.standardActionsRemaining > 0 or state.nonMagicActionsRemaining > 0
 
   pure def useCountCapValue(combatant: BattleCombatant, useCountCap: UseCountCap): int =
     match useCountCap {
@@ -507,108 +494,92 @@ module surfaceRuntimeCorrection {
       | _ => canTakeMagicAction(state)
     }
 
-  pure def actorActionChoices(state: BattleState): List[AvailableBattleAction] = {
-    val activeCombatant = currentCombatant(state)
-    val result = match activeCombatant {
-      | NoCombatant => List()
-      | FoundCombatant(combatant) =>
-          val unitChoices = combatant.units
-            .select(unit => unitActionAvailable(state, combatant, unit))
-            .foldl([], (acc, unit) => acc.append(BACUseUnit(unit.unitId)))
-          val baseChoices = [BACEndTurn].concat(unitChoices)
-          if (canTakeNonMagicAction(state) and attackTargetIds(state, combatant.id).length() > 0)
-            [BACAttack].concat(baseChoices)
-          else
-            baseChoices
-    }
-    result
+  pure def actorActionChoices(state: BattleState): List[AvailableTurnOption] = {
+    val combatant = currentCombatant(state)
+    val unitChoices = combatant.units
+      .select(unit => unitActionAvailable(state, combatant, unit))
+      .foldl([], (acc, unit) => acc.append(ATOUnit(unit.unitId)))
+    val baseChoices = [ATOCoreActionEndTurn].concat(unitChoices)
+    if (canTakeNonMagicAction(state) and attackTargetIds(state, combatant.id).length() > 0)
+      [ATOCoreActionAttack].concat(baseChoices)
+    else
+      baseChoices
   }
 
   pure def deriveOpenPrompt(
     state: BattleState,
     openPrompt: OpenPromptState,
   ): PromptDerivationResult = {
-    val activeCombatant = currentCombatant(state)
-    val result = match activeCombatant {
-      | NoCombatant => PromptDerivationInvalid("no prompt is currently available")
-      | FoundCombatant(combatant) =>
-          match openPrompt {
-            | NoOpenPrompt => PromptDerivationInvalid("no prompt is currently available")
-            | OPChooseAttackTarget =>
-                val availableTargetIds = attackTargetIds(state, combatant.id)
-                if (availableTargetIds.length() == 0)
-                  PromptDerivationInvalid("attack is not currently available")
-                else
-                  PromptDerived(
-                    BPChooseAttackTarget({
-                      actorId: combatant.id,
-                      availableTargetIds: availableTargetIds,
-                      damageLabel: AttackDamageLabel,
-                    })
-                  )
-            | OPChooseSingleTargetUnit(unitId) =>
-                match unitById(combatant, unitId) {
-                  | NoUnit => PromptDerivationInvalid("selected unit is no longer available")
-                  | FoundUnit(unit) =>
-                      match unit.semantics {
-                        | BUSingleTargetHeal =>
+    val combatant = currentCombatant(state)
+    val result = match openPrompt {
+      | NoOpenPrompt => PromptDerivationInvalid("no prompt is currently available")
+      | OPChooseAttackTarget =>
+          val availableTargetIds = attackTargetIds(state, combatant.id)
+          if (availableTargetIds.length() == 0)
+            PromptDerivationInvalid("attack is not currently available")
+          else
+            PromptDerived(
+              BPChooseAttackTarget({
+                actorId: combatant.id,
+                availableTargetIds: availableTargetIds,
+              })
+            )
+      | OPChooseSingleTargetUnit(unitId) =>
+          match unitById(combatant, unitId) {
+            | NoUnit => PromptDerivationInvalid("selected unit is no longer available")
+            | FoundUnit(unit) =>
+                match unit.semantics {
+                  | BUSingleTargetHeal =>
+                      PromptDerived(
+                        BPChooseSingleTargetUnit({
+                          actorId: combatant.id,
+                          unitId: unitId,
+                        })
+                      )
+                  | _ => PromptDerivationInvalid("selected unit is not a structurally supported single-target heal")
+                }
+          }
+      | OPChooseAreaEffect(unitId) =>
+          match unitById(combatant, unitId) {
+            | NoUnit => PromptDerivationInvalid("selected unit is no longer available")
+            | FoundUnit(unit) =>
+                match unit.semantics {
+                  | BUAreaSaveDamage(config) =>
+                      match combatant.spellSaveDc {
+                        | NoSpellSaveDc => PromptDerivationInvalid("current actor does not have a spell save dc")
+                        | HasSpellSaveDc(dc) =>
                             PromptDerived(
-                              BPChooseSingleTargetUnit({
+                              BPChooseAreaEffect({
                                 actorId: combatant.id,
                                 unitId: unitId,
+                                rangeFeet: config.rangeFeet,
+                                radiusFeet: config.radiusFeet,
+                                saveAbility: config.saveAbility,
+                                dc: dc,
+                                damageType: config.damageType,
+                                onSuccess: HalfDamage,
                               })
                             )
-                        | _ => PromptDerivationInvalid("selected unit is not a structurally supported single-target heal")
                       }
-                }
-            | OPChooseAreaEffect(unitId) =>
-                match unitById(combatant, unitId) {
-                  | NoUnit => PromptDerivationInvalid("selected unit is no longer available")
-                  | FoundUnit(unit) =>
-                      match unit.semantics {
-                        | BUAreaSaveDamage(config) =>
-                            match combatant.spellSaveDc {
-                              | NoSpellSaveDc => PromptDerivationInvalid("current actor does not have a spell save dc")
-                              | HasSpellSaveDc(dc) =>
-                                  PromptDerived(
-                                    BPChooseAreaEffect({
-                                      actorId: combatant.id,
-                                      unitId: unitId,
-                                      rangeFeet: config.rangeFeet,
-                                      radiusFeet: config.radiusFeet,
-                                      saveAbility: config.saveAbility,
-                                      dc: dc,
-                                      damageType: config.damageType,
-                                      onSuccess: HalfDamage,
-                                    })
-                                  )
-                            }
-                        | _ => PromptDerivationInvalid("selected unit is not a structurally supported area effect")
-                      }
+                  | _ => PromptDerivationInvalid("selected unit is not a structurally supported area effect")
                 }
           }
     }
     result
   }
 
-  pure def discoverAvailableBattlePrompt(state: BattleState): PromptDiscoveryResult = match state.turnActorId {
-      | NoTurnActor => NoPromptAvailable
-      | TurnActor(_) =>
-          match state.openPrompt {
-            | NoOpenPrompt =>
-                match currentCombatant(state) {
-                  | NoCombatant => NoPromptAvailable
-                  | FoundCombatant(combatant) =>
-                      PromptAvailable(BPChooseAction({
-                        actorId: combatant.id,
-                        options: actorActionChoices(state),
-                      }))
-                }
-            | _ =>
-                match deriveOpenPrompt(state, state.openPrompt) {
-                  | PromptDerived(prompt) => PromptAvailable(prompt)
-                  | PromptDerivationInvalid(_) => NoPromptAvailable
-                }
+  pure def discoverAvailableBattlePrompt(state: BattleState): PromptDiscoveryResult =
+    match state.openPrompt {
+      | NoOpenPrompt =>
+          val combatant = currentCombatant(state)
+          PromptAvailable(BPChooseAction({
+            actorId: combatant.id,
+            options: actorActionChoices(state),
+          }))
+      | _ =>
+          match deriveOpenPrompt(state, state.openPrompt) {
+            | PromptDerived(prompt) => PromptAvailable(prompt)
+            | PromptDerivationInvalid(_) => NoPromptAvailable
           }
     }
 
@@ -674,22 +645,21 @@ module surfaceRuntimeCorrection {
                 if (not(listContains(payload.options, choice)))
                   AnswerInvalid("chosen action is not currently available")
                 else match choice {
-                  | BACUseUnit(unitId) => answerUnitChoice(state, payload.actorId, unitId)
-                  | BACEndTurn =>
+                  | ATOUnit(unitId) => answerUnitChoice(state, payload.actorId, unitId)
+                  | ATOCoreActionEndTurn =>
                       AnswerResolved({
                         state: clearOpenPrompt(state),
                         resolvedAction: RAEndTurn({
                           actorId: payload.actorId,
                         }),
                       })
-                  | BACAttack =>
+                  | ATOCoreActionAttack =>
                       val nextState = stateWithOpenPrompt(clearOpenPrompt(state), OPChooseAttackTarget)
                       AnswerOpened({
                         state: nextState,
                         prompt: BPChooseAttackTarget({
                           actorId: payload.actorId,
                           availableTargetIds: attackTargetIds(state, payload.actorId),
-                          damageLabel: AttackDamageLabel,
                         }),
                       })
                 }
@@ -723,7 +693,7 @@ module surfaceRuntimeCorrection {
                       actorId: payload.actorId,
                       unitId: payload.unitId,
                       targetId: result.targetId,
-                      total: result.total,
+                      healing: result.amount,
                     }),
                   })
             | _ => AnswerInvalid("answer tag does not match the current prompt")
@@ -740,7 +710,7 @@ module surfaceRuntimeCorrection {
                       actorId: payload.actorId,
                       unitId: payload.unitId,
                       targetResults: result.targetResults,
-                      total: result.total,
+                      damage: result.amount,
                     }),
                   })
             | _ => AnswerInvalid("answer tag does not match the current prompt")
@@ -764,16 +734,21 @@ module surfaceRuntimeCorrection {
     }
 
   pure def replaceCombatant(
-    combatants: List[BattleCombatant],
+    participants: List[BattleParticipant],
     updatedCombatant: BattleCombatant,
-  ): List[BattleCombatant] =
-    combatants.foldl([], (acc, combatant) =>
-      acc.append(if (combatant.id == updatedCombatant.id) updatedCombatant else combatant)
+  ): List[BattleParticipant] =
+    participants.foldl([], (acc, participant) =>
+      acc.append(
+        if (participant.combatant.id == updatedCombatant.id)
+          participant.with("combatant", updatedCombatant)
+        else
+          participant
+      )
     )
 
   pure def spendNonMagicAction(state: BattleState): BattleStateReduceResult =
-    if (state.restrictedActionsRemaining > 0)
-      BattleStateReduced(state.with("restrictedActionsRemaining", state.restrictedActionsRemaining - 1))
+    if (state.nonMagicActionsRemaining > 0)
+      BattleStateReduced(state.with("nonMagicActionsRemaining", state.nonMagicActionsRemaining - 1))
     else if (state.standardActionsRemaining > 0)
       BattleStateReduced(state.with("standardActionsRemaining", state.standardActionsRemaining - 1))
     else
@@ -789,22 +764,28 @@ module surfaceRuntimeCorrection {
     state: BattleState,
     attackAction: AttackAction,
   ): BattleStateReduceResult = {
-    if (state.restrictedActionsRemaining <= 0 and state.standardActionsRemaining <= 0)
+    if (state.nonMagicActionsRemaining <= 0 and state.standardActionsRemaining <= 0)
       BattleStateReductionInvalid("no non-magic action is currently available")
     else {
-      val spentState = if (state.restrictedActionsRemaining > 0)
-        state.with("restrictedActionsRemaining", state.restrictedActionsRemaining - 1)
+      val spentState = if (state.nonMagicActionsRemaining > 0)
+        state.with("nonMagicActionsRemaining", state.nonMagicActionsRemaining - 1)
         else state.with("standardActionsRemaining", state.standardActionsRemaining - 1)
-      val targetMatches = spentState.combatants.select(combatant => combatant.id == attackAction.targetId)
+      val targetMatches = spentState.turnOrder.select(participant => participant.combatant.id == attackAction.targetId)
       if (targetMatches.length() == 0)
         BattleStateReductionInvalid("attack target is no longer in the battle")
       else
         BattleStateReduced(
           spentState.with(
-            "combatants",
+            "turnOrder",
             replaceCombatant(
-              spentState.combatants,
-              targetMatches[0].with("currentHp", clampHp(targetMatches[0].currentHp - attackAction.damage, targetMatches[0].maxHp))
+              spentState.turnOrder,
+              targetMatches[0].combatant.with(
+                "currentHp",
+                clampHp(
+                  targetMatches[0].combatant.currentHp - attackAction.damage,
+                  targetMatches[0].combatant.maxHp
+                )
+              )
             )
           )
         )
@@ -819,16 +800,22 @@ module surfaceRuntimeCorrection {
       BattleStateReductionInvalid("no Magic action is currently available")
     else {
       val spentState = state.with("standardActionsRemaining", state.standardActionsRemaining - 1)
-      val targetMatches = spentState.combatants.select(combatant => combatant.id == healAction.targetId)
+      val targetMatches = spentState.turnOrder.select(participant => participant.combatant.id == healAction.targetId)
       if (targetMatches.length() == 0)
         BattleStateReductionInvalid("heal target is no longer in the battle")
       else
         BattleStateReduced(
           spentState.with(
-            "combatants",
+            "turnOrder",
             replaceCombatant(
-              spentState.combatants,
-              targetMatches[0].with("currentHp", clampHp(targetMatches[0].currentHp + healAction.total, targetMatches[0].maxHp))
+              spentState.turnOrder,
+              targetMatches[0].combatant.with(
+                "currentHp",
+                clampHp(
+                  targetMatches[0].combatant.currentHp + healAction.healing,
+                  targetMatches[0].combatant.maxHp
+                )
+              )
             )
           )
         )
@@ -849,13 +836,19 @@ module surfaceRuntimeCorrection {
       val affectedTargetIds = areaAction.targetResults.foldl([], (acc, targetResult) => acc.append(targetResult.targetId))
       BattleStateReduced(
         spentState.with(
-          "combatants",
-          spentState.combatants.foldl([], (acc, combatant) =>
+          "turnOrder",
+          spentState.turnOrder.foldl([], (acc, participant) =>
             acc.append(
-              if (not(listContains(affectedTargetIds, combatant.id))) combatant
+              if (not(listContains(affectedTargetIds, participant.combatant.id))) participant
               else
-                val damage = if (listContains(successfulTargetIds, combatant.id)) areaAction.total / 2 else areaAction.total
-                combatant.with("currentHp", clampHp(combatant.currentHp - damage, combatant.maxHp))
+                val damage = if (listContains(successfulTargetIds, participant.combatant.id)) areaAction.damage / 2 else areaAction.damage
+                participant.with(
+                  "combatant",
+                  participant.combatant.with(
+                    "currentHp",
+                    clampHp(participant.combatant.currentHp - damage, participant.combatant.maxHp)
+                  )
+                )
             )
           )
         )
@@ -867,11 +860,11 @@ module surfaceRuntimeCorrection {
     state: BattleState,
     extraAction: GrantExtraActionAction,
   ): BattleStateReduceResult = {
-    val actorMatches = state.combatants.select(combatant => combatant.id == extraAction.actorId)
+    val actorMatches = state.turnOrder.select(participant => participant.combatant.id == extraAction.actorId)
     if (actorMatches.length() == 0)
       BattleStateReductionInvalid("acting combatant is no longer in the battle")
     else {
-      val actor = actorMatches[0]
+      val actor = actorMatches[0].combatant
       val unitMatches = actor.units.select(unit => unit.unitId == extraAction.unitId)
       val resourceMatches = actor.unitResourceStates.select(resourceState => resourceState.unitId == extraAction.unitId)
       if (unitMatches.length() == 0)
@@ -904,8 +897,8 @@ module surfaceRuntimeCorrection {
               )
               BattleStateReduced(
                 state
-                  .with("combatants", replaceCombatant(state.combatants, updatedActor))
-                  .with("restrictedActionsRemaining", state.restrictedActionsRemaining + 1)
+                  .with("turnOrder", replaceCombatant(state.turnOrder, updatedActor))
+                  .with("nonMagicActionsRemaining", state.nonMagicActionsRemaining + 1)
               )
         | _ => BattleStateReductionInvalid("unit does not structurally grant an extra action")
       }
@@ -917,27 +910,27 @@ module surfaceRuntimeCorrection {
     resolvedAction: ResolvedBattleAction,
   ): BattleStateReduceResult = match resolvedAction {
       | RAEndTurn(endTurnAction) =>
-          if (state.turnActorId != TurnActor(endTurnAction.actorId))
+          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != endTurnAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             BattleStateReduced(advanceBattleTurn(state))
       | RAAttack(attackAction) =>
-          if (state.turnActorId != TurnActor(attackAction.actorId))
+          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != attackAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceAttack(state, attackAction)
       | RASingleTargetHeal(healAction) =>
-          if (state.turnActorId != TurnActor(healAction.actorId))
+          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != healAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceSingleTargetHeal(state, healAction)
       | RAAreaSaveDamage(areaAction) =>
-          if (state.turnActorId != TurnActor(areaAction.actorId))
+          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != areaAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceAreaSaveDamage(state, areaAction)
       | RAGrantExtraAction(extraAction) =>
-          if (state.turnActorId != TurnActor(extraAction.actorId))
+          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != extraAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceGrantExtraAction(state, extraAction)
