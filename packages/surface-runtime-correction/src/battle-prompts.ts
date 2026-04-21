@@ -196,11 +196,14 @@ function validateDistinctTargetIds(
   return Either.right(ids);
 }
 
-function deriveOpenBattlePrompt(
+function deriveCurrentOpenPrompt(
   state: BattleState,
-  openPrompt: OpenBattlePromptState,
 ): Either.Either<OpenBattlePrompt, InvalidBattlePromptAnswerError> {
   const combatant = currentCombatant(state);
+  const openPrompt = state.openPrompt;
+  if (openPrompt === null) {
+    return invalidBattlePromptAnswer("no prompt is currently available");
+  }
 
   if (openPrompt.tag === "chooseAttackTarget") {
     const availableTargetIds = attackTargetIds(state, combatant.id);
@@ -279,6 +282,15 @@ function deriveOpenBattlePrompt(
   });
 }
 
+function deriveChooseActionPrompt(state: BattleState): AvailableBattlePrompt {
+  const combatant = currentCombatant(state);
+  return {
+    tag: "chooseAction",
+    actorId: combatant.id,
+    options: actorActionChoices(state),
+  };
+}
+
 function openPromptForUnit(
   state: BattleState,
   actorId: CreatureId,
@@ -313,7 +325,7 @@ function openPromptForUnit(
       tag: "chooseSingleTargetUnit",
       unitAccessId,
     });
-    const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
+    const nextPrompt = deriveCurrentOpenPrompt(nextState);
     if (Either.isLeft(nextPrompt)) {
       return Either.left(nextPrompt.left);
     }
@@ -328,7 +340,7 @@ function openPromptForUnit(
     tag: "chooseAreaEffect",
     unitAccessId,
   });
-  const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
+  const nextPrompt = deriveCurrentOpenPrompt(nextState);
   if (Either.isLeft(nextPrompt)) {
     return Either.left(nextPrompt.left);
   }
@@ -341,18 +353,12 @@ function openPromptForUnit(
 
 export function discoverAvailableBattlePrompt(
   state: BattleState,
-): AvailableBattlePrompt | null {
+): Either.Either<AvailableBattlePrompt, InvalidBattlePromptAnswerError> {
   if (state.openPrompt !== null) {
-    const openPrompt = deriveOpenBattlePrompt(state, state.openPrompt);
-    return Either.isRight(openPrompt) ? openPrompt.right : null;
+    return deriveCurrentOpenPrompt(state);
   }
 
-  const combatant = currentCombatant(state);
-  return {
-    tag: "chooseAction",
-    actorId: combatant.id,
-    options: actorActionChoices(state),
-  };
+  return Either.right(deriveChooseActionPrompt(state));
 }
 
 export function answerBattlePrompt(
@@ -360,7 +366,7 @@ export function answerBattlePrompt(
   answer: BattlePromptAnswer,
 ): Either.Either<BattleResolutionResult, InvalidBattlePromptAnswerError> {
   if (state.openPrompt !== null) {
-    const openPrompt = deriveOpenBattlePrompt(state, state.openPrompt);
+    const openPrompt = deriveCurrentOpenPrompt(state);
     if (Either.isLeft(openPrompt)) {
       return Either.left(openPrompt.left);
     }
@@ -369,11 +375,11 @@ export function answerBattlePrompt(
   }
 
   const prompt = discoverAvailableBattlePrompt(state);
-  if (prompt === null) {
-    return invalidBattlePromptAnswer("no prompt is currently available");
+  if (Either.isLeft(prompt)) {
+    return Either.left(prompt.left);
   }
 
-  return answerDerivedBattlePrompt(state, prompt, answer);
+  return answerDerivedBattlePrompt(state, prompt.right, answer);
 }
 
 function answerDerivedBattlePrompt(

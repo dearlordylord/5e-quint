@@ -403,18 +403,19 @@ function emptyPrompt(): NormalizedPrompt {
 
 function normalizePrompt(
   state: BattleState,
-  prompt: AvailableBattlePrompt | null,
+  prompt: Either.Either<AvailableBattlePrompt, unknown>,
 ): NormalizedPrompt {
-  if (prompt === null) {
+  if (Either.isLeft(prompt)) {
     return emptyPrompt();
   }
+  const resolvedPrompt = prompt.right;
 
-  if (prompt.tag === "chooseAction") {
+  if (resolvedPrompt.tag === "chooseAction") {
     return {
       ...emptyPrompt(),
-      tag: prompt.tag,
-      actorId: prompt.actorId,
-      options: prompt.options.map((choice) =>
+      tag: resolvedPrompt.tag,
+      actorId: resolvedPrompt.actorId,
+      options: resolvedPrompt.options.map((choice) =>
         choice.tag === "coreAction"
           ? `core:${choice.action}`
           : `unit:${unitIdForAccess(state, choice.unitAccessId)}`,
@@ -422,39 +423,39 @@ function normalizePrompt(
     };
   }
 
-  if (prompt.tag === "chooseAttackTarget") {
+  if (resolvedPrompt.tag === "chooseAttackTarget") {
     return {
       ...emptyPrompt(),
-      tag: prompt.tag,
-      actorId: prompt.actorId,
-      availableTargetIds: [...prompt.availableTargetIds],
+      tag: resolvedPrompt.tag,
+      actorId: resolvedPrompt.actorId,
+      availableTargetIds: [...resolvedPrompt.availableTargetIds],
     };
   }
 
-  if (prompt.tag === "chooseSingleTargetUnit") {
+  if (resolvedPrompt.tag === "chooseSingleTargetUnit") {
     return {
       ...emptyPrompt(),
-      tag: prompt.tag,
-      actorId: prompt.actorId,
-      unitId: unitIdForAccess(state, prompt.unitAccessId),
-      targetingTag: prompt.targeting.tag,
-      effectTag: prompt.effect.tag,
+      tag: resolvedPrompt.tag,
+      actorId: resolvedPrompt.actorId,
+      unitId: unitIdForAccess(state, resolvedPrompt.unitAccessId),
+      targetingTag: resolvedPrompt.targeting.tag,
+      effectTag: resolvedPrompt.effect.tag,
     };
   }
 
   return {
     ...emptyPrompt(),
-    tag: prompt.tag,
-    actorId: prompt.actorId,
-    unitId: unitIdForAccess(state, prompt.unitAccessId),
-    targetingTag: prompt.targeting.tag,
-    rangeFeet: prompt.targeting.rangeFeet,
-    radiusFeet: prompt.targeting.radiusFeet,
-    saveAbility: prompt.save.ability,
-    saveDc: prompt.save.dc,
-    effectTag: prompt.effect.tag,
-    damageType: String(prompt.effect.damageType),
-    onSuccess: prompt.effect.onSuccess,
+    tag: resolvedPrompt.tag,
+    actorId: resolvedPrompt.actorId,
+    unitId: unitIdForAccess(state, resolvedPrompt.unitAccessId),
+    targetingTag: resolvedPrompt.targeting.tag,
+    rangeFeet: resolvedPrompt.targeting.rangeFeet,
+    radiusFeet: resolvedPrompt.targeting.radiusFeet,
+    saveAbility: resolvedPrompt.save.ability,
+    saveDc: resolvedPrompt.save.dc,
+    effectTag: resolvedPrompt.effect.tag,
+    damageType: String(resolvedPrompt.effect.damageType),
+    onSuccess: resolvedPrompt.effect.onSuccess,
   };
 }
 

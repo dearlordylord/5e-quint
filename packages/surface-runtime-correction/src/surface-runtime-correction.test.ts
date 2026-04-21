@@ -333,18 +333,20 @@ describe("surface runtime correction", () => {
     // RAW/UL check: the current prompt belongs to the turn owner in initiative
     // order, matching Playing-the-Game.md ("The Order of Combat", "Your Turn")
     // and the Initiative / Turn / Action terms in UBIQUITOUS_LANGUAGE.md.
-    expect(discoverAvailableBattlePrompt(battle)).toEqual({
-      tag: "chooseAction",
-      actorId: "wizard",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-        {
-          tag: "unit",
-          unitAccessId: FIREBALL_ACCESS_ID,
-        },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(battle)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "wizard",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+          {
+            tag: "unit",
+            unitAccessId: FIREBALL_ACCESS_ID,
+          },
+        ],
+      }),
+    );
   });
 
   it("resolves a complete prompt answer directly when no follow-up input is needed", async () => {
@@ -462,15 +464,17 @@ describe("surface runtime correction", () => {
     );
 
     const prompt = discoverAvailableBattlePrompt(battle);
-    expect(prompt).toEqual({
-      tag: "chooseAction",
-      actorId: "wizard",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
-      ],
-    });
+    expect(prompt).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "wizard",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+          { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
+        ],
+      }),
+    );
 
     const chooseAttack = answerBattlePrompt(battle, {
       tag: "chooseAction",
@@ -512,15 +516,17 @@ describe("surface runtime correction", () => {
 
     expect(currentActorId(nextTurn)).toBe("fighter");
     expect(nextTurn.openPrompt).toBeNull();
-    expect(discoverAvailableBattlePrompt(nextTurn)).toEqual({
-      tag: "chooseAction",
-      actorId: "fighter",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(nextTurn)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "fighter",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+          { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
+        ],
+      }),
+    );
   });
 
   it("does not advertise attack when the current actor has no legal target", async () => {
@@ -534,14 +540,16 @@ describe("surface runtime correction", () => {
       }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer)),
     );
 
-    expect(discoverAvailableBattlePrompt(soloBattle)).toEqual({
-      tag: "chooseAction",
-      actorId: "wizard",
-      options: [
-        { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(soloBattle)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "wizard",
+        options: [
+          { tag: "coreAction", action: "endTurn" },
+          { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
+        ],
+      }),
+    );
   });
 
   it("runs the end-turn flow through reduction", async () => {
@@ -724,15 +732,17 @@ describe("surface runtime correction", () => {
   it("runs a full turn through prompt discovery, follow-up prompting, reduction, and next-turn discovery", async () => {
     const battle = await projectPromptBattle();
 
-    expect(discoverAvailableBattlePrompt(battle)).toEqual({
-      tag: "chooseAction",
-      actorId: "wizard",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(battle)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "wizard",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+          { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
+        ],
+      }),
+    );
 
     const chooseFireball = answerBattlePrompt(battle, {
       tag: "chooseAction",
@@ -815,11 +825,13 @@ describe("surface runtime correction", () => {
     );
     expect(currentActorId(afterFireball.right)).toBe("wizard");
 
-    expect(discoverAvailableBattlePrompt(afterFireball.right)).toEqual({
-      tag: "chooseAction",
-      actorId: "wizard",
-      options: [{ tag: "coreAction", action: "endTurn" }],
-    });
+    expect(discoverAvailableBattlePrompt(afterFireball.right)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "wizard",
+        options: [{ tag: "coreAction", action: "endTurn" }],
+      }),
+    );
 
     const resolvedEndTurn = answerBattlePrompt(afterFireball.right, {
       tag: "chooseAction",
@@ -853,15 +865,17 @@ describe("surface runtime correction", () => {
     }
     expect(currentActorId(nextTurn.right)).toBe("fighter");
 
-    expect(discoverAvailableBattlePrompt(nextTurn.right)).toEqual({
-      tag: "chooseAction",
-      actorId: "fighter",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(nextTurn.right)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "fighter",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+          { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
+        ],
+      }),
+    );
   });
 
   it("runs the action surge flow through structural extra-action granting", async () => {
@@ -926,14 +940,16 @@ describe("surface runtime correction", () => {
       return;
     }
 
-    expect(discoverAvailableBattlePrompt(reduced.right)).toEqual({
-      tag: "chooseAction",
-      actorId: "fighter",
-      options: [
-        { tag: "coreAction", action: "attack" },
-        { tag: "coreAction", action: "endTurn" },
-      ],
-    });
+    expect(discoverAvailableBattlePrompt(reduced.right)).toEqual(
+      Either.right({
+        tag: "chooseAction",
+        actorId: "fighter",
+        options: [
+          { tag: "coreAction", action: "attack" },
+          { tag: "coreAction", action: "endTurn" },
+        ],
+      }),
+    );
   });
 
   it("makes partial prompt answers unrepresentable at the type level", () => {
