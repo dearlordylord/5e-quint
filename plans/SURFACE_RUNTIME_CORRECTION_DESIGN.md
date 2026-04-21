@@ -26,6 +26,23 @@ It is therefore doing two jobs:
 
 It is not meant to be a full changelog or a full package walkthrough.
 
+## Landed Slice Status
+
+`SRC1`-`SRC4` have now landed in TS.
+
+The package no longer just carries candidate shapes for the first slice; it has
+an implemented correction flow for:
+
+- initiative-aware battle init
+- prompt discovery from battle state
+- complete prompt answers only
+- prompt resolution that can either resolve immediately or open a follow-up prompt
+- pure battle reduction for `attack`, `endTurn`, `cure_wounds`, `fireball`, and `fighter_action_surge_l2`
+
+The remaining work for this document is to stay honest about the landed shape so
+the Quint follow-up is based on discovered reality rather than earlier
+speculation.
+
 ## Non-Goals
 
 This package is **not** trying to:
@@ -256,6 +273,7 @@ So the current phase is allowed to be TS-first, but it is not allowed to become 
 Implication:
 
 - TS structures chosen now should already be easy to formalize in Quint later
+- once the discovered pattern is frozen, Quint becomes the semantic lead for the slice again
 
 That favors:
 
@@ -353,6 +371,31 @@ Not like:
 - hardcoded authored-unit-specific compilers
 - runtime dispatch on known unit ids
 - a large new language parallel to `Surface`
+
+## Landed Prompt Lifecycle
+
+The landed TS flow now distinguishes four different things explicitly:
+
+- available prompt discovery from `BattleState`
+- complete prompt answers in `BattlePromptAnswer`
+- resolution results in `BattleResolutionResult`
+- reducer-owned state updates in `reduceBattleState`
+
+The key distinction from the earlier pre-implementation notes is:
+
+- an incomplete answer to the current prompt is invalid and unrepresentable at the type level
+- a complete answer may still yield a new prompt when resolution discovers more required table input
+
+The slice currently demonstrates that with concrete paths:
+
+- `chooseAction -> endTurn -> resolvedAction`
+- `chooseAction -> attack -> openedPrompt(chooseAttackTarget)`
+- `chooseAction -> cure_wounds -> openedPrompt(chooseSingleTargetUnit)`
+- `chooseAction -> fireball -> openedPrompt(chooseAreaEffect)`
+- `chooseAction -> fighter_action_surge_l2 -> resolvedAction`
+
+That is the pattern Quint must formalize next. The Quint task should not
+re-infer a different prompt contract from the old candidate shapes below.
 
 ## Effect Usage
 
@@ -475,6 +518,11 @@ type AvailableBattlePrompt =
 
 The important property is not the exact names; it is that prompts represent unresolved frontend/Table requirements explicitly.
 
+Status note:
+
+- this exact candidate shape was superseded by the landed `chooseAction` plus typed follow-up prompt variants
+- keep this section as architectural rationale, not as the current source of truth
+
 ### Candidate resolved action shape
 
 ```ts
@@ -505,6 +553,11 @@ This is where iterative prompting fits:
 
 - a complete prompt answer may still produce a new prompt
 
+Status note:
+
+- the landed names are `resolvedAction` and `openedPrompt`
+- the important invariant survived the rename: complete prompt answers do not imply immediate state mutation, and they may still create a new prompt
+
 ### Candidate battle state additions
 
 ```ts
@@ -517,6 +570,11 @@ type BattleState = {
   readonly openPrompt?: AvailableBattlePrompt;
 };
 ```
+
+Status note:
+
+- the landed state stores `openPrompt` as minimal prompt-owned state rather than a full duplicated derived prompt object
+- this keeps prompt discovery derived while still making the in-flight interaction window real state
 
 This is not meant to be copied literally, but it is the intended direction.
 

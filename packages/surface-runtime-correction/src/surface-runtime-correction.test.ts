@@ -804,6 +804,147 @@ describe("surface runtime correction", () => {
     );
   });
 
+  it("runs a full turn through prompt discovery, follow-up prompting, reduction, and next-turn discovery", async () => {
+    const battle = await projectPromptBattle();
+
+    expect(discoverAvailableBattlePrompt(battle)).toEqual({
+      tag: "chooseAction",
+      actorId: "wizard",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
+        { tag: "unit", unitId: "fireball" },
+      ],
+    });
+
+    const chooseFireball = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "unit",
+        unitId: "fireball",
+      },
+    });
+    expect(chooseFireball).toEqual(
+      Either.right({
+        tag: "openedPrompt",
+        state: {
+          ...battle,
+          openPrompt: {
+            tag: "chooseAreaEffect",
+            unitId: "fireball",
+          },
+        },
+        prompt: {
+          tag: "chooseAreaEffect",
+          actorId: "wizard",
+          unitId: "fireball",
+          targeting: {
+            tag: "pointWithinRangeSphere",
+            rangeFeet: 150,
+            radiusFeet: 20,
+          },
+          save: { ability: "dex", dc: 15 },
+          effect: {
+            tag: "damage",
+            damageType: "fire",
+            onSuccess: "half",
+          },
+        },
+      }),
+    );
+    if (Either.isLeft(chooseFireball) || chooseFireball.right.tag !== "openedPrompt") {
+      return;
+    }
+
+    const resolvedFireball = answerBattlePrompt(chooseFireball.right.state, {
+      tag: "chooseAreaEffect",
+      targetResults: [
+        { targetId: "fighter", saveOutcome: "failure" },
+        { targetId: "cleric", saveOutcome: "success" },
+        { targetId: "ogre", saveOutcome: "failure" },
+      ],
+      total: 10,
+    });
+    expect(Either.isRight(resolvedFireball)).toBe(true);
+    if (
+      Either.isLeft(resolvedFireball) ||
+      resolvedFireball.right.tag !== "resolvedAction"
+    ) {
+      return;
+    }
+
+    const afterFireball = reduceBattleState(
+      resolvedFireball.right.state,
+      resolvedFireball.right.action,
+    );
+    expect(afterFireball).toEqual(
+      Either.right(
+        expect.objectContaining({
+          turnActorId: "wizard",
+          openPrompt: null,
+          standardActionsRemaining: 0,
+          restrictedActionsRemaining: 0,
+          combatants: expect.arrayContaining([
+            expect.objectContaining({ id: "fighter", currentHp: 10 }),
+            expect.objectContaining({ id: "cleric", currentHp: 13 }),
+            expect.objectContaining({ id: "ogre", currentHp: 49 }),
+          ]),
+        }),
+      ),
+    );
+    if (Either.isLeft(afterFireball)) {
+      return;
+    }
+
+    expect(discoverAvailableBattlePrompt(afterFireball.right)).toEqual({
+      tag: "chooseAction",
+      actorId: "wizard",
+      options: [{ tag: "coreAction", action: "endTurn" }],
+    });
+
+    const resolvedEndTurn = answerBattlePrompt(afterFireball.right, {
+      tag: "chooseAction",
+      choice: { tag: "coreAction", action: "endTurn" },
+    });
+    expect(Either.isRight(resolvedEndTurn)).toBe(true);
+    if (
+      Either.isLeft(resolvedEndTurn) ||
+      resolvedEndTurn.right.tag !== "resolvedAction"
+    ) {
+      return;
+    }
+
+    const nextTurn = reduceBattleState(
+      resolvedEndTurn.right.state,
+      resolvedEndTurn.right.action,
+    );
+    expect(nextTurn).toEqual(
+      Either.right(
+        expect.objectContaining({
+          turnActorId: "fighter",
+          round: 1,
+          turnNumber: 2,
+          openPrompt: null,
+          standardActionsRemaining: 1,
+          restrictedActionsRemaining: 0,
+        }),
+      ),
+    );
+    if (Either.isLeft(nextTurn)) {
+      return;
+    }
+
+    expect(discoverAvailableBattlePrompt(nextTurn.right)).toEqual({
+      tag: "chooseAction",
+      actorId: "fighter",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
+        { tag: "unit", unitId: "fighter_action_surge_l2" },
+      ],
+    });
+  });
+
   it("runs the action surge flow through structural extra-action granting", async () => {
     const battle = await Effect.runPromise(
       projectRosterToBattle(promptRoster, {

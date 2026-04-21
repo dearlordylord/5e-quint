@@ -109,6 +109,11 @@ flowchart TD
   - hydrated runtime values as input
 - Table choices are part of reducer execution, not part of authored content.
 - Provenance must stay distinct from structured input and from runtime projection.
+- The landed correction slice now has an explicit prompt contract:
+  - `discoverAvailableBattlePrompt(state)` derives the current prompt
+  - `BattlePromptAnswer` is complete-answer-only
+  - answering a prompt can produce either a resolved action or a newly opened follow-up prompt
+- The next phase is Quint parity for this discovered prompt/action pattern, not further TS-only drift.
 
 ## Conflation Points To Avoid
 
