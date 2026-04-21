@@ -1,4 +1,9 @@
 export {
+  advanceBattleTurn,
+  createInitiativeOrder,
+  initializeBattleState,
+} from "#/battle-init.ts";
+export {
   loadSurfaceUnitsEither,
   parseSurfaceUnitEither,
   SurfaceUnitLibraryLive,

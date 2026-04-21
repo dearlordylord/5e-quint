@@ -1,6 +1,7 @@
 import { Effect, Either, Option, pipe } from "effect";
 
-import type { BattleCombatant } from "#/battle-types.ts";
+import { initializeBattleState } from "#/battle-init.ts";
+import type { BattleCombatant, BattleInit } from "#/battle-types.ts";
 import { effectFromEither, optionToEither } from "#/effect-helpers.ts";
 import { MissingRuntimeUnitError } from "#/errors.ts";
 import { RuntimeUnitLibrary } from "#/services.ts";
@@ -42,8 +43,9 @@ function combatantUnits(
 
 export function projectRosterToBattle(
   state: CreatureRosterState,
+  init: BattleInit,
 ) {
-  return Effect.gen(function*() {
+  return Effect.gen(function* () {
     const runtimeLibrary = yield* RuntimeUnitLibrary;
     const combatants = yield* Effect.forEach(state.creatures, (creature) =>
       effectFromEither(
@@ -68,6 +70,6 @@ export function projectRosterToBattle(
       ),
     );
 
-    return { combatants };
+    return yield* effectFromEither(initializeBattleState(combatants, init));
   });
 }

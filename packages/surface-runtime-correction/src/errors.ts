@@ -15,3 +15,7 @@ export class MissingCombatantError extends Data.TaggedError("MissingCombatantErr
 export class InvalidRosterActionError extends Data.TaggedError("InvalidRosterActionError")<{
   readonly message: string;
 }> {}
+
+export class InvalidBattleInitError extends Data.TaggedError("InvalidBattleInitError")<{
+  readonly message: string;
+}> {}

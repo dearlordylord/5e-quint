@@ -37,8 +37,8 @@ The coding loop should treat this file as the active queue. Do not start a task 
   "schema": "ralph-plan.v1",
   "tasks": [
     { "number": 0, "id": "SRC1", "status": "done", "title": "Rename Package And Establish First-Class Battle Types" },
-    { "number": 1, "id": "SRC2", "status": "ready-for-implementation-after-light-research", "title": "Implement Initiative-Aware Battle Init And Turn Ownership" },
-    { "number": 2, "id": "SRC3", "status": "blocked", "title": "Replace Flat Battle Choice With Prompt And Resolution Flow" },
+    { "number": 1, "id": "SRC2", "status": "done", "title": "Implement Initiative-Aware Battle Init And Turn Ownership" },
+    { "number": 2, "id": "SRC3", "status": "ready-for-implementation-after-light-research", "title": "Replace Flat Battle Choice With Prompt And Resolution Flow" },
     { "number": 3, "id": "SRC4", "status": "blocked", "title": "Route Core And Unit Actions Through Structural Surface Interpretation" },
     { "number": 4, "id": "SRC5", "status": "blocked", "title": "Land End-To-End Correction Slice Tests And Docs" },
     { "number": 5, "id": "SRC5.5", "status": "blocked", "title": "Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups" },
@@ -66,8 +66,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 |---|---|---|---|---|---|---|
 | 0 | SRC1 - Rename Package And Establish First-Class Battle Types | done | none | SRC2, SRC3, SRC4, SRC5 | Landed `packages/surface-runtime-correction`, updated workspace/package metadata, replaced the flat toy battle choice with first-class battle vocabulary types, and kept authored identity only on `unit.id`. | Done. Verification: package typecheck and package test passed; broader `pnpm quality` stopped at unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
-| 1 | SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership | ready-for-implementation-after-light-research | SRC1 | SRC3, SRC4, SRC5 | Add battle-init and turn-state ownership for initiative counts, initiative order, round/turn counters, and `turnActorId`. Model initiative insertion so future mid-battle joins can be added without redesign. Tie resolution is Table-owned input. | Ready now that `SRC1` landed. Read the cited SRD initiative text and keep the new turn-state layer separate from prompt discovery/resolution. |
-| 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | blocked | SRC1, SRC2 | SRC4, SRC5 | Remove the current already-filled battle choice shape. Implement prompt discovery from state plus a resolution flow that distinguishes: available prompt, complete prompt answer, resolved action, and “new prompt created after prior resolution.” Partial prompt answers must be unrepresentable. | Blocked on battle state and turn ownership. |
+| 1 | SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership | done | SRC1 | SRC3, SRC4, SRC5 | Landed battle init input, stable initiative ordering, and explicit turn ownership (`turnActorId`, `round`, `turnNumber`) in `packages/surface-runtime-correction`. Tie resolution stays table-owned input and the empty-battle path validates that init remains battle-scoped. | Done. Verification: package typecheck and test passed; broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
+| 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | ready-for-implementation-after-light-research | SRC1, SRC2 | SRC4, SRC5 | Remove the current already-filled battle choice shape. Implement prompt discovery from state plus a resolution flow that distinguishes: available prompt, complete prompt answer, resolved action, and “new prompt created after prior resolution.” Partial prompt answers must be unrepresentable. | Ready now that battle init and turn ownership exist. Keep prompts derived from the initiative-owned current actor rather than duplicating turn state. |
 | 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | blocked | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Blocked on prompt flow existing first. |
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | blocked | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Add deterministic tests for the implemented slice and update docs/diagrams to reflect the landed pattern, especially the distinction between complete prompt answers and newly-created prompts after resolution. Record the TS-first / Quint-followed sequencing explicitly so Quint can take semantic lead in the next phase. | Last implementation task in the first batch. |
 | 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | blocked | SRC5 | SRC6, SRC7, SRC8 | Compare the landed `SRC1`-`SRC5` pattern against the pre-implementation design doc, document what changed, and rewrite `SRC6` / `SRC7` / `SRC8` from the actual outcome rather than from speculation. This is the handoff freeze point between TS-first discovery and Quint-led follow-up. | Blocked until the first slice is real. |
@@ -151,7 +151,7 @@ Do **not**:
 
 ### Task 1 - SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC1`
 
@@ -208,9 +208,17 @@ It must be designed so future mid-battle joins are straightforward.
   - turn advancement across a round boundary
 - `/simplify` minimum two rounds
 
+### Outcome
+
+- Added `BattleInit`, `initiativeCounts`, `initiativeOrder`, `turnActorId`, `round`, and `turnNumber` to the battle-state layer in `packages/surface-runtime-correction`.
+- Landed `battle-init.ts` with validation for missing, duplicate, and out-of-battle actor ids, including the empty-battle path.
+- Kept tie resolution table-owned input via tied-cohort ordering rather than reducer-owned inference.
+- Preserved a clean future insertion seam by keeping initiative ordering logic isolated from prompt discovery and resolution.
+- Verified with `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test`. Broader `pnpm quality` stopped at the unrelated pre-existing lint failure in `packages/core/src/projected-compiler.ts`.
+
 ### Task 2 - SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC1`, `SRC2`
 

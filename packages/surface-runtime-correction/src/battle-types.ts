@@ -1,9 +1,10 @@
-import type { CreatureId, CreatureRosterEntry, RuntimeUnitAccess } from "#/types.ts";
+import type {
+  CreatureId,
+  CreatureRosterEntry,
+  RuntimeUnitAccess,
+} from "#/types.ts";
 
-export const CORE_BATTLE_ACTIONS = [
-  "attack",
-  "endTurn",
-] as const;
+export const CORE_BATTLE_ACTIONS = ["attack", "endTurn"] as const;
 export type CoreBattleAction = (typeof CORE_BATTLE_ACTIONS)[number];
 
 export type BattleCombatant = {
@@ -17,6 +18,20 @@ export type BattleCombatant = {
   readonly spellSaveDc: number | null;
   readonly spellcastingModifier: number | null;
   readonly units: ReadonlyArray<RuntimeUnitAccess>;
+};
+
+export type BattleInitiativeCount = {
+  readonly actorId: CreatureId;
+  readonly count: number;
+};
+
+export type BattleInitiativeTieResolution = {
+  readonly actorIds: ReadonlyArray<CreatureId>;
+};
+
+export type BattleInit = {
+  readonly initiativeCounts: ReadonlyArray<BattleInitiativeCount>;
+  readonly tieResolutions: ReadonlyArray<BattleInitiativeTieResolution>;
 };
 
 export type AvailableActionOption =
@@ -96,4 +111,9 @@ export type BattleResolutionResult =
 
 export type BattleState = {
   readonly combatants: ReadonlyArray<BattleCombatant>;
+  readonly initiativeCounts: ReadonlyArray<BattleInitiativeCount>;
+  readonly initiativeOrder: ReadonlyArray<CreatureId>;
+  readonly round: number;
+  readonly turnNumber: number;
+  readonly turnActorId: CreatureId | null;
 };
