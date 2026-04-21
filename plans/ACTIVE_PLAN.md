@@ -103,7 +103,7 @@ The coding loop should treat this file as the active queue. Do not start a task 
 | 8 | SRC8 - Integrate Correction Slice Back Into Core | blocked | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path after Quint parity exists. | Final task in the next batch. |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
 
-## Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
+### Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
 
 Status: `ready-for-implementation-after-light-research`
 
@@ -167,7 +167,7 @@ Do **not**:
 - `pnpm --filter @dnd/surface-runtime-correction test` (if tests still exist at this stage)
 - `/simplify` minimum two rounds
 
-## Task 1 - SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership
+### Task 1 - SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership
 
 Status: `blocked`
 
@@ -224,7 +224,7 @@ It must be designed so future mid-battle joins are straightforward.
   - turn advancement across a round boundary
 - `/simplify` minimum two rounds
 
-## Task 2 - SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow
+### Task 2 - SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow
 
 Status: `blocked`
 
@@ -286,7 +286,7 @@ The model must **not** allow:
   - invalid partial answer is unrepresentable or rejected immediately
 - `/simplify` minimum two rounds
 
-## Task 3 - SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation
+### Task 3 - SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation
 
 Status: `blocked`
 
@@ -349,7 +349,7 @@ The important design constraint is:
   - action surge flow
 - `/simplify` minimum two rounds
 
-## Task 4 - SRC5 - Land End-To-End Correction Slice Tests And Docs
+### Task 4 - SRC5 - Land End-To-End Correction Slice Tests And Docs
 
 Status: `blocked`
 
@@ -401,7 +401,7 @@ This task should:
 - `pnpm --filter @dnd/surface-runtime-correction test`
 - `/simplify` minimum two rounds
 
-## Task 5 - SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups
+### Task 5 - SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups
 
 Status: `blocked`
 
@@ -451,7 +451,7 @@ This task must:
 - docs/plan diff reviewed for consistency with landed code
 - `/simplify` minimum two rounds
 
-## Task 6 - SRC6 - Add Quint Spec For Correction Slice
+### Task 6 - SRC6 - Add Quint Spec For Correction Slice
 
 Status: `blocked`
 
@@ -486,7 +486,7 @@ Formalize the landed correction-slice pattern in Quint after the discovered patt
 - Quint typecheck/tests appropriate to the landed slice
 - `/simplify` minimum two rounds
 
-## Task 7 - SRC7 - Add Correction-Slice MBT Bridge And MBT Tests
+### Task 7 - SRC7 - Add Correction-Slice MBT Bridge And MBT Tests
 
 Status: `blocked`
 
@@ -521,7 +521,7 @@ Add MBT coverage for the correction slice against the new Quint model.
 - focused correction-slice MBT runs
 - `/simplify` minimum two rounds
 
-## Task 8 - SRC8 - Integrate Correction Slice Back Into Core
+### Task 8 - SRC8 - Integrate Correction Slice Back Into Core
 
 Status: `blocked`
 
