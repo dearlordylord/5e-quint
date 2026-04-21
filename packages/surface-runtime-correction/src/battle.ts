@@ -4,35 +4,35 @@ import { initializeBattleState } from "#/battle-init.ts";
 import type { BattleCombatant, BattleInit } from "#/battle-types.ts";
 import { effectFromEither, optionToEither } from "#/effect-helpers.ts";
 import { MissingRuntimeUnitError } from "#/errors.ts";
-import { RuntimeUnitLibrary } from "#/services.ts";
+import { SurfaceUnitLibrary } from "#/services.ts";
 import type {
   CreatureRosterEntry,
   CreatureRosterState,
-  RuntimeUnit,
   RuntimeUnitAccess,
+  SurfaceUnit,
 } from "#/types.ts";
 
 function attachOwnership(
   creature: CreatureRosterEntry,
-  units: ReadonlyArray<RuntimeUnit>,
+  units: ReadonlyArray<SurfaceUnit>,
 ): ReadonlyArray<RuntimeUnitAccess> {
-  return units.map((runtimeUnit) => ({
+  return units.map((unit) => ({
     ownerId: creature.id,
     sourceKind: creature.sourceKind,
-    unit: runtimeUnit.unit,
+    unit,
   }));
 }
 
 function combatantUnits(
   creature: CreatureRosterEntry,
-  runtimeLibrary: ReadonlyMap<
+  surfaceLibrary: ReadonlyMap<
     CreatureRosterEntry["authoredUnitIds"][number],
-    RuntimeUnit
+    SurfaceUnit
   >,
 ): Either.Either<ReadonlyArray<RuntimeUnitAccess>, MissingRuntimeUnitError> {
   const resolved = creature.authoredUnitIds.map((unitId) =>
     pipe(
-      runtimeLibrary.get(unitId),
+      surfaceLibrary.get(unitId),
       Option.fromNullable,
       (option) =>
         optionToEither(option, () => new MissingRuntimeUnitError({ unitId })),
@@ -46,11 +46,11 @@ export function projectRosterToBattle(
   init: BattleInit,
 ) {
   return Effect.gen(function* () {
-    const runtimeLibrary = yield* RuntimeUnitLibrary;
+    const surfaceLibrary = yield* SurfaceUnitLibrary;
     const combatants = yield* Effect.forEach(state.creatures, (creature) =>
       effectFromEither(
         pipe(
-          combatantUnits(creature, runtimeLibrary),
+          combatantUnits(creature, surfaceLibrary),
           Either.map(
             (units) =>
               ({

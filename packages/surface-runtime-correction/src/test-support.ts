@@ -1,13 +1,10 @@
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 
 import { SurfaceUnitLibraryLive } from "#/authored-library.ts";
 import { projectRosterToBattle } from "#/battle.ts";
-import { RuntimeUnitLibraryLive } from "#/hydration.ts";
 import type { BattleState, CreatureRosterState } from "#/index.ts";
 
-export const SurfaceRuntimeCorrectionTestLayer = RuntimeUnitLibraryLive.pipe(
-  Layer.provide(SurfaceUnitLibraryLive),
-);
+export const SurfaceRuntimeCorrectionTestLayer = SurfaceUnitLibraryLive;
 
 export const initialRoster: CreatureRosterState = {
   creatures: [

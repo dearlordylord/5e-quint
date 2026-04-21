@@ -14,10 +14,6 @@ export type SurfaceUnit = SpellRecord | ClassFeatureRecord;
 
 export type CreatureId = string;
 
-export type RuntimeUnit = {
-  readonly unit: SurfaceUnit;
-};
-
 type CreatureBase = {
   readonly id: CreatureId;
   readonly name: string;

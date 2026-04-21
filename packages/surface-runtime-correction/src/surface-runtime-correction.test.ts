@@ -11,7 +11,7 @@ import { projectRosterToBattle } from "#/battle.ts";
 import { CORE_BATTLE_ACTIONS } from "#/battle-types.ts";
 import { effectFromEither } from "#/effect-helpers.ts";
 import { reduceRosterState } from "#/roster.ts";
-import { RuntimeUnitLibrary } from "#/services.ts";
+import { SurfaceUnitLibrary } from "#/services.ts";
 import {
   initialRoster,
   projectPromptBattle,
@@ -25,25 +25,25 @@ import type {
 } from "#/index.ts";
 
 describe("surface runtime correction", () => {
-  it("hydrates runtime units without compiling a second execution ir", async () => {
+  it("exposes authored surface units without compiling a second execution ir", async () => {
     const program = Effect.gen(function* () {
-      const runtimeLibrary = yield* RuntimeUnitLibrary;
-      const cureWounds = runtimeLibrary.get("cure_wounds");
-      const fireball = runtimeLibrary.get("fireball");
-      const actionSurge = runtimeLibrary.get("fighter_action_surge_l2");
+      const surfaceLibrary = yield* SurfaceUnitLibrary;
+      const cureWounds = surfaceLibrary.get("cure_wounds");
+      const fireball = surfaceLibrary.get("fireball");
+      const actionSurge = surfaceLibrary.get("fighter_action_surge_l2");
 
-      expect(cureWounds).toEqual({
-        unit: expect.objectContaining({ id: "cure_wounds", kind: "spell" }),
-      });
-      expect(fireball).toEqual({
-        unit: expect.objectContaining({ id: "fireball", kind: "spell" }),
-      });
-      expect(actionSurge).toEqual({
-        unit: expect.objectContaining({
+      expect(cureWounds).toEqual(
+        expect.objectContaining({ id: "cure_wounds", kind: "spell" }),
+      );
+      expect(fireball).toEqual(
+        expect.objectContaining({ id: "fireball", kind: "spell" }),
+      );
+      expect(actionSurge).toEqual(
+        expect.objectContaining({
           id: "fighter_action_surge_l2",
           kind: "class_feature",
         }),
-      });
+      );
     }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer));
 
     await Effect.runPromise(program);
