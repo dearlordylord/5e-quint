@@ -4,7 +4,7 @@ import { InvalidBattlePromptAnswerError } from "#/errors.ts";
 import type {
   AvailableBattleAction,
   AvailableBattlePrompt,
-  BattleUnitId,
+  BattleUnitAccessId,
   BattlePromptAnswer,
   BattleResolutionResult,
   BattleState,
@@ -80,7 +80,7 @@ function actorOwnsChoice(
     }
 
     if (availableChoice.tag === "unit" && choice.tag === "unit") {
-      return availableChoice.unitId === choice.unitId;
+      return availableChoice.unitAccessId === choice.unitAccessId;
     }
 
     return false;
@@ -113,14 +113,14 @@ function canTakeNonMagicAction(state: BattleState): boolean {
 function unitAccessForCombatant(
   state: BattleState,
   actorId: CreatureId,
-  unitId: BattleUnitId,
+  unitAccessId: BattleUnitAccessId,
 ): RuntimeUnitAccess | null {
   const combatant = state.combatants.find((candidate) => candidate.id === actorId);
   if (combatant === undefined) {
     return null;
   }
 
-  return combatant.units.find((unit) => unit.unit.id === unitId) ?? null;
+  return combatant.units.find((unit) => unit.accessId === unitAccessId) ?? null;
 }
 
 function unitActionAvailable(
@@ -137,7 +137,7 @@ function unitActionAvailable(
     if (combatant === null) {
       return false;
     }
-    const resourceState = resourceStateForUnit(combatant, unit.unit.id);
+    const resourceState = resourceStateForUnit(combatant, unit.accessId);
     return (
       resourceState !== null &&
       !resourceState.usedThisTurn &&
@@ -165,7 +165,7 @@ function actorActionChoices(
         (unit) =>
           ({
             tag: "unit",
-            unitId: unit.unit.id,
+            unitAccessId: unit.accessId,
           }) satisfies AvailableBattleAction,
       ),
   ];
@@ -227,7 +227,11 @@ function deriveOpenBattlePrompt(
   }
 
   if (openPrompt.tag === "chooseSingleTargetUnit") {
-    const unit = unitAccessForCombatant(state, combatant.id, openPrompt.unitId);
+    const unit = unitAccessForCombatant(
+      state,
+      combatant.id,
+      openPrompt.unitAccessId,
+    );
     if (unit === null) {
       return invalidBattlePromptAnswer("selected unit is no longer available");
     }
@@ -242,7 +246,7 @@ function deriveOpenBattlePrompt(
     return Either.right({
       tag: "chooseSingleTargetUnit",
       actorId: combatant.id,
-      unitId: openPrompt.unitId,
+      unitAccessId: openPrompt.unitAccessId,
       targeting: interpretation.value.targeting,
       effect: {
         tag: "healHp",
@@ -250,7 +254,11 @@ function deriveOpenBattlePrompt(
     });
   }
 
-  const unit = unitAccessForCombatant(state, combatant.id, openPrompt.unitId);
+  const unit = unitAccessForCombatant(
+    state,
+    combatant.id,
+    openPrompt.unitAccessId,
+  );
   if (unit === null) {
     return invalidBattlePromptAnswer("selected unit is no longer available");
   }
@@ -268,7 +276,7 @@ function deriveOpenBattlePrompt(
   return Either.right({
     tag: "chooseAreaEffect",
     actorId: combatant.id,
-    unitId: openPrompt.unitId,
+    unitAccessId: openPrompt.unitAccessId,
     targeting: interpretation.value.targeting,
     save: {
       ability: interpretation.value.saveAbility,
@@ -285,9 +293,9 @@ function deriveOpenBattlePrompt(
 function openPromptForUnit(
   state: BattleState,
   actorId: CreatureId,
-  unitId: BattleUnitId,
+  unitAccessId: BattleUnitAccessId,
 ): Either.Either<BattleResolutionResult, InvalidBattlePromptAnswerError> {
-  const unit = unitAccessForCombatant(state, actorId, unitId);
+  const unit = unitAccessForCombatant(state, actorId, unitAccessId);
   if (unit === null) {
     return invalidBattlePromptAnswer("selected unit is not currently available");
   }
@@ -306,7 +314,7 @@ function openPromptForUnit(
       action: {
         tag: "grantExtraAction",
         actorId,
-        unitId,
+        unitAccessId,
       } satisfies ResolvedBattleAction,
     });
   }
@@ -314,7 +322,7 @@ function openPromptForUnit(
   if (interpretation.value.tag === "singleTargetHeal") {
     const nextState = stateWithOpenPrompt(clearOpenPrompt(state), {
       tag: "chooseSingleTargetUnit",
-      unitId,
+      unitAccessId,
     });
     const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
     if (Either.isLeft(nextPrompt)) {
@@ -329,7 +337,7 @@ function openPromptForUnit(
 
   const nextState = stateWithOpenPrompt(clearOpenPrompt(state), {
     tag: "chooseAreaEffect",
-    unitId,
+    unitAccessId,
   });
   const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
   if (Either.isLeft(nextPrompt)) {
@@ -404,7 +412,11 @@ function answerDerivedBattlePrompt(
     }
 
     if (answer.choice.tag === "unit") {
-      return openPromptForUnit(state, prompt.actorId, answer.choice.unitId);
+      return openPromptForUnit(
+        state,
+        prompt.actorId,
+        answer.choice.unitAccessId,
+      );
     }
 
     if (answer.choice.action === "endTurn") {
@@ -480,7 +492,7 @@ function answerDerivedBattlePrompt(
       action: {
         tag: "singleTargetHeal",
         actorId: prompt.actorId,
-        unitId: prompt.unitId,
+        unitAccessId: prompt.unitAccessId,
         targetId: answer.targetId,
         total: answer.total,
       },
@@ -508,7 +520,7 @@ function answerDerivedBattlePrompt(
     action: {
       tag: "areaSaveDamage",
       actorId: prompt.actorId,
-      unitId: prompt.unitId,
+      unitAccessId: prompt.unitAccessId,
       targetResults: answer.targetResults,
       total: answer.total,
     },

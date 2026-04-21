@@ -18,11 +18,20 @@ import {
   promptRoster,
   SurfaceRuntimeCorrectionTestLayer,
 } from "#/test-support.ts";
+import { runtimeUnitAccessId } from "#/types.ts";
 import type {
   BattlePromptAnswer,
   BattleState,
   CreatureRosterState,
 } from "#/index.ts";
+
+const FIREBALL_ACCESS_ID = runtimeUnitAccessId("characterSheet:wizard:fireball");
+const CURE_WOUNDS_ACCESS_ID = runtimeUnitAccessId(
+  "characterSheet:cleric:cure_wounds",
+);
+const ACTION_SURGE_ACCESS_ID = runtimeUnitAccessId(
+  "characterSheet:fighter:fighter_action_surge_l2",
+);
 
 describe("surface runtime correction", () => {
   it("exposes authored surface units without compiling a second execution ir", async () => {
@@ -96,21 +105,21 @@ describe("surface runtime correction", () => {
       expect(battle.restrictedActionsRemaining).toBe(0);
       expect(fighter?.units).toEqual([
         {
-          ownerId: "fighter",
-          sourceKind: "characterSheet",
+          accessId: ACTION_SURGE_ACCESS_ID,
+          battleSourceRef: "characterSheet:fighter",
           unit: expect.objectContaining({ id: "fighter_action_surge_l2" }),
         },
       ]);
       expect(cleric?.units).toEqual([
         {
-          ownerId: "cleric",
-          sourceKind: "characterSheet",
+          accessId: CURE_WOUNDS_ACCESS_ID,
+          battleSourceRef: "characterSheet:cleric",
           unit: expect.objectContaining({ id: "cure_wounds" }),
         },
       ]);
       expect(fighter?.unitResourceStates).toEqual([
         {
-          unitId: "fighter_action_surge_l2",
+          unitAccessId: ACTION_SURGE_ACCESS_ID,
           expendedUses: 0,
           usedThisTurn: false,
         },
@@ -299,7 +308,7 @@ describe("surface runtime correction", () => {
         { tag: "coreAction", action: "endTurn" },
         {
           tag: "unit",
-          unitId: "fireball",
+          unitAccessId: FIREBALL_ACCESS_ID,
         },
       ],
     });
@@ -422,7 +431,7 @@ describe("surface runtime correction", () => {
       options: [
         { tag: "coreAction", action: "attack" },
         { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitId: "fireball" },
+        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
       ],
     });
 
@@ -472,7 +481,7 @@ describe("surface runtime correction", () => {
       options: [
         { tag: "coreAction", action: "attack" },
         { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitId: "fighter_action_surge_l2" },
+        { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
       ],
     });
   });
@@ -493,7 +502,7 @@ describe("surface runtime correction", () => {
       actorId: "wizard",
       options: [
         { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitId: "fireball" },
+        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
       ],
     });
   });
@@ -554,7 +563,7 @@ describe("surface runtime correction", () => {
       tag: "chooseAction",
       choice: {
         tag: "unit",
-        unitId: "cure_wounds",
+        unitAccessId: CURE_WOUNDS_ACCESS_ID,
       },
     });
     expect(Either.isRight(chooseUnit)).toBe(true);
@@ -565,7 +574,7 @@ describe("surface runtime correction", () => {
     expect(chooseUnit.right.prompt).toEqual({
       tag: "chooseSingleTargetUnit",
       actorId: "cleric",
-      unitId: "cure_wounds",
+      unitAccessId: CURE_WOUNDS_ACCESS_ID,
       targeting: {
         tag: "touchCreature",
       },
@@ -605,7 +614,7 @@ describe("surface runtime correction", () => {
       tag: "chooseAction",
       choice: {
         tag: "unit",
-        unitId: "fireball",
+        unitAccessId: FIREBALL_ACCESS_ID,
       },
     });
     expect(Either.isRight(chooseUnit)).toBe(true);
@@ -616,7 +625,7 @@ describe("surface runtime correction", () => {
     expect(chooseUnit.right.prompt).toEqual({
       tag: "chooseAreaEffect",
       actorId: "wizard",
-      unitId: "fireball",
+      unitAccessId: FIREBALL_ACCESS_ID,
       targeting: {
         tag: "pointWithinRangeSphere",
         rangeFeet: 150,
@@ -674,7 +683,7 @@ describe("surface runtime correction", () => {
       options: [
         { tag: "coreAction", action: "attack" },
         { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitId: "fireball" },
+        { tag: "unit", unitAccessId: FIREBALL_ACCESS_ID },
       ],
     });
 
@@ -682,7 +691,7 @@ describe("surface runtime correction", () => {
       tag: "chooseAction",
       choice: {
         tag: "unit",
-        unitId: "fireball",
+        unitAccessId: FIREBALL_ACCESS_ID,
       },
     });
     expect(chooseFireball).toEqual(
@@ -692,13 +701,13 @@ describe("surface runtime correction", () => {
           ...battle,
           openPrompt: {
             tag: "chooseAreaEffect",
-            unitId: "fireball",
+            unitAccessId: FIREBALL_ACCESS_ID,
           },
         },
         prompt: {
           tag: "chooseAreaEffect",
           actorId: "wizard",
-          unitId: "fireball",
+          unitAccessId: FIREBALL_ACCESS_ID,
           targeting: {
             tag: "pointWithinRangeSphere",
             rangeFeet: 150,
@@ -801,7 +810,7 @@ describe("surface runtime correction", () => {
       options: [
         { tag: "coreAction", action: "attack" },
         { tag: "coreAction", action: "endTurn" },
-        { tag: "unit", unitId: "fighter_action_surge_l2" },
+        { tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID },
       ],
     });
   });
@@ -823,7 +832,7 @@ describe("surface runtime correction", () => {
       tag: "chooseAction",
       choice: {
         tag: "unit",
-        unitId: "fighter_action_surge_l2",
+        unitAccessId: ACTION_SURGE_ACCESS_ID,
       },
     });
     expect(Either.isRight(chooseUnit)).toBe(true);
@@ -833,7 +842,7 @@ describe("surface runtime correction", () => {
     expect(chooseUnit.right.action).toEqual({
       tag: "grantExtraAction",
       actorId: "fighter",
-      unitId: "fighter_action_surge_l2",
+      unitAccessId: ACTION_SURGE_ACCESS_ID,
     });
 
     const reduced = reduceBattleState(
@@ -850,7 +859,7 @@ describe("surface runtime correction", () => {
               id: "fighter",
               unitResourceStates: [
                 {
-                  unitId: "fighter_action_surge_l2",
+                  unitAccessId: ACTION_SURGE_ACCESS_ID,
                   expendedUses: 1,
                   usedThisTurn: true,
                 },

@@ -10,13 +10,21 @@ import {
 } from "#/battle-prompts.ts";
 import { reduceBattleState } from "#/battle-reducer.ts";
 import type {
-  AvailableBattleAction,
   AvailableBattlePrompt,
   BattlePromptAnswer,
   BattleState,
   ResolvedBattleAction,
 } from "#/index.ts";
 import { projectPromptBattle } from "#/test-support.ts";
+import { runtimeUnitAccessId } from "#/types.ts";
+
+const FIREBALL_ACCESS_ID = runtimeUnitAccessId("characterSheet:wizard:fireball");
+const CURE_WOUNDS_ACCESS_ID = runtimeUnitAccessId(
+  "characterSheet:cleric:cure_wounds",
+);
+const ACTION_SURGE_ACCESS_ID = runtimeUnitAccessId(
+  "characterSheet:fighter:fighter_action_surge_l2",
+);
 
 type PromptTag =
   | ""
@@ -251,6 +259,19 @@ function normalizeResolvedAction(value: {
   };
 }
 
+function unitIdForAccess(
+  state: BattleState,
+  unitAccessId: string,
+): string {
+  for (const combatant of state.combatants) {
+    const unit = combatant.units.find((candidate) => candidate.accessId === unitAccessId);
+    if (unit != null) {
+      return unit.unit.id;
+    }
+  }
+  return "";
+}
+
 function normalizeActionChoiceFromRaw(value: unknown): string {
   const tag = variantToString(value);
   if (tag === "BACAttack") {
@@ -354,12 +375,6 @@ function normalizeModelState(raw: unknown): NormalizedState {
   };
 }
 
-function normalizeActionChoice(choice: AvailableBattleAction): string {
-  return choice.tag === "coreAction"
-    ? `core:${choice.action}`
-    : `unit:${choice.unitId}`;
-}
-
 function emptyPrompt(): NormalizedPrompt {
   return {
     tag: "",
@@ -379,7 +394,10 @@ function emptyPrompt(): NormalizedPrompt {
   };
 }
 
-function normalizePrompt(prompt: AvailableBattlePrompt | null): NormalizedPrompt {
+function normalizePrompt(
+  state: BattleState,
+  prompt: AvailableBattlePrompt | null,
+): NormalizedPrompt {
   if (prompt === null) {
     return emptyPrompt();
   }
@@ -389,7 +407,11 @@ function normalizePrompt(prompt: AvailableBattlePrompt | null): NormalizedPrompt
       ...emptyPrompt(),
       tag: prompt.tag,
       actorId: prompt.actorId,
-      options: prompt.options.map(normalizeActionChoice),
+      options: prompt.options.map((choice) =>
+        choice.tag === "coreAction"
+          ? `core:${choice.action}`
+          : `unit:${unitIdForAccess(state, choice.unitAccessId)}`,
+      ),
     };
   }
 
@@ -408,7 +430,7 @@ function normalizePrompt(prompt: AvailableBattlePrompt | null): NormalizedPrompt
       ...emptyPrompt(),
       tag: prompt.tag,
       actorId: prompt.actorId,
-      unitId: prompt.unitId,
+      unitId: unitIdForAccess(state, prompt.unitAccessId),
       targetingTag: prompt.targeting.tag,
       effectTag: prompt.effect.tag,
     };
@@ -418,7 +440,7 @@ function normalizePrompt(prompt: AvailableBattlePrompt | null): NormalizedPrompt
     ...emptyPrompt(),
     tag: prompt.tag,
     actorId: prompt.actorId,
-    unitId: prompt.unitId,
+    unitId: unitIdForAccess(state, prompt.unitAccessId),
     targetingTag: prompt.targeting.tag,
     rangeFeet: prompt.targeting.rangeFeet,
     radiusFeet: prompt.targeting.radiusFeet,
@@ -438,6 +460,7 @@ function normalizeTargetResult(result: {
 }
 
 function normalizeResolvedActionPayload(
+  state: BattleState,
   action: ResolvedBattleAction,
 ): NormalizedResolvedAction {
   if (action.tag === "endTurn") {
@@ -458,7 +481,7 @@ function normalizeResolvedActionPayload(
     return normalizeResolvedAction({
       tag: action.tag,
       actorId: action.actorId,
-      unitId: action.unitId,
+      unitId: unitIdForAccess(state, action.unitAccessId),
       targetId: action.targetId,
       total: action.total,
     });
@@ -467,7 +490,7 @@ function normalizeResolvedActionPayload(
     return normalizeResolvedAction({
       tag: action.tag,
       actorId: action.actorId,
-      unitId: action.unitId,
+      unitId: unitIdForAccess(state, action.unitAccessId),
       total: action.total,
       targetResults: action.targetResults.map(normalizeTargetResult),
     });
@@ -475,7 +498,7 @@ function normalizeResolvedActionPayload(
   return normalizeResolvedAction({
     tag: action.tag,
     actorId: action.actorId,
-    unitId: action.unitId,
+    unitId: unitIdForAccess(state, action.unitAccessId),
   });
 }
 
@@ -489,7 +512,7 @@ function normalizeTsBattle(state: BattleState): NormalizedState["battle"] {
       spellSaveDc: combatant.spellSaveDc,
       unitIds: combatant.units.map((unit) => unit.unit.id),
       unitResourceStates: combatant.unitResourceStates.map((resourceState) => ({
-        unitId: resourceState.unitId,
+        unitId: unitIdForAccess(state, resourceState.unitAccessId),
         expendedUses: resourceState.expendedUses,
         usedThisTurn: resourceState.usedThisTurn,
       })),
@@ -504,7 +527,10 @@ function normalizeTsBattle(state: BattleState): NormalizedState["battle"] {
         ? { tag: "", unitId: "" }
         : {
             tag: state.openPrompt.tag,
-            unitId: "unitId" in state.openPrompt ? state.openPrompt.unitId : "",
+            unitId:
+              "unitAccessId" in state.openPrompt
+                ? unitIdForAccess(state, state.openPrompt.unitAccessId)
+                : "",
           },
     standardActionsRemaining: state.standardActionsRemaining,
     restrictedActionsRemaining: state.restrictedActionsRemaining,
@@ -556,7 +582,10 @@ function applyAnswer(
     outcome: {
       tag: "resolvedAction",
       openedPromptTag: "",
-      resolvedAction: normalizeResolvedActionPayload(resolution.right.action),
+      resolvedAction: normalizeResolvedActionPayload(
+        resolution.right.state,
+        resolution.right.action,
+      ),
     },
   };
 }
@@ -611,7 +640,7 @@ function createSurfaceRuntimeCorrectionDriver() {
         });
       },
       srcChooseFireball: () => {
-        step(chooseAction({ tag: "unit", unitId: "fireball" }));
+        step(chooseAction({ tag: "unit", unitAccessId: FIREBALL_ACCESS_ID }));
       },
       srcAnswerAreaEffect: () => {
         step({
@@ -625,7 +654,7 @@ function createSurfaceRuntimeCorrectionDriver() {
         });
       },
       srcChooseCureWounds: () => {
-        step(chooseAction({ tag: "unit", unitId: "cure_wounds" }));
+        step(chooseAction({ tag: "unit", unitAccessId: CURE_WOUNDS_ACCESS_ID }));
       },
       srcAnswerSingleTargetUnit: () => {
         step({
@@ -635,12 +664,15 @@ function createSurfaceRuntimeCorrectionDriver() {
         });
       },
       srcChooseActionSurge: () => {
-        step(chooseAction({ tag: "unit", unitId: "fighter_action_surge_l2" }));
+        step(chooseAction({ tag: "unit", unitAccessId: ACTION_SURGE_ACCESS_ID }));
       },
       srcStep: () => {},
       getState: (): NormalizedState => ({
         battle: normalizeTsBattle(battle),
-        prompt: normalizePrompt(discoverAvailableBattlePrompt(battle)),
+        prompt: normalizePrompt(
+          battle,
+          discoverAvailableBattlePrompt(battle),
+        ),
         outcome,
       }),
       config: () => ({ statePath: [] }),

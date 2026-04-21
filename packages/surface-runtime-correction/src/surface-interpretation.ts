@@ -9,7 +9,7 @@ import type {
 
 import type {
   BattleCombatant,
-  BattleUnitId,
+  BattleUnitAccessId,
   BattleUnitResourceState,
 } from "#/battle-types.ts";
 import type { RuntimeUnitAccess, SurfaceUnit } from "#/types.ts";
@@ -169,10 +169,12 @@ export function interpretRuntimeUnit(
 
 export function resourceStateForUnit(
   combatant: BattleCombatant,
-  unitId: BattleUnitId,
+  unitAccessId: BattleUnitAccessId,
 ): BattleUnitResourceState | null {
   return (
-    combatant.unitResourceStates.find((resourceState) => resourceState.unitId === unitId) ??
+    combatant.unitResourceStates.find(
+      (resourceState) => resourceState.unitAccessId === unitAccessId,
+    ) ??
     null
   );
 }

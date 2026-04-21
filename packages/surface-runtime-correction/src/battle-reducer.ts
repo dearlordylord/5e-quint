@@ -4,7 +4,7 @@ import { advanceBattleTurn } from "#/battle-init.ts";
 import type {
   BattleCombatant,
   BattleState,
-  BattleUnitId,
+  BattleUnitAccessId,
   ResolvedBattleAction,
 } from "#/battle-types.ts";
 import {
@@ -31,9 +31,9 @@ function invalidBattleAction(
 
 function unitForCombatant(
   combatant: BattleCombatant,
-  unitId: BattleUnitId,
+  unitAccessId: BattleUnitAccessId,
 ) {
-  return combatant.units.find((unit) => unit.unit.id === unitId) ?? null;
+  return combatant.units.find((unit) => unit.accessId === unitAccessId) ?? null;
 }
 
 function updateCombatant(
@@ -160,7 +160,7 @@ function reduceGrantExtraAction(
     return missingCombatant(action.actorId);
   }
 
-  const unit = unitForCombatant(actor, action.unitId);
+  const unit = unitForCombatant(actor, action.unitAccessId);
   if (unit === null) {
     return invalidBattleAction("unit is not currently available to the acting combatant");
   }
@@ -170,7 +170,7 @@ function reduceGrantExtraAction(
     return invalidBattleAction("unit does not structurally grant an extra action");
   }
 
-  const resourceState = resourceStateForUnit(actor, action.unitId);
+  const resourceState = resourceStateForUnit(actor, action.unitAccessId);
   if (resourceState === null) {
     return invalidBattleAction("unit resource state is missing");
   }
@@ -189,7 +189,7 @@ function reduceGrantExtraAction(
   const updated = updateCombatant(state, action.actorId, (combatant) => ({
     ...combatant,
     unitResourceStates: combatant.unitResourceStates.map((candidate) =>
-      candidate.unitId !== action.unitId
+      candidate.unitAccessId !== action.unitAccessId
         ? candidate
         : {
             ...candidate,

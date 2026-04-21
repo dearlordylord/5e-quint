@@ -1,5 +1,6 @@
 import { Effect, Either, Option, pipe } from "effect";
 
+import { battleSourceRefForCreature } from "#/battle-source-ref.ts";
 import { initializeBattleState } from "#/battle-init.ts";
 import type { BattleCombatant, BattleInit } from "#/battle-types.ts";
 import { effectFromEither, optionToEither } from "#/effect-helpers.ts";
@@ -11,14 +12,16 @@ import type {
   RuntimeUnitAccess,
   SurfaceUnit,
 } from "#/types.ts";
+import { runtimeUnitAccessId } from "#/types.ts";
 
 function attachOwnership(
   creature: CreatureRosterEntry,
   units: ReadonlyArray<SurfaceUnit>,
 ): ReadonlyArray<RuntimeUnitAccess> {
+  const battleSourceRef = battleSourceRefForCreature(creature);
   return units.map((unit) => ({
-    ownerId: creature.id,
-    sourceKind: creature.sourceKind,
+    accessId: runtimeUnitAccessId(`${battleSourceRef}:${unit.id}`),
+    battleSourceRef,
     unit,
   }));
 }
@@ -56,7 +59,7 @@ export function projectRosterToBattle(
               ({
                 id: creature.id,
                 name: creature.name,
-                sourceKind: creature.sourceKind,
+                battleSourceRef: battleSourceRefForCreature(creature),
                 level: creature.level,
                 currentHp: creature.currentHp,
                 maxHp: creature.maxHp,
@@ -65,7 +68,7 @@ export function projectRosterToBattle(
                 spellcastingModifier: creature.spellcastingModifier,
                 units,
                 unitResourceStates: units.map((unit) => ({
-                  unitId: unit.unit.id,
+                  unitAccessId: unit.accessId,
                   expendedUses: 0,
                   usedThisTurn: false,
                 })),

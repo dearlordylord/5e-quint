@@ -1,7 +1,11 @@
+import { Brand } from "effect";
+
 import type {
   ClassFeatureRecord,
   SpellRecord,
 } from "@dnd/prototype-content-surface/surface/types";
+
+import type { BattleSourceRef } from "#/battle-source-ref.ts";
 
 export const AUTHORED_UNIT_IDS = [
   "cure_wounds",
@@ -13,6 +17,11 @@ export type AuthoredUnitId = (typeof AUTHORED_UNIT_IDS)[number];
 export type SurfaceUnit = SpellRecord | ClassFeatureRecord;
 
 export type CreatureId = string;
+type RuntimeUnitAccessId = string & Brand.Brand<"RuntimeUnitAccessId">;
+const RuntimeUnitAccessId = Brand.nominal<RuntimeUnitAccessId>();
+export const runtimeUnitAccessId: (s: string) => RuntimeUnitAccessId =
+  RuntimeUnitAccessId;
+export type { RuntimeUnitAccessId };
 
 type CreatureBase = {
   readonly id: CreatureId;
@@ -39,8 +48,8 @@ export type StatBlockCreature = CreatureBase & {
 export type CreatureRosterEntry = CharacterSheetCreature | StatBlockCreature;
 
 export type RuntimeUnitAccess = {
-  readonly ownerId: CreatureId;
-  readonly sourceKind: CreatureRosterEntry["sourceKind"];
+  readonly accessId: RuntimeUnitAccessId;
+  readonly battleSourceRef: BattleSourceRef;
   readonly unit: SurfaceUnit;
 };
 

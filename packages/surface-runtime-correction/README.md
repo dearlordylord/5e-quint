@@ -17,13 +17,18 @@ Current scope:
 
 Out of scope in this package stage:
 
-- core integration follow-up
 - mechanics outside the currently-landed correction slice
 - any second execution IR parallel to `Surface`
 
-The package keeps authored identity only on `unit.id`. Runtime ownership stays in
-`RuntimeUnitAccess.ownerId`; there is no duplicate `authoredUnitId` field on the
-battle-facing wrapper types.
+This package already fed one bounded `core` integration on the slotless
+`acid_splash` prepared-spell path. The remaining follow-up is to replace that
+temporary core bridge with direct correction-pattern code rather than letting
+the older projected-execution structure survive as the steady-state shape.
+
+The package keeps authored identity only on `unit.id`. Battle/source projection
+identity lives in `RuntimeUnitAccess.battleSourceRef`, and concrete runtime
+access identity lives in `RuntimeUnitAccess.accessId`; there is no duplicate
+`authoredUnitId` field on the battle-facing wrapper types.
 
 Initiative follows the SRD combat shape in `.references/srd-5.2.1/Playing-the-Game.md`:
 initiative counts are supplied per combatant, initiative order is ranked from
@@ -64,7 +69,8 @@ follow-up prompt. It compares:
 - open-prompt ownership
 - whether a complete answer produced a `resolvedAction` or an `openedPrompt`
 
-The next follow-up is integrating the proven slice back into `core`.
+The next follow-up is finishing the core migration by removing the temporary
+projected-execution bridge from the bounded migrated path.
 
 ## Run
 

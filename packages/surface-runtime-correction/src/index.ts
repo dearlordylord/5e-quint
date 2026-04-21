@@ -1,4 +1,13 @@
 export {
+  BATTLE_SOURCE_KINDS,
+  BATTLE_SOURCE_REF_SEPARATOR,
+  battleSourceKind,
+  battleSourceLocalId,
+  battleSourceRefForCreature,
+  characterSheetBattleSourceRef,
+  statBlockBattleSourceRef,
+} from "#/battle-source-ref.ts";
+export {
   advanceBattleTurn,
   createInitiativeOrder,
   initializeBattleState,
@@ -23,3 +32,5 @@ export * from "#/services.ts";
 export * from "#/errors.ts";
 export type * from "#/battle-types.ts";
 export type * from "#/types.ts";
+export type * from "#/battle-source-ref.ts";
+export { runtimeUnitAccessId } from "#/types.ts";

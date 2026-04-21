@@ -5,16 +5,16 @@ import type {
 
 import type {
   CreatureId,
-  CreatureRosterEntry,
   RuntimeUnitAccess,
 } from "#/types.ts";
+import type { BattleSourceRef } from "#/battle-source-ref.ts";
 
 export const CORE_BATTLE_ACTIONS = ["attack", "endTurn"] as const;
 export type CoreBattleAction = (typeof CORE_BATTLE_ACTIONS)[number];
-export type BattleUnitId = RuntimeUnitAccess["unit"]["id"];
+export type BattleUnitAccessId = RuntimeUnitAccess["accessId"];
 
 export type BattleUnitResourceState = {
-  readonly unitId: BattleUnitId;
+  readonly unitAccessId: BattleUnitAccessId;
   readonly expendedUses: number;
   readonly usedThisTurn: boolean;
 };
@@ -22,7 +22,7 @@ export type BattleUnitResourceState = {
 export type BattleCombatant = {
   readonly id: CreatureId;
   readonly name: string;
-  readonly sourceKind: CreatureRosterEntry["sourceKind"];
+  readonly battleSourceRef: BattleSourceRef;
   readonly level: number;
   readonly currentHp: number;
   readonly maxHp: number;
@@ -54,7 +54,7 @@ export type AvailableBattleAction =
     }
   | {
       readonly tag: "unit";
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
     };
 
 export type ChooseActionPrompt = {
@@ -73,7 +73,7 @@ export type ChooseAttackTargetPrompt = {
 export type ChooseSingleTargetUnitPrompt = {
   readonly tag: "chooseSingleTargetUnit";
   readonly actorId: CreatureId;
-  readonly unitId: BattleUnitId;
+  readonly unitAccessId: BattleUnitAccessId;
   readonly targeting: {
     readonly tag: "touchCreature";
   };
@@ -85,7 +85,7 @@ export type ChooseSingleTargetUnitPrompt = {
 export type ChooseAreaEffectPrompt = {
   readonly tag: "chooseAreaEffect";
   readonly actorId: CreatureId;
-  readonly unitId: BattleUnitId;
+  readonly unitAccessId: BattleUnitAccessId;
   readonly targeting: {
     readonly tag: "pointWithinRangeSphere";
     readonly rangeFeet: number;
@@ -113,11 +113,11 @@ export type OpenBattlePromptState =
     }
   | {
       readonly tag: "chooseSingleTargetUnit";
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
     }
   | {
       readonly tag: "chooseAreaEffect";
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
     };
 
 export type AvailableBattlePrompt = ChooseActionPrompt | OpenBattlePrompt;
@@ -160,14 +160,14 @@ export type ResolvedBattleAction =
   | {
       readonly tag: "singleTargetHeal";
       readonly actorId: CreatureId;
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
       readonly targetId: CreatureId;
       readonly total: number;
     }
   | {
       readonly tag: "areaSaveDamage";
       readonly actorId: CreatureId;
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
       readonly targetResults: ReadonlyArray<{
         readonly targetId: CreatureId;
         readonly saveOutcome: "success" | "failure";
@@ -177,7 +177,7 @@ export type ResolvedBattleAction =
   | {
       readonly tag: "grantExtraAction";
       readonly actorId: CreatureId;
-      readonly unitId: BattleUnitId;
+      readonly unitAccessId: BattleUnitAccessId;
     };
 
 export type BattleResolutionResult =
