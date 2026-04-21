@@ -75,13 +75,13 @@ The coding loop should treat this file as the active queue. Do not start a task 
     {
       "number": 6,
       "id": "SRC6",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Quint Spec For Correction Slice"
     },
     {
       "number": 7,
       "id": "SRC7",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add Correction-Slice MBT Bridge And MBT Tests"
     },
     {
@@ -116,8 +116,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 | 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | done | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Ready now that prompt discovery, exact answer typing, and follow-up prompt creation are explicit. Keep `useUnit` generic until structural interpretation lands here. |
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | done | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Landed deterministic end-to-end package coverage for prompt discovery, follow-up prompting, reduction, and next-turn prompt discovery; updated the package docs and design notes to match the implemented prompt lifecycle and to state Quint parity as the next phase. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test` passed with `22` tests. |
 | 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | done | SRC5 | SRC6, SRC7, SRC8 | Froze the discovered TS-first slice in the design note, rewrote the next-batch tasks from the landed contract, and recorded the handoff back to Quint-led work. | Done. Verification: docs/plan diff reviewed against landed `surface-runtime-correction` code; RAW and `UBIQUITOUS_LANGUAGE.md` sources checked for the rewritten follow-up tasks; `/simplify` converged in 2 rounds. |
-| 6 | SRC6 - Add Quint Spec For Correction Slice | ready-for-implementation-after-light-research | SRC5.5 | SRC7, SRC8 | Formalize the frozen correction-slice contract in Quint: initiative-owned battle state, derived prompt discovery, minimal open-prompt state, prompt answers that yield either `resolvedAction` or `openedPrompt`, and reducer application for `endTurn`, `attack`, `singleTargetHeal`, `areaSaveDamage`, and `grantExtraAction`. Quint should model the exact bounded slice already covered in package tests, but it must re-ground that slice in SRD text and `UBIQUITOUS_LANGUAGE.md` before modeling. | Ready once the implementer re-reads the cited SRD and ubiquitous-language sources, then starts from the frozen prompt/action contract rather than the older speculative shapes. |
-| 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | blocked | SRC6 | SRC8 | Add an MBT bridge and MBT tests for the correction slice against the Quint model. | Blocked on the Quint spec. |
+| 6 | SRC6 - Add Quint Spec For Correction Slice | done | SRC5.5 | SRC7, SRC8 | Landed a dedicated Quint module and deterministic Quint tests for the frozen correction slice, plus a mapping note that ties the modeled terms back to the TS contract and the cited RAW / ubiquitous-language sources. `grantExtraAction` stays structural in Quint by carrying restriction, use-count-cap, and once-per-turn facts rather than collapsing into an Action Surge-only tag. | Done. Verification: `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt`, `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt`, and `pnpm quality` passed. `/simplify` converged in 2 rounds while tightening the extra-action model and RAW trace note. |
+| 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | ready-for-implementation-after-light-research | SRC6 | SRC8 | Add an MBT bridge and MBT tests for the correction slice against the Quint model. | Ready now that the Quint module and deterministic Quint replay surface exist. Re-read the landed Quint mapping note and keep verification at Ralph-approved Tier 1 / Tier 1b only. |
 | 8 | SRC8 - Integrate Correction Slice Back Into Core | blocked | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path after Quint parity exists. | Final task in the next batch. |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
 
@@ -535,7 +535,7 @@ This task must:
 
 ### Task 6 - SRC6 - Add Quint Spec For Correction Slice
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC5.5`
 
@@ -616,9 +616,16 @@ Do **not**:
   passages and `UBIQUITOUS_LANGUAGE.md` terms listed in Inputs
 - `/simplify` minimum two rounds
 
+### Outcome
+
+- Added [surfaceRuntimeCorrection.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrection.qnt:1) for the frozen correction-slice contract.
+- Added [surfaceRuntimeCorrectionTest.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrectionTest.qnt:1) for deterministic Quint coverage of initiative, prompt discovery, prompt answering, reducer application, and the Action Surge edge cases in scope.
+- Added [QUINT_MAPPING.md](/workspace/typescript/dnd/packages/surface-runtime-correction/QUINT_MAPPING.md:1) to map TS prompt/action terms to the Quint names and to record the cited RAW / ubiquitous-language grounding.
+- Kept `grantExtraAction` structural in the Quint model by carrying restriction, use-count-cap, and usage-limit facts rather than baking in an Action Surge-only constructor.
+
 ### Task 7 - SRC7 - Add Correction-Slice MBT Bridge And MBT Tests
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC6`
 

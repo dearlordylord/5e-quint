@@ -16,7 +16,7 @@ Current scope:
 
 Out of scope in this package stage:
 
-- Quint parity, Quint MBT, and core integration follow-up
+- Quint MBT and core integration follow-up
 - mechanics outside the currently-landed correction slice
 - any second execution IR parallel to `Surface`
 
@@ -45,14 +45,20 @@ That distinction matters for this slice:
 - `chooseAction -> fireball` opens `chooseAreaEffect`
 - `chooseAction -> cure_wounds` opens `chooseSingleTargetUnit`
 
-This package is deliberately TS-first only for pattern discovery. Quint parity
-is still required next: the landed TS shapes are the input to the follow-up
-Quint spec and MBT bridge work, after which Quint resumes semantic leadership
-for the slice.
+The TS-first discovery phase is now frozen into the matching Quint slice in:
+
+- [surfaceRuntimeCorrection.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrection.qnt:1)
+- [surfaceRuntimeCorrectionTest.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrectionTest.qnt:1)
+- [QUINT_MAPPING.md](/workspace/typescript/dnd/packages/surface-runtime-correction/QUINT_MAPPING.md:1)
+
+The next follow-up is the MBT bridge against that spec before `core`
+integration resumes.
 
 ## Run
 
 ```sh
 pnpm --filter @dnd/surface-runtime-correction typecheck
 pnpm --filter @dnd/surface-runtime-correction test
+pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt
+pnpm exec quint test surfaceRuntimeCorrectionTest.qnt
 ```
