@@ -15,6 +15,7 @@
     "effect": "^3.21.0"
   },
   "devDependencies": {
+    "@types/node": "^22.10.0",
     "@firfi/quint-connect": "^0.8.2",
     "typescript": "^5.9.3",
     "vitest": "^3.0.5"

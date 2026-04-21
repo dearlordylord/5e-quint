@@ -1,5 +1,6 @@
 {
   "include": ["**/*.ts"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "target": "ES2022",
     "module": "ESNext",
@@ -8,6 +9,7 @@
       "#/*": ["./src/*"]
     },
     "lib": ["ES2022"],
+    "types": ["node", "vitest/globals"],
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
