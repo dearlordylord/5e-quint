@@ -44,39 +44,12 @@ The coding loop should treat this file as the active queue. Do not start a task 
     { "number": 5, "id": "SRC5.5", "status": "blocked", "title": "Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups" },
     { "number": 6, "id": "SRC6", "status": "blocked", "title": "Add Quint Spec For Correction Slice" },
     { "number": 7, "id": "SRC7", "status": "blocked", "title": "Add Correction-Slice MBT Bridge And MBT Tests" },
-    { "number": 8, "id": "SRC8", "status": "blocked", "title": "Integrate Correction Slice Back Into Core" },
-
-    { "number": 100, "id": "EPT9",  "status": "deferred", "title": "Wire Character And Monster Paths For Tracer Bullet Scenario" },
-    { "number": 101, "id": "EPT10", "status": "deferred", "title": "Add Quint And TypeScript Parity Tests For First Slice" },
-    { "number": 102, "id": "EPT11", "status": "deferred", "title": "Add End-To-End MCP Tracer-Bullet Tests" },
-    { "number": 103, "id": "EPT12", "status": "deferred", "title": "Remove Or Mark Superseded Handwritten Paths In Promoted Slice" },
-    { "number": 104, "id": "EPT13", "status": "deferred", "title": "Move Battle Spell Facts To Surface-Owned Inputs" },
-    { "number": 105, "id": "EPT14", "status": "deferred", "title": "Generalize Spellcasting Event And Provenance" },
-    { "number": 106, "id": "EPT16", "status": "deferred", "title": "Generalize MCP Battle Participants Schema" },
-    { "number": 107, "id": "EPT17", "status": "deferred", "title": "Decode Authored Surface JSON Through Schemas" },
-    { "number": 108, "id": "EPT18", "status": "deferred", "title": "Make Projected Interpreter Transition Construction Total" },
-    { "number": 109, "id": "EPT19", "status": "deferred", "title": "Clarify Projection Tests Versus Build-Legality Scope" },
-    { "number": 110, "id": "EPT20", "status": "deferred", "title": "Split Quint Engine Primitives From Authored Feature Projections" },
-    { "number": 111, "id": "CSA5",  "status": "deferred", "title": "C4e Alter Self Mode Picker And Adjacent Atoms" },
-    { "number": 112, "id": "CSA6",  "status": "deferred", "title": "C4g Object-Target Attachment And True Polymorph Object Modes" },
-    { "number": 113, "id": "CSA7",  "status": "deferred", "title": "Shapechange Multi-Type Filter And Form Switch" },
-    { "number": 114, "id": "CSA8",  "status": "deferred", "title": "Convergence Checkpoint A" },
-    { "number": 115, "id": "CSB1",  "status": "deferred", "title": "Species Traits Batch" },
-    { "number": 116, "id": "CSB2",  "status": "deferred", "title": "Feats Batch" },
-    { "number": 117, "id": "CSB3",  "status": "deferred", "title": "Fighter And Rogue Class Features" },
-    { "number": 118, "id": "CSB4",  "status": "deferred", "title": "Paladin And Cleric Class Features" },
-    { "number": 119, "id": "CSB5",  "status": "deferred", "title": "Barbarian And Monk Class Features" },
-    { "number": 120, "id": "CSB6",  "status": "deferred", "title": "Druid And Ranger Class Features" },
-    { "number": 121, "id": "CSB7",  "status": "deferred", "title": "Wizard And Sorcerer Class Features" },
-    { "number": 122, "id": "CSB8",  "status": "deferred", "title": "Warlock And Bard Class Features" },
-    { "number": 123, "id": "CSB9",  "status": "deferred", "title": "Magic Items Attunement-Passive Batch" },
-    { "number": 124, "id": "CSB10", "status": "deferred", "title": "Magic Items Charge-Wand Batch" },
-    { "number": 125, "id": "CSB11", "status": "deferred", "title": "Magic Items Sentient Cursed Artifact Batch" },
-    { "number": 126, "id": "CSC1",  "status": "deferred", "title": "Final Mining Pass And Convergence Measurement" },
-    { "number": 127, "id": "CSC2",  "status": "deferred", "title": "Surface-v1 Convergence Tag And Handoff Doc" }
+    { "number": 8, "id": "SRC8", "status": "blocked", "title": "Integrate Correction Slice Back Into Core" }
   ]
 }
 -->
+
+The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical work (`EPT9`-`EPT20`, `CSA5`-`CSA8`, `CSB1`-`CSB11`, `CSC1`-`CSC2`) is retained as textual context in the "Deferred Historical Queue" section at the end of this file; it is not picked up by the coding loop.
 
 ## Coding Loop Handoff Rules
 
