@@ -28,20 +28,25 @@ import {
   SRD_SPELLS,
 } from "#/features/spell-registry.ts";
 import { proficiencyBonus, spellId, type SpellName } from "#/types.ts";
+import {
+  decodeClassFeatureRecordSync,
+  decodeSpellRecordSync,
+} from "@dnd/prototype-content-surface/surface/schema";
 import type {
   ClassFeatureRecord,
   SpellRecord,
-} from "../../prototype-content-surface/src/surface/types.ts";
+} from "@dnd/prototype-content-surface/surface/types";
 import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
 import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
 import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
 
 // FIXME - projected-action-bridge.ts... projected WHERE, FROM? bridge WHERE, FROM? at least in comments
 
-// FIXME .jsons are boundary - we always parse boundaries with codecs. use effect-schema. effect-schema will become the master definition of the surface.
-const ACID_SPLASH_SURFACE = acidSplashSurface as unknown as SpellRecord;
-const SECOND_WIND_SURFACE = secondWindSurface as unknown as ClassFeatureRecord;
-const ACTION_SURGE_SURFACE = actionSurgeSurface as unknown as ClassFeatureRecord;
+const ACID_SPLASH_SURFACE: SpellRecord = decodeSpellRecordSync(acidSplashSurface);
+const SECOND_WIND_SURFACE: ClassFeatureRecord =
+  decodeClassFeatureRecordSync(secondWindSurface);
+const ACTION_SURGE_SURFACE: ClassFeatureRecord =
+  decodeClassFeatureRecordSync(actionSurgeSurface);
 
 const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURFACE);
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);

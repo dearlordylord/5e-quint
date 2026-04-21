@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    "./surface/types": "./src/surface/types.ts"
+    "./surface/types": "./src/surface/types.ts",
+    "./surface/schema": "./src/surface/schema.ts"
   },
   "imports": {
     "#/*": "./src/*"
@@ -18,5 +19,8 @@
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "effect": "^3.21.0"
   }
 }

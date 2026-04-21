@@ -1,6 +1,8 @@
 import type {
   Ability,
+  ClassFeatureRecord,
   DamageType,
+  SpellRecord,
   StandardActionKind,
 } from "@dnd/prototype-content-surface/surface/types";
 
@@ -10,6 +12,7 @@ export const TOY_AUTHORED_UNIT_IDS = [
   "fighter_action_surge_l2",
 ] as const;
 export type ToyAuthoredUnitId = (typeof TOY_AUTHORED_UNIT_IDS)[number];
+export type ToySurfaceUnit = SpellRecord | ClassFeatureRecord;
 
 export type ToyCreatureId = string;
 

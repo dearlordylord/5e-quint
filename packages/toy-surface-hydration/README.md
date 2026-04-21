@@ -6,8 +6,7 @@ It uses:
 
 - the real content surface vocabulary from `@dnd/prototype-content-surface`
 - a tiny real authored corpus
-- Effect Schema validation at the JSON boundary
-- subset validation against the real surface for the selected units
+- the canonical Effect Schema decoder exported by `@dnd/prototype-content-surface`
 - Effect-style service injection for:
   - validated surface-unit library
   - hydrated runtime-unit library
@@ -37,6 +36,20 @@ It deliberately avoids contradictory states such as a hero-tagged monster.
 - `cure_wounds`
 - `fireball`
 - `fighter_action_surge_l2`
+
+## Dependency injection
+
+What is injected:
+
+- the validated authored-unit library
+- the hydrated runtime-unit library
+
+What stays pure:
+
+- single-unit hydration from real surface record to toy runtime unit
+- roster reduction
+- roster-to-battle projection once runtime units are provided
+- battle reduction
 
 ## Run
 

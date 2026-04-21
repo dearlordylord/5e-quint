@@ -13,11 +13,11 @@ import {
 } from "#/projected-mechanic-interpreter.ts";
 import { byTag } from "#/battle-machine-helpers.ts";
 import type { ProjectedInterpreterTransition } from "#/projected-mechanic-interpreter-types.ts";
-import type { ClassFeatureRecord } from "../../prototype-content-surface/src/surface/types.ts";
+import { decodeClassFeatureRecordSync } from "@dnd/prototype-content-surface/surface/schema";
 import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
 
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
-  actionSurgeSurface as unknown as ClassFeatureRecord,
+  decodeClassFeatureRecordSync(actionSurgeSurface),
 );
 
 function actorForBattleCreature(

@@ -1,7 +1,10 @@
 import { Context } from "effect";
 
-import type { ToyAuthoredUnitId, ToyRuntimeUnit } from "#/types.ts";
-import type { ToySurfaceUnit } from "#/surface-subset-schema.ts";
+import type {
+  ToyAuthoredUnitId,
+  ToyRuntimeUnit,
+  ToySurfaceUnit,
+} from "#/types.ts";
 
 export const ToySurfaceUnitLibrary =
   Context.GenericTag<

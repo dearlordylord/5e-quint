@@ -1,4 +1,4 @@
-import { Effect, Either, Option, pipe } from "effect";
+import { Effect, Either, Match, Option, pipe } from "effect";
 
 import { effectFromEither, optionToEither } from "#/effect-helpers.ts";
 import {
@@ -165,8 +165,8 @@ export function reduceToyBattleState(
   ToyBattleState,
   MissingCombatantError | MissingOwnedUnitError | InvalidToyChoiceError
 > {
-  switch (choice.tag) {
-    case "activateGrantExtraAction": {
+  return Match.value(choice).pipe(
+    Match.when({ tag: "activateGrantExtraAction" }, (choice) => {
       const actor = getCombatant(state.combatants, choice.actorId);
       if (Either.isLeft(actor)) return Either.left(actor.left);
       const unit = getOwnedUnit(actor.right, choice.unitId);
@@ -197,8 +197,8 @@ export function reduceToyBattleState(
           extraActionForbiddenKinds: unit.right.executable.restrictedActions,
         })),
       });
-    }
-    case "activateSingleTargetHeal": {
+    }),
+    Match.when({ tag: "activateSingleTargetHeal" }, (choice) => {
       const actor = getCombatant(state.combatants, choice.actorId);
       if (Either.isLeft(actor)) return Either.left(actor.left);
       const target = getCombatant(state.combatants, choice.targetId);
@@ -228,8 +228,8 @@ export function reduceToyBattleState(
           currentHp: Math.min(current.maxHp, current.currentHp + totalHealing),
         })),
       });
-    }
-    case "activateAreaSaveDamage": {
+    }),
+    Match.when({ tag: "activateAreaSaveDamage" }, (choice) => {
       const actor = getCombatant(state.combatants, choice.actorId);
       if (Either.isLeft(actor)) return Either.left(actor.left);
       const unit = getOwnedUnit(actor.right, choice.unitId);
@@ -267,6 +267,7 @@ export function reduceToyBattleState(
           };
         }),
       });
-    }
-  }
+    }),
+    Match.exhaustive,
+  );
 }

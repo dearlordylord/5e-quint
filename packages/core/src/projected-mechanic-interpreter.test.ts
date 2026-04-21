@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+  decodeClassFeatureRecordSync,
+  decodeSpellRecordSync,
+} from "@dnd/prototype-content-surface/surface/schema";
 
 import { compileProjectedExecutable } from "#/projected-compiler.ts";
 import {
@@ -6,22 +10,18 @@ import {
   interpretProjectedAction,
   type ProjectedExecutionRuntime,
 } from "#/projected-mechanic-interpreter.ts";
-import type {
-  ClassFeatureRecord,
-  SpellRecord,
-} from "../../prototype-content-surface/src/surface/types.ts";
 import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
 import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
 import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
 
 const ACID_SPLASH_PROJECTED_ACTION = compileProjectedExecutable(
-  acidSplashSurface as unknown as SpellRecord,
+  decodeSpellRecordSync(acidSplashSurface),
 );
 const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(
-  secondWindSurface as unknown as ClassFeatureRecord,
+  decodeClassFeatureRecordSync(secondWindSurface),
 );
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
-  actionSurgeSurface as unknown as ClassFeatureRecord,
+  decodeClassFeatureRecordSync(actionSurgeSurface),
 );
 
 function runtimeForTests(

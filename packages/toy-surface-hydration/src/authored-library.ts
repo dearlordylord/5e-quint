@@ -1,16 +1,13 @@
-import { Either, Layer, ParseResult, pipe, Schema } from "effect";
+import { Either, Layer, ParseResult, pipe } from "effect";
 
 import cureWoundsJson from "../../prototype-content-surface/content/cure_wounds.json";
 import fireballJson from "../../prototype-content-surface/content/fireball.json";
 import actionSurgeJson from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
+import { decodeUnitRecordEither } from "@dnd/prototype-content-surface/surface/schema";
 import { effectFromEither } from "#/effect-helpers.ts";
 import { ToySchemaDecodeError } from "#/errors.ts";
 import { ToySurfaceUnitLibrary } from "#/services.ts";
-import {
-  ToySurfaceUnitSchema,
-  type ToySurfaceUnit,
-} from "#/surface-subset-schema.ts";
-import type { ToyAuthoredUnitId } from "#/types.ts";
+import type { ToyAuthoredUnitId, ToySurfaceUnit } from "#/types.ts";
 
 export const TOY_AUTHORED_JSON_UNITS = [
   cureWoundsJson,
@@ -22,11 +19,23 @@ export function parseToySurfaceUnitEither(
   raw: unknown,
 ): Either.Either<ToySurfaceUnit, ToySchemaDecodeError> {
   return pipe(
-    Schema.decodeUnknownEither(ToySurfaceUnitSchema)(raw),
+    decodeUnitRecordEither(raw),
+    Either.flatMap((unit) =>
+      unit.kind === "spell" || unit.kind === "class_feature"
+        ? Either.right(unit)
+        : Either.left(
+            new ToySchemaDecodeError({
+              message: `Toy package only accepts spell and class_feature units, received ${unit.kind}.`,
+            }),
+          ),
+    ),
     Either.mapLeft(
-      (error) =>
+      (error: ToySchemaDecodeError | ParseResult.ParseError) =>
         new ToySchemaDecodeError({
-          message: ParseResult.TreeFormatter.formatErrorSync(error),
+          message:
+            error instanceof ToySchemaDecodeError
+              ? error.message
+              : ParseResult.TreeFormatter.formatErrorSync(error),
         }),
     ),
   );
@@ -40,7 +49,11 @@ export function loadToySurfaceUnitsEither(): Either.Either<
     Either.all(TOY_AUTHORED_JSON_UNITS.map(parseToySurfaceUnitEither)),
     Either.map(
       (entries) =>
-        new Map(entries.map((parsed) => [parsed.id, parsed] as const)),
+        new Map(
+          entries.map(
+            (parsed) => [parsed.id as ToyAuthoredUnitId, parsed] as const,
+          ),
+        ) as ReadonlyMap<ToyAuthoredUnitId, ToySurfaceUnit>,
     ),
   );
 }

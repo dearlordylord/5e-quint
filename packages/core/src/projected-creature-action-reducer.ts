@@ -20,17 +20,17 @@ import {
 import { canUseProjectedPreparedSpell } from "#/projected-action-bridge.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import { hp, resourceCount } from "#/types.ts";
+import { decodeClassFeatureRecordSync } from "@dnd/prototype-content-surface/surface/schema";
 import { Match } from "effect";
 import { byTag } from "#/battle-machine-helpers.ts";
-import type { ClassFeatureRecord } from "../../prototype-content-surface/src/surface/types.ts";
 import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
 import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
 
 const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(
-  secondWindSurface as unknown as ClassFeatureRecord,
+  decodeClassFeatureRecordSync(secondWindSurface),
 );
 const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
-  actionSurgeSurface as unknown as ClassFeatureRecord,
+  decodeClassFeatureRecordSync(actionSurgeSurface),
 );
 
 interface ReducerAcc {

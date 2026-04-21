@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { argv, exit, stdout } from "node:process";
 
-import type { UnitRecord } from "./surface/types.ts";
+import { decodeUnitRecordSync } from "./surface/schema.ts";
 import { traceUnit } from "./interpreter/tracer.ts";
 import { renderTraceDocument } from "./interpreter/mermaid.ts";
 
@@ -26,7 +26,7 @@ function main(): void {
   }
   const unitPath = resolve(unitPathArg);
   const raw = readFileSync(unitPath, "utf8");
-  const unit = JSON.parse(raw) as UnitRecord;
+  const unit = decodeUnitRecordSync(JSON.parse(raw));
 
   const trace = traceUnit(unit);
   const doc = renderTraceDocument(trace, unit);
