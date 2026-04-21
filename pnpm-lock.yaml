@@ -292,7 +292,7 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
-  packages/toy-surface-hydration:
+  packages/surface-runtime-correction:
     dependencies:
       '@dnd/prototype-content-surface':
         specifier: workspace:*

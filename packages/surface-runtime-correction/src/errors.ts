@@ -1,6 +1,6 @@
 import { Data } from "effect";
 
-export class ToySchemaDecodeError extends Data.TaggedError("ToySchemaDecodeError")<{
+export class SchemaDecodeError extends Data.TaggedError("SchemaDecodeError")<{
   readonly message: string;
 }> {}
 
@@ -12,11 +12,6 @@ export class MissingCombatantError extends Data.TaggedError("MissingCombatantErr
   readonly combatantId: string;
 }> {}
 
-export class MissingOwnedUnitError extends Data.TaggedError("MissingOwnedUnitError")<{
-  readonly combatantId: string;
-  readonly unitId: string;
-}> {}
-
-export class InvalidToyChoiceError extends Data.TaggedError("InvalidToyChoiceError")<{
+export class InvalidRosterActionError extends Data.TaggedError("InvalidRosterActionError")<{
   readonly message: string;
 }> {}

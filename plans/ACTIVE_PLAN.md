@@ -36,8 +36,8 @@ The coding loop should treat this file as the active queue. Do not start a task 
 {
   "schema": "ralph-plan.v1",
   "tasks": [
-    { "number": 0, "id": "SRC1", "status": "ready-for-implementation-after-light-research", "title": "Rename Package And Establish First-Class Battle Types" },
-    { "number": 1, "id": "SRC2", "status": "blocked", "title": "Implement Initiative-Aware Battle Init And Turn Ownership" },
+    { "number": 0, "id": "SRC1", "status": "done", "title": "Rename Package And Establish First-Class Battle Types" },
+    { "number": 1, "id": "SRC2", "status": "ready-for-implementation-after-light-research", "title": "Implement Initiative-Aware Battle Init And Turn Ownership" },
     { "number": 2, "id": "SRC3", "status": "blocked", "title": "Replace Flat Battle Choice With Prompt And Resolution Flow" },
     { "number": 3, "id": "SRC4", "status": "blocked", "title": "Route Core And Unit Actions Through Structural Surface Interpretation" },
     { "number": 4, "id": "SRC5", "status": "blocked", "title": "Land End-To-End Correction Slice Tests And Docs" },
@@ -65,8 +65,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 
 | Order | Task | Status | Depends on | Blocks | Next action | Handoff readiness |
 |---|---|---|---|---|---|---|
-| 0 | SRC1 - Rename Package And Establish First-Class Battle Types | ready-for-implementation-after-light-research | none | SRC2, SRC3, SRC4, SRC5 | Rename `packages/toy-surface-hydration` to `packages/surface-runtime-correction`, update workspace/package metadata, and replace the current flat toy battle types with first-class correction-package battle types: `BattleCombatant`, `BattleState`, `AvailableBattlePrompt`, `ResolvedBattleAction`, and any minimal runtime wrapper types needed for unit ownership. Keep authored identity only on `unit.id`; do not add duplicate `authoredUnitId` fields. | Ready. Design is frozen in `SURFACE_RUNTIME_CORRECTION_DESIGN.md`; do a light blast-radius check across imports and package names before edits. |
-| 1 | SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership | blocked | SRC1 | SRC3, SRC4, SRC5 | Add battle-init and turn-state ownership for initiative counts, initiative order, round/turn counters, and `turnActorId`. Model initiative insertion so future mid-battle joins can be added without redesign. Tie resolution is Table-owned input. | Blocked on the new package/types landing first. |
+| 0 | SRC1 - Rename Package And Establish First-Class Battle Types | done | none | SRC2, SRC3, SRC4, SRC5 | Landed `packages/surface-runtime-correction`, updated workspace/package metadata, replaced the flat toy battle choice with first-class battle vocabulary types, and kept authored identity only on `unit.id`. | Done. Verification: package typecheck and package test passed; broader `pnpm quality` stopped at unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
+| 1 | SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership | ready-for-implementation-after-light-research | SRC1 | SRC3, SRC4, SRC5 | Add battle-init and turn-state ownership for initiative counts, initiative order, round/turn counters, and `turnActorId`. Model initiative insertion so future mid-battle joins can be added without redesign. Tie resolution is Table-owned input. | Ready now that `SRC1` landed. Read the cited SRD initiative text and keep the new turn-state layer separate from prompt discovery/resolution. |
 | 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | blocked | SRC1, SRC2 | SRC4, SRC5 | Remove the current already-filled battle choice shape. Implement prompt discovery from state plus a resolution flow that distinguishes: available prompt, complete prompt answer, resolved action, and “new prompt created after prior resolution.” Partial prompt answers must be unrepresentable. | Blocked on battle state and turn ownership. |
 | 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | blocked | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Blocked on prompt flow existing first. |
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | blocked | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Add deterministic tests for the implemented slice and update docs/diagrams to reflect the landed pattern, especially the distinction between complete prompt answers and newly-created prompts after resolution. Record the TS-first / Quint-followed sequencing explicitly so Quint can take semantic lead in the next phase. | Last implementation task in the first batch. |
@@ -78,7 +78,7 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 
 ### Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: none
 
@@ -142,9 +142,16 @@ Do **not**:
 - `pnpm --filter @dnd/surface-runtime-correction test` (if tests still exist at this stage)
 - `/simplify` minimum two rounds
 
+### Outcome
+
+- Renamed the package to `packages/surface-runtime-correction`.
+- Replaced the old flat `ToyBattleChoice` export surface with first-class battle vocabulary types.
+- Kept authored identity only on `unit.id` by using `RuntimeUnitAccess` wrappers with `ownerId` and no duplicate `authoredUnitId`.
+- Verified the package with package-scoped typecheck and test. Broader `pnpm quality` hit an unrelated pre-existing lint failure in `packages/core/src/projected-compiler.ts`.
+
 ### Task 1 - SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC1`
 
