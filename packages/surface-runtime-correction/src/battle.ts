@@ -64,6 +64,11 @@ export function projectRosterToBattle(
                 spellSaveDc: creature.spellSaveDc,
                 spellcastingModifier: creature.spellcastingModifier,
                 units,
+                unitResourceStates: units.map((unit) => ({
+                  unitId: unit.unit.id,
+                  expendedUses: 0,
+                  usedThisTurn: false,
+                })),
               }) satisfies BattleCombatant,
           ),
         ),

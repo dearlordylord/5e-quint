@@ -7,6 +7,7 @@ import {
   discoverAvailableBattlePrompt,
 } from "#/battle-prompts.ts";
 import { advanceBattleTurn, createInitiativeOrder } from "#/battle-init.ts";
+import { reduceBattleState } from "#/battle-reducer.ts";
 import { projectRosterToBattle } from "#/battle.ts";
 import { CORE_BATTLE_ACTIONS } from "#/battle-types.ts";
 import { effectFromEither } from "#/effect-helpers.ts";
@@ -210,6 +211,8 @@ describe("surface runtime correction", () => {
       expect(battle.round).toBe(1);
       expect(battle.turnNumber).toBe(1);
       expect(battle.turnActorId).toBe("fighter");
+      expect(battle.standardActionsRemaining).toBe(1);
+      expect(battle.restrictedActionsRemaining).toBe(0);
       expect(fighter?.units).toEqual([
         {
           ownerId: "fighter",
@@ -222,6 +225,13 @@ describe("surface runtime correction", () => {
           ownerId: "cleric",
           sourceKind: "characterSheet",
           unit: expect.objectContaining({ id: "cure_wounds" }),
+        },
+      ]);
+      expect(fighter?.unitResourceStates).toEqual([
+        {
+          unitId: "fighter_action_surge_l2",
+          expendedUses: 0,
+          usedThisTurn: false,
         },
       ]);
       expect(fighter?.units[0]).not.toHaveProperty("authoredUnitId");
@@ -380,6 +390,8 @@ describe("surface runtime correction", () => {
       expect(afterFighter.turnNumber).toBe(2);
       expect(afterFighter.turnActorId).toBe("cleric");
       expect(afterFighter.openPrompt).toBeNull();
+      expect(afterFighter.standardActionsRemaining).toBe(1);
+      expect(afterFighter.restrictedActionsRemaining).toBe(0);
 
       expect(afterCleric.round).toBe(1);
       expect(afterCleric.turnNumber).toBe(3);
@@ -414,11 +426,7 @@ describe("surface runtime correction", () => {
         { tag: "coreAction", action: "endTurn" },
         {
           tag: "unit",
-          unit: {
-            ownerId: "wizard",
-            sourceKind: "characterSheet",
-            unit: expect.objectContaining({ id: "fireball" }),
-          },
+          unitId: "fireball",
         },
       ],
     });
@@ -468,42 +476,105 @@ describe("surface runtime correction", () => {
           tag: "chooseAttackTarget",
           actorId: "wizard",
           availableTargetIds: ["fighter", "cleric", "ogre"],
+          damageLabel: "attack_damage",
         },
       }),
     );
   });
 
-  it("resolves a selected unit without duplicating actor ownership", async () => {
+  it("runs the attack flow through prompt discovery and battle reduction", async () => {
     const battle = await projectPromptBattle();
-    const wizard = battle.combatants.find(
-      (combatant) => combatant.id === "wizard",
-    )!;
 
-    const resolution = answerBattlePrompt(battle, {
+    const chooseAttack = answerBattlePrompt(battle, {
       tag: "chooseAction",
       choice: {
-        tag: "unit",
-        unit: wizard.units[0]!,
+        tag: "coreAction",
+        action: "attack",
       },
     });
+    expect(Either.isRight(chooseAttack)).toBe(true);
+    if (Either.isLeft(chooseAttack) || chooseAttack.right.tag !== "openedPrompt") {
+      return;
+    }
 
-    expect(resolution).toEqual(
+    const resolvedAttack = answerBattlePrompt(chooseAttack.right.state, {
+      tag: "chooseAttackTarget",
+      targetId: "ogre",
+      damage: 7,
+    });
+    expect(Either.isRight(resolvedAttack)).toBe(true);
+    if (Either.isLeft(resolvedAttack) || resolvedAttack.right.tag !== "resolvedAction") {
+      return;
+    }
+
+    const reduced = reduceBattleState(
+      resolvedAttack.right.state,
+      resolvedAttack.right.action,
+    );
+    expect(reduced).toEqual(
       Either.right({
-        tag: "resolvedAction",
-        state: {
-          ...battle,
-          openPrompt: null,
-        },
-        action: {
-          tag: "useUnit",
-          unit: {
-            ownerId: "wizard",
-            sourceKind: "characterSheet",
-            unit: expect.objectContaining({ id: "fireball" }),
-          },
-        },
+        ...battle,
+        openPrompt: null,
+        standardActionsRemaining: 0,
+        restrictedActionsRemaining: 0,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({ id: "ogre", currentHp: 52 }),
+        ]),
       }),
     );
+  });
+
+  it("keeps 0-hp combatants targetable for attack prompts in this slice", async () => {
+    const zeroHpRoster: CreatureRosterState = {
+      creatures: promptRoster.creatures.map((creature) =>
+        creature.id === "ogre" ? { ...creature, currentHp: 0 } : creature,
+      ),
+    };
+    const battle = await Effect.runPromise(
+      projectRosterToBattle(zeroHpRoster, {
+        initiativeCounts: [
+          { actorId: "wizard", count: 18 },
+          { actorId: "fighter", count: 16 },
+          { actorId: "cleric", count: 12 },
+          { actorId: "ogre", count: 9 },
+        ],
+        tieResolutions: [],
+      }).pipe(
+        Effect.provide(
+          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
+        ),
+      ),
+    );
+
+    const prompt = discoverAvailableBattlePrompt(battle);
+    expect(prompt).toEqual({
+      tag: "chooseAction",
+      actorId: "wizard",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
+        { tag: "unit", unitId: "fireball" },
+      ],
+    });
+
+    const chooseAttack = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: { tag: "coreAction", action: "attack" },
+    });
+    expect(Either.isRight(chooseAttack)).toBe(true);
+    if (Either.isLeft(chooseAttack) || chooseAttack.right.tag !== "openedPrompt") {
+      return;
+    }
+    expect(chooseAttack.right.prompt.tag).toBe("chooseAttackTarget");
+    if (chooseAttack.right.prompt.tag !== "chooseAttackTarget") {
+      return;
+    }
+
+    expect(chooseAttack.right.prompt.availableTargetIds).toEqual([
+      "fighter",
+      "cleric",
+      "ogre",
+    ]);
   });
 
   it("clears any open prompt when turn ownership advances", async () => {
@@ -532,14 +603,7 @@ describe("surface runtime correction", () => {
       options: [
         { tag: "coreAction", action: "attack" },
         { tag: "coreAction", action: "endTurn" },
-        {
-          tag: "unit",
-          unit: {
-            ownerId: "fighter",
-            sourceKind: "characterSheet",
-            unit: expect.objectContaining({ id: "fighter_action_surge_l2" }),
-          },
-        },
+        { tag: "unit", unitId: "fighter_action_surge_l2" },
       ],
     });
   });
@@ -564,14 +628,250 @@ describe("surface runtime correction", () => {
       actorId: "wizard",
       options: [
         { tag: "coreAction", action: "endTurn" },
-        {
-          tag: "unit",
-          unit: {
-            ownerId: "wizard",
-            sourceKind: "characterSheet",
-            unit: expect.objectContaining({ id: "fireball" }),
-          },
-        },
+        { tag: "unit", unitId: "fireball" },
+      ],
+    });
+  });
+
+  it("runs the end-turn flow through reduction", async () => {
+    const battle = await projectPromptBattle();
+
+    const resolvedEndTurn = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: { tag: "coreAction", action: "endTurn" },
+    });
+    expect(Either.isRight(resolvedEndTurn)).toBe(true);
+    if (
+      Either.isLeft(resolvedEndTurn) ||
+      resolvedEndTurn.right.tag !== "resolvedAction"
+    ) {
+      return;
+    }
+
+    const reduced = reduceBattleState(
+      resolvedEndTurn.right.state,
+      resolvedEndTurn.right.action,
+    );
+    expect(reduced).toEqual(
+      Either.right(
+        expect.objectContaining({
+          turnActorId: "fighter",
+          standardActionsRemaining: 1,
+          restrictedActionsRemaining: 0,
+          openPrompt: null,
+        }),
+      ),
+    );
+  });
+
+  it("runs the cure wounds flow through structural single-target healing", async () => {
+    const injuredRoster: CreatureRosterState = {
+      creatures: promptRoster.creatures.map((creature) =>
+        creature.id === "fighter"
+          ? { ...creature, currentHp: 9 }
+          : creature,
+      ),
+    };
+
+    const battle = await Effect.runPromise(
+      projectRosterToBattle(injuredRoster, {
+        initiativeCounts: [
+          { actorId: "cleric", count: 18 },
+          { actorId: "wizard", count: 16 },
+          { actorId: "fighter", count: 12 },
+          { actorId: "ogre", count: 9 },
+        ],
+        tieResolutions: [],
+      }).pipe(
+        Effect.provide(
+          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
+        ),
+      ),
+    );
+
+    const chooseUnit = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "unit",
+        unitId: "cure_wounds",
+      },
+    });
+    expect(Either.isRight(chooseUnit)).toBe(true);
+    if (Either.isLeft(chooseUnit) || chooseUnit.right.tag !== "openedPrompt") {
+      return;
+    }
+
+    expect(chooseUnit.right.prompt).toEqual({
+      tag: "chooseSingleTargetUnit",
+      actorId: "cleric",
+      unitId: "cure_wounds",
+      targeting: {
+        tag: "touchCreature",
+      },
+      effect: { tag: "healHp" },
+    });
+
+    const resolvedHeal = answerBattlePrompt(chooseUnit.right.state, {
+      tag: "chooseSingleTargetUnit",
+      targetId: "fighter",
+      total: 8,
+    });
+    expect(Either.isRight(resolvedHeal)).toBe(true);
+    if (Either.isLeft(resolvedHeal) || resolvedHeal.right.tag !== "resolvedAction") {
+      return;
+    }
+
+    const reduced = reduceBattleState(
+      resolvedHeal.right.state,
+      resolvedHeal.right.action,
+    );
+    expect(reduced).toEqual(
+      Either.right(
+        expect.objectContaining({
+          standardActionsRemaining: 0,
+          combatants: expect.arrayContaining([
+            expect.objectContaining({ id: "fighter", currentHp: 17 }),
+          ]),
+        }),
+      ),
+    );
+  });
+
+  it("runs the fireball flow through structural area save damage", async () => {
+    const battle = await projectPromptBattle();
+
+    const chooseUnit = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "unit",
+        unitId: "fireball",
+      },
+    });
+    expect(Either.isRight(chooseUnit)).toBe(true);
+    if (Either.isLeft(chooseUnit) || chooseUnit.right.tag !== "openedPrompt") {
+      return;
+    }
+
+    expect(chooseUnit.right.prompt).toEqual({
+      tag: "chooseAreaEffect",
+      actorId: "wizard",
+      unitId: "fireball",
+      targeting: {
+        tag: "pointWithinRangeSphere",
+        rangeFeet: 150,
+        radiusFeet: 20,
+      },
+      save: { ability: "dex", dc: 15 },
+      effect: {
+        tag: "damage",
+        damageType: "fire",
+        onSuccess: "half",
+      },
+    });
+
+    const resolvedFireball = answerBattlePrompt(chooseUnit.right.state, {
+      tag: "chooseAreaEffect",
+      targetResults: [
+        { targetId: "fighter", saveOutcome: "failure" },
+        { targetId: "cleric", saveOutcome: "success" },
+        { targetId: "ogre", saveOutcome: "failure" },
+      ],
+      total: 10,
+    });
+    expect(Either.isRight(resolvedFireball)).toBe(true);
+    if (
+      Either.isLeft(resolvedFireball) ||
+      resolvedFireball.right.tag !== "resolvedAction"
+    ) {
+      return;
+    }
+
+    const reduced = reduceBattleState(
+      resolvedFireball.right.state,
+      resolvedFireball.right.action,
+    );
+    expect(reduced).toEqual(
+      Either.right(
+        expect.objectContaining({
+          standardActionsRemaining: 0,
+          combatants: expect.arrayContaining([
+            expect.objectContaining({ id: "fighter", currentHp: 10 }),
+            expect.objectContaining({ id: "cleric", currentHp: 13 }),
+            expect.objectContaining({ id: "ogre", currentHp: 49 }),
+          ]),
+        }),
+      ),
+    );
+  });
+
+  it("runs the action surge flow through structural extra-action granting", async () => {
+    const battle = await Effect.runPromise(
+      projectRosterToBattle(promptRoster, {
+        initiativeCounts: [
+          { actorId: "fighter", count: 18 },
+          { actorId: "wizard", count: 16 },
+          { actorId: "cleric", count: 12 },
+          { actorId: "ogre", count: 9 },
+        ],
+        tieResolutions: [],
+      }).pipe(
+        Effect.provide(
+          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
+        ),
+      ),
+    );
+
+    const chooseUnit = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "unit",
+        unitId: "fighter_action_surge_l2",
+      },
+    });
+    expect(Either.isRight(chooseUnit)).toBe(true);
+    if (Either.isLeft(chooseUnit) || chooseUnit.right.tag !== "resolvedAction") {
+      return;
+    }
+    expect(chooseUnit.right.action).toEqual({
+      tag: "grantExtraAction",
+      actorId: "fighter",
+      unitId: "fighter_action_surge_l2",
+    });
+
+    const reduced = reduceBattleState(
+      chooseUnit.right.state,
+      chooseUnit.right.action,
+    );
+    expect(reduced).toEqual(
+      Either.right(
+        expect.objectContaining({
+          standardActionsRemaining: 1,
+          restrictedActionsRemaining: 1,
+          combatants: expect.arrayContaining([
+            expect.objectContaining({
+              id: "fighter",
+              unitResourceStates: [
+                {
+                  unitId: "fighter_action_surge_l2",
+                  expendedUses: 1,
+                  usedThisTurn: true,
+                },
+              ],
+            }),
+          ]),
+        }),
+      ),
+    );
+    if (Either.isLeft(reduced)) {
+      return;
+    }
+
+    expect(discoverAvailableBattlePrompt(reduced.right)).toEqual({
+      tag: "chooseAction",
+      actorId: "fighter",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
       ],
     });
   });

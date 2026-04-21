@@ -4,12 +4,19 @@ import { InvalidBattlePromptAnswerError } from "#/errors.ts";
 import type {
   AvailableBattleAction,
   AvailableBattlePrompt,
+  BattleUnitId,
   BattlePromptAnswer,
   BattleResolutionResult,
   BattleState,
   OpenBattlePrompt,
   OpenBattlePromptState,
+  ResolvedBattleAction,
 } from "#/battle-types.ts";
+import {
+  interpretRuntimeUnit,
+  maxUsesForCombatant,
+  resourceStateForUnit,
+} from "#/surface-interpretation.ts";
 import type { CreatureId, RuntimeUnitAccess } from "#/types.ts";
 
 function invalidBattlePromptAnswer(
@@ -59,17 +66,6 @@ function stateWithOpenPrompt(
   };
 }
 
-function sameUnitAccess(
-  left: RuntimeUnitAccess,
-  right: RuntimeUnitAccess,
-): boolean {
-  return (
-    left.ownerId === right.ownerId &&
-    left.sourceKind === right.sourceKind &&
-    left.unit.id === right.unit.id
-  );
-}
-
 function actorOwnsChoice(
   availableChoices: ReadonlyArray<AvailableBattleAction>,
   choice: AvailableBattleAction,
@@ -84,11 +80,15 @@ function actorOwnsChoice(
     }
 
     if (availableChoice.tag === "unit" && choice.tag === "unit") {
-      return sameUnitAccess(availableChoice.unit, choice.unit);
+      return availableChoice.unitId === choice.unitId;
     }
 
     return false;
   });
+}
+
+function combatantIds(state: BattleState): ReadonlyArray<CreatureId> {
+  return state.combatants.map((combatant) => combatant.id);
 }
 
 function attackTargetIds(
@@ -98,6 +98,55 @@ function attackTargetIds(
   return state.combatants
     .filter((combatant) => combatant.id !== actorId)
     .map((combatant) => combatant.id);
+}
+
+function canTakeMagicAction(state: BattleState): boolean {
+  return state.standardActionsRemaining > 0;
+}
+
+function canTakeNonMagicAction(state: BattleState): boolean {
+  return (
+    state.standardActionsRemaining > 0 || state.restrictedActionsRemaining > 0
+  );
+}
+
+function unitAccessForCombatant(
+  state: BattleState,
+  actorId: CreatureId,
+  unitId: BattleUnitId,
+): RuntimeUnitAccess | null {
+  const combatant = state.combatants.find((candidate) => candidate.id === actorId);
+  if (combatant === undefined) {
+    return null;
+  }
+
+  return combatant.units.find((unit) => unit.unit.id === unitId) ?? null;
+}
+
+function unitActionAvailable(
+  state: BattleState,
+  unit: RuntimeUnitAccess,
+): boolean {
+  const interpretation = interpretRuntimeUnit(unit);
+  if (interpretation._tag !== "Some") {
+    return false;
+  }
+
+  if (interpretation.value.tag === "grantExtraAction") {
+    const combatant = currentCombatant(state);
+    if (combatant === null) {
+      return false;
+    }
+    const resourceState = resourceStateForUnit(combatant, unit.unit.id);
+    return (
+      resourceState !== null &&
+      !resourceState.usedThisTurn &&
+      resourceState.expendedUses <
+        maxUsesForCombatant(combatant, interpretation.value)
+    );
+  }
+
+  return canTakeMagicAction(state);
 }
 
 function actorActionChoices(
@@ -110,16 +159,21 @@ function actorActionChoices(
 
   const choices: Array<AvailableBattleAction> = [
     { tag: "coreAction", action: "endTurn" },
-    ...combatant.units.map(
-      (unit) =>
-        ({
-          tag: "unit",
-          unit,
-        }) satisfies AvailableBattleAction,
-    ),
+    ...combatant.units
+      .filter((unit) => unitActionAvailable(state, unit))
+      .map(
+        (unit) =>
+          ({
+            tag: "unit",
+            unitId: unit.unit.id,
+          }) satisfies AvailableBattleAction,
+      ),
   ];
 
-  if (attackTargetIds(state, combatant.id).length > 0) {
+  if (
+    canTakeNonMagicAction(state) &&
+    attackTargetIds(state, combatant.id).length > 0
+  ) {
     choices.unshift({ tag: "coreAction", action: "attack" });
   }
 
@@ -151,22 +205,140 @@ function validateDistinctTargetIds(
 
 function deriveOpenBattlePrompt(
   state: BattleState,
-  _openPrompt: OpenBattlePromptState,
+  openPrompt: OpenBattlePromptState,
 ): Either.Either<OpenBattlePrompt, InvalidBattlePromptAnswerError> {
   const combatant = currentCombatant(state);
   if (combatant === null) {
     return invalidBattlePromptAnswer("no prompt is currently available");
   }
 
-  const availableTargetIds = attackTargetIds(state, combatant.id);
-  if (availableTargetIds.length === 0) {
-    return invalidBattlePromptAnswer("attack is not currently available");
+  if (openPrompt.tag === "chooseAttackTarget") {
+    const availableTargetIds = attackTargetIds(state, combatant.id);
+    if (availableTargetIds.length === 0) {
+      return invalidBattlePromptAnswer("attack is not currently available");
+    }
+
+    return Either.right({
+      tag: "chooseAttackTarget",
+      actorId: combatant.id,
+      availableTargetIds,
+      damageLabel: "attack_damage",
+    });
+  }
+
+  if (openPrompt.tag === "chooseSingleTargetUnit") {
+    const unit = unitAccessForCombatant(state, combatant.id, openPrompt.unitId);
+    if (unit === null) {
+      return invalidBattlePromptAnswer("selected unit is no longer available");
+    }
+
+    const interpretation = interpretRuntimeUnit(unit);
+    if (interpretation._tag !== "Some" || interpretation.value.tag !== "singleTargetHeal") {
+      return invalidBattlePromptAnswer(
+        "selected unit is not a structurally supported single-target heal",
+      );
+    }
+
+    return Either.right({
+      tag: "chooseSingleTargetUnit",
+      actorId: combatant.id,
+      unitId: openPrompt.unitId,
+      targeting: interpretation.value.targeting,
+      effect: {
+        tag: "healHp",
+      },
+    });
+  }
+
+  const unit = unitAccessForCombatant(state, combatant.id, openPrompt.unitId);
+  if (unit === null) {
+    return invalidBattlePromptAnswer("selected unit is no longer available");
+  }
+
+  const interpretation = interpretRuntimeUnit(unit);
+  if (interpretation._tag !== "Some" || interpretation.value.tag !== "areaSaveDamage") {
+    return invalidBattlePromptAnswer(
+      "selected unit is not a structurally supported area effect",
+    );
+  }
+  if (combatant.spellSaveDc === null) {
+    return invalidBattlePromptAnswer("current actor does not have a spell save dc");
   }
 
   return Either.right({
-    tag: "chooseAttackTarget",
+    tag: "chooseAreaEffect",
     actorId: combatant.id,
-    availableTargetIds,
+    unitId: openPrompt.unitId,
+    targeting: interpretation.value.targeting,
+    save: {
+      ability: interpretation.value.saveAbility,
+      dc: combatant.spellSaveDc,
+    },
+    effect: {
+      tag: "damage",
+      damageType: interpretation.value.damageType,
+      onSuccess: "half",
+    },
+  });
+}
+
+function openPromptForUnit(
+  state: BattleState,
+  actorId: CreatureId,
+  unitId: BattleUnitId,
+): Either.Either<BattleResolutionResult, InvalidBattlePromptAnswerError> {
+  const unit = unitAccessForCombatant(state, actorId, unitId);
+  if (unit === null) {
+    return invalidBattlePromptAnswer("selected unit is not currently available");
+  }
+
+  const interpretation = interpretRuntimeUnit(unit);
+  if (interpretation._tag !== "Some") {
+    return invalidBattlePromptAnswer(
+      "selected unit is not structurally supported in this slice",
+    );
+  }
+
+  if (interpretation.value.tag === "grantExtraAction") {
+    return Either.right({
+      tag: "resolvedAction",
+      state: clearOpenPrompt(state),
+      action: {
+        tag: "grantExtraAction",
+        actorId,
+        unitId,
+      } satisfies ResolvedBattleAction,
+    });
+  }
+
+  if (interpretation.value.tag === "singleTargetHeal") {
+    const nextState = stateWithOpenPrompt(clearOpenPrompt(state), {
+      tag: "chooseSingleTargetUnit",
+      unitId,
+    });
+    const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
+    if (Either.isLeft(nextPrompt)) {
+      return Either.left(nextPrompt.left);
+    }
+    return Either.right({
+      tag: "openedPrompt",
+      state: nextState,
+      prompt: nextPrompt.right,
+    });
+  }
+
+  const nextState = stateWithOpenPrompt(clearOpenPrompt(state), {
+    tag: "chooseAreaEffect",
+    unitId,
+  });
+  const nextPrompt = deriveOpenBattlePrompt(nextState, nextState.openPrompt!);
+  if (Either.isLeft(nextPrompt)) {
+    return Either.left(nextPrompt.left);
+  }
+  return Either.right({
+    tag: "openedPrompt",
+    state: nextState,
+    prompt: nextPrompt.right,
   });
 }
 
@@ -232,14 +404,7 @@ function answerDerivedBattlePrompt(
     }
 
     if (answer.choice.tag === "unit") {
-      return Either.right({
-        tag: "resolvedAction",
-        state: clearOpenPrompt(state),
-        action: {
-          tag: "useUnit",
-          unit: answer.choice.unit,
-        },
-      });
+      return openPromptForUnit(state, prompt.actorId, answer.choice.unitId);
     }
 
     if (answer.choice.action === "endTurn") {
@@ -258,14 +423,14 @@ function answerDerivedBattlePrompt(
       return invalidBattlePromptAnswer("attack is not currently available");
     }
 
-    const nextPromptState: OpenBattlePromptState = {
+    const nextState = stateWithOpenPrompt(clearOpenPrompt(state), {
       tag: "chooseAttackTarget",
-    };
-    const nextState = stateWithOpenPrompt(clearOpenPrompt(state), nextPromptState);
+    });
     const nextPrompt: OpenBattlePrompt = {
       tag: "chooseAttackTarget",
       actorId: prompt.actorId,
       availableTargetIds,
+      damageLabel: "attack_damage",
     };
     return Either.right({
       tag: "openedPrompt",
@@ -274,16 +439,64 @@ function answerDerivedBattlePrompt(
     });
   }
 
-  if (prompt.tag !== "chooseAttackTarget" || answer.tag !== "chooseAttackTarget") {
+  if (prompt.tag === "chooseAttackTarget" && answer.tag === "chooseAttackTarget") {
+    const targetIds = validateDistinctTargetIds(
+      [answer.targetId],
+      prompt.availableTargetIds,
+      "attack targets",
+    );
+    if (Either.isLeft(targetIds)) {
+      return Either.left(targetIds.left);
+    }
+
+    return Either.right({
+      tag: "resolvedAction",
+      state: clearOpenPrompt(state),
+      action: {
+        tag: "attack",
+        actorId: prompt.actorId,
+        targetId: answer.targetId,
+        damage: answer.damage,
+      },
+    });
+  }
+
+  if (
+    prompt.tag === "chooseSingleTargetUnit" &&
+    answer.tag === "chooseSingleTargetUnit"
+  ) {
+    const targetIds = validateDistinctTargetIds(
+      [answer.targetId],
+      combatantIds(state),
+      "unit targets",
+    );
+    if (Either.isLeft(targetIds)) {
+      return Either.left(targetIds.left);
+    }
+
+    return Either.right({
+      tag: "resolvedAction",
+      state: clearOpenPrompt(state),
+      action: {
+        tag: "singleTargetHeal",
+        actorId: prompt.actorId,
+        unitId: prompt.unitId,
+        targetId: answer.targetId,
+        total: answer.total,
+      },
+    });
+  }
+
+  if (prompt.tag !== "chooseAreaEffect" || answer.tag !== "chooseAreaEffect") {
     return invalidBattlePromptAnswer(
       `expected answer for ${prompt.tag}, received ${answer.tag}`,
     );
   }
 
   const targetIds = validateDistinctTargetIds(
-    [answer.targetId],
-    prompt.availableTargetIds,
-    "attack targets",
+    answer.targetResults.map((result) => result.targetId),
+    combatantIds(state),
+    "area targets",
   );
   if (Either.isLeft(targetIds)) {
     return Either.left(targetIds.left);
@@ -293,9 +506,11 @@ function answerDerivedBattlePrompt(
     tag: "resolvedAction",
     state: clearOpenPrompt(state),
     action: {
-      tag: "attack",
+      tag: "areaSaveDamage",
       actorId: prompt.actorId,
-      targetId: answer.targetId,
+      unitId: prompt.unitId,
+      targetResults: answer.targetResults,
+      total: answer.total,
     },
   });
 }

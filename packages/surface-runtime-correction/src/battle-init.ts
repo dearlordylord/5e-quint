@@ -141,6 +141,27 @@ function validateInitiativeCounts(
   );
 }
 
+function resetTurnScopedUnitUsage(
+  combatants: ReadonlyArray<BattleCombatant>,
+  actorId: CreatureId | null,
+): ReadonlyArray<BattleCombatant> {
+  if (actorId === null) {
+    return combatants;
+  }
+
+  return combatants.map((combatant) =>
+    combatant.id !== actorId
+      ? combatant
+      : {
+          ...combatant,
+          unitResourceStates: combatant.unitResourceStates.map((resourceState) => ({
+            ...resourceState,
+            usedThisTurn: false,
+          })),
+        },
+  );
+}
+
 export function createInitiativeOrder(
   combatantIds: ReadonlyArray<CreatureId>,
   init: BattleInit,
@@ -192,14 +213,17 @@ export function initializeBattleState(
     return Either.left(initiativeOrder.left);
   }
 
+  const turnActorId = initiativeOrder.right[0] ?? null;
   return Either.right({
-    combatants,
+    combatants: resetTurnScopedUnitUsage(combatants, turnActorId),
     initiativeCounts: init.initiativeCounts,
     initiativeOrder: initiativeOrder.right,
     round: initiativeOrder.right.length === 0 ? 0 : 1,
     turnNumber: initiativeOrder.right.length === 0 ? 0 : 1,
-    turnActorId: initiativeOrder.right[0] ?? null,
+    turnActorId,
     openPrompt: null,
+    standardActionsRemaining: initiativeOrder.right.length === 0 ? 0 : 1,
+    restrictedActionsRemaining: 0,
   });
 }
 
@@ -210,20 +234,29 @@ export function advanceBattleTurn(state: BattleState): BattleState {
 
   const turnIndex = state.initiativeOrder.indexOf(state.turnActorId);
   if (turnIndex === -1) {
+    const turnActorId = state.initiativeOrder[0] ?? null;
     return {
       ...state,
-      turnActorId: state.initiativeOrder[0] ?? null,
+      combatants: resetTurnScopedUnitUsage(state.combatants, turnActorId),
+      turnActorId,
+      openPrompt: null,
+      standardActionsRemaining: turnActorId === null ? 0 : 1,
+      restrictedActionsRemaining: 0,
     };
   }
 
   const nextTurnIndex = (turnIndex + 1) % state.initiativeOrder.length;
   const wrapsRound = nextTurnIndex === 0;
+  const turnActorId = state.initiativeOrder[nextTurnIndex] ?? null;
 
   return {
     ...state,
+    combatants: resetTurnScopedUnitUsage(state.combatants, turnActorId),
     round: wrapsRound ? state.round + 1 : state.round,
     turnNumber: state.turnNumber + 1,
-    turnActorId: state.initiativeOrder[nextTurnIndex] ?? null,
+    turnActorId,
     openPrompt: null,
+    standardActionsRemaining: turnActorId === null ? 0 : 1,
+    restrictedActionsRemaining: 0,
   };
 }

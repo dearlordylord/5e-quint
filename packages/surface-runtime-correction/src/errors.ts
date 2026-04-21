@@ -23,3 +23,7 @@ export class InvalidBattleInitError extends Data.TaggedError("InvalidBattleInitE
 export class InvalidBattlePromptAnswerError extends Data.TaggedError("InvalidBattlePromptAnswerError")<{
   readonly message: string;
 }> {}
+
+export class InvalidBattleActionError extends Data.TaggedError("InvalidBattleActionError")<{
+  readonly message: string;
+}> {}
