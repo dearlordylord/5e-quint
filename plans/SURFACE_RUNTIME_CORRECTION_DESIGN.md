@@ -397,6 +397,83 @@ The slice currently demonstrates that with concrete paths:
 That is the pattern Quint must formalize next. The Quint task should not
 re-infer a different prompt contract from the old candidate shapes below.
 
+## Discovered Pattern Freeze (SRC5.5)
+
+This section is the freeze point for the next batch. `SRC6`, `SRC7`, and
+`SRC8` should treat it as the discovered source of truth rather than reusing
+older pre-implementation guesses.
+
+### What stayed true
+
+- `Surface` stayed the semantic language and reducers still interpret units by
+  structural `Surface` helpers rather than by authored unit ids.
+- authored identity still lives only on `unit.id`; runtime ownership is carried
+  by `RuntimeUnitAccess.ownerId`
+- available prompts are still derived from `BattleState`
+- open interaction windows are still real runtime state
+- prompt answers are still complete-answer-only at the type level
+- reducers are still pure and request more table input by returning data rather
+  than by performing I/O
+- the package is still TS-first only as a discovery phase, with Quint required
+  next
+
+### What changed from the pre-implementation design
+
+- the slice did not land a generic `fillActionInputs` prompt; it landed one
+  top-level `chooseAction` prompt plus typed follow-up prompt variants:
+  `chooseAttackTarget`, `chooseSingleTargetUnit`, and `chooseAreaEffect`
+- `openPrompt` is not a stored full prompt object; `BattleState.openPrompt`
+  stores only minimal prompt-owned state and the visible prompt is re-derived
+  from current state
+- the resolved action vocabulary is concrete and structural:
+  `endTurn`, `attack`, `singleTargetHeal`, `areaSaveDamage`, and
+  `grantExtraAction`
+- the end-to-end proof surface is now explicit and bounded to five paths:
+  `attack`, `endTurn`, `cure_wounds`, `fireball`, and
+  `fighter_action_surge_l2`
+- the package now has deterministic slice tests that cover prompt discovery,
+  follow-up prompting, reduction, and next-turn prompt discovery, so the next
+  Quint task can model a known flow instead of designing from scratch
+
+### Assumptions rejected by the landed code
+
+- rejected: a generic pending-action plus required-input bag is the right first
+  prompt shape
+  landed instead: explicit prompt variants with domain-specific payloads
+- rejected: storing the full current prompt object in state
+  landed instead: minimal in-flight prompt state plus derived prompt discovery
+- rejected: letting TS discovery keep drifting while Quint catches up later
+  landed instead: this freeze point closes the TS-only discovery phase and
+  hands semantic leadership back to Quint for the next task
+- rejected: planning `core` integration before the exact prompt/action contract
+  is frozen and MBT-backed
+  landed instead: `core` stays downstream of the Quint spec and MBT bridge
+
+### Frozen implementation facts Quint must model
+
+- `BattleState` owns:
+  - combatants
+  - initiative counts
+  - stable initiative order
+  - `round`, `turnNumber`, and `turnActorId`
+  - `openPrompt` as minimal prompt-owned state
+  - action-economy counters:
+    `standardActionsRemaining` and `restrictedActionsRemaining`
+- prompt discovery starts from `discoverAvailableBattlePrompt(state)`
+- prompt fulfillment goes through `answerBattlePrompt(state, answer)`
+- prompt resolution returns either:
+  - `resolvedAction`, or
+  - `openedPrompt`
+- state mutation happens only in `reduceBattleState(state, action)`
+
+### Frozen sequencing for the next batch
+
+1. `SRC6` should formalize this exact prompt/action/open-window contract in
+   Quint.
+2. `SRC7` should build a correction-slice MBT bridge against that Quint model.
+3. `SRC8` should port one bounded `core` path only after the Quint+MBT lane is
+   proving the slice.
+
 ## Effect Usage
 
 This package should use Effect properly, but not indiscriminately.

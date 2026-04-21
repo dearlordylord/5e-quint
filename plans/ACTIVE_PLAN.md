@@ -69,13 +69,13 @@ The coding loop should treat this file as the active queue. Do not start a task 
     {
       "number": 5,
       "id": "SRC5.5",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups"
     },
     {
       "number": 6,
       "id": "SRC6",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Add Quint Spec For Correction Slice"
     },
     {
@@ -115,8 +115,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 | 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | done | SRC1, SRC2 | SRC4, SRC5 | Landed derived prompt discovery from battle state, exact prompt-answer types, resolved battle actions, and minimal in-flight prompt state for multi-step interactions. The first follow-up prompt seam is `chooseAttackTarget`; structural `Surface` interpretation of chosen units remains deferred to SRC4. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test` passed; broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
 | 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | done | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Ready now that prompt discovery, exact answer typing, and follow-up prompt creation are explicit. Keep `useUnit` generic until structural interpretation lands here. |
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | done | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Landed deterministic end-to-end package coverage for prompt discovery, follow-up prompting, reduction, and next-turn prompt discovery; updated the package docs and design notes to match the implemented prompt lifecycle and to state Quint parity as the next phase. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test` passed with `22` tests. |
-| 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | ready-for-implementation-after-light-research | SRC5 | SRC6, SRC7, SRC8 | Compare the landed `SRC1`-`SRC5` pattern against the pre-implementation design doc, document what changed, and rewrite `SRC6` / `SRC7` / `SRC8` from the actual outcome rather than from speculation. This is the handoff freeze point between TS-first discovery and Quint-led follow-up. | Ready now that the first correction slice and its documentation are landed. |
-| 6 | SRC6 - Add Quint Spec For Correction Slice | blocked | SRC5.5 | SRC7, SRC8 | Formalize the landed correction-slice pattern in Quint so Quint becomes the semantic lead after the TS discovery phase. | Blocked on the discovered-pattern freeze. |
+| 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | done | SRC5 | SRC6, SRC7, SRC8 | Froze the discovered TS-first slice in the design note, rewrote the next-batch tasks from the landed contract, and recorded the handoff back to Quint-led work. | Done. Verification: docs/plan diff reviewed against landed `surface-runtime-correction` code; RAW and `UBIQUITOUS_LANGUAGE.md` sources checked for the rewritten follow-up tasks; `/simplify` converged in 2 rounds. |
+| 6 | SRC6 - Add Quint Spec For Correction Slice | ready-for-implementation-after-light-research | SRC5.5 | SRC7, SRC8 | Formalize the frozen correction-slice contract in Quint: initiative-owned battle state, derived prompt discovery, minimal open-prompt state, prompt answers that yield either `resolvedAction` or `openedPrompt`, and reducer application for `endTurn`, `attack`, `singleTargetHeal`, `areaSaveDamage`, and `grantExtraAction`. Quint should model the exact bounded slice already covered in package tests, but it must re-ground that slice in SRD text and `UBIQUITOUS_LANGUAGE.md` before modeling. | Ready once the implementer re-reads the cited SRD and ubiquitous-language sources, then starts from the frozen prompt/action contract rather than the older speculative shapes. |
 | 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | blocked | SRC6 | SRC8 | Add an MBT bridge and MBT tests for the correction slice against the Quint model. | Blocked on the Quint spec. |
 | 8 | SRC8 - Integrate Correction Slice Back Into Core | blocked | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path after Quint parity exists. | Final task in the next batch. |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
@@ -459,7 +459,7 @@ This task should:
 
 ### Task 5 - SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC5`
 
@@ -505,11 +505,37 @@ This task must:
 ### Verification
 
 - docs/plan diff reviewed for consistency with landed code
+- RAW/UL check for the rewritten follow-up tasks:
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:318) for Bonus Action / Reaction timing
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:479) for rounds, turns, initiative, and stable initiative order
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:584) for attack structure and target selection
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:710) for shared damage rolls on simultaneous save-for-damage effects
+  - [Spells/Descriptions-A-D.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md:1277) for `Cure Wounds`
+  - [Spells/Descriptions-E-L.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md:418) for `Fireball`
+  - [Classes/Fighter.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Fighter.md:76) for `Action Surge`
+  - [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md:14) and [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md:128) for initiative, round/turn, action, bonus action, reaction, offer, and quota terminology
 - `/simplify` minimum two rounds
+
+### Outcome
+
+- Added an explicit discovered-pattern freeze section to
+  [plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md](/workspace/typescript/dnd/plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md:1)
+  covering what stayed true, what changed, and which pre-implementation
+  assumptions were rejected.
+- Rewrote `SRC6`, `SRC7`, and `SRC8` around the landed prompt/action/window
+  contract and restored stable repo-root links in their inputs.
+- Re-grounded the Quint follow-up in specific SRD and
+  `UBIQUITOUS_LANGUAGE.md` sources so the frozen TS contract is an input to
+  Quint work, not the semantic authority.
+- `/simplify` round 1: tightened the handoff so `SRC5.5` now closes as `done`
+  and unblocks `SRC6` instead of leaving the queue artificially stalled after
+  the freeze note landed.
+- `/simplify` round 2: re-checked the rewritten tasks and freeze note for
+  redundant speculation and found no further durable planning changes.
 
 ### Task 6 - SRC6 - Add Quint Spec For Correction Slice
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC5.5`
 
@@ -517,29 +543,77 @@ Blocks: `SRC7`, `SRC8`
 
 ### Scope
 
-Formalize the landed correction-slice pattern in Quint after the discovered pattern is frozen.
+Formalize the frozen correction-slice contract in Quint so Quint becomes the
+semantic lead again before any `core` integration work resumes.
+
+This task must model the exact slice already proven in TS:
+
+- initiative-owned battle state with `initiativeCounts`, stable
+  `initiativeOrder`, `turnActorId`, `round`, and `turnNumber`
+- derived prompt discovery from battle state rather than stored prompt lists
+- minimal open-prompt state for in-flight interaction windows
+- complete prompt answers that yield either `resolvedAction` or `openedPrompt`
+- reducer application for the bounded resolved-action set:
+  `endTurn`, `attack`, `singleTargetHeal`, `areaSaveDamage`, and
+  `grantExtraAction`
+
+Do **not**:
+
+- invent a broader generic prompt language than the frozen TS slice uses
+- start `core` integration in this task
+- add MBT in the same task
 
 ### Input
 
-- `SRC5.5` respecified task body and freeze notes
+- `SRC5.5` freeze notes in
+  [plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md](/workspace/typescript/dnd/plans/SURFACE_RUNTIME_CORRECTION_DESIGN.md:1)
+- relevant RAW before modeling:
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:318) for Bonus Action / Reaction timing
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:479) for initiative order, rounds, and turns
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:584) for attack target selection and attack resolution shape
+  - [Playing-the-Game.md](/workspace/typescript/dnd/.references/srd-5.2.1/Playing-the-Game.md:710) for simultaneous save-based damage rolls
+  - [Spells/Descriptions-A-D.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-A-D.md:1277) for `Cure Wounds`
+  - [Spells/Descriptions-E-L.md](/workspace/typescript/dnd/.references/srd-5.2.1/Spells/Descriptions-E-L.md:418) for `Fireball`
+  - [Classes/Fighter.md](/workspace/typescript/dnd/.references/srd-5.2.1/Classes/Fighter.md:76) for `Action Surge`
+- [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md:14) and [UBIQUITOUS_LANGUAGE.md](/workspace/typescript/dnd/UBIQUITOUS_LANGUAGE.md:128) for initiative, round/turn, action, bonus action, reaction, offer, and quota terminology
+- exported TS contract in
+  [packages/surface-runtime-correction/src/battle-types.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/battle-types.ts:1)
+- prompt behavior in
+  [packages/surface-runtime-correction/src/battle-prompts.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/battle-prompts.ts:1)
+- reducer behavior in
+  [packages/surface-runtime-correction/src/battle-reducer.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/battle-reducer.ts:1)
+- deterministic slice tests in
+  [packages/surface-runtime-correction/src/surface-runtime-correction.test.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/surface-runtime-correction.test.ts:1)
 
 ### Output
 
 - Quint model for the correction slice
+- documented mapping from frozen TS prompt/action terms to Quint terms where
+  naming differs
 
 ### Useful implementation recommendation
 
-- The Quint model should follow the landed pattern, not the pre-discovery guess.
-- Once this task lands, Quint becomes the semantic lead for the correction slice.
+- Start from the frozen deterministic flows, not from abstract prompt
+  generalization.
+- Treat the frozen TS contract as a discovery artifact to be matched against
+  RAW, not as permission to skip the SRD/UL grounding step.
+- Keep the Quint state aligned with the minimal `openPrompt` ownership model so
+  MBT can reuse the same semantic boundary.
+- Once this task lands, Quint becomes the semantic lead for the correction
+  slice.
 
 ### Acceptance criteria
 
 - correction-slice semantics are expressed in Quint
 - Quint matches the frozen discovered pattern
+- the Quint model covers the currently-landed bounded slice only
 
 ### Verification
 
 - Quint typecheck/tests appropriate to the landed slice
+- deterministic Quint tests for the frozen prompt/action flows before MBT
+- explicit check that every modeled rule in the slice still traces to the SRD
+  passages and `UBIQUITOUS_LANGUAGE.md` terms listed in Inputs
 - `/simplify` minimum two rounds
 
 ### Task 7 - SRC7 - Add Correction-Slice MBT Bridge And MBT Tests
@@ -552,29 +626,41 @@ Blocks: `SRC8`
 
 ### Scope
 
-Add MBT coverage for the correction slice against the new Quint model.
+Add MBT coverage for the correction slice against the frozen prompt/action model
+after `SRC6` lands.
 
 ### Input
 
 - `SRC6` Quint model
+- frozen contract from `SRC5.5`
 
 ### Output
 
 - MBT bridge and MBT tests for the correction slice
+- bridge mapping for:
+  - prompt discovery
+  - open-prompt state
+  - complete prompt answers
+  - resolved actions
 
 ### Useful implementation recommendation
 
-- Keep the MBT surface aligned with the landed prompt/action/window model.
-- Prefer deterministic local replays first, then add the MBT layer.
+- Keep the MBT surface aligned with the frozen prompt/action/window model
+  rather than inventing a broader adapter surface.
+- Reuse the deterministic TS slice tests as replay targets before spending a
+  Tier 1 MBT run.
+- Keep MBT validation at Ralph-approved Tier 1 / Tier 1b only.
 
 ### Acceptance criteria
 
 - correction-slice MBT path exists
 - MBT exercises the correction-slice prompt/action flow against Quint
+- MBT can distinguish `resolvedAction` from `openedPrompt`
 
 ### Verification
 
 - focused correction-slice MBT runs
+- deterministic replay tests for failing seeds before any rerun
 - `/simplify` minimum two rounds
 
 ### Task 8 - SRC8 - Integrate Correction Slice Back Into Core
@@ -587,27 +673,42 @@ Blocks: none
 
 ### Scope
 
-Port the proven correction-slice pattern back into one bounded `core` path after Quint parity exists.
+Port the Quint-backed correction-slice pattern back into one bounded `core`
+entry path after `SRC6` and `SRC7` land.
+
+The first integration should reuse the frozen prompt lifecycle:
+
+- derive the currently-available prompt from battle state
+- accept complete answers only
+- allow resolution to open a new prompt
+- reduce only resolved actions
 
 ### Input
 
 - frozen discovered pattern from `SRC5.5`
 - Quint parity from `SRC6`
 - MBT bridge/tests from `SRC7`
+- the bounded target `core` entry path selected during implementation
 
 ### Output
 
 - one bounded `core` integration of the correction pattern
+- removal or bypass of conflicting local ad hoc prompt/action handling in that
+  bounded path
 
 ### Useful implementation recommendation
 
 - Keep the integration bounded; do not attempt a whole-core rewrite in one task.
 - Pick one representative `core` path and port the pattern cleanly.
+- Prefer replacing a local ad hoc prompt/action seam over layering an adapter on
+  top of it.
 
 ### Acceptance criteria
 
 - one real `core` path uses the correction pattern
 - the integration is backed by Quint/MBT rather than TS-only confidence
+- the integrated `core` path does not reintroduce authored-id semantic
+  branching or duplicated prompt state
 
 ### Verification
 
