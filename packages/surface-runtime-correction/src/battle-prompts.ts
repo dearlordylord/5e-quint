@@ -39,7 +39,7 @@ function duplicateIds(ids: ReadonlyArray<CreatureId>): ReadonlyArray<CreatureId>
 }
 
 function currentCombatant(state: BattleState) {
-  return state.turnOrder[0]?.combatant ?? null;
+  return state.currentParticipant.combatant;
 }
 
 function clearOpenPrompt(state: BattleState): BattleState {
@@ -81,14 +81,17 @@ function actorOwnsChoice(
 }
 
 function combatantIds(state: BattleState): ReadonlyArray<CreatureId> {
-  return state.turnOrder.map((participant) => participant.combatant.id);
+  return [
+    state.currentParticipant,
+    ...state.waitingParticipants,
+  ].map((participant) => participant.combatant.id);
 }
 
 function attackTargetIds(
   state: BattleState,
   actorId: CreatureId,
 ): ReadonlyArray<CreatureId> {
-  return state.turnOrder
+  return [state.currentParticipant, ...state.waitingParticipants]
     .map((participant) => participant.combatant)
     .filter((combatant) => combatant.id !== actorId)
     .map((combatant) => combatant.id);
@@ -109,7 +112,7 @@ function unitAccessForCombatant(
   actorId: CreatureId,
   unitAccessId: BattleUnitAccessId,
 ): RuntimeUnitAccess | null {
-  const combatant = state.turnOrder
+  const combatant = [state.currentParticipant, ...state.waitingParticipants]
     .map((participant) => participant.combatant)
     .find((candidate) => candidate.id === actorId);
   if (combatant === undefined) {
@@ -130,9 +133,6 @@ function unitActionAvailable(
 
   if (interpretation.value.tag === "grantExtraAction") {
     const combatant = currentCombatant(state);
-    if (combatant === null) {
-      return false;
-    }
     const resourceState = resourceStateForUnit(combatant, unit.accessId);
     return (
       resourceState !== null &&
@@ -149,9 +149,6 @@ function actorActionChoices(
   state: BattleState,
 ): ReadonlyArray<AvailableTurnOption> {
   const combatant = currentCombatant(state);
-  if (combatant === null) {
-    return [];
-  }
 
   const choices: Array<AvailableTurnOption> = [
     { tag: "coreAction", action: "endTurn" },
@@ -204,9 +201,6 @@ function deriveOpenBattlePrompt(
   openPrompt: OpenBattlePromptState,
 ): Either.Either<OpenBattlePrompt, InvalidBattlePromptAnswerError> {
   const combatant = currentCombatant(state);
-  if (combatant === null) {
-    return invalidBattlePromptAnswer("no prompt is currently available");
-  }
 
   if (openPrompt.tag === "chooseAttackTarget") {
     const availableTargetIds = attackTargetIds(state, combatant.id);
@@ -354,10 +348,6 @@ export function discoverAvailableBattlePrompt(
   }
 
   const combatant = currentCombatant(state);
-  if (combatant === null) {
-    return null;
-  }
-
   return {
     tag: "chooseAction",
     actorId: combatant.id,

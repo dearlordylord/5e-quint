@@ -69,7 +69,24 @@ type NormalizedOutcome = {
 
 type NormalizedState = {
   readonly battle: {
-    readonly turnOrder: ReadonlyArray<{
+    readonly currentParticipant: {
+      readonly initiativeCount: number;
+      readonly projectionOrder: number;
+      readonly combatant: {
+        readonly id: string;
+        readonly level: number;
+        readonly currentHp: number;
+        readonly maxHp: number;
+        readonly spellSaveDc: number | null;
+        readonly unitIds: ReadonlyArray<string>;
+        readonly unitResourceStates: ReadonlyArray<{
+          readonly unitId: string;
+          readonly expendedUses: number;
+          readonly usedThisTurn: boolean;
+        }>;
+      };
+    };
+    readonly waitingParticipants: ReadonlyArray<{
       readonly initiativeCount: number;
       readonly projectionOrder: number;
       readonly combatant: {
@@ -254,7 +271,10 @@ function unitIdForAccess(
   state: BattleState,
   unitAccessId: string,
 ): string {
-  for (const combatant of state.turnOrder.map((participant) => participant.combatant)) {
+  for (const combatant of [
+    state.currentParticipant,
+    ...state.waitingParticipants,
+  ].map((participant) => participant.combatant)) {
     const unit = combatant.units.find((candidate) => candidate.accessId === unitAccessId);
     if (unit != null) {
       return unit.unit.id;
@@ -282,36 +302,40 @@ function normalizeTargetResultFromRaw(value: unknown): string {
 function normalizeModelState(raw: unknown): NormalizedState {
   const state = recordOf(raw);
   const battle = recordOf(state["srcBattle"]);
+  const normalizeParticipant = (entry: unknown) => {
+    const participant = recordOf(entry);
+    const combatant = recordOf(participant["combatant"]);
+    return {
+      initiativeCount: bigintToNumber(participant["initiativeCount"]),
+      projectionOrder: bigintToNumber(participant["projectionOrder"]),
+      combatant: {
+        id: String(combatant["id"] ?? ""),
+        level: bigintToNumber(combatant["level"]),
+        currentHp: bigintToNumber(combatant["currentHp"]),
+        maxHp: bigintToNumber(combatant["maxHp"]),
+        spellSaveDc: normalizeSpellSaveDc(combatant["spellSaveDc"]),
+        unitIds: arrayOf(combatant["units"]).map((unit) =>
+          String(recordOf(unit)["unitId"] ?? ""),
+        ),
+        unitResourceStates: arrayOf(combatant["unitResourceStates"]).map(
+          (resourceState) => {
+            const parsed = recordOf(resourceState);
+            return {
+              unitId: String(parsed["unitId"] ?? ""),
+              expendedUses: bigintToNumber(parsed["expendedUses"]),
+              usedThisTurn: Boolean(parsed["usedThisTurn"]),
+            };
+          },
+        ),
+      },
+    };
+  };
   return {
     battle: {
-      turnOrder: arrayOf(battle["turnOrder"]).map((entry) => {
-        const participant = recordOf(entry);
-        const combatant = recordOf(participant["combatant"]);
-        return {
-          initiativeCount: bigintToNumber(participant["initiativeCount"]),
-          projectionOrder: bigintToNumber(participant["projectionOrder"]),
-          combatant: {
-            id: String(combatant["id"] ?? ""),
-            level: bigintToNumber(combatant["level"]),
-            currentHp: bigintToNumber(combatant["currentHp"]),
-            maxHp: bigintToNumber(combatant["maxHp"]),
-            spellSaveDc: normalizeSpellSaveDc(combatant["spellSaveDc"]),
-            unitIds: arrayOf(combatant["units"]).map((unit) =>
-              String(recordOf(unit)["unitId"] ?? ""),
-            ),
-            unitResourceStates: arrayOf(combatant["unitResourceStates"]).map(
-              (resourceState) => {
-                const parsed = recordOf(resourceState);
-                return {
-                  unitId: String(parsed["unitId"] ?? ""),
-                  expendedUses: bigintToNumber(parsed["expendedUses"]),
-                  usedThisTurn: Boolean(parsed["usedThisTurn"]),
-                };
-              },
-            ),
-          },
-        };
-      }),
+      currentParticipant: normalizeParticipant(battle["currentParticipant"]),
+      waitingParticipants: arrayOf(battle["waitingParticipants"]).map(
+        normalizeParticipant,
+      ),
       round: bigintToNumber(battle["round"]),
       turnNumber: bigintToNumber(battle["turnNumber"]),
       openPrompt: normalizeOpenPrompt(battle["openPrompt"]),
@@ -485,26 +509,28 @@ function normalizeResolvedActionPayload(
 }
 
 function normalizeTsBattle(state: BattleState): NormalizedState["battle"] {
+  const normalizeParticipant = (participant: BattleState["currentParticipant"]) => ({
+    initiativeCount: participant.initiativeCount,
+    projectionOrder: participant.projectionOrder,
+    combatant: {
+      id: participant.combatant.id,
+      level: participant.combatant.level,
+      currentHp: participant.combatant.currentHp,
+      maxHp: participant.combatant.maxHp,
+      spellSaveDc: participant.combatant.spellSaveDc,
+      unitIds: participant.combatant.units.map((unit) => unit.unit.id),
+      unitResourceStates: participant.combatant.unitResourceStates.map(
+        (resourceState) => ({
+          unitId: unitIdForAccess(state, resourceState.unitAccessId),
+          expendedUses: resourceState.expendedUses,
+          usedThisTurn: resourceState.usedThisTurn,
+        }),
+      ),
+    },
+  });
   return {
-    turnOrder: state.turnOrder.map((participant) => ({
-      initiativeCount: participant.initiativeCount,
-      projectionOrder: participant.projectionOrder,
-      combatant: {
-        id: participant.combatant.id,
-        level: participant.combatant.level,
-        currentHp: participant.combatant.currentHp,
-        maxHp: participant.combatant.maxHp,
-        spellSaveDc: participant.combatant.spellSaveDc,
-        unitIds: participant.combatant.units.map((unit) => unit.unit.id),
-        unitResourceStates: participant.combatant.unitResourceStates.map(
-          (resourceState) => ({
-            unitId: unitIdForAccess(state, resourceState.unitAccessId),
-            expendedUses: resourceState.expendedUses,
-            usedThisTurn: resourceState.usedThisTurn,
-          }),
-        ),
-      },
-    })),
+    currentParticipant: normalizeParticipant(state.currentParticipant),
+    waitingParticipants: state.waitingParticipants.map(normalizeParticipant),
     round: state.round,
     turnNumber: state.turnNumber,
     openPrompt:

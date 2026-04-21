@@ -13,8 +13,15 @@ module surfaceRuntimeCorrectionTest::Impl {
     unitResourceStates: List(),
   }
 
+  pure val EMPTY_PARTICIPANT: BattleParticipant = {
+    combatant: EMPTY_COMBATANT,
+    initiativeCount: 0,
+    projectionOrder: 0,
+  }
+
   pure val EMPTY_BATTLE_STATE: BattleState = {
-    turnOrder: List(),
+    currentParticipant: EMPTY_PARTICIPANT,
+    waitingParticipants: List(),
     round: 0,
     turnNumber: 0,
     openPrompt: NoOpenPrompt,
@@ -148,22 +155,32 @@ module surfaceRuntimeCorrectionTest::Impl {
   pure val PROMPT_BATTLE: BattleState =
     battleStateOrEmpty(initializeBattleState(PROMPT_COMBATANTS, PROMPT_INIT))
 
+  pure def participants(state: BattleState): List[BattleParticipant] =
+    [state.currentParticipant].concat(state.waitingParticipants)
+
   pure def currentActorId(state: BattleState): CreatureId =
-    state.turnOrder[0].combatant.id
+    state.currentParticipant.combatant.id
 
   pure def replaceCombatantInState(
     state: BattleState,
     updatedCombatant: BattleCombatant,
   ): BattleState =
-    state.with(
-      "turnOrder",
-      state.turnOrder.foldl([], (acc, participant) =>
+    {
+      currentParticipant:
+        if (state.currentParticipant.combatant.id != updatedCombatant.id) state.currentParticipant
+        else state.currentParticipant.with("combatant", updatedCombatant),
+      waitingParticipants: state.waitingParticipants.foldl([], (acc, participant) =>
         acc.append(
           if (participant.combatant.id != updatedCombatant.id) participant
           else participant.with("combatant", updatedCombatant)
         )
-      )
-    )
+      ),
+      round: state.round,
+      turnNumber: state.turnNumber,
+      openPrompt: state.openPrompt,
+      standardActionsRemaining: state.standardActionsRemaining,
+      nonMagicActionsRemaining: state.nonMagicActionsRemaining,
+    }
 
   run test_createInitiativeOrder_uses_table_supplied_tie_order = {
     val order = createInitiativeOrder(
@@ -185,8 +202,8 @@ module surfaceRuntimeCorrectionTest::Impl {
     val battle = battleStateOrEmpty(initResult)
     all {
       assert(initResult == BattleStateOk(battle)),
-      assert(battle.turnOrder.foldl([], (acc, participant) => acc.append(participant.initiativeCount)) == [18, 12, 9]),
-      assert(battle.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
+      assert(participants(battle).foldl([], (acc, participant) => acc.append(participant.initiativeCount)) == [18, 12, 9]),
+      assert(participants(battle).foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
       assert(battle.round == 1),
       assert(battle.turnNumber == 1),
       assert(currentActorId(battle) == "fighter"),
@@ -218,12 +235,12 @@ module surfaceRuntimeCorrectionTest::Impl {
     val afterCleric = advanceBattleTurn(afterFighter)
     val afterOgre = advanceBattleTurn(afterCleric)
     all {
-      assert(afterFighter.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["cleric", "ogre", "fighter"]),
+      assert(participants(afterFighter).foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["cleric", "ogre", "fighter"]),
       assert(afterFighter.round == 1),
       assert(afterFighter.turnNumber == 2),
       assert(currentActorId(afterFighter) == "cleric"),
       assert(currentActorId(afterCleric) == "ogre"),
-      assert(afterOgre.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
+      assert(participants(afterOgre).foldl([], (acc, participant) => acc.append(participant.combatant.id)) == ["fighter", "cleric", "ogre"]),
       assert(afterOgre.round == 2),
       assert(afterOgre.turnNumber == 4),
       assert(currentActorId(afterOgre) == "fighter"),

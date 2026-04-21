@@ -34,7 +34,9 @@ const ACTION_SURGE_ACCESS_ID = runtimeUnitAccessId(
 );
 
 function combatants(state: BattleState) {
-  return state.turnOrder.map((participant) => participant.combatant);
+  return [state.currentParticipant, ...state.waitingParticipants].map(
+    (participant) => participant.combatant,
+  );
 }
 
 function initiativeCounts(state: BattleState) {
@@ -49,17 +51,18 @@ function initiativeOrder(state: BattleState) {
 }
 
 function currentActorId(state: BattleState) {
-  return state.turnOrder[0].combatant.id;
+  return state.currentParticipant.combatant.id;
 }
 
 function canonicalTurnOrder(state: BattleState) {
-  const offset = (state.turnNumber - 1) % state.turnOrder.length;
+  const turnOrder = [state.currentParticipant, ...state.waitingParticipants];
+  const offset = (state.turnNumber - 1) % turnOrder.length;
   if (offset === 0) {
-    return [...state.turnOrder];
+    return [...turnOrder];
   }
   return [
-    ...state.turnOrder.slice(state.turnOrder.length - offset),
-    ...state.turnOrder.slice(0, state.turnOrder.length - offset),
+    ...turnOrder.slice(turnOrder.length - offset),
+    ...turnOrder.slice(0, turnOrder.length - offset),
   ];
 }
 
@@ -428,14 +431,16 @@ describe("surface runtime correction", () => {
           openPrompt: null,
           standardActionsRemaining: 0,
           nonMagicActionsRemaining: 0,
-          turnOrder: expect.arrayContaining([
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "ogre", currentHp: 52 }),
-            }),
-          ]),
         }),
       ),
     );
+    if (Either.isRight(reduced)) {
+      expect(combatants(reduced.right)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "ogre", currentHp: 52 }),
+        ]),
+      );
+    }
   });
 
   it("keeps 0-hp combatants targetable for attack prompts in this slice", async () => {
@@ -633,14 +638,16 @@ describe("surface runtime correction", () => {
       Either.right(
         expect.objectContaining({
           standardActionsRemaining: 0,
-          turnOrder: expect.arrayContaining([
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "fighter", currentHp: 17 }),
-            }),
-          ]),
         }),
       ),
     );
+    if (Either.isRight(reduced)) {
+      expect(combatants(reduced.right)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "fighter", currentHp: 17 }),
+        ]),
+      );
+    }
   });
 
   it("runs the fireball flow through structural area save damage", async () => {
@@ -700,20 +707,18 @@ describe("surface runtime correction", () => {
       Either.right(
         expect.objectContaining({
           standardActionsRemaining: 0,
-          turnOrder: expect.arrayContaining([
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            }),
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "cleric", currentHp: 4 }),
-            }),
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "ogre", currentHp: 49 }),
-            }),
-          ]),
         }),
       ),
     );
+    if (Either.isRight(reduced)) {
+      expect(combatants(reduced.right)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "fighter", currentHp: 10 }),
+          expect.objectContaining({ id: "cleric", currentHp: 4 }),
+          expect.objectContaining({ id: "ogre", currentHp: 49 }),
+        ]),
+      );
+    }
   });
 
   it("runs a full turn through prompt discovery, follow-up prompting, reduction, and next-turn discovery", async () => {
@@ -795,23 +800,19 @@ describe("surface runtime correction", () => {
           openPrompt: null,
           standardActionsRemaining: 0,
           nonMagicActionsRemaining: 0,
-          turnOrder: expect.arrayContaining([
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            }),
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "cleric", currentHp: 4 }),
-            }),
-            expect.objectContaining({
-              combatant: expect.objectContaining({ id: "ogre", currentHp: 49 }),
-            }),
-          ]),
         }),
       ),
     );
     if (Either.isLeft(afterFireball)) {
       return;
     }
+    expect(combatants(afterFireball.right)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "fighter", currentHp: 10 }),
+        expect.objectContaining({ id: "cleric", currentHp: 4 }),
+        expect.objectContaining({ id: "ogre", currentHp: 49 }),
+      ]),
+    );
     expect(currentActorId(afterFireball.right)).toBe("wizard");
 
     expect(discoverAvailableBattlePrompt(afterFireball.right)).toEqual({
@@ -902,23 +903,25 @@ describe("surface runtime correction", () => {
         expect.objectContaining({
           standardActionsRemaining: 1,
           nonMagicActionsRemaining: 1,
-          turnOrder: expect.arrayContaining([
-            expect.objectContaining({
-              combatant: expect.objectContaining({
-                id: "fighter",
-                unitResourceStates: [
-                  {
-                    unitAccessId: ACTION_SURGE_ACCESS_ID,
-                    expendedUses: 1,
-                    usedThisTurn: true,
-                  },
-                ],
-              }),
-            }),
-          ]),
         }),
       ),
     );
+    if (Either.isRight(reduced)) {
+      expect(combatants(reduced.right)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            id: "fighter",
+            unitResourceStates: [
+              {
+                unitAccessId: ACTION_SURGE_ACCESS_ID,
+                expendedUses: 1,
+                usedThisTurn: true,
+              },
+            ],
+          }),
+        ]),
+      );
+    }
     if (Either.isLeft(reduced)) {
       return;
     }

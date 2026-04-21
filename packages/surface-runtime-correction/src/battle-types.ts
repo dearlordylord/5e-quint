@@ -210,7 +210,8 @@ export type BattleResolutionResult =
     };
 
 export type BattleState = {
-  readonly turnOrder: readonly [BattleParticipant, ...BattleParticipant[]];
+  readonly currentParticipant: BattleParticipant;
+  readonly waitingParticipants: ReadonlyArray<BattleParticipant>;
   readonly round: number;
   readonly turnNumber: number;
   // This slice models at most one unresolved prompt window at a time.

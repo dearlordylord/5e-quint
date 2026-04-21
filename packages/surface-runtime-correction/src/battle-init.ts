@@ -11,12 +11,6 @@ import type {
 } from "#/battle-types.ts";
 import type { CreatureId } from "#/types.ts";
 
-function asTurnOrder(
-  participants: ReadonlyArray<BattleParticipant>,
-): readonly [BattleParticipant, ...BattleParticipant[]] {
-  return participants as readonly [BattleParticipant, ...BattleParticipant[]];
-}
-
 function duplicateIds(ids: ReadonlyArray<CreatureId>): ReadonlyArray<CreatureId> {
   const seen = new Set<CreatureId>();
   const duplicates = new Set<CreatureId>();
@@ -149,26 +143,18 @@ function validateInitiativeCounts(
 }
 
 function resetTurnScopedUnitUsage(
-  participants: ReadonlyArray<BattleParticipant>,
-): ReadonlyArray<BattleParticipant> {
-  const [current, ...rest] = participants;
-  if (current === undefined) {
-    return participants;
-  }
-
-  return [
-    {
-      ...current,
-      combatant: {
-        ...current.combatant,
-        unitResourceStates: current.combatant.unitResourceStates.map((resourceState) => ({
-          ...resourceState,
-          usedThisTurn: false,
-        })),
-      },
+  participant: BattleParticipant,
+): BattleParticipant {
+  return {
+    ...participant,
+    combatant: {
+      ...participant.combatant,
+      unitResourceStates: participant.combatant.unitResourceStates.map((resourceState) => ({
+        ...resourceState,
+        usedThisTurn: false,
+      })),
     },
-    ...rest,
-  ];
+  };
 }
 
 function orderParticipants(
@@ -274,10 +260,11 @@ export function initializeBattleState(
     initiativeOrder.right,
     initiativeCounts.right,
   );
-  const turnOrder = asTurnOrder(resetTurnScopedUnitUsage(orderedParticipants));
+  const [currentParticipant, ...waitingParticipants] = orderedParticipants;
 
   return Either.right({
-    turnOrder,
+    currentParticipant: resetTurnScopedUnitUsage(currentParticipant!),
+    waitingParticipants,
     round: 1,
     turnNumber: 1,
     openPrompt: null,
@@ -287,14 +274,15 @@ export function initializeBattleState(
 }
 
 export function advanceBattleTurn(state: BattleState): BattleState {
-  const [current, ...rest] = state.turnOrder;
-  const nextTurnOrderBase = asTurnOrder([...rest, current]);
-  const nextTurnOrder = asTurnOrder(resetTurnScopedUnitUsage(nextTurnOrderBase));
-  const wrapsRound = state.turnNumber % state.turnOrder.length === 0;
+  const nextTurnOrder = [...state.waitingParticipants, state.currentParticipant];
+  const [currentParticipant, ...waitingParticipants] = nextTurnOrder;
+  const wrapsRound =
+    state.turnNumber % (state.waitingParticipants.length + 1) === 0;
 
   return {
     ...state,
-    turnOrder: nextTurnOrder,
+    currentParticipant: resetTurnScopedUnitUsage(currentParticipant!),
+    waitingParticipants,
     round: wrapsRound ? state.round + 1 : state.round,
     turnNumber: state.turnNumber + 1,
     openPrompt: null,

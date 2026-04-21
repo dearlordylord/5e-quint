@@ -3,7 +3,21 @@ module surfaceRuntimeCorrectionMbt {
   import surfaceRuntimeCorrection.* from "./surfaceRuntimeCorrection"
 
   pure val EMPTY_BATTLE_STATE: BattleState = {
-    turnOrder: List(),
+    currentParticipant: {
+      combatant: {
+        id: "",
+        name: "",
+        level: 0,
+        currentHp: 0,
+        maxHp: 0,
+        spellSaveDc: NoSpellSaveDc,
+        units: List(),
+        unitResourceStates: List(),
+      },
+      initiativeCount: 0,
+      projectionOrder: 0,
+    },
+    waitingParticipants: List(),
     round: 0,
     turnNumber: 0,
     openPrompt: NoOpenPrompt,

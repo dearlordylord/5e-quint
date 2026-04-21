@@ -174,7 +174,8 @@ module surfaceRuntimeCorrection {
     | RAGrantExtraAction(GrantExtraActionAction)
 
   type BattleState = {
-    turnOrder: List[BattleParticipant],
+    currentParticipant: BattleParticipant,
+    waitingParticipants: List[BattleParticipant],
     round: int,
     turnNumber: int,
     openPrompt: OpenPromptState,
@@ -251,10 +252,11 @@ module surfaceRuntimeCorrection {
       and left.foldl(true, (acc, actorId) => acc and listContains(right, actorId))
 
   pure def currentCombatant(state: BattleState): BattleCombatant =
-    state.turnOrder[0].combatant
+    state.currentParticipant.combatant
 
   pure def combatantById(state: BattleState, actorId: CreatureId): MaybeBattleCombatant = {
-    val matches = state.turnOrder.select(participant => participant.combatant.id == actorId)
+    val matches = [state.currentParticipant].concat(state.waitingParticipants)
+      .select(participant => participant.combatant.id == actorId)
     if (matches.length() == 0) NoCombatant else FoundCombatant(matches[0].combatant)
   }
 
@@ -283,10 +285,11 @@ module surfaceRuntimeCorrection {
     state.with("openPrompt", openPrompt)
 
   pure def combatantIds(state: BattleState): List[CreatureId] =
-    state.turnOrder.foldl([], (acc, participant) => acc.append(participant.combatant.id))
+    [state.currentParticipant].concat(state.waitingParticipants)
+      .foldl([], (acc, participant) => acc.append(participant.combatant.id))
 
   pure def attackTargetIds(state: BattleState, actorId: CreatureId): List[CreatureId] =
-    state.turnOrder
+    [state.currentParticipant].concat(state.waitingParticipants)
       .select(participant => participant.combatant.id != actorId)
       .foldl([], (acc, participant) => acc.append(participant.combatant.id))
 
@@ -388,24 +391,17 @@ module surfaceRuntimeCorrection {
   }
 
   pure def resetTurnScopedUnitUsage(
-    participants: List[BattleParticipant],
-  ): List[BattleParticipant] =
-    if (participants.length() == 0) participants
-    else
-      participants.foldl([], (acc, participant) =>
-        acc.append(
-          if (participant.combatant.id != participants[0].combatant.id) participant
-          else participant.with(
-            "combatant",
-            participant.combatant.with(
-              "unitResourceStates",
-              participant.combatant.unitResourceStates.foldl([], (resourceAcc, resourceState) =>
-                resourceAcc.append(resourceState.with("usedThisTurn", false))
-              )
-            )
-          )
+    participant: BattleParticipant,
+  ): BattleParticipant =
+    participant.with(
+      "combatant",
+      participant.combatant.with(
+        "unitResourceStates",
+        participant.combatant.unitResourceStates.foldl([], (resourceAcc, resourceState) =>
+          resourceAcc.append(resourceState.with("usedThisTurn", false))
         )
       )
+    )
 
   pure def orderedParticipants(
     combatants: List[BattleCombatant],
@@ -435,9 +431,10 @@ module surfaceRuntimeCorrection {
     match orderResult {
       | InitiativeOrderInvalid(message) => BattleStateInvalid(message)
       | InitiativeOrderOk(order) =>
-          val turnOrder = resetTurnScopedUnitUsage(orderedParticipants(combatants, order, init.initiativeCounts))
+          val ordered = orderedParticipants(combatants, order, init.initiativeCounts)
           BattleStateOk({
-            turnOrder: turnOrder,
+            currentParticipant: resetTurnScopedUnitUsage(ordered[0]),
+            waitingParticipants: ordered.slice(1, ordered.length()),
             round: 1,
             turnNumber: 1,
             openPrompt: NoOpenPrompt,
@@ -449,14 +446,12 @@ module surfaceRuntimeCorrection {
   }
 
   pure def advanceBattleTurn(state: BattleState): BattleState =
-    if (state.turnOrder.length() == 0) state
-    else {
-      val current = state.turnOrder[0]
-      val rest = state.turnOrder.slice(1, state.turnOrder.length())
-      val nextTurnOrder = resetTurnScopedUnitUsage(rest.append(current))
-      val wrapsRound = state.turnNumber % state.turnOrder.length() == 0
+    {
+      val nextTurnOrder = state.waitingParticipants.append(state.currentParticipant)
+      val wrapsRound = state.turnNumber % (state.waitingParticipants.length() + 1) == 0
       {
-        turnOrder: nextTurnOrder,
+        currentParticipant: resetTurnScopedUnitUsage(nextTurnOrder[0]),
+        waitingParticipants: nextTurnOrder.slice(1, nextTurnOrder.length()),
         round: if (wrapsRound) state.round + 1 else state.round,
         turnNumber: state.turnNumber + 1,
         openPrompt: NoOpenPrompt,
@@ -746,6 +741,23 @@ module surfaceRuntimeCorrection {
       )
     )
 
+  pure def stateWithReplacedCombatant(
+    state: BattleState,
+    updatedCombatant: BattleCombatant,
+  ): BattleState = {
+    currentParticipant:
+      if (state.currentParticipant.combatant.id == updatedCombatant.id)
+        state.currentParticipant.with("combatant", updatedCombatant)
+      else
+        state.currentParticipant,
+    waitingParticipants: replaceCombatant(state.waitingParticipants, updatedCombatant),
+    round: state.round,
+    turnNumber: state.turnNumber,
+    openPrompt: state.openPrompt,
+    standardActionsRemaining: state.standardActionsRemaining,
+    nonMagicActionsRemaining: state.nonMagicActionsRemaining,
+  }
+
   pure def spendNonMagicAction(state: BattleState): BattleStateReduceResult =
     if (state.nonMagicActionsRemaining > 0)
       BattleStateReduced(state.with("nonMagicActionsRemaining", state.nonMagicActionsRemaining - 1))
@@ -770,21 +782,19 @@ module surfaceRuntimeCorrection {
       val spentState = if (state.nonMagicActionsRemaining > 0)
         state.with("nonMagicActionsRemaining", state.nonMagicActionsRemaining - 1)
         else state.with("standardActionsRemaining", state.standardActionsRemaining - 1)
-      val targetMatches = spentState.turnOrder.select(participant => participant.combatant.id == attackAction.targetId)
+      val targetMatches = [spentState.currentParticipant].concat(spentState.waitingParticipants)
+        .select(participant => participant.combatant.id == attackAction.targetId)
       if (targetMatches.length() == 0)
         BattleStateReductionInvalid("attack target is no longer in the battle")
       else
         BattleStateReduced(
-          spentState.with(
-            "turnOrder",
-            replaceCombatant(
-              spentState.turnOrder,
-              targetMatches[0].combatant.with(
-                "currentHp",
-                clampHp(
-                  targetMatches[0].combatant.currentHp - attackAction.damage,
-                  targetMatches[0].combatant.maxHp
-                )
+          stateWithReplacedCombatant(
+            spentState,
+            targetMatches[0].combatant.with(
+              "currentHp",
+              clampHp(
+                targetMatches[0].combatant.currentHp - attackAction.damage,
+                targetMatches[0].combatant.maxHp
               )
             )
           )
@@ -800,21 +810,19 @@ module surfaceRuntimeCorrection {
       BattleStateReductionInvalid("no Magic action is currently available")
     else {
       val spentState = state.with("standardActionsRemaining", state.standardActionsRemaining - 1)
-      val targetMatches = spentState.turnOrder.select(participant => participant.combatant.id == healAction.targetId)
+      val targetMatches = [spentState.currentParticipant].concat(spentState.waitingParticipants)
+        .select(participant => participant.combatant.id == healAction.targetId)
       if (targetMatches.length() == 0)
         BattleStateReductionInvalid("heal target is no longer in the battle")
       else
         BattleStateReduced(
-          spentState.with(
-            "turnOrder",
-            replaceCombatant(
-              spentState.turnOrder,
-              targetMatches[0].combatant.with(
-                "currentHp",
-                clampHp(
-                  targetMatches[0].combatant.currentHp + healAction.healing,
-                  targetMatches[0].combatant.maxHp
-                )
+          stateWithReplacedCombatant(
+            spentState,
+            targetMatches[0].combatant.with(
+              "currentHp",
+              clampHp(
+                targetMatches[0].combatant.currentHp + healAction.healing,
+                targetMatches[0].combatant.maxHp
               )
             )
           )
@@ -835,9 +843,19 @@ module surfaceRuntimeCorrection {
         .foldl([], (acc, targetResult) => acc.append(targetResult.targetId))
       val affectedTargetIds = areaAction.targetResults.foldl([], (acc, targetResult) => acc.append(targetResult.targetId))
       BattleStateReduced(
-        spentState.with(
-          "turnOrder",
-          spentState.turnOrder.foldl([], (acc, participant) =>
+        {
+          currentParticipant:
+            if (not(listContains(affectedTargetIds, spentState.currentParticipant.combatant.id))) spentState.currentParticipant
+            else
+              val damage = if (listContains(successfulTargetIds, spentState.currentParticipant.combatant.id)) areaAction.damage / 2 else areaAction.damage
+              spentState.currentParticipant.with(
+                "combatant",
+                spentState.currentParticipant.combatant.with(
+                  "currentHp",
+                  clampHp(spentState.currentParticipant.combatant.currentHp - damage, spentState.currentParticipant.combatant.maxHp)
+                )
+              ),
+          waitingParticipants: spentState.waitingParticipants.foldl([], (acc, participant) =>
             acc.append(
               if (not(listContains(affectedTargetIds, participant.combatant.id))) participant
               else
@@ -850,8 +868,13 @@ module surfaceRuntimeCorrection {
                   )
                 )
             )
-          )
-        )
+          ),
+          round: spentState.round,
+          turnNumber: spentState.turnNumber,
+          openPrompt: spentState.openPrompt,
+          standardActionsRemaining: spentState.standardActionsRemaining,
+          nonMagicActionsRemaining: spentState.nonMagicActionsRemaining,
+        }
       )
     }
   }
@@ -860,7 +883,8 @@ module surfaceRuntimeCorrection {
     state: BattleState,
     extraAction: GrantExtraActionAction,
   ): BattleStateReduceResult = {
-    val actorMatches = state.turnOrder.select(participant => participant.combatant.id == extraAction.actorId)
+    val actorMatches = [state.currentParticipant].concat(state.waitingParticipants)
+      .select(participant => participant.combatant.id == extraAction.actorId)
     if (actorMatches.length() == 0)
       BattleStateReductionInvalid("acting combatant is no longer in the battle")
     else {
@@ -896,8 +920,7 @@ module surfaceRuntimeCorrection {
                 )
               )
               BattleStateReduced(
-                state
-                  .with("turnOrder", replaceCombatant(state.turnOrder, updatedActor))
+                stateWithReplacedCombatant(state, updatedActor)
                   .with("nonMagicActionsRemaining", state.nonMagicActionsRemaining + 1)
               )
         | _ => BattleStateReductionInvalid("unit does not structurally grant an extra action")
@@ -910,27 +933,27 @@ module surfaceRuntimeCorrection {
     resolvedAction: ResolvedBattleAction,
   ): BattleStateReduceResult = match resolvedAction {
       | RAEndTurn(endTurnAction) =>
-          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != endTurnAction.actorId)
+          if (state.currentParticipant.combatant.id != endTurnAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             BattleStateReduced(advanceBattleTurn(state))
       | RAAttack(attackAction) =>
-          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != attackAction.actorId)
+          if (state.currentParticipant.combatant.id != attackAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceAttack(state, attackAction)
       | RASingleTargetHeal(healAction) =>
-          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != healAction.actorId)
+          if (state.currentParticipant.combatant.id != healAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceSingleTargetHeal(state, healAction)
       | RAAreaSaveDamage(areaAction) =>
-          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != areaAction.actorId)
+          if (state.currentParticipant.combatant.id != areaAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceAreaSaveDamage(state, areaAction)
       | RAGrantExtraAction(extraAction) =>
-          if (state.turnOrder.length() == 0 or state.turnOrder[0].combatant.id != extraAction.actorId)
+          if (state.currentParticipant.combatant.id != extraAction.actorId)
             BattleStateReductionInvalid("resolved action does not belong to the current turn actor")
           else
             reduceGrantExtraAction(state, extraAction)

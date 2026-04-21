@@ -17,11 +17,14 @@ import {
   resourceStateForUnit,
 } from "#/surface-interpretation.ts";
 
-function mapTurnOrder(
+function mapParticipants(
   state: BattleState,
-  update: (participant: BattleState["turnOrder"][number]) => BattleState["turnOrder"][number],
-): BattleState["turnOrder"] {
-  return state.turnOrder.map(update) as unknown as BattleState["turnOrder"];
+  update: (participant: BattleState["currentParticipant"]) => BattleState["currentParticipant"],
+): Pick<BattleState, "currentParticipant" | "waitingParticipants"> {
+  return {
+    currentParticipant: update(state.currentParticipant),
+    waitingParticipants: state.waitingParticipants.map(update),
+  };
 }
 
 function missingCombatant(
@@ -48,7 +51,7 @@ function updateCombatant(
   combatantId: string,
   update: (combatant: Combatant) => Combatant,
 ) {
-  const combatant = state.turnOrder
+  const combatant = [state.currentParticipant, ...state.waitingParticipants]
     .map((participant) => participant.combatant)
     .find((candidate) => candidate.id === combatantId);
   if (combatant === undefined) {
@@ -57,7 +60,7 @@ function updateCombatant(
 
   return Either.right({
     ...state,
-    turnOrder: mapTurnOrder(state, (participant) =>
+    ...mapParticipants(state, (participant) =>
       participant.combatant.id !== combatantId
         ? participant
         : {
@@ -149,7 +152,7 @@ function reduceAreaSaveDamage(
 
   return Either.right({
     ...spent.right,
-    turnOrder: mapTurnOrder(spent.right, (participant) => {
+    ...mapParticipants(spent.right, (participant) => {
       const combatant = participant.combatant;
       if (!affectedIds.has(combatant.id)) {
         return participant;
@@ -173,7 +176,7 @@ function reduceGrantExtraAction(
   state: BattleState,
   action: Extract<ResolvedBattleAction, { readonly tag: "grantExtraAction" }>,
 ) {
-  const actor = state.turnOrder
+  const actor = [state.currentParticipant, ...state.waitingParticipants]
     .map((participant) => participant.combatant)
     .find((combatant) => combatant.id === action.actorId);
   if (actor === undefined) {
@@ -232,7 +235,7 @@ export function reduceBattleState(
   state: BattleState,
   action: ResolvedBattleAction,
 ): Either.Either<BattleState, MissingCombatantError | InvalidBattleActionError> {
-  if (state.turnOrder[0].combatant.id !== action.actorId) {
+  if (state.currentParticipant.combatant.id !== action.actorId) {
     return invalidBattleAction("resolved action does not belong to the current turn actor");
   }
 

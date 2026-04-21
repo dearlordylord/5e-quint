@@ -77,3 +77,9 @@ the surface-runtime-correction walkthrough.
     not as a rescue from a failed model.
     What it changed was the frozen contract shape, not the underlying
     possibility of multi-step prompting.
+
+15. `nonMagicActionsRemaining` may be a boundary leak.
+    It likely pulls unit-granted semantics into battle-core state too early.
+    Before changing that boundary, do the concrete SRD / PHB research:
+    count how many units actually grant this kind of extra non-Magic action and
+    list the specific units.
