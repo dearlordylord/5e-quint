@@ -2,6 +2,10 @@ import { Effect, Either, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { SurfaceUnitLibraryLive } from "#/authored-library.ts";
+import {
+  answerBattlePrompt,
+  discoverAvailableBattlePrompt,
+} from "#/battle-prompts.ts";
 import { advanceBattleTurn, createInitiativeOrder } from "#/battle-init.ts";
 import { projectRosterToBattle } from "#/battle.ts";
 import { CORE_BATTLE_ACTIONS } from "#/battle-types.ts";
@@ -9,7 +13,11 @@ import { effectFromEither } from "#/effect-helpers.ts";
 import { RuntimeUnitLibraryLive } from "#/hydration.ts";
 import { reduceRosterState } from "#/roster.ts";
 import { RuntimeUnitLibrary } from "#/services.ts";
-import type { BattleState, CreatureRosterState } from "#/index.ts";
+import type {
+  BattlePromptAnswer,
+  BattleState,
+  CreatureRosterState,
+} from "#/index.ts";
 
 const initialRoster: CreatureRosterState = {
   creatures: [
@@ -54,6 +62,81 @@ const initialRoster: CreatureRosterState = {
     },
   ],
 };
+
+const promptRoster: CreatureRosterState = {
+  creatures: [
+    {
+      id: "fighter",
+      name: "Brakka",
+      sourceKind: "characterSheet",
+      className: "fighter",
+      level: 2,
+      currentHp: 20,
+      maxHp: 20,
+      armorClass: 16,
+      spellSaveDc: null,
+      spellcastingModifier: null,
+      authoredUnitIds: ["fighter_action_surge_l2"],
+    },
+    {
+      id: "cleric",
+      name: "Mira",
+      sourceKind: "characterSheet",
+      className: "cleric",
+      level: 3,
+      currentHp: 18,
+      maxHp: 18,
+      armorClass: 15,
+      spellSaveDc: 14,
+      spellcastingModifier: 3,
+      authoredUnitIds: ["cure_wounds"],
+    },
+    {
+      id: "wizard",
+      name: "Nyra",
+      sourceKind: "characterSheet",
+      className: "wizard",
+      level: 5,
+      currentHp: 22,
+      maxHp: 22,
+      armorClass: 12,
+      spellSaveDc: 15,
+      spellcastingModifier: 4,
+      authoredUnitIds: ["fireball"],
+    },
+    {
+      id: "ogre",
+      name: "Ogre",
+      sourceKind: "statBlock",
+      statBlockName: "ogre",
+      level: 2,
+      currentHp: 59,
+      maxHp: 59,
+      armorClass: 11,
+      spellSaveDc: null,
+      spellcastingModifier: null,
+      authoredUnitIds: [],
+    },
+  ],
+};
+
+async function projectPromptBattle(): Promise<BattleState> {
+  const program = projectRosterToBattle(promptRoster, {
+    initiativeCounts: [
+      { actorId: "wizard", count: 18 },
+      { actorId: "fighter", count: 16 },
+      { actorId: "cleric", count: 12 },
+      { actorId: "ogre", count: 9 },
+    ],
+    tieResolutions: [],
+  }).pipe(
+    Effect.provide(
+      RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
+    ),
+  );
+
+  return Effect.runPromise(program);
+}
 
 describe("surface runtime correction", () => {
   it("hydrates runtime units without compiling a second execution ir", async () => {
@@ -296,15 +379,18 @@ describe("surface runtime correction", () => {
       expect(afterFighter.round).toBe(1);
       expect(afterFighter.turnNumber).toBe(2);
       expect(afterFighter.turnActorId).toBe("cleric");
+      expect(afterFighter.openPrompt).toBeNull();
 
       expect(afterCleric.round).toBe(1);
       expect(afterCleric.turnNumber).toBe(3);
       expect(afterCleric.turnActorId).toBe("ogre");
+      expect(afterCleric.openPrompt).toBeNull();
 
       expect(afterOgre.initiativeOrder).toEqual(["fighter", "cleric", "ogre"]);
       expect(afterOgre.round).toBe(2);
       expect(afterOgre.turnNumber).toBe(4);
       expect(afterOgre.turnActorId).toBe("fighter");
+      expect(afterOgre.openPrompt).toBeNull();
     }).pipe(
       Effect.provide(
         RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
@@ -312,5 +398,190 @@ describe("surface runtime correction", () => {
     );
 
     await Effect.runPromise(program);
+  });
+
+  it("derives the current choose-action prompt from battle state", async () => {
+    const battle = await projectPromptBattle();
+
+    // RAW/UL check: the current prompt belongs to the turn owner in initiative
+    // order, matching Playing-the-Game.md ("The Order of Combat", "Your Turn")
+    // and the Initiative / Turn / Action terms in UBIQUITOUS_LANGUAGE.md.
+    expect(discoverAvailableBattlePrompt(battle)).toEqual({
+      tag: "chooseAction",
+      actorId: "wizard",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
+        {
+          tag: "unit",
+          unit: {
+            ownerId: "wizard",
+            sourceKind: "characterSheet",
+            unit: expect.objectContaining({ id: "fireball" }),
+          },
+        },
+      ],
+    });
+  });
+
+  it("resolves a complete prompt answer directly when no follow-up input is needed", async () => {
+    const battle = await projectPromptBattle();
+
+    const resolution = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: { tag: "coreAction", action: "endTurn" },
+    });
+
+    expect(resolution).toEqual(
+      Either.right({
+        tag: "resolvedAction",
+        state: { ...battle, openPrompt: null },
+        action: {
+          tag: "endTurn",
+          actorId: "wizard",
+        },
+      }),
+    );
+  });
+
+  it("can open a new prompt after a complete answer selects attack", async () => {
+    const battle = await projectPromptBattle();
+
+    const chooseAttack = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "coreAction",
+        action: "attack",
+      },
+    });
+
+    expect(chooseAttack).toEqual(
+      Either.right({
+        tag: "openedPrompt",
+        state: {
+          ...battle,
+          openPrompt: {
+            tag: "chooseAttackTarget",
+          },
+        },
+        prompt: {
+          tag: "chooseAttackTarget",
+          actorId: "wizard",
+          availableTargetIds: ["fighter", "cleric", "ogre"],
+        },
+      }),
+    );
+  });
+
+  it("resolves a selected unit without duplicating actor ownership", async () => {
+    const battle = await projectPromptBattle();
+    const wizard = battle.combatants.find(
+      (combatant) => combatant.id === "wizard",
+    )!;
+
+    const resolution = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "unit",
+        unit: wizard.units[0]!,
+      },
+    });
+
+    expect(resolution).toEqual(
+      Either.right({
+        tag: "resolvedAction",
+        state: {
+          ...battle,
+          openPrompt: null,
+        },
+        action: {
+          tag: "useUnit",
+          unit: {
+            ownerId: "wizard",
+            sourceKind: "characterSheet",
+            unit: expect.objectContaining({ id: "fireball" }),
+          },
+        },
+      }),
+    );
+  });
+
+  it("clears any open prompt when turn ownership advances", async () => {
+    const battle = await projectPromptBattle();
+
+    const chooseAttack = answerBattlePrompt(battle, {
+      tag: "chooseAction",
+      choice: {
+        tag: "coreAction",
+        action: "attack",
+      },
+    });
+
+    expect(Either.isRight(chooseAttack)).toBe(true);
+    if (Either.isLeft(chooseAttack)) {
+      return;
+    }
+
+    const nextTurn = advanceBattleTurn(chooseAttack.right.state);
+
+    expect(nextTurn.turnActorId).toBe("fighter");
+    expect(nextTurn.openPrompt).toBeNull();
+    expect(discoverAvailableBattlePrompt(nextTurn)).toEqual({
+      tag: "chooseAction",
+      actorId: "fighter",
+      options: [
+        { tag: "coreAction", action: "attack" },
+        { tag: "coreAction", action: "endTurn" },
+        {
+          tag: "unit",
+          unit: {
+            ownerId: "fighter",
+            sourceKind: "characterSheet",
+            unit: expect.objectContaining({ id: "fighter_action_surge_l2" }),
+          },
+        },
+      ],
+    });
+  });
+
+  it("does not advertise attack when the current actor has no legal target", async () => {
+    const soloRoster: CreatureRosterState = {
+      creatures: [promptRoster.creatures[2]!],
+    };
+    const soloBattle = await Effect.runPromise(
+      projectRosterToBattle(soloRoster, {
+        initiativeCounts: [{ actorId: "wizard", count: 18 }],
+        tieResolutions: [],
+      }).pipe(
+        Effect.provide(
+          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
+        ),
+      ),
+    );
+
+    expect(discoverAvailableBattlePrompt(soloBattle)).toEqual({
+      tag: "chooseAction",
+      actorId: "wizard",
+      options: [
+        { tag: "coreAction", action: "endTurn" },
+        {
+          tag: "unit",
+          unit: {
+            ownerId: "wizard",
+            sourceKind: "characterSheet",
+            unit: expect.objectContaining({ id: "fireball" }),
+          },
+        },
+      ],
+    });
+  });
+
+  it("makes partial prompt answers unrepresentable at the type level", () => {
+    // @ts-expect-error chooseAction answers must include a selected choice.
+    const invalidPartialAnswer: BattlePromptAnswer = {
+      tag: "chooseAction",
+    };
+
+    expect(invalidPartialAnswer).toBeDefined();
   });
 });

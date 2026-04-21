@@ -34,7 +34,7 @@ export type BattleInit = {
   readonly tieResolutions: ReadonlyArray<BattleInitiativeTieResolution>;
 };
 
-export type AvailableActionOption =
+export type AvailableBattleAction =
   | {
       readonly tag: "coreAction";
       readonly action: CoreBattleAction;
@@ -44,70 +44,63 @@ export type AvailableActionOption =
       readonly unit: RuntimeUnitAccess;
     };
 
-export type PendingBattleAction =
+export type ChooseActionPrompt = {
+  readonly tag: "chooseAction";
+  readonly actorId: CreatureId;
+  readonly options: ReadonlyArray<AvailableBattleAction>;
+};
+
+export type ChooseAttackTargetPrompt = {
+  readonly tag: "chooseAttackTarget";
+  readonly actorId: CreatureId;
+  readonly availableTargetIds: ReadonlyArray<CreatureId>;
+};
+
+export type OpenBattlePrompt = ChooseAttackTargetPrompt;
+
+export type OpenBattlePromptState =
   | {
-      readonly tag: "useCoreAction";
-      readonly action: CoreBattleAction;
-    }
-  | {
-      readonly tag: "useUnit";
-      readonly unit: RuntimeUnitAccess;
+      readonly tag: "chooseAttackTarget";
     };
 
-export type PromptInputRequirement =
-  | { readonly tag: "chooseTarget"; readonly count: "single" | "multiple" }
-  | { readonly tag: "chooseSpellSlot"; readonly minimumLevel: number }
-  | { readonly tag: "reportRoll"; readonly roll: "healing" | "damage" }
-  | { readonly tag: "reportOutcomeTargets"; readonly outcome: "failedSave" };
+export type AvailableBattlePrompt = ChooseActionPrompt | OpenBattlePrompt;
 
-export type AvailableBattlePrompt =
+export type BattlePromptAnswer =
   | {
       readonly tag: "chooseAction";
-      readonly actorId: CreatureId;
-      readonly options: ReadonlyArray<AvailableActionOption>;
+      readonly choice: AvailableBattleAction;
     }
   | {
-      readonly tag: "fillActionInputs";
-      readonly actorId: CreatureId;
-      readonly action: PendingBattleAction;
-      readonly requiredInputs: ReadonlyArray<PromptInputRequirement>;
-    };
-
-export type ResolvedPromptInput =
-  | {
-      readonly tag: "chosenTargets";
-      readonly targetIds: ReadonlyArray<CreatureId>;
-    }
-  | {
-      readonly tag: "chosenSpellSlot";
-      readonly level: number;
-    }
-  | {
-      readonly tag: "reportedRoll";
-      readonly roll: "healing" | "damage";
-      readonly total: number;
-    }
-  | {
-      readonly tag: "reportedOutcomeTargets";
-      readonly outcome: "failedSave";
-      readonly targetIds: ReadonlyArray<CreatureId>;
+      readonly tag: "chooseAttackTarget";
+      readonly targetId: CreatureId;
     };
 
 export type ResolvedBattleAction =
   | {
-      readonly tag: "useCoreAction";
+      readonly tag: "endTurn";
       readonly actorId: CreatureId;
-      readonly action: CoreBattleAction;
+    }
+  | {
+      readonly tag: "attack";
+      readonly actorId: CreatureId;
+      readonly targetId: CreatureId;
     }
   | {
       readonly tag: "useUnit";
       readonly unit: RuntimeUnitAccess;
-      readonly inputs: ReadonlyArray<ResolvedPromptInput>;
     };
 
 export type BattleResolutionResult =
-  | { readonly tag: "ready"; readonly action: ResolvedBattleAction }
-  | { readonly tag: "needsPrompt"; readonly prompt: AvailableBattlePrompt };
+  | {
+      readonly tag: "resolvedAction";
+      readonly state: BattleState;
+      readonly action: ResolvedBattleAction;
+    }
+  | {
+      readonly tag: "openedPrompt";
+      readonly state: BattleState;
+      readonly prompt: OpenBattlePrompt;
+    };
 
 export type BattleState = {
   readonly combatants: ReadonlyArray<BattleCombatant>;
@@ -116,4 +109,5 @@ export type BattleState = {
   readonly round: number;
   readonly turnNumber: number;
   readonly turnActorId: CreatureId | null;
+  readonly openPrompt: OpenBattlePromptState | null;
 };

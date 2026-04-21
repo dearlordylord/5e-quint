@@ -19,3 +19,7 @@ export class InvalidRosterActionError extends Data.TaggedError("InvalidRosterAct
 export class InvalidBattleInitError extends Data.TaggedError("InvalidBattleInitError")<{
   readonly message: string;
 }> {}
+
+export class InvalidBattlePromptAnswerError extends Data.TaggedError("InvalidBattlePromptAnswerError")<{
+  readonly message: string;
+}> {}

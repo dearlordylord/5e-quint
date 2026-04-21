@@ -4,6 +4,10 @@ export {
   initializeBattleState,
 } from "#/battle-init.ts";
 export {
+  answerBattlePrompt,
+  discoverAvailableBattlePrompt,
+} from "#/battle-prompts.ts";
+export {
   loadSurfaceUnitsEither,
   parseSurfaceUnitEither,
   SurfaceUnitLibraryLive,

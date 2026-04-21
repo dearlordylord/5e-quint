@@ -38,8 +38,8 @@ The coding loop should treat this file as the active queue. Do not start a task 
   "tasks": [
     { "number": 0, "id": "SRC1", "status": "done", "title": "Rename Package And Establish First-Class Battle Types" },
     { "number": 1, "id": "SRC2", "status": "done", "title": "Implement Initiative-Aware Battle Init And Turn Ownership" },
-    { "number": 2, "id": "SRC3", "status": "ready-for-implementation-after-light-research", "title": "Replace Flat Battle Choice With Prompt And Resolution Flow" },
-    { "number": 3, "id": "SRC4", "status": "blocked", "title": "Route Core And Unit Actions Through Structural Surface Interpretation" },
+    { "number": 2, "id": "SRC3", "status": "done", "title": "Replace Flat Battle Choice With Prompt And Resolution Flow" },
+    { "number": 3, "id": "SRC4", "status": "ready-for-implementation-after-light-research", "title": "Route Core And Unit Actions Through Structural Surface Interpretation" },
     { "number": 4, "id": "SRC5", "status": "blocked", "title": "Land End-To-End Correction Slice Tests And Docs" },
     { "number": 5, "id": "SRC5.5", "status": "blocked", "title": "Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups" },
     { "number": 6, "id": "SRC6", "status": "blocked", "title": "Add Quint Spec For Correction Slice" },
@@ -67,8 +67,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 |---|---|---|---|---|---|---|
 | 0 | SRC1 - Rename Package And Establish First-Class Battle Types | done | none | SRC2, SRC3, SRC4, SRC5 | Landed `packages/surface-runtime-correction`, updated workspace/package metadata, replaced the flat toy battle choice with first-class battle vocabulary types, and kept authored identity only on `unit.id`. | Done. Verification: package typecheck and package test passed; broader `pnpm quality` stopped at unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
 | 1 | SRC2 - Implement Initiative-Aware Battle Init And Turn Ownership | done | SRC1 | SRC3, SRC4, SRC5 | Landed battle init input, stable initiative ordering, and explicit turn ownership (`turnActorId`, `round`, `turnNumber`) in `packages/surface-runtime-correction`. Tie resolution stays table-owned input and the empty-battle path validates that init remains battle-scoped. | Done. Verification: package typecheck and test passed; broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
-| 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | ready-for-implementation-after-light-research | SRC1, SRC2 | SRC4, SRC5 | Remove the current already-filled battle choice shape. Implement prompt discovery from state plus a resolution flow that distinguishes: available prompt, complete prompt answer, resolved action, and “new prompt created after prior resolution.” Partial prompt answers must be unrepresentable. | Ready now that battle init and turn ownership exist. Keep prompts derived from the initiative-owned current actor rather than duplicating turn state. |
-| 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | blocked | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Blocked on prompt flow existing first. |
+| 2 | SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow | done | SRC1, SRC2 | SRC4, SRC5 | Landed derived prompt discovery from battle state, exact prompt-answer types, resolved battle actions, and minimal in-flight prompt state for multi-step interactions. The first follow-up prompt seam is `chooseAttackTarget`; structural `Surface` interpretation of chosen units remains deferred to SRC4. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test` passed; broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`. |
+| 3 | SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation | ready-for-implementation-after-light-research | SRC1, SRC2, SRC3 | SRC5 | Implement the first real correction slice with both core actions and unit actions routed through structural helper interpretation of `Surface`, not by specific unit ids. Minimum in-scope path: `attack`, `endTurn`, `cure_wounds`, `fireball`, `fighter_action_surge_l2`. Avoid introducing a second compiled execution language unless the implementer proves the design doc’s narrowing conditions. | Ready now that prompt discovery, exact answer typing, and follow-up prompt creation are explicit. Keep `useUnit` generic until structural interpretation lands here. |
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | blocked | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Add deterministic tests for the implemented slice and update docs/diagrams to reflect the landed pattern, especially the distinction between complete prompt answers and newly-created prompts after resolution. Record the TS-first / Quint-followed sequencing explicitly so Quint can take semantic lead in the next phase. | Last implementation task in the first batch. |
 | 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | blocked | SRC5 | SRC6, SRC7, SRC8 | Compare the landed `SRC1`-`SRC5` pattern against the pre-implementation design doc, document what changed, and rewrite `SRC6` / `SRC7` / `SRC8` from the actual outcome rather than from speculation. This is the handoff freeze point between TS-first discovery and Quint-led follow-up. | Blocked until the first slice is real. |
 | 6 | SRC6 - Add Quint Spec For Correction Slice | blocked | SRC5.5 | SRC7, SRC8 | Formalize the landed correction-slice pattern in Quint so Quint becomes the semantic lead after the TS discovery phase. | Blocked on the discovered-pattern freeze. |
@@ -218,7 +218,7 @@ It must be designed so future mid-battle joins are straightforward.
 
 ### Task 2 - SRC3 - Replace Flat Battle Choice With Prompt And Resolution Flow
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC1`, `SRC2`
 
@@ -280,9 +280,17 @@ The model must **not** allow:
   - invalid partial answer is unrepresentable or rejected immediately
 - `/simplify` minimum two rounds
 
+### Outcome
+
+- Replaced the old flat already-resolved choice flow with explicit battle prompts, exact prompt answers, and explicit resolved action variants in `packages/surface-runtime-correction`.
+- Kept available prompts derived from battle state and stored only minimal in-flight prompt state via `openPrompt`.
+- Landed the first multi-step resolution seam by letting a complete `chooseAction` answer open a new `chooseAttackTarget` prompt before producing a resolved attack action.
+- Preserved the SRC3/SRC4 boundary by keeping unit selection generic here; structural interpretation of chosen `Surface` units still belongs to SRC4.
+- Verified with `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test`; broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts`.
+
 ### Task 3 - SRC4 - Route Core And Unit Actions Through Structural Surface Interpretation
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC1`, `SRC2`, `SRC3`
 

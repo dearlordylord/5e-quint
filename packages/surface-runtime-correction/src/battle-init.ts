@@ -199,6 +199,7 @@ export function initializeBattleState(
     round: initiativeOrder.right.length === 0 ? 0 : 1,
     turnNumber: initiativeOrder.right.length === 0 ? 0 : 1,
     turnActorId: initiativeOrder.right[0] ?? null,
+    openPrompt: null,
   });
 }
 
@@ -223,5 +224,6 @@ export function advanceBattleTurn(state: BattleState): BattleState {
     round: wrapsRound ? state.round + 1 : state.round,
     turnNumber: state.turnNumber + 1,
     turnActorId: state.initiativeOrder[nextTurnIndex] ?? null,
+    openPrompt: null,
   };
 }
