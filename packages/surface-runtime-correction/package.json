@@ -8,13 +8,14 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run src/surface-runtime-correction.test.ts"
   },
   "dependencies": {
     "@dnd/prototype-content-surface": "workspace:*",
     "effect": "^3.21.0"
   },
   "devDependencies": {
+    "@firfi/quint-connect": "^0.8.2",
     "typescript": "^5.9.3",
     "vitest": "^3.0.5"
   }

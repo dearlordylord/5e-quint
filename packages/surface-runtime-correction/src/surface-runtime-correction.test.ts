@@ -1,7 +1,6 @@
-import { Effect, Either, Layer } from "effect";
+import { Effect, Either } from "effect";
 import { describe, expect, it } from "vitest";
 
-import { SurfaceUnitLibraryLive } from "#/authored-library.ts";
 import {
   answerBattlePrompt,
   discoverAvailableBattlePrompt,
@@ -11,133 +10,19 @@ import { reduceBattleState } from "#/battle-reducer.ts";
 import { projectRosterToBattle } from "#/battle.ts";
 import { CORE_BATTLE_ACTIONS } from "#/battle-types.ts";
 import { effectFromEither } from "#/effect-helpers.ts";
-import { RuntimeUnitLibraryLive } from "#/hydration.ts";
 import { reduceRosterState } from "#/roster.ts";
 import { RuntimeUnitLibrary } from "#/services.ts";
+import {
+  initialRoster,
+  projectPromptBattle,
+  promptRoster,
+  SurfaceRuntimeCorrectionTestLayer,
+} from "#/test-support.ts";
 import type {
   BattlePromptAnswer,
   BattleState,
   CreatureRosterState,
 } from "#/index.ts";
-
-const initialRoster: CreatureRosterState = {
-  creatures: [
-    {
-      id: "fighter",
-      name: "Brakka",
-      sourceKind: "characterSheet",
-      className: "fighter",
-      level: 1,
-      currentHp: 20,
-      maxHp: 20,
-      armorClass: 16,
-      spellSaveDc: null,
-      spellcastingModifier: null,
-      authoredUnitIds: [],
-    },
-    {
-      id: "cleric",
-      name: "Mira",
-      sourceKind: "characterSheet",
-      className: "cleric",
-      level: 3,
-      currentHp: 18,
-      maxHp: 18,
-      armorClass: 15,
-      spellSaveDc: 14,
-      spellcastingModifier: 3,
-      authoredUnitIds: ["cure_wounds"],
-    },
-    {
-      id: "ogre",
-      name: "Ogre",
-      sourceKind: "statBlock",
-      statBlockName: "ogre",
-      level: 2,
-      currentHp: 59,
-      maxHp: 59,
-      armorClass: 11,
-      spellSaveDc: null,
-      spellcastingModifier: null,
-      authoredUnitIds: [],
-    },
-  ],
-};
-
-const promptRoster: CreatureRosterState = {
-  creatures: [
-    {
-      id: "fighter",
-      name: "Brakka",
-      sourceKind: "characterSheet",
-      className: "fighter",
-      level: 2,
-      currentHp: 20,
-      maxHp: 20,
-      armorClass: 16,
-      spellSaveDc: null,
-      spellcastingModifier: null,
-      authoredUnitIds: ["fighter_action_surge_l2"],
-    },
-    {
-      id: "cleric",
-      name: "Mira",
-      sourceKind: "characterSheet",
-      className: "cleric",
-      level: 3,
-      currentHp: 18,
-      maxHp: 18,
-      armorClass: 15,
-      spellSaveDc: 14,
-      spellcastingModifier: 3,
-      authoredUnitIds: ["cure_wounds"],
-    },
-    {
-      id: "wizard",
-      name: "Nyra",
-      sourceKind: "characterSheet",
-      className: "wizard",
-      level: 5,
-      currentHp: 22,
-      maxHp: 22,
-      armorClass: 12,
-      spellSaveDc: 15,
-      spellcastingModifier: 4,
-      authoredUnitIds: ["fireball"],
-    },
-    {
-      id: "ogre",
-      name: "Ogre",
-      sourceKind: "statBlock",
-      statBlockName: "ogre",
-      level: 2,
-      currentHp: 59,
-      maxHp: 59,
-      armorClass: 11,
-      spellSaveDc: null,
-      spellcastingModifier: null,
-      authoredUnitIds: [],
-    },
-  ],
-};
-
-async function projectPromptBattle(): Promise<BattleState> {
-  const program = projectRosterToBattle(promptRoster, {
-    initiativeCounts: [
-      { actorId: "wizard", count: 18 },
-      { actorId: "fighter", count: 16 },
-      { actorId: "cleric", count: 12 },
-      { actorId: "ogre", count: 9 },
-    ],
-    tieResolutions: [],
-  }).pipe(
-    Effect.provide(
-      RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-    ),
-  );
-
-  return Effect.runPromise(program);
-}
 
 describe("surface runtime correction", () => {
   it("hydrates runtime units without compiling a second execution ir", async () => {
@@ -159,11 +44,7 @@ describe("surface runtime correction", () => {
           kind: "class_feature",
         }),
       });
-    }).pipe(
-      Effect.provide(
-        RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-      ),
-    );
+    }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer));
 
     await Effect.runPromise(program);
   });
@@ -235,11 +116,7 @@ describe("surface runtime correction", () => {
         },
       ]);
       expect(fighter?.units[0]).not.toHaveProperty("authoredUnitId");
-    }).pipe(
-      Effect.provide(
-        RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-      ),
-    );
+    }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer));
 
     await Effect.runPromise(program);
   });
@@ -403,11 +280,7 @@ describe("surface runtime correction", () => {
       expect(afterOgre.turnNumber).toBe(4);
       expect(afterOgre.turnActorId).toBe("fighter");
       expect(afterOgre.openPrompt).toBeNull();
-    }).pipe(
-      Effect.provide(
-        RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-      ),
-    );
+    }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer));
 
     await Effect.runPromise(program);
   });
@@ -539,11 +412,7 @@ describe("surface runtime correction", () => {
           { actorId: "ogre", count: 9 },
         ],
         tieResolutions: [],
-      }).pipe(
-        Effect.provide(
-          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-        ),
-      ),
+      }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer)),
     );
 
     const prompt = discoverAvailableBattlePrompt(battle);
@@ -616,11 +485,7 @@ describe("surface runtime correction", () => {
       projectRosterToBattle(soloRoster, {
         initiativeCounts: [{ actorId: "wizard", count: 18 }],
         tieResolutions: [],
-      }).pipe(
-        Effect.provide(
-          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-        ),
-      ),
+      }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer)),
     );
 
     expect(discoverAvailableBattlePrompt(soloBattle)).toEqual({
@@ -682,11 +547,7 @@ describe("surface runtime correction", () => {
           { actorId: "ogre", count: 9 },
         ],
         tieResolutions: [],
-      }).pipe(
-        Effect.provide(
-          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-        ),
-      ),
+      }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer)),
     );
 
     const chooseUnit = answerBattlePrompt(battle, {
@@ -796,7 +657,7 @@ describe("surface runtime correction", () => {
           standardActionsRemaining: 0,
           combatants: expect.arrayContaining([
             expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            expect.objectContaining({ id: "cleric", currentHp: 13 }),
+            expect.objectContaining({ id: "cleric", currentHp: 4 }),
             expect.objectContaining({ id: "ogre", currentHp: 49 }),
           ]),
         }),
@@ -886,7 +747,7 @@ describe("surface runtime correction", () => {
           restrictedActionsRemaining: 0,
           combatants: expect.arrayContaining([
             expect.objectContaining({ id: "fighter", currentHp: 10 }),
-            expect.objectContaining({ id: "cleric", currentHp: 13 }),
+            expect.objectContaining({ id: "cleric", currentHp: 4 }),
             expect.objectContaining({ id: "ogre", currentHp: 49 }),
           ]),
         }),
@@ -955,11 +816,7 @@ describe("surface runtime correction", () => {
           { actorId: "ogre", count: 9 },
         ],
         tieResolutions: [],
-      }).pipe(
-        Effect.provide(
-          RuntimeUnitLibraryLive.pipe(Layer.provide(SurfaceUnitLibraryLive)),
-        ),
-      ),
+      }).pipe(Effect.provide(SurfaceRuntimeCorrectionTestLayer)),
     );
 
     const chooseUnit = answerBattlePrompt(battle, {

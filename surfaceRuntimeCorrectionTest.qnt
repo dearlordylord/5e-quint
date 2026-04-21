@@ -74,7 +74,7 @@ module surfaceRuntimeCorrectionTest::Impl {
       18,
       HasSpellSaveDc(14),
       [{ unitId: "cure_wounds", semantics: BUSingleTargetHeal }],
-      List(),
+      [{ unitId: "cure_wounds", expendedUses: 0, usedThisTurn: false }],
     ),
     mkCombatant("ogre", "Ogre", 2, 59, 59, NoSpellSaveDc, List(), List()),
   ]
@@ -109,7 +109,7 @@ module surfaceRuntimeCorrectionTest::Impl {
       18,
       HasSpellSaveDc(14),
       [{ unitId: "cure_wounds", semantics: BUSingleTargetHeal }],
-      List(),
+      [{ unitId: "cure_wounds", expendedUses: 0, usedThisTurn: false }],
     ),
     mkCombatant(
       "wizard",
@@ -124,7 +124,7 @@ module surfaceRuntimeCorrectionTest::Impl {
         saveAbility: Dex,
         damageType: Fire,
       }) }],
-      List(),
+      [{ unitId: "fireball", expendedUses: 0, usedThisTurn: false }],
     ),
     mkCombatant("ogre", "Ogre", 2, 59, 59, NoSpellSaveDc, List(), List()),
   ]

@@ -81,13 +81,13 @@ The coding loop should treat this file as the active queue. Do not start a task 
     {
       "number": 7,
       "id": "SRC7",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Add Correction-Slice MBT Bridge And MBT Tests"
     },
     {
       "number": 8,
       "id": "SRC8",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Integrate Correction Slice Back Into Core"
     }
   ]
@@ -117,8 +117,8 @@ The JSON index tracks only the active `SRC1`-`SRC8` batch. Deferred historical w
 | 4 | SRC5 - Land End-To-End Correction Slice Tests And Docs | done | SRC1, SRC2, SRC3, SRC4 | SRC5.5 | Landed deterministic end-to-end package coverage for prompt discovery, follow-up prompting, reduction, and next-turn prompt discovery; updated the package docs and design notes to match the implemented prompt lifecycle and to state Quint parity as the next phase. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck` and `pnpm --filter @dnd/surface-runtime-correction test` passed with `22` tests. |
 | 5 | SRC5.5 - Freeze Discovered Pattern And Respecify Quint/Core Follow-Ups | done | SRC5 | SRC6, SRC7, SRC8 | Froze the discovered TS-first slice in the design note, rewrote the next-batch tasks from the landed contract, and recorded the handoff back to Quint-led work. | Done. Verification: docs/plan diff reviewed against landed `surface-runtime-correction` code; RAW and `UBIQUITOUS_LANGUAGE.md` sources checked for the rewritten follow-up tasks; `/simplify` converged in 2 rounds. |
 | 6 | SRC6 - Add Quint Spec For Correction Slice | done | SRC5.5 | SRC7, SRC8 | Landed a dedicated Quint module and deterministic Quint tests for the frozen correction slice, plus a mapping note that ties the modeled terms back to the TS contract and the cited RAW / ubiquitous-language sources. `grantExtraAction` stays structural in Quint by carrying restriction, use-count-cap, and once-per-turn facts rather than collapsing into an Action Surge-only tag. | Done. Verification: `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt` and `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt` passed; `pnpm quality` stopped in an unrelated repo-wide lint bootstrap path because `/workspace/typescript/dnd/node_modules/eslint/bin/eslint.js` was missing before it reached the touched files. `/simplify` converged in 2 rounds while tightening the extra-action model and RAW trace note. |
-| 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | ready-for-implementation-after-light-research | SRC6 | SRC8 | Add an MBT bridge and MBT tests for the correction slice against the Quint model. | Ready now that the Quint module and deterministic Quint replay surface exist. Re-read the landed Quint mapping note and keep verification at Ralph-approved Tier 1 / Tier 1b only. |
-| 8 | SRC8 - Integrate Correction Slice Back Into Core | blocked | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path after Quint parity exists. | Final task in the next batch. |
+| 7 | SRC7 - Add Correction-Slice MBT Bridge And MBT Tests | done | SRC6 | SRC8 | Landed a dedicated correction-slice MBT bridge in `packages/surface-runtime-correction`, replaying both the opening wizard turn and the later cleric follow-up prompt slice against `surfaceRuntimeCorrectionMbt.qnt`. The bridge compares initiative-owned battle state, full prompt payloads, open-prompt ownership, and resolved-action payloads instead of only prompt tags. | Done. Verification: `pnpm --filter @dnd/surface-runtime-correction typecheck`, `pnpm --filter @dnd/surface-runtime-correction test`, `pnpm exec quint typecheck surfaceRuntimeCorrectionMbt.qnt`, `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt`, `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt`, and `pnpm --filter @dnd/surface-runtime-correction exec vitest run src/surface-runtime-correction.mbt.test.ts` passed. `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`). |
+| 8 | SRC8 - Integrate Correction Slice Back Into Core | ready-for-implementation-after-light-research | SRC6, SRC7 | none | Port the proven correction-slice pattern back into one bounded `core` path now that Quint parity and correction-slice MBT replay both exist. | Ready now. Start from the frozen prompt lifecycle proved in `packages/surface-runtime-correction`, re-read the Quint mapping note, and keep the integration bounded to one `core` entry path. |
 | 100 | Legacy open work (EPT/CSA/CSB/CSC queue) | deferred | owner | none | Park all previously-open work until the correction-package slice is landed or the owner explicitly revives a different batch. | Historical queue only; do not pick from it. |
 
 ### Task 0 - SRC1 - Rename Package And Establish First-Class Battle Types
@@ -625,7 +625,7 @@ Do **not**:
 
 ### Task 7 - SRC7 - Add Correction-Slice MBT Bridge And MBT Tests
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: `SRC6`
 
@@ -670,9 +670,17 @@ after `SRC6` lands.
 - deterministic replay tests for failing seeds before any rerun
 - `/simplify` minimum two rounds
 
+### Outcome
+
+- Added [surfaceRuntimeCorrectionMbt.qnt](/workspace/typescript/dnd/surfaceRuntimeCorrectionMbt.qnt:1) plus an explicit-only MBT replay file at [packages/surface-runtime-correction/src/surface-runtime-correction.mbt.test.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/surface-runtime-correction.mbt.test.ts:1).
+- Reused the deterministic correction-slice fixtures through [test-support.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/test-support.ts:1) so the MBT bridge and the deterministic TS slice tests share the same prompt battle setup.
+- Tightened the bridge to compare full prompt payloads (`options`, attack targets, spell targeting/save/effect fields), open-prompt ownership, and resolved-action payloads, not just prompt tags.
+- Aligned the Quint fixtures with runtime projection by giving every hydrated unit a default `unitResourceStates` entry, matching the TS battle projection shape.
+- Verified with `pnpm --filter @dnd/surface-runtime-correction typecheck`, `pnpm --filter @dnd/surface-runtime-correction test`, `pnpm exec quint typecheck surfaceRuntimeCorrectionMbt.qnt`, `pnpm exec quint typecheck surfaceRuntimeCorrectionTest.qnt`, `pnpm exec quint test surfaceRuntimeCorrectionTest.qnt`, and `pnpm --filter @dnd/surface-runtime-correction exec vitest run src/surface-runtime-correction.mbt.test.ts`. Broader `pnpm quality` stopped at the unrelated baseline lint failure in `packages/core/src/projected-compiler.ts` (`max-lines`).
+
 ### Task 8 - SRC8 - Integrate Correction Slice Back Into Core
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: `SRC6`, `SRC7`
 
