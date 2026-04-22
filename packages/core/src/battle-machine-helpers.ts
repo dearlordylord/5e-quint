@@ -3,6 +3,7 @@
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
 import { Match, Option } from "effect";
+import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
 
 import type { BattleSpellAccess } from "#/battle-spell-access.ts";
 import { sameBattleCreatureReactionTrigger } from "#/battle-spell-access.ts";
@@ -118,7 +119,7 @@ export function isHitWithAttackRollBonus(
 }
 
 export function activeId(c: BattleContext): CreatureId {
-  return c.initiative[c.turnIndex];
+  return currentActing(c.initiative);
 }
 
 export function awaitingReaction(c: BattleContext): AwaitCtx | null {
@@ -1131,12 +1132,9 @@ export function applyFailEffects(
 }
 
 export function nextTurn(
-  turnIndex: number,
-  initLen: number,
-  round: number,
-): { idx: number; round: number } {
-  const nextIdx = turnIndex + 1 < initLen ? turnIndex + 1 : 0;
-  return { idx: nextIdx, round: nextIdx === 0 ? round + 1 : round };
+  initiative: BattleContext["initiative"],
+): BattleContext["initiative"] {
+  return nextInitiative(initiative)[0];
 }
 
 /** Apply damage to a creature and handle concentration break + propagation in one step. */

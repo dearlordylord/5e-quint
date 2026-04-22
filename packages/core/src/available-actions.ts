@@ -1,4 +1,5 @@
 import { Match, Option, Schema } from "effect";
+import { currentActing } from "@dnd/shared/initiative-algebra";
 
 import {
   battleSpellAccessById,
@@ -4597,7 +4598,8 @@ export function getAvailableBattleActions(
 
   const awaitCtx = context.awaitCtx;
   if (awaitCtx == null) {
-    const activeCreatureId = context.initiative[context.turnIndex];
+    if (context.creatures.size === 0) return [];
+    const activeCreatureId = currentActing(context.initiative);
     if (activeCreatureId == null) return [];
     const activeCreature = context.creatures.get(activeCreatureId);
     if (

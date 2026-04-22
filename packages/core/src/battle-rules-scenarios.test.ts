@@ -1,4 +1,5 @@
 import { Option } from "effect";
+import { currentActing, initiativeOrder } from "@dnd/shared/initiative-algebra";
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
@@ -143,6 +144,24 @@ function send(
 
 function ctx(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   return actor.getSnapshot().context;
+}
+
+function turnIndex(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  return ctx(actor).initiative.alreadyActed.length;
+}
+
+function round(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  return ctx(actor).initiative.round;
+}
+
+function initiative(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+  return initiativeOrder(ctx(actor).initiative);
+}
+
+function activeCreatureId(
+  actor: ReturnType<typeof createActor<typeof battleMachine>>,
+) {
+  return currentActing(ctx(actor).initiative);
 }
 
 function creature(
@@ -903,16 +922,14 @@ describe("battle rules scenario regressions", () => {
       insertAtIndex: 0,
       creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
     });
-    expect(ctx(beforeActor).initiative).toEqual([
+    expect(initiative(beforeActor)).toEqual([
       CreatureId("D"),
       CreatureId("A"),
       CreatureId("B"),
       CreatureId("C"),
     ]);
-    expect(ctx(beforeActor).turnIndex).toBe(1);
-    expect(ctx(beforeActor).initiative[ctx(beforeActor).turnIndex]).toBe(
-      CreatureId("A"),
-    );
+    expect(turnIndex(beforeActor)).toBe(1);
+    expect(activeCreatureId(beforeActor)).toBe(CreatureId("A"));
     expect(creature(beforeActor, "D").battlePosition).toEqual({
       row: 0,
       col: 0,
@@ -931,17 +948,15 @@ describe("battle rules scenario regressions", () => {
         { id: CreatureId("E"), maxHp: 18, kind: "PC", initiativeRoll: 16 },
       ],
     });
-    expect(ctx(atActor).initiative).toEqual([
+    expect(initiative(atActor)).toEqual([
       CreatureId("E"),
       CreatureId("D"),
       CreatureId("A"),
       CreatureId("B"),
       CreatureId("C"),
     ]);
-    expect(ctx(atActor).turnIndex).toBe(2);
-    expect(ctx(atActor).initiative[ctx(atActor).turnIndex]).toBe(
-      CreatureId("A"),
-    );
+    expect(turnIndex(atActor)).toBe(2);
+    expect(activeCreatureId(atActor)).toBe(CreatureId("A"));
 
     const afterActor = initStartedThreeCreatureBattle();
     send(afterActor, {
@@ -949,16 +964,14 @@ describe("battle rules scenario regressions", () => {
       insertAtIndex: 2,
       creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
     });
-    expect(ctx(afterActor).initiative).toEqual([
+    expect(initiative(afterActor)).toEqual([
       CreatureId("A"),
       CreatureId("B"),
       CreatureId("D"),
       CreatureId("C"),
     ]);
-    expect(ctx(afterActor).turnIndex).toBe(0);
-    expect(ctx(afterActor).initiative[ctx(afterActor).turnIndex]).toBe(
-      CreatureId("A"),
-    );
+    expect(turnIndex(afterActor)).toBe(0);
+    expect(activeCreatureId(afterActor)).toBe(CreatureId("A"));
     expect(creature(afterActor, "D").battlePosition).toEqual({
       row: 4,
       col: 0,
@@ -991,7 +1004,7 @@ describe("battle rules scenario regressions", () => {
       ],
     });
 
-    expect(ctx(actor).initiative).toEqual([
+    expect(initiative(actor)).toEqual([
       CreatureId("fighter"),
       CreatureId("goblin-warrior-1"),
     ]);
@@ -1017,7 +1030,7 @@ describe("battle rules scenario regressions", () => {
       ],
     });
 
-    expect(ctx(actor).initiative).toEqual([
+    expect(initiative(actor)).toEqual([
       CreatureId("fighter"),
       CreatureId("goblin-minion-1"),
       CreatureId("goblin-warrior-1"),
@@ -1028,9 +1041,7 @@ describe("battle rules scenario regressions", () => {
       monsterStatBlockId: "goblinMinion",
       battleBonusActionOptions: ["disengage", "hide"],
     });
-    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(
-      CreatureId("fighter"),
-    );
+    expect(activeCreatureId(actor)).toBe(CreatureId("fighter"));
   });
 
   it("rejects insertion before the first turn starts and on duplicate ids", () => {
@@ -1125,8 +1136,8 @@ describe("battle rules scenario regressions", () => {
       creatureIds: [CreatureId("B"), CreatureId("C")],
     });
 
-    expect(ctx(actor).initiative).toEqual([CreatureId("A")]);
-    expect(ctx(actor).turnIndex).toBe(0);
+    expect(initiative(actor)).toEqual([CreatureId("A")]);
+    expect(turnIndex(actor)).toBe(0);
     expect(ctx(actor).helpTargets).toEqual([]);
     expect(ctx(actor).creatures.has(CreatureId("B"))).toBe(false);
     expect(ctx(actor).creatures.has(CreatureId("C"))).toBe(false);
@@ -1145,8 +1156,8 @@ describe("battle rules scenario regressions", () => {
     advanceToNextTurn(actor);
     advanceToNextTurn(actor);
 
-    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(CreatureId("C"));
-    expect(ctx(actor).round).toBe(1);
+    expect(activeCreatureId(actor)).toBe(CreatureId("C"));
+    expect(round(actor)).toBe(1);
     expect(ctx(actor).turnStarted).toBe(true);
 
     send(actor, {
@@ -1154,11 +1165,11 @@ describe("battle rules scenario regressions", () => {
       creatureIds: [CreatureId("A"), CreatureId("C")],
     });
 
-    expect(ctx(actor).initiative).toEqual([CreatureId("B")]);
-    expect(ctx(actor).turnIndex).toBe(0);
-    expect(ctx(actor).round).toBe(2);
+    expect(initiative(actor)).toEqual([CreatureId("B")]);
+    expect(turnIndex(actor)).toBe(0);
+    expect(round(actor)).toBe(2);
     expect(ctx(actor).turnStarted).toBe(false);
-    expect(ctx(actor).initiative[ctx(actor).turnIndex]).toBe(CreatureId("B"));
+    expect(activeCreatureId(actor)).toBe(CreatureId("B"));
   });
 
   it("removing a creature clears concentration and owned effects", () => {
@@ -1232,7 +1243,7 @@ describe("battle rules scenario regressions", () => {
     expect(creature(actor, "B").paralyzed).toBe(false);
     expect(creature(actor, "B").invisible).toBe(false);
     expect(ctx(actor).turnStarted).toBe(false);
-    expect(ctx(actor).initiative).toEqual([CreatureId("B"), CreatureId("C")]);
+    expect(initiative(actor)).toEqual([CreatureId("B"), CreatureId("C")]);
   });
 
   it("removing a grappler clears grapple links", () => {
@@ -1254,7 +1265,7 @@ describe("battle rules scenario regressions", () => {
     expect(ctx(actor).creatures.has(CreatureId("A"))).toBe(false);
     expect(creature(actor, "B").grappled).toBe(false);
     expect(creature(actor, "B").grappledBy).toBeNull();
-    expect(ctx(actor).initiative).toEqual([CreatureId("B"), CreatureId("C")]);
+    expect(initiative(actor)).toEqual([CreatureId("B"), CreatureId("C")]);
   });
 
   it("natural_20: Shield negates the triggering hit and spends the reaction", () => {
@@ -1806,7 +1817,7 @@ describe("battle rules scenario regressions", () => {
 
     expect(ctx(actor).laCtx).toBeNull();
     expect(ctx(actor).turnStarted).toBe(false);
-    expect(ctx(actor).turnIndex).toBe(1);
+    expect(turnIndex(actor)).toBe(1);
   });
 
   it("natural_20: a legendary attack spends one legendary action and then returns to the legendary window", () => {
@@ -1853,7 +1864,7 @@ describe("battle rules scenario regressions", () => {
     send(actor, { type: "BATTLE_LEGENDARY_PASS" });
 
     expect(ctx(actor).laCtx).toBeNull();
-    expect(ctx(actor).turnIndex).toBe(1);
+    expect(turnIndex(actor)).toBe(1);
   });
 
   it("battle control accepts non-attack legendary, recharge, and daily ability selection without spending resources", () => {

@@ -135,8 +135,8 @@ const QuintInitiativeList = z.any().transform((raw: unknown) => {
 
 const QuintBattleState = z.object({
   bCreatures: QuintBCreaturesMap,
-  bInitiative: QuintInitiativeList,
-  bTurnIndex: z.bigint(),
+  bAlreadyActed: QuintInitiativeList,
+  bStillToAct: QuintInitiativeList,
   bRound: z.bigint(),
   bPhase: z.any(), // parsed but only used for phase detection
 });

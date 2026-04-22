@@ -1,61 +1,48 @@
 import { Brand, Schema } from "effect";
-import type { Condition, SpellSlots } from "@dnd/shared/types";
+import type {
+  Condition,
+  DamageQualifier,
+  DamageType,
+  PhysicalDamageType,
+  SpellSlots,
+  WeaponProperty,
+} from "@dnd/shared/types";
 
-export { CONDITIONS } from "@dnd/shared/types";
-export { CASTER_CLASSES, CASTER_CLASS_TO_TYPE, CASTER_TYPES } from "@dnd/shared/types";
-export type { CasterClass, CasterType, Condition, SpellSlots } from "@dnd/shared/types";
+export {
+  ABILITIES,
+  CASTER_CLASSES,
+  CASTER_CLASS_TO_TYPE,
+  CASTER_TYPES,
+  CONDITIONS,
+  DAMAGE_QUALIFIERS,
+  DAMAGE_TYPES,
+  INCAP_SOURCES,
+  MAGICAL_DAMAGE_TYPES,
+  PHYSICAL_DAMAGE_TYPES,
+  WEAPON_PROPERTIES,
+} from "@dnd/shared/types";
+export type {
+  Ability,
+  CasterClass,
+  CasterType,
+  Condition,
+  DamageQualifier,
+  DamageType,
+  IncapSource,
+  MagicalDamageType,
+  PhysicalDamageType,
+  SpellSlots,
+  WeaponProperty,
+} from "@dnd/shared/types";
 
 // --- Domain constants + derived types ---
 // Convention: define const array first, derive union type with typeof X[number].
 // See CLAUDE.md "Typed constant arrays" and "Derive union types from constant arrays".
 
-export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
-export type Ability = (typeof ABILITIES)[number];
-
-export const DAMAGE_TYPES = [
-  "acid",
-  "bludgeoning",
-  "cold",
-  "fire",
-  "force",
-  "lightning",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "radiant",
-  "slashing",
-  "thunder",
-] as const;
-export type DamageType = (typeof DAMAGE_TYPES)[number];
-
-export const PHYSICAL_DAMAGE_TYPES = [
-  "bludgeoning",
-  "piercing",
-  "slashing",
-] as const satisfies ReadonlyArray<DamageType>;
-export type PhysicalDamageType = (typeof PHYSICAL_DAMAGE_TYPES)[number];
-
-export const DAMAGE_QUALIFIERS = ["adamantine", "magical", "silvered"] as const;
-export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
-
 export interface QualifiedPhysicalBypass {
   readonly damageType: PhysicalDamageType;
   readonly bypassedBy: ReadonlySet<DamageQualifier>;
 }
-
-export const WEAPON_PROPERTIES = [
-  "ammunition",
-  "finesse",
-  "heavy",
-  "light",
-  "loading",
-  "reach",
-  "thrown",
-  "twoHanded",
-  "versatile",
-] as const;
-export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
 
 export const HAND_USES = [
   "free",
@@ -160,15 +147,6 @@ export const CANONICAL_CONDITION_CONSEQUENCES: Readonly<
     blocksSpeech: true,
   },
 };
-
-export const INCAP_SOURCES = [
-  "paralyzed",
-  "petrified",
-  "stunned",
-  "unconscious",
-  "direct",
-] as const;
-export type IncapSource = (typeof INCAP_SOURCES)[number];
 
 export const ACTION_TYPES = [
   "attack",

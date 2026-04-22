@@ -232,16 +232,25 @@ export function deriveSnapshot(
   meta: ScenarioMeta,
   aoeEventIndex: string | null = null,
 ): SceneSnapshot {
-  const activeId =
-    ctx.initiative.length > 0 &&
-    ctx.turnIndex >= 0 &&
-    ctx.turnIndex < ctx.initiative.length
-      ? ctx.initiative[ctx.turnIndex]
-      : null;
+  if (ctx.creatures.size === 0) {
+    return {
+      creatures: [],
+      phase: derivePhase(ctx),
+      aoeZones: deriveAoEZones(ctx, meta, aoeEventIndex),
+      aoeTargetPoint:
+        aoeEventIndex != null
+          ? (meta.aoeTargetPoints[aoeEventIndex] ?? null)
+          : null,
+      round: 0,
+      activeCreatureId: null,
+    };
+  }
+
+  const activeId = currentActing(ctx.initiative);
 
   const blueSet = new Set(meta.teams.blue);
   const creatures: Array<CreatureSnapshot> = [];
-  for (const id of ctx.initiative) {
+  for (const id of initiativeOrder(ctx.initiative)) {
     const cs = ctx.creatures.get(id);
     if (cs) creatures.push(deriveCreature(id, cs, meta, activeId, blueSet));
   }
@@ -254,7 +263,8 @@ export function deriveSnapshot(
       aoeEventIndex != null
         ? (meta.aoeTargetPoints[aoeEventIndex] ?? null)
         : null,
-    round: ctx.round,
+    round: ctx.initiative.round,
     activeCreatureId: activeId,
   };
 }
+import { currentActing, initiativeOrder } from "@dnd/shared/initiative-algebra";

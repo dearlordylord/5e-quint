@@ -21,6 +21,61 @@ export const CONDITIONS = [
 ] as const;
 export type Condition = (typeof CONDITIONS)[number];
 
+export const INCAP_SOURCES = [
+  "paralyzed",
+  "petrified",
+  "stunned",
+  "unconscious",
+  "direct",
+] as const;
+export type IncapSource = (typeof INCAP_SOURCES)[number];
+
+export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
+export type Ability = (typeof ABILITIES)[number];
+
+export const PHYSICAL_DAMAGE_TYPES = [
+  "bludgeoning",
+  "piercing",
+  "slashing",
+] as const;
+export type PhysicalDamageType = (typeof PHYSICAL_DAMAGE_TYPES)[number];
+
+export const MAGICAL_DAMAGE_TYPES = [
+  "acid",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "poison",
+  "psychic",
+  "radiant",
+  "thunder",
+] as const;
+export type MagicalDamageType = (typeof MAGICAL_DAMAGE_TYPES)[number];
+
+export const DAMAGE_TYPES = [
+  ...PHYSICAL_DAMAGE_TYPES,
+  ...MAGICAL_DAMAGE_TYPES,
+] as const;
+export type DamageType = (typeof DAMAGE_TYPES)[number];
+
+export const DAMAGE_QUALIFIERS = ["adamantine", "magical", "silvered"] as const;
+export type DamageQualifier = (typeof DAMAGE_QUALIFIERS)[number];
+
+export const WEAPON_PROPERTIES = [
+  "ammunition",
+  "finesse",
+  "heavy",
+  "light",
+  "loading",
+  "reach",
+  "thrown",
+  "twoHanded",
+  "versatile",
+] as const;
+export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
+
 export type Integer = number & Brand.Brand<"Integer">;
 export const Integer = Brand.refined<Integer>(
   (n: number) => Number.isInteger(n),

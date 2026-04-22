@@ -7,6 +7,7 @@
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
+import { currentActing } from "@dnd/shared/initiative-algebra";
 import { Option } from "effect";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { createActor } from "xstate";
@@ -144,8 +145,8 @@ const QuintInitiativeList = z.any().transform((raw: unknown) => {
 
 const QuintBattleState = z.object({
   bCreatures: QuintBCreaturesMap,
-  bInitiative: QuintInitiativeList,
-  bTurnIndex: z.bigint(),
+  bAlreadyActed: QuintInitiativeList,
+  bStillToAct: QuintInitiativeList,
   bRound: z.bigint(),
   bTurnStarted: z.boolean(),
   bPhase: z.any(),
@@ -822,7 +823,7 @@ function attackContextPicks(picks: Record<string, unknown>) {
 }
 
 function currentTurnCreatureId(context: BattleContext): CreatureId {
-  return context.initiative[context.turnIndex]!;
+  return currentActing(context.initiative);
 }
 
 function onHitEffectFromPicks(
@@ -1373,8 +1374,8 @@ function createBattleMachineDriver() {
             : "idle";
         return {
           creatures,
-          turnIndex: c.turnIndex,
-          round: c.round,
+          turnIndex: c.initiative.alreadyActed.length,
+          round: c.initiative.round,
           turnStarted: c.turnStarted,
           phase,
           selectedMonsterCommand:
@@ -1441,7 +1442,7 @@ const battleMachineStateCheck = stateCheck(
       creatures.set(id, quintCombatantToNormalized(combatant));
     return {
       creatures,
-      turnIndex: Number(parsed.bTurnIndex),
+      turnIndex: parsed.bAlreadyActed.length,
       round: Number(parsed.bRound),
       turnStarted: parsed.bTurnStarted,
       phase: normalizeQuintPhase(parsed.bPhase),

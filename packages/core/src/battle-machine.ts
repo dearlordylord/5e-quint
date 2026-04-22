@@ -99,9 +99,7 @@ const MT = {
 
 const INITIAL_CONTEXT: BattleContext = {
   creatures: new Map(),
-  initiative: [],
-  turnIndex: 0,
-  round: 0,
+  initiative: null as never,
   turnStarted: false,
   selectedMonsterCommand: null,
   awaitCtx: null,

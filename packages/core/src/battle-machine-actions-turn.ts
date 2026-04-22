@@ -1,4 +1,12 @@
 import { Option } from "effect";
+import {
+  createInitiativeStack,
+  initiativeOrder,
+  insertAtOrderIndex,
+  removeFromInitiative as removeFromInitiativeStack,
+  type InitiativeStack,
+} from "@dnd/shared/initiative-algebra";
+import { Round } from "@dnd/shared/types";
 
 import {
   buildBattleAttackContext,
@@ -117,23 +125,20 @@ function squaresBetween(
 /** Check for ready-eligible creatures, enter ready window or advance turn. */
 function readyWindowOrAdvance(
   cs: ReadonlyMap<CreatureId, BattleCreatureState>,
-  turnIndex: number,
-  initLen: number,
-  round: number,
+  initiative: InitiativeStack<CreatureId>,
+  endingTurnIndex: number,
 ): Partial<BattleContext> {
   const rElig = readyEligible(cs);
   if (rElig.size > 0) {
     return {
       ...phaseAwaitingReady({
         eligibleCreatures: rElig,
-        endingTurnIndex: turnIndex,
+        endingTurnIndex,
       }),
     };
   }
-  const nt = nextTurn(turnIndex, initLen, round);
   return {
-    turnIndex: nt.idx,
-    round: nt.round,
+    initiative: nextTurn(initiative),
     ...PHASE_ACTIVE,
     turnStarted: false,
   };
@@ -350,19 +355,19 @@ export function battleInit({
   }));
   // Stable sort: ES2019+ guarantees Array.sort stability.
   const sorted = [...scored].sort((a, b) => b.score - a.score);
-  const initiative: Array<CreatureId> = [];
-  for (const { cfg } of sorted) {
+  const orderedIds = sorted.map(({ cfg }) => cfg.id);
+  for (const [index, { cfg }] of sorted.entries()) {
     creatures.set(
       cfg.id,
-      buildCreatureState(cfg, initiative.length),
+      buildCreatureState(cfg, index),
     );
-    initiative.push(cfg.id);
   }
   return {
     creatures,
-    initiative,
-    turnIndex: 0,
-    round: 1,
+    initiative: createInitiativeStack(
+      orderedIds as [CreatureId, ...CreatureId[]],
+      Round(1),
+    ),
     ...PHASE_ACTIVE,
     spellStack: [],
     turnStarted: false,
@@ -377,7 +382,8 @@ export function battleAddCreature({
   // BATTLE_ADD_CREATURE changes battle participation, not creature existence.
   // The added creatures are already-authored inputs projected into battle state.
   if (!c.turnStarted) return {};
-  if (e.insertAtIndex < 0 || e.insertAtIndex > c.initiative.length) return {};
+  const order = initiativeOrder(c.initiative);
+  if (e.insertAtIndex < 0 || e.insertAtIndex > order.length) return {};
   if (e.creatures.length === 0) return {};
   if (new Set(e.creatures.map((cfg) => cfg.id)).size !== e.creatures.length)
     return {};
@@ -397,19 +403,18 @@ export function battleAddCreature({
   );
 
   const creatures = new Map(c.creatures);
-  const initiative = [
-    ...c.initiative.slice(0, e.insertAtIndex),
-    ...sorted.map(({ cfg }) => cfg.id),
-    ...c.initiative.slice(e.insertAtIndex),
-  ];
+  let initiative = c.initiative;
   const insertedCount = sorted.length;
+  for (const [offset, { cfg }] of sorted.entries()) {
+    initiative = insertAtOrderIndex(initiative, e.insertAtIndex + offset, cfg.id);
+  }
 
   for (
     let oldIndex = e.insertAtIndex;
-    oldIndex < c.initiative.length;
+    oldIndex < order.length;
     oldIndex++
   ) {
-    const shiftedId = c.initiative[oldIndex]!;
+    const shiftedId = order[oldIndex]!;
     const shiftedCreature = creatures.get(shiftedId)!;
     if (!isDefaultBattlePosition(shiftedCreature, oldIndex)) continue;
     creatures.set(shiftedId, {
@@ -431,10 +436,6 @@ export function battleAddCreature({
   return {
     creatures,
     initiative,
-    turnIndex:
-      e.insertAtIndex <= c.turnIndex
-        ? c.turnIndex + insertedCount
-        : c.turnIndex,
   };
 }
 
@@ -464,7 +465,8 @@ export function battleRemoveCreature({
   if (creatureIds.length === 0) return {};
   if (creatureIds.length !== e.creatureIds.length) return {};
   if (creatureIds.some((id) => !c.creatures.has(id))) return {};
-  if (creatureIds.length >= c.initiative.length) return {};
+  const order = initiativeOrder(c.initiative);
+  if (creatureIds.length >= order.length) return {};
 
   const removedIds = new Set(creatureIds);
   const currentActiveId = activeId(c);
@@ -496,22 +498,16 @@ export function battleRemoveCreature({
     creatures.delete(id);
   }
 
-  const initiative = c.initiative.filter((id) => !removedIds.has(id));
-  const removedBefore = c.initiative
-    .slice(0, c.turnIndex)
-    .filter((id) => removedIds.has(id)).length;
-  let turnIndex = c.turnIndex - removedBefore;
-  let round = c.round;
-  if (activeRemoved && turnIndex >= initiative.length) {
-    turnIndex = 0;
-    round += 1;
+  let initiative = c.initiative;
+  for (const id of creatureIds) {
+    const removed = removeFromInitiativeStack(initiative, (current) => current === id);
+    if (Option.isNone(removed)) return {};
+    initiative = removed.value;
   }
 
   return {
     creatures,
     initiative,
-    turnIndex,
-    round,
     turnStarted: activeRemoved ? false : c.turnStarted,
     helpTargets: c.helpTargets.filter(
       (target) =>
@@ -609,13 +605,17 @@ export function battleEndTurn({
       creatures: cs,
       ...phaseAwaitingLegendary({
         eligibleMonsters: laEligible,
-        endingTurnIndex: c.turnIndex,
+        endingTurnIndex: c.initiative.alreadyActed.length,
       }),
     };
   }
   return {
     creatures: cs,
-    ...readyWindowOrAdvance(cs, c.turnIndex, c.initiative.length, c.round),
+    ...readyWindowOrAdvance(
+      cs,
+      c.initiative,
+      c.initiative.alreadyActed.length,
+    ),
   };
 }
 
@@ -689,9 +689,8 @@ export function battleLegendaryPass({
 }: BattleActionArgs<"BATTLE_LEGENDARY_PASS">): Partial<BattleContext> {
   return readyWindowOrAdvance(
     c.creatures,
-    c.turnIndex,
-    c.initiative.length,
-    c.round,
+    c.initiative,
+    c.initiative.alreadyActed.length,
   );
 }
 
@@ -919,10 +918,8 @@ export function battleWakeEffect({
 export function battleReadyPass({
   context: c,
 }: BattleActionArgs<"BATTLE_READY_PASS">): Partial<BattleContext> {
-  const nt = nextTurn(c.turnIndex, c.initiative.length, c.round);
   return {
-    turnIndex: nt.idx,
-    round: nt.round,
+    initiative: nextTurn(c.initiative),
     ...PHASE_ACTIVE,
     turnStarted: false,
   };

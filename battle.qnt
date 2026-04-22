@@ -834,8 +834,8 @@ module battle {
   // ============================================================
 
   var bCreatures: CreatureId -> Combatant
-  var bInitiative: List[CreatureId]
-  var bTurnIndex: int
+  var bAlreadyActed: List[CreatureId]
+  var bStillToAct: List[CreatureId]
   var bRound: int
   var bPhase: BattlePhase
   var bSpellStack: List[SpellStackEntry]  // Counterspell chain stack (B5)
@@ -845,6 +845,12 @@ module battle {
   // ============================================================
   // 3. HELPERS
   // ============================================================
+
+  pure def bInitiative: List[CreatureId] =
+    bAlreadyActed.concat(bStillToAct)
+
+  pure def bTurnIndex: int =
+    bAlreadyActed.length()
 
   pure def setCreature(
     cs: CreatureId -> Combatant, id: CreatureId, c: CreatureState
@@ -1767,18 +1773,33 @@ module battle {
   // Frame condition for battle vars not changed by this action.
   // If you use explicit assignments instead of keepBattle, include ALL of these.
   action keepBattle = all {
-    bInitiative' = bInitiative,
-    bTurnIndex' = bTurnIndex,
+    bAlreadyActed' = bAlreadyActed,
+    bStillToAct' = bStillToAct,
     bRound' = bRound,
     bSpellStack' = bSpellStack,
     bTurnStarted' = bTurnStarted,
     bHelpTargets' = bHelpTargets,
   }
 
-  /// Compute next turn index and round number.
-  pure def nextTurn(turnIndex: int, initLen: int, round: int): { idx: int, round: int } = {
-    val nextIdx = if (turnIndex + 1 < initLen) turnIndex + 1 else 0
-    { idx: nextIdx, round: if (nextIdx == 0) round + 1 else round }
+  action keepInitiative = all {
+    bAlreadyActed' = bAlreadyActed,
+    bStillToAct' = bStillToAct,
+    bRound' = bRound,
+  }
+
+  /// Advance the initiative split; wrap to next round when stillToAct empties.
+  pure def nextTurn(
+    alreadyActed: List[CreatureId],
+    stillToAct: List[CreatureId],
+    round: int,
+  ): { alreadyActed: List[CreatureId], stillToAct: List[CreatureId], round: int } = {
+    val current = stillToAct[0]
+    val remaining = stillToAct.slice(1, stillToAct.length())
+    val acted = alreadyActed.append(current)
+    if (remaining.length() == 0)
+      { alreadyActed: List(), stillToAct: acted, round: round + 1 }
+    else
+      { alreadyActed: acted, stillToAct: remaining, round: round }
   }
 
   /// Creatures eligible to release a readied action: readiedAction == true, reactionAvailable, alive, not incapacitated.
@@ -1809,6 +1830,14 @@ module battle {
     val before = lst.slice(0, idx)
     val after = lst.slice(idx, lst.length())
     before.concat(elems).concat(after)
+  }
+
+  pure def splitInitiative(
+    initiative: List[CreatureId],
+    turnIndex: int,
+  ): { alreadyActed: List[CreatureId], stillToAct: List[CreatureId] } = {
+    alreadyActed: initiative.slice(0, turnIndex),
+    stillToAct: initiative.slice(turnIndex, initiative.length()),
   }
 
   pure def monsterAttackToWeapon(atk: MonsterAttack): Weapon = {
@@ -1880,13 +1909,13 @@ module battle {
       ),
       // Initiative order: sorted by effective roll descending (highest first).
       // SRD 5.2.1: "Disadvantage on their Initiative roll" for surprised combatants.
-      bInitiative' = sortInitDesc([
+      bAlreadyActed' = List(),
+      bStillToAct' = sortInitDesc([
         { id: "A", score: effectiveInitRoll(initRoll1, initRoll1b, surprised1) },
         { id: "B", score: effectiveInitRoll(initRoll2, initRoll2b, surprised2) },
         { id: "C", score: effectiveInitRoll(initRoll3, initRoll3b, surprised3) },
         { id: "D", score: effectiveInitRoll(initRoll4, initRoll4b, surprised4) },
       ]),
-      bTurnIndex' = 0,
       bRound' = 1,
       bPhase' = BPActiveTurn,
       bSpellStack' = List(),
@@ -1978,8 +2007,8 @@ module battle {
       all {
         bCreatures' = normalizeBattleGrapples(cs5),
         bPhase' = BPActiveTurn,
-        bInitiative' = bInitiative,
-        bTurnIndex' = bTurnIndex,
+        bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
         bRound' = bRound,
         bSpellStack' = bSpellStack,
         bTurnStarted' = true,
@@ -2217,8 +2246,8 @@ module battle {
       all {
         bCreatures' = result.creatures,
         bPhase' = result.phase,
-        bInitiative' = bInitiative,
-        bTurnIndex' = bTurnIndex,
+        bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
         bRound' = bRound,
         bSpellStack' = bSpellStack,
         bTurnStarted' = bTurnStarted,
@@ -2973,21 +3002,21 @@ module battle {
                           // Fizzled spell was a CS → refund CS slot, its target spell continues
                           val csRef2 = maybeRefundEntry(bCreatures, popped.top)
                           if (popped.rest.length() == 0) {
-                            all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
+                            all { bCreatures' = csRef2, bPhase' = BPActiveTurn, bAlreadyActed' = bAlreadyActed, bStillToAct' = bStillToAct, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                           } else {
                             val gp = popStack(popped.rest)
                             val result = returnToCSWindow(csRef2, gp.top, gp.rest)
-                            all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
+                            all { bCreatures' = result.creatures, bPhase' = result.phase, bAlreadyActed' = bAlreadyActed, bStillToAct' = bStillToAct, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                           }
                         | _ =>
                           // Original spell fizzled → refund slot
                           val csRef3 = maybeRefundEntry(bCreatures, popped.top)
-                          all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
+                          all { bCreatures' = csRef3, bPhase' = BPActiveTurn, bAlreadyActed' = bAlreadyActed, bStillToAct' = bStillToAct, bRound' = bRound, bSpellStack' = popped.rest, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                       }
                     } else {
                       // CS fails → countered spell continues
                       val result = returnToCSWindow(bCreatures, popped.top, popped.rest)
-                      all { bCreatures' = result.creatures, bPhase' = result.phase, bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
+                      all { bCreatures' = result.creatures, bPhase' = result.phase, bAlreadyActed' = bAlreadyActed, bStillToAct' = bStillToAct, bRound' = bRound, bSpellStack' = result.stack, bTurnStarted' = bTurnStarted, bHelpTargets' = bHelpTargets }
                     }
                   }
                 | _ =>
@@ -3054,7 +3083,7 @@ module battle {
                     all {
                       bCreatures' = cs2,
                       bPhase' = BPAwaitingReaction(mkAwait(PISpellCast(csSpell), TSpellBeingCast, csElig)),
-                      bInitiative' = bInitiative, bTurnIndex' = bTurnIndex, bRound' = bRound, bSpellStack' = newStack, bTurnStarted' = bTurnStarted,
+                      bAlreadyActed' = bAlreadyActed, bStillToAct' = bStillToAct, bRound' = bRound, bSpellStack' = newStack, bTurnStarted' = bTurnStarted,
                       bHelpTargets' = bHelpTargets,
                     }
                   }
@@ -3535,8 +3564,8 @@ module battle {
         all {
           bCreatures' = result.creatures,
           bPhase' = result.phase,
-          bInitiative' = bInitiative,
-          bTurnIndex' = bTurnIndex,
+          bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
           bRound' = bRound,
           bSpellStack' = bSpellStack,
           bTurnStarted' = bTurnStarted,
@@ -3701,10 +3730,10 @@ module battle {
             keepBattle,
           }
         } else {
-          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          val nt = nextTurn(bAlreadyActed, bStillToAct, bRound)
           all {
-            bCreatures' = cs2, bInitiative' = bInitiative,
-            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bCreatures' = cs2, bAlreadyActed' = nt.alreadyActed,
+            bStillToAct' = nt.stillToAct, bRound' = nt.round,
             bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
             bTurnStarted' = false,
             bHelpTargets' = bHelpTargets,
@@ -3728,10 +3757,10 @@ module battle {
             keepBattle,
           }
         } else {
-          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          val nt = nextTurn(bAlreadyActed, bStillToAct, bRound)
           all {
-            bCreatures' = bCreatures, bInitiative' = bInitiative,
-            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bCreatures' = bCreatures, bAlreadyActed' = nt.alreadyActed,
+            bStillToAct' = nt.stillToAct, bRound' = nt.round,
             bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
             bTurnStarted' = false,
             bHelpTargets' = bHelpTargets,
@@ -3747,10 +3776,10 @@ module battle {
             keepBattle,
           }
         } else {
-          val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+          val nt = nextTurn(bAlreadyActed, bStillToAct, bRound)
           all {
-            bCreatures' = bCreatures, bInitiative' = bInitiative,
-            bTurnIndex' = nt.idx, bRound' = nt.round,
+            bCreatures' = bCreatures, bAlreadyActed' = nt.alreadyActed,
+            bStillToAct' = nt.stillToAct, bRound' = nt.round,
             bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
             bTurnStarted' = false,
             bHelpTargets' = bHelpTargets,
@@ -3803,10 +3832,10 @@ module battle {
   action bReadyPass = {
     match bPhase {
       | BPAwaitingReadiedAction(_) =>
-        val nt = nextTurn(bTurnIndex, bInitiative.length(), bRound)
+        val nt = nextTurn(bAlreadyActed, bStillToAct, bRound)
         all {
-          bCreatures' = bCreatures, bInitiative' = bInitiative,
-          bTurnIndex' = nt.idx, bRound' = nt.round,
+          bCreatures' = bCreatures, bAlreadyActed' = nt.alreadyActed,
+          bStillToAct' = nt.stillToAct, bRound' = nt.round,
           bPhase' = BPActiveTurn, bSpellStack' = bSpellStack,
           bTurnStarted' = false,
           bHelpTargets' = bHelpTargets,
@@ -3856,8 +3885,8 @@ module battle {
           all {
             bCreatures' = result.creatures,
             bPhase' = result.phase,
-            bInitiative' = bInitiative,
-            bTurnIndex' = bTurnIndex,
+            bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
             bRound' = bRound,
             bSpellStack' = bSpellStack,
             bTurnStarted' = bTurnStarted,
@@ -3980,8 +4009,8 @@ module battle {
           not(laAtkWithin5ft) or laAtkWithin60ft,
           bCreatures' = result.creatures,
           bPhase' = result.phase,
-          bInitiative' = bInitiative,
-          bTurnIndex' = bTurnIndex,
+          bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
           bRound' = bRound,
           bSpellStack' = bSpellStack,
           bTurnStarted' = bTurnStarted,
@@ -4013,8 +4042,8 @@ module battle {
       all {
         bCreatures' = setTurn(bCreatures, activeId, newTurn),
         bPhase' = BPActiveTurn,
-        bInitiative' = bInitiative,
-        bTurnIndex' = bTurnIndex,
+        bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
         bRound' = bRound,
         bSpellStack' = bSpellStack,
         bTurnStarted' = bTurnStarted,
@@ -4074,8 +4103,8 @@ module battle {
       all {
         bCreatures' = result.creatures,
         bPhase' = result.phase,
-        bInitiative' = bInitiative,
-        bTurnIndex' = bTurnIndex,
+        bAlreadyActed' = bAlreadyActed,
+        bStillToAct' = bStillToAct,
         bRound' = bRound,
         bSpellStack' = bSpellStack,
         bTurnStarted' = bTurnStarted,
@@ -4583,8 +4612,14 @@ module battle {
       insertIdx <= bInitiative.length(),
       not(bCreatures.keys().contains(newId)),
       bCreatures' = bCreatures.put(newId, mkCaster(hpE, PC)),
-      bInitiative' = listInsertAt(bInitiative, insertIdx, [newId]),
-      bTurnIndex' = if (insertIdx <= bTurnIndex) bTurnIndex + 1 else bTurnIndex,
+      bAlreadyActed' = splitInitiative(
+        listInsertAt(bInitiative, insertIdx, [newId]),
+        if (insertIdx <= bTurnIndex) bTurnIndex + 1 else bTurnIndex,
+      ).alreadyActed,
+      bStillToAct' = splitInitiative(
+        listInsertAt(bInitiative, insertIdx, [newId]),
+        if (insertIdx <= bTurnIndex) bTurnIndex + 1 else bTurnIndex,
+      ).stillToAct,
       bPhase' = BPActiveTurn,
       bRound' = bRound,
       bSpellStack' = bSpellStack,
@@ -4645,8 +4680,8 @@ module battle {
       bTurnStarted,
       bCreatures.keys().size() > 1,
       bCreatures' = newCreatures,
-      bInitiative' = newInitiative,
-      bTurnIndex' = wrappedTurnIndex,
+      bAlreadyActed' = splitInitiative(newInitiative, wrappedTurnIndex).alreadyActed,
+      bStillToAct' = splitInitiative(newInitiative, wrappedTurnIndex).stillToAct,
       bPhase' = BPActiveTurn,
       bRound' = nextRound,
       bSpellStack' = bSpellStack,

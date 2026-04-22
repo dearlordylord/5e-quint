@@ -1,4 +1,5 @@
 import type { Option } from "effect";
+import type { InitiativeStack } from "@dnd/shared/initiative-algebra";
 import type { ReadiedSpellParams } from "#/battle-ready-types.ts";
 import type {
   LAWindowCtx,
@@ -410,9 +411,7 @@ export type {
 
 export interface BattleContext {
   readonly creatures: ReadonlyMap<CreatureId, BattleCreatureState>;
-  readonly initiative: ReadonlyArray<CreatureId>;
-  readonly turnIndex: number;
-  readonly round: number;
+  readonly initiative: InitiativeStack<CreatureId>;
   readonly turnStarted: boolean;
   readonly selectedMonsterCommand: MonsterCommandSelection | null;
   readonly awaitCtx: AwaitCtx | null;
