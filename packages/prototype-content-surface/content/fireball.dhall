@@ -15,6 +15,7 @@
 --   • AreaOrigin.point_within_range (range 150 ft)
 --   • DiceAmount.linear_per_level (axis=slot, base=8d6, +1d6/slot)
 --   • SaveSuccessOutcome.half_damage
+--   • explicit initial hole for the chosen point within range
 -- Circle of Death already covers the same shape at L6; Fireball is
 -- the L3 canonical citation that future authors will look for first.
 --
@@ -47,9 +48,14 @@ let fireball =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "sphere", radiusFeet = 20 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "fireball_point"
+                    , label = Some "point of explosion"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 20 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }

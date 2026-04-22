@@ -381,6 +381,14 @@ The landed TS flow now distinguishes four different things explicitly:
 - resolution results in `BattleResolutionResult`
 - reducer-owned state updates in `reduceBattleState`
 
+It is also important to preserve an older point that the earlier history made
+explicit and the current wording risked obscuring:
+
+- an available action may still have unresolved frontend/Table holes
+- filling those holes produces a complete prompt answer
+- resolution of that complete answer may still discover new holes and
+  open a follow-up prompt
+
 The key distinction from the earlier pre-implementation notes is:
 
 - an incomplete answer to the current prompt is invalid and unrepresentable at the type level
@@ -419,9 +427,14 @@ older pre-implementation guesses.
 
 ### What changed from the pre-implementation design
 
-- the slice did not land a generic `fillActionInputs` prompt; it landed one
-  top-level `chooseAction` prompt plus typed follow-up prompt variants:
-  `chooseAttackTarget`, `chooseSingleTargetUnit`, and `chooseAreaEffect`
+- the slice did not land one fully generic untyped
+  `fillActionInputs(requiredInputs: bag)` surface as the long-term first-class
+  runtime contract; it landed one top-level `chooseAction` prompt plus typed
+  follow-up prompt variants: `chooseAttackTarget`, `chooseSingleTargetUnit`,
+  and `chooseAreaEffect`
+- however, the earlier design insight remains correct: available actions may
+  expose unresolved runtime holes, and frontend fulfillment can be understood
+  as filling those holes before resolution
 - `openPrompt` is not a stored full prompt object; `BattleState.openPrompt`
   stores only minimal prompt-owned state and the visible prompt is re-derived
   from current state
@@ -437,9 +450,11 @@ older pre-implementation guesses.
 
 ### Assumptions rejected by the landed code
 
-- rejected: a generic pending-action plus required-input bag is the right first
-  prompt shape
-  landed instead: explicit prompt variants with domain-specific payloads
+- rejected: the only honest way to model unresolved runtime holes is one
+  generic pending-action plus required-input bag
+  landed instead: explicit prompt variants with domain-specific payloads, while
+  preserving the deeper invariant that actions may still carry unresolved
+  frontend/Table holes before they become fully answerable
 - rejected: storing the full current prompt object in state
   landed instead: minimal in-flight prompt state plus derived prompt discovery
 - rejected: letting TS discovery keep drifting while Quint catches up later
@@ -510,6 +525,12 @@ Preferred split:
 - Effect for orchestration and services
 
 ## Access Identity
+
+Status note:
+
+- reconsidering / redesigning
+- do not treat this section as implementation guidance for the current reducer-state work
+- do not introduce `accessId` / access-path identity into `reducer-state.ts` from this document alone
 
 The package should stay simple initially, but it must leave room for access-path identity.
 
@@ -593,12 +614,45 @@ type AvailableBattlePrompt =
     };
 ```
 
-The important property is not the exact names; it is that prompts represent unresolved frontend/Table requirements explicitly.
+The important property is not the exact names; it is that prompts represent
+unresolved frontend/Table holes explicitly.
+
+Historical note:
+
+- earlier work and MCP surfaces already used the idea of executable tokens with
+  unresolved holes to fill
+- for example, `CAST_PREPARED_SPELL` in `core` can surface a token whose
+  `slotLevel` is still a bounded choice that the caller must fill before
+  execution
+- the correction package should preserve that architectural idea even if the
+  first landed correction slice chose explicit typed prompt variants instead of
+  a single generic `requiredInputs` bag
+
+Terminology note:
+
+- use `holes` as the primary term in this document
+- avoid calling these holes `slots`
+- in this repo `slot` already strongly means spell slot, pact slot, or another
+  resource slot
+- acceptable supporting phrases are:
+  - `unresolved holes`
+  - `fillable holes`
+  - `action holes`
+  - `prompt holes`
+- avoid slipping back to `requirements` when the meaning is specifically
+  "caller-visible missing pieces that must be filled"
 
 Status note:
 
-- this exact candidate shape was superseded by the landed `chooseAction` plus typed follow-up prompt variants
+- this exact candidate shape was superseded by the landed `chooseAction` plus
+  typed follow-up prompt variants
 - keep this section as architectural rationale, not as the current source of truth
+- the correction to preserve is:
+  - not “reject fillable holes”
+  - but rather “reject an overly generic opaque bag as the only first-class
+    runtime shape”
+  - explicit typed prompts and fillable holes are compatible ideas, not
+    competing ones
 
 ### Candidate resolved action shape
 
@@ -706,6 +760,8 @@ The next implementation slice should do the following:
    - available battle prompts
    - resolved battle actions
    - optional open prompt state when a multi-step interaction is in progress
+   - explicit unresolved runtime holes on actions/prompts where caller
+     fulfillment is still needed
 3. Enforce complete prompt answers at the type level.
 4. Add initiative-aware battle turn state:
    - initiative
@@ -733,9 +789,11 @@ If you are implementing from this document without prior context, keep these rul
 3. Do not store the full current choice set in state.
    Derive it.
 4. Do store an open unresolved prompt if a multi-step interaction is in flight.
-5. Do not allow partial prompt answers.
-6. Do not add a new execution IR unless you can prove it is smaller and more generic than `Surface`.
-7. If your implementation starts stretching these rules, stop and redesign instead of patching around them.
+5. Available actions may still expose holes that the frontend/table must fill
+   before execution.
+6. Do not allow partial prompt answers.
+7. Do not add a new execution IR unless you can prove it is smaller and more generic than `Surface`.
+8. If your implementation starts stretching these rules, stop and redesign instead of patching around them.
 
 ## Code Smells To Reject Immediately
 
@@ -744,6 +802,8 @@ The following should be treated as immediate design failures in this package:
 - dispatch by specific authored unit id for semantics
 - duplicate authored identity fields
 - storing available choices redundantly in state
+- erasing unresolved runtime holes from the contract merely because a
+  first implementation used explicit typed prompts
 - allowing partially answered prompts
 - a broad second execution language that mirrors `Surface`
 - hidden reducer I/O

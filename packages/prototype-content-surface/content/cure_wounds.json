@@ -19,9 +19,14 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "kind": "hole",
+          "holeId": "cure_wounds_target",
+          "label": "healing target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "effects": [

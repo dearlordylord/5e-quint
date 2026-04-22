@@ -93,6 +93,7 @@ export type SaveSuccessOutcome = Schema.Schema.Type<typeof SurfaceSchema.SaveSuc
 export type RandomTableRoll = Schema.Schema.Type<typeof SurfaceSchema.RandomTableRollSchema>;
 export type RandomTableOutcome = Schema.Schema.Type<typeof SurfaceSchema.RandomTableOutcomeSchema>;
 export type ActivationPhase = Schema.Schema.Type<typeof SurfaceSchema.ActivationPhaseSchema>;
+export type PhaseContinuation = Schema.Schema.Type<typeof SurfaceSchema.PhaseContinuationSchema>;
 export type OngoingEffectMechanics = Schema.Schema.Type<typeof SurfaceSchema.OngoingEffectMechanicsSchema>;
 export type ActivationMechanics = Schema.Schema.Type<typeof SurfaceSchema.ActivationMechanicsSchema>;
 export type TriggeredReactionMechanics = Schema.Schema.Type<typeof SurfaceSchema.TriggeredReactionMechanicsSchema>;

@@ -14,6 +14,7 @@
 --     cleric spells share this shape.)
 --   • EffectAtom.heal_hp with linear_per_level scaling on axis=slot.
 --   • ActivationPhase.direct (touch, single target, no gate).
+--   • explicit initial hole for target selection.
 
 let cureWounds =
       { kind = "spell"
@@ -36,8 +37,13 @@ let cureWounds =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "cure_wounds_target"
+                    , label = Some "healing target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "heal_hp"

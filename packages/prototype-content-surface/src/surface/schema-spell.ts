@@ -96,9 +96,30 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
   allowsMidDurationSwitchAs: optionalExact(Schema.Literal("magic_action")),
 });
 
-export const DamageTypeRefSchema = Schema.Union(
+export const HoleIdSchema = Schema.String;
+export const HoleLabelSchema = Schema.String;
+
+function makeHoleSchema<A, I, R>(value: Schema.Schema<A, I, R>) {
+  return Schema.Struct({
+    kind: Schema.Literal("hole"),
+    holeId: HoleIdSchema,
+    value,
+    label: optionalExact(HoleLabelSchema),
+  });
+}
+
+export const DamageTypeRefBaseSchema = Schema.Union(
   DamageTypeSchema,
   CastTimeChoiceDamageTypeSchema,
+  Schema.Struct({
+    kind: Schema.Literal("same_choice_as"),
+    holeId: HoleIdSchema,
+  }),
+);
+
+export const DamageTypeRefSchema = Schema.Union(
+  DamageTypeRefBaseSchema,
+  makeHoleSchema(DamageTypeRefBaseSchema),
 );
 
 export const ActionRestrictionSchema = Schema.Union(
@@ -435,6 +456,22 @@ type RandomTableOutcome = {
   readonly phases?: ReadonlyNonEmptyArray<ActivationPhase>;
 };
 
+type ContinuationPredicate = {
+  readonly kind: "damage_roll_has_duplicate_faces";
+  readonly minimumMultiplicity: 2;
+};
+
+type ContinuationLimit =
+  | { readonly kind: "max_leaps_from_slot_level" }
+  | { readonly kind: "exclude_already_targeted_in_same_cast" };
+
+type PhaseContinuation = {
+  readonly kind: "repeat";
+  readonly when: ContinuationPredicate;
+  readonly limits: ReadonlyNonEmptyArray<ContinuationLimit>;
+  readonly next: ReadonlyNonEmptyArray<ActivationPhase>;
+};
+
 type ActivationPhase =
   | {
       readonly kind: "attack_roll";
@@ -442,6 +479,7 @@ type ActivationPhase =
       readonly attackKind: "ranged_spell_attack" | "melee_spell_attack";
       readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
       readonly onMiss: ReadonlyNonEmptyArray<EffectAtom>;
+      readonly continue?: PhaseContinuation;
     }
   | {
       readonly kind: "save_gate";
@@ -720,7 +758,7 @@ export const ObjectFilterSchema = Schema.Struct({
   maxSize: optionalExact(SizeSchema),
 });
 
-export const AttachmentSchema = Schema.Union(
+export const AttachmentBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("self"),
   }),
@@ -747,6 +785,25 @@ export const AttachmentSchema = Schema.Union(
     count: Schema.Literal(1, 2),
     filter: optionalExact(ObjectFilterSchema),
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
+  }),
+);
+
+export const AttachmentSchema = Schema.Union(
+  AttachmentBaseSchema,
+  makeHoleSchema(AttachmentBaseSchema),
+);
+
+export const ContinuationPredicateSchema = Schema.Struct({
+  kind: Schema.Literal("damage_roll_has_duplicate_faces"),
+  minimumMultiplicity: Schema.Literal(2),
+});
+
+export const ContinuationLimitSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("max_leaps_from_slot_level"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("exclude_already_targeted_in_same_cast"),
   }),
 );
 
@@ -1258,6 +1315,19 @@ export const RandomTableOutcomeSchema: Schema.suspend<
   }),
 );
 
+export const PhaseContinuationSchema: Schema.suspend<
+  PhaseContinuation,
+  PhaseContinuation,
+  never
+> = Schema.suspend(() =>
+  Schema.Struct({
+    kind: Schema.Literal("repeat"),
+    when: ContinuationPredicateSchema,
+    limits: nonEmpty(ContinuationLimitSchema),
+    next: nonEmpty(ActivationPhaseSchema),
+  }),
+);
+
 export const ActivationPhaseSchema: Schema.suspend<
   ActivationPhase,
   ActivationPhase,
@@ -1270,6 +1340,7 @@ export const ActivationPhaseSchema: Schema.suspend<
         attackKind: Schema.Literal("ranged_spell_attack", "melee_spell_attack"),
         onHit: nonEmpty(EffectAtomSchema),
         onMiss: nonEmpty(EffectAtomSchema),
+        continue: optionalExact(PhaseContinuationSchema),
       }),
       Schema.Struct({
         kind: Schema.Literal("save_gate"),

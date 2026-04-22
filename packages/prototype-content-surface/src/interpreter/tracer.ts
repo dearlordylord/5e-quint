@@ -96,6 +96,7 @@ export type AtomCategory =
   | "source"
   | "procedure"
   | "window"
+  | "hole"
   | "attachment"
   | "resolution"
   | "lifecycle"
@@ -2258,6 +2259,16 @@ function tracePhase(
         edges,
         ids,
       );
+      if (phase.continue !== undefined) {
+        tracePhaseContinuation(
+          phase.continue,
+          resId,
+          ctx,
+          nodes,
+          edges,
+          ids,
+        );
+      }
       return resId;
     }
     case "save_gate": {
@@ -2492,6 +2503,62 @@ function tracePhase(
   }
 }
 
+function tracePhaseContinuation(
+  continuation: import("../surface/types.ts").PhaseContinuation,
+  hostId: string,
+  ctx: SpellCtx,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const continuationId = ids("cont");
+  nodes.push({
+    id: continuationId,
+    category: "window",
+    atomKind: "repeat_continuation",
+    label:
+      continuation.when.kind === "damage_roll_has_duplicate_faces"
+        ? `repeat_continuation\nwhen damage roll has duplicate faces (${continuation.when.minimumMultiplicity}+)`
+        : "repeat_continuation",
+  });
+  edges.push({ from: hostId, to: continuationId, relation: "opens_window" });
+
+  for (const limit of continuation.limits) {
+    const limitId = ids("lim");
+    nodes.push({
+      id: limitId,
+      category: "lifecycle",
+      atomKind: "continuation_limit",
+      label:
+        limit.kind === "max_leaps_from_slot_level"
+          ? "continuation_limit\nmax leaps from slot level"
+          : "continuation_limit\nexclude already targeted in same cast",
+    });
+    edges.push({ from: continuationId, to: limitId, relation: "bounded_by" });
+  }
+
+  const branchCtx: SpellCtx = { ...ctx, procId: continuationId };
+  let previousResolutionId: string | null = null;
+  continuation.next.forEach((nestedPhase: ActivationPhase, idx: number) => {
+    const nestedResolutionId = tracePhase(
+      nestedPhase,
+      idx + 1,
+      branchCtx,
+      nodes,
+      edges,
+      ids,
+    );
+    if (previousResolutionId !== null) {
+      edges.push({
+        from: previousResolutionId,
+        to: nestedResolutionId,
+        relation: "branches_on_completion",
+      });
+    }
+    previousResolutionId = nestedResolutionId;
+  });
+}
+
 function traceEffectModeChoice(
   mode: CastTimeEffectModeChoice,
   procId: string,
@@ -2675,9 +2742,50 @@ function traceAttachment(
       });
       return id;
     }
+    case "hole": {
+      nodes.push({
+        id,
+        category: "hole",
+        atomKind: "hole",
+        label: describeAttachmentHole(a, range),
+      });
+      return id;
+    }
     default: {
       const _exhaustive: never = a;
       throw new Error(`unhandled attachment: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeAttachmentHole(a: Extract<Attachment, { readonly kind: "hole" }>, range: Range): string {
+  const labelPrefix = a.label !== undefined ? `hole\n${a.label}` : "hole";
+  switch (a.value.kind) {
+    case "self":
+      return `${labelPrefix}\nself\nrange ${describeRange(range)}`;
+    case "target":
+      return `${labelPrefix}\ntarget\n${describeTargetSelection(a.value.selection)}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
+    case "area": {
+      const originLabel = describeAreaOrigin(a.value.origin, range, a.value.rangeOrigin);
+      const occupantLabel = describeAreaOccupantDispositionFilter(
+        a.value.occupantDispositionFilter,
+      );
+      return `${labelPrefix}\narea\n${describeAreaShape(a.value.shape)}\n${originLabel}${occupantLabel}`;
+    }
+    case "mark": {
+      const transferLabel = a.value.transfer
+        ? `\ntransfer on ${describeTransferEvent(a.value.transfer)} (${a.value.transfer.cost.kind})`
+        : "";
+      return `${labelPrefix}\nmark\n${describeTargetSelection(a.value.selection)}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}${transferLabel}`;
+    }
+    case "object": {
+      const countLabel = a.value.count === 2 ? "2 objects" : "object";
+      const filterLabel = describeObjectFilter(a.value.filter);
+      return `${labelPrefix}\n${countLabel}${filterLabel}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
+    }
+    default: {
+      const _: never = a.value;
+      throw new Error(`unhandled attachment hole value: ${String(_)}`);
     }
   }
 }
@@ -2722,14 +2830,13 @@ function describeObjectFilter(f: ObjectFilter | undefined): string {
 
 function describeDamageTypeRef(d: DamageTypeRef): string {
   if (typeof d === "string") return d;
-  switch (d.kind) {
-    case "choice":
-      return `${d.label} (choose: ${d.options.join(" | ")})`;
-    default: {
-      const _: never = d.kind;
-      throw new Error(`unhandled damage type ref: ${String(_)}`);
-    }
+  if (d.kind === "hole") {
+    return `${describeDamageTypeRef(d.value)}${d.label !== undefined ? ` [hole: ${d.label}]` : " [hole]"}`;
   }
+  if (d.kind === "same_choice_as") return `same choice as ${d.holeId}`;
+  if (d.kind === "choice") return `${d.label} (choose: ${d.options.join(" | ")})`;
+  const _: never = d;
+  throw new Error(`unhandled damage type ref: ${String(_)}`);
 }
 
 function describeTargetSelection(s: TargetSelection): string {

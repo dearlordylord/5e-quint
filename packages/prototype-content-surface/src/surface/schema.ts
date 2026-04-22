@@ -57,6 +57,7 @@ export {
   OngoingTriggerSchema,
   ModifyAcSetBaseEffectSchema,
   ModifyAcSetFloorEffectSchema,
+  PhaseContinuationSchema,
   PolymorphActionRestrictionSchema,
   PolymorphFormSourceSchema,
   PolymorphRetainedFieldSchema,

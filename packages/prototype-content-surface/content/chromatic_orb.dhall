@@ -16,21 +16,17 @@
 --    of times equal to the level of the slot expended, and a creature
 --    can be targeted only once by each casting of this spell."
 --
--- PARTIAL validation reference. Encodes:
+-- Validation reference. Encodes:
 --   • attack_roll phase with ranged_spell_attack
---   • DamageTypeRef.choice — caster picks damage type at cast time
---     from the six elemental options (validation reference for the
---     existing choice variant, noted inline in types.ts).
---   • Linear-per-slot damage scaling (+1d8 per slot above 1).
+--   • explicit initial holes for target selection and damage type
+--   • Linear-per-slot damage scaling (+1d8 per slot above 1)
+--   • repeat continuation when the damage roll contains duplicate d8
+--     faces, bounded by slot-level leap budget and once-per-casting
+--     target uniqueness
 --
--- DEFERRED. The matching-dice leap rider ("if you roll the same number
--- on two or more of the d8s, the orb leaps…") has no modeled shape:
--- it is a conditional repeatable spell-attack chain triggered by the
--- DAMAGE roll's result pattern, not any existing window atom. The
--- "leap count = slot level" and "each creature targeted once per
--- casting" constraints layer on top of that. No widening lands here
--- until a second SRD unit pressures the same pattern; see survey
--- result-chromatic_orb.json for the full widening inventory.
+-- The runtime still needs cast-local continuation state to track
+-- already-targeted creatures, leaps used, and the just-rolled damage
+-- dice. This file only expresses the authored continuation contract.
 
 let chromaticOrb =
       { kind = "spell"
@@ -57,23 +53,33 @@ let chromaticOrb =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "chromatic_orb_primary_target"
+                    , label = Some "primary target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =
                     [ { kind = "damage"
                       , damageType =
-                          { kind = "choice"
-                          , label = "orb type"
-                          , options =
-                              [ "acid"
-                              , "cold"
-                              , "fire"
-                              , "lightning"
-                              , "poison"
-                              , "thunder"
-                              ]
+                          { kind = "hole"
+                          , holeId = "chromatic_orb_damage_type"
+                          , label = Some "orb type"
+                          , value =
+                              { kind = "choice"
+                              , label = "orb type"
+                              , options =
+                                  [ "acid"
+                                  , "cold"
+                                  , "fire"
+                                  , "lightning"
+                                  , "poison"
+                                  , "thunder"
+                                  ]
+                              }
                           }
                       , amount =
                           { kind = "linear_per_level"
@@ -85,6 +91,48 @@ let chromaticOrb =
                       }
                     ]
                 , onMiss = [ { kind = "none" } ]
+                , continue =
+                    Some
+                      { kind = "repeat"
+                      , when =
+                          { kind = "damage_roll_has_duplicate_faces"
+                          , minimumMultiplicity = 2
+                          }
+                      , limits =
+                          [ { kind = "max_leaps_from_slot_level" }
+                          , { kind = "exclude_already_targeted_in_same_cast" }
+                          ]
+                      , next =
+                          [ { kind = "attack_roll"
+                            , attachment =
+                                { kind = "hole"
+                                , holeId = "chromatic_orb_leap_target"
+                                , label = Some "leap target"
+                                , value =
+                                    { kind = "target"
+                                    , selection = { mode = "one" }
+                                    }
+                                }
+                            , attackKind = "ranged_spell_attack"
+                            , onHit =
+                                [ { kind = "damage"
+                                  , damageType =
+                                      { kind = "same_choice_as"
+                                      , holeId = "chromatic_orb_damage_type"
+                                      }
+                                  , amount =
+                                      { kind = "linear_per_level"
+                                      , axis = "slot"
+                                      , base = { dice = 3, dieSize = 8 }
+                                      , perLevel = { dice = 1 }
+                                      , startingAtLevel = 1
+                                      }
+                                  }
+                                ]
+                            , onMiss = [ { kind = "none" } ]
+                            }
+                          ]
+                      }
                 }
               ]
           }

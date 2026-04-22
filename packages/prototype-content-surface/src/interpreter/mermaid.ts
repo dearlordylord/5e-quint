@@ -6,6 +6,7 @@ import type { Trace, AtomCategory } from "./tracer.ts";
 const CLASS_DEFS = `  classDef source fill:#1f77b4,color:#fff,stroke:#0d3c61
   classDef procedure fill:#2ca02c,color:#fff,stroke:#185018
   classDef window fill:#9467bd,color:#fff,stroke:#4a2b66
+  classDef hole fill:#f4a261,color:#000,stroke:#8a4f12
   classDef attachment fill:#ffcc00,color:#000,stroke:#8a6d00
   classDef resolution fill:#ff7f0e,color:#fff,stroke:#8a4308
   classDef lifecycle fill:#7f7f7f,color:#fff,stroke:#333
@@ -17,6 +18,7 @@ const CATEGORY_CLASS: Record<AtomCategory, string> = {
   source: "source",
   procedure: "procedure",
   window: "window",
+  hole: "hole",
   attachment: "attachment",
   resolution: "resolution",
   lifecycle: "lifecycle",

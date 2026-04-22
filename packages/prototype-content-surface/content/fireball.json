@@ -20,13 +20,18 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "sphere",
-            "radiusFeet": 20
+          "kind": "hole",
+          "holeId": "fireball_point",
+          "label": "point of explosion",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "sphere",
+              "radiusFeet": 20
+            }
           }
         },
         "dc": {
