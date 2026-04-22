@@ -8,19 +8,19 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import {
-  createInitiativeStack,
+  createScoredInitiativeStack,
   type InitiativeEntry,
-  insert,
+  insertByInitiative,
   nextInitiative,
   removeFromInitiative,
   type InitiativeStack,
-} from "#/initiative-algebra.ts";
+} from "@dnd/shared/initiative-algebra";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 type CreatureId = "c1" | "c2" | "c2b" | "c3" | "c4" | "cx";
 
 type ModelState = {
-  readonly stack: InitiativeStack<CreatureId>;
+  readonly stack: InitiativeStack<InitiativeEntry<CreatureId>>;
   readonly lastInsertStatus: "none" | "ok" | "decide" | "error";
   readonly lastTie: ReadonlyArray<CreatureId>;
 };
@@ -76,7 +76,7 @@ function compareState(spec: ModelState, impl: ModelState): boolean {
 }
 
 function makeInitialModelState(): ModelState {
-  const created = createInitiativeStack<CreatureId>([
+  const created = createScoredInitiativeStack<CreatureId>([
     { creature: "c1", initiative: Initiative(1) },
     { creature: "c2", initiative: Initiative(2) },
     { creature: "c2b", initiative: Initiative(2) },
@@ -119,19 +119,25 @@ function createInitiativeDriver() {
         };
       },
       doRemoveC1: () => {
-        const removed = removeFromInitiative(state.stack, (c) => c === "c1");
+        const removed = removeFromInitiative(
+          state.stack,
+          (entry) => entry.creature === "c1",
+        );
         if (Option.isSome(removed)) {
           state = { ...state, stack: removed.value };
         }
       },
       doRemoveC2: () => {
-        const removed = removeFromInitiative(state.stack, (c) => c === "c2");
+        const removed = removeFromInitiative(
+          state.stack,
+          (entry) => entry.creature === "c2",
+        );
         if (Option.isSome(removed)) {
           state = { ...state, stack: removed.value };
         }
       },
       doInsertC3NoDecision: () => {
-        const result = insert<CreatureId>(
+        const result = insertByInitiative<CreatureId>(
           state.stack,
           "c3",
           Initiative(3),
@@ -145,7 +151,7 @@ function createInitiativeDriver() {
         }
       },
       doInsertCxTieNoDecision: () => {
-        const result = insert<CreatureId>(
+        const result = insertByInitiative<CreatureId>(
           state.stack,
           "cx",
           Initiative(2),
@@ -159,7 +165,7 @@ function createInitiativeDriver() {
         }
       },
       doInsertCxTieDecision: () => {
-        const result = insert<CreatureId>(
+        const result = insertByInitiative<CreatureId>(
           state.stack,
           "cx",
           Initiative(2),
@@ -174,7 +180,7 @@ function createInitiativeDriver() {
         }
       },
       doInsertC3WrongDecision: () => {
-        const result = insert<CreatureId>(
+        const result = insertByInitiative<CreatureId>(
           state.stack,
           "c3",
           Initiative(3),

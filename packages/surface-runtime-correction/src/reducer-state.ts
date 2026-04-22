@@ -1,5 +1,5 @@
-import type { InitiativeStack } from '#/initiative-algebra.ts';
 import type { ConditionState } from '@dnd/shared/conditions-algebra';
+import type { InitiativeStack } from '@dnd/shared/initiative-algebra';
 import type { CreatureId, Hp, SpellSlots } from '@dnd/shared/types';
 import type { UnitRecord } from '@dnd/prototype-content-surface/surface/types';
 

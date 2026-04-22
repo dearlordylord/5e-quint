@@ -1,21 +1,4 @@
 module conditionsAlgebraMbt::Impl {
-  type ConditionState = {
-    blinded: bool,
-    charmed: bool,
-    deafened: bool,
-    frightened: bool,
-    grappled: bool,
-    invisible: bool,
-    paralyzed: bool,
-    petrified: bool,
-    poisoned: bool,
-    prone: bool,
-    restrained: bool,
-    stunned: bool,
-    unconscious: bool,
-    directIncapacitated: bool,
-  }
-
   var qBlinded: bool
   var qCharmed: bool
   var qDeafened: bool
@@ -33,120 +16,286 @@ module conditionsAlgebraMbt::Impl {
   var qHasIncapacitated: bool
   var qHasProne: bool
 
-  pure def emptyConditionState(): ConditionState = {
-    blinded: false,
-    charmed: false,
-    deafened: false,
-    frightened: false,
-    grappled: false,
-    invisible: false,
-    paralyzed: false,
-    petrified: false,
-    poisoned: false,
-    prone: false,
-    restrained: false,
-    stunned: false,
-    unconscious: false,
-    directIncapacitated: false,
+  pure def qComputeHasIncapacitated(
+    directIncapacitated: bool,
+    paralyzed: bool,
+    petrified: bool,
+    stunned: bool,
+    unconscious: bool,
+  ): bool =
+    directIncapacitated or paralyzed or petrified or stunned or unconscious
+
+  pure def qComputeHasProne(prone: bool, unconscious: bool): bool =
+    prone or unconscious
+
+  action init = all {
+    qBlinded' = false,
+    qCharmed' = false,
+    qDeafened' = false,
+    qFrightened' = false,
+    qGrappled' = false,
+    qInvisible' = false,
+    qParalyzed' = false,
+    qPetrified' = false,
+    qPoisoned' = false,
+    qProne' = false,
+    qRestrained' = false,
+    qStunned' = false,
+    qUnconscious' = false,
+    qDirectIncapacitated' = false,
+    qHasIncapacitated' = false,
+    qHasProne' = false,
   }
 
-  pure def isIncapacitated(state: ConditionState): bool =
-    state.directIncapacitated or
-    state.paralyzed or
-    state.petrified or
-    state.stunned or
-    state.unconscious
-
-  pure def hasProne(state: ConditionState): bool =
-    state.prone or state.unconscious
-
-  pure def applyCondition(state: ConditionState, condition: str): ConditionState =
-    if (condition == "incapacitated")
-      state.with("directIncapacitated", true)
-    else if (condition == "unconscious")
-      state.with("unconscious", true).with("prone", true)
-    else if (condition == "blinded")
-      state.with("blinded", true)
-    else if (condition == "prone")
-      state.with("prone", true)
-    else if (condition == "paralyzed")
-      state.with("paralyzed", true)
-    else
-      state
-
-  pure def removeCondition(state: ConditionState, condition: str): ConditionState =
-    if (condition == "incapacitated")
-      state.with("directIncapacitated", false)
-    else if (condition == "unconscious")
-      state.with("unconscious", false)
-    else if (condition == "prone" and state.unconscious)
-      state
-    else if (condition == "blinded")
-      state.with("blinded", false)
-    else if (condition == "prone")
-      state.with("prone", false)
-    else if (condition == "paralyzed")
-      state.with("paralyzed", false)
-    else
-      state
-
-  pure def currentState(): ConditionState = {
-    blinded: qBlinded,
-    charmed: qCharmed,
-    deafened: qDeafened,
-    frightened: qFrightened,
-    grappled: qGrappled,
-    invisible: qInvisible,
-    paralyzed: qParalyzed,
-    petrified: qPetrified,
-    poisoned: qPoisoned,
-    prone: qProne,
-    restrained: qRestrained,
-    stunned: qStunned,
-    unconscious: qUnconscious,
-    directIncapacitated: qDirectIncapacitated,
+  action doApplyBlinded = all {
+    qBlinded' = true,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
   }
 
-  action writeState(state: ConditionState) = all {
-      qBlinded' = state.blinded,
-      qCharmed' = state.charmed,
-      qDeafened' = state.deafened,
-      qFrightened' = state.frightened,
-      qGrappled' = state.grappled,
-      qInvisible' = state.invisible,
-      qParalyzed' = state.paralyzed,
-      qPetrified' = state.petrified,
-      qPoisoned' = state.poisoned,
-      qProne' = state.prone,
-      qRestrained' = state.restrained,
-      qStunned' = state.stunned,
-      qUnconscious' = state.unconscious,
-      qDirectIncapacitated' = state.directIncapacitated,
-      qHasIncapacitated' = isIncapacitated(state),
-      qHasProne' = hasProne(state),
-    }
+  action doRemoveBlinded = all {
+    qBlinded' = false,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
+  }
 
-  action init = writeState(emptyConditionState())
+  action doApplyProne = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = true,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(true, qUnconscious),
+  }
 
-  action doApplyBlinded = writeState(applyCondition(currentState(), "blinded"))
+  action doRemoveProne = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = if (qUnconscious) qProne else false,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(if (qUnconscious) qProne else false, qUnconscious),
+  }
 
-  action doRemoveBlinded = writeState(removeCondition(currentState(), "blinded"))
+  action doApplyParalyzed = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = true,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      true,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
+  }
 
-  action doApplyProne = writeState(applyCondition(currentState(), "prone"))
+  action doRemoveParalyzed = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = false,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      false,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
+  }
 
-  action doRemoveProne = writeState(removeCondition(currentState(), "prone"))
+  action doApplyUnconscious = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = true,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = true,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      true,
+    ),
+    qHasProne' = qComputeHasProne(true, true),
+  }
 
-  action doApplyParalyzed = writeState(applyCondition(currentState(), "paralyzed"))
+  action doRemoveUnconscious = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = false,
+    qDirectIncapacitated' = qDirectIncapacitated,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      qDirectIncapacitated,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      false,
+    ),
+    qHasProne' = qComputeHasProne(qProne, false),
+  }
 
-  action doRemoveParalyzed = writeState(removeCondition(currentState(), "paralyzed"))
+  action doApplyDirectIncapacitated = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = true,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      true,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
+  }
 
-  action doApplyUnconscious = writeState(applyCondition(currentState(), "unconscious"))
-
-  action doRemoveUnconscious = writeState(removeCondition(currentState(), "unconscious"))
-
-  action doApplyDirectIncapacitated = writeState(applyCondition(currentState(), "incapacitated"))
-
-  action doRemoveDirectIncapacitated = writeState(removeCondition(currentState(), "incapacitated"))
+  action doRemoveDirectIncapacitated = all {
+    qBlinded' = qBlinded,
+    qCharmed' = qCharmed,
+    qDeafened' = qDeafened,
+    qFrightened' = qFrightened,
+    qGrappled' = qGrappled,
+    qInvisible' = qInvisible,
+    qParalyzed' = qParalyzed,
+    qPetrified' = qPetrified,
+    qPoisoned' = qPoisoned,
+    qProne' = qProne,
+    qRestrained' = qRestrained,
+    qStunned' = qStunned,
+    qUnconscious' = qUnconscious,
+    qDirectIncapacitated' = false,
+    qHasIncapacitated' = qComputeHasIncapacitated(
+      false,
+      qParalyzed,
+      qPetrified,
+      qStunned,
+      qUnconscious,
+    ),
+    qHasProne' = qComputeHasProne(qProne, qUnconscious),
+  }
 
   action step = any {
     doApplyBlinded,
