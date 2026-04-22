@@ -76,6 +76,47 @@ export const WEAPON_PROPERTIES = [
 ] as const;
 export type WeaponProperty = (typeof WEAPON_PROPERTIES)[number];
 
+export const ACTIVATION_TIMINGS = [
+  "action",
+  "bonusAction",
+  "reaction",
+] as const;
+export type ActivationTiming = (typeof ACTIVATION_TIMINGS)[number];
+
+export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const;
+export type CoverType = (typeof COVER_TYPES)[number];
+
+export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const;
+export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number];
+
+export const ARMOR_WEIGHTS = ["none", ...ARMOR_CATEGORIES] as const;
+export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number];
+
+export const SIZES = [
+  "tiny",
+  "small",
+  "medium",
+  "large",
+  "huge",
+  "gargantuan",
+] as const;
+export type Size = (typeof SIZES)[number];
+
+export const SHOVE_CHOICES = ["prone", "push"] as const;
+export type ShoveChoice = (typeof SHOVE_CHOICES)[number];
+
+export const SPELL_SCHOOLS = [
+  "abjuration",
+  "conjuration",
+  "divination",
+  "enchantment",
+  "evocation",
+  "illusion",
+  "necromancy",
+  "transmutation",
+] as const;
+export type SpellSchool = (typeof SPELL_SCHOOLS)[number];
+
 export type Integer = number & Brand.Brand<"Integer">;
 export const Integer = Brand.refined<Integer>(
   (n: number) => Number.isInteger(n),

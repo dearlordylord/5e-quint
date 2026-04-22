@@ -4,9 +4,10 @@ import {
   initiativeOrder,
   insertAtOrderIndex,
   removeFromInitiative as removeFromInitiativeStack,
+  type InitiativeEntry,
   type InitiativeStack,
 } from "@dnd/shared/initiative-algebra";
-import { Round } from "@dnd/shared/types";
+import { Initiative, Round } from "@dnd/shared/types";
 
 import {
   buildBattleAttackContext,
@@ -355,7 +356,10 @@ export function battleInit({
   }));
   // Stable sort: ES2019+ guarantees Array.sort stability.
   const sorted = [...scored].sort((a, b) => b.score - a.score);
-  const orderedIds = sorted.map(({ cfg }) => cfg.id);
+  const orderedInitiative = sorted.map(({ cfg, score }) => ({
+    creature: cfg.id,
+    initiative: Initiative(score),
+  })) as [InitiativeEntry<CreatureId>, ...Array<InitiativeEntry<CreatureId>>];
   for (const [index, { cfg }] of sorted.entries()) {
     creatures.set(
       cfg.id,
@@ -364,10 +368,7 @@ export function battleInit({
   }
   return {
     creatures,
-    initiative: createInitiativeStack(
-      orderedIds as [CreatureId, ...CreatureId[]],
-      Round(1),
-    ),
+    initiative: createInitiativeStack(orderedInitiative, Round(1)),
     ...PHASE_ACTIVE,
     spellStack: [],
     turnStarted: false,
@@ -406,7 +407,16 @@ export function battleAddCreature({
   let initiative = c.initiative;
   const insertedCount = sorted.length;
   for (const [offset, { cfg }] of sorted.entries()) {
-    initiative = insertAtOrderIndex(initiative, e.insertAtIndex + offset, cfg.id);
+    initiative = insertAtOrderIndex(initiative, e.insertAtIndex + offset, {
+      creature: cfg.id,
+      initiative: Initiative(
+        effectiveInitRoll(
+          cfg.initiativeRoll ?? 10,
+          cfg.initiativeRollB ?? cfg.initiativeRoll ?? 10,
+          cfg.surprised ?? false,
+        ),
+      ),
+    });
   }
 
   for (

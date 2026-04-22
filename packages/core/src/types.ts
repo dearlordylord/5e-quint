@@ -1,5 +1,6 @@
 import { Brand, Schema } from "effect";
 import type {
+  ArmorCategory,
   Condition,
   DamageQualifier,
   DamageType,
@@ -10,27 +11,41 @@ import type {
 
 export {
   ABILITIES,
+  ACTIVATION_TIMINGS,
+  ARMOR_CATEGORIES,
+  ARMOR_WEIGHTS,
   CASTER_CLASSES,
   CASTER_CLASS_TO_TYPE,
   CASTER_TYPES,
   CONDITIONS,
+  COVER_TYPES,
   DAMAGE_QUALIFIERS,
   DAMAGE_TYPES,
   INCAP_SOURCES,
   MAGICAL_DAMAGE_TYPES,
   PHYSICAL_DAMAGE_TYPES,
+  SHOVE_CHOICES,
+  SIZES,
+  SPELL_SCHOOLS,
   WEAPON_PROPERTIES,
 } from "@dnd/shared/types";
 export type {
   Ability,
+  ActivationTiming,
+  ArmorCategory,
+  ArmorWeight,
   CasterClass,
   CasterType,
   Condition,
+  CoverType,
   DamageQualifier,
   DamageType,
   IncapSource,
   MagicalDamageType,
   PhysicalDamageType,
+  ShoveChoice,
+  Size,
+  SpellSchool,
   SpellSlots,
   WeaponProperty,
 } from "@dnd/shared/types";
@@ -148,6 +163,7 @@ export const CANONICAL_CONDITION_CONSEQUENCES: Readonly<
   },
 };
 
+// TODO: wrong domain language
 export const ACTION_TYPES = [
   "attack",
   "magic",
@@ -164,35 +180,7 @@ export const ACTION_TYPES = [
 ] as const;
 export type ActionType = (typeof ACTION_TYPES)[number];
 
-export const ACTIVATION_TIMINGS = [
-  "action",
-  "bonusAction",
-  "reaction",
-] as const;
-export type ActivationTiming = (typeof ACTIVATION_TIMINGS)[number];
-
-export const COVER_TYPES = ["none", "half", "threeQuarters", "total"] as const;
-export type CoverType = (typeof COVER_TYPES)[number];
-
-export const ARMOR_CATEGORIES = ["light", "medium", "heavy"] as const;
-export type ArmorCategory = (typeof ARMOR_CATEGORIES)[number];
-
-export const ARMOR_WEIGHTS = ["none", "light", "medium", "heavy"] as const;
-export type ArmorWeight = (typeof ARMOR_WEIGHTS)[number];
-
-export const SIZES = [
-  "tiny",
-  "small",
-  "medium",
-  "large",
-  "huge",
-  "gargantuan",
-] as const;
-export type Size = (typeof SIZES)[number];
-
-export const SHOVE_CHOICES = ["prone", "push"] as const;
-export type ShoveChoice = (typeof SHOVE_CHOICES)[number];
-
+// TODO wrong domain language. it is either charList or stateBlock.
 export const CREATURE_KINDS = ["PC", "Monster"] as const;
 export type CreatureKind = (typeof CREATURE_KINDS)[number];
 
@@ -201,18 +189,6 @@ export type UnarmoredDefense = (typeof UNARMORED_DEFENSES)[number];
 
 export const EXPIRY_PHASES = ["start", "end"] as const;
 export type ExpiryPhase = (typeof EXPIRY_PHASES)[number];
-
-export const SPELL_SCHOOLS = [
-  "abjuration",
-  "conjuration",
-  "divination",
-  "enchantment",
-  "evocation",
-  "illusion",
-  "necromancy",
-  "transmutation",
-] as const;
-export type SpellSchool = (typeof SPELL_SCHOOLS)[number];
 
 export interface EffectTurnHook {
   readonly healAmount?: number;

@@ -20,7 +20,7 @@ import { Index, Initiative, Round } from "@dnd/shared/types";
 type CreatureId = "c1" | "c2" | "c2b" | "c3" | "c4" | "cx";
 
 type ModelState = {
-  readonly stack: InitiativeStack<InitiativeEntry<CreatureId>>;
+  readonly stack: InitiativeStack<CreatureId>;
   readonly lastInsertStatus: "none" | "ok" | "decide" | "error";
   readonly lastTie: ReadonlyArray<CreatureId>;
 };
@@ -121,7 +121,7 @@ function createInitiativeDriver() {
       doRemoveC1: () => {
         const removed = removeFromInitiative(
           state.stack,
-          (entry) => entry.creature === "c1",
+          (creature) => creature === "c1",
         );
         if (Option.isSome(removed)) {
           state = { ...state, stack: removed.value };
@@ -130,7 +130,7 @@ function createInitiativeDriver() {
       doRemoveC2: () => {
         const removed = removeFromInitiative(
           state.stack,
-          (entry) => entry.creature === "c2",
+          (creature) => creature === "c2",
         );
         if (Option.isSome(removed)) {
           state = { ...state, stack: removed.value };
