@@ -362,9 +362,9 @@ The intended first slice should look more like:
 - validated `Surface` units from a service
 - runtime ownership/access wrappers around those units
 - battle state over creatures and participation
-- pure prompt discovery from battle state
-- pure prompt resolution into battle actions
-- pure reducer execution over resolved battle actions
+- pure available-action discovery from battle state
+- pure structural interpretation for a small supported subset
+- pure replay-from-root resolution over chosen subject plus filled holes
 
 Not like:
 
@@ -372,122 +372,197 @@ Not like:
 - runtime dispatch on known unit ids
 - a large new language parallel to `Surface`
 
-## Landed Prompt Lifecycle
+## Current Reducer Direction
 
-The landed TS flow now distinguishes four different things explicitly:
+The current reducer direction is not the older prompt-owned
+`chooseAction -> openPrompt -> answerBattlePrompt` model.
 
-- available prompt discovery from `BattleState`
-- complete prompt answers in `BattlePromptAnswer`
-- resolution results in `BattleResolutionResult`
-- reducer-owned state updates in `reduceBattleState`
+That was useful discovery work, but it is no longer the target architecture.
 
-It is also important to preserve an older point that the earlier history made
-explicit and the current wording risked obscuring:
+The live reducer direction is:
 
-- an available action may still have unresolved frontend/Table holes
-- filling those holes produces a complete prompt answer
-- resolution of that complete answer may still discover new holes and
-  open a follow-up prompt
+- discover currently legal actions from battle state
+- include current initial holes on those actions
+- let the caller resend the full accumulated filled-hole assignment for the
+  chosen subject
+- replay resolution from the root on every call
+- either resolve fully or return the next missing holes
 
-The key distinction from the earlier pre-implementation notes is:
+### Durable decisions
 
-- an incomplete answer to the current prompt is invalid and unrepresentable at the type level
-- a complete answer may still yield a new prompt when resolution discovers more required table input
+- `Surface` remains the semantic language.
+- Reducer semantics must not branch on authored unit ids.
+- Reducer interpretation is structural and limited to a small supported subset.
+- Reducer state owns only durable battle state.
+- Chosen subject does not live in reducer state in the first slice.
+- Continuation transcript does not live in reducer state in the first slice.
+- Holes are derived, not stored in reducer state.
+- Hole ids are derived automatically, not authored.
+- Unsupportedness exists only at the interpreter boundary.
 
-The slice currently demonstrates that with concrete paths:
+### Replay-From-Root
 
-- `chooseAction -> endTurn -> resolvedAction`
-- `chooseAction -> attack -> openedPrompt(chooseAttackTarget)`
-- `chooseAction -> cure_wounds -> openedPrompt(chooseSingleTargetUnit)`
-- `chooseAction -> fireball -> openedPrompt(chooseAreaEffect)`
-- `chooseAction -> fighter_action_surge_l2 -> resolvedAction`
+The first reducer slice uses replay-from-root.
 
-That is the pattern Quint must formalize next. The Quint task should not
-re-infer a different prompt contract from the old candidate shapes below.
+Caller payload includes:
 
-## Discovered Pattern Freeze (SRC5.5)
+- chosen subject
+- full currently known filled-hole assignment for that subject
 
-This section is the freeze point for the next batch. `SRC6`, `SRC7`, and
-`SRC8` should treat it as the discovered source of truth rather than reusing
-older pre-implementation guesses.
+Reducer behavior is:
 
-### What stayed true
+- replay resolution from the root every time
+- either resolve and produce the next state
+- or return the next missing holes
 
-- `Surface` stayed the semantic language and reducers still interpret units by
-  structural `Surface` helpers rather than by authored unit ids.
-- authored identity still lives only on `unit.id`; runtime ownership is carried
-  by `RuntimeUnitAccess.ownerId`
-- available prompts are still derived from `BattleState`
-- open interaction windows are still real runtime state
-- prompt answers are still complete-answer-only at the type level
-- reducers are still pure and request more table input by returning data rather
-  than by performing I/O
-- the package is still TS-first only as a discovery phase, with Quint required
-  next
+Why this is the chosen model:
 
-### What changed from the pre-implementation design
+- the system is deterministic
+- replay is cheap
+- it avoids early continuation-frame design
+- it gets the package to a real reducer faster for the supported subset
 
-- the slice did not land one fully generic untyped
-  `fillActionInputs(requiredInputs: bag)` surface as the long-term first-class
-  runtime contract; it landed one top-level `chooseAction` prompt plus typed
-  follow-up prompt variants: `chooseAttackTarget`, `chooseSingleTargetUnit`,
-  and `chooseAreaEffect`
-- however, the earlier design insight remains correct: available actions may
-  expose unresolved runtime holes, and frontend fulfillment can be understood
-  as filling those holes before resolution
-- `openPrompt` is not a stored full prompt object; `BattleState.openPrompt`
-  stores only minimal prompt-owned state and the visible prompt is re-derived
-  from current state
-- the resolved action vocabulary is concrete and structural:
-  `endTurn`, `attack`, `singleTargetHeal`, `areaSaveDamage`, and
-  `grantExtraAction`
-- the end-to-end proof surface is now explicit and bounded to five paths:
-  `attack`, `endTurn`, `cure_wounds`, `fireball`, and
-  `fighter_action_surge_l2`
-- the package now has deterministic slice tests that cover prompt discovery,
-  follow-up prompting, reduction, and next-turn prompt discovery, so the next
-  Quint task can model a known flow instead of designing from scratch
+### State Ownership
 
-### Assumptions rejected by the landed code
+Reducer state owns durable battle facts only.
 
-- rejected: the only honest way to model unresolved runtime holes is one
-  generic pending-action plus required-input bag
-  landed instead: explicit prompt variants with domain-specific payloads, while
-  preserving the deeper invariant that actions may still carry unresolved
-  frontend/Table holes before they become fully answerable
-- rejected: storing the full current prompt object in state
-  landed instead: minimal in-flight prompt state plus derived prompt discovery
-- rejected: letting TS discovery keep drifting while Quint catches up later
-  landed instead: this freeze point closes the TS-only discovery phase and
-  hands semantic leadership back to Quint for the next task
-- rejected: planning `core` integration before the exact prompt/action contract
-  is frozen and MBT-backed
-  landed instead: `core` stays downstream of the Quint spec and MBT bridge
+Reducer state does not own:
 
-### Frozen implementation facts Quint must model
+- available actions
+- initial holes
+- chosen subject
+- prompt transcript
+- continuation transcript
 
-- `BattleState` owns:
-  - combatants
-  - initiative counts
-  - stable initiative order
-  - `round`, `turnNumber`, and `turnActorId`
-  - `openPrompt` as minimal prompt-owned state
-  - action-economy counters:
-    `standardActionsRemaining` and `restrictedActionsRemaining`
-- prompt discovery starts from `discoverAvailableBattlePrompt(state)`
-- prompt fulfillment goes through `answerBattlePrompt(state, answer)`
-- prompt resolution returns either:
-  - `resolvedAction`, or
-  - `openedPrompt`
-- state mutation happens only in `reduceBattleState(state, action)`
+Those are derived or caller-supplied per replay.
 
-### Frozen sequencing for the next batch
+### Subject Identity
 
-1. `SRC6` should formalize this exact prompt/action/open-window contract in
-   Quint.
-2. `SRC7` should build a correction-slice MBT bridge against that Quint model.
-3. `SRC8` should port one bounded `core` path only after the Quint+MBT lane is
-   proving the slice.
+Execution identity must include `actorId`.
+
+This is necessary because reaction windows, legendary actions, and other
+out-of-turn semantics mean the acting creature is not always the current
+initiative actor.
+
+### Interpreter Axes
+
+Supported authored structures should be interpreted into five separate axes:
+
+- `requirements`
+- `delivery`
+- `targeting`
+- `effect`
+- `continuation`
+
+Requirements are separate from delivery.
+
+Example:
+
+- `fireball` may have delivery `save_gate`
+- but it still has requirements such as “a legal slot exists” and “a slot
+  choice must be filled”
+
+Requirements therefore split into:
+
+- legality requirements
+- hole requirements
+
+### Holes
+
+The term is `holes`.
+
+Do not call them `slots` in this architecture because `slot` is already
+overloaded in the repo by spell slots and similar resource concepts.
+
+Holes are caller/table-supplied missing pieces needed for resolution to
+continue.
+
+Examples:
+
+- slot choice
+- chosen target
+- chosen damage type
+- supplied attack roll
+- supplied damage dice
+
+The reducer must fail hard on invalid filled-hole payloads:
+
+- unknown hole id
+- duplicate hole id
+- wrong value shape
+- extra hole values not currently expected
+
+### Discovery Contract
+
+`discoverAvailableActions(state)` should surface only actions that are currently
+legal to begin.
+
+Unavailable actions are hidden in the first slice.
+
+Discovery returns:
+
+- execution identity (`subject`)
+- current initial holes
+- light metadata such as `label` and `summary`
+- optional structural `family` for debugging/tests
+
+Resolution always re-derives supported interpretation from `state + subject`.
+
+### Supported First Slice
+
+The first supported subset is deliberately small.
+
+Core actions:
+
+- `attack`
+- `endTurn`
+
+Units:
+
+- `fire_bolt`
+- `fireball`
+- `cure_wounds`
+- `fighter_action_surge_l2`
+
+Explicitly out of scope for the first slice:
+
+- reactions
+- legendary actions
+- continuation semantics
+- random-table branching
+- counterspell-style interrupt windows
+- any authored structure outside the supported subset
+
+### Resolution Contract
+
+The first resolution API should conceptually be:
+
+```ts
+resolveSubject(
+  state,
+  subject,
+  filledHoles,
+)
+```
+
+and return one of:
+
+- `resolved`
+- `needsHoles`
+- `unsupported`
+- `invalid`
+
+### Historical Note
+
+Older prompt-shaped designs in this document are historical and should not be
+treated as the current reducer target.
+
+In particular, these are no longer current assumptions:
+
+- reducer state owns `openPrompt`
+- the main protocol is `answerBattlePrompt`
+- typed follow-up prompt variants are the authoritative long-term shape
+- reducer continuation must first be modeled as prompt-owned state
 
 ## Effect Usage
 
@@ -559,11 +634,12 @@ The design requirement is therefore:
 
 ## Frontend Fulfillment
 
-The package should assume that prompts are fulfilled by the frontend.
+The package should assume that holes are filled by the frontend.
 
 An important target frontend is MCP, just like in `core`.
 
-So prompt shapes should be designed as frontend-fulfillable data, not as internal-only helper objects.
+So discovery payloads and hole descriptors should be designed as
+frontend-fulfillable data, not as internal-only helper objects.
 
 ## Package Naming
 
@@ -597,97 +673,31 @@ Notes:
 - authored identity comes from `unit.id`
 - this shape intentionally leaves room for later `accessId` if multi-access cases are added
 
-### Candidate prompt shape
+### Candidate subject shape
 
 ```ts
-type AvailableBattlePrompt =
+type ResolutionSubject =
   | {
-      readonly tag: "chooseAction";
-      readonly actorId: CreatureId;
-      readonly options: ReadonlyArray<AvailableActionOption>;
-    }
-  | {
-      readonly tag: "fillActionInputs";
-      readonly actorId: CreatureId;
-      readonly action: PendingAction;
-      readonly requiredInputs: PromptRequirement;
-    };
-```
-
-The important property is not the exact names; it is that prompts represent
-unresolved frontend/Table holes explicitly.
-
-Historical note:
-
-- earlier work and MCP surfaces already used the idea of executable tokens with
-  unresolved holes to fill
-- for example, `CAST_PREPARED_SPELL` in `core` can surface a token whose
-  `slotLevel` is still a bounded choice that the caller must fill before
-  execution
-- the correction package should preserve that architectural idea even if the
-  first landed correction slice chose explicit typed prompt variants instead of
-  a single generic `requiredInputs` bag
-
-Terminology note:
-
-- use `holes` as the primary term in this document
-- avoid calling these holes `slots`
-- in this repo `slot` already strongly means spell slot, pact slot, or another
-  resource slot
-- acceptable supporting phrases are:
-  - `unresolved holes`
-  - `fillable holes`
-  - `action holes`
-  - `prompt holes`
-- avoid slipping back to `requirements` when the meaning is specifically
-  "caller-visible missing pieces that must be filled"
-
-Status note:
-
-- this exact candidate shape was superseded by the landed `chooseAction` plus
-  typed follow-up prompt variants
-- keep this section as architectural rationale, not as the current source of truth
-- the correction to preserve is:
-  - not “reject fillable holes”
-  - but rather “reject an overly generic opaque bag as the only first-class
-    runtime shape”
-  - explicit typed prompts and fillable holes are compatible ideas, not
-    competing ones
-
-### Candidate resolved action shape
-
-```ts
-type ResolvedBattleAction =
-  | {
-      readonly tag: "useCoreAction";
+      readonly tag: "coreAction";
       readonly actorId: CreatureId;
       readonly action: "attack" | "endTurn";
-      readonly ...
     }
   | {
-      readonly tag: "useUnit";
+      readonly tag: "unit";
       readonly actorId: CreatureId;
-      readonly unit: RuntimeUnitAccess;
-      readonly ...
+      readonly unitId: RuntimeUnitAccess["unit"]["id"];
     };
 ```
 
 ### Candidate resolution result shape
 
 ```ts
-type BattleResolutionResult =
-  | { readonly tag: "ready"; readonly action: ResolvedBattleAction }
-  | { readonly tag: "needsPrompt"; readonly prompt: AvailableBattlePrompt };
+type ResolutionResult =
+  | { readonly tag: "resolved"; readonly state: State }
+  | { readonly tag: "needsHoles"; readonly holes: RuntimeHoleSet }
+  | { readonly tag: "unsupported"; readonly reason: UnsupportedReason }
+  | { readonly tag: "invalid"; readonly reason: string };
 ```
-
-This is where iterative prompting fits:
-
-- a complete prompt answer may still produce a new prompt
-
-Status note:
-
-- the landed names are `resolvedAction` and `openedPrompt`
-- the important invariant survived the rename: complete prompt answers do not imply immediate state mutation, and they may still create a new prompt
 
 ### Candidate battle state additions
 
@@ -698,31 +708,28 @@ type BattleState = {
   readonly round: number;
   readonly turnNumber: number;
   readonly turnActorId: CreatureId | null;
-  readonly openPrompt?: AvailableBattlePrompt;
 };
 ```
 
 Status note:
 
-- the landed state stores `openPrompt` as minimal prompt-owned state rather than a full duplicated derived prompt object
-- this keeps prompt discovery derived while still making the in-flight interaction window real state
+- no `openPrompt`-style continuation state is required in the first
+  replay-from-root reducer slice
 
 This is not meant to be copied literally, but it is the intended direction.
 
 ### Candidate file split
 
 - `types.ts`
-  - domain types
+  - domain types and lightweight discovery/view types
   - battle state
-  - prompt/action/result types
-- `surface-interpretation.ts`
+  - subject/result types
+- `reducer-interpretation.ts`
   - structural helpers over `Surface`
 - `battle-discovery.ts`
-  - derive available prompts from state
-- `battle-resolution.ts`
-  - turn complete prompt answers into resolved actions or new prompts
-- `battle-reducer.ts`
-  - apply resolved actions to state
+  - derive currently legal actions and initial holes from state
+- `reducer-resolution.ts`
+  - replay-from-root resolution
 - `battle-init.ts`
   - start battle, initiative ordering, participant insertion
 
@@ -735,13 +742,14 @@ The package should support a flow like this:
 1. Battle is initialized with participating creatures and initiative counts.
 2. `initiativeOrder` is established, including any frontend/Table tie decision.
 3. `turnActorId` points at the first acting creature.
-4. Prompt discovery derives what that creature can currently do.
-5. The frontend answers the current prompt completely.
-6. Resolution either:
-   - yields a final action, or
-   - yields a new prompt created by earlier resolution
-7. A reducer applies the resolved action.
-8. Battle state advances:
+4. Available-action discovery derives what creatures can currently do and what
+   initial holes each action has.
+5. The frontend sends a chosen subject plus the full currently known filled-hole
+   assignment for that subject.
+6. Resolution replays from the root and either:
+   - yields a final next state, or
+   - yields the next missing holes
+7. Battle state advances:
    - same turn if more interaction remains
    - next turn otherwise
 
@@ -757,19 +765,17 @@ The next implementation slice should do the following:
 
 1. Rename the package to `surface-runtime-correction`.
 2. Replace the current flat battle choice object with:
-   - available battle prompts
-   - resolved battle actions
-   - optional open prompt state when a multi-step interaction is in progress
-   - explicit unresolved runtime holes on actions/prompts where caller
-     fulfillment is still needed
-3. Enforce complete prompt answers at the type level.
+   - derived currently legal actions
+   - explicit current holes on those actions
+   - replay-from-root resolution on chosen subject plus filled holes
+3. Enforce strict validation of filled-hole payloads.
 4. Add initiative-aware battle turn state:
    - initiative
    - initiative order
    - turn actor id
    - round / turn counters
-5. Keep available prompts derived from state.
-6. Add support for “new prompt appears after prior resolution.”
+5. Keep available actions and initial holes derived from state.
+6. Return next missing holes from resolution when replay cannot yet complete.
 7. Include both:
    - a core battle mechanic such as attack or end turn
    - unit-based interactions such as cure wounds, fireball, and action surge
@@ -788,10 +794,11 @@ If you are implementing from this document without prior context, keep these rul
 2. Do not duplicate authored identity outside `unit.id`.
 3. Do not store the full current choice set in state.
    Derive it.
-4. Do store an open unresolved prompt if a multi-step interaction is in flight.
-5. Available actions may still expose holes that the frontend/table must fill
+4. Do not store chosen subject or continuation transcript in reducer state for
+   the first slice.
+5. Available actions may expose holes that the frontend/table must fill
    before execution.
-6. Do not allow partial prompt answers.
+6. Replay from the root on each resolution call.
 7. Do not add a new execution IR unless you can prove it is smaller and more generic than `Surface`.
 8. If your implementation starts stretching these rules, stop and redesign instead of patching around them.
 
@@ -802,9 +809,10 @@ The following should be treated as immediate design failures in this package:
 - dispatch by specific authored unit id for semantics
 - duplicate authored identity fields
 - storing available choices redundantly in state
-- erasing unresolved runtime holes from the contract merely because a
-  first implementation used explicit typed prompts
-- allowing partially answered prompts
+- storing prompt/open-window continuation state as the primary reducer protocol
+- hiding holes behind reducer-only state instead of making them explicit in the
+  caller-facing contract
+- allowing partially filled hole assignments
 - a broad second execution language that mirrors `Surface`
 - hidden reducer I/O
 - using `core` naming or structure merely because it already exists there
@@ -813,9 +821,11 @@ The following should be treated as immediate design failures in this package:
 
 The diagram work should be updated to reflect one explicit point:
 
-- resolution can create a new prompt after a complete prior prompt answer
+- resolution can return the next missing holes after replay reaches an
+  incomplete continuation point
 
 This should be shown as distinct from the simple reducer/table loop, because the distinction matters:
 
-- incomplete answer to current prompt is invalid
-- complete answer followed by newly created prompt is valid
+- invalid filled holes are rejected
+- valid filled holes may still be insufficient for complete replay, in which
+  case resolution returns the next missing holes

@@ -3,6 +3,7 @@ import { join } from "node:path";
 
 import { Context, Layer, Option, HashMap } from "effect";
 import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
+import { checkSupportedUnit } from "#/reducer-support.ts";
 
 import type {
   UnitRecord,
@@ -28,9 +29,10 @@ function surfaceContentPath(unitId: string): string {
   );
 }
 
-export function loadAuthoredUnit(unitId: string): UnitRecord {
+export function loadAuthoredUnit(unitId: string) {
   const raw = readFileSync(surfaceContentPath(unitId), "utf8");
-  return decodeUnitRecordSync(JSON.parse(raw));
+  const unit = decodeUnitRecordSync(JSON.parse(raw));
+  return checkSupportedUnit(unit);
 }
 
 export function loadAuthoredUnits(

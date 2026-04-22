@@ -115,7 +115,7 @@ function createInitiativeDriver() {
       doNext: () => {
         state = {
           ...state,
-          stack: nextInitiative(state.stack)[0],
+          stack: nextInitiative(state.stack),
         };
       },
       doRemoveC1: () => {

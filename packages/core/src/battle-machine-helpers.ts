@@ -1134,7 +1134,7 @@ export function applyFailEffects(
 export function nextTurn(
   initiative: BattleContext["initiative"],
 ): BattleContext["initiative"] {
-  return nextInitiative(initiative)[0];
+  return nextInitiative(initiative);
 }
 
 /** Apply damage to a creature and handle concentration break + propagation in one step. */

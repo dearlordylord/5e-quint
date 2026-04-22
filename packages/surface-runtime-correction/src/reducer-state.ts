@@ -2,7 +2,6 @@ import type { ConditionState } from '@dnd/shared/conditions-algebra';
 import type { InitiativeStack } from '@dnd/shared/initiative-algebra';
 import type { CreatureId, Hp, SpellSlots } from '@dnd/shared/types';
 import type { UnitRecord } from '@dnd/prototype-content-surface/surface/types';
-import type { PendingResolution } from '#/reducer-resolution.ts';
 
 export type CreatureState = {
   // invariant: hp can't be more than maxHp. for temp hp, there is a field
@@ -28,7 +27,4 @@ export type State = {
   readonly currentActionsAvailable: 0 | 1 | 2
   readonly currentHasBonusAction: boolean
   readonly currentHasFreeAction: boolean
-
-  // only continuation holes belong in state; initial action holes stay derived
-  readonly pendingResolution: PendingResolution | null
 }

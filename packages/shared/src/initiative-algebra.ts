@@ -15,8 +15,6 @@ export type InitiativeStack<T> = {
   readonly stillToAct: ReadonlyNonEmptyArray<InitiativeEntry<T>>;
 };
 
-export type RoundTicked = boolean;
-
 export const createInitiativeStack = <T>(
   order: ReadonlyNonEmptyArray<InitiativeEntry<T>>,
   round: Round,
@@ -28,31 +26,25 @@ export const createInitiativeStack = <T>(
 
 export const nextInitiative = <T>(
   s0: InitiativeStack<T>,
-): readonly [InitiativeStack<T>, RoundTicked] => {
+): InitiativeStack<T> => {
   const [current, ...remaining] = s0.stillToAct;
   const acted = [...s0.alreadyActed, current] as unknown as ReadonlyNonEmptyArray<
     InitiativeEntry<T>
   >;
 
   if (isEmptyReadonlyArray(remaining)) {
-    return [
-      {
-        round: (s0.round + 1) as Round,
-        alreadyActed: [],
-        stillToAct: acted,
-      },
-      true,
-    ];
+    return {
+      round: (s0.round + 1) as Round,
+      alreadyActed: [],
+      stillToAct: acted,
+    };
   }
 
-  return [
-    {
-      round: s0.round,
-      alreadyActed: acted,
-      stillToAct: remaining as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>,
-    },
-    false,
-  ];
+  return {
+    round: s0.round,
+    alreadyActed: acted,
+    stillToAct: remaining as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>,
+  };
 };
 
 export const currentActing = <T>(stack: InitiativeStack<T>): T =>
