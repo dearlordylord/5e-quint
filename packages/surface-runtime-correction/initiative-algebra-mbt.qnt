@@ -89,7 +89,7 @@ module initiativeAlgebraMbt::Impl {
       (acc, current) =>
         if (acc.result < order.length())
           { idx: acc.idx + 1, result: acc.result }
-        else if (current.initiative > initiative)
+        else if (current.initiative < initiative)
           { idx: acc.idx + 1, result: acc.idx }
         else
           { idx: acc.idx + 1, result: order.length() }
@@ -113,7 +113,7 @@ module initiativeAlgebraMbt::Impl {
       (acc, current) =>
         if (acc.result < order.length())
           { idx: acc.idx + 1, result: acc.result }
-        else if (current.initiative > initiative)
+        else if (current.initiative < initiative)
           { idx: acc.idx + 1, result: acc.idx }
         else
           { idx: acc.idx + 1, result: order.length() }
@@ -173,7 +173,7 @@ module initiativeAlgebraMbt::Impl {
       match decision {
         | NoInitiativeTieDecision => InsertWithInitiativeDecide(tie)
         | HasInitiativeTieDecision(decisionRec) =>
-            if (sameTieCreatures(tie, decisionRec.tie) and decisionRec.index >= 0 and decisionRec.index < tie.length())
+            if (sameTieCreatures(tie, decisionRec.tie) and decisionRec.index >= 0 and decisionRec.index <= tie.length())
               InsertWithInitiativeOk(insertAtOrderIndex(stack, equalIndex + decisionRec.index, entry))
             else
               InsertWithInitiativeDecide(tie)
@@ -185,10 +185,10 @@ module initiativeAlgebraMbt::Impl {
     qRound' = 1,
     qAlreadyActed' = List(),
     qStillToAct' = [
-      { creature: "c1", initiative: 1 },
+      { creature: "c4", initiative: 4 },
       { creature: "c2", initiative: 2 },
       { creature: "c2b", initiative: 2 },
-      { creature: "c4", initiative: 4 },
+      { creature: "c1", initiative: 1 },
     ],
     qLastInsertStatus' = "none",
     qLastTie' = List(),

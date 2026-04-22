@@ -1842,14 +1842,19 @@ const BattleInitControlSchema = Schema.Struct({
   type: Schema.Literal("BATTLE_INIT"),
   creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
 });
+const BattleAddCreatureTieDecisionSchema = Schema.Struct({
+  creatureId: Schema.String,
+  tie: Schema.NonEmptyArray(Schema.String),
+  index: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
+});
 const BattleAddCreatureControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_ADD_CREATURE"),
   creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
-  insertAtIndex: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
-  ),
+  tieDecisions: Schema.optional(Schema.Array(BattleAddCreatureTieDecisionSchema)),
 });
 const BattleRemoveCreatureControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),

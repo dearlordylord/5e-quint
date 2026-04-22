@@ -90,7 +90,11 @@ export type BattleEvent =
   | {
       readonly type: "BATTLE_ADD_CREATURE";
       readonly creatures: ReadonlyArray<InitCreatureConfig>;
-      readonly insertAtIndex: number;
+      readonly tieDecisions?: ReadonlyArray<{
+        readonly creatureId: CreatureId;
+        readonly tie: ReadonlyArray<CreatureId>;
+        readonly index: number;
+      }>;
     }
   | {
       readonly type: "BATTLE_REMOVE_CREATURE";

@@ -915,12 +915,11 @@ function passSpellCastWindow(
 }
 
 describe("battle rules scenario regressions", () => {
-  it("adds creatures before, at, and after turnIndex while preserving the active creature", () => {
+  it("adds creatures by initiative while preserving the active creature and honoring tie decisions", () => {
     const beforeActor = initStartedThreeCreatureBattle();
     send(beforeActor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 0,
-      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
+      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 25 }],
     });
     expect(initiative(beforeActor)).toEqual([
       CreatureId("D"),
@@ -942,42 +941,40 @@ describe("battle rules scenario regressions", () => {
     const atActor = initStartedThreeCreatureBattle();
     send(atActor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 0,
       creatures: [
         { id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 12 },
         { id: CreatureId("E"), maxHp: 18, kind: "PC", initiativeRoll: 16 },
       ],
     });
     expect(initiative(atActor)).toEqual([
-      CreatureId("E"),
-      CreatureId("D"),
       CreatureId("A"),
+      CreatureId("E"),
       CreatureId("B"),
+      CreatureId("D"),
       CreatureId("C"),
     ]);
-    expect(turnIndex(atActor)).toBe(2);
+    expect(turnIndex(atActor)).toBe(0);
     expect(activeCreatureId(atActor)).toBe(CreatureId("A"));
 
     const afterActor = initStartedThreeCreatureBattle();
     send(afterActor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 2,
-      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC" }],
+      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 5 }],
     });
     expect(initiative(afterActor)).toEqual([
       CreatureId("A"),
       CreatureId("B"),
-      CreatureId("D"),
       CreatureId("C"),
+      CreatureId("D"),
     ]);
     expect(turnIndex(afterActor)).toBe(0);
     expect(activeCreatureId(afterActor)).toBe(CreatureId("A"));
     expect(creature(afterActor, "D").battlePosition).toEqual({
-      row: 4,
+      row: 6,
       col: 0,
     });
     expect(creature(afterActor, "C").battlePosition).toEqual({
-      row: 6,
+      row: 4,
       col: 0,
     });
   });
@@ -1018,7 +1015,6 @@ describe("battle rules scenario regressions", () => {
     send(actor, { type: "BATTLE_START_TURN", ...ZERO_SOT });
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [
         statBlockToInitCreatureConfig({
         spellLibrary: SPELL_LIBRARY,
@@ -1032,8 +1028,8 @@ describe("battle rules scenario regressions", () => {
 
     expect(initiative(actor)).toEqual([
       CreatureId("fighter"),
-      CreatureId("goblin-minion-1"),
       CreatureId("goblin-warrior-1"),
+      CreatureId("goblin-minion-1"),
     ]);
     expect(creature(actor, "goblin-minion-1")).toMatchObject({
       hp: 7,
@@ -1057,7 +1053,6 @@ describe("battle rules scenario regressions", () => {
     const before = ctx(actor);
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [{ id: CreatureId("C"), maxHp: 18, kind: "PC" }],
     });
     expect(ctx(actor)).toEqual(before);
@@ -1066,10 +1061,19 @@ describe("battle rules scenario regressions", () => {
     const started = ctx(actor);
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [{ id: CreatureId("A"), maxHp: 18, kind: "PC" }],
     });
     expect(ctx(actor)).toEqual(started);
+  });
+
+  it("rejects mid-battle insertion when a tie decision is required but not supplied", () => {
+    const actor = initStartedThreeCreatureBattle();
+    const before = ctx(actor);
+    send(actor, {
+      type: "BATTLE_ADD_CREATURE",
+      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 15 }],
+    });
+    expect(ctx(actor)).toEqual(before);
   });
 
   it("rejects insertion outside the active-turn phase", () => {
@@ -1109,7 +1113,6 @@ describe("battle rules scenario regressions", () => {
     const awaitingReaction = ctx(actor);
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [{ id: CreatureId("C"), maxHp: 18, kind: "PC" }],
     });
     expect(ctx(actor)).toEqual(awaitingReaction);
@@ -4383,7 +4386,6 @@ describe("battle rules scenario regressions", () => {
     startTurn(actor);
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [
         {
           id: CreatureId("B"),

@@ -133,7 +133,7 @@ export const createScoredInitiativeStack = <T>(
 ) : Either.Either<InitiativeStack<T>, string> =>
   isMonotoneInitiative(order)
     ? Either.right(createInitiativeStack(order, round))
-    : Either.left("Initiative order must be monotone nondecreasing.");
+    : Either.left("Initiative order must be monotone nonincreasing.");
 
 export type InsertWithInitiativeResult<T> =
   | {
@@ -161,7 +161,7 @@ export const insertByInitiative = <T>(
   const order = initiativeEntries(stack);
 
   let firstGreaterIndex = order.findIndex(
-    (current) => current.initiative > initiative,
+    (current) => current.initiative < initiative,
   );
   if (firstGreaterIndex < 0) {
     firstGreaterIndex = order.length;
@@ -197,7 +197,7 @@ export const insertByInitiative = <T>(
 
   if (decision != null) {
     const [decisionTie, decisionIndex] = decision;
-    if (sameTieCreatures(tie, decisionTie) && decisionIndex < tie.length) {
+    if (sameTieCreatures(tie, decisionTie) && decisionIndex <= tie.length) {
       return {
         status: "ok",
         stack: insertAtScoredOrderIndex(stack, firstEqualIndex + decisionIndex, entry),
@@ -215,7 +215,7 @@ function insertAtScoredOrderIndex<T>(
 ) : InitiativeStack<T> {
   const inserted = insertAtOrderIndex(stack, index, value);
   if (!isMonotoneInitiative(initiativeEntries(inserted))) {
-    throw new Error("Initiative order must be monotone nondecreasing.");
+    throw new Error("Initiative order must be monotone nonincreasing.");
   }
   return inserted;
 }
@@ -224,7 +224,7 @@ function isMonotoneInitiative<T>(
   order: ReadonlyArray<InitiativeEntry<T>>,
 ): boolean {
   for (let i = 1; i < order.length; i += 1) {
-    if (order[i - 1]!.initiative > order[i]!.initiative) {
+    if (order[i - 1]!.initiative < order[i]!.initiative) {
       return false;
     }
   }

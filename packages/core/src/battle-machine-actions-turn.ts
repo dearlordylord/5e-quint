@@ -2,12 +2,13 @@ import { Option } from "effect";
 import {
   createInitiativeStack,
   initiativeOrder,
-  insertAtOrderIndex,
+  insertByInitiative,
   removeFromInitiative as removeFromInitiativeStack,
   type InitiativeEntry,
+  type InitiativeTieDecision,
   type InitiativeStack,
 } from "@dnd/shared/initiative-algebra";
-import { Initiative, Round } from "@dnd/shared/types";
+import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
   buildBattleAttackContext,
@@ -383,12 +384,22 @@ export function battleAddCreature({
   // BATTLE_ADD_CREATURE changes battle participation, not creature existence.
   // The added creatures are already-authored inputs projected into battle state.
   if (!c.turnStarted) return {};
-  const order = initiativeOrder(c.initiative);
-  if (e.insertAtIndex < 0 || e.insertAtIndex > order.length) return {};
+  const oldOrder = initiativeOrder(c.initiative);
   if (e.creatures.length === 0) return {};
   if (new Set(e.creatures.map((cfg) => cfg.id)).size !== e.creatures.length)
     return {};
   if (e.creatures.some((cfg) => c.creatures.has(cfg.id))) return {};
+  const addedIds = new Set(e.creatures.map((cfg) => cfg.id));
+  const tieDecisionsByCreature = new Map<CreatureId, InitiativeTieDecision<CreatureId>>();
+  for (const decision of e.tieDecisions ?? []) {
+    if (!addedIds.has(decision.creatureId)) return {};
+    if (tieDecisionsByCreature.has(decision.creatureId)) return {};
+    if (decision.tie.length === 0) return {};
+    tieDecisionsByCreature.set(decision.creatureId, [
+      decision.tie as [CreatureId, ...Array<CreatureId>],
+      Index(decision.index),
+    ]);
+  }
 
   const scored = e.creatures.map((cfg, index) => ({
     cfg,
@@ -405,41 +416,39 @@ export function battleAddCreature({
 
   const creatures = new Map(c.creatures);
   let initiative = c.initiative;
-  const insertedCount = sorted.length;
-  for (const [offset, { cfg }] of sorted.entries()) {
-    initiative = insertAtOrderIndex(initiative, e.insertAtIndex + offset, {
-      creature: cfg.id,
-      initiative: Initiative(
-        effectiveInitRoll(
-          cfg.initiativeRoll ?? 10,
-          cfg.initiativeRollB ?? cfg.initiativeRoll ?? 10,
-          cfg.surprised ?? false,
-        ),
-      ),
-    });
+  for (const { cfg, score } of sorted) {
+    const inserted = insertByInitiative(
+      initiative,
+      cfg.id,
+      Initiative(score),
+      tieDecisionsByCreature.get(cfg.id),
+    );
+    if (inserted.status !== "ok") return {};
+    initiative = inserted.stack;
   }
 
-  for (
-    let oldIndex = e.insertAtIndex;
-    oldIndex < order.length;
-    oldIndex++
-  ) {
-    const shiftedId = order[oldIndex]!;
+  const newOrder = initiativeOrder(initiative);
+
+  for (const [oldIndex, shiftedId] of oldOrder.entries()) {
     const shiftedCreature = creatures.get(shiftedId)!;
     if (!isDefaultBattlePosition(shiftedCreature, oldIndex)) continue;
+    const newIndex = newOrder.indexOf(shiftedId);
+    if (newIndex < 0) return {};
     creatures.set(shiftedId, {
       ...shiftedCreature,
       battlePosition: {
-        row: (oldIndex + insertedCount) * 2,
+        row: newIndex * 2,
         col: 0,
       },
     });
   }
 
-  for (const [offset, { cfg }] of sorted.entries()) {
+  for (const { cfg } of sorted) {
+    const newIndex = newOrder.indexOf(cfg.id);
+    if (newIndex < 0) return {};
     creatures.set(
       cfg.id,
-      buildCreatureState(cfg, e.insertAtIndex + offset),
+      buildCreatureState(cfg, newIndex),
     );
   }
 

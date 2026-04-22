@@ -77,10 +77,10 @@ function compareState(spec: ModelState, impl: ModelState): boolean {
 
 function makeInitialModelState(): ModelState {
   const created = createScoredInitiativeStack<CreatureId>([
-    { creature: "c1", initiative: Initiative(1) },
+    { creature: "c4", initiative: Initiative(4) },
     { creature: "c2", initiative: Initiative(2) },
     { creature: "c2b", initiative: Initiative(2) },
-    { creature: "c4", initiative: Initiative(4) },
+    { creature: "c1", initiative: Initiative(1) },
   ], Round(1));
   if (Either.isLeft(created)) {
     throw new Error(created.left);

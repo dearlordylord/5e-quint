@@ -959,7 +959,6 @@ describe("available actions contract", () => {
       Schema.decodeUnknownEither(ControlCommandSchema)({
         scope: "battle",
         type: "BATTLE_ADD_CREATURE",
-        insertAtIndex: 1,
         creatures: [{ id: "A", maxHp: 20, kind: "PC" }],
       })._tag,
     ).toBe("Right");
@@ -993,7 +992,6 @@ describe("available actions contract", () => {
     const command = Schema.decodeSync(ControlCommandSchema)({
       scope: "battle",
       type: "BATTLE_ADD_CREATURE",
-      insertAtIndex: 1,
       creatures: [
         {
           id: "A",
@@ -1014,6 +1012,17 @@ describe("available actions contract", () => {
       maxHp: 10,
       saveAdvantageContexts: new Set(["spell"]),
     });
+  });
+
+  test("control command schema decodes BATTLE_ADD_CREATURE tie decisions", () => {
+    expect(
+      Schema.decodeUnknownEither(ControlCommandSchema)({
+        scope: "battle",
+        type: "BATTLE_ADD_CREATURE",
+        creatures: [{ id: "A", maxHp: 20, kind: "PC", initiativeRoll: 15 }],
+        tieDecisions: [{ creatureId: "A", tie: ["B", "C"], index: 2 }],
+      })._tag,
+    ).toBe("Right");
   });
 
   test("control command schema decodes BATTLE_REMOVE_CREATURE", () => {
