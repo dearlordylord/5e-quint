@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { loadSupportedUnit } from "#/authored-library.ts";
+import { loadSupportedUnit } from "#/supported-unit-library.ts";
 import {
   assertSupportedUnit,
-  UnsupportedUnitShapeError,
+  UnsupportedUnitError,
 } from "#/reducer-support.ts";
 
 describe("assertSupportedUnit", () => {
@@ -13,7 +13,7 @@ describe("assertSupportedUnit", () => {
 
   it("rejects chromatic orb during load because continuation is not in the first slice", () => {
     expect(() => loadSupportedUnit("chromatic_orb")).toThrow(
-      UnsupportedUnitShapeError,
+      UnsupportedUnitError,
     );
   });
 
@@ -32,7 +32,7 @@ describe("assertSupportedUnit", () => {
     };
 
     expect(() => assertSupportedUnit(unsupported)).toThrow(
-      UnsupportedUnitShapeError,
+      UnsupportedUnitError,
     );
   });
 });

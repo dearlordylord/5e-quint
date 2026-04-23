@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
 import type { ActivationPhase } from "@dnd/prototype-content-surface/surface/types";
 
-import { loadSupportedUnit } from "#/authored-library.ts";
+import { loadSupportedUnit } from "#/supported-unit-library.ts";
 import { projectPhaseHoles } from "#/runtime-holes.ts";
 
 function activationPhase(unitId: string, phaseIndex: number) {
