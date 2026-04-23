@@ -20,9 +20,9 @@ export function discoverAvailableActs(
   ) {
     acts.push({
       subject: {
-        tag: 'coreAction',
+        tag: 'coreAct',
         actorId,
-        action: 'attack',
+        act: 'attack',
       },
       label: 'Attack',
       summary: 'Make an attack.',
@@ -39,9 +39,9 @@ export function discoverAvailableActs(
 
   acts.push({
     subject: {
-      tag: 'coreAction',
+      tag: 'coreAct',
       actorId,
-      action: 'endTurn',
+      act: 'endTurn',
     },
     label: 'End Turn',
     summary: 'End the current turn.',

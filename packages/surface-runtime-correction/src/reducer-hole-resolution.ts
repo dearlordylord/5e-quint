@@ -160,11 +160,11 @@ export function resolveSubject(
 
   return Match.value(request.subject).pipe(
     Match.when(
-      { tag: 'coreAction', action: 'attack' },
+      { tag: 'coreAct', act: 'attack' },
       () => advanceCoreAttackResolution(state, request.filledHoleValues),
     ),
     Match.when(
-      { tag: 'coreAction', action: 'endTurn' },
+      { tag: 'coreAct', act: 'endTurn' },
       () => resolveCoreEndTurn(state),
     ),
     Match.orElse(() => ({ tag: 'invalid', reason: 'not implemented' } as const)),

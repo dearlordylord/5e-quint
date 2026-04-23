@@ -11,7 +11,7 @@ export type CreatureState = {
   readonly conditions: ConditionState
   // carried through the rounds, into the next turn
   readonly hasReaction: boolean
-  readonly units: ReadonlyArray<UnitRecord>
+  readonly authoredUnits: ReadonlyArray<UnitRecord>
   readonly spellSlots: SpellSlots
   // invariant: current spell slots can't be larger than max
   readonly spellSlotsMax: SpellSlots
@@ -23,7 +23,7 @@ export type State = {
   readonly combatants: ReadonlyMap<CreatureId, CreatureState>
 
   // action economy
-  // too close to "units" because fighter's action surge, but given it's fighter (1st class) and 2nd level... canon enough
+  // Remaining count for the domain resource Action.
   readonly currentActionsAvailable: 0 | 1 | 2
   readonly currentHasBonusAction: boolean
   readonly currentHasFreeAction: boolean

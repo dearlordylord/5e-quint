@@ -44,8 +44,8 @@ export function loadSupportedUnits(
 export function createSupportedUnitLibrary(
   unitIds: ReadonlyArray<string>,
 ): SupportedUnitLibraryShape {
-  const units = loadSupportedUnits(unitIds);
-  const unitsById = HashMap.make(...units.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
+  const authoredUnits = loadSupportedUnits(unitIds);
+  const unitsById = HashMap.make(...authoredUnits.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
   return {
     get(unitId) {
       return HashMap.get(unitId)(unitsById)

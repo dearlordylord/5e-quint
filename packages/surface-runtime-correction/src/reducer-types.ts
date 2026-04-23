@@ -11,9 +11,9 @@ import type {
 } from "@dnd/shared/types";
 import type { State } from "#/reducer-state.ts";
 
-// Semantic identity of a hole across replay.
+// Stable identity of a hole across replay.
 // Example: "chromatic_orb_damage_type", "fireball_slot_level".
-// Note that we NEVER would match fireball_slot_level, chromatic_orb_damage_type or other runtime authored Units in code
+// Note that we NEVER would match fireball_slot_level, chromatic_orb_damage_type or other authored-unit hole ids in code.
 
 type HoleIdText =
   | "core_attack_target"
@@ -42,7 +42,7 @@ export type RolledDiceGroup = {
   readonly results: ReadonlyNonEmptyArray<DieRollResult>
 };
 
-// "non-runtime" holes are Surface holes
+// "non-runtime" holes are Surface holes.
 export type RuntimeHole =
   { readonly holeInstanceKey: HoleInstanceKey; readonly holeId: HoleId } & (
     {
@@ -72,11 +72,11 @@ export type RuntimeHole =
 
 export type RuntimeHoleSet = ReadonlyArray<RuntimeHole>;
 
-export type ResolutionSubject =
+export type Subject =
   | {
-      readonly tag: "coreAction";
+      readonly tag: "coreAct";
       readonly actorId: CreatureId;
-      readonly action: "attack" | "endTurn";
+      readonly act: "attack" | "endTurn";
     }
   | {
       readonly tag: "unit";
@@ -128,14 +128,14 @@ export type FilledHoleValue =
     };
 
 export type AvailableAct = {
-  readonly subject: ResolutionSubject
+  readonly subject: Subject
   readonly label: string
   readonly summary: string
   readonly initialHoles: RuntimeHoleSet
 };
 
 export type ResolutionRequest = {
-  readonly subject: ResolutionSubject
+  readonly subject: Subject
   readonly filledHoleValues: ReadonlyArray<FilledHoleValue>
 }
 
