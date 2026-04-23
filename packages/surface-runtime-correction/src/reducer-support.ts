@@ -1,4 +1,5 @@
-import { Either } from "effect";
+import { Either, Option } from "effect";
+import { isArrayOfOne } from "@dnd/shared/types";
 import type {
   ActivationPhase,
   UnitRecord,
@@ -21,7 +22,7 @@ export class UnsupportedUnitError extends Error {
 
 export function checkSupportedUnit(
   unit: UnitRecord,
-): Either.Either<UnitRecord, UnsupportedUnitError> {
+): Either.Either<CurrentSliceSupportedActivationUnit, UnsupportedUnitError> {
   if (unit.kind !== "spell" && unit.kind !== "class_feature") {
     return Either.left(
       new UnsupportedUnitError(
@@ -38,7 +39,7 @@ export function checkSupportedUnit(
     );
   }
 
-  if (unit.mechanics.phases.length !== 1) {
+  if (!isArrayOfOne(unit.mechanics.phases)) {
     return Either.left(
       new UnsupportedUnitError(
         `Reducer currently supports exactly one phase for unit ${unit.id}`,
@@ -47,6 +48,7 @@ export function checkSupportedUnit(
   }
 
   const [phase] = unit.mechanics.phases;
+
   if (
     phase.kind !== "attack_roll" &&
     phase.kind !== "save_gate" &&
@@ -150,10 +152,12 @@ export function checkSupportedUnit(
     }
   }
 
-  return Either.right(unit);
+  return Either.right(unit as CurrentSliceSupportedActivationUnit);
 }
 
-export function assertSupportedUnit(unit: UnitRecord): UnitRecord {
+export function assertSupportedUnit(
+  unit: UnitRecord,
+): CurrentSliceSupportedActivationUnit {
   const result = checkSupportedUnit(unit);
   if (Either.isLeft(result)) {
     throw result.left;
@@ -164,11 +168,12 @@ export function assertSupportedUnit(unit: UnitRecord): UnitRecord {
 
 export function getCurrentSliceSupportedActivationUnit(
   unit: UnitRecord,
-): CurrentSliceSupportedActivationUnit | null {
+): Option.Option<CurrentSliceSupportedActivationUnit> {
   const result = checkSupportedUnit(unit);
+
   if (Either.isLeft(result)) {
-    return null;
+    return Option.none();
   }
 
-  return result.right as CurrentSliceSupportedActivationUnit;
+  return Option.some(result.right);
 }

@@ -157,7 +157,13 @@ export type ResolutionRequest = {
   readonly filledHoleValues: ReadonlyArray<FilledHoleValue>;
 };
 
-export type ResolutionResult =
+export type ResolutionInvalid = {
+  readonly tag: "invalid";
+  readonly reason: string;
+};
+
+export type ResolutionContinuation =
   | { readonly tag: "resolved"; readonly state: State }
-  | { readonly tag: "needsHoles"; readonly holes: RuntimeHoleSet }
-  | { readonly tag: "invalid"; readonly reason: string };
+  | { readonly tag: "needsHoles"; readonly holes: RuntimeHoleSet };
+
+export type ResolutionResult = ResolutionInvalid | ResolutionContinuation;

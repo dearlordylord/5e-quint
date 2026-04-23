@@ -3,6 +3,21 @@ import { Brand, Schema } from "effect";
 export type NonEmptyArray<T> = [T, ...T[]];
 export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 
+export function isArrayOfOne<T>(
+  value: readonly T[],
+): value is readonly [T] {
+  return value.length === 1;
+}
+
+export const getOnlyOneStrict = <T>(
+  value: readonly [T],
+): T => {
+  if (isArrayOfOne(value)) {
+    return value[0];
+  }
+  throw new Error("Expected exactly one value");
+};
+
 export const CONDITIONS = [
   "blinded",
   "charmed",

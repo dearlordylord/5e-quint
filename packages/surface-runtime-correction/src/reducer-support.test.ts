@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type {
+  ActivationPhase,
+  UnitRecord,
+} from "@dnd/prototype-content-surface/surface/types";
 
 import { loadSupportedUnit } from "#/supported-unit-library.ts";
 import {
@@ -23,11 +27,14 @@ describe("assertSupportedUnit", () => {
       throw new Error("expected activation spell");
     }
 
-    const unsupported = {
+    const unsupported: UnitRecord = {
       ...unit,
       mechanics: {
         ...unit.mechanics,
-        phases: [...unit.mechanics.phases, unit.mechanics.phases[0]] as const,
+        phases: [
+          ...unit.mechanics.phases,
+          unit.mechanics.phases[0],
+        ] as unknown as readonly [ActivationPhase, ...ActivationPhase[]],
       },
     };
 

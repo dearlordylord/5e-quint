@@ -14,7 +14,8 @@ node_modules/
 .references/qa2014/reddit_corpus.jsonl
 .output/
 .vinxi/
-.claude
+.claude/*
+!.claude/review-rules.md
 .ralph/
 .ralphrc
 .ralph_backup_*

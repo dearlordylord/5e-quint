@@ -1,3 +1,4 @@
+import { Option } from "effect";
 import { currentActing } from "@dnd/shared/initiative-algebra";
 import type { CreatureId } from "@dnd/shared/types";
 
@@ -21,28 +22,28 @@ type DiscoverableActionCantrip = UnitRecord & {
 };
 
 // Current discovery slice only surfaces action cantrips.
-// Other supported unit lanes should be added as separate discovery helpers,
-// not by widening this predicate into an unstructured catch-all.
+// marked for review: this is fishy; we have bonus action stuff too, and bonus action things can be cast using an action. we also have spell levels. taxonomy doesn't seem to hold well
 function getDiscoverableActionCantrip(
   unit: UnitRecord,
 ): DiscoverableActionCantrip | null {
   const supportedUnit = getCurrentSliceSupportedActivationUnit(unit);
-  if (supportedUnit === null) {
+  if (Option.isNone(supportedUnit)) {
     return null;
   }
+  const unitValue = supportedUnit.value;
 
-  if (supportedUnit.kind !== "spell") {
+  if (unitValue.kind !== "spell") {
     return null;
   }
 
   if (
-    supportedUnit.mechanics.level !== 0 ||
-    supportedUnit.mechanics.castingTime.kind !== "action"
+    unitValue.mechanics.level !== 0 ||
+    unitValue.mechanics.castingTime.kind !== "action"
   ) {
     return null;
   }
 
-  return supportedUnit as DiscoverableActionCantrip;
+  return unitValue as DiscoverableActionCantrip;
 }
 
 function discoverUnitBackedActs(

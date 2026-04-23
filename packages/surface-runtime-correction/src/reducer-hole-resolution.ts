@@ -1,5 +1,6 @@
-import { Match } from "effect";
+import { Either, Match } from "effect";
 import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
+import type { ActivationPhase, UnitRecord } from '@dnd/prototype-content-surface/surface/types';
 
 import {
   coreAttackDamageHole,
@@ -7,14 +8,32 @@ import {
   coreAttackTargetHole,
 } from "#/reducer-core-attack-holes.ts";
 import { canUseCoreAttack } from "#/reducer-core-acts.ts";
-import type { State } from "#/reducer-state.ts";
-import { holeId } from "#/reducer-types.ts";
+import type { CreatureState, State } from "#/reducer-state.ts";
+import { holeId, holeStepKey } from "#/reducer-types.ts";
 import type {
   FilledHoleValue,
   ResolutionRequest,
+  ResolutionInvalid,
   ResolutionResult,
+  Subject,
   RuntimeHoleSet,
 } from "#/reducer-types.ts";
+import {
+  type CurrentSliceSupportedActivationUnit,
+  getCurrentSliceSupportedActivationUnit,
+} from "#/reducer-support.ts";
+import { projectPhaseHoles } from "#/runtime-holes.ts";
+import { getOnlyOneStrict } from '@dnd/shared/types';
+
+type ResolutionCheck<A> = Either.Either<A, ResolutionInvalid>;
+type ResolutionAdvance<A> = Either.Either<A, ResolutionResult>;
+type UnitResolutionRequest = ResolutionRequest & {
+  readonly subject: Extract<Subject, { readonly tag: "unit" }>;
+};
+
+function invalid(reason: string): ResolutionInvalid {
+  return { tag: "invalid", reason };
+}
 
 function isTargetChoiceValue(
   value: FilledHoleValue,
@@ -58,7 +77,7 @@ function needsDamageRollHole(): ResolutionResult {
 function validateCurrentHoleInputs(
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
   expectedHoles: RuntimeHoleSet,
-): (ResolutionResult & { readonly tag: "invalid" }) | null {
+): ResolutionInvalid | null {
   const expectedById = new Map(
     expectedHoles.map((hole) => [hole.holeId, hole]),
   );
@@ -68,8 +87,7 @@ function validateCurrentHoleInputs(
     const seenKey = String(value.holeId);
     if (seen.has(seenKey)) {
       return {
-        tag: "invalid",
-        reason: `duplicate filled value for hole ${seenKey}`,
+        ...invalid(`duplicate filled value for hole ${seenKey}`),
       };
     }
     seen.add(seenKey);
@@ -77,15 +95,15 @@ function validateCurrentHoleInputs(
     const expectedHole = expectedById.get(value.holeId);
     if (expectedHole === undefined) {
       return {
-        tag: "invalid",
-        reason: `unexpected filled value for hole ${seenKey}`,
+        ...invalid(`unexpected filled value for hole ${seenKey}`),
       };
     }
 
     if (expectedHole.kind !== value.kind) {
       return {
-        tag: "invalid",
-        reason: `filled value kind ${value.kind} does not match hole ${seenKey}`,
+        ...invalid(
+          `filled value kind ${value.kind} does not match hole ${seenKey}`,
+        ),
       };
     }
   }
@@ -93,16 +111,34 @@ function validateCurrentHoleInputs(
   return null;
 }
 
-function ensureActingCreature(
+function requireActingRequest(
   state: State,
   request: ResolutionRequest,
-): ResolutionResult | null {
-  const acting = currentActing(state.initiative);
-  if (request.subject.actorId !== acting) {
-    return { tag: "invalid", reason: "actor is not currently acting" };
+): ResolutionCheck<ResolutionRequest> {
+  if (request.subject.actorId !== currentActing(state.initiative)) {
+    return Either.left(invalid("actor is not currently acting"));
   }
 
-  return null;
+  return Either.right(request);
+}
+
+function requireUnitActor(
+  state: State,
+  actorId: ResolutionRequest["subject"]["actorId"],
+): ResolutionCheck<CreatureState> {
+  return Either.fromNullable(state.combatants.get(actorId), () =>
+    invalid("acting actor not found in combatants"),
+  );
+}
+
+function requireUnit(
+  actor: CreatureState,
+  request: UnitResolutionRequest,
+): ResolutionCheck<(typeof actor.units)[number]> {
+  return Either.fromNullable(
+    actor.units.find((candidate) => candidate.id === request.subject.unitId),
+    () => invalid(`unit not found: ${request.subject.unitId}`),
+  );
 }
 
 function advanceCoreAttackHoleResolution(
@@ -110,13 +146,13 @@ function advanceCoreAttackHoleResolution(
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
 ): ResolutionResult {
   if (!canUseCoreAttack(state)) {
-    return { tag: "invalid", reason: "no action available for attack" };
+    return invalid("no action available for attack");
   }
 
   const acting = currentActing(state.initiative);
 
   if (![...state.combatants.keys()].some((id) => id !== acting)) {
-    return { tag: "invalid", reason: "no valid attack target" };
+    return invalid("no valid attack target");
   }
 
   const targetChoice = filledHoleValues
@@ -138,7 +174,7 @@ function advanceCoreAttackHoleResolution(
     targetChoice.value === acting ||
     !state.combatants.has(targetChoice.value)
   ) {
-    return { tag: "invalid", reason: "invalid attack target" };
+    return invalid("invalid attack target");
   }
 
   const attackRoll = filledHoleValues
@@ -184,8 +220,7 @@ function advanceCoreAttackHoleResolution(
   }
 
   return {
-    tag: "invalid",
-    reason: "attack hit adjudication is not implemented yet",
+    ...invalid("attack hit adjudication is not implemented yet"),
   };
 }
 
@@ -208,33 +243,124 @@ export function resolveSubjectHoles(
   state: State,
   request: ResolutionRequest,
 ): ResolutionResult {
-  const actingError = ensureActingCreature(state, request);
-  if (actingError !== null) {
-    return actingError;
+  const actingRequest = requireActingRequest(state, request);
+  if (Either.isLeft(actingRequest)) {
+    return actingRequest.left;
   }
 
-  return Match.value(request.subject).pipe(
-  Match.when({ tag: "coreAct" }, (subject) =>
-    Match.value(subject.act).pipe(
-      Match.when("attack", () =>
-        advanceCoreAttackHoleResolution(state, request.filledHoleValues),
+  return Match.value(actingRequest.right.subject).pipe(
+    Match.when({ tag: "coreAct" }, (subject) =>
+      Match.value(subject.act).pipe(
+        Match.when("attack", () =>
+          advanceCoreAttackHoleResolution(
+            state,
+            actingRequest.right.filledHoleValues,
+          ),
+        ),
+        Match.when("endTurn", () => resolveCoreEndTurn(state)),
+        Match.exhaustive,
       ),
-      Match.when("endTurn", () => resolveCoreEndTurn(state)),
-      Match.exhaustive,
     ),
-  ),
-  Match.when({ tag: "unit" }, () => resolveUnitSubjectHoles(state, request)),
-  Match.orElse(() => ({ tag: "invalid", reason: "not implemented" }) as const),
-);
+    Match.when({ tag: "unit" }, (subject) =>
+      resolveUnitSubjectHoles(state, {
+        ...actingRequest.right,
+        subject,
+      }),
+    ),
+    Match.orElse(() => invalid("not implemented")),
+  );
 }
 
-export function resolveUnitSubjectHoles(
+function requireSupportedUnit(
+  unit: UnitRecord,
+  request: UnitResolutionRequest,
+): ResolutionCheck<CurrentSliceSupportedActivationUnit> {
+  return Either.fromOption(getCurrentSliceSupportedActivationUnit(unit), () =>
+    invalid(`unsupported unit: ${request.subject.unitId}`),
+  );
+}
+
+function requireValidHoleInputs(
+  filledHoleValues: ReadonlyArray<FilledHoleValue>,
+  holes: RuntimeHoleSet,
+): ResolutionCheck<RuntimeHoleSet> {
+  const validation = validateCurrentHoleInputs(filledHoleValues, holes);
+  return validation === null ? Either.right(holes) : Either.left(validation);
+}
+
+function missingHoles(
+  filledHoleValues: ReadonlyArray<FilledHoleValue>,
+  holes: RuntimeHoleSet,
+): RuntimeHoleSet {
+  const filledHoleIds = new Set(filledHoleValues.map((value) => value.holeId));
+
+  return holes.filter((hole) => !filledHoleIds.has(hole.holeId));
+}
+
+function requireNoMissingHoles(
+  filledHoleValues: ReadonlyArray<FilledHoleValue>,
+  holes: RuntimeHoleSet,
+): ResolutionAdvance<RuntimeHoleSet> {
+  const holesToAsk = missingHoles(filledHoleValues, holes);
+  return holesToAsk.length === 0
+    ? Either.right(holes)
+    : Either.left({ tag: "needsHoles", holes: holesToAsk });
+}
+
+function resolveUnitSubjectHoles(
   state: State,
-  request: ResolutionRequest,
+  request: UnitResolutionRequest,
 ): ResolutionResult {
-  const actor = state.combatants.get(request.subject.actorId);
-  return {
-    tag: "invalid",
-    reason: "unit-backed hole resolution not implemented yet",
-  };
+  const checked = Either.gen(function* () {
+    const actor = yield* requireUnitActor(state, request.subject.actorId);
+    const unit = yield* requireUnit(actor, request);
+    const supportedUnit = yield* requireSupportedUnit(unit, request);
+    const phase = getOnlyOneStrict(supportedUnit.mechanics.phases);
+    const holes = yield* requireValidHoleInputs(
+      request.filledHoleValues,
+      projectPhaseHoles(phase, holeStepKey("activation:0")),
+    );
+    const filledHoles = yield* requireNoMissingHoles(
+      request.filledHoleValues,
+      holes,
+    );
+
+    return { actor, supportedUnit, filledHoles };
+  });
+
+  if (Either.isLeft(checked)) {
+    return checked.left;
+  }
+
+  return resolveFilledCurrentSliceUnit(checked.right.supportedUnit);
+}
+
+// temporary for current slice, will be removed.
+function resolveFilledCurrentSliceUnit(
+  unit: CurrentSliceSupportedActivationUnit,
+): ResolutionResult {
+  // Current support gate makes this a one-phase unit; multi-phase replay belongs here later.
+  const phase = getOnlyOneStrict(unit.mechanics.phases);
+  return resolveFilledActivationPhase(phase);
+}
+
+function resolveFilledActivationPhase(phase: ActivationPhase): ResolutionResult {
+  return Match.value(phase).pipe(
+    Match.when({ kind: "attack_roll" }, () =>
+      invalid("attack-roll unit damage application is not implemented yet"),
+    ),
+    Match.when({ kind: "save_gate" }, () =>
+      invalid("save-gate unit outcome application is not implemented yet"),
+    ),
+    Match.when({ kind: "direct" }, () =>
+      invalid("direct unit effect application is not implemented yet"),
+    ),
+    Match.when({ kind: "ability_check_gate" }, () =>
+      invalid("ability-check unit execution is not supported by current slice"),
+    ),
+    Match.when({ kind: "random_table" }, () =>
+      invalid("random-table unit execution is not supported by current slice"),
+    ),
+    Match.exhaustive,
+  );
 }

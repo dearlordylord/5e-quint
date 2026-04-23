@@ -43,6 +43,51 @@ General design rule:
 
 When a union type feels off, the signal to refactor is **domain conflation**, not *just* "is this type-safe?" Type safety matters a lot; it is necessary but not sufficient. A mixed union whose name fits only half its members already lies about the world even if every variant typechecks. Justify splits/renames in domain terms first (e.g., "rest-triggered" vs "calendar-time-triggered" are distinct SRD triggers), and let type safety follow.
 
+## Connascence discipline (CRITICAL)
+
+When changing code, actively look for connascence: code facts that must change together for correctness.
+
+This is mandatory before finalizing any change, especially when adding or preserving:
+
+- string or numeric literals;
+- tuple/array index assumptions;
+- phase/order/count assumptions;
+- support gates and downstream narrowed-type usage;
+- duplicated validation/projection/execution logic;
+- caller protocols that require a sequence of operations.
+
+Required check:
+
+1. Ask: "What must change together if this line changes?"
+2. Classify the coupling:
+   - name/type: usually acceptable if explicit and tool-visible;
+   - meaning/value/position/algorithm: risky if duplicated or distant;
+   - execution/timing/identity: high-risk unless type-enforced or tightly localized.
+3. Evaluate locality and degree:
+   - strong connascence is acceptable only when nearby and obvious;
+   - distant or repeated connascence must be refactored.
+4. Prefer refactors that weaken or localize connascence:
+   - replace magic values with named constants or domain types;
+   - replace positional conventions with named fields;
+   - replace duplicated algorithms with one shared implementation;
+   - replace caller sequencing requirements with one operation or state-typed APIs;
+   - make support-gate facts flow through narrowed types instead of downstream memory.
+5. If strong connascence must remain, colocate the coupled facts in one helper/module and name the helper after the domain invariant.
+
+Do not rely on comments alone when code can encode the relationship.
+
+If an assumption is required for correctness, make it executable at the boundary where it matters. Do not replace an executable assumption with an implicit convention unless future changes would either fail to compile or remain semantically correct.
+
+Review trigger words: `current`, `supported`, `slice`, `phase`, `first`, `only`, `activation`, `hole`, `unit`, `index`, `order`, `TODO`, `temporary`, `for now`.
+
+If any trigger appears in changed code, perform the connascence check before proceeding.
+
+## Code review
+
+Code review agents must consult `.claude/review-rules.md` for project-specific quality gates.
+
+When the user asks for a review, findings are the primary output. Enforce the review rules strictly and cite file/line references for every finding.
+
 ## Memory
 
 Do not write to the memory system unless explicitly asked.
