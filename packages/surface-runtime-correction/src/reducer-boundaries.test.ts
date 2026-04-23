@@ -1,22 +1,43 @@
 import { describe, expect, it } from "vitest";
 
-import { createInitiativeStack, currentActing } from "@dnd/shared/initiative-algebra";
+import { EMPTY_CONDITION_STATE } from "@dnd/shared/conditions-algebra";
+import {
+  createInitiativeStack,
+  currentActing,
+} from "@dnd/shared/initiative-algebra";
 import type {
   CreatureId,
   DieRollResult,
+  Hp,
   ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
 import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
-import type { State } from "#/reducer-state.ts";
+import type { CreatureState, State } from "#/reducer-state.ts";
+import { holeId } from "#/reducer-types.ts";
+import { loadSupportedUnit } from "#/supported-unit-library.ts";
+
+function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
+  return {
+    hp: 1 as Hp,
+    maxHp: 1 as Hp,
+    tempHp: 0 as Hp,
+    conditions: EMPTY_CONDITION_STATE,
+    hasReaction: true,
+    units: [],
+    spellSlots: [],
+    spellSlotsMax: [],
+    ...overrides,
+  };
+}
 
 function emptyState(): State {
   const order = [
     { creature: "A" as CreatureId, initiative: 10 as never },
   ] as unknown as ReadonlyNonEmptyArray<{
-    readonly creature: CreatureId
-    readonly initiative: never
+    readonly creature: CreatureId;
+    readonly initiative: never;
   }>;
 
   return {
@@ -33,8 +54,8 @@ function twoCreatureState(): State {
   return {
     ...state,
     combatants: new Map([
-      ["A" as CreatureId, {} as never],
-      ["B" as CreatureId, {} as never],
+      ["A" as CreatureId, creatureState()],
+      ["B" as CreatureId, creatureState()],
     ]),
   };
 }
@@ -43,6 +64,22 @@ function exhaustedActionState(): State {
   return {
     ...twoCreatureState(),
     currentActionsAvailable: 0,
+  };
+}
+
+function twoCreatureStateWithActingUnit(unitId: string): State {
+  const unit = loadSupportedUnit(unitId);
+  return {
+    ...twoCreatureState(),
+    combatants: new Map([
+      [
+        "A" as CreatureId,
+        creatureState({
+          units: [unit],
+        }),
+      ],
+      ["B" as CreatureId, creatureState()],
+    ]),
   };
 }
 
@@ -93,6 +130,58 @@ describe("reducer boundaries", () => {
     ]);
   });
 
+  it("discoverAvailableActs surfaces acting-creature fire bolt as a unit-backed act", () => {
+    expect(
+      discoverAvailableActs(twoCreatureStateWithActingUnit("fire_bolt")),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        label: "Attack",
+        summary: "Make an attack.",
+        initialHoles: [
+          {
+            holeInstanceKey: "core:attack:target",
+            holeId: "core_attack_target",
+            kind: "targetChoice",
+            label: "attack target",
+          },
+        ],
+      },
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+      {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        label: "Fire Bolt",
+        summary: expect.stringContaining("You hurl a mote of fire"),
+        initialHoles: [
+          {
+            holeInstanceKey: "activation:0:surface:fire_bolt_target",
+            holeId: "fire_bolt_target",
+            kind: "surfaceAttachment",
+            label: "fire bolt target",
+            attachment: {
+              kind: "target",
+              selection: { mode: "one" },
+            },
+          },
+          {
+            holeInstanceKey: "activation:0:runtime:attackRoll",
+            holeId: "activation:0_attack_roll",
+            kind: "attackRoll",
+          },
+        ],
+      },
+    ]);
+  });
+
   it("resolveSubjectHoles advances initiative for core endTurn", () => {
     const result = resolveSubjectHoles(emptyState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
@@ -111,10 +200,12 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles requests a target hole for core attack", () => {
-    expect(resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
       tag: "needsHoles",
       holes: [
         {
@@ -128,16 +219,18 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles requests an attack roll after a valid attack target", () => {
-    expect(resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [
-        {
-          kind: "targetChoice",
-          holeId: "core_attack_target" as never,
-          value: "B" as CreatureId,
-        },
-      ],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: "core_attack_target" as never,
+            value: "B" as CreatureId,
+          },
+        ],
+      }),
+    ).toEqual({
       tag: "needsHoles",
       holes: [
         {
@@ -151,21 +244,23 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles requests damage dice after an attack roll", () => {
-    expect(resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [
-        {
-          kind: "targetChoice",
-          holeId: "core_attack_target" as never,
-          value: "B" as CreatureId,
-        },
-        {
-          kind: "attackRoll",
-          holeId: "core_attack_roll" as never,
-          value: 17,
-        },
-      ],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: "core_attack_target" as never,
+            value: "B" as CreatureId,
+          },
+          {
+            kind: "attackRoll",
+            holeId: "core_attack_roll" as never,
+            value: 17,
+          },
+        ],
+      }),
+    ).toEqual({
       tag: "needsHoles",
       holes: [
         {
@@ -179,62 +274,130 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles stops at hit adjudication after attack damage is filled", () => {
-    expect(resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [
-        {
-          kind: "targetChoice",
-          holeId: "core_attack_target" as never,
-          value: "B" as CreatureId,
-        },
-        {
-          kind: "attackRoll",
-          holeId: "core_attack_roll" as never,
-          value: 17,
-        },
-        {
-          kind: "rolledDice",
-          holeId: "core_attack_damage" as never,
-          value: [{ results: [6 as DieRollResult] }],
-        },
-      ],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: "core_attack_target" as never,
+            value: "B" as CreatureId,
+          },
+          {
+            kind: "attackRoll",
+            holeId: "core_attack_roll" as never,
+            value: 17,
+          },
+          {
+            kind: "rolledDice",
+            holeId: "core_attack_damage" as never,
+            value: [{ results: [6 as DieRollResult] }],
+          },
+        ],
+      }),
+    ).toEqual({
       tag: "invalid",
       reason: "attack hit adjudication is not implemented yet",
     });
   });
 
   it("resolveSubjectHoles rejects an invalid attack target", () => {
-    expect(resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [
-        {
-          kind: "targetChoice",
-          holeId: "core_attack_target" as never,
-          value: "A" as CreatureId,
-        },
-      ],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: "core_attack_target" as never,
+            value: "A" as CreatureId,
+          },
+        ],
+      }),
+    ).toEqual({
       tag: "invalid",
       reason: "invalid attack target",
     });
   });
 
+  it("resolveSubjectHoles rejects duplicate filled values for the same current hole", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("core_attack_target"),
+            value: "B" as CreatureId,
+          },
+          {
+            kind: "targetChoice",
+            holeId: holeId("core_attack_target"),
+            value: "B" as CreatureId,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "duplicate filled value for hole core_attack_target",
+    });
+  });
+
+  it("resolveSubjectHoles rejects unexpected future filled values", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "rolledDice",
+            holeId: holeId("core_attack_damage"),
+            value: [{ results: [6 as DieRollResult] }],
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unexpected filled value for hole core_attack_damage",
+    });
+  });
+
+  it("resolveSubjectHoles rejects kind mismatches for the current hole", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "attackRoll",
+            holeId: holeId("core_attack_target"),
+            value: 17,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason:
+        "filled value kind attackRoll does not match hole core_attack_target",
+    });
+  });
+
   it("resolveSubjectHoles rejects core attack when no action is available", () => {
-    expect(resolveSubjectHoles(exhaustedActionState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-      filledHoleValues: [],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(exhaustedActionState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
       tag: "invalid",
       reason: "no action available for attack",
     });
   });
 
   it("resolveSubjectHoles rejects core endTurn for a non-acting creature", () => {
-    expect(resolveSubjectHoles(emptyState(), {
-      subject: { tag: "coreAct", actorId: "B" as CreatureId, act: "endTurn" },
-      filledHoleValues: [],
-    })).toEqual({
+    expect(
+      resolveSubjectHoles(emptyState(), {
+        subject: { tag: "coreAct", actorId: "B" as CreatureId, act: "endTurn" },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
       tag: "invalid",
       reason: "actor is not currently acting",
     });

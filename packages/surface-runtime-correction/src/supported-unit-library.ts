@@ -1,13 +1,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { Context, Layer, Option, HashMap } from "effect";
+import { Context, Layer, HashMap } from "effect";
 import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
 import { assertSupportedUnit } from "#/reducer-support.ts";
 
-import type {
-  UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+import type { Option } from "effect";
+import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
 
 export type SupportedUnitLibraryShape = {
   readonly get: (unitId: string) => Option.Option<UnitRecord>;
@@ -45,10 +44,14 @@ export function createSupportedUnitLibrary(
   unitIds: ReadonlyArray<string>,
 ): SupportedUnitLibraryShape {
   const authoredUnits = loadSupportedUnits(unitIds);
-  const authoredUnitsById = HashMap.make(...authoredUnits.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
+  const authoredUnitsById = HashMap.make(
+    ...authoredUnits.map(
+      (unit) => [unit.id, unit] as readonly [string, UnitRecord],
+    ),
+  );
   return {
     get(unitId) {
-      return HashMap.get(unitId)(authoredUnitsById)
+      return HashMap.get(unitId)(authoredUnitsById);
     },
     list() {
       return [...HashMap.values(authoredUnitsById)];
@@ -59,5 +62,8 @@ export function createSupportedUnitLibrary(
 export function supportedUnitLibraryLayer(
   unitIds: ReadonlyArray<string>,
 ): Layer.Layer<SupportedUnitLibrary> {
-  return Layer.succeed(SupportedUnitLibrary, createSupportedUnitLibrary(unitIds));
+  return Layer.succeed(
+    SupportedUnitLibrary,
+    createSupportedUnitLibrary(unitIds),
+  );
 }

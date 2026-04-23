@@ -47,7 +47,9 @@ const quintStateSchema = z.object({
   qLastTie: z.array(z.enum(["c1", "c2", "c2b", "c3", "c4", "cx"])),
 });
 
-function parseEntry(raw: z.infer<typeof entrySchema>): InitiativeEntry<CreatureId> {
+function parseEntry(
+  raw: z.infer<typeof entrySchema>,
+): InitiativeEntry<CreatureId> {
   return {
     creature: raw.creature,
     initiative: Initiative(Number(raw.initiative)),
@@ -65,7 +67,8 @@ function normalizeQuintState(raw: unknown): ModelState {
         ...Array<InitiativeEntry<CreatureId>>,
       ],
     },
-    lastInsertStatus: parsed.qLastInsertStatus as ModelState["lastInsertStatus"],
+    lastInsertStatus:
+      parsed.qLastInsertStatus as ModelState["lastInsertStatus"],
     lastTie: parsed.qLastTie,
   };
 }
@@ -76,12 +79,15 @@ function compareState(spec: ModelState, impl: ModelState): boolean {
 }
 
 function makeInitialModelState(): ModelState {
-  const created = createScoredInitiativeStack<CreatureId>([
-    { creature: "c4", initiative: Initiative(4) },
-    { creature: "c2", initiative: Initiative(2) },
-    { creature: "c2b", initiative: Initiative(2) },
-    { creature: "c1", initiative: Initiative(1) },
-  ], Round(1));
+  const created = createScoredInitiativeStack<CreatureId>(
+    [
+      { creature: "c4", initiative: Initiative(4) },
+      { creature: "c2", initiative: Initiative(2) },
+      { creature: "c2b", initiative: Initiative(2) },
+      { creature: "c1", initiative: Initiative(1) },
+    ],
+    Round(1),
+  );
   if (Either.isLeft(created)) {
     throw new Error(created.left);
   }
@@ -143,9 +149,18 @@ function createInitiativeDriver() {
           Initiative(3),
         );
         if (result.status === "ok") {
-          state = { ...state, stack: result.stack, lastInsertStatus: "ok", lastTie: [] };
+          state = {
+            ...state,
+            stack: result.stack,
+            lastInsertStatus: "ok",
+            lastTie: [],
+          };
         } else if (result.status === "decide") {
-          state = { ...state, lastInsertStatus: "decide", lastTie: [...result.tie] };
+          state = {
+            ...state,
+            lastInsertStatus: "decide",
+            lastTie: [...result.tie],
+          };
         } else {
           state = { ...state, lastInsertStatus: "error", lastTie: [] };
         }
@@ -157,9 +172,18 @@ function createInitiativeDriver() {
           Initiative(2),
         );
         if (result.status === "ok") {
-          state = { ...state, stack: result.stack, lastInsertStatus: "ok", lastTie: [] };
+          state = {
+            ...state,
+            stack: result.stack,
+            lastInsertStatus: "ok",
+            lastTie: [],
+          };
         } else if (result.status === "decide") {
-          state = { ...state, lastInsertStatus: "decide", lastTie: [...result.tie] };
+          state = {
+            ...state,
+            lastInsertStatus: "decide",
+            lastTie: [...result.tie],
+          };
         } else {
           state = { ...state, lastInsertStatus: "error", lastTie: [] };
         }
@@ -172,9 +196,18 @@ function createInitiativeDriver() {
           [["c2", "c2b"] as const, Index(1)],
         );
         if (result.status === "ok") {
-          state = { ...state, stack: result.stack, lastInsertStatus: "ok", lastTie: [] };
+          state = {
+            ...state,
+            stack: result.stack,
+            lastInsertStatus: "ok",
+            lastTie: [],
+          };
         } else if (result.status === "decide") {
-          state = { ...state, lastInsertStatus: "decide", lastTie: [...result.tie] };
+          state = {
+            ...state,
+            lastInsertStatus: "decide",
+            lastTie: [...result.tie],
+          };
         } else {
           state = { ...state, lastInsertStatus: "error", lastTie: [] };
         }
@@ -187,9 +220,18 @@ function createInitiativeDriver() {
           [["c1"] as const, Index(0)],
         );
         if (result.status === "ok") {
-          state = { ...state, stack: result.stack, lastInsertStatus: "ok", lastTie: [] };
+          state = {
+            ...state,
+            stack: result.stack,
+            lastInsertStatus: "ok",
+            lastTie: [],
+          };
         } else if (result.status === "decide") {
-          state = { ...state, lastInsertStatus: "decide", lastTie: [...result.tie] };
+          state = {
+            ...state,
+            lastInsertStatus: "decide",
+            lastTie: [...result.tie],
+          };
         } else {
           state = { ...state, lastInsertStatus: "error", lastTie: [] };
         }

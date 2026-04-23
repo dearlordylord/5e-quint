@@ -124,7 +124,9 @@ The Quint spec is a **direct formalization of the SRD** — nothing more, nothin
   - If a function only makes sense for damage effects, it should accept `DamageEffect`, not `Effect`.
   - Narrow/filter first, then call it. Do not pass `Effect` into the function and check `effect.kind === "damage"` again inside.
 
-- **Brand meaningful strings early:** If a string carries protocol/domain meaning, give it a branded type at the boundary instead of passing raw `string` deeper into the code.
+- **Return the most precise type available:** If a function can only return one branch of a union, type it as that branch, not the wider union. Example: return `ResolutionResult & { readonly tag: "invalid" }`, not `ResolutionResult`.
+
+- **Brand meaningful primitives early:** If a primitive (`string`, `number`, etc.) carries protocol/domain meaning, give it a branded type at the boundary instead of passing the raw primitive deeper into the code.
 
 - **Typed constant arrays:** When defining a fixed list of domain values (conditions, damage types, etc.), use `as const satisfies ReadonlyArray<T>` to get both literal types and compile-time validation:
   ```typescript

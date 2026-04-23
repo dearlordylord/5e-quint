@@ -41,17 +41,46 @@ function decodeAuthoredUnitUnchecked(unitId: string) {
 
 describe("projectPhaseHoles", () => {
   it("returns an empty list for a holeless activation phase", () => {
-    expect(projectPhaseHoles(
-      activationPhase("fighter_action_surge_l2", 0),
-      holeStepKey("activation:0"),
-    )).toEqual([]);
+    expect(
+      projectPhaseHoles(
+        activationPhase("fighter_action_surge_l2", 0),
+        holeStepKey("activation:0"),
+      ),
+    ).toEqual([]);
+  });
+
+  it("projects the authored target hole and attack roll for fire bolt", () => {
+    expect(
+      projectPhaseHoles(
+        activationPhase("fire_bolt", 0),
+        holeStepKey("activation:0"),
+      ),
+    ).toEqual([
+      {
+        holeInstanceKey: "activation:0:surface:fire_bolt_target",
+        holeId: "fire_bolt_target",
+        kind: "surfaceAttachment",
+        label: "fire bolt target",
+        attachment: {
+          kind: "target",
+          selection: { mode: "one" },
+        },
+      },
+      {
+        holeInstanceKey: "activation:0:runtime:attackRoll",
+        holeId: "activation:0_attack_roll",
+        kind: "attackRoll",
+      },
+    ]);
   });
 
   it("projects the cure wounds target hole", () => {
-    expect(projectPhaseHoles(
-      activationPhase("cure_wounds", 0),
-      holeStepKey("activation:0"),
-    )).toEqual([
+    expect(
+      projectPhaseHoles(
+        activationPhase("cure_wounds", 0),
+        holeStepKey("activation:0"),
+      ),
+    ).toEqual([
       {
         holeInstanceKey: "activation:0:surface:cure_wounds_target",
         holeId: "cure_wounds_target",
@@ -66,10 +95,12 @@ describe("projectPhaseHoles", () => {
   });
 
   it("projects the fireball point-of-explosion hole", () => {
-    expect(projectPhaseHoles(
-      activationPhase("fireball", 0),
-      holeStepKey("activation:0"),
-    )).toEqual([
+    expect(
+      projectPhaseHoles(
+        activationPhase("fireball", 0),
+        holeStepKey("activation:0"),
+      ),
+    ).toEqual([
       {
         holeInstanceKey: "activation:0:surface:fireball_point",
         holeId: "fireball_point",
@@ -97,10 +128,7 @@ describe("projectPhaseHoles", () => {
       throw new Error("expected phase 0 for chromatic_orb");
     }
 
-    expect(projectPhaseHoles(
-      phase,
-      holeStepKey("activation:0"),
-    )).toEqual([
+    expect(projectPhaseHoles(phase, holeStepKey("activation:0"))).toEqual([
       {
         holeInstanceKey: "activation:0:surface:chromatic_orb_primary_target",
         holeId: "chromatic_orb_primary_target",
@@ -142,6 +170,16 @@ describe("projectPhaseHoles", () => {
 
     expect(projectPhaseHoles(phase, holeStepKey("activation:1"))).toEqual([
       {
+        holeInstanceKey: "activation:1:surface:scorching_ray_target",
+        holeId: "scorching_ray_target",
+        kind: "surfaceAttachment",
+        label: "ray target",
+        attachment: {
+          kind: "target",
+          selection: { mode: "one" },
+        },
+      },
+      {
         holeInstanceKey: "activation:1:runtime:attackRoll",
         holeId: "activation:1_attack_roll",
         kind: "attackRoll",
@@ -160,10 +198,9 @@ describe("projectPhaseHoles", () => {
       throw new Error("expected attack-roll continuation");
     }
 
-    expect(projectPhaseHoles(
-      phase.continue.next[0],
-      holeStepKey("continuation:1"),
-    )).toEqual([
+    expect(
+      projectPhaseHoles(phase.continue.next[0], holeStepKey("continuation:1")),
+    ).toEqual([
       {
         holeInstanceKey: "continuation:1:surface:chromatic_orb_leap_target",
         holeId: "chromatic_orb_leap_target",

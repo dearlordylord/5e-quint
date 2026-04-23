@@ -38,28 +38,32 @@ function isFillableDamageTypeRef(
   damageTypeRef: DamageTypeRef,
 ): damageTypeRef is FillableDamageTypeRef {
   return !(
-    typeof damageTypeRef === "object"
-    && damageTypeRef !== null
-    && "kind" in damageTypeRef
-    && (damageTypeRef.kind === "hole" || damageTypeRef.kind === "same_choice_as")
+    typeof damageTypeRef === "object" &&
+    "kind" in damageTypeRef &&
+    (damageTypeRef.kind === "hole" || damageTypeRef.kind === "same_choice_as")
   );
 }
 
 function isHoleDamageTypeRef(
   damageTypeRef: DamageTypeRef,
 ): damageTypeRef is Extract<DamageTypeRef, { readonly kind: "hole" }> {
-  return typeof damageTypeRef === "object" && damageTypeRef !== null && "kind" in damageTypeRef && damageTypeRef.kind === "hole";
+  return (
+    typeof damageTypeRef === "object" &&
+    "kind" in damageTypeRef &&
+    damageTypeRef.kind === "hole"
+  );
 }
 
-function isDamageEffect(
-  effect: EffectAtom,
-): effect is DamageEffectAtom {
+function isDamageEffect(effect: EffectAtom): effect is DamageEffectAtom {
   return effect.kind === "damage";
 }
 
 function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   return {
-    holeInstanceKey: makeHoleInstanceKey(stepKey, holeLocalKey("runtime:attackRoll")),
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey("runtime:attackRoll"),
+    ),
     holeId: holeId(`${stepKey}_attack_roll`),
     kind: "attackRoll",
   };
@@ -82,7 +86,11 @@ function attachmentHoles(
     kind: "surfaceAttachment" as const,
     attachment: attachment.value,
   };
-  return [attachment.label === undefined ? baseHole : { ...baseHole, label: attachment.label }];
+  return [
+    attachment.label === undefined
+      ? baseHole
+      : { ...baseHole, label: attachment.label },
+  ];
 }
 
 function damageTypeHoles(
@@ -105,7 +113,11 @@ function damageTypeHoles(
     kind: "surfaceDamageTypeRef" as const,
     damageTypeRef: damageTypeRef.value,
   };
-  return [damageTypeRef.label === undefined ? baseHole : { ...baseHole, label: damageTypeRef.label }];
+  return [
+    damageTypeRef.label === undefined
+      ? baseHole
+      : { ...baseHole, label: damageTypeRef.label },
+  ];
 }
 
 function phaseDamageTypeHolesFromEffect(
@@ -133,7 +145,9 @@ function assertNoGatedDamageTypeHoles(
     .some((effect) => isHoleDamageTypeRef(effect.damageType));
 
   if (hasUnsupported) {
-      throw new Error(`runtime-holes: unsupported gated damage-type hole in ${context}`);
+    throw new Error(
+      `runtime-holes: unsupported gated damage-type hole in ${context}`,
+    );
   }
 }
 
@@ -170,10 +184,13 @@ export function projectPhaseHoles(
       ...(assertNoGatedDamageTypeHoles(
         [
           saveGatePhase.onFail,
-          ...(saveGatePhase.onSuccess.kind === "half_damage" ? [] : [saveGatePhase.onSuccess]),
+          ...(saveGatePhase.onSuccess.kind === "half_damage"
+            ? []
+            : [saveGatePhase.onSuccess]),
         ],
         "save_gate",
-      ), []),
+      ),
+      []),
     ]),
     Match.when({ kind: "direct" }, (directPhase) => [
       ...attachmentHoles(stepKey, directPhase.attachment),
@@ -186,10 +203,13 @@ export function projectPhaseHoles(
       ...(assertNoGatedDamageTypeHoles(
         [
           abilityCheckGatePhase.onPass,
-          ...(abilityCheckGatePhase.onFail ? [abilityCheckGatePhase.onFail] : []),
+          ...(abilityCheckGatePhase.onFail
+            ? [abilityCheckGatePhase.onFail]
+            : []),
         ],
         "ability_check_gate",
-      ), []),
+      ),
+      []),
     ]),
     Match.when({ kind: "random_table" }, () => []),
     Match.exhaustive,

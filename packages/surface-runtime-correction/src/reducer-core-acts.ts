@@ -1,5 +1,5 @@
-import type { State } from '#/reducer-state.ts';
+import type { State } from "#/reducer-state.ts";
 
 export function canUseCoreAttack(state: State): boolean {
-  return state.currentActionsAvailable > 0
+  return state.currentActionsAvailable > 0;
 }

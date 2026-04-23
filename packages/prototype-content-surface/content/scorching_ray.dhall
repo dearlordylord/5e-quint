@@ -9,8 +9,13 @@
 let ray =
       { kind = "attack_roll"
       , attachment =
-          { kind = "target"
-          , selection = { mode = "one" }
+          { kind = "hole"
+          , holeId = "scorching_ray_target"
+          , label = "ray target"
+          , value =
+              { kind = "target"
+              , selection = { mode = "one" }
+              }
           }
       , attackKind = "ranged_spell_attack"
       , onHit =

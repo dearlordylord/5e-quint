@@ -7,6 +7,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "lint": "eslint --no-inline-config -c eslint.config.mjs src && prettier --check src",
+    "lint:fix": "eslint --no-inline-config -c eslint.config.mjs src --fix && prettier --write src",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

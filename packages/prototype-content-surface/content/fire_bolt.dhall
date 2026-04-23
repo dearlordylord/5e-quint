@@ -47,8 +47,13 @@ let fireBolt =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "fire_bolt_target"
+                    , label = "fire bolt target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =
