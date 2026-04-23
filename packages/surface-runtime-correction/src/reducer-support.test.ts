@@ -1,24 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { loadAuthoredUnit } from "#/authored-library.ts";
+import { loadSupportedUnit } from "#/authored-library.ts";
 import {
-  checkSupportedUnit,
+  assertSupportedUnit,
   UnsupportedUnitShapeError,
 } from "#/reducer-support.ts";
 
-describe("checkSupportedUnit", () => {
+describe("assertSupportedUnit", () => {
   it("accepts a supported authored unit during load", () => {
-    expect(loadAuthoredUnit("fireball").id).toBe("fireball");
+    expect(loadSupportedUnit("fireball").id).toBe("fireball");
   });
 
   it("rejects chromatic orb during load because continuation is not in the first slice", () => {
-    expect(() => loadAuthoredUnit("chromatic_orb")).toThrow(
+    expect(() => loadSupportedUnit("chromatic_orb")).toThrow(
       UnsupportedUnitShapeError,
     );
   });
 
   it("rejects an unsupported multi-phase shape", () => {
-    const unit = loadAuthoredUnit("fireball");
+    const unit = loadSupportedUnit("fireball");
     if (unit.kind !== "spell" || unit.mechanics.family !== "activation") {
       throw new Error("expected activation spell");
     }
@@ -31,7 +31,7 @@ describe("checkSupportedUnit", () => {
       },
     };
 
-    expect(() => checkSupportedUnit(unsupported)).toThrow(
+    expect(() => assertSupportedUnit(unsupported)).toThrow(
       UnsupportedUnitShapeError,
     );
   });

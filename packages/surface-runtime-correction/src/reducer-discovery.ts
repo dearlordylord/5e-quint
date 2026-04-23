@@ -1,20 +1,24 @@
 import { currentActing } from '@dnd/shared/initiative-algebra';
 
+import { canUseCoreAttack } from '#/reducer-core-acts.ts';
 import type { State } from '#/reducer-state.ts';
 import type {
-  AvailableAction,
+  AvailableAct,
   HoleId,
-  PromptInstanceKey,
-} from '#/reducer-resolution.ts';
+  HoleInstanceKey,
+} from '#/reducer-types.ts';
 
-export function discoverAvailableActions(
+export function discoverAvailableActs(
   state: State,
-): ReadonlyArray<AvailableAction> {
+): ReadonlyArray<AvailableAct> {
   const actorId = currentActing(state.initiative)
-  const actions: Array<AvailableAction> = []
+  const acts: Array<AvailableAct> = []
 
-  if ([...state.combatants.keys()].some((id) => id !== actorId)) {
-    actions.push({
+  if (
+    canUseCoreAttack(state) &&
+    [...state.combatants.keys()].some((id) => id !== actorId)
+  ) {
+    acts.push({
       subject: {
         tag: 'coreAction',
         actorId,
@@ -22,18 +26,18 @@ export function discoverAvailableActions(
       },
       label: 'Attack',
       summary: 'Make an attack.',
-      initialHoles: [
-        {
-          promptInstanceKey: 'core:attack:target' as PromptInstanceKey,
-          holeId: 'core_attack_target' as HoleId,
-          kind: 'targetChoice',
-          label: 'attack target',
+        initialHoles: [
+          {
+            holeInstanceKey: 'core:attack:target' as HoleInstanceKey,
+            holeId: 'core_attack_target' as HoleId,
+            kind: 'targetChoice',
+            label: 'attack target',
         },
       ],
     })
   }
 
-  actions.push({
+  acts.push({
     subject: {
       tag: 'coreAction',
       actorId,
@@ -44,5 +48,5 @@ export function discoverAvailableActions(
     initialHoles: [],
   })
 
-  return actions
+  return acts
 }

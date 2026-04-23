@@ -3,20 +3,20 @@ import { join } from "node:path";
 
 import { Context, Layer, Option, HashMap } from "effect";
 import { decodeUnitRecordSync } from "@dnd/prototype-content-surface/surface/schema";
-import { checkSupportedUnit } from "#/reducer-support.ts";
+import { assertSupportedUnit } from "#/reducer-support.ts";
 
 import type {
   UnitRecord,
 } from "@dnd/prototype-content-surface/surface/types";
 
-export type AuthoredUnitLibraryShape = {
+export type SupportedUnitLibraryShape = {
   readonly get: (unitId: string) => Option.Option<UnitRecord>;
   readonly list: () => ReadonlyArray<UnitRecord>;
 };
 
-export class AuthoredUnitLibrary extends Context.Tag(
-  "@dnd/surface-runtime-correction/AuthoredUnitLibrary",
-)<AuthoredUnitLibrary, AuthoredUnitLibraryShape>() {}
+export class SupportedUnitLibrary extends Context.Tag(
+  "@dnd/surface-runtime-correction/SupportedUnitLibrary",
+)<SupportedUnitLibrary, SupportedUnitLibraryShape>() {}
 
 function surfaceContentPath(unitId: string): string {
   return join(
@@ -29,22 +29,22 @@ function surfaceContentPath(unitId: string): string {
   );
 }
 
-export function loadAuthoredUnit(unitId: string) {
+export function loadSupportedUnit(unitId: string) {
   const raw = readFileSync(surfaceContentPath(unitId), "utf8");
   const unit = decodeUnitRecordSync(JSON.parse(raw));
-  return checkSupportedUnit(unit);
+  return assertSupportedUnit(unit);
 }
 
-export function loadAuthoredUnits(
+export function loadSupportedUnits(
   unitIds: ReadonlyArray<string>,
 ): ReadonlyArray<UnitRecord> {
-  return unitIds.map(loadAuthoredUnit);
+  return unitIds.map(loadSupportedUnit);
 }
 
-export function createAuthoredUnitLibrary(
+export function createSupportedUnitLibrary(
   unitIds: ReadonlyArray<string>,
-): AuthoredUnitLibraryShape {
-  const units = loadAuthoredUnits(unitIds);
+): SupportedUnitLibraryShape {
+  const units = loadSupportedUnits(unitIds);
   const unitsById = HashMap.make(...units.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
   return {
     get(unitId) {
@@ -56,8 +56,8 @@ export function createAuthoredUnitLibrary(
   };
 }
 
-export function surfaceUnitLibraryLayer(
+export function supportedUnitLibraryLayer(
   unitIds: ReadonlyArray<string>,
-): Layer.Layer<AuthoredUnitLibrary> {
-  return Layer.succeed(AuthoredUnitLibrary, createAuthoredUnitLibrary(unitIds));
+): Layer.Layer<SupportedUnitLibrary> {
+  return Layer.succeed(SupportedUnitLibrary, createSupportedUnitLibrary(unitIds));
 }

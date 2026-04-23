@@ -141,6 +141,12 @@ export const PositiveInteger = Brand.all(
   ),
 );
 
+export type DieRollResult = PositiveInteger & Brand.Brand<"DieRollResult">;
+export const DieRollResult = Brand.all(
+  PositiveInteger,
+  Brand.nominal<DieRollResult>(),
+);
+
 export type Initiative = Integer & Brand.Brand<"Initiative">;
 export const Initiative = Brand.all(
   Integer,

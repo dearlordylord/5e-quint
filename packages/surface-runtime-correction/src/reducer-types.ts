@@ -1,11 +1,14 @@
 import { Brand } from "effect";
 import type {
   Attachment,
-  AttackKind as SurfaceAttackKind,
   DamageTypeRef,
   UnitRecord,
 } from "@dnd/prototype-content-surface/surface/types";
-import type { CreatureId } from "@dnd/shared/types";
+import type {
+  CreatureId,
+  DieRollResult,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { State } from "#/reducer-state.ts";
 
 // Semantic identity of a hole across replay.
@@ -15,11 +18,12 @@ import type { State } from "#/reducer-state.ts";
 type HoleIdText =
   | "core_attack_target"
   | "core_attack_roll"
+  | "core_attack_damage"
   | (string & {});
 export type HoleId = HoleIdText & Brand.Brand<"HoleId">;
-// Concrete prompt occurrence identity for one replay step/path.
+// Concrete hole occurrence identity for one replay step/path.
 // Example: "activation:0:surface:fireball_point", "continuation:1:runtime:attackRoll".
-export type PromptInstanceKey = string & Brand.Brand<"PromptInstanceKey">;
+export type HoleInstanceKey = string & Brand.Brand<"HoleInstanceKey">;
 
 type KindedMember<T> = Extract<T, { readonly kind: string }>;
 
@@ -34,40 +38,37 @@ export type FillableDamageTypeRef = ExcludeByKind<
   "hole" | "same_choice_as"
 >;
 
+export type RolledDiceGroup = {
+  readonly results: ReadonlyNonEmptyArray<DieRollResult>
+};
+
+// "non-runtime" holes are Surface holes
 export type RuntimeHole =
-  | {
-      readonly promptInstanceKey: PromptInstanceKey
-      readonly holeId: HoleId
+  { readonly holeInstanceKey: HoleInstanceKey; readonly holeId: HoleId } & (
+    {
       readonly kind: "targetChoice"
       readonly label?: string
     }
-  | {
-      readonly promptInstanceKey: PromptInstanceKey
-      readonly holeId: HoleId
+    | {
       // RAW: attack roll is a distinct D20 Test kind, not a generic d20 roll.
       // The other D20 Test kinds are ability checks and saving throws.
       readonly kind: "attackRoll"
       readonly label?: string
     }
-  | {
-      readonly promptInstanceKey: PromptInstanceKey
-      readonly holeId: HoleId
+    | {
+      readonly kind: "rolledDice"
+      readonly label?: string
+    }
+    | {
       readonly kind: "surfaceAttachment"
       readonly label?: string
       readonly attachment: FillableAttachment
     }
-  | {
-      readonly promptInstanceKey: PromptInstanceKey
-      readonly holeId: HoleId
+    | {
       readonly kind: "surfaceDamageTypeRef"
       readonly label?: string
       readonly damageTypeRef: FillableDamageTypeRef
-    }
-  | {
-      readonly promptInstanceKey: PromptInstanceKey
-      readonly kind: "attackRoll"
-      readonly attackKind: SurfaceAttackKind
-    };
+    });
 
 export type RuntimeHoleSet = ReadonlyArray<RuntimeHole>;
 
@@ -122,11 +123,11 @@ export type FilledHoleValue =
   | {
       readonly kind: "rolledDice"
       readonly holeId: HoleId
-      // Example: Chromatic Orb damage roll [4, 4, 2].
-      readonly value: ReadonlyArray<number>
+      // Example: Chromatic Orb damage roll [{ results: [4, 4, 2] }].
+      readonly value: ReadonlyNonEmptyArray<RolledDiceGroup>
     };
 
-export type AvailableAction = {
+export type AvailableAct = {
   readonly subject: ResolutionSubject
   readonly label: string
   readonly summary: string

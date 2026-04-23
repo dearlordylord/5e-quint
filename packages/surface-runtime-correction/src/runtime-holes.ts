@@ -3,7 +3,6 @@ import { Match } from "effect";
 import type {
   ActivationPhase,
   Attachment,
-  AttackKind,
   DamageTypeRef,
   EffectAtom,
 } from "@dnd/prototype-content-surface/surface/types";
@@ -11,20 +10,20 @@ import type {
 import {
   type FillableDamageTypeRef,
   type HoleId,
-  type PromptInstanceKey,
+  type HoleInstanceKey,
   type RuntimeHole,
   type RuntimeHoleSet,
-} from "#/reducer-resolution.ts";
+} from "#/reducer-types.ts";
 
 function asHoleId(raw: string): HoleId {
   return raw as HoleId;
 }
 
-function makePromptInstanceKey(
+function makeHoleInstanceKey(
   stepKey: string,
   localKey: string,
-): PromptInstanceKey {
-  return `${stepKey}:${localKey}` as PromptInstanceKey;
+): HoleInstanceKey {
+  return `${stepKey}:${localKey}` as HoleInstanceKey;
 }
 
 function isHoleAttachment(
@@ -50,11 +49,11 @@ function isHoleDamageTypeRef(
   return typeof damageTypeRef === "object" && damageTypeRef !== null && "kind" in damageTypeRef && damageTypeRef.kind === "hole";
 }
 
-function attackRollHole(stepKey: string, attackKind: AttackKind): RuntimeHole {
+function attackRollHole(stepKey: string): RuntimeHole {
   return {
-    promptInstanceKey: makePromptInstanceKey(stepKey, "runtime:attackRoll"),
+    holeInstanceKey: makeHoleInstanceKey(stepKey, "runtime:attackRoll"),
+    holeId: asHoleId(`${stepKey}_attack_roll`),
     kind: "attackRoll",
-    attackKind,
   };
 }
 
@@ -64,7 +63,7 @@ function attachmentHoles(stepKey: string, attachment: Attachment): RuntimeHoleSe
   }
 
   const baseHole = {
-    promptInstanceKey: makePromptInstanceKey(stepKey, `surface:${attachment.holeId}`),
+    holeInstanceKey: makeHoleInstanceKey(stepKey, `surface:${attachment.holeId}`),
     holeId: asHoleId(attachment.holeId),
     kind: "surfaceAttachment" as const,
     attachment: attachment.value,
@@ -81,7 +80,7 @@ function damageTypeHoles(stepKey: string, damageTypeRef: DamageTypeRef): Runtime
   }
 
   const baseHole = {
-    promptInstanceKey: makePromptInstanceKey(stepKey, `surface:${damageTypeRef.holeId}`),
+    holeInstanceKey: makeHoleInstanceKey(stepKey, `surface:${damageTypeRef.holeId}`),
     holeId: asHoleId(damageTypeRef.holeId),
     kind: "surfaceDamageTypeRef" as const,
     damageTypeRef: damageTypeRef.value,
@@ -107,7 +106,7 @@ function phaseOwnedDamageTypeChoiceHolesFromEffects(
   return effects.flatMap((effect) => phaseOwnedDamageTypeChoiceHolesFromEffect(stepKey, effect));
 }
 
-function assertNoPhaseOwnedDamageTypePrompts(
+function assertNoGatedDamageTypeHoles(
   effects: ReadonlyArray<EffectAtom>,
   context: string,
 ): void {
@@ -119,41 +118,41 @@ function assertNoPhaseOwnedDamageTypePrompts(
   });
 
   if (hasUnsupported) {
-    throw new Error(`runtime-holes: unsupported gated damage-type prompt in ${context}`);
+      throw new Error(`runtime-holes: unsupported gated damage-type hole in ${context}`);
   }
 }
 
-function assertUniquePromptInstanceKeys(prompts: RuntimeHoleSet): RuntimeHoleSet {
+function assertUniqueHoleInstanceKeys(holes: RuntimeHoleSet): RuntimeHoleSet {
   const seen = new Set<string>();
 
-  for (const prompt of prompts) {
-    const key = prompt.promptInstanceKey as string;
+  for (const hole of holes) {
+    const key = hole.holeInstanceKey as string;
     if (seen.has(key)) {
-      throw new Error(`runtime-holes: duplicate prompt instance key: ${key}`);
+      throw new Error(`runtime-holes: duplicate hole instance key: ${key}`);
     }
     seen.add(key);
   }
 
-  return prompts;
+  return holes;
 }
 
-// Projects the prompt payload authored on a specific phase.
+// Projects the current hole payload authored on a specific phase.
 // It does not decide whether this phase is currently legal to ask about.
-export function projectPhasePrompts(
+export function projectPhaseHoles(
   phase: ActivationPhase,
   stepKey: string,
 ): RuntimeHoleSet {
-  const prompts = Match.value(phase).pipe(
+  const holes = Match.value(phase).pipe(
     Match.when({ kind: "attack_roll" }, (attackRollPhase) => [
       ...attachmentHoles(stepKey, attackRollPhase.attachment),
-      attackRollHole(stepKey, attackRollPhase.attackKind),
+      attackRollHole(stepKey),
       // Attack-roll damage-type choices are decided before the roll even though
       // Surface nests them under on-hit effects.
       ...phaseOwnedDamageTypeChoiceHolesFromEffects(stepKey, attackRollPhase.onHit),
     ]),
     Match.when({ kind: "save_gate" }, (saveGatePhase) => [
       ...attachmentHoles(stepKey, saveGatePhase.attachment),
-      ...(assertNoPhaseOwnedDamageTypePrompts(
+      ...(assertNoGatedDamageTypeHoles(
         [
           saveGatePhase.onFail,
           ...(saveGatePhase.onSuccess.kind === "half_damage" ? [] : [saveGatePhase.onSuccess]),
@@ -169,7 +168,7 @@ export function projectPhasePrompts(
     ]),
     Match.when({ kind: "ability_check_gate" }, (abilityCheckGatePhase) => [
       ...attachmentHoles(stepKey, abilityCheckGatePhase.attachment),
-      ...(assertNoPhaseOwnedDamageTypePrompts(
+      ...(assertNoGatedDamageTypeHoles(
         [
           abilityCheckGatePhase.onPass,
           ...(abilityCheckGatePhase.onFail ? [abilityCheckGatePhase.onFail] : []),
@@ -181,5 +180,5 @@ export function projectPhasePrompts(
     Match.exhaustive,
   );
 
-  return assertUniquePromptInstanceKeys(prompts);
+  return assertUniqueHoleInstanceKeys(holes);
 }

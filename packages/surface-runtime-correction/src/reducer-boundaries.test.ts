@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import { createInitiativeStack, currentActing } from "@dnd/shared/initiative-algebra";
-import type { CreatureId, ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type {
+  CreatureId,
+  DieRollResult,
+  ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 
-import { discoverAvailableActions } from "#/reducer-discovery.ts";
-import { resolveSubject } from "#/reducer-execution.ts";
+import { discoverAvailableActs } from "#/reducer-discovery.ts";
+import { resolveSubject } from "#/reducer-hole-resolution.ts";
 import type { State } from "#/reducer-state.ts";
 
 function emptyState(): State {
@@ -35,16 +39,23 @@ function twoCreatureState(): State {
   };
 }
 
+function exhaustedActionState(): State {
+  return {
+    ...twoCreatureState(),
+    currentActionsAvailable: 0,
+  };
+}
+
 describe("reducer boundaries", () => {
-  it("discoverAvailableActions surfaces core attack and endTurn when another creature exists", () => {
-    expect(discoverAvailableActions(twoCreatureState())).toEqual([
+  it("discoverAvailableActs surfaces core attack and endTurn when another creature exists", () => {
+    expect(discoverAvailableActs(twoCreatureState())).toEqual([
       {
         subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "attack" },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
           {
-            promptInstanceKey: "core:attack:target",
+            holeInstanceKey: "core:attack:target",
             holeId: "core_attack_target",
             kind: "targetChoice",
             label: "attack target",
@@ -60,8 +71,19 @@ describe("reducer boundaries", () => {
     ]);
   });
 
-  it("discoverAvailableActions suppresses core attack when no other creature exists", () => {
-    expect(discoverAvailableActions(emptyState())).toEqual([
+  it("discoverAvailableActs suppresses core attack when no other creature exists", () => {
+    expect(discoverAvailableActs(emptyState())).toEqual([
+      {
+        subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs suppresses core attack when no action is available", () => {
+    expect(discoverAvailableActs(exhaustedActionState())).toEqual([
       {
         subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "endTurn" },
         label: "End Turn",
@@ -96,7 +118,7 @@ describe("reducer boundaries", () => {
       tag: "needsHoles",
       holes: [
         {
-          promptInstanceKey: "core:attack:target",
+          holeInstanceKey: "core:attack:target",
           holeId: "core_attack_target",
           kind: "targetChoice",
           label: "attack target",
@@ -119,12 +141,66 @@ describe("reducer boundaries", () => {
       tag: "needsHoles",
       holes: [
         {
-          promptInstanceKey: "core:attack:attackRoll",
+          holeInstanceKey: "core:attack:attackRoll",
           holeId: "core_attack_roll",
           kind: "attackRoll",
           label: "attack roll",
         },
       ],
+    });
+  });
+
+  it("resolveSubject requests damage dice after an attack roll", () => {
+    expect(resolveSubject(twoCreatureState(), {
+      subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "attack" },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: "core_attack_target" as never,
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: "core_attack_roll" as never,
+          value: 17,
+        },
+      ],
+    })).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "core:attack:damage",
+          holeId: "core_attack_damage",
+          kind: "rolledDice",
+          label: "damage roll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubject stops at hit adjudication after attack damage is filled", () => {
+    expect(resolveSubject(twoCreatureState(), {
+      subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "attack" },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: "core_attack_target" as never,
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: "core_attack_roll" as never,
+          value: 17,
+        },
+        {
+          kind: "rolledDice",
+          holeId: "core_attack_damage" as never,
+          value: [{ results: [6 as DieRollResult] }],
+        },
+      ],
+    })).toEqual({
+      tag: "invalid",
+      reason: "attack hit adjudication is not implemented yet",
     });
   });
 
@@ -141,6 +217,16 @@ describe("reducer boundaries", () => {
     })).toEqual({
       tag: "invalid",
       reason: "invalid attack target",
+    });
+  });
+
+  it("resolveSubject rejects core attack when no action is available", () => {
+    expect(resolveSubject(exhaustedActionState(), {
+      subject: { tag: "coreAction", actorId: "A" as CreatureId, action: "attack" },
+      filledHoleValues: [],
+    })).toEqual({
+      tag: "invalid",
+      reason: "no action available for attack",
     });
   });
 

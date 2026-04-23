@@ -7,7 +7,7 @@ export class UnsupportedUnitShapeError extends Error {
   }
 }
 
-export function checkSupportedUnit(unit: UnitRecord) {
+export function assertSupportedUnit(unit: UnitRecord) {
   if (unit.kind !== 'spell' && unit.kind !== 'class_feature') {
     throw new UnsupportedUnitShapeError(
       `Unsupported unit kind for reducer: ${unit.kind}`,
