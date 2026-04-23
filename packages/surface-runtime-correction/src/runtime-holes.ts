@@ -9,21 +9,23 @@ import type {
 
 import {
   type FillableDamageTypeRef,
-  type HoleId,
   type HoleInstanceKey,
+  type HoleLocalKey,
+  type HoleStepKey,
+  holeId,
+  holeInstanceKey,
+  holeLocalKey,
   type RuntimeHole,
   type RuntimeHoleSet,
 } from "#/reducer-types.ts";
 
-function asHoleId(raw: string): HoleId {
-  return raw as HoleId;
-}
+type DamageEffectAtom = Extract<EffectAtom, { readonly kind: "damage" }>;
 
 function makeHoleInstanceKey(
-  stepKey: string,
-  localKey: string,
+  stepKey: HoleStepKey,
+  localKey: HoleLocalKey,
 ): HoleInstanceKey {
-  return `${stepKey}:${localKey}` as HoleInstanceKey;
+  return holeInstanceKey(`${stepKey}:${localKey}`);
 }
 
 function isHoleAttachment(
@@ -49,29 +51,44 @@ function isHoleDamageTypeRef(
   return typeof damageTypeRef === "object" && damageTypeRef !== null && "kind" in damageTypeRef && damageTypeRef.kind === "hole";
 }
 
-function attackRollHole(stepKey: string): RuntimeHole {
+function isDamageEffect(
+  effect: EffectAtom,
+): effect is DamageEffectAtom {
+  return effect.kind === "damage";
+}
+
+function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   return {
-    holeInstanceKey: makeHoleInstanceKey(stepKey, "runtime:attackRoll"),
-    holeId: asHoleId(`${stepKey}_attack_roll`),
+    holeInstanceKey: makeHoleInstanceKey(stepKey, holeLocalKey("runtime:attackRoll")),
+    holeId: holeId(`${stepKey}_attack_roll`),
     kind: "attackRoll",
   };
 }
 
-function attachmentHoles(stepKey: string, attachment: Attachment): RuntimeHoleSet {
+function attachmentHoles(
+  stepKey: HoleStepKey,
+  attachment: Attachment,
+): RuntimeHoleSet {
   if (!isHoleAttachment(attachment)) {
     return [];
   }
 
   const baseHole = {
-    holeInstanceKey: makeHoleInstanceKey(stepKey, `surface:${attachment.holeId}`),
-    holeId: asHoleId(attachment.holeId),
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey(`surface:${attachment.holeId}`),
+    ),
+    holeId: holeId(attachment.holeId),
     kind: "surfaceAttachment" as const,
     attachment: attachment.value,
   };
   return [attachment.label === undefined ? baseHole : { ...baseHole, label: attachment.label }];
 }
 
-function damageTypeHoles(stepKey: string, damageTypeRef: DamageTypeRef): RuntimeHoleSet {
+function damageTypeHoles(
+  stepKey: HoleStepKey,
+  damageTypeRef: DamageTypeRef,
+): RuntimeHoleSet {
   if (!isHoleDamageTypeRef(damageTypeRef)) {
     return [];
   }
@@ -80,8 +97,11 @@ function damageTypeHoles(stepKey: string, damageTypeRef: DamageTypeRef): Runtime
   }
 
   const baseHole = {
-    holeInstanceKey: makeHoleInstanceKey(stepKey, `surface:${damageTypeRef.holeId}`),
-    holeId: asHoleId(damageTypeRef.holeId),
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey(`surface:${damageTypeRef.holeId}`),
+    ),
+    holeId: holeId(damageTypeRef.holeId),
     kind: "surfaceDamageTypeRef" as const,
     damageTypeRef: damageTypeRef.value,
   };
@@ -89,33 +109,28 @@ function damageTypeHoles(stepKey: string, damageTypeRef: DamageTypeRef): Runtime
 }
 
 function phaseDamageTypeHolesFromEffect(
-  stepKey: string,
-  effect: EffectAtom,
+  stepKey: HoleStepKey,
+  effect: DamageEffectAtom,
 ): RuntimeHoleSet {
-  if (effect.kind !== "damage") {
-    return [];
-  }
-
   return damageTypeHoles(stepKey, effect.damageType);
 }
 
 function phaseDamageTypeHolesFromEffects(
-  stepKey: string,
+  stepKey: HoleStepKey,
   effects: ReadonlyArray<EffectAtom>,
 ): RuntimeHoleSet {
-  return effects.flatMap((effect) => phaseDamageTypeHolesFromEffect(stepKey, effect));
+  return effects
+    .filter(isDamageEffect)
+    .flatMap((effect) => phaseDamageTypeHolesFromEffect(stepKey, effect));
 }
 
 function assertNoGatedDamageTypeHoles(
   effects: ReadonlyArray<EffectAtom>,
   context: string,
 ): void {
-  const hasUnsupported = effects.some((effect) => {
-    if (effect.kind !== "damage") {
-      return false;
-    }
-    return isHoleDamageTypeRef(effect.damageType);
-  });
+  const hasUnsupported = effects
+    .filter(isDamageEffect)
+    .some((effect) => isHoleDamageTypeRef(effect.damageType));
 
   if (hasUnsupported) {
       throw new Error(`runtime-holes: unsupported gated damage-type hole in ${context}`);
@@ -140,7 +155,7 @@ function assertUniqueHoleInstanceKeys(holes: RuntimeHoleSet): RuntimeHoleSet {
 // It does not decide whether this phase is currently legal to ask about.
 export function projectPhaseHoles(
   phase: ActivationPhase,
-  stepKey: string,
+  stepKey: HoleStepKey,
 ): RuntimeHoleSet {
   const holes = Match.value(phase).pipe(
     Match.when({ kind: "attack_roll" }, (attackRollPhase) => [

@@ -8,6 +8,7 @@ import type { ActivationPhase } from "@dnd/prototype-content-surface/surface/typ
 
 import { loadSupportedUnit } from "#/supported-unit-library.ts";
 import { projectPhaseHoles } from "#/runtime-holes.ts";
+import { holeStepKey } from "#/reducer-types.ts";
 
 function activationPhase(unitId: string, phaseIndex: number) {
   const unit = loadSupportedUnit(unitId);
@@ -42,14 +43,14 @@ describe("projectPhaseHoles", () => {
   it("returns an empty list for a holeless activation phase", () => {
     expect(projectPhaseHoles(
       activationPhase("fighter_action_surge_l2", 0),
-      "activation:0",
+      holeStepKey("activation:0"),
     )).toEqual([]);
   });
 
   it("projects the cure wounds target hole", () => {
     expect(projectPhaseHoles(
       activationPhase("cure_wounds", 0),
-      "activation:0",
+      holeStepKey("activation:0"),
     )).toEqual([
       {
         holeInstanceKey: "activation:0:surface:cure_wounds_target",
@@ -67,7 +68,7 @@ describe("projectPhaseHoles", () => {
   it("projects the fireball point-of-explosion hole", () => {
     expect(projectPhaseHoles(
       activationPhase("fireball", 0),
-      "activation:0",
+      holeStepKey("activation:0"),
     )).toEqual([
       {
         holeInstanceKey: "activation:0:surface:fireball_point",
@@ -98,7 +99,7 @@ describe("projectPhaseHoles", () => {
 
     expect(projectPhaseHoles(
       phase,
-      "activation:0",
+      holeStepKey("activation:0"),
     )).toEqual([
       {
         holeInstanceKey: "activation:0:surface:chromatic_orb_primary_target",
@@ -139,7 +140,7 @@ describe("projectPhaseHoles", () => {
       throw new Error("expected phase 1 for scorching_ray");
     }
 
-    expect(projectPhaseHoles(phase, "activation:1")).toEqual([
+    expect(projectPhaseHoles(phase, holeStepKey("activation:1"))).toEqual([
       {
         holeInstanceKey: "activation:1:runtime:attackRoll",
         holeId: "activation:1_attack_roll",
@@ -161,7 +162,7 @@ describe("projectPhaseHoles", () => {
 
     expect(projectPhaseHoles(
       phase.continue.next[0],
-      "continuation:1",
+      holeStepKey("continuation:1"),
     )).toEqual([
       {
         holeInstanceKey: "continuation:1:surface:chromatic_orb_leap_target",
@@ -207,7 +208,7 @@ describe("projectPhaseHoles", () => {
       ],
     } satisfies ActivationPhase;
 
-    expect(() => projectPhaseHoles(phase, "activation:0")).toThrow(
+    expect(() => projectPhaseHoles(phase, holeStepKey("activation:0"))).toThrow(
       "duplicate hole instance key",
     );
   });
@@ -230,7 +231,7 @@ describe("projectPhaseHoles", () => {
       onSuccess: { kind: "half_damage" },
     } satisfies ActivationPhase;
 
-    expect(() => projectPhaseHoles(phase, "activation:0")).toThrow(
+    expect(() => projectPhaseHoles(phase, holeStepKey("activation:0"))).toThrow(
       "unsupported gated damage-type hole",
     );
   });

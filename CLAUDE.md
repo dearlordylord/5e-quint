@@ -118,6 +118,14 @@ The Quint spec is a **direct formalization of the SRD** — nothing more, nothin
 
 ## TypeScript conventions
 
+- **Parse, don’t validate:** Parse once at the boundary; use the parsed type everywhere else. When code establishes a stronger fact about a value, reflect that fact in the type and pass the narrowed value forward. Do not keep passing the weaker type and re-checking the same property downstream.
+
+  First examples:
+  - If a function only makes sense for damage effects, it should accept `DamageEffect`, not `Effect`.
+  - Narrow/filter first, then call it. Do not pass `Effect` into the function and check `effect.kind === "damage"` again inside.
+
+- **Brand meaningful strings early:** If a string carries protocol/domain meaning, give it a branded type at the boundary instead of passing raw `string` deeper into the code.
+
 - **Typed constant arrays:** When defining a fixed list of domain values (conditions, damage types, etc.), use `as const satisfies ReadonlyArray<T>` to get both literal types and compile-time validation:
   ```typescript
   const CURABLE = ["poisoned", "blinded", "charmed"] as const satisfies ReadonlyArray<Condition>

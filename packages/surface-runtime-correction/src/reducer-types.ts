@@ -21,9 +21,24 @@ type HoleIdText =
   | "core_attack_damage"
   | (string & {});
 export type HoleId = HoleIdText & Brand.Brand<"HoleId">;
+const HoleId = Brand.nominal<HoleId>();
+export const holeId: (value: HoleIdText) => HoleId = HoleId;
+// Replay-step/path identity used when constructing hole instance keys.
+// Example: "activation:0", "continuation:1".
+export type HoleStepKey = string & Brand.Brand<"HoleStepKey">;
+const HoleStepKey = Brand.nominal<HoleStepKey>();
+export const holeStepKey: (value: string) => HoleStepKey = HoleStepKey;
+// Hole identity within one replay step/path.
+// Example: "runtime:attackRoll", "surface:fireball_point".
+export type HoleLocalKey = string & Brand.Brand<"HoleLocalKey">;
+const HoleLocalKey = Brand.nominal<HoleLocalKey>();
+export const holeLocalKey: (value: string) => HoleLocalKey = HoleLocalKey;
 // Concrete hole occurrence identity for one replay step/path.
 // Example: "activation:0:surface:fireball_point", "continuation:1:runtime:attackRoll".
 export type HoleInstanceKey = string & Brand.Brand<"HoleInstanceKey">;
+const HoleInstanceKey = Brand.nominal<HoleInstanceKey>();
+export const holeInstanceKey: (value: string) => HoleInstanceKey =
+  HoleInstanceKey;
 
 type KindedMember<T> = Extract<T, { readonly kind: string }>;
 
