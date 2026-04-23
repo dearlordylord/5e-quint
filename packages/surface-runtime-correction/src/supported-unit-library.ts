@@ -18,7 +18,7 @@ export class SupportedUnitLibrary extends Context.Tag(
   "@dnd/surface-runtime-correction/SupportedUnitLibrary",
 )<SupportedUnitLibrary, SupportedUnitLibraryShape>() {}
 
-function surfaceContentPath(unitId: string): string {
+function authoredUnitContentPath(unitId: string): string {
   return join(
     import.meta.dirname,
     "..",
@@ -30,7 +30,7 @@ function surfaceContentPath(unitId: string): string {
 }
 
 export function loadSupportedUnit(unitId: string) {
-  const raw = readFileSync(surfaceContentPath(unitId), "utf8");
+  const raw = readFileSync(authoredUnitContentPath(unitId), "utf8");
   const unit = decodeUnitRecordSync(JSON.parse(raw));
   return assertSupportedUnit(unit);
 }
@@ -45,13 +45,13 @@ export function createSupportedUnitLibrary(
   unitIds: ReadonlyArray<string>,
 ): SupportedUnitLibraryShape {
   const authoredUnits = loadSupportedUnits(unitIds);
-  const unitsById = HashMap.make(...authoredUnits.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
+  const authoredUnitsById = HashMap.make(...authoredUnits.map((unit) => [unit.id, unit] as readonly [string, UnitRecord]));
   return {
     get(unitId) {
-      return HashMap.get(unitId)(unitsById)
+      return HashMap.get(unitId)(authoredUnitsById)
     },
     list() {
-      return [...HashMap.values(unitsById)];
+      return [...HashMap.values(authoredUnitsById)];
     },
   };
 }

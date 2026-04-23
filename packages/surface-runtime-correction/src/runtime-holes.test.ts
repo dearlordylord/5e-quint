@@ -212,7 +212,7 @@ describe("projectPhaseHoles", () => {
     );
   });
 
-  it("rejects gated branch-owned damage-type holes for now", () => {
+  it("rejects gated damage-type holes for now", () => {
     const phase = {
       kind: "save_gate",
       attachment: { kind: "self" },

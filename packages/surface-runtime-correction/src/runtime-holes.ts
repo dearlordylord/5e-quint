@@ -88,7 +88,7 @@ function damageTypeHoles(stepKey: string, damageTypeRef: DamageTypeRef): Runtime
   return [damageTypeRef.label === undefined ? baseHole : { ...baseHole, label: damageTypeRef.label }];
 }
 
-function phaseOwnedDamageTypeChoiceHolesFromEffect(
+function phaseDamageTypeHolesFromEffect(
   stepKey: string,
   effect: EffectAtom,
 ): RuntimeHoleSet {
@@ -99,11 +99,11 @@ function phaseOwnedDamageTypeChoiceHolesFromEffect(
   return damageTypeHoles(stepKey, effect.damageType);
 }
 
-function phaseOwnedDamageTypeChoiceHolesFromEffects(
+function phaseDamageTypeHolesFromEffects(
   stepKey: string,
   effects: ReadonlyArray<EffectAtom>,
 ): RuntimeHoleSet {
-  return effects.flatMap((effect) => phaseOwnedDamageTypeChoiceHolesFromEffect(stepKey, effect));
+  return effects.flatMap((effect) => phaseDamageTypeHolesFromEffect(stepKey, effect));
 }
 
 function assertNoGatedDamageTypeHoles(
@@ -148,7 +148,7 @@ export function projectPhaseHoles(
       attackRollHole(stepKey),
       // Attack-roll damage-type choices are decided before the roll even though
       // Surface nests them under on-hit effects.
-      ...phaseOwnedDamageTypeChoiceHolesFromEffects(stepKey, attackRollPhase.onHit),
+      ...phaseDamageTypeHolesFromEffects(stepKey, attackRollPhase.onHit),
     ]),
     Match.when({ kind: "save_gate" }, (saveGatePhase) => [
       ...attachmentHoles(stepKey, saveGatePhase.attachment),
@@ -163,7 +163,7 @@ export function projectPhaseHoles(
     Match.when({ kind: "direct" }, (directPhase) => [
       ...attachmentHoles(stepKey, directPhase.attachment),
       ...(directPhase.effects
-        ? phaseOwnedDamageTypeChoiceHolesFromEffects(stepKey, directPhase.effects)
+        ? phaseDamageTypeHolesFromEffects(stepKey, directPhase.effects)
         : []),
     ]),
     Match.when({ kind: "ability_check_gate" }, (abilityCheckGatePhase) => [

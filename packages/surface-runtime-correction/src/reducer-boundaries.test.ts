@@ -8,7 +8,7 @@ import type {
 } from "@dnd/shared/types";
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
-import { resolveSubject } from "#/reducer-hole-resolution.ts";
+import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
 import type { State } from "#/reducer-state.ts";
 
 function emptyState(): State {
@@ -93,8 +93,8 @@ describe("reducer boundaries", () => {
     ]);
   });
 
-  it("resolveSubject advances initiative for core endTurn", () => {
-    const result = resolveSubject(emptyState(), {
+  it("resolveSubjectHoles advances initiative for core endTurn", () => {
+    const result = resolveSubjectHoles(emptyState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
       filledHoleValues: [],
     });
@@ -110,8 +110,8 @@ describe("reducer boundaries", () => {
     expect(result.state.currentHasFreeAction).toBe(true);
   });
 
-  it("resolveSubject requests a target hole for core attack", () => {
-    expect(resolveSubject(twoCreatureState(), {
+  it("resolveSubjectHoles requests a target hole for core attack", () => {
+    expect(resolveSubjectHoles(twoCreatureState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [],
     })).toEqual({
@@ -127,8 +127,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject requests an attack roll after a valid attack target", () => {
-    expect(resolveSubject(twoCreatureState(), {
+  it("resolveSubjectHoles requests an attack roll after a valid attack target", () => {
+    expect(resolveSubjectHoles(twoCreatureState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [
         {
@@ -150,8 +150,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject requests damage dice after an attack roll", () => {
-    expect(resolveSubject(twoCreatureState(), {
+  it("resolveSubjectHoles requests damage dice after an attack roll", () => {
+    expect(resolveSubjectHoles(twoCreatureState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [
         {
@@ -178,8 +178,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject stops at hit adjudication after attack damage is filled", () => {
-    expect(resolveSubject(twoCreatureState(), {
+  it("resolveSubjectHoles stops at hit adjudication after attack damage is filled", () => {
+    expect(resolveSubjectHoles(twoCreatureState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [
         {
@@ -204,8 +204,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject rejects an invalid attack target", () => {
-    expect(resolveSubject(twoCreatureState(), {
+  it("resolveSubjectHoles rejects an invalid attack target", () => {
+    expect(resolveSubjectHoles(twoCreatureState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [
         {
@@ -220,8 +220,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject rejects core attack when no action is available", () => {
-    expect(resolveSubject(exhaustedActionState(), {
+  it("resolveSubjectHoles rejects core attack when no action is available", () => {
+    expect(resolveSubjectHoles(exhaustedActionState(), {
       subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
       filledHoleValues: [],
     })).toEqual({
@@ -230,8 +230,8 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubject rejects core endTurn for a non-acting creature", () => {
-    expect(resolveSubject(emptyState(), {
+  it("resolveSubjectHoles rejects core endTurn for a non-acting creature", () => {
+    expect(resolveSubjectHoles(emptyState(), {
       subject: { tag: "coreAct", actorId: "B" as CreatureId, act: "endTurn" },
       filledHoleValues: [],
     })).toEqual({

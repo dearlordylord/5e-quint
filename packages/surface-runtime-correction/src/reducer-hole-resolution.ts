@@ -83,7 +83,7 @@ function ensureActingCreature(
   return null
 }
 
-function advanceCoreAttackResolution(
+function advanceCoreAttackHoleResolution(
   state: State,
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
 ): ResolutionResult {
@@ -149,7 +149,7 @@ function resolveCoreEndTurn(state: State): ResolutionResult {
   }
 }
 
-export function resolveSubject(
+export function resolveSubjectHoles(
   state: State,
   request: ResolutionRequest,
 ): ResolutionResult {
@@ -161,7 +161,7 @@ export function resolveSubject(
   return Match.value(request.subject).pipe(
     Match.when(
       { tag: 'coreAct', act: 'attack' },
-      () => advanceCoreAttackResolution(state, request.filledHoleValues),
+      () => advanceCoreAttackHoleResolution(state, request.filledHoleValues),
     ),
     Match.when(
       { tag: 'coreAct', act: 'endTurn' },
