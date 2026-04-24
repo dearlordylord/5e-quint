@@ -1,6 +1,9 @@
 import { Either, Match } from "effect";
 import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
-import type { ActivationPhase, UnitRecord } from '@dnd/prototype-content-surface/surface/types';
+import type {
+  ActivationPhase,
+  UnitRecord,
+} from "@dnd/prototype-content-surface/surface/types";
 
 import {
   coreAttackDamageHole,
@@ -23,13 +26,15 @@ import {
   getCurrentSliceSupportedActivationUnit,
 } from "#/reducer-support.ts";
 import { projectPhaseHoles } from "#/runtime-holes.ts";
-import { getOnlyOneStrict } from '@dnd/shared/types';
+import { getOnlyOneStrict } from "@dnd/shared/types";
 
 type ResolutionCheck<A> = Either.Either<A, ResolutionInvalid>;
 type ResolutionAdvance<A> = Either.Either<A, ResolutionResult>;
 type UnitResolutionRequest = ResolutionRequest & {
   readonly subject: Extract<Subject, { readonly tag: "unit" }>;
 };
+
+const CURRENT_SLICE_ACTIVATION_STEP = holeStepKey("activation:0");
 
 function invalid(reason: string): ResolutionInvalid {
   return { tag: "invalid", reason };
@@ -307,6 +312,21 @@ function requireNoMissingHoles(
     : Either.left({ tag: "needsHoles", holes: holesToAsk });
 }
 
+function currentSliceActivationPhase(
+  unit: CurrentSliceSupportedActivationUnit,
+): ActivationPhase {
+  return getOnlyOneStrict(unit.mechanics.phases);
+}
+
+function projectCurrentSliceUnitHoles(
+  unit: CurrentSliceSupportedActivationUnit,
+): RuntimeHoleSet {
+  return projectPhaseHoles(
+    currentSliceActivationPhase(unit),
+    CURRENT_SLICE_ACTIVATION_STEP,
+  );
+}
+
 function resolveUnitSubjectHoles(
   state: State,
   request: UnitResolutionRequest,
@@ -315,10 +335,9 @@ function resolveUnitSubjectHoles(
     const actor = yield* requireUnitActor(state, request.subject.actorId);
     const unit = yield* requireUnit(actor, request);
     const supportedUnit = yield* requireSupportedUnit(unit, request);
-    const phase = getOnlyOneStrict(supportedUnit.mechanics.phases);
     const holes = yield* requireValidHoleInputs(
       request.filledHoleValues,
-      projectPhaseHoles(phase, holeStepKey("activation:0")),
+      projectCurrentSliceUnitHoles(supportedUnit),
     );
     const filledHoles = yield* requireNoMissingHoles(
       request.filledHoleValues,
@@ -339,12 +358,12 @@ function resolveUnitSubjectHoles(
 function resolveFilledCurrentSliceUnit(
   unit: CurrentSliceSupportedActivationUnit,
 ): ResolutionResult {
-  // Current support gate makes this a one-phase unit; multi-phase replay belongs here later.
-  const phase = getOnlyOneStrict(unit.mechanics.phases);
-  return resolveFilledActivationPhase(phase);
+  return resolveFilledActivationPhase(currentSliceActivationPhase(unit));
 }
 
-function resolveFilledActivationPhase(phase: ActivationPhase): ResolutionResult {
+function resolveFilledActivationPhase(
+  phase: ActivationPhase,
+): ResolutionResult {
   return Match.value(phase).pipe(
     Match.when({ kind: "attack_roll" }, () =>
       invalid("attack-roll unit damage application is not implemented yet"),

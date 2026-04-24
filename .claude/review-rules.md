@@ -23,6 +23,7 @@ Every function, type, constant, and export must have a current call site or cons
 For rules behavior, verify that every modeled rule traces to SRD 5.2.1 text in `.references/srd-5.2.1/` or to an explicit entry in `ASSUMPTIONS.md`.
 
 Flag:
+
 - homebrew or "reasonable extension" mechanics not present in the SRD;
 - silent interpretation of ambiguous RAW;
 - mixed provenance modeled as if it were one source;
@@ -34,6 +35,7 @@ Flag:
 Review combat behavior against the authoritative Quint model.
 
 Flag:
+
 - XState or TypeScript behavior that diverges from `battle.qnt` without a corresponding spec change;
 - changes to fields mapped by MBT bridges without checking the relevant parity tests;
 - duplicated rule logic between Quint, TS, bridge code, and UI that should be shared, derived, or explicitly projected;
@@ -42,6 +44,7 @@ Flag:
 ## Type Safety — Cast Review Checklist
 
 For every `as T` cast, verify:
+
 1. A comment explains why the cast is necessary.
 2. The evidence supporting the cast is local and correct.
 3. A generic type parameter, parser, branded constructor, or type guard could not eliminate the cast.
@@ -52,6 +55,7 @@ For every `as T` cast, verify:
 Branded types are compile-time-only constructs and are erased during transpilation.
 
 Flag:
+
 - "branded at runtime";
 - cast justifications that imply brands have runtime meaning;
 - claims that two differently branded strings differ at runtime.
@@ -63,6 +67,7 @@ Correct pattern: "Brands are erased at runtime; both values are `string`, so thi
 For every product type, interface, type alias, Schema struct, Quint record, and machine context shape, verify: can every combination of field values occur in practice?
 
 Flag:
+
 - sentinel values such as `""`, `0`, `null`, or `undefined` meaning "not applicable";
 - booleans alongside fields only meaningful for one boolean value;
 - optional fields that must all be present-or-absent together;
@@ -77,6 +82,7 @@ Prefer discriminated unions, nested types, `Option`, branded/domain values, or s
 Review every changed literal, branch condition, helper boundary, narrowed type, protocol step, and duplicated rule for connascence: code facts that must change together for correctness.
 
 Flag distant or high-degree connascence, especially:
+
 - magic strings/numbers whose validity depends on a separate parser, support gate, schema, spec, bridge, test fixture, or authored content convention;
 - tuple/array index assumptions instead of named fields or narrowed tuple types;
 - duplicated validation, projection, encoding, decoding, or execution algorithms;
@@ -85,11 +91,13 @@ Flag distant or high-degree connascence, especially:
 - duplicated default values, initial state, status meanings, sentinel semantics, hole IDs, phase keys, or action names.
 
 Required reviewer questions:
+
 1. What must change together if this line changes?
 2. Is that coupling local and obvious, or distant and implicit?
 3. Is the coupling weak enough for its distance? If not, require a refactor.
 
 Preferred fixes:
+
 - replace magic values with named constants, literal unions, branded/domain types, or derived values;
 - replace positional conventions with records, named fields, or narrowed tuple types;
 - centralize duplicated algorithms behind one implementation;
@@ -103,12 +111,14 @@ Do not accept comments as the only fix when the relationship can be encoded in t
 When changed code depends on an assumption for correctness, reviewers must verify that the assumption is executable at the boundary where it matters.
 
 Flag:
+
 - replacing a named assertion, parser, support gate, exhaustive match, or domain helper with code that merely follows a convention;
 - code that would keep compiling and running if a future schema/type/support slice widened, but would silently ignore or misinterpret the new meaningful data;
 - local algorithms that rely on "only one", "first", "current", "supported", "for now", ordering, cardinality, or phase boundaries without an assertion or exhaustive handling at that algorithm boundary;
 - comments that state a correctness precondition while the code does not enforce it.
 
 Accept:
+
 - trusting a type/parser/narrowed value when future widening would make the code fail to compile or when the algorithm would remain semantically correct;
 - removing an assertion only when the downstream algorithm now handles all cases the assertion previously excluded;
 - keeping a local assertion even when the current type proves the fact, if future widening could otherwise compile and change the meaning silently.
@@ -117,19 +127,22 @@ Required reviewer question:
 "If the upstream type or support gate admits more meaningful data later, does this line fail loudly, remain correct, or silently drop meaning?"
 
 Preferred fixes:
+
 - keep or add a named assertion at the semantic boundary;
 - make the algorithm exhaustive over the widened shape;
 - strengthen the domain type so invalid or unsupported shapes are unrepresentable at the call site;
 - move the assertion into a helper named after the invariant when several call sites depend on the same assumption.
 
 Examples:
-- Do not replace `getOnlyOneStrict(supportedUnit.mechanics.phases)` with `const [phase] = supportedUnit.mechanics.phases` in a single-phase replay algorithm. Even if the current support-gate type narrows `phases` to `[ActivationPhase]`, future support for multi-phase units could still compile and silently execute only the first phase. Keep the named assertion unless the replay algorithm handles multiple phases.
+
+- Parse-don't-validate means parse or narrow once at the boundary and carry the stronger type forward; it does not require hiding the assumptions a downstream algorithm consumes. When an algorithm depends on a cardinality invariant already proven by a narrowed type, reify that dependency at the algorithm boundary with a named helper or assertion rather than anonymous positional access. This is not repeated validation; it makes the compile-time invariant visible at the semantic boundary that must change if the narrowed shape later widens.
 
 ## Boundary Typing
 
 All data crossing system boundaries must be parsed or decoded at the boundary and represented with precise domain types afterward.
 
 Flag:
+
 - `any`, untyped JSON access, or raw external data beyond the boundary;
 - passing weak `string`, `number`, or broad union values deeper after a stronger fact has been established;
 - validation repeated downstream instead of parsing once and carrying the parsed type;
@@ -140,6 +153,7 @@ Flag:
 Function signatures and type definitions must not use bare `string`, `number`, or `boolean` where a domain-specific type, literal union, branded type, or alias exists or should exist.
 
 Symptoms to flag:
+
 - `(x: DomainType): string` where the return value has domain meaning;
 - `ReadonlyMap<string, string>` where keys or values have known domains;
 - numeric fields that represent HP, AC, spell slot level, phase index, die size, count, range, or action economy without a domain type or documented reason;
@@ -149,6 +163,7 @@ Symptoms to flag:
 ## Immutability
 
 No `let` for conditional assignment. Use:
+
 - `const` with a ternary for single-variable branches;
 - a destructured struct or extracted function for multi-variable branches;
 - `Either.gen` / `Effect.gen` when a branch needs monadic computation.

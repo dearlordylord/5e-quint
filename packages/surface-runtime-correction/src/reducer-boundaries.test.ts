@@ -379,6 +379,147 @@ describe("reducer boundaries", () => {
     });
   });
 
+  it("resolveSubjectHoles requests all current holes for unit-backed fire bolt", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:surface:fire_bolt_target",
+          holeId: "fire_bolt_target",
+          kind: "surfaceAttachment",
+          label: "fire bolt target",
+          attachment: {
+            kind: "target",
+            selection: { mode: "one" },
+          },
+        },
+        {
+          holeInstanceKey: "activation:0:runtime:attackRoll",
+          holeId: "activation:0_attack_roll",
+          kind: "attackRoll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles requests the missing fire bolt attack roll after target fill", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "surfaceAttachment",
+            holeId: holeId("fire_bolt_target"),
+            value: {
+              kind: "target",
+              selection: { mode: "one" },
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:runtime:attackRoll",
+          holeId: "activation:0_attack_roll",
+          kind: "attackRoll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles reaches attack-roll execution boundary after fire bolt holes are filled", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "surfaceAttachment",
+            holeId: holeId("fire_bolt_target"),
+            value: {
+              kind: "target",
+              selection: { mode: "one" },
+            },
+          },
+          {
+            kind: "attackRoll",
+            holeId: holeId("activation:0_attack_roll"),
+            value: 17,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "attack-roll unit damage application is not implemented yet",
+    });
+  });
+
+  it("resolveSubjectHoles reaches save-gate execution boundary after fireball point is filled", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fireball",
+        },
+        filledHoleValues: [
+          {
+            kind: "surfaceAttachment",
+            holeId: holeId("fireball_point"),
+            value: {
+              kind: "area",
+              origin: { kind: "point_within_range" },
+              shape: {
+                kind: "sphere",
+                radiusFeet: 20,
+              },
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "save-gate unit outcome application is not implemented yet",
+    });
+  });
+
+  it("resolveSubjectHoles reaches direct execution boundary for holeless action surge", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fighter_action_surge_l2",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "direct unit effect application is not implemented yet",
+    });
+  });
+
   it("resolveSubjectHoles rejects core attack when no action is available", () => {
     expect(
       resolveSubjectHoles(exhaustedActionState(), {
