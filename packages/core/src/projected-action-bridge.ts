@@ -1,22 +1,25 @@
-import { Match } from "effect";
-
 import type { BattleCreatureState } from "#/battle-machine-types.ts";
 import { isIncapacitated as isBattleCreatureIncapacitated } from "#/battle-machine-creature.ts";
 import type { DndContext } from "#/machine-types.ts";
 import { canCastSpells, isIncapacitated } from "#/machine-queries.ts";
-import { compileProjectedExecutable } from "#/projected-compiler.ts";
-import type { ProjectedExecutableAction } from "#/projected-executable.ts";
 import {
-  type ProjectedInterpreterActor,
-  interpretProjectedAction,
-} from "#/projected-mechanic-interpreter.ts";
+  ACTION_SURGE_PROJECTED_ACTION,
+  projectedActorFromBattleCreature,
+  projectedActorFromCreatureContext,
+  projectedBattleFighterAvailabilityState,
+  projectedCreatureAvailabilityState,
+  projectedNonSpellActorFromCreatureContext,
+  projectedPreparedSpellAction,
+  projectedPreparedSpellDefinition,
+  SECOND_WIND_PROJECTED_ACTION,
+} from "#/projected-action-context.ts";
+import { interpretProjectedAction } from "#/projected-mechanic-interpreter.ts";
 import {
   actionCostParts,
   canUseProjectedAction,
   describeProjectedAction,
   interpretationHealOutcome,
   selfOnlyRuntime,
-  type ProjectedAvailabilityState,
   type ProjectedPoolCost,
   type ProjectedQuotaCost,
 } from "#/projected-action-bridge-helpers.ts";
@@ -26,122 +29,11 @@ import {
   type ProjectedPreparedSpellPrompt,
   type ProjectedPreparedSpellPromptAnswer,
 } from "#/projected-action-bridge-prepared-spell.ts";
-import {
-  getSpellRecordStrict,
-  makeSpellLibrary,
-  SRD_SPELLS,
-} from "#/features/spell-registry.ts";
 import { spellId, type SpellName } from "#/types.ts";
-import {
-  decodeClassFeatureRecordSync,
-  decodeSpellRecordSync,
-} from "@dnd/prototype-content-surface/surface/schema";
-import type {
-  ClassFeatureRecord,
-  SpellRecord,
-} from "@dnd/prototype-content-surface/surface/types";
-import acidSplashSurface from "../../prototype-content-surface/content/acid_splash.json";
-import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
-import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
 
 // Bridge from the legacy projected-executable seam into the current
 // available-actions / machine runtime. This file is a bounded compatibility
 // layer, not the target architecture for migrated correction-pattern flows.
-
-const ACID_SPLASH_SURFACE: SpellRecord = decodeSpellRecordSync(acidSplashSurface);
-const SECOND_WIND_SURFACE: ClassFeatureRecord =
-  decodeClassFeatureRecordSync(secondWindSurface);
-const ACTION_SURGE_SURFACE: ClassFeatureRecord =
-  decodeClassFeatureRecordSync(actionSurgeSurface);
-
-const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(SECOND_WIND_SURFACE);
-const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(ACTION_SURGE_SURFACE);
-const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
-
-function projectedPreparedSpellAction(
-  spellName: SpellName,
-): ProjectedExecutableAction | null {
-  return Match.value(spellName).pipe(
-    Match.when("acid_splash", () => compileProjectedExecutable(ACID_SPLASH_SURFACE)),
-    Match.orElse(() => null),
-  );
-}
-
-function projectedCharacterLevel(context: DndContext): number {
-  return Object.values(context.classStates).reduce(
-    (total, entry) => total + (entry?.level ?? 0),
-    0,
-  );
-}
-
-function projectedSpellSaveDc(
-  context: DndContext,
-  spellName: SpellName,
-): number | null {
-  return context.preparedSpellSaveDCs.get(spellId(spellName)) ?? null;
-}
-
-function projectedActorFromCreatureContext(
-  context: DndContext,
-  spellName: SpellName,
-): ProjectedInterpreterActor {
-  return {
-    actorId: context.selfId ?? "self",
-    characterLevel: projectedCharacterLevel(context),
-    fighterLevel: context.classStates.fighter?.level ?? 0,
-    spellSaveDc: projectedSpellSaveDc(context, spellName),
-  };
-}
-
-function projectedNonSpellActorFromCreatureContext(
-  context: DndContext,
-): ProjectedInterpreterActor {
-  return {
-    actorId: context.selfId ?? "self",
-    characterLevel: projectedCharacterLevel(context),
-    fighterLevel: context.classStates.fighter?.level ?? 0,
-    spellSaveDc: null,
-  };
-}
-
-function projectedActorFromBattleCreature(
-  actorId: string,
-  actor: BattleCreatureState,
-): ProjectedInterpreterActor {
-  return {
-    actorId,
-    characterLevel: Math.max(actor.fighterLevel, 1),
-    fighterLevel: actor.fighterLevel,
-    spellSaveDc: null,
-  };
-}
-
-function projectedCreatureAvailabilityState(
-  context: DndContext,
-): ProjectedAvailabilityState {
-  return {
-    fighterLevel: context.classStates.fighter?.level ?? 0,
-    secondWindCharges: context.classStates.fighter?.secondWindCharges ?? 0,
-    actionSurgeCharges: context.classStates.fighter?.actionSurgeCharges ?? 0,
-    actionSurgeUsedThisTurn:
-      context.classStates.fighter?.actionSurgeUsedThisTurn ?? false,
-    bonusActionUsed: context.bonusActionUsed,
-    actionsRemaining: context.actionsRemaining,
-  };
-}
-
-function projectedBattleFighterAvailabilityState(
-  actor: BattleCreatureState,
-): ProjectedAvailabilityState {
-  return {
-    fighterLevel: actor.fighterLevel,
-    secondWindCharges: 0,
-    actionSurgeCharges: actor.actionSurgeCharges,
-    actionSurgeUsedThisTurn: actor.actionSurgeUsedThisTurn,
-    bonusActionUsed: actor.bonusActionUsed,
-    actionsRemaining: actor.actionsRemaining,
-  };
-}
 
 export function projectedPreparedSpellSummary(
   context: DndContext,
@@ -224,7 +116,7 @@ export function canUseProjectedPreparedSpell(
   const action = projectedPreparedSpellAction(spellName);
   if (action == null) return false;
   if (!context.preparedSpells.has(spellId(spellName))) return false;
-  const spell = getSpellRecordStrict(SPELL_LIBRARY, spellName);
+  const spell = projectedPreparedSpellDefinition(spellName);
   const isCantrip = spell.level === 0;
   if (
     // These are runtime spellcasting gates owned by creature context rather than

@@ -14,24 +14,16 @@ import {
   type ProjectedExecutionRuntime,
   type ProjectedInterpreterActor,
 } from "#/projected-mechanic-interpreter.ts";
-import {
-  compileProjectedExecutable,
-} from "#/projected-compiler.ts";
 import { canUseProjectedPreparedSpell } from "#/projected-action-bridge.ts";
+import {
+  ACTION_SURGE_PROJECTED_ACTION,
+  projectedNonSpellActorFromCreatureContext,
+  SECOND_WIND_PROJECTED_ACTION,
+} from "#/projected-action-context.ts";
 import { isIncapacitated } from "#/machine-queries.ts";
 import { hp, resourceCount } from "#/types.ts";
-import { decodeClassFeatureRecordSync } from "@dnd/prototype-content-surface/surface/schema";
 import { Match } from "effect";
 import { byTag } from "#/battle-machine-helpers.ts";
-import actionSurgeSurface from "../../prototype-content-surface/content/fighter_action_surge_l2.json";
-import secondWindSurface from "../../prototype-content-surface/content/fighter_second_wind.json";
-
-const SECOND_WIND_PROJECTED_ACTION = compileProjectedExecutable(
-  decodeClassFeatureRecordSync(secondWindSurface),
-);
-const ACTION_SURGE_PROJECTED_ACTION = compileProjectedExecutable(
-  decodeClassFeatureRecordSync(actionSurgeSurface),
-);
 
 interface ReducerAcc {
   readonly context: DndContext;
@@ -178,19 +170,6 @@ function reduceProjectedTransitions(
   return acc.patch;
 }
 
-function actorForContext(context: DndContext): ProjectedInterpreterActor {
-  let characterLevel = 0;
-  for (const state of Object.values(context.classStates)) {
-    if (state) characterLevel += state.level;
-  }
-  return {
-    actorId: context.selfId ?? "self",
-    characterLevel,
-    fighterLevel: context.classStates.fighter?.level ?? 0,
-    spellSaveDc: 8,
-  };
-}
-
 function applyProjectedAction(
   action: ProjectedExecutableAction,
   actor: ProjectedInterpreterActor,
@@ -229,11 +208,13 @@ export function projectedActionLegalForContext(
     Match.when("PEASaveGateDamage", () =>
       canUseProjectedPreparedSpell(
         context,
-        action.source.unitId as Parameters<typeof canUseProjectedPreparedSpell>[1],
+        action.source.unitId as Parameters<
+          typeof canUseProjectedPreparedSpell
+        >[1],
       ),
     ),
     Match.when("PEADirectHealHp", () => {
-      const actor = actorForContext(context);
+      const actor = projectedNonSpellActorFromCreatureContext(context);
       const patch = reduceProjectedTransitions(
         context,
         interpretProjectedAction(
@@ -246,7 +227,7 @@ export function projectedActionLegalForContext(
       return patch != null;
     }),
     Match.when("PEADirectGrantExtraAction", () => {
-      const actor = actorForContext(context);
+      const actor = projectedNonSpellActorFromCreatureContext(context);
       const patch = reduceProjectedTransitions(
         context,
         interpretProjectedAction(
@@ -266,7 +247,7 @@ export function applyProjectedSecondWind(
   context: DndContext,
   d10Roll: number,
 ): Partial<DndContext> {
-  const actor = actorForContext(context);
+  const actor = projectedNonSpellActorFromCreatureContext(context);
   return applyProjectedAction(
     SECOND_WIND_PROJECTED_ACTION,
     actor,
@@ -285,7 +266,7 @@ export function applyProjectedSecondWind(
 export function applyProjectedActionSurge(
   context: DndContext,
 ): Partial<DndContext> {
-  const actor = actorForContext(context);
+  const actor = projectedNonSpellActorFromCreatureContext(context);
   return applyProjectedAction(
     ACTION_SURGE_PROJECTED_ACTION,
     actor,

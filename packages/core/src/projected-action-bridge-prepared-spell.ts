@@ -1,4 +1,4 @@
-import { Match } from "effect";
+import { Match, Schema } from "effect";
 
 import type { ProjectedExecutableAction } from "#/projected-executable.ts";
 import {
@@ -19,6 +19,176 @@ export type ProjectedPreparedSpellPromptAnswer = {
   readonly total: number;
   readonly rolledTotal?: number;
 };
+
+export type ProjectedPreparedSpellRuntimeInputs = {
+  readonly runtime: "projectedPreparedSpell";
+  readonly values: ProjectedPreparedSpellPromptAnswer;
+};
+
+const ProjectedPreparedSpellRuntimeOverrideSchema = Schema.Struct({
+  runtime: Schema.Literal("projectedPreparedSpell"),
+  values: Schema.Struct({
+    targetIds: Schema.Array(Schema.String),
+    saveOutcomes: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        outcome: Schema.Literal("fail", "success"),
+      }),
+    ),
+    amounts: Schema.Array(
+      Schema.Struct({
+        targetId: Schema.String,
+        total: Schema.Number.pipe(Schema.int()),
+        rolledTotal: Schema.optional(Schema.Number.pipe(Schema.int())),
+      }),
+    ),
+  }),
+});
+
+type ProjectedPreparedSpellRuntimeOverride = Schema.Schema.Type<
+  typeof ProjectedPreparedSpellRuntimeOverrideSchema
+>;
+
+export function formatProjectedPreparedSpellExpectedFields(): string {
+  return [
+    "targetIds: array<string>",
+    'saveOutcomes: array<{ targetId: string, outcome: "fail" | "success" }>',
+    "amounts: array<{ targetId: string, total: integer, rolledTotal?: integer }>",
+  ].join(", ");
+}
+
+function hasExactKeys(
+  value: unknown,
+  allowedKeys: ReadonlySet<string>,
+): boolean {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  return Object.keys(value).every((key) => allowedKeys.has(key));
+}
+
+function hasUniqueValues(values: ReadonlyArray<string>): boolean {
+  return new Set(values).size === values.length;
+}
+
+function sameOptionalNumber(a: number | undefined, b: number | undefined) {
+  return a === b;
+}
+
+function isProjectedTargetResult(
+  result: {
+    readonly targetId: string;
+    readonly saveOutcome: "failure" | "success";
+  } | null,
+): result is {
+  readonly targetId: string;
+  readonly saveOutcome: "failure" | "success";
+} {
+  return result !== null;
+}
+
+function decodeRuntimeOverrideAnswer(
+  decoded: ProjectedPreparedSpellRuntimeOverride,
+): ProjectedPreparedSpellPromptAnswer | null {
+  const { amounts, saveOutcomes, targetIds } = decoded.values;
+  if (
+    !hasUniqueValues(targetIds) ||
+    !hasUniqueValues(saveOutcomes.map((outcome) => outcome.targetId)) ||
+    !hasUniqueValues(amounts.map((amount) => amount.targetId))
+  ) {
+    return null;
+  }
+
+  const targetIdSet = new Set(targetIds);
+  if (saveOutcomes.some((outcome) => !targetIdSet.has(outcome.targetId))) {
+    return null;
+  }
+
+  const saveByTarget = new Map(
+    saveOutcomes.map((outcome) => [outcome.targetId, outcome.outcome]),
+  );
+  const targetResults = targetIds.map((targetId) => {
+    const outcome = saveByTarget.get(targetId);
+    return outcome == null
+      ? null
+      : {
+          targetId,
+          saveOutcome:
+            outcome === "fail" ? ("failure" as const) : ("success" as const),
+        };
+  });
+  if (!targetResults.every(isProjectedTargetResult)) {
+    return null;
+  }
+
+  const failedTargets = targetResults
+    .filter((result) => result?.saveOutcome === "failure")
+    .map((result) => result.targetId);
+  const failedTargetSet = new Set(failedTargets);
+  if (amounts.some((amount) => !failedTargetSet.has(amount.targetId))) {
+    return null;
+  }
+  if (failedTargets.length !== amounts.length) {
+    return null;
+  }
+
+  const firstAmount = amounts[0];
+  if (firstAmount === undefined) {
+    return {
+      tag: "chooseAreaEffect",
+      targetResults,
+      total: 0,
+    };
+  }
+  if (
+    amounts.some(
+      (amount) =>
+        amount.total !== firstAmount.total ||
+        !sameOptionalNumber(amount.rolledTotal, firstAmount.rolledTotal),
+    )
+  ) {
+    return null;
+  }
+
+  return {
+    tag: "chooseAreaEffect",
+    targetResults,
+    total: firstAmount.total,
+    ...(firstAmount.rolledTotal == null
+      ? {}
+      : { rolledTotal: firstAmount.rolledTotal }),
+  };
+}
+
+export function decodeProjectedPreparedSpellRuntimeInputs(
+  args: unknown,
+): ProjectedPreparedSpellRuntimeInputs | null {
+  if (typeof args !== "object" || args === null || Array.isArray(args)) {
+    return null;
+  }
+
+  const runtime = Reflect.get(args, "runtime");
+  const decoded = Schema.decodeUnknownEither(
+    ProjectedPreparedSpellRuntimeOverrideSchema,
+  )(runtime);
+  if (decoded._tag === "Left") {
+    return null;
+  }
+  if (
+    !hasExactKeys(runtime, new Set(["runtime", "values"])) ||
+    !hasExactKeys(
+      Reflect.get(runtime as object, "values"),
+      new Set(["targetIds", "saveOutcomes", "amounts"]),
+    )
+  ) {
+    return null;
+  }
+
+  const answer = decodeRuntimeOverrideAnswer(decoded.right);
+  return answer === null
+    ? null
+    : { runtime: "projectedPreparedSpell", values: answer };
+}
 
 export type ProjectedPreparedSpellPrompt = {
   readonly tag: "chooseAreaEffect";

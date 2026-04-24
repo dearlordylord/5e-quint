@@ -1,0 +1,216 @@
+import { Either, Match, Option } from "effect";
+import { currentActing } from "@dnd/shared/initiative-algebra";
+import { getOnlyOneStrict } from "@dnd/shared/types";
+import type { CreatureId } from "@dnd/shared/types";
+import type {
+  ActivationPhase,
+  UnitRecord,
+} from "@dnd/prototype-content-surface/surface/types";
+
+import {
+  type CoreAttackAct,
+  discoverCoreAttackAct,
+} from "#/reducer-core-attack.ts";
+import type { CreatureState, State } from "#/reducer-state.ts";
+import {
+  type CurrentSliceSupportedActivationUnit,
+  getCurrentSliceSupportedActivationUnit,
+} from "#/reducer-support.ts";
+import { holeStepKey } from "#/reducer-types.ts";
+import type {
+  AvailableAct,
+  ResolutionInvalid,
+  Subject,
+} from "#/reducer-types.ts";
+import { projectPhaseHoles } from "#/runtime-holes.ts";
+
+export const CURRENT_SLICE_ACTIVATION_STEP = holeStepKey("activation:0");
+
+type UnitSubject = Extract<Subject, { readonly tag: "unit" }>;
+type EndTurnSubject = Extract<Subject, { readonly tag: "coreAct" }> & {
+  readonly act: "endTurn";
+};
+
+type DiscoverableActionCantrip = CurrentSliceSupportedActivationUnit & {
+  readonly kind: "spell";
+  readonly mechanics: CurrentSliceSupportedActivationUnit["mechanics"] & {
+    readonly level: 0;
+    readonly castingTime: { readonly kind: "action" };
+  };
+};
+
+export type InterpretedCoreEndTurnAct = AvailableAct & {
+  readonly subject: EndTurnSubject;
+  readonly tag: "coreEndTurn";
+};
+
+export type InterpretedUnitAct = AvailableAct & {
+  readonly subject: UnitSubject;
+  readonly tag: "unit";
+  readonly unit: CurrentSliceSupportedActivationUnit;
+  readonly phase: ActivationPhase;
+};
+
+export type InterpretedAct =
+  | (CoreAttackAct & { readonly tag: "coreAttack" })
+  | InterpretedCoreEndTurnAct
+  | InterpretedUnitAct;
+
+function invalid(reason: string): ResolutionInvalid {
+  return { tag: "invalid", reason };
+}
+
+function requireUnitActor(
+  state: State,
+  actorId: CreatureId,
+): Either.Either<CreatureState, ResolutionInvalid> {
+  return Either.fromNullable(state.combatants.get(actorId), () =>
+    invalid("acting actor not found in combatants"),
+  );
+}
+
+function requireUnit(
+  actor: CreatureState,
+  subject: UnitSubject,
+): Either.Either<UnitRecord, ResolutionInvalid> {
+  return Either.fromNullable(
+    actor.units.find((candidate) => candidate.id === subject.unitId),
+    () => invalid(`unit not found: ${subject.unitId}`),
+  );
+}
+
+function requireSupportedUnit(
+  unit: UnitRecord,
+  subject: UnitSubject,
+): Either.Either<CurrentSliceSupportedActivationUnit, ResolutionInvalid> {
+  return Either.fromOption(getCurrentSliceSupportedActivationUnit(unit), () =>
+    invalid(`unsupported unit: ${subject.unitId}`),
+  );
+}
+
+function currentSliceActivationPhase(
+  unit: CurrentSliceSupportedActivationUnit,
+): ActivationPhase {
+  return getOnlyOneStrict(unit.mechanics.phases);
+}
+
+function interpretUnitAct(
+  state: State,
+  subject: UnitSubject,
+): Either.Either<InterpretedUnitAct, ResolutionInvalid> {
+  return Either.gen(function* () {
+    const actor = yield* requireUnitActor(state, subject.actorId);
+    const unit = yield* requireUnit(actor, subject);
+    const supportedUnit = yield* requireSupportedUnit(unit, subject);
+    const phase = currentSliceActivationPhase(supportedUnit);
+
+    return {
+      tag: "unit" as const,
+      subject,
+      unit: supportedUnit,
+      phase,
+      label: supportedUnit.name,
+      summary: supportedUnit.description,
+      initialHoles: projectPhaseHoles(phase, CURRENT_SLICE_ACTIVATION_STEP),
+    };
+  });
+}
+
+function actionCantripUnit(unit: UnitRecord): DiscoverableActionCantrip | null {
+  const supportedUnit = getCurrentSliceSupportedActivationUnit(unit);
+  if (Option.isNone(supportedUnit)) {
+    return null;
+  }
+  const unitValue = supportedUnit.value;
+
+  if (unitValue.kind !== "spell") {
+    return null;
+  }
+
+  if (
+    unitValue.mechanics.level !== 0 ||
+    unitValue.mechanics.castingTime.kind !== "action"
+  ) {
+    return null;
+  }
+
+  return unitValue as DiscoverableActionCantrip;
+}
+
+function discoverUnitActs(
+  state: State,
+  actorId: CreatureId,
+): ReadonlyArray<InterpretedUnitAct> {
+  const actor = state.combatants.get(actorId);
+  if (actor === undefined) {
+    return [];
+  }
+
+  return actor.units.flatMap((unit) => {
+    const cantripUnit = actionCantripUnit(unit);
+    if (cantripUnit === null) {
+      return [];
+    }
+
+    const subject = {
+      tag: "unit" as const,
+      actorId,
+      unitId: cantripUnit.id,
+    };
+    const interpreted = interpretUnitAct(state, subject);
+    return Either.isRight(interpreted) ? [interpreted.right] : [];
+  });
+}
+
+function endTurnAct(actorId: CreatureId): InterpretedCoreEndTurnAct {
+  return {
+    tag: "coreEndTurn",
+    subject: {
+      tag: "coreAct",
+      actorId,
+      act: "endTurn",
+    },
+    label: "End Turn",
+    summary: "End the current turn.",
+    initialHoles: [],
+  };
+}
+
+export function discoverInterpretedActs(
+  state: State,
+): ReadonlyArray<InterpretedAct> {
+  const actorId = currentActing(state.initiative);
+  const coreAttack = discoverCoreAttackAct(state, actorId);
+  return [
+    ...(coreAttack === null
+      ? []
+      : [{ ...coreAttack, tag: "coreAttack" as const }]),
+    endTurnAct(actorId),
+    ...discoverUnitActs(state, actorId),
+  ];
+}
+
+export function interpretSubject(
+  state: State,
+  subject: Subject,
+): Either.Either<InterpretedAct, ResolutionInvalid> {
+  if (subject.actorId !== currentActing(state.initiative)) {
+    return Either.left(invalid("actor is not currently acting"));
+  }
+
+  return Match.value(subject).pipe(
+    Match.when({ tag: "coreAct", act: "attack" }, () => {
+      const act = discoverCoreAttackAct(state, subject.actorId);
+      return act === null
+        ? Either.left(invalid("no action available for attack"))
+        : Either.right({ ...act, tag: "coreAttack" as const });
+    }),
+    Match.when({ tag: "coreAct", act: "endTurn" }, () =>
+      Either.right(endTurnAct(subject.actorId)),
+    ),
+    Match.when({ tag: "unit" }, (unitSubject) =>
+      interpretUnitAct(state, unitSubject),
+    ),
+    Match.exhaustive,
+  );
+}
