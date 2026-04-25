@@ -1,0 +1,208 @@
+{
+  "description": "A wall of water springs into existence at a point within range, up to 300 feet long, 300 feet high, and 50 feet thick. When the wall appears, creatures in it make a Strength saving throw, taking 6d10 Bludgeoning damage on a failed save or half as much on a success. At the start of each of your turns, the wall and creatures in it move 50 feet away from you. Huge or smaller creatures inside the wall or whose spaces it enters save or take 5d10 Bludgeoning damage, only once per round. At the end of the turn, the wall height is reduced by 1d10, and the spell ends at 0 feet. Creatures caught in the wall must succeed on a Strength (Athletics) check against your spell save DC to move at all, and a creature that moves out falls to the ground.",
+  "id": "tsunami",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "tsunami_wall",
+      "kind": "hole",
+      "label": "wall of water",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "wall_volume",
+          "maxHeightFeet": 300,
+          "maxLengthFeet": 300,
+          "thicknessFeet": 50
+        }
+      }
+    },
+    "castingTime": {
+      "amount": 1,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 6,
+        "unit": "round"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "str",
+      "attachment": {
+        "holeId": "tsunami_wall",
+        "kind": "hole",
+        "label": "wall of water",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "wall_volume",
+            "maxHeightFeet": 300,
+            "maxLengthFeet": 300,
+            "thicknessFeet": 50
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "amount": {
+          "expr": {
+            "dice": 6,
+            "dieSize": 10
+          },
+          "kind": "fixed"
+        },
+        "damageType": "bludgeoning",
+        "kind": "damage"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 8,
+    "operations": [
+      {
+        "effect": {
+          "direction": "away_from_caster",
+          "distanceFeet": 50,
+          "includeCreaturesInArea": true,
+          "kind": "move_area"
+        },
+        "trigger": {
+          "kind": "on_caster_turn_start"
+        }
+      },
+      {
+        "effect": {
+          "ability": "str",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 5,
+                "dieSize": 10
+              },
+              "kind": "fixed"
+            },
+            "damageType": "bludgeoning",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "kind": "on_caster_turn_start"
+        },
+        "usageLimit": {
+          "kind": "once_per_round"
+        }
+      },
+      {
+        "effect": {
+          "ability": "str",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 5,
+                "dieSize": 10
+              },
+              "kind": "fixed"
+            },
+            "damageType": "bludgeoning",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "kind": "on_area_moves_into_creature_space",
+          "maxCreatureSize": "huge"
+        },
+        "usageLimit": {
+          "kind": "once_per_round"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 1,
+              "dieSize": 10
+            },
+            "kind": "fixed"
+          },
+          "kind": "reduce_area_height"
+        },
+        "trigger": {
+          "kind": "on_caster_turn_end"
+        }
+      },
+      {
+        "effect": {
+          "kind": "end_current_effect_at_area_height_zero"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "str",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "ability_check_to_move_in_area",
+          "onFailure": "cannot_move",
+          "skill": "athletics"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "fall_to_ground"
+        },
+        "trigger": {
+          "kind": "on_creature_exits_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 5280,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Tsunami",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Tsunami"
+  }
+}

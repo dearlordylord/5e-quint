@@ -422,5 +422,5 @@ export const ProvenanceSchema = Schema.Struct({
 });
 
 export const UsageLimitSchema = Schema.Struct({
-  kind: Schema.Literal("once_per_turn"),
+  kind: Schema.Literal("once_per_turn", "once_per_round"),
 });

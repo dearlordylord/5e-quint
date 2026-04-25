@@ -92,6 +92,7 @@ import type {
   PassiveSuppressor,
   SpawnedCreatureStatBlock,
   SkillFilter,
+  UsageLimit,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -550,6 +551,58 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "fall_when_effect_ends",
         label: `fall_when_effect_ends\n${e.direction}${unless}`,
+      });
+      return id;
+    }
+    case "move_area": {
+      const id = ids("eff");
+      const carry =
+        e.includeCreaturesInArea === true ? "\nwith creatures in area" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "move_area",
+        label: `move_area\n${e.direction} ${e.distanceFeet} ft${carry}`,
+      });
+      return id;
+    }
+    case "reduce_area_height": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "reduce_area_height",
+        label: `reduce_area_height\n${describeDiceAmount(e.amount)}`,
+      });
+      return id;
+    }
+    case "end_current_effect_at_area_height_zero": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "end_current_effect_at_area_height_zero",
+        label: "end_current_effect_at_area_height_zero",
+      });
+      return id;
+    }
+    case "ability_check_to_move_in_area": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "ability_check_to_move_in_area",
+        label: `ability_check_to_move_in_area\n${e.ability.toUpperCase()} (${e.skill}) vs ${describeDc(e.dc)}\non failure: ${e.onFailure}`,
+      });
+      return id;
+    }
+    case "fall_to_ground": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "fall_to_ground",
+        label: "fall_to_ground",
       });
       return id;
     }
@@ -1414,6 +1467,10 @@ function traceEffectAtomScaling(
     case "grab_fixed_object":
     case "suspend_in_area":
     case "fall_when_effect_ends":
+    case "move_area":
+    case "end_current_effect_at_area_height_zero":
+    case "ability_check_to_move_in_area":
+    case "fall_to_ground":
     case "block_targeting":
     case "block_travel":
     case "block_projectiles":
@@ -1479,6 +1536,9 @@ function traceEffectAtomScaling(
     case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
       return;
+    case "reduce_area_height":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
     case "damage_structure":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
@@ -1490,6 +1550,41 @@ function traceEffectAtomScaling(
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceUsageLimit(
+  limit: UsageLimit | undefined,
+  hostId: string,
+  relation: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string | null {
+  if (limit === undefined) {
+    return null;
+  }
+  const fenceId = ids("fence");
+  nodes.push({
+    id: fenceId,
+    category: "resource",
+    atomKind: "use_count",
+    label: `use_count\n${describeUsageLimit(limit)}`,
+  });
+  edges.push({ from: hostId, to: fenceId, relation });
+  return fenceId;
+}
+
+function describeUsageLimit(limit: UsageLimit): string {
+  switch (limit.kind) {
+    case "once_per_turn":
+      return "once per turn";
+    case "once_per_round":
+      return "once per round";
+    default: {
+      const _: never = limit.kind;
+      throw new Error(`unhandled usage limit: ${String(_)}`);
     }
   }
 }
@@ -1959,6 +2054,7 @@ function traceOngoingOperation(
   // window atom emitted for the trigger.
   const hostId = triggerCtx.hostId;
   const hostRelation = triggerCtx.hostRelation;
+  traceUsageLimit(op.usageLimit, hostId, "limits", nodes, edges, ids);
   traceOngoingOpEffect(
     op.effect,
     hostId,
@@ -2084,6 +2180,32 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(creature enters area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_area_moves_into_creature_space": {
+      const winId = ids("win");
+      const size =
+        trigger.maxCreatureSize === undefined
+          ? ""
+          : `\nmax size: ${trigger.maxCreatureSize}`;
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(area moves into creature space)${size}`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_exits_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: "post_action_window\n(creature exits area)",
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -3595,6 +3717,8 @@ function describeAreaShape(s: AreaShapeSpec): string {
       return `emanation r=${s.radiusFeet} ft`;
     case "line":
       return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
+    case "wall_volume":
+      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
     case "choice":
       return `choice of:\n  ${s.options
         .map(describeAreaShapeFixed)
@@ -3628,6 +3752,8 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `emanation r=${s.radiusFeet} ft`;
     case "line":
       return `line ${s.lengthFeet} ft × ${s.widthFeet} ft`;
+    case "wall_volume":
+      return `wall ${s.maxLengthFeet} ft × ${s.maxHeightFeet} ft × ${s.thicknessFeet} ft`;
     default: {
       const _: never = s;
       throw new Error(`unhandled area shape: ${String(_)}`);
@@ -4441,17 +4567,7 @@ function traceActivatedAbility(
   edges.push({ from: procId, to: resId, relation: "consumes" });
   traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
 
-  // Per-turn usage cap (Action Surge L17: once per turn).
-  if (m.usageLimit?.kind === "once_per_turn") {
-    const fenceId = ids("fence");
-    nodes.push({
-      id: fenceId,
-      category: "resource",
-      atomKind: "use_count",
-      label: "use_count\nonce per turn",
-    });
-    edges.push({ from: procId, to: fenceId, relation: "consumes" });
-  }
+  traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
   // Phases — iterate in sequence, threading branches_on_completion
   // edges like spell activations.
@@ -4502,16 +4618,7 @@ function traceTriggeredReactionAbility(
   edges.push({ from: procId, to: resId, relation: "consumes" });
   traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
 
-  if (m.usageLimit?.kind === "once_per_turn") {
-    const fenceId = ids("fence");
-    nodes.push({
-      id: fenceId,
-      category: "resource",
-      atomKind: "use_count",
-      label: "use_count\nonce per turn",
-    });
-    edges.push({ from: procId, to: fenceId, relation: "consumes" });
-  }
+  traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
   if (m.duration !== undefined) {
     traceDuration(m.duration, procId, nodes, edges, ids);
@@ -4602,16 +4709,7 @@ function traceMagicItemSpawnedCreature(
   edges.push({ from: procId, to: resId, relation: "consumes" });
   traceResetCadence(m.resetCadence, resId, nodes, edges, ids);
 
-  if (m.usageLimit?.kind === "once_per_turn") {
-    const fenceId = ids("fence");
-    nodes.push({
-      id: fenceId,
-      category: "resource",
-      atomKind: "use_count",
-      label: "use_count\nonce per turn",
-    });
-    edges.push({ from: procId, to: fenceId, relation: "consumes" });
-  }
+  traceUsageLimit(m.usageLimit, procId, "consumes", nodes, edges, ids);
 
   if (m.duration !== undefined) {
     traceDuration(m.duration, procId, nodes, edges, ids);
@@ -5075,15 +5173,15 @@ function traceMasteryMechanics(
 
   traceMasteryEffect(m.effect, winId, targetId, nodes, edges, ids);
 
-  if (m.usageLimit?.kind === "once_per_turn") {
-    const fenceId = ids("fence");
-    nodes.push({
-      id: fenceId,
-      category: "resource",
-      atomKind: "use_count",
-      label: "use_count\nonce per turn",
-    });
-    edges.push({ from: winId, to: fenceId, relation: "consumes" });
+  const fenceId = traceUsageLimit(
+    m.usageLimit,
+    winId,
+    "consumes",
+    nodes,
+    edges,
+    ids,
+  );
+  if (fenceId !== null) {
     const turnId = ids("turn");
     nodes.push({
       id: turnId,

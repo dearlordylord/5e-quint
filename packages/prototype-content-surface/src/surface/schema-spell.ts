@@ -442,6 +442,25 @@ type EffectAtom =
       readonly direction: "downward";
       readonly unlessCanStopFall?: true;
     }
+  | {
+      readonly kind: "move_area";
+      readonly distanceFeet: number;
+      readonly direction: "away_from_caster";
+      readonly includeCreaturesInArea?: true;
+    }
+  | {
+      readonly kind: "reduce_area_height";
+      readonly amount: DiceAmount;
+    }
+  | { readonly kind: "end_current_effect_at_area_height_zero" }
+  | {
+      readonly kind: "ability_check_to_move_in_area";
+      readonly ability: "str";
+      readonly skill: "athletics";
+      readonly dc: DcSource;
+      readonly onFailure: "cannot_move";
+    }
+  | { readonly kind: "fall_to_ground" }
   | { readonly kind: "block_targeting"; readonly scope: string }
   | { readonly kind: "block_travel"; readonly scope: string }
   | {
@@ -1003,6 +1022,12 @@ export const AreaShapeDescriptorSchema = Schema.Union(
     lengthFeet: Schema.Number,
     widthFeet: Schema.Number,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("wall_volume"),
+    maxLengthFeet: Schema.Number,
+    maxHeightFeet: Schema.Number,
+    thicknessFeet: Schema.Number,
+  }),
 );
 
 export const AreaShapeSpecSchema = Schema.Union(
@@ -1150,6 +1175,11 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_area_moves_into_creature_space"),
+    maxCreatureSize: optionalExact(SizeSchema),
+  }),
+  Schema.Struct({ kind: Schema.Literal("on_creature_exits_area") }),
   Schema.Struct({
     kind: Schema.Literal("on_structure_collapses"),
     affectedWithin: Schema.Literal("half_structure_height"),
@@ -1465,6 +1495,27 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         direction: Schema.Literal("downward"),
         unlessCanStopFall: optionalExact(Schema.Literal(true)),
       }),
+      Schema.Struct({
+        kind: Schema.Literal("move_area"),
+        distanceFeet: Schema.Number,
+        direction: Schema.Literal("away_from_caster"),
+        includeCreaturesInArea: optionalExact(Schema.Literal(true)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("reduce_area_height"),
+        amount: DiceAmountSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("end_current_effect_at_area_height_zero"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("ability_check_to_move_in_area"),
+        ability: Schema.Literal("str"),
+        skill: Schema.Literal("athletics"),
+        dc: DcSourceSchema,
+        onFailure: Schema.Literal("cannot_move"),
+      }),
+      Schema.Struct({ kind: Schema.Literal("fall_to_ground") }),
       Schema.Struct({
         kind: Schema.Literal("block_targeting"),
         scope: Schema.String,
