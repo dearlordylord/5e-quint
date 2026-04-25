@@ -626,6 +626,46 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "object_immune_to_all_damage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "object_immune_to_all_damage",
+        label: "object_immune_to_all_damage",
+      });
+      return id;
+    }
+    case "object_destroyed_by_spell": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "object_destroyed_by_spell",
+        label: `object_destroyed_by_spell\n${e.spellId}`,
+      });
+      return id;
+    }
+    case "cannot_be_dispelled_by_spell": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "cannot_be_dispelled_by_spell",
+        label: `cannot_be_dispelled_by_spell\n${e.spellId}`,
+      });
+      return id;
+    }
+    case "block_ethereal_travel": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_ethereal_travel",
+        label: "block_ethereal_travel",
+      });
+      return id;
+    }
     case "block_projectiles": {
       const id = ids("eff");
       const exception =
@@ -1473,6 +1513,10 @@ function traceEffectAtomScaling(
     case "fall_to_ground":
     case "block_targeting":
     case "block_travel":
+    case "object_immune_to_all_damage":
+    case "object_destroyed_by_spell":
+    case "cannot_be_dispelled_by_spell":
+    case "block_ethereal_travel":
     case "block_projectiles":
     case "block_gases_and_gaseous_creatures":
     case "block_flying_movement":

@@ -1,0 +1,165 @@
+{
+  "description": "An Invisible wall of force springs into existence at a point within range. It can be a hemispherical dome or globe with a radius of up to 10 feet, or a flat surface made of ten contiguous 10-foot-by-10-foot panels. If the wall cuts through a creature's space when it appears, the creature is pushed to one side. Nothing can physically pass through it. It is immune to all damage and can't be dispelled by Dispel Magic. Disintegrate destroys it without harming anything inside. The wall extends into the Ethereal Plane and blocks ethereal travel through it.",
+  "id": "wall_of_force",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "wall_of_force_area",
+      "kind": "hole",
+      "label": "force wall",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "wall_volume",
+              "maxHeightFeet": 10,
+              "maxLengthFeet": 100,
+              "thicknessFeet": 2.08333e-2
+            },
+            {
+              "kind": "sphere",
+              "radiusFeet": 10
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a shard of glass",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "wall_of_force_area",
+        "kind": "hole",
+        "label": "force wall",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "wall_volume",
+                "maxHeightFeet": 10,
+                "maxLengthFeet": 100,
+                "thicknessFeet": 2.08333e-2
+              },
+              {
+                "kind": "sphere",
+                "radiusFeet": 10
+              }
+            ]
+          }
+        }
+      },
+      "effects": [
+        {
+          "effects": [
+            {
+              "kind": "create_object",
+              "maxSize": "gargantuan",
+              "shape": {
+                "kind": "choice",
+                "options": [
+                  {
+                    "kind": "wall_volume",
+                    "maxHeightFeet": 10,
+                    "maxLengthFeet": 100,
+                    "thicknessFeet": 2.08333e-2
+                  },
+                  {
+                    "kind": "sphere",
+                    "radiusFeet": 10
+                  }
+                ]
+              }
+            },
+            {
+              "direction": "push",
+              "distanceFeet": 5,
+              "kind": "force_move"
+            }
+          ],
+          "kind": "composite"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 5,
+    "operations": [
+      {
+        "effect": {
+          "kind": "block_travel",
+          "scope": "physical_passage"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "object_immune_to_all_damage"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "cannot_be_dispelled_by_spell",
+          "spellId": "dispel_magic"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "object_destroyed_by_spell",
+          "spellId": "disintegrate"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_ethereal_travel"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Wall of Force",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Wall of Force"
+  }
+}

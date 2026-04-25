@@ -463,6 +463,10 @@ type EffectAtom =
   | { readonly kind: "fall_to_ground" }
   | { readonly kind: "block_targeting"; readonly scope: string }
   | { readonly kind: "block_travel"; readonly scope: string }
+  | { readonly kind: "object_immune_to_all_damage" }
+  | { readonly kind: "object_destroyed_by_spell"; readonly spellId: string }
+  | { readonly kind: "cannot_be_dispelled_by_spell"; readonly spellId: string }
+  | { readonly kind: "block_ethereal_travel" }
   | {
       readonly kind: "block_projectiles";
       readonly projectile: "ordinary";
@@ -1524,6 +1528,16 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("block_travel"),
         scope: Schema.String,
       }),
+      Schema.Struct({ kind: Schema.Literal("object_immune_to_all_damage") }),
+      Schema.Struct({
+        kind: Schema.Literal("object_destroyed_by_spell"),
+        spellId: Schema.String,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("cannot_be_dispelled_by_spell"),
+        spellId: Schema.String,
+      }),
+      Schema.Struct({ kind: Schema.Literal("block_ethereal_travel") }),
       Schema.Struct({
         kind: Schema.Literal("block_projectiles"),
         projectile: Schema.Literal("ordinary"),
