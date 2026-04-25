@@ -767,7 +767,7 @@ export const ReactionTriggerSchema: Schema.suspend<
 
 export const BonusActionTriggerSchema = Schema.Struct({
   kind: Schema.Literal("after_hit_with"),
-  attack: Schema.Literal("melee_weapon_or_unarmed_strike"),
+  attack: Schema.Literal("melee_weapon_or_unarmed_strike", "weapon"),
 });
 
 export const CastingTimeSchema = Schema.Union(

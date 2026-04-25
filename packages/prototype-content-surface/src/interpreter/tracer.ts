@@ -1434,9 +1434,11 @@ function describeBonusActionTrigger(
   if (t === undefined) return "";
   switch (t.kind) {
     case "after_hit_with":
-      return t.attack === "melee_weapon_or_unarmed_strike"
-        ? "after hit with Melee weapon or Unarmed Strike"
-        : t.attack;
+      if (t.attack === "melee_weapon_or_unarmed_strike") {
+        return "after hit with Melee weapon or Unarmed Strike";
+      }
+      if (t.attack === "weapon") return "after hit with weapon";
+      return t.attack;
   }
 }
 

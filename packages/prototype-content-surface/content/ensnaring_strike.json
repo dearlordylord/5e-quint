@@ -1,0 +1,97 @@
+{
+  "description": "Immediately after hitting a creature with a weapon, you take a Bonus Action. As you hit the target, grasping vines appear on it, and it makes a Strength saving throw. On a failed save, the target has the Restrained condition until the spell ends. On a successful save, the vines shrivel away, and the spell ends. While Restrained, the target takes 1d6 Piercing damage at the start of each of its turns. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 1.",
+  "id": "ensnaring_strike",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "ensnaring_strike_hit_target",
+      "kind": "hole",
+      "label": "hit creature",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action",
+      "trigger": {
+        "attack": "weapon",
+        "kind": "after_hit_with"
+      }
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "str",
+      "attachment": {
+        "holeId": "ensnaring_strike_hit_target",
+        "kind": "hole",
+        "label": "hit creature",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "condition": "restrained",
+        "kind": "apply_condition"
+      },
+      "onSuccess": {
+        "kind": "end_current_effect"
+      }
+    },
+    "level": 1,
+    "operations": [
+      {
+        "effect": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "startingAtLevel": 1
+          },
+          "damageType": "piercing",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_attached_turn_start"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "conjuration"
+  },
+  "name": "Ensnaring Strike",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Ensnaring Strike"
+  }
+}
