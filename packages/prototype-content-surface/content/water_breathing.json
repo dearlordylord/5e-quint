@@ -1,0 +1,57 @@
+{
+  "description": "This spell grants up to ten willing creatures of your choice within range the ability to breathe underwater until the spell ends. Affected creatures also retain their normal mode of respiration.",
+  "id": "water_breathing",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action",
+      "ritual": true
+    },
+    "components": {
+      "m": "a short reed",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "water_breathing_targets",
+          "kind": "hole",
+          "label": "targets",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 10,
+              "mode": "choose_up_to"
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "water_breathing"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Water Breathing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Water Breathing"
+  }
+}

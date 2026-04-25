@@ -1,0 +1,51 @@
+{
+  "description": "You can breathe underwater for 24 hours after drinking this potion.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_water_breathing",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 24,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "kind": "water_breathing"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Water Breathing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#PotionOfWaterBreathing"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

@@ -219,10 +219,13 @@ export const PassiveOperationSchema = Schema.Struct({
 const ActivatedAbilityHeaderSchema = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
   activationCost: ClassFeatureActivationCostSchema,
+  range: exactOptional(RangeSchema),
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
   duration: exactOptional(DurationSchema),
-  usageLimit: exactOptional(Schema.Struct({ kind: Schema.Literal("once_per_turn") })),
+  usageLimit: exactOptional(
+    Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
+  ),
 });
 
 export const ActivatedAbilityMechanicsSchema = Schema.Struct({
@@ -236,7 +239,9 @@ export const TriggeredReactionAbilityMechanicsSchema = Schema.Struct({
   resource: ActivationResourceSchema,
   resetCadence: ResetCadenceSchema,
   duration: exactOptional(DurationSchema),
-  usageLimit: exactOptional(Schema.Struct({ kind: Schema.Literal("once_per_turn") })),
+  usageLimit: exactOptional(
+    Schema.Struct({ kind: Schema.Literal("once_per_turn") }),
+  ),
   family: Schema.Literal("triggered_reaction"),
   activationCost: Schema.Struct({
     kind: Schema.Literal("reaction"),
@@ -261,7 +266,8 @@ export const MagicItemSpawnedCreatureMechanicsSchema = Schema.Struct({
   range: RangeSchema,
 });
 
-export const ClassFeatureActivationMechanicsSchema = ActivatedAbilityMechanicsSchema;
+export const ClassFeatureActivationMechanicsSchema =
+  ActivatedAbilityMechanicsSchema;
 
 export const ClassFeatureComponentMechanicsSchema = Schema.Union(
   Schema.suspend(() => PassiveMechanicsSchema),

@@ -90,6 +90,7 @@ import type {
   MagicItemSpawnedCreatureMechanics,
   PassiveSuppressor,
   SpawnedCreatureStatBlock,
+  SkillFilter,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -315,12 +316,36 @@ function traceEffectAtom(
         e.conditionFilter !== undefined && e.conditionFilter.length > 0
           ? `\ncondition: ${e.conditionFilter.join("/")}`
           : "";
+      const contextRange =
+        e.contextRangeFeet !== undefined
+          ? `\ncontext: within ${e.contextRangeFeet} ft`
+          : "";
       const saveSource = describeSavingThrowSourceFilter(e.saveSourceFilter);
       nodes.push({
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${saveSource}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${saveSource}${contextRange}`,
+      });
+      return id;
+    }
+    case "suppress_roll_disadvantage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_roll_disadvantage",
+        label: `suppress_roll_disadvantage\non ${e.on.join(", ")}${describeSkillFilter(e.skillFilter)}`,
+      });
+      return id;
+    }
+    case "remove_equipment_requirement": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "remove_equipment_requirement",
+        label: `remove_equipment_requirement\n${e.requirement}`,
       });
       return id;
     }
@@ -340,7 +365,8 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "suppress_incoming_critical_hit",
-        label: "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
+        label:
+          "suppress_incoming_critical_hit\ncritical hits against bearer become normal hits",
       });
       return id;
     }
@@ -411,6 +437,50 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "grant_sense",
         label: `grant_sense\n${e.sense} ${e.rangeFeet} ft`,
+      });
+      return id;
+    }
+    case "modify_sense_range": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_sense_range",
+        label:
+          `modify_sense_range\n${e.sense}: grant ${e.grantIfAbsentFeet} ft if absent` +
+          `\nelse +${e.increaseIfPresentFeet} ft`,
+      });
+      return id;
+    }
+    case "grant_language_understanding": {
+      const id = ids("eff");
+      const outward = e.intelligibleToAnyLanguageKnower
+        ? "\nunderstood by any language-knower"
+        : "";
+      const writtenTouch =
+        e.writtenRequiresTouch === true ? "\nwritten: touch required" : "";
+      const excludesCodes =
+        e.excludesCodesAndSecretMessages === true
+          ? "\nexcludes codes/secret messages"
+          : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_language_understanding",
+        label: `grant_language_understanding\n${e.scope}${outward}${writtenTouch}${excludesCodes}`,
+      });
+      return id;
+    }
+    case "grant_creature_communication": {
+      const id = ids("eff");
+      const influence = e.includesInfluenceActionOptions
+        ? "\nincludes Influence action options"
+        : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_creature_communication",
+        label: `grant_creature_communication\n${e.creatureType}${influence}`,
       });
       return id;
     }
@@ -562,6 +632,32 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "container_storage",
         label: describeContainerStorage(e.storage),
+      });
+      return id;
+    }
+    case "create_sensor": {
+      const id = ids("eff");
+      const senses =
+        e.sensorSenses === undefined
+          ? ""
+          : `\nsenses: ${e.sensorSenses.map((s) => `${s.kind} ${s.rangeFeet} ft`).join(", ")}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "create_sensor",
+        label: `create_sensor\n${e.visibility}, ${e.durability}${senses}`,
+      });
+      return id;
+    }
+    case "remote_perception": {
+      const id = ids("eff");
+      const switchTag =
+        e.switchCost === "bonus_action" ? "\nswitch: Bonus Action" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "remote_perception",
+        label: `remote_perception\n${e.senses.join(" or ")}${switchTag}`,
       });
       return id;
     }
@@ -883,6 +979,8 @@ function traceEffectAtomScaling(
     case "modify_roll_numeric":
     case "modify_damage_numeric":
     case "modify_roll_advantage":
+    case "suppress_roll_disadvantage":
+    case "remove_equipment_requirement":
     case "modify_crit_range":
     case "suppress_incoming_critical_hit":
     case "scale_attack_count":
@@ -892,6 +990,9 @@ function traceEffectAtomScaling(
     case "block_travel":
     case "negate_named_effect":
     case "grant_sense":
+    case "modify_sense_range":
+    case "grant_language_understanding":
+    case "grant_creature_communication":
     case "deny_opportunity_attack":
     case "grant_feat":
     case "grant_proficiency":
@@ -906,6 +1007,8 @@ function traceEffectAtomScaling(
     case "teleport":
     case "transport_exile":
     case "container_storage":
+    case "create_sensor":
+    case "remote_perception":
     case "grant_speed":
     case "ignore_web_restrictions":
     case "alter_item_kind":
@@ -1145,8 +1248,7 @@ function describeReactionTrigger(t: ReactionTrigger): string {
         t.spellLevelAtMost === undefined
           ? ""
           : `, level <= ${t.spellLevelAtMost}`;
-      const schoolTag =
-        t.spellSchool === undefined ? "" : `, ${t.spellSchool}`;
+      const schoolTag = t.spellSchool === undefined ? "" : `, ${t.spellSchool}`;
       const selfTag = t.spellTargetsOnlySelf === true ? ", self only" : "";
       const areaTag =
         t.spellHasNoAreaOfEffect === true ? ", no area of effect" : "";
@@ -2260,14 +2362,7 @@ function tracePhase(
         ids,
       );
       if (phase.continue !== undefined) {
-        tracePhaseContinuation(
-          phase.continue,
-          resId,
-          ctx,
-          nodes,
-          edges,
-          ids,
-        );
+        tracePhaseContinuation(phase.continue, resId, ctx, nodes, edges, ids);
       }
       return resId;
     }
@@ -2742,6 +2837,15 @@ function traceAttachment(
       });
       return id;
     }
+    case "location": {
+      nodes.push({
+        id,
+        category: "attachment",
+        atomKind: "location",
+        label: `location\n${a.description}\nrange ${describeAttachmentRange(range, a.rangeOrigin)}`,
+      });
+      return id;
+    }
     case "hole": {
       nodes.push({
         id,
@@ -2758,7 +2862,10 @@ function traceAttachment(
   }
 }
 
-function describeAttachmentHole(a: Extract<Attachment, { readonly kind: "hole" }>, range: Range): string {
+function describeAttachmentHole(
+  a: Extract<Attachment, { readonly kind: "hole" }>,
+  range: Range,
+): string {
   const labelPrefix = a.label !== undefined ? `hole\n${a.label}` : "hole";
   switch (a.value.kind) {
     case "self":
@@ -2766,7 +2873,11 @@ function describeAttachmentHole(a: Extract<Attachment, { readonly kind: "hole" }
     case "target":
       return `${labelPrefix}\ntarget\n${describeTargetSelection(a.value.selection)}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     case "area": {
-      const originLabel = describeAreaOrigin(a.value.origin, range, a.value.rangeOrigin);
+      const originLabel = describeAreaOrigin(
+        a.value.origin,
+        range,
+        a.value.rangeOrigin,
+      );
       const occupantLabel = describeAreaOccupantDispositionFilter(
         a.value.occupantDispositionFilter,
       );
@@ -2783,6 +2894,8 @@ function describeAttachmentHole(a: Extract<Attachment, { readonly kind: "hole" }
       const filterLabel = describeObjectFilter(a.value.filter);
       return `${labelPrefix}\n${countLabel}${filterLabel}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     }
+    case "location":
+      return `${labelPrefix}\nlocation\n${a.value.description}\nrange ${describeAttachmentRange(range, a.value.rangeOrigin)}`;
     default: {
       const _: never = a.value;
       throw new Error(`unhandled attachment hole value: ${String(_)}`);
@@ -2834,7 +2947,8 @@ function describeDamageTypeRef(d: DamageTypeRef): string {
     return `${describeDamageTypeRef(d.value)}${d.label !== undefined ? ` [hole: ${d.label}]` : " [hole]"}`;
   }
   if (d.kind === "same_choice_as") return `same choice as ${d.holeId}`;
-  if (d.kind === "choice") return `${d.label} (choose: ${d.options.join(" | ")})`;
+  if (d.kind === "choice")
+    return `${d.label} (choose: ${d.options.join(" | ")})`;
   const _: never = d;
   throw new Error(`unhandled damage type ref: ${String(_)}`);
 }
@@ -2889,7 +3003,9 @@ function describeAreaOccupantDispositionFilter(
       return "\naffects: hostile creatures";
     default: {
       const _: never = filter;
-      throw new Error(`unhandled area occupant disposition filter: ${String(_)}`);
+      throw new Error(
+        `unhandled area occupant disposition filter: ${String(_)}`,
+      );
     }
   }
 }
@@ -3301,7 +3417,10 @@ function traceMagicItemUnit(item: MagicItemRecord): Trace {
 
 function traceMagicItemVariant(
   parentRootId: string,
-  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  item: Extract<
+    MagicItemRecord,
+    { readonly variants: ReadonlyArray<MagicItemVariant> }
+  >,
   variant: MagicItemVariant,
   nodes: TraceNode[],
   edges: TraceEdge[],
@@ -3365,24 +3484,28 @@ function describeMagicItemAttunement(item: MagicItemRecord): string {
 }
 
 function describeMagicItemCollectionAttunement(
-  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  item: Extract<
+    MagicItemRecord,
+    { readonly variants: ReadonlyArray<MagicItemVariant> }
+  >,
 ): string {
   return describeMagicItemPayloadAttunement(item.defaultAttunement);
 }
 
-function describeMagicItemPayloadAttunement(
-  item: {
-    readonly requiresAttunement: boolean;
-    readonly attunementRestriction?: MagicItemAttunementRestriction;
-  },
-): string {
+function describeMagicItemPayloadAttunement(item: {
+  readonly requiresAttunement: boolean;
+  readonly attunementRestriction?: MagicItemAttunementRestriction;
+}): string {
   if (!item.requiresAttunement) return "";
   if (item.attunementRestriction === undefined) return " [attunement]";
   return ` [attunement: ${describeMagicItemAttunementRestriction(item.attunementRestriction)}]`;
 }
 
 function resolveMagicItemVariantAttunement(
-  item: Extract<MagicItemRecord, { readonly variants: ReadonlyArray<MagicItemVariant> }>,
+  item: Extract<
+    MagicItemRecord,
+    { readonly variants: ReadonlyArray<MagicItemVariant> }
+  >,
   variant: MagicItemVariant,
 ): MagicItemAttunement {
   return variant.attunementOverride ?? item.defaultAttunement;
@@ -3403,7 +3526,10 @@ function describeMagicItemAttunementRestriction(
   }
 }
 
-function describeRandomTableRoll(roll: { die: number; modifier?: number }): string {
+function describeRandomTableRoll(roll: {
+  die: number;
+  modifier?: number;
+}): string {
   const modifier =
     roll.modifier === undefined || roll.modifier === 0
       ? ""
@@ -3588,7 +3714,10 @@ function describePassiveOperationWindow(operation: PassiveOperation): string {
 }
 
 function describeContainerStorage(
-  storage: Extract<EffectAtom, { readonly kind: "container_storage" }>["storage"],
+  storage: Extract<
+    EffectAtom,
+    { readonly kind: "container_storage" }
+  >["storage"],
 ): string {
   const lines = [
     "container_storage",
@@ -3747,7 +3876,11 @@ function traceActivatedAbility(
 
   // Phases — iterate in sequence, threading branches_on_completion
   // edges like spell activations.
-  const ctx: SpellCtx = { procId, slotId: null, range: { kind: "self" } };
+  const ctx: SpellCtx = {
+    procId,
+    slotId: null,
+    range: m.range ?? { kind: "self" },
+  };
   let previousResolutionId: string | null = null;
   m.phases.forEach((phase, idx) => {
     const thisResolutionId = tracePhase(phase, idx + 1, ctx, nodes, edges, ids);
@@ -4116,7 +4249,9 @@ function describeUseCountCap(cap: UseCountResource["cap"]): string {
 function describeProficiencyGrant(grant: ProficiencyGrant): string {
   switch (grant.kind) {
     case "fixed":
-      return grant.proficiencies.map(describeProficiencyGrantSubject).join(", ");
+      return grant.proficiencies
+        .map(describeProficiencyGrantSubject)
+        .join(", ");
     case "choice":
       return `choose ${grant.count}: ${grant.options
         .map(describeProficiencyGrantSubject)
@@ -4654,9 +4789,7 @@ function describeConditionChoice(
 }
 
 function describeConditionList(conditions: ReadonlyArray<string>): string {
-  return conditions.length === 1
-    ? conditions[0]
-    : `[${conditions.join(", ")}]`;
+  return conditions.length === 1 ? conditions[0] : `[${conditions.join(", ")}]`;
 }
 
 function describeOngoingPredicate(p: {
@@ -4755,7 +4888,9 @@ function describeGrantedSpellDurationOverride(
 function describeGrantedSpellDcOverride(
   dcOverride: DcSource | undefined,
 ): string {
-  return dcOverride === undefined ? "" : `\nDC override: ${describeDc(dcOverride)}`;
+  return dcOverride === undefined
+    ? ""
+    : `\nDC override: ${describeDc(dcOverride)}`;
 }
 
 function describeGrantedSpellAreaOverride(
@@ -4782,12 +4917,25 @@ function describeWeaponFilter(f: WeaponFilter | undefined): string {
   }
 }
 
+function describeSkillFilter(f: SkillFilter | undefined): string {
+  if (!f) return "";
+  switch (f.kind) {
+    case "fixed":
+      return ` [${f.skills.join(", ")} only]`;
+    case "choice":
+      return ` [choice: ${f.options.join(", ")}]`;
+    default: {
+      const _exhaustive: never = f;
+      return _exhaustive;
+    }
+  }
+}
+
 function describeResistanceSourceFilter(
   f: ResistanceSourceFilter | undefined,
 ): string {
   if (!f) return "";
-  const magicality =
-    f.magicality === undefined ? "" : `, ${f.magicality} only`;
+  const magicality = f.magicality === undefined ? "" : `, ${f.magicality} only`;
   const weapon = describeWeaponFilter(f.weaponFilter);
   return `\nfrom: attacks${weapon}${magicality}`;
 }
@@ -4890,7 +5038,8 @@ function describeExpr(e: DiceExpr): string {
       : e.abilityModifier !== undefined
         ? `${e.abilityModifier.toUpperCase()} mod`
         : "";
-  const mod = modLabel === "" ? "" : hasDice || flat ? `+${modLabel}` : modLabel;
+  const mod =
+    modLabel === "" ? "" : hasDice || flat ? `+${modLabel}` : modLabel;
   const diceStr = hasDice ? `${e.dice}d${e.dieSize}` : "";
   return `${diceStr}${flat}${mod}` || "0";
 }

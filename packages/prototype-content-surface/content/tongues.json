@@ -1,0 +1,56 @@
+{
+  "description": "This spell grants the creature you touch the ability to understand any spoken or signed language that it hears or sees. Moreover, when the target communicates by speaking or signing, any creature that knows at least one language can understand it if that creature can hear the speech or see the signing.",
+  "id": "tongues",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a miniature ziggurat",
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "tongues_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "effects": [
+          {
+            "intelligibleToAnyLanguageKnower": true,
+            "kind": "grant_language_understanding",
+            "scope": "spoken_or_signed"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "divination"
+  },
+  "name": "Tongues",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Tongues"
+  }
+}

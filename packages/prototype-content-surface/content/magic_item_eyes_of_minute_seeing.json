@@ -1,0 +1,42 @@
+{
+  "description": "These crystal lenses fit over the eyes. While wearing them, your vision improves significantly out to a range of 1 foot, granting you Darkvision within that range and Advantage on Intelligence (Investigation) checks made to examine something within that range.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_eyes_of_minute_seeing",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "kind": "grant_sense",
+        "rangeFeet": 1,
+        "sense": "darkvision"
+      },
+      {
+        "contextRangeFeet": 1,
+        "kind": "modify_roll_advantage",
+        "mode": "advantage",
+        "on": [
+          "ability_check"
+        ],
+        "skillFilter": {
+          "kind": "fixed",
+          "skills": [
+            "investigation"
+          ]
+        }
+      }
+    ]
+  },
+  "name": "Eyes of Minute Seeing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#EyesOfMinuteSeeing"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}

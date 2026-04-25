@@ -1,0 +1,68 @@
+{
+  "description": "When you drink this potion, you gain a Climb Speed equal to your Speed for 1 hour. During this time, you have Advantage on Strength (Athletics) checks to climb.",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_climbing",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "kind": "self"
+        },
+        "effects": [
+          {
+            "feet": {
+              "kind": "walk_speed"
+            },
+            "kind": "grant_speed",
+            "speedKind": "climb"
+          },
+          {
+            "kind": "modify_roll_advantage",
+            "mode": "advantage",
+            "on": [
+              "ability_check"
+            ],
+            "skillFilter": {
+              "kind": "fixed",
+              "skills": [
+                "athletics"
+              ]
+            }
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Climbing",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#PotionOfClimbing"
+  },
+  "rarity": "common",
+  "requiresAttunement": false
+}

@@ -1,0 +1,66 @@
+{
+  "description": "You create an Invisible sensor within range in a location familiar to you or in an obvious location that is unfamiliar to you. The intangible, invulnerable sensor remains in place for the duration. When you cast the spell, choose seeing or hearing. You can use the chosen sense through the sensor as if you were in its space. As a Bonus Action, you can switch between seeing and hearing.",
+  "id": "clairvoyance",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "amount": 10,
+      "kind": "minutes",
+      "ritual": false
+    },
+    "components": {
+      "m": "a focus worth 100+ GP, either a jeweled horn for hearing or a glass eye for seeing",
+      "materialCostGp": 100,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 3,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "clairvoyance_sensor_location",
+          "kind": "hole",
+          "label": "sensor location",
+          "value": {
+            "description": "familiar or obvious location",
+            "kind": "location"
+          }
+        },
+        "effects": [
+          {
+            "durability": "invulnerable",
+            "kind": "create_sensor",
+            "visibility": "invisible"
+          },
+          {
+            "kind": "remote_perception",
+            "senses": [
+              "seeing",
+              "hearing"
+            ],
+            "switchCost": "bonus_action"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 5280,
+      "kind": "point"
+    },
+    "school": "divination"
+  },
+  "name": "Clairvoyance",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Clairvoyance"
+  }
+}

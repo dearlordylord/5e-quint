@@ -1,0 +1,71 @@
+{
+  "description": "When you drink this potion, you gain the effect of the Clairvoyance spell (no Concentration required).",
+  "destruction": {
+    "kind": "permanent_on_empty"
+  },
+  "id": "magic_item_potion_of_clairvoyance",
+  "kind": "magic_item",
+  "mechanics": {
+    "activationCost": {
+      "kind": "action"
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "magic_item_potion_of_clairvoyance_sensor_location",
+          "kind": "hole",
+          "label": "sensor location",
+          "value": {
+            "description": "familiar or obvious location",
+            "kind": "location"
+          }
+        },
+        "effects": [
+          {
+            "durability": "invulnerable",
+            "kind": "create_sensor",
+            "visibility": "invisible"
+          },
+          {
+            "kind": "remote_perception",
+            "senses": [
+              "seeing",
+              "hearing"
+            ],
+            "switchCost": "bonus_action"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 5280,
+      "kind": "point"
+    },
+    "resetCadence": {
+      "kind": "never"
+    },
+    "resource": {
+      "cap": {
+        "kind": "fixed",
+        "uses": 1
+      },
+      "kind": "use_count"
+    }
+  },
+  "name": "Potion of Clairvoyance",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#PotionOfClairvoyance"
+  },
+  "rarity": "rare",
+  "requiresAttunement": false
+}

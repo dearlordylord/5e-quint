@@ -1,0 +1,84 @@
+{
+  "description": "You create an Invisible, invulnerable eye within range that hovers for the duration. You mentally receive visual information from the eye, which can see in every direction. It also has Darkvision with a range of 30 feet. As a Bonus Action, you can move the eye up to 30 feet in any direction.",
+  "id": "arcane_eye",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "arcane_eye_location",
+      "kind": "hole",
+      "label": "eye location",
+      "value": {
+        "description": "point within range",
+        "kind": "location"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of bat fur",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 4,
+    "operations": [
+      {
+        "effect": {
+          "durability": "invulnerable",
+          "kind": "create_sensor",
+          "sensorSenses": [
+            {
+              "kind": "darkvision",
+              "rangeFeet": 30
+            }
+          ],
+          "visibility": "invisible"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "remote_perception",
+          "senses": [
+            "seeing"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 30
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 30,
+      "kind": "point"
+    },
+    "school": "divination"
+  },
+  "name": "Arcane Eye",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Arcane Eye"
+  }
+}

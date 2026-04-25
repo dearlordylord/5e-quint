@@ -1,0 +1,29 @@
+{
+  "description": "While wearing these dark lenses, you have Darkvision out to 60 feet. If you already have Darkvision, wearing the goggles increases its range by 60 feet.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_goggles_of_night",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "wearing_item"
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "grantIfAbsentFeet": 60,
+        "increaseIfPresentFeet": 60,
+        "kind": "modify_sense_range",
+        "sense": "darkvision"
+      }
+    ]
+  },
+  "name": "Goggles of Night",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#GogglesOfNight"
+  },
+  "rarity": "uncommon",
+  "requiresAttunement": false
+}
