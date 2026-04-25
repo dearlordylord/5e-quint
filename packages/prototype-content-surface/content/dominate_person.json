@@ -30,12 +30,17 @@
       {
         "ability": "wis",
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one",
-            "typeFilter": [
-              "humanoid"
-            ]
+          "holeId": "dominate_person_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one",
+              "typeFilter": [
+                "humanoid"
+              ]
+            }
           }
         },
         "dc": {

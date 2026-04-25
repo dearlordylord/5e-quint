@@ -44,9 +44,14 @@ let shatter =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "sphere", radiusFeet = 10 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "shatter_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 10 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "con"
                 , dc = { kind = "caster_spell_save_dc" }

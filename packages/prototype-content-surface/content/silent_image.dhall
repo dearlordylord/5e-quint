@@ -108,9 +108,14 @@ let silentImage =
                   , upTo = { unit = "minute", amount = 10 }
                   }
               , attachment =
-                  { kind = "area"
-                  , shape = { kind = "cube", sideFeet = 15 }
-                  , origin = { kind = "point_within_range" }
+                  { kind = "hole"
+                  , holeId = "silent_image_point"
+                  , label = "spell origin point"
+                  , value =
+                      { kind = "area"
+                      , shape = { kind = "cube", sideFeet = 15 }
+                      , origin = { kind = "point_within_range" }
+                      }
                   }
               , operations =
                   ( [ { trigger = passiveTrigger, effect = createIllusion }

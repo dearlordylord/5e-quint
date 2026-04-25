@@ -62,12 +62,17 @@
               "startingAtLevel": 3
             },
             "damageType": {
-              "kind": "choice",
+              "holeId": "spirit_guardians_damage_type",
+              "kind": "hole",
               "label": "radiant (good/neutral caster) or necrotic (evil caster)",
-              "options": [
-                "radiant",
-                "necrotic"
-              ]
+              "value": {
+                "kind": "choice",
+                "label": "radiant (good/neutral caster) or necrotic (evil caster)",
+                "options": [
+                  "radiant",
+                  "necrotic"
+                ]
+              }
             },
             "kind": "damage"
           },

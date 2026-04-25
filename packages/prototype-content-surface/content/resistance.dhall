@@ -34,8 +34,13 @@ let resistance =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "one" }
+              { kind = "hole"
+              , holeId = "resistance_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "one" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }
@@ -46,21 +51,26 @@ let resistance =
                         , expr = { dice = 1, dieSize = 4 }
                         }
                     , damageType =
-                        { kind = "choice"
+                        { kind = "hole"
+                        , holeId = "resistance_damage_type"
                         , label = "damage type"
-                        , options =
-                            [ "acid"
-                            , "bludgeoning"
-                            , "cold"
-                            , "fire"
-                            , "lightning"
-                            , "necrotic"
-                            , "piercing"
-                            , "poison"
-                            , "radiant"
-                            , "slashing"
-                            , "thunder"
-                            ]
+                        , value =
+                            { kind = "choice"
+                            , label = "damage type"
+                            , options =
+                                [ "acid"
+                                , "bludgeoning"
+                                , "cold"
+                                , "fire"
+                                , "lightning"
+                                , "necrotic"
+                                , "piercing"
+                                , "poison"
+                                , "radiant"
+                                , "slashing"
+                                , "thunder"
+                                ]
+                            }
                         }
                     }
                 }

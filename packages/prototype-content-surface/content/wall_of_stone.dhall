@@ -107,9 +107,14 @@ let wallOfStone =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "line", lengthFeet = 100, widthFeet = 10 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "wall_of_stone_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "line", lengthFeet = 100, widthFeet = 10 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , effects =
                     [ { kind = "composite"

@@ -23,11 +23,16 @@
     "phases": [
       {
         "attachment": {
-          "count": 1,
-          "filter": {
-            "heldOrWorn": "forbidden"
-          },
-          "kind": "object"
+          "holeId": "light_object",
+          "kind": "hole",
+          "label": "target object",
+          "value": {
+            "count": 1,
+            "filter": {
+              "heldOrWorn": "forbidden"
+            },
+            "kind": "object"
+          }
         },
         "effects": [
           {

@@ -78,9 +78,14 @@ let hypnoticPattern =
                       }
               in  [ { kind = "save_gate"
                     , attachment =
-                        { kind = "area"
-                        , shape = { kind = "cube", sideFeet = 30 }
-                        , origin = { kind = "point_within_range" }
+                        { kind = "hole"
+                        , holeId = "hypnotic_pattern_point"
+                        , label = "spell origin point"
+                        , value =
+                            { kind = "area"
+                            , shape = { kind = "cube", sideFeet = 30 }
+                            , origin = { kind = "point_within_range" }
+                            }
                         }
                     , ability = "wis"
                     , dc = { kind = "caster_spell_save_dc" }

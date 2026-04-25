@@ -59,8 +59,13 @@ let sovereignGlue =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "object"
-                    , count = 2
+                    { kind = "hole"
+                    , holeId = "magic_item_sovereign_glue_object"
+                    , label = "target object"
+                    , value =
+                        { kind = "object"
+                        , count = 2
+                        }
                     }
                 , effects =
                     [ { kind = "bond_objects" }

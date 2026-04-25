@@ -56,7 +56,12 @@ let magicWeapon =
               , value = { unit = "hour", amount = 1 }
               , earlyEnd = [ { kind = "caster_recasts_spell" } ]
               }
-          , attachment = { kind = "object", count = 1 }
+          , attachment = { kind = "hole"
+                         , holeId = "magic_weapon_object"
+                         , label = "target object"
+                         , value =
+                             { kind = "object", count = 1 }
+                         }
           , operations =
               [ { trigger = { kind = "passive" }, effect = baseOp }
               , { trigger = { kind = "passive" }, effect = damageOp }

@@ -46,14 +46,19 @@
             "startingAtLevel": 4
           },
           "damageType": {
-            "kind": "choice",
+            "holeId": "conjure_minor_elementals_damage_type",
+            "kind": "hole",
             "label": "elemental damage type (chosen per attack)",
-            "options": [
-              "acid",
-              "cold",
-              "fire",
-              "lightning"
-            ]
+            "value": {
+              "kind": "choice",
+              "label": "elemental damage type (chosen per attack)",
+              "options": [
+                "acid",
+                "cold",
+                "fire",
+                "lightning"
+              ]
+            }
           },
           "kind": "damage"
         },

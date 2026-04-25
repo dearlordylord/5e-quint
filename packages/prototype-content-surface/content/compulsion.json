@@ -24,9 +24,14 @@
       {
         "ability": "wis",
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "any_number"
+          "holeId": "compulsion_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "any_number"
+            }
           }
         },
         "dc": {

@@ -44,8 +44,13 @@ let rod =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "any_number" }
+                    { kind = "hole"
+                    , holeId = "magic_item_rod_of_rulership_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "any_number" }
+                        }
                     }
                 , ability = "wis"
                 , dc = { kind = "fixed", dc = 15 }

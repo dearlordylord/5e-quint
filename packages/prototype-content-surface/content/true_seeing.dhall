@@ -46,8 +46,13 @@ let trueSeeing =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "true_seeing_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "grant_sense"

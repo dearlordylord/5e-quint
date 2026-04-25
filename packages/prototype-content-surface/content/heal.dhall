@@ -80,8 +80,13 @@ let heal =
                       }
               in  [ { kind = "direct"
                     , attachment =
-                        { kind = "target"
-                        , selection = { mode = "one" }
+                        { kind = "hole"
+                        , holeId = "heal_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection = { mode = "one" }
+                            }
                         }
                     , effects = [ healRider, cleanseRider ]
                     }

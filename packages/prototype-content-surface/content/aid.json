@@ -23,10 +23,15 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": 3,
-            "mode": "choose_up_to"
+          "holeId": "aid_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 3,
+              "mode": "choose_up_to"
+            }
           }
         },
         "effects": [

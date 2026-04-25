@@ -35,8 +35,13 @@ let greaterInvisibility =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "greater_invisibility_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "apply_condition"

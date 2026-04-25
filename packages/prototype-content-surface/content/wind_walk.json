@@ -25,10 +25,15 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": 11,
-            "mode": "choose_up_to"
+          "holeId": "wind_walk_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 11,
+              "mode": "choose_up_to"
+            }
           }
         },
         "effects": [

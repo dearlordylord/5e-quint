@@ -4,13 +4,18 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "area",
-      "origin": {
-        "kind": "point_within_range"
-      },
-      "shape": {
-        "kind": "sphere",
-        "radiusFeet": 20
+      "holeId": "cloudkill_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 20
+        }
       }
     },
     "castingTime": {
@@ -32,13 +37,18 @@
     "initialPhase": {
       "ability": "con",
       "attachment": {
-        "kind": "area",
-        "origin": {
-          "kind": "point_within_range"
-        },
-        "shape": {
-          "kind": "sphere",
-          "radiusFeet": 20
+        "holeId": "cloudkill_point",
+        "kind": "hole",
+        "label": "spell origin point",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 20
+          }
         }
       },
       "dc": {

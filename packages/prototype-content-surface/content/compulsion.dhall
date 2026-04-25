@@ -58,8 +58,13 @@ let compulsion =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "any_number" }
+                    { kind = "hole"
+                    , holeId = "compulsion_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "any_number" }
+                        }
                     }
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }

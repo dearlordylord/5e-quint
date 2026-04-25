@@ -77,10 +77,15 @@ let massSuggestion =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count = 12
+                    { kind = "hole"
+                    , holeId = "mass_suggestion_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count = 12
+                            }
                         }
                     }
                 , ability = "wis"

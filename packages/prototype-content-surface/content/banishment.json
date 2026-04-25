@@ -24,15 +24,20 @@
       {
         "ability": "cha",
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": {
-              "base": 1,
-              "baseLevel": 4,
-              "kind": "linear",
-              "perSlotAboveBase": 1
-            },
-            "mode": "choose_up_to"
+          "holeId": "banishment_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": {
+                "base": 1,
+                "baseLevel": 4,
+                "kind": "linear",
+                "perSlotAboveBase": 1
+              },
+              "mode": "choose_up_to"
+            }
           }
         },
         "dc": {

@@ -83,8 +83,13 @@ let shockingGrasp =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "shocking_grasp_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "melee_spell_attack"
                 , onHit = [ damageRider, denyOARider ]

@@ -47,16 +47,21 @@ let hold_person =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 2
+                    { kind = "hole"
+                    , holeId = "hold_person_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 1
+                                , perSlotAboveBase = 1
+                                , baseLevel = 2
+                                }
+                            , typeFilter = [ "humanoid" ]
                             }
-                        , typeFilter = [ "humanoid" ]
                         }
                     }
                 , ability = "wis"

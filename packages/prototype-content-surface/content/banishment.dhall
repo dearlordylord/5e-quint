@@ -59,14 +59,19 @@ let banishment =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 4
+                    { kind = "hole"
+                    , holeId = "banishment_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 1
+                                , perSlotAboveBase = 1
+                                , baseLevel = 4
+                                }
                             }
                         }
                     }

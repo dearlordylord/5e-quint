@@ -33,8 +33,13 @@ let continualFlame =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "object"
-                    , count = 1
+                    { kind = "hole"
+                    , holeId = "continual_flame_object"
+                    , label = "target object"
+                    , value =
+                        { kind = "object"
+                        , count = 1
+                        }
                     }
                 , effects =
                     [ { kind = "emit_light"

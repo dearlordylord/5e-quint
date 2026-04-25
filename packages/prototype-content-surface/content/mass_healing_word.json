@@ -19,10 +19,15 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": 6,
-            "mode": "choose_up_to"
+          "holeId": "mass_healing_word_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": 6,
+              "mode": "choose_up_to"
+            }
           }
         },
         "effects": [

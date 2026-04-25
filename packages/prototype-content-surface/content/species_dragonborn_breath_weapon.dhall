@@ -74,15 +74,20 @@ let breathWeapon =
                 , onFail =
                     { kind = "damage"
                     , damageType =
-                        { kind = "choice"
+                        { kind = "hole"
+                        , holeId = "species_dragonborn_breath_weapon_damage_type"
                         , label = "draconic ancestry"
-                        , options =
-                            [ "acid"
-                            , "cold"
-                            , "fire"
-                            , "lightning"
-                            , "poison"
-                            ]
+                        , value =
+                            { kind = "choice"
+                            , label = "draconic ancestry"
+                            , options =
+                                [ "acid"
+                                , "cold"
+                                , "fire"
+                                , "lightning"
+                                , "poison"
+                                ]
+                            }
                         }
                     , amount =
                         { kind = "threshold_tiers"

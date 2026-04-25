@@ -35,8 +35,13 @@ let potionOfHealing =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "magic_item_potions_of_healing_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "heal_hp"

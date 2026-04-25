@@ -51,9 +51,14 @@ let necklace =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "sphere", radiusFeet = 20 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "magic_item_necklace_of_fireballs_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 20 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "dex"
                 , dc = { kind = "fixed", dc = 15 }

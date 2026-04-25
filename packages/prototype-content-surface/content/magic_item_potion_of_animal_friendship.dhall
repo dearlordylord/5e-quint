@@ -43,11 +43,16 @@ let potionOfAnimalFriendship =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count = 3
-                        , typeFilter = [ "beast" ]
+                    { kind = "hole"
+                    , holeId = "magic_item_potion_of_animal_friendship_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count = 3
+                            , typeFilter = [ "beast" ]
+                            }
                         }
                     }
                 , ability = "wis"

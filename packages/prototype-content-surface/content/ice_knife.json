@@ -19,9 +19,14 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "holeId": "ice_knife_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "attackKind": "ranged_spell_attack",
@@ -48,13 +53,18 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "on_primary_target"
-          },
-          "shape": {
-            "kind": "emanation",
-            "radiusFeet": 5
+          "holeId": "ice_knife_burst_origin",
+          "kind": "hole",
+          "label": "burst origin",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "on_primary_target"
+            },
+            "shape": {
+              "kind": "emanation",
+              "radiusFeet": 5
+            }
           }
         },
         "dc": {

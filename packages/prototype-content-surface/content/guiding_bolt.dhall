@@ -83,8 +83,13 @@ let guidingBolt =
                       }
               in  [ { kind = "attack_roll"
                     , attachment =
-                        { kind = "target"
-                        , selection = { mode = "one" }
+                        { kind = "hole"
+                        , holeId = "guiding_bolt_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection = { mode = "one" }
+                            }
                         }
                     , attackKind = "ranged_spell_attack"
                     , onHit = [ damageRider, advRider ]

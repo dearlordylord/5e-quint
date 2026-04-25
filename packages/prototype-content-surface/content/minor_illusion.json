@@ -28,13 +28,18 @@
     "phases": [
       {
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "cube",
-            "sideFeet": 5
+          "holeId": "minor_illusion_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "cube",
+              "sideFeet": 5
+            }
           }
         },
         "kind": "direct",

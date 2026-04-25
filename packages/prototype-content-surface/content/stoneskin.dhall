@@ -53,8 +53,13 @@ let stoneskin =
                     = { kind = "grant_resistance", damageType = "slashing" }
               in  [ { kind = "direct"
                     , attachment =
-                        { kind = "target"
-                        , selection = { mode = "one" }
+                        { kind = "hole"
+                        , holeId = "stoneskin_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection = { mode = "one" }
+                            }
                         }
                     , effects =
                         [ { kind = "composite", effects = [ b, p, s ] } ]

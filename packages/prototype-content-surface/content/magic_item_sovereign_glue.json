@@ -14,8 +14,13 @@
     "phases": [
       {
         "attachment": {
-          "count": 2,
-          "kind": "object"
+          "holeId": "magic_item_sovereign_glue_object",
+          "kind": "hole",
+          "label": "target object",
+          "value": {
+            "count": 2,
+            "kind": "object"
+          }
         },
         "effects": [
           {

@@ -10,20 +10,25 @@
     "grants": [
       {
         "damageType": {
-          "kind": "choice",
+          "holeId": "magic_item_ring_of_resistance_damage_type",
+          "kind": "hole",
           "label": "Damage Type (GM-determined at creation)",
-          "options": [
-            "acid",
-            "cold",
-            "fire",
-            "force",
-            "lightning",
-            "necrotic",
-            "poison",
-            "psychic",
-            "radiant",
-            "thunder"
-          ]
+          "value": {
+            "kind": "choice",
+            "label": "Damage Type (GM-determined at creation)",
+            "options": [
+              "acid",
+              "cold",
+              "fire",
+              "force",
+              "lightning",
+              "necrotic",
+              "poison",
+              "psychic",
+              "radiant",
+              "thunder"
+            ]
+          }
         },
         "kind": "grant_resistance"
       }

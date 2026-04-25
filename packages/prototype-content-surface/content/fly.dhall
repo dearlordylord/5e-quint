@@ -47,14 +47,19 @@ let fly =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 3
+                    { kind = "hole"
+                    , holeId = "fly_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 1
+                                , perSlotAboveBase = 1
+                                , baseLevel = 3
+                                }
                             }
                         }
                     }

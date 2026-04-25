@@ -62,9 +62,14 @@ let conjureMinorElementals =
                 , effect =
                     { kind = "damage"
                     , damageType =
-                        { kind = "choice"
+                        { kind = "hole"
+                        , holeId = "conjure_minor_elementals_damage_type"
                         , label = "elemental damage type (chosen per attack)"
-                        , options = [ "acid", "cold", "fire", "lightning" ]
+                        , value =
+                            { kind = "choice"
+                            , label = "elemental damage type (chosen per attack)"
+                            , options = [ "acid", "cold", "fire", "lightning" ]
+                            }
                         }
                     , amount =
                         { kind = "linear_per_level"

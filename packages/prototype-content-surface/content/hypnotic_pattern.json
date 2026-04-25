@@ -29,13 +29,18 @@
       {
         "ability": "wis",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "cube",
-            "sideFeet": 30
+          "holeId": "hypnotic_pattern_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "cube",
+              "sideFeet": 30
+            }
           }
         },
         "dc": {

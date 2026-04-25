@@ -49,8 +49,13 @@ let sequester =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "sequester_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "apply_condition"

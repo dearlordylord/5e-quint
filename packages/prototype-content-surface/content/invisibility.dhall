@@ -50,14 +50,19 @@ let invisibility =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 2
+                    { kind = "hole"
+                    , holeId = "invisibility_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 1
+                                , perSlotAboveBase = 1
+                                , baseLevel = 2
+                                }
                             }
                         }
                     }

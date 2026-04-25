@@ -23,23 +23,33 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "holeId": "protection_from_energy_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "effects": [
           {
             "damageType": {
-              "kind": "choice",
+              "holeId": "protection_from_energy_damage_type",
+              "kind": "hole",
               "label": "energy type",
-              "options": [
-                "acid",
-                "cold",
-                "fire",
-                "lightning",
-                "thunder"
-              ]
+              "value": {
+                "kind": "choice",
+                "label": "energy type",
+                "options": [
+                  "acid",
+                  "cold",
+                  "fire",
+                  "lightning",
+                  "thunder"
+                ]
+              }
             },
             "kind": "grant_resistance"
           }

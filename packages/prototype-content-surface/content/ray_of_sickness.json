@@ -23,9 +23,14 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "holeId": "ray_of_sickness_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "attackKind": "ranged_spell_attack",

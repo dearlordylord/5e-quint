@@ -43,8 +43,13 @@ let truePolymorph =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "true_polymorph_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }

@@ -31,10 +31,15 @@ let dominateBeast =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "one"
-                        , typeFilter = [ "beast" ]
+                    { kind = "hole"
+                    , holeId = "dominate_beast_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "one"
+                            , typeFilter = [ "beast" ]
+                            }
                         }
                     }
                 , ability = "wis"

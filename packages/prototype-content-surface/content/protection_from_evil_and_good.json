@@ -25,9 +25,14 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "holeId": "protection_from_evil_and_good_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "effects": [

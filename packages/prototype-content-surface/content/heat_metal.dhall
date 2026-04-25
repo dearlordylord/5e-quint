@@ -139,8 +139,13 @@ let heatMetal =
           = { kind = "on_caster_spends_action", cost = { kind = "bonus_action" } }
 
       let metalObjectAttachment
-          = { kind = "object", count = 1
-            , filter = { material = "metal", manufactured = True }
+          = { kind = "hole"
+            , holeId = "heat_metal_object"
+            , label = "target object"
+            , value =
+                { kind = "object", count = 1
+                , filter = { material = "metal", manufactured = True }
+                }
             }
 
       in  { kind = "spell"

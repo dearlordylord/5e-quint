@@ -15,20 +15,25 @@ let ring =
           , grants =
               [ { kind = "grant_resistance"
                 , damageType =
-                    { kind = "choice"
+                    { kind = "hole"
+                    , holeId = "magic_item_ring_of_resistance_damage_type"
                     , label = "Damage Type (GM-determined at creation)"
-                    , options =
-                        [ "acid"
-                        , "cold"
-                        , "fire"
-                        , "force"
-                        , "lightning"
-                        , "necrotic"
-                        , "poison"
-                        , "psychic"
-                        , "radiant"
-                        , "thunder"
-                        ]
+                    , value =
+                        { kind = "choice"
+                        , label = "Damage Type (GM-determined at creation)"
+                        , options =
+                            [ "acid"
+                            , "cold"
+                            , "fire"
+                            , "force"
+                            , "lightning"
+                            , "necrotic"
+                            , "poison"
+                            , "psychic"
+                            , "radiant"
+                            , "thunder"
+                            ]
+                        }
                     }
                 }
               ]

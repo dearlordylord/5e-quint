@@ -7,15 +7,20 @@
     "grants": [
       {
         "damageType": {
-          "kind": "choice",
+          "holeId": "species_dragonborn_damage_resistance_damage_type",
+          "kind": "hole",
           "label": "draconic ancestry",
-          "options": [
-            "acid",
-            "cold",
-            "fire",
-            "lightning",
-            "poison"
-          ]
+          "value": {
+            "kind": "choice",
+            "label": "draconic ancestry",
+            "options": [
+              "acid",
+              "cold",
+              "fire",
+              "lightning",
+              "poison"
+            ]
+          }
         },
         "kind": "grant_resistance"
       }

@@ -67,14 +67,24 @@ let animalShapes =
           , components = { v = True, s = True, m = False }
           , duration = { kind = "timed", value = { unit = "hour", amount = 24 } }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "any_number" }
+              { kind = "hole"
+              , holeId = "animal_shapes_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "any_number" }
+                  }
               }
           , initialPhase =
               { kind = "direct"
               , attachment =
-                  { kind = "target"
-                  , selection = { mode = "any_number" }
+                  { kind = "hole"
+                  , holeId = "animal_shapes_target"
+                  , label = "target"
+                  , value =
+                      { kind = "target"
+                      , selection = { mode = "any_number" }
+                      }
                   }
               , effects =
                   [ { kind = "transform_target"

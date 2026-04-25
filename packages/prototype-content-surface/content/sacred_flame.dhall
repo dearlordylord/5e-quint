@@ -34,8 +34,13 @@ let sacredFlame =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "sacred_flame_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }

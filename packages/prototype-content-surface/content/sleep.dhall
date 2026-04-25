@@ -37,9 +37,14 @@ let sleep =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "sphere", radiusFeet = 5 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "sleep_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 5 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "wis"
                 , dc = { kind = "caster_spell_save_dc" }

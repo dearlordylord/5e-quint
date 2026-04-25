@@ -62,8 +62,13 @@ let protectionFromEvilAndGood =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "protection_from_evil_and_good_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "modify_roll_advantage"

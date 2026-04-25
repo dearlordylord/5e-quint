@@ -20,13 +20,18 @@
       {
         "ability": "con",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "sphere",
-            "radiusFeet": 60
+          "holeId": "circle_of_death_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "sphere",
+              "radiusFeet": 60
+            }
           }
         },
         "dc": {

@@ -26,14 +26,19 @@ let heroism =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection =
-                  { mode = "choose_up_to"
-                  , count =
-                      { kind = "linear"
-                      , base = 1
-                      , perSlotAboveBase = 1
-                      , baseLevel = 1
+              { kind = "hole"
+              , holeId = "heroism_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection =
+                      { mode = "choose_up_to"
+                      , count =
+                          { kind = "linear"
+                          , base = 1
+                          , perSlotAboveBase = 1
+                          , baseLevel = 1
+                          }
                       }
                   }
               }

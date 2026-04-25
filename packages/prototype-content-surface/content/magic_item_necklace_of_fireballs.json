@@ -15,13 +15,18 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "sphere",
-            "radiusFeet": 20
+          "holeId": "magic_item_necklace_of_fireballs_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "sphere",
+              "radiusFeet": 20
+            }
           }
         },
         "dc": {

@@ -24,14 +24,19 @@
     "phases": [
       {
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "line",
-            "lengthFeet": 100,
-            "widthFeet": 10
+          "holeId": "wall_of_stone_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "line",
+              "lengthFeet": 100,
+              "widthFeet": 10
+            }
           }
         },
         "effects": [

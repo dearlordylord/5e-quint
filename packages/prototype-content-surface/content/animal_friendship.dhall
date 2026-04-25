@@ -44,16 +44,21 @@ let animalFriendship =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 1
-                            , perSlotAboveBase = 1
-                            , baseLevel = 1
+                    { kind = "hole"
+                    , holeId = "animal_friendship_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 1
+                                , perSlotAboveBase = 1
+                                , baseLevel = 1
+                                }
+                            , typeFilter = [ "beast" ]
                             }
-                        , typeFilter = [ "beast" ]
                         }
                     }
                 , ability = "wis"

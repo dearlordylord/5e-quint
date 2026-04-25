@@ -48,8 +48,13 @@ let arcane_lock =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "object"
-                    , count = 1
+                    { kind = "hole"
+                    , holeId = "arcane_lock_object"
+                    , label = "target object"
+                    , value =
+                        { kind = "object"
+                        , count = 1
+                        }
                     }
                 , effects =
                     [ { kind = "lock_object" }

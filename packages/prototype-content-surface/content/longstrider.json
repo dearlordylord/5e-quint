@@ -23,15 +23,20 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": {
-              "base": 1,
-              "baseLevel": 1,
-              "kind": "linear",
-              "perSlotAboveBase": 1
-            },
-            "mode": "choose_up_to"
+          "holeId": "longstrider_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": {
+                "base": 1,
+                "baseLevel": 1,
+                "kind": "linear",
+                "perSlotAboveBase": 1
+              },
+              "mode": "choose_up_to"
+            }
           }
         },
         "effects": [

@@ -19,8 +19,8 @@
     "phases": [
       {
         "attachment": {
-          "kind": "hole",
           "holeId": "fire_bolt_target",
+          "kind": "hole",
           "label": "fire bolt target",
           "value": {
             "kind": "target",

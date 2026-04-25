@@ -20,14 +20,19 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "heightFeet": 40,
-            "kind": "cylinder",
-            "radiusFeet": 10
+          "holeId": "flame_strike_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "heightFeet": 40,
+              "kind": "cylinder",
+              "radiusFeet": 10
+            }
           }
         },
         "dc": {

@@ -36,9 +36,14 @@ let spikeGrowth =
               , upTo = { unit = "minute", amount = 10 }
               }
           , attachment =
-              { kind = "area"
-              , shape = { kind = "sphere", radiusFeet = 20 }
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "spike_growth_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 20 }
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , operations =
               [ { trigger =
@@ -52,15 +57,16 @@ let spikeGrowth =
                       , perFeet = Some 5
                       }
                 , effect =
-                      T.defaultEffect
-                  //  { kind = "damage"
-                      , damageType = Some "piercing"
-                      , amount =
-                          Some
-                            { kind = "fixed"
-                            , expr = { dice = 2, dieSize = 4 }
-                            }
-                      }
+                        T.defaultEffect
+                    //  { kind = "damage"
+                        , damageType = Some "piercing"
+                        , amount = Some
+                            (    T.defaultDiceAmount
+                              // { kind = "fixed"
+                                 , expr = Some { dice = 2, dieSize = 4 }
+                                 }
+                            )
+                        }
                 }
               ]
           }

@@ -25,8 +25,13 @@
     "phases": [
       {
         "attachment": {
-          "count": 1,
-          "kind": "object"
+          "holeId": "gentle_repose_object",
+          "kind": "hole",
+          "label": "target object",
+          "value": {
+            "count": 1,
+            "kind": "object"
+          }
         },
         "effects": [
           {

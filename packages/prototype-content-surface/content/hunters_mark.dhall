@@ -45,13 +45,18 @@ let huntersMark =
                   }
               }
           , attachment =
-              { kind = "mark"
-              , selection = { mode = "one" }
-              , transfer =
-                  Some
-                    { onEvent = { kind = "target_drops_to_0_hp" }
-                    , cost = { kind = "bonus_action" }
-                    }
+              { kind = "hole"
+              , holeId = "hunters_mark_mark"
+              , label = "mark target"
+              , value =
+                  { kind = "mark"
+                  , selection = { mode = "one" }
+                  , transfer =
+                      Some
+                        { onEvent = { kind = "target_drops_to_0_hp" }
+                        , cost = { kind = "bonus_action" }
+                        }
+                  }
               }
           , operations =
               [ { trigger = { kind = "on_caster_attack_hit" }

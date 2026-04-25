@@ -4,15 +4,20 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "target",
-      "selection": {
-        "count": {
-          "base": 3,
-          "baseLevel": 1,
-          "kind": "linear",
-          "perSlotAboveBase": 1
-        },
-        "mode": "choose_up_to"
+      "holeId": "bless_target",
+      "kind": "hole",
+      "label": "target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "count": {
+            "base": 3,
+            "baseLevel": 1,
+            "kind": "linear",
+            "perSlotAboveBase": 1
+          },
+          "mode": "choose_up_to"
+        }
       }
     },
     "castingTime": {

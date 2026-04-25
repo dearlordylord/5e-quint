@@ -31,8 +31,13 @@ let guidance =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "one" }
+              { kind = "hole"
+              , holeId = "guidance_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "one" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

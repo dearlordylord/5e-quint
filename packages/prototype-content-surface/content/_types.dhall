@@ -63,6 +63,7 @@ let defaultTrigger : Trigger =
 --   area: shape, origin
 --   mark: selection
 --   object: count
+--   hole: holeId, label, value (carries an inner AttachmentValue)
 let AreaShape : Type =
       { kind : Text
       , radiusFeet : Optional Natural
@@ -77,8 +78,30 @@ let defaultAreaShape : AreaShape =
       , lengthFeet = None Natural
       }
 
+-- AttachmentValue is the inner record when an attachment is wrapped in
+-- a hole. Same field shape as the non-hole attachment; the difference
+-- is purely whether it sits at the top level or nested under `value`.
+let AttachmentValue : Type =
+      { kind : Text
+      , selection : Optional { mode : Text }
+      , shape : Optional AreaShape
+      , origin : Optional { kind : Text }
+      , count : Optional Natural
+      }
+
+let defaultAttachmentValue : AttachmentValue =
+      { kind = ""
+      , selection = None { mode : Text }
+      , shape = None AreaShape
+      , origin = None { kind : Text }
+      , count = None Natural
+      }
+
 let Attachment : Type =
       { kind : Text
+      , holeId : Optional Text
+      , label : Optional Text
+      , value : Optional AttachmentValue
       , selection : Optional { mode : Text }
       , shape : Optional AreaShape
       , origin : Optional { kind : Text }
@@ -87,6 +110,9 @@ let Attachment : Type =
 
 let defaultAttachment : Attachment =
       { kind = ""
+      , holeId = None Text
+      , label = None Text
+      , value = None AttachmentValue
       , selection = None { mode : Text }
       , shape = None AreaShape
       , origin = None { kind : Text }
@@ -135,6 +161,8 @@ in  { DiceExpr
     , defaultTrigger
     , AreaShape
     , defaultAreaShape
+    , AttachmentValue
+    , defaultAttachmentValue
     , Attachment
     , defaultAttachment
     , DcSource

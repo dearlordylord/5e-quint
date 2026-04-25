@@ -99,14 +99,19 @@ let freedomOfMovement =
                       }
               in  [ { kind = "direct"
                     , attachment =
-                        { kind = "target"
-                        , selection =
-                            { mode = "choose_up_to"
-                            , count =
-                                { kind = "linear"
-                                , base = 1
-                                , perSlotAboveBase = 1
-                                , baseLevel = 4
+                        { kind = "hole"
+                        , holeId = "freedom_of_movement_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection =
+                                { mode = "choose_up_to"
+                                , count =
+                                    { kind = "linear"
+                                    , base = 1
+                                    , perSlotAboveBase = 1
+                                    , baseLevel = 4
+                                    }
                                 }
                             }
                         }

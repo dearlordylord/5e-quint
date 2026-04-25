@@ -52,14 +52,19 @@ let chainLightning =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count =
-                            { kind = "linear"
-                            , base = 4
-                            , perSlotAboveBase = 1
-                            , baseLevel = 6
+                    { kind = "hole"
+                    , holeId = "chain_lightning_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count =
+                                { kind = "linear"
+                                , base = 4
+                                , perSlotAboveBase = 1
+                                , baseLevel = 6
+                                }
                             }
                         }
                     }

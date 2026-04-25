@@ -39,8 +39,13 @@ let mageArmor =
               , earlyEnd = [ { kind = "target_dons_armor" } ]
               }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "one" }
+              { kind = "hole"
+              , holeId = "mage_armor_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "one" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

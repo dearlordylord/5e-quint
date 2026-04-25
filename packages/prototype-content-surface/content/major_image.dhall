@@ -33,9 +33,14 @@ let majorImage =
               , upTo = { unit = "minute", amount = 10 }
               }
           , attachment =
-              { kind = "area"
-              , shape = { kind = "cube", sideFeet = 20 }
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "major_image_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = { kind = "cube", sideFeet = 20 }
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

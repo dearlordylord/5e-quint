@@ -46,8 +46,13 @@ let acidArrow =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "acid_arrow_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =

@@ -33,10 +33,15 @@ let massHealingWord =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count = 6
+                    { kind = "hole"
+                    , holeId = "mass_healing_word_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count = 6
+                            }
                         }
                     }
                 , effects =

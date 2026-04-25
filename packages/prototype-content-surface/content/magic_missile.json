@@ -19,16 +19,21 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "count": {
-              "base": 3,
-              "baseLevel": 1,
-              "kind": "linear",
-              "perSlotAboveBase": 1
-            },
-            "mode": "choose_up_to",
-            "repeatsAllowed": true
+          "holeId": "magic_missile_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": {
+                "base": 3,
+                "baseLevel": 1,
+                "kind": "linear",
+                "perSlotAboveBase": 1
+              },
+              "mode": "choose_up_to",
+              "repeatsAllowed": true
+            }
           }
         },
         "effects": [

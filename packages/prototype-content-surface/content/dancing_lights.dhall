@@ -123,9 +123,14 @@ let dancingLights =
                   , upTo = { unit = "minute", amount = 1 }
                   }
               , attachment =
-                  { kind = "area"
-                  , shape = { kind = "sphere", radiusFeet = 10 }
-                  , origin = { kind = "point_within_range" }
+                  { kind = "hole"
+                  , holeId = "dancing_lights_point"
+                  , label = "spell origin point"
+                  , value =
+                      { kind = "area"
+                      , shape = { kind = "sphere", radiusFeet = 10 }
+                      , origin = { kind = "point_within_range" }
+                      }
                   }
               , operations =
                   [ { trigger = passiveTrigger, effect = createIllusion }

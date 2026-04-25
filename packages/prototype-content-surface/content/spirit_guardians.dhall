@@ -60,8 +60,13 @@ let spiritGuardians =
                           { kind : Text
                           , damageType :
                               { kind : Text
+                              , holeId : Text
                               , label : Text
-                              , options : List Text
+                              , value :
+                                  { kind : Text
+                                  , label : Text
+                                  , options : List Text
+                                  }
                               }
                           , amount :
                               { kind : Text
@@ -85,9 +90,14 @@ let spiritGuardians =
                         Some
                           { kind = "damage"
                           , damageType =
-                              { kind = "choice"
+                              { kind = "hole"
+                              , holeId = "spirit_guardians_damage_type"
                               , label = "radiant (good/neutral caster) or necrotic (evil caster)"
-                              , options = [ "radiant", "necrotic" ]
+                              , value =
+                                  { kind = "choice"
+                                  , label = "radiant (good/neutral caster) or necrotic (evil caster)"
+                                  , options = [ "radiant", "necrotic" ]
+                                  }
                               }
                           , amount =
                               { kind = "linear_per_level"

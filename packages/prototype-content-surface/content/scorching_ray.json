@@ -19,8 +19,8 @@
     "phases": [
       {
         "attachment": {
-          "kind": "hole",
           "holeId": "scorching_ray_target",
+          "kind": "hole",
           "label": "ray target",
           "value": {
             "kind": "target",
@@ -52,8 +52,8 @@
       },
       {
         "attachment": {
-          "kind": "hole",
           "holeId": "scorching_ray_target",
+          "kind": "hole",
           "label": "ray target",
           "value": {
             "kind": "target",
@@ -85,8 +85,8 @@
       },
       {
         "attachment": {
-          "kind": "hole",
           "holeId": "scorching_ray_target",
+          "kind": "hole",
           "label": "ray target",
           "value": {
             "kind": "target",

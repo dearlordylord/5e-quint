@@ -47,10 +47,15 @@ let aid =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "choose_up_to"
-                        , count = 3
+                    { kind = "hole"
+                    , holeId = "aid_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "choose_up_to"
+                            , count = 3
+                            }
                         }
                     }
                 , effects =

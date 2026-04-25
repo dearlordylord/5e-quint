@@ -25,9 +25,14 @@
     "phases": [
       {
         "attachment": {
-          "kind": "target",
-          "selection": {
-            "mode": "one"
+          "holeId": "sequester_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
           }
         },
         "effects": [

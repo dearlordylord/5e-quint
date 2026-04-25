@@ -32,8 +32,13 @@ let inflictWounds =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "inflict_wounds_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , ability = "con"
                 , dc = { kind = "caster_spell_save_dc" }

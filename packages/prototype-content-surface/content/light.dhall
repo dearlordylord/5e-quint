@@ -57,9 +57,14 @@ let light =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "object"
-                    , count = 1
-                    , filter = { heldOrWorn = "forbidden" }
+                    { kind = "hole"
+                    , holeId = "light_object"
+                    , label = "target object"
+                    , value =
+                        { kind = "object"
+                        , count = 1
+                        , filter = { heldOrWorn = "forbidden" }
+                        }
                     }
                 , effects =
                     [ { kind = "emit_light"

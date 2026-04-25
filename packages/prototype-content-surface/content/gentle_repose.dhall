@@ -51,7 +51,12 @@ let gentleRepose =
               }
           , phases =
               [ { kind = "direct"
-                , attachment = { kind = "object", count = 1 }
+                , attachment = { kind = "hole"
+                               , holeId = "gentle_repose_object"
+                               , label = "target object"
+                               , value =
+                                   { kind = "object", count = 1 }
+                               }
                 , effects = [ { kind = "block_reanimation" } ]
                 }
               ]

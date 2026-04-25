@@ -35,15 +35,25 @@ let protectionFromEnergy =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "protection_from_energy_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , effects =
                     [ { kind = "grant_resistance"
                       , damageType =
-                          { kind = "choice"
+                          { kind = "hole"
+                          , holeId = "protection_from_energy_damage_type"
                           , label = "energy type"
-                          , options = [ "acid", "cold", "fire", "lightning", "thunder" ]
+                          , value =
+                              { kind = "choice"
+                              , label = "energy type"
+                              , options = [ "acid", "cold", "fire", "lightning", "thunder" ]
+                              }
                           }
                       }
                     ]

@@ -39,7 +39,12 @@ let fabricate =
           , duration = { kind = "instantaneous" }
           , phases =
               [ { kind = "direct"
-                , attachment = { kind = "object", count = 1 }
+                , attachment = { kind = "hole"
+                               , holeId = "fabricate_object"
+                               , label = "target object"
+                               , value =
+                                   { kind = "object", count = 1 }
+                               }
                 , effects =
                     [ { kind = "create_object"
                       , maxSize = "large"

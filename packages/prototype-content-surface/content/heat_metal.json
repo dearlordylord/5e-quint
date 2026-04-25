@@ -4,12 +4,17 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "count": 1,
-      "filter": {
-        "manufactured": true,
-        "material": "metal"
-      },
-      "kind": "object"
+      "holeId": "heat_metal_object",
+      "kind": "hole",
+      "label": "target object",
+      "value": {
+        "count": 1,
+        "filter": {
+          "manufactured": true,
+          "material": "metal"
+        },
+        "kind": "object"
+      }
     },
     "castingTime": {
       "kind": "action"
@@ -29,12 +34,17 @@
     "family": "ongoing_effect",
     "initialPhase": {
       "attachment": {
-        "count": 1,
-        "filter": {
-          "manufactured": true,
-          "material": "metal"
-        },
-        "kind": "object"
+        "holeId": "heat_metal_object",
+        "kind": "hole",
+        "label": "target object",
+        "value": {
+          "count": 1,
+          "filter": {
+            "manufactured": true,
+            "material": "metal"
+          },
+          "kind": "object"
+        }
       },
       "effects": [
         {

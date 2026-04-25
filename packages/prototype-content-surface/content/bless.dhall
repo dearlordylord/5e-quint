@@ -20,14 +20,19 @@ let bless =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection =
-                  { mode = "choose_up_to"
-                  , count =
-                      { kind = "linear"
-                      , base = 3
-                      , perSlotAboveBase = 1
-                      , baseLevel = 1
+              { kind = "hole"
+              , holeId = "bless_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection =
+                      { mode = "choose_up_to"
+                      , count =
+                          { kind = "linear"
+                          , base = 3
+                          , perSlotAboveBase = 1
+                          , baseLevel = 1
+                          }
                       }
                   }
               }

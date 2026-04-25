@@ -29,8 +29,13 @@ let beaconOfHope =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "any_number" }
+              { kind = "hole"
+              , holeId = "beacon_of_hope_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "any_number" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

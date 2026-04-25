@@ -4,16 +4,21 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "mark",
-      "selection": {
-        "mode": "one"
-      },
-      "transfer": {
-        "cost": {
-          "kind": "bonus_action"
+      "holeId": "hunters_mark_mark",
+      "kind": "hole",
+      "label": "mark target",
+      "value": {
+        "kind": "mark",
+        "selection": {
+          "mode": "one"
         },
-        "onEvent": {
-          "kind": "target_drops_to_0_hp"
+        "transfer": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "onEvent": {
+            "kind": "target_drops_to_0_hp"
+          }
         }
       }
     },

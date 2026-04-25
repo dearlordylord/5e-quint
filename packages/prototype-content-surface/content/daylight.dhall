@@ -51,9 +51,14 @@ let daylight =
               , value = { unit = "hour", amount = 1 }
               }
           , attachment =
-              { kind = "area"
-              , shape = { kind = "sphere", radiusFeet = 60 }
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "daylight_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 60 }
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

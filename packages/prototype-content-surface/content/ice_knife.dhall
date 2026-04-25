@@ -23,14 +23,30 @@ let T = ./_types.dhall
 
 let targetAttachment =
         T.defaultAttachment
-      //  { kind = "target", selection = Some { mode = "one" } }
+      //  { kind = "hole"
+          , holeId = Some "ice_knife_target"
+          , label = Some "target"
+          , value = Some
+              (    T.defaultAttachmentValue
+                // { kind = "target", selection = Some { mode = "one" } }
+              )
+          }
 
 let areaAttachment =
         T.defaultAttachment
-      //  { kind = "area"
-          , shape = Some (T.defaultAreaShape
-              // { kind = "emanation", radiusFeet = Some 5 })
-          , origin = Some { kind = "on_primary_target" }
+      //  { kind = "hole"
+          , holeId = Some "ice_knife_burst_origin"
+          , label = Some "burst origin"
+          , value = Some
+              (    T.defaultAttachmentValue
+                // { kind = "area"
+                   , shape = Some
+                       (    T.defaultAreaShape
+                         // { kind = "emanation", radiusFeet = Some 5 }
+                       )
+                   , origin = Some { kind = "on_primary_target" }
+                   }
+              )
           }
 
 let piercingHit =

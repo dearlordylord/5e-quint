@@ -156,10 +156,15 @@ let summonDragon =
                         , onFail =
                             { kind = "damage"
                             , damageType =
-                                { kind = "choice"
+                                { kind = "hole"
+                                , holeId = "summon_dragon_damage_type"
                                 , label = "breath-weapon damage type (shared with Shared Resistances)"
-                                , options =
-                                    [ "acid", "cold", "fire", "lightning", "poison" ]
+                                , value =
+                                    { kind = "choice"
+                                    , label = "breath-weapon damage type (shared with Shared Resistances)"
+                                    , options =
+                                        [ "acid", "cold", "fire", "lightning", "poison" ]
+                                    }
                                 }
                             , amount =
                                 { kind = "fixed"

@@ -4,8 +4,13 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "count": 1,
-      "kind": "object"
+      "holeId": "magic_weapon_object",
+      "kind": "hole",
+      "label": "target object",
+      "value": {
+        "count": 1,
+        "kind": "object"
+      }
     },
     "castingTime": {
       "kind": "bonus_action"

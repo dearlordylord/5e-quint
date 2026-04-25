@@ -4,9 +4,14 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "target",
-      "selection": {
-        "mode": "any_number"
+      "holeId": "animal_shapes_target",
+      "kind": "hole",
+      "label": "target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "any_number"
+        }
       }
     },
     "castingTime": {
@@ -27,9 +32,14 @@
     "family": "ongoing_effect",
     "initialPhase": {
       "attachment": {
-        "kind": "target",
-        "selection": {
-          "mode": "any_number"
+        "holeId": "animal_shapes_target",
+        "kind": "hole",
+        "label": "target",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "any_number"
+          }
         }
       },
       "effects": [

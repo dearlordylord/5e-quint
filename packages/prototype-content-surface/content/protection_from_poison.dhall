@@ -59,8 +59,13 @@ let protectionFromPoison =
                       }
               in  [ { kind = "direct"
                     , attachment =
-                        { kind = "target"
-                        , selection = { mode = "one" }
+                        { kind = "hole"
+                        , holeId = "protection_from_poison_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection = { mode = "one" }
+                            }
                         }
                     , effects =
                         [ { kind = "composite"

@@ -4,14 +4,19 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "area",
-      "origin": {
-        "kind": "point_within_range"
-      },
-      "shape": {
-        "heightFeet": 10,
-        "kind": "cylinder",
-        "radiusFeet": 60
+      "holeId": "call_lightning_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "heightFeet": 10,
+          "kind": "cylinder",
+          "radiusFeet": 60
+        }
       }
     },
     "castingTime": {
@@ -33,13 +38,18 @@
     "initialPhase": {
       "ability": "dex",
       "attachment": {
-        "kind": "area",
-        "origin": {
-          "kind": "point_within_range"
-        },
-        "shape": {
-          "kind": "sphere",
-          "radiusFeet": 5
+        "holeId": "call_lightning_point",
+        "kind": "hole",
+        "label": "spell origin point",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 5
+          }
         }
       },
       "dc": {

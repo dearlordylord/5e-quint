@@ -24,13 +24,18 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "area",
-          "origin": {
-            "kind": "point_within_range"
-          },
-          "shape": {
-            "kind": "cube",
-            "sideFeet": 10
+          "holeId": "grease_point",
+          "kind": "hole",
+          "label": "spell origin point",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "kind": "cube",
+              "sideFeet": 10
+            }
           }
         },
         "dc": {

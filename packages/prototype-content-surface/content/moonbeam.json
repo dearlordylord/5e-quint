@@ -4,14 +4,19 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "area",
-      "origin": {
-        "kind": "point_within_range"
-      },
-      "shape": {
-        "heightFeet": 40,
-        "kind": "cylinder",
-        "radiusFeet": 5
+      "holeId": "moonbeam_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "heightFeet": 40,
+          "kind": "cylinder",
+          "radiusFeet": 5
+        }
       }
     },
     "castingTime": {
@@ -33,14 +38,19 @@
     "initialPhase": {
       "ability": "con",
       "attachment": {
-        "kind": "area",
-        "origin": {
-          "kind": "point_within_range"
-        },
-        "shape": {
-          "heightFeet": 40,
-          "kind": "cylinder",
-          "radiusFeet": 5
+        "holeId": "moonbeam_point",
+        "kind": "hole",
+        "label": "spell origin point",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "heightFeet": 40,
+            "kind": "cylinder",
+            "radiusFeet": 5
+          }
         }
       },
       "dc": {

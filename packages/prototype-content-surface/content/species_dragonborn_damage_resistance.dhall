@@ -30,15 +30,20 @@ let damageResistance =
           , grants =
               [ { kind = "grant_resistance"
                 , damageType =
-                    { kind = "choice"
+                    { kind = "hole"
+                    , holeId = "species_dragonborn_damage_resistance_damage_type"
                     , label = "draconic ancestry"
-                    , options =
-                        [ "acid"
-                        , "cold"
-                        , "fire"
-                        , "lightning"
-                        , "poison"
-                        ]
+                    , value =
+                        { kind = "choice"
+                        , label = "draconic ancestry"
+                        , options =
+                            [ "acid"
+                            , "cold"
+                            , "fire"
+                            , "lightning"
+                            , "poison"
+                            ]
+                        }
                     }
                 }
               ]

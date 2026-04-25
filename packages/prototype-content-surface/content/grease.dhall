@@ -56,9 +56,14 @@ let grease =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "cube", sideFeet = 10 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "grease_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "cube", sideFeet = 10 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }

@@ -19,8 +19,8 @@
     "phases": [
       {
         "attachment": {
-          "kind": "hole",
           "holeId": "chromatic_orb_primary_target",
+          "kind": "hole",
           "label": "primary target",
           "value": {
             "kind": "target",
@@ -43,8 +43,8 @@
           "next": [
             {
               "attachment": {
-                "kind": "hole",
                 "holeId": "chromatic_orb_leap_target",
+                "kind": "hole",
                 "label": "leap target",
                 "value": {
                   "kind": "target",
@@ -70,8 +70,8 @@
                     "startingAtLevel": 1
                   },
                   "damageType": {
-                    "kind": "same_choice_as",
-                    "holeId": "chromatic_orb_damage_type"
+                    "holeId": "chromatic_orb_damage_type",
+                    "kind": "same_choice_as"
                   },
                   "kind": "damage"
                 }
@@ -104,8 +104,8 @@
               "startingAtLevel": 1
             },
             "damageType": {
-              "kind": "hole",
               "holeId": "chromatic_orb_damage_type",
+              "kind": "hole",
               "label": "orb type",
               "value": {
                 "kind": "choice",

@@ -80,13 +80,18 @@ let flameStrike =
                       }
               in  [ { kind = "save_gate"
                     , attachment =
-                        { kind = "area"
-                        , shape =
-                            { kind = "cylinder"
-                            , radiusFeet = 10
-                            , heightFeet = 40
+                        { kind = "hole"
+                        , holeId = "flame_strike_point"
+                        , label = "spell origin point"
+                        , value =
+                            { kind = "area"
+                            , shape =
+                                { kind = "cylinder"
+                                , radiusFeet = 10
+                                , heightFeet = 40
+                                }
+                            , origin = { kind = "point_within_range" }
                             }
-                        , origin = { kind = "point_within_range" }
                         }
                     , ability = "dex"
                     , dc = { kind = "caster_spell_save_dc" }

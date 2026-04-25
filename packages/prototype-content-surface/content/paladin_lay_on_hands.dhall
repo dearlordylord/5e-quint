@@ -51,7 +51,12 @@ let layOnHands =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "target", selection = { mode = "one" } }
+                    { kind = "hole"
+                    , holeId = "paladin_lay_on_hands_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target", selection = { mode = "one" } }
+                    }
                 , effects =
                     [ { kind = "heal_hp"
                       , target = "target_creature"

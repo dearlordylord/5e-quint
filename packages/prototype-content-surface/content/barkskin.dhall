@@ -37,8 +37,13 @@ let barkskin =
               , value = { unit = "hour", amount = 1 }
               }
           , attachment =
-              { kind = "target"
-              , selection = { mode = "one" }
+              { kind = "hole"
+              , holeId = "barkskin_target"
+              , label = "target"
+              , value =
+                  { kind = "target"
+                  , selection = { mode = "one" }
+                  }
               }
           , operations =
               [ { trigger = { kind = "passive" }

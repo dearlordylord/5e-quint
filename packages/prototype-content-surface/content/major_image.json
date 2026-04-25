@@ -4,13 +4,18 @@
   "kind": "spell",
   "mechanics": {
     "attachment": {
-      "kind": "area",
-      "origin": {
-        "kind": "point_within_range"
-      },
-      "shape": {
-        "kind": "cube",
-        "sideFeet": 20
+      "holeId": "major_image_point",
+      "kind": "hole",
+      "label": "spell origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "cube",
+          "sideFeet": 20
+        }
       }
     },
     "castingTime": {

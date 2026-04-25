@@ -42,9 +42,14 @@ let entangle =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "cube", sideFeet = 20 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "entangle_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "cube", sideFeet = 20 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "str"
                 , dc = { kind = "caster_spell_save_dc" }

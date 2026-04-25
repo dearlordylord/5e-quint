@@ -20,8 +20,8 @@
       {
         "ability": "dex",
         "attachment": {
-          "kind": "hole",
           "holeId": "fireball_point",
+          "kind": "hole",
           "label": "point of explosion",
           "value": {
             "kind": "area",

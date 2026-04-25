@@ -64,8 +64,13 @@ let wand =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "magic_item_wand_of_paralysis_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , ability = "con"
                 , dc = { kind = "fixed", dc = 15 }

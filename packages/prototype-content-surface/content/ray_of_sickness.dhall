@@ -89,8 +89,13 @@ let rayOfSickness =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "ray_of_sickness_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit = [ damageRider, poisonedRider ]

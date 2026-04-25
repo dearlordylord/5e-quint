@@ -41,10 +41,15 @@ let dominatePerson =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "target"
-                    , selection =
-                        { mode = "one"
-                        , typeFilter = [ "humanoid" ]
+                    { kind = "hole"
+                    , holeId = "dominate_person_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection =
+                            { mode = "one"
+                            , typeFilter = [ "humanoid" ]
+                            }
                         }
                     }
                 , ability = "wis"

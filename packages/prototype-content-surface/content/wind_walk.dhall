@@ -121,8 +121,13 @@ let windWalk =
                       }
               in  [ { kind = "direct"
                     , attachment =
-                        { kind = "target"
-                        , selection = { mode = "choose_up_to", count = 11 }
+                        { kind = "hole"
+                        , holeId = "wind_walk_target"
+                        , label = "target"
+                        , value =
+                            { kind = "target"
+                            , selection = { mode = "choose_up_to", count = 11 }
+                            }
                         }
                     , effects =
                         [ { kind = "composite"

@@ -45,16 +45,26 @@ let callLightning =
               , upTo = { unit = "minute", amount = 10 }
               }
           , attachment =
-              { kind = "area"
-              , shape = { kind = "cylinder", radiusFeet = 60, heightFeet = 10 }
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "call_lightning_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = { kind = "cylinder", radiusFeet = 60, heightFeet = 10 }
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , initialPhase =
               { kind = "save_gate"
               , attachment =
-                  { kind = "area"
-                  , shape = { kind = "sphere", radiusFeet = 5 }
-                  , origin = { kind = "point_within_range" }
+                  { kind = "hole"
+                  , holeId = "call_lightning_point"
+                  , label = "spell origin point"
+                  , value =
+                      { kind = "area"
+                      , shape = { kind = "sphere", radiusFeet = 5 }
+                      , origin = { kind = "point_within_range" }
+                      }
                   }
               , ability = "dex"
               , dc = { kind = "caster_spell_save_dc" }

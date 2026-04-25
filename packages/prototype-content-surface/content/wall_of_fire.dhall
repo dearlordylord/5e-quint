@@ -99,16 +99,26 @@ let wallOfFire =
               , upTo = { unit = "minute", amount = 1 }
               }
           , attachment =
-              { kind = "area"
-              , shape = areaShape
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "wall_of_fire_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = areaShape
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , initialPhase =
               { kind = "save_gate"
               , attachment =
-                  { kind = "area"
-                  , shape = areaShape
-                  , origin = { kind = "point_within_range" }
+                  { kind = "hole"
+                  , holeId = "wall_of_fire_point"
+                  , label = "spell origin point"
+                  , value =
+                      { kind = "area"
+                      , shape = areaShape
+                      , origin = { kind = "point_within_range" }
+                      }
                   }
               , ability = "dex"
               , dc = { kind = "caster_spell_save_dc" }

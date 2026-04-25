@@ -57,9 +57,14 @@ let minorIllusion =
           , phases =
               [ { kind = "direct"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "cube", sideFeet = 5 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "minor_illusion_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "cube", sideFeet = 5 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , mode =
                     { label = "Illusion Type"

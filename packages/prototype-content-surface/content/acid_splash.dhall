@@ -25,9 +25,14 @@ let acidSplash =
           , phases =
               [ { kind = "save_gate"
                 , attachment =
-                    { kind = "area"
-                    , shape = { kind = "sphere", radiusFeet = 5 }
-                    , origin = { kind = "point_within_range" }
+                    { kind = "hole"
+                    , holeId = "acid_splash_point"
+                    , label = "spell origin point"
+                    , value =
+                        { kind = "area"
+                        , shape = { kind = "sphere", radiusFeet = 5 }
+                        , origin = { kind = "point_within_range" }
+                        }
                     }
                 , ability = "dex"
                 , dc = { kind = "caster_spell_save_dc" }

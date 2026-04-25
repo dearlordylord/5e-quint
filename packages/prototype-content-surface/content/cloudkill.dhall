@@ -41,16 +41,26 @@ let cloudkill =
               , upTo = { unit = "minute", amount = 10 }
               }
           , attachment =
-              { kind = "area"
-              , shape = { kind = "sphere", radiusFeet = 20 }
-              , origin = { kind = "point_within_range" }
+              { kind = "hole"
+              , holeId = "cloudkill_point"
+              , label = "spell origin point"
+              , value =
+                  { kind = "area"
+                  , shape = { kind = "sphere", radiusFeet = 20 }
+                  , origin = { kind = "point_within_range" }
+                  }
               }
           , initialPhase =
               { kind = "save_gate"
               , attachment =
-                  { kind = "area"
-                  , shape = { kind = "sphere", radiusFeet = 20 }
-                  , origin = { kind = "point_within_range" }
+                  { kind = "hole"
+                  , holeId = "cloudkill_point"
+                  , label = "spell origin point"
+                  , value =
+                      { kind = "area"
+                      , shape = { kind = "sphere", radiusFeet = 20 }
+                      , origin = { kind = "point_within_range" }
+                      }
                   }
               , ability = "con"
               , dc = { kind = "caster_spell_save_dc" }

@@ -29,8 +29,13 @@ let starryWisp =
           , phases =
               [ { kind = "attack_roll"
                 , attachment =
-                    { kind = "target"
-                    , selection = { mode = "one" }
+                    { kind = "hole"
+                    , holeId = "starry_wisp_target"
+                    , label = "target"
+                    , value =
+                        { kind = "target"
+                        , selection = { mode = "one" }
+                        }
                     }
                 , attackKind = "ranged_spell_attack"
                 , onHit =

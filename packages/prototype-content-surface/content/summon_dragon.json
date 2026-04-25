@@ -132,15 +132,20 @@
                 "kind": "fixed"
               },
               "damageType": {
-                "kind": "choice",
+                "holeId": "summon_dragon_damage_type",
+                "kind": "hole",
                 "label": "breath-weapon damage type (shared with Shared Resistances)",
-                "options": [
-                  "acid",
-                  "cold",
-                  "fire",
-                  "lightning",
-                  "poison"
-                ]
+                "value": {
+                  "kind": "choice",
+                  "label": "breath-weapon damage type (shared with Shared Resistances)",
+                  "options": [
+                    "acid",
+                    "cold",
+                    "fire",
+                    "lightning",
+                    "poison"
+                  ]
+                }
               },
               "kind": "damage"
             },
