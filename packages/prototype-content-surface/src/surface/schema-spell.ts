@@ -629,6 +629,13 @@ type EffectAtom =
   | { readonly kind: "area_movement_cost_multiplier"; readonly multiplier: 4 }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
   | { readonly kind: "block_line_of_sight" }
+  | {
+      readonly kind: "prevent_creature_passage";
+      readonly exceptCreatureTypes: ReadonlyNonEmptyArray<CreatureType>;
+      readonly allowsThroughBarrier: ReadonlyNonEmptyArray<
+        "spells" | "ranged_attacks" | "reach_weapon_attacks"
+      >;
+    }
   | { readonly kind: "allow_reaction_stand_up" }
   | { readonly kind: "none" };
 
@@ -1651,6 +1658,13 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         cover: Schema.Literal("three_quarters"),
       }),
       Schema.Struct({ kind: Schema.Literal("block_line_of_sight") }),
+      Schema.Struct({
+        kind: Schema.Literal("prevent_creature_passage"),
+        exceptCreatureTypes: nonEmpty(CreatureTypeSchema),
+        allowsThroughBarrier: nonEmpty(
+          Schema.Literal("spells", "ranged_attacks", "reach_weapon_attacks"),
+        ),
+      }),
       Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
       Schema.Struct({ kind: Schema.Literal("none") }),
     ),

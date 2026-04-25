@@ -983,6 +983,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "prevent_creature_passage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_creature_passage",
+        label: `prevent_creature_passage\nexcept: ${e.exceptCreatureTypes.join(", ")}\nallows: ${e.allowsThroughBarrier.join(", ")}`,
+      });
+      return id;
+    }
     case "allow_reaction_stand_up": {
       const id = ids("eff");
       nodes.push({
@@ -1270,6 +1280,7 @@ function traceEffectAtomScaling(
     case "area_movement_cost_multiplier":
     case "grant_cover":
     case "block_line_of_sight":
+    case "prevent_creature_passage":
     case "allow_reaction_stand_up":
       return;
     case "composite":
