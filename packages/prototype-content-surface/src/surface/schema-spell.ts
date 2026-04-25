@@ -705,6 +705,7 @@ type EffectAtom =
   | { readonly kind: "lock_object"; readonly password?: string }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
+  | { readonly kind: "area_is_lightly_obscured" }
   | { readonly kind: "area_is_heavily_obscured" }
   | { readonly kind: "area_has_strong_wind" }
   | { readonly kind: "prevent_ranged_weapon_attacks" }
@@ -1869,6 +1870,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxMoveFeet: optionalExact(Schema.Number),
       }),
       Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
+      Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
       Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
       Schema.Struct({ kind: Schema.Literal("prevent_ranged_weapon_attacks") }),

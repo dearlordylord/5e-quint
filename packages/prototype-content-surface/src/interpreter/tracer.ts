@@ -1176,6 +1176,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "area_is_lightly_obscured": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_is_lightly_obscured",
+        label: "area_is_lightly_obscured",
+      });
+      return id;
+    }
     case "area_is_heavily_obscured": {
       const id = ids("eff");
       nodes.push({
@@ -1610,6 +1620,7 @@ function traceEffectAtomScaling(
     case "lock_object":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "area_is_lightly_obscured":
     case "area_is_heavily_obscured":
     case "area_has_strong_wind":
     case "prevent_ranged_weapon_attacks":
