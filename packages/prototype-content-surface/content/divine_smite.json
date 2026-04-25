@@ -1,0 +1,86 @@
+{
+  "description": "Immediately after hitting a target with a Melee weapon or an Unarmed Strike, you take a Bonus Action. The target takes an extra 2d8 Radiant damage from the attack, plus 1d8 if the target is a Fiend or an Undead. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
+  "id": "divine_smite",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "bonus_action",
+      "trigger": {
+        "attack": "melee_weapon_or_unarmed_strike",
+        "kind": "after_hit_with"
+      }
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 1,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "divine_smite_hit_target",
+          "kind": "hole",
+          "label": "hit target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 2,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1,
+                "dieSize": 8
+              },
+              "startingAtLevel": 1
+            },
+            "damageType": "radiant",
+            "kind": "damage"
+          },
+          {
+            "amount": {
+              "expr": {
+                "dice": 1,
+                "dieSize": 8
+              },
+              "kind": "fixed"
+            },
+            "damageType": "radiant",
+            "kind": "conditional_bonus_damage",
+            "when": {
+              "kind": "target_creature_type",
+              "types": [
+                "fiend",
+                "undead"
+              ]
+            }
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Divine Smite",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Divine Smite"
+  }
+}

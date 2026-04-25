@@ -17,7 +17,7 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 
 type Anchor =
   | { kind: "srd_markdown"; file: string; heading: string }
-  | { kind: "xphb_json"; file: string; spellName: string }
+  | { kind: "fivetools_spell_json"; file: string; spellName: string }
   | { kind: "hardcoded"; note: string };
 
 function parseArgs(): { anchorJson: string } {
@@ -62,7 +62,7 @@ function extractMarkdownSection(filePath: string, heading: string): string {
 
 type XphbSpell = { name: string; [k: string]: unknown };
 
-function extractXphbSpell(filePath: string, spellName: string): string {
+function extractFivetoolsSpell(filePath: string, spellName: string): string {
   const content = fs.readFileSync(filePath, "utf8");
   const data = JSON.parse(content) as { spell: XphbSpell[] };
   const sp = data.spell.find((x) => x.name === spellName);
@@ -80,9 +80,9 @@ function main(): void {
       text = extractMarkdownSection(filePath, anchor.heading);
       break;
     }
-    case "xphb_json": {
+    case "fivetools_spell_json": {
       const filePath = path.resolve(repoRoot, anchor.file);
-      text = extractXphbSpell(filePath, anchor.spellName);
+      text = extractFivetoolsSpell(filePath, anchor.spellName);
       break;
     }
     case "hardcoded":

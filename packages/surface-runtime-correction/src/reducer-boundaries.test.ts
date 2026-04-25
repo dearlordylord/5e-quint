@@ -165,12 +165,8 @@ describe("reducer boundaries", () => {
           {
             holeInstanceKey: "activation:0:surface:fire_bolt_target",
             holeId: "fire_bolt_target",
-            kind: "surfaceAttachment",
+            kind: "targetChoice",
             label: "fire bolt target",
-            attachment: {
-              kind: "target",
-              selection: { mode: "one" },
-            },
           },
           {
             holeInstanceKey: "activation:0:runtime:attackRoll",
@@ -395,12 +391,8 @@ describe("reducer boundaries", () => {
         {
           holeInstanceKey: "activation:0:surface:fire_bolt_target",
           holeId: "fire_bolt_target",
-          kind: "surfaceAttachment",
+          kind: "targetChoice",
           label: "fire bolt target",
-          attachment: {
-            kind: "target",
-            selection: { mode: "one" },
-          },
         },
         {
           holeInstanceKey: "activation:0:runtime:attackRoll",
@@ -421,12 +413,9 @@ describe("reducer boundaries", () => {
         },
         filledHoleValues: [
           {
-            kind: "surfaceAttachment",
+            kind: "targetChoice",
             holeId: holeId("fire_bolt_target"),
-            value: {
-              kind: "target",
-              selection: { mode: "one" },
-            },
+            value: "B" as CreatureId,
           },
         ],
       }),
@@ -452,12 +441,9 @@ describe("reducer boundaries", () => {
         },
         filledHoleValues: [
           {
-            kind: "surfaceAttachment",
+            kind: "targetChoice",
             holeId: holeId("fire_bolt_target"),
-            value: {
-              kind: "target",
-              selection: { mode: "one" },
-            },
+            value: "B" as CreatureId,
           },
           {
             kind: "attackRoll",
@@ -469,6 +455,33 @@ describe("reducer boundaries", () => {
     ).toEqual({
       tag: "invalid",
       reason: "attack-roll unit damage application is not implemented yet",
+    });
+  });
+
+  it("resolveSubjectHoles rejects a unit-backed attack that targets the actor", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("fire_bolt_target"),
+            value: "A" as CreatureId,
+          },
+          {
+            kind: "attackRoll",
+            holeId: holeId("activation:0_attack_roll"),
+            value: 17,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "invalid attack target",
     });
   });
 

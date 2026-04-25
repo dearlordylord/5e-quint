@@ -32,6 +32,23 @@ One-liner: **this dir tells us what's MISSING; the package's `content/` dir hold
 | `evidence/auto-close-loop/` | tracked per-batch archive: closure report + per-slug proposal/result/verdict snapshots |
 | `provenance-check.sh` | pre-commit sweep: fails if PHB content leaked to main repo |
 
+## Authored holes (hard)
+
+Cast-time inputs MUST be authored as holes — `{ kind = "hole", holeId,
+label, value }` wrapping the bare payload — for both new mined units
+and any existing unit re-touched by a survey. The runtime correction
+reducer reads `holeId` to drive prompt discovery; emitting a bare
+`target` / `mark` / `object` / `area+point_within_range` /
+`area+on_primary_target` attachment, or a bare `damageType =
+{ kind = "choice", ... }`, is verdict-failing. Inherent payloads stay
+bare — `attachment = { kind = "self" }`, `attachment = { kind = "area",
+origin = { kind = "self" } }`, and static damage types do not need
+wrapping. Reference `bless.dhall`, `cure_wounds.dhall`,
+`fire_bolt.dhall`, `chromatic_orb.dhall`, and `fireball.dhall` for
+canonical shapes; `_types.dhall` exposes `Attachment` and
+`AttachmentValue` superset records for content that needs heterogeneous
+phase/operation lists.
+
 ## Routing rule (hard)
 
 SRD units produce artifacts in the **main repo**:
@@ -135,17 +152,21 @@ AUTO_COMMIT=1 bash scripts/content-surface-survey/run-auto-close-loop.sh start
 - **`--slug <slug>` narrows to one queue row.** It combines with `--tier` if you want an extra safety filter.
 - **`--force` is overwrite semantics.** It bypasses dataset skip, removes any existing dataset row for that slug, reruns the worker, and re-adds the row only if the new verdict succeeds.
 
-## Current limitations (catalog)
+## Catalog coverage
 
-`unit-catalog.ts` parses spells from 5etools XPHB JSON. It does NOT yet parse:
+`unit-catalog.ts` parses these SRD 5.2.1 sources at queue-build time:
 
-- Class features from `.references/srd-5.2.1/Classes/*.md`
-- Feats from `.references/srd-5.2.1/Feats.md`
-- Species traits from `.references/srd-5.2.1/Character-Origins.md`
-- Masteries (hardcode the 8)
-- Magic items from `.references/srd-5.2.1/Magic-Items/`
+- **Spells** — from 5etools `spells-xphb.json`, filtered by `srd52: true`.
+- **Class features** — `### Level N: ...` headings in `Classes/*.md` (covers both base-class and subclass features, since subclasses live in the same files at the same heading depth).
+- **Feats** — `### FeatName` under `## … Feats` sections in `Feats.md`.
+- **Species traits** — `***Trait Name.***` entries under `#### Species` in `Character-Origins.md`.
+- **Masteries** — 8 hardcoded names; definitions live in `Equipment.md` / `Rules-Glossary.md`.
+- **Magic items** — `## ItemName` headings in `Magic-Items/Items-*.md`.
+- **Backgrounds** — `#### BackgroundName` under `### Background Descriptions` in `Character-Origins.md` (4 SRD entries: Acolyte, Criminal, Sage, Soldier).
 
-Tier 1 includes ~15 manually-specified class features / species / masteries for coverage. Tier 2 coverage beyond spells requires extending the catalog parser.
+Categories NOT yet catalogued: animals/beasts (`Animals.md`, 95 stat blocks — out of scope; the survey targets content-surface units, not creature stat blocks), monsters (same reason), mundane equipment / weapon properties.
+
+Tier 1 includes ~15 manually-specified class features / species / masteries for canonical coverage. Tier 2 sweeps everything else.
 
 ## Convergence loop
 

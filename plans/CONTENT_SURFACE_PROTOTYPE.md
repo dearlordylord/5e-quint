@@ -200,6 +200,14 @@ At that point, Phase 1 proper begins (per the existing research-side plan).
 
 All typecheck clean. Traces under `packages/prototype-content-surface/content/<slug>.trace.md` (gitignored). Surface types in `src/surface/types.ts`; tracer in `src/interpreter/tracer.ts`.
 
+### Authoring conventions — holes
+
+- Cast-time inputs use the explicit hole shape `{ kind: "hole", holeId, label, value }` instead of the raw payload. Required for `target` / `mark` / `object` attachments, `area` attachments with `origin = "point_within_range"` or `"on_primary_target"`, and `damageType = { kind: "choice", ... }` slots.
+- Inherent payloads stay bare — `attachment = { kind: "self" }`, `attachment = { kind: "area", origin = { kind: "self" } }`, and static damage types do not need wrapping.
+- `holeId` follows `<slug>_<role>` (`fire_bolt_target`, `fireball_point`, `chromatic_orb_damage_type`, `heat_metal_object`, `ice_knife_burst_origin`). Cross-phase reuse goes through `{ kind: "same_choice_as", holeId }` rather than a fresh hole.
+- Heterogeneous phase / operation lists use `_types.dhall`'s `Attachment` and `AttachmentValue` supersets so the holed and non-holed elements share one Dhall record type.
+- Canonical references: `bless.dhall`, `cure_wounds.dhall`, `fire_bolt.dhall`, `fireball.dhall`, `chromatic_orb.dhall`.
+
 ### Survey data
 
 - `scripts/content-surface-survey/survey-results-srd.jsonl` — 28 Tier 0+1 units classified (pre-Option-B).

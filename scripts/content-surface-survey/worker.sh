@@ -63,26 +63,23 @@ anchor_json=$(jq -c .anchor <<<"$ROW")
 # WORKSPACE is the per-worker scratch so parallel workers don't clobber
 # each other's result.json / content writes.
 
-if [[ "$source" == "xphb" ]]; then
+if [[ "$source" == "srd-5.2.1" ]]; then
+  TEMPLATE_DIR="$REPO_ROOT/packages/prototype-content-surface"
+  RESULTS_DIR="$SCRIPTS_DIR/results-srd"
+  DATASET="$SCRIPTS_DIR/survey-results-srd.jsonl"
+else
+  # Any non-SRD source (xphb-only, tce, xge, phb, scc, ...) routes into
+  # the research workspace per the provenance rule. PHB / supplementary
+  # text never enters the main repo.
   TEMPLATE_DIR="$REPO_ROOT/.references/xphb-srd-pairing/phb-survey/workspace"
   RESULTS_DIR="$REPO_ROOT/.references/xphb-srd-pairing/phb-survey/results"
   DATASET="$REPO_ROOT/.references/xphb-srd-pairing/phb-survey/survey-results-phb.jsonl"
-  # Ensure template exists (first-PHB-unit setup).
   if [[ ! -d "$TEMPLATE_DIR" ]]; then
     mkdir -p "$TEMPLATE_DIR"
     rsync -a --exclude node_modules --exclude 'content/*.trace.md' \
       "$REPO_ROOT/packages/prototype-content-surface/" "$TEMPLATE_DIR/"
   fi
-  # Keep the PHB research template wired to the package dependencies so
-  # scratch workspaces inherit a valid node_modules symlink.
   ln -sfn "$REPO_ROOT/packages/prototype-content-surface/node_modules" "$TEMPLATE_DIR/node_modules"
-elif [[ "$source" == "srd-5.2.1" ]]; then
-  TEMPLATE_DIR="$REPO_ROOT/packages/prototype-content-surface"
-  RESULTS_DIR="$SCRIPTS_DIR/results-srd"
-  DATASET="$SCRIPTS_DIR/survey-results-srd.jsonl"
-else
-  echo "worker.sh: unknown source '$source'" >&2
-  exit 2
 fi
 
 mkdir -p "$RESULTS_DIR/$slug"

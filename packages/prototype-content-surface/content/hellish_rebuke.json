@@ -1,0 +1,76 @@
+{
+  "description": "The creature that damaged you is momentarily surrounded by green flames. It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save or half as much damage on a successful one. Using a Higher-Level Spell Slot. The damage increases by 1d10 for each spell slot level above 1.",
+  "id": "hellish_rebuke",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "reaction",
+      "trigger": {
+        "kind": "takes_damage_from_creature",
+        "rangeFeet": 60,
+        "requiresVisibleCreature": true
+      }
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "triggered_reaction",
+    "interruptsTrigger": false,
+    "level": 1,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "holeId": "hellish_rebuke_target",
+          "kind": "hole",
+          "label": "damaging creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 10
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 10
+            },
+            "startingAtLevel": 1
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Hellish Rebuke",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Hellish Rebuke"
+  }
+}

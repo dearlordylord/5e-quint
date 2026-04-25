@@ -17,12 +17,46 @@ CHECK_ROOTS=(
   "$REPO_ROOT/packages/prototype-content-surface/content"
 )
 
-# Signals of PHB leak: rows marked "xphb" source, known PHB-only slugs,
-# XPHB-only atom names not in SRD. The main-repo dataset and content
-# dir should contain NONE of these.
+# Signals of non-SRD leak: any non-`srd-5.2.1` source value, known
+# non-SRD slugs, XPHB-only atom names not in SRD. The main-repo dataset
+# and content dir should contain NONE of these. Sources covered:
+# xphb (PHB-only-2024), tce, xge, phb (2014), scc, bmt, egw, ftd,
+# frhof, ai, aag, aitfr-avt, efa, ggr, idrotf, llk, sato.
 declare -a PHB_PATTERNS=(
   '"source":"xphb"'
   '"source": "xphb"'
+  '"source":"tce"'
+  '"source": "tce"'
+  '"source":"xge"'
+  '"source": "xge"'
+  '"source":"phb"'
+  '"source": "phb"'
+  '"source":"scc"'
+  '"source": "scc"'
+  '"source":"bmt"'
+  '"source": "bmt"'
+  '"source":"egw"'
+  '"source": "egw"'
+  '"source":"ftd"'
+  '"source": "ftd"'
+  '"source":"frhof"'
+  '"source": "frhof"'
+  '"source":"ai"'
+  '"source": "ai"'
+  '"source":"aag"'
+  '"source": "aag"'
+  '"source":"aitfr-avt"'
+  '"source": "aitfr-avt"'
+  '"source":"efa"'
+  '"source": "efa"'
+  '"source":"ggr"'
+  '"source": "ggr"'
+  '"source":"idrotf"'
+  '"source": "idrotf"'
+  '"source":"llk"'
+  '"source": "llk"'
+  '"source":"sato"'
+  '"source": "sato"'
   '"srd52": *false'
 )
 

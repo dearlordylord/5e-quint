@@ -69,12 +69,31 @@ function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   };
 }
 
+function targetChoiceHole(
+  stepKey: HoleStepKey,
+  attachment: Extract<Attachment, { readonly kind: "hole" }>,
+): RuntimeHole {
+  return {
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey(`surface:${attachment.holeId}`),
+    ),
+    holeId: holeId(attachment.holeId),
+    kind: "targetChoice",
+    ...(attachment.label === undefined ? {} : { label: attachment.label }),
+  };
+}
+
 function attachmentHoles(
   stepKey: HoleStepKey,
   attachment: Attachment,
 ): RuntimeHoleSet {
   if (!isHoleAttachment(attachment)) {
     return [];
+  }
+
+  if (attachment.value.kind === "target") {
+    return [targetChoiceHole(stepKey, attachment)];
   }
 
   const baseHole = {

@@ -1,0 +1,115 @@
+{
+  "description": "Hail falls in a 20-foot-radius, 40-foot-high Cylinder centered on a point within range. Each creature in the Cylinder makes a Dexterity saving throw, taking 2d10 Bludgeoning damage and 4d6 Cold damage on a failed save or half as much damage on a successful one. The ground in the Cylinder becomes Difficult Terrain until the end of your next turn. Using a Higher-Level Spell Slot. The Bludgeoning damage increases by 1d10 for each spell slot level above 4.",
+  "id": "ice_storm",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a mitten",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 4,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "holeId": "ice_storm_cylinder",
+          "kind": "hole",
+          "label": "storm cylinder",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "heightFeet": 40,
+              "kind": "cylinder",
+              "radiusFeet": 20
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 2,
+                  "dieSize": 10
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1,
+                  "dieSize": 10
+                },
+                "startingAtLevel": 4
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 4,
+                  "dieSize": 6
+                },
+                "kind": "fixed"
+              },
+              "damageType": "cold",
+              "kind": "damage"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      },
+      {
+        "attachment": {
+          "holeId": "ice_storm_cylinder",
+          "kind": "hole",
+          "label": "storm cylinder",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "heightFeet": 40,
+              "kind": "cylinder",
+              "radiusFeet": 20
+            }
+          }
+        },
+        "effects": [
+          {
+            "kind": "area_is_difficult_terrain"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 300,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Ice Storm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Ice Storm"
+  }
+}

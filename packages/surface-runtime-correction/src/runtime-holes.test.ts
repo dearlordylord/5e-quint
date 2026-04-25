@@ -59,12 +59,8 @@ describe("projectPhaseHoles", () => {
       {
         holeInstanceKey: "activation:0:surface:fire_bolt_target",
         holeId: "fire_bolt_target",
-        kind: "surfaceAttachment",
+        kind: "targetChoice",
         label: "fire bolt target",
-        attachment: {
-          kind: "target",
-          selection: { mode: "one" },
-        },
       },
       {
         holeInstanceKey: "activation:0:runtime:attackRoll",
@@ -84,12 +80,8 @@ describe("projectPhaseHoles", () => {
       {
         holeInstanceKey: "activation:0:surface:cure_wounds_target",
         holeId: "cure_wounds_target",
-        kind: "surfaceAttachment",
+        kind: "targetChoice",
         label: "healing target",
-        attachment: {
-          kind: "target",
-          selection: { mode: "one" },
-        },
       },
     ]);
   });
@@ -132,12 +124,8 @@ describe("projectPhaseHoles", () => {
       {
         holeInstanceKey: "activation:0:surface:chromatic_orb_primary_target",
         holeId: "chromatic_orb_primary_target",
-        kind: "surfaceAttachment",
+        kind: "targetChoice",
         label: "primary target",
-        attachment: {
-          kind: "target",
-          selection: { mode: "one" },
-        },
       },
       {
         holeInstanceKey: "activation:0:runtime:attackRoll",
@@ -172,12 +160,8 @@ describe("projectPhaseHoles", () => {
       {
         holeInstanceKey: "activation:1:surface:scorching_ray_target",
         holeId: "scorching_ray_target",
-        kind: "surfaceAttachment",
+        kind: "targetChoice",
         label: "ray target",
-        attachment: {
-          kind: "target",
-          selection: { mode: "one" },
-        },
       },
       {
         holeInstanceKey: "activation:1:runtime:attackRoll",
@@ -204,12 +188,8 @@ describe("projectPhaseHoles", () => {
       {
         holeInstanceKey: "continuation:1:surface:chromatic_orb_leap_target",
         holeId: "chromatic_orb_leap_target",
-        kind: "surfaceAttachment",
+        kind: "targetChoice",
         label: "leap target",
-        attachment: {
-          kind: "target",
-          selection: { mode: "one" },
-        },
       },
       {
         holeInstanceKey: "continuation:1:runtime:attackRoll",

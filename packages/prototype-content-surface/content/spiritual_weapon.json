@@ -1,0 +1,134 @@
+{
+  "description": "You create a floating, spectral force within range and can immediately make one melee spell attack against one creature within 5 feet of the force. On a hit, the target takes Force damage equal to 1d8 plus your spellcasting ability modifier. On later turns, you can take a Bonus Action to move the force up to 20 feet and repeat the attack. Using a Higher-Level Spell Slot. The damage increases by 1d8 for every slot level above 2.",
+  "id": "spiritual_weapon",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "spiritual_weapon_force",
+      "kind": "hole",
+      "label": "spectral force",
+      "value": {
+        "description": "space within range",
+        "kind": "location"
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "spiritual_weapon_attack_target",
+        "kind": "hole",
+        "label": "creature within 5 feet of the force",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "attackKind": "melee_spell_attack",
+      "kind": "attack_roll",
+      "onHit": [
+        {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 1,
+              "dieSize": 8,
+              "spellcastingMod": true
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 8
+            },
+            "startingAtLevel": 2
+          },
+          "damageType": "force",
+          "kind": "damage"
+        }
+      ],
+      "onMiss": [
+        {
+          "kind": "none"
+        }
+      ]
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 20
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      },
+      {
+        "effect": {
+          "attackKind": "melee_spell_attack",
+          "kind": "attack_roll",
+          "onHit": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "spellcastingMod": true
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1,
+                  "dieSize": 8
+                },
+                "startingAtLevel": 2
+              },
+              "damageType": "force",
+              "kind": "damage"
+            }
+          ],
+          "onMiss": [
+            {
+              "kind": "none"
+            }
+          ]
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Spiritual Weapon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Spiritual Weapon"
+  }
+}

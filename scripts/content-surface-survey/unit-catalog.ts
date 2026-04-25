@@ -23,9 +23,31 @@ type UnitKind =
   | "feat"
   | "species_trait"
   | "mastery"
-  | "magic_item";
+  | "magic_item"
+  | "background";
 
-type Source = "srd-5.2.1" | "xphb";
+// Source identifies the 5etools source code OR the SRD provenance class.
+// Routing rule: `srd-5.2.1` → main repo; everything else → research repo
+// (see worker.sh's source-based routing).
+type Source =
+  | "srd-5.2.1"
+  | "xphb"
+  | "tce"
+  | "xge"
+  | "phb"
+  | "scc"
+  | "bmt"
+  | "egw"
+  | "ftd"
+  | "frhof"
+  | "ai"
+  | "aag"
+  | "aitfr-avt"
+  | "efa"
+  | "ggr"
+  | "idrotf"
+  | "llk"
+  | "sato";
 
 type Tier = 0 | 1 | 2 | 3;
 
@@ -33,7 +55,11 @@ type Tier = 0 | 1 | 2 | 3;
 // at runtime — NO text embedded in the queue itself.
 type Anchor =
   | { readonly kind: "srd_markdown"; readonly file: string; readonly heading: string }
-  | { readonly kind: "xphb_json"; readonly file: string; readonly spellName: string }
+  | {
+      readonly kind: "fivetools_spell_json";
+      readonly file: string;
+      readonly spellName: string;
+    }
   | { readonly kind: "hardcoded"; readonly note: string };
 
 type QueueRow = {
@@ -69,7 +95,7 @@ const tier0: ReadonlyArray<QueueRow> = [
     kind: "spell",
     tier: 0,
     anchor: {
-      kind: "xphb_json",
+      kind: "fivetools_spell_json",
       file: ".references/5etools-src/data/spells/spells-xphb.json",
       spellName: "Fire Bolt",
     },
@@ -135,28 +161,28 @@ const tier0: ReadonlyArray<QueueRow> = [
 const tier1Manual: ReadonlyArray<QueueRow> = [
   // Cantrip outliers and variants
   { slug: "eldritch_blast", name: "Eldritch Blast", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Eldritch Blast" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Eldritch Blast" } },
   { slug: "shillelagh", name: "Shillelagh", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Shillelagh" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Shillelagh" } },
   // Auto-hit / save / attack variety
   { slug: "magic_missile", name: "Magic Missile", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Magic Missile" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Magic Missile" } },
   { slug: "fireball", name: "Fireball", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Fireball" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Fireball" } },
   { slug: "shield", name: "Shield", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Shield" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Shield" } },
   { slug: "counterspell", name: "Counterspell", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Counterspell" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Counterspell" } },
   { slug: "hunters_mark", name: "Hunter's Mark", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Hunter's Mark" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Hunter's Mark" } },
   { slug: "alarm", name: "Alarm", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Alarm" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Alarm" } },
   { slug: "death_ward", name: "Death Ward", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Death Ward" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Death Ward" } },
   { slug: "polymorph", name: "Polymorph", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Polymorph" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Polymorph" } },
   { slug: "protection_from_energy", name: "Protection from Energy", source: "srd-5.2.1", kind: "spell", tier: 1,
-    anchor: { kind: "xphb_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Protection from Energy" } },
+    anchor: { kind: "fivetools_spell_json", file: ".references/5etools-src/data/spells/spells-xphb.json", spellName: "Protection from Energy" } },
   // Class features (variety of scaling axes)
   { slug: "fighter_action_surge", name: "Action Surge", source: "srd-5.2.1", kind: "class_feature", tier: 1,
     anchor: { kind: "srd_markdown", file: ".references/srd-5.2.1/Classes/Fighter.md", heading: "Action Surge" } },
@@ -217,7 +243,7 @@ function buildSpellTier2(spells: ReadonlyArray<XphbSpell>): ReadonlyArray<QueueR
       kind: "spell",
       tier: 2,
       anchor: {
-        kind: "xphb_json",
+        kind: "fivetools_spell_json",
         file: ".references/5etools-src/data/spells/spells-xphb.json",
         spellName: sp.name,
       },
@@ -227,27 +253,87 @@ function buildSpellTier2(spells: ReadonlyArray<XphbSpell>): ReadonlyArray<QueueR
 }
 
 // ------------------------------------------------------------
-// Tier 3 — PHB-only spells (research only; never enter main repo)
+// Tier 3 — PHB-extension and supplementary 5e spells (research only;
+// never enter main repo). Walks every spells-*.json in
+// .references/5etools-src/data/spells/, dedupes by slug, prefers XPHB
+// over reprints, and falls back through TCE / XGE / PHB / others in
+// priority order. Booming Blade and Green-Flame Blade live in TCE
+// (and XGE before that) — neither is in XPHB, both belong here.
 // ------------------------------------------------------------
 
-function buildPhbTier3(spells: ReadonlyArray<XphbSpell>): ReadonlyArray<QueueRow> {
-  const rows: QueueRow[] = [];
-  for (const sp of spells) {
-    if (sp.srd52 === true) continue;
-    rows.push({
-      slug: slugify(sp.name),
-      name: sp.name,
-      source: "xphb",
-      kind: "spell",
-      tier: 3,
-      anchor: {
-        kind: "xphb_json",
-        file: ".references/5etools-src/data/spells/spells-xphb.json",
-        spellName: sp.name,
-      },
-    });
+type FivetoolsSpellRecord = {
+  readonly name: string;
+  readonly srd52?: boolean;
+};
+
+type FivetoolsSourceFile = {
+  readonly source: Source;
+  readonly file: string;
+  readonly priority: number; // lower wins on slug collision
+};
+
+const FIVETOOLS_SOURCES: ReadonlyArray<FivetoolsSourceFile> = [
+  // XPHB is the highest-priority 2024 reprint; non-srd52 XPHB rows are
+  // PHB-only-2024 content (already produced by buildPhbTier3-equivalent below).
+  { source: "xphb", file: "spells-xphb.json", priority: 0 },
+  { source: "tce", file: "spells-tce.json", priority: 1 },
+  { source: "xge", file: "spells-xge.json", priority: 2 },
+  { source: "phb", file: "spells-phb.json", priority: 3 },
+  { source: "scc", file: "spells-scc.json", priority: 4 },
+  { source: "bmt", file: "spells-bmt.json", priority: 5 },
+  { source: "egw", file: "spells-egw.json", priority: 6 },
+  { source: "ftd", file: "spells-ftd.json", priority: 7 },
+  { source: "frhof", file: "spells-frhof.json", priority: 8 },
+  { source: "ai", file: "spells-ai.json", priority: 9 },
+  { source: "aag", file: "spells-aag.json", priority: 10 },
+  { source: "aitfr-avt", file: "spells-aitfr-avt.json", priority: 11 },
+  { source: "efa", file: "spells-efa.json", priority: 12 },
+  { source: "ggr", file: "spells-ggr.json", priority: 13 },
+  { source: "idrotf", file: "spells-idrotf.json", priority: 14 },
+  { source: "llk", file: "spells-llk.json", priority: 15 },
+  { source: "sato", file: "spells-sato.json", priority: 16 },
+];
+
+function loadFivetoolsSpells(file: string): ReadonlyArray<FivetoolsSpellRecord> {
+  const p = path.join(refs, "5etools-src/data/spells", file);
+  if (!fs.existsSync(p)) return [];
+  const raw = fs.readFileSync(p, "utf8");
+  const data = JSON.parse(raw) as { spell: FivetoolsSpellRecord[] };
+  return data.spell;
+}
+
+// Tier 3 — every non-SRD-5.2.1 5e spell from any 5etools source.
+// Dedupes by slug; if multiple sources contain the same spell name,
+// the lowest-priority (first declared) source wins. Slugs already
+// taken by tier 0 / 1 / 2 are skipped (those carry SRD provenance).
+function buildTier3FromAllSources(
+  takenSrdSlugs: ReadonlySet<string>,
+): ReadonlyArray<QueueRow> {
+  const seen = new Map<string, QueueRow>();
+  for (const srcFile of FIVETOOLS_SOURCES) {
+    const spells = loadFivetoolsSpells(srcFile.file);
+    for (const sp of spells) {
+      // Skip srd52-flagged XPHB reprints — those go into the main-repo
+      // tier 2 pool via buildSpellTier2(). All other rows are tier 3.
+      if (srcFile.source === "xphb" && sp.srd52 === true) continue;
+      const slug = slugify(sp.name);
+      if (takenSrdSlugs.has(slug)) continue;
+      if (seen.has(slug)) continue; // earlier (higher-priority) source wins
+      seen.set(slug, {
+        slug,
+        name: sp.name,
+        source: srcFile.source,
+        kind: "spell",
+        tier: 3,
+        anchor: {
+          kind: "fivetools_spell_json",
+          file: `.references/5etools-src/data/spells/${srcFile.file}`,
+          spellName: sp.name,
+        },
+      });
+    }
   }
-  return rows;
+  return [...seen.values()];
 }
 
 // ------------------------------------------------------------
@@ -407,6 +493,55 @@ function buildMasteries(): ReadonlyArray<QueueRow> {
 }
 
 // ------------------------------------------------------------
+// Backgrounds — parse #### BackgroundName entries under
+// `### Background Descriptions` in Character-Origins.md.
+// ------------------------------------------------------------
+
+const KNOWN_BACKGROUNDS = new Set([
+  "Acolyte",
+  "Criminal",
+  "Sage",
+  "Soldier",
+]);
+
+function parseBackgrounds(): ReadonlyArray<QueueRow> {
+  const file = ".references/srd-5.2.1/Character-Origins.md";
+  const content = fs.readFileSync(path.join(repoRoot, file), "utf8");
+  const lines = content.split("\n");
+  const rows: QueueRow[] = [];
+  let inBackgroundSection = false;
+  for (const line of lines) {
+    if (line.startsWith("### ")) {
+      inBackgroundSection = line.includes("Background Descriptions");
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      // Top-level section change closes the backgrounds block.
+      inBackgroundSection = false;
+      continue;
+    }
+    if (!inBackgroundSection) continue;
+    const m = line.match(/^####\s+(.+?)\s*$/);
+    if (!m) continue;
+    const name = m[1] ?? "";
+    if (!KNOWN_BACKGROUNDS.has(name)) continue;
+    rows.push({
+      slug: `background_${slugify(name)}`,
+      name,
+      source: "srd-5.2.1",
+      kind: "background",
+      tier: 2,
+      anchor: {
+        kind: "srd_markdown",
+        file,
+        heading: name,
+      },
+    });
+  }
+  return rows;
+}
+
+// ------------------------------------------------------------
 // Magic items — parse ## ItemName headings in Magic-Items/Items-*.md
 // ------------------------------------------------------------
 
@@ -457,12 +592,20 @@ function dedupeAgainst(
 function main(): void {
   const spells = loadXphbSpells();
   const tier2Spells = buildSpellTier2(spells);
-  const tier3 = buildPhbTier3(spells);
+  // Slugs already claimed by tier 0/1/2 (all SRD-shipped); tier 3 must
+  // not duplicate them — non-SRD reprints of SRD spells are skipped.
+  const srdSpellSlugs = new Set<string>([
+    ...tier0.filter((r) => r.kind === "spell").map((r) => r.slug),
+    ...tier1Manual.filter((r) => r.kind === "spell").map((r) => r.slug),
+    ...tier2Spells.map((r) => r.slug),
+  ]);
+  const tier3 = buildTier3FromAllSources(srdSpellSlugs);
   const classFeatures = parseClassFeatures();
   const feats = parseFeats();
   const speciesTraits = parseSpeciesTraits();
   const masteries = buildMasteries();
   const magicItems = parseMagicItems();
+  const backgrounds = parseBackgrounds();
 
   const takenSlugs = new Set([
     ...tier0.map((r) => r.slug),
@@ -478,6 +621,7 @@ function main(): void {
     ...dedupeAgainst(speciesTraits, takenSlugs),
     ...dedupeAgainst(masteries, takenSlugs),
     ...dedupeAgainst(magicItems, takenSlugs),
+    ...dedupeAgainst(backgrounds, takenSlugs),
     ...tier3,
   ];
 

@@ -72,6 +72,7 @@ export const V4_RESOLUTION_ATOMS = [
   "save_gate",
   "repeat_save",
   "ability_check",
+  "ability_check_gate",
   "interrupt_resolution",
   "condition_progression",
 ] as const;
@@ -260,6 +261,17 @@ export const STAGE_3_EXTENSIONS = [
   // for percentile/d20 outcome tables authored as activation phases.
   "random_table",
   "table_result",
+  // Authored-hole demarcation: the tracer emits a `hole` node whenever a
+  // unit defers a payload (target/mark/object/area-with-chosen-point or a
+  // damageType choice) to cast-time selection. Whitelisting keeps mined
+  // verdicts on hole-bearing content from tripping false atom_widenings.
+  "hole",
+  // Continuation model (ed0b47c0): repeat_continuation chains a phase to
+  // a follow-up branch when a runtime predicate fires (Chromatic Orb's
+  // "leap on duplicate damage faces"); continuation_limit nodes carry
+  // bounded-by edges describing the limit's grammar.
+  "repeat_continuation",
+  "continuation_limit",
 ] as const;
 
 // Stage 3 relation extensions: tracer-emitted relations beyond v4.
@@ -267,6 +279,7 @@ export const STAGE_3_RELATIONS = [
   "repeats_as", // repeat_save cadence edge.
   "lifecycle", // magic-item destruction edge from root → item_destruction.
   "branches_on_roll", // random-table outcome edge from table → result.
+  "bounded_by", // continuation_limit edge from a repeat_continuation node.
 ] as const;
 
 export const ALL_KNOWN_ATOMS: ReadonlyArray<string> = [

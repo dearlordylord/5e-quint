@@ -175,6 +175,20 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "conditional_bonus_damage": {
+      const id = ids("dmg");
+      const when =
+        e.when.kind === "target_creature_type"
+          ? `target type: ${e.when.types.join("/")}`
+          : e.when.kind;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "conditional_bonus_damage",
+        label: `conditional_bonus_damage\n${when}\n${describeDiceAmount(e.amount)} ${describeDamageTypeRef(e.damageType)}`,
+      });
+      return id;
+    }
     case "heal_hp": {
       const id = ids("eff");
       nodes.push({
@@ -954,6 +968,7 @@ function traceEffectAtomScaling(
 ): void {
   switch (e.kind) {
     case "damage":
+    case "conditional_bonus_damage":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
     case "heal_hp":
@@ -1194,11 +1209,15 @@ function traceCastingTimeQuota(
       });
       return id;
     case "bonus_action":
+      const trigger =
+        ct.trigger === undefined
+          ? ""
+          : `\ntrigger: ${describeBonusActionTrigger(ct.trigger)}`;
       nodes.push({
         id,
         category: "resource",
         atomKind: "bonus_action_quota",
-        label: "bonus_action_quota\n(Casting Time: Bonus Action)",
+        label: `bonus_action_quota\n(Casting Time: Bonus Action)${trigger}`,
       });
       return id;
     case "reaction":
@@ -1228,10 +1247,28 @@ function traceCastingTimeQuota(
   }
 }
 
+function describeBonusActionTrigger(
+  t: Extract<CastingTime, { kind: "bonus_action" }>["trigger"],
+): string {
+  if (t === undefined) return "";
+  switch (t.kind) {
+    case "after_hit_with":
+      return t.attack === "melee_weapon_or_unarmed_strike"
+        ? "after hit with Melee weapon or Unarmed Strike"
+        : t.attack;
+  }
+}
+
 function describeReactionTrigger(t: ReactionTrigger): string {
   switch (t.kind) {
     case "hit_by_attack_roll":
       return `hit by attack roll${describeWeaponFilter(t.weaponFilter)}`;
+    case "takes_damage_from_creature": {
+      const visible = t.requiresVisibleCreature === true ? ", visible" : "";
+      const range =
+        t.rangeFeet === undefined ? "" : `, within ${t.rangeFeet} ft`;
+      return `takes damage from creature${visible}${range}`;
+    }
     case "targeted_by_named_spell":
       return `targeted by ${t.spellId}`;
     case "creature_casts_spell": {
@@ -1691,12 +1728,14 @@ function traceOngoingOpEffect(
         const hitId = traceEffectAtom(hit, nodes, ids, edges);
         if (hitId !== null) {
           edges.push({ from: arId, to: hitId, relation: "branches_on_hit" });
+          traceEffectAtomScaling(hit, hitId, slotId, nodes, edges, ids);
         }
       }
       for (const miss of eff.onMiss) {
         const missId = traceEffectAtom(miss, nodes, ids, edges);
         if (missId !== null) {
           edges.push({ from: arId, to: missId, relation: "branches_on_miss" });
+          traceEffectAtomScaling(miss, missId, slotId, nodes, edges, ids);
         }
       }
       return;

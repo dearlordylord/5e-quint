@@ -186,6 +186,11 @@ type ReactionTrigger =
       readonly kind: "hit_by_attack_roll";
       readonly weaponFilter?: WeaponFilter;
     }
+  | {
+      readonly kind: "takes_damage_from_creature";
+      readonly requiresVisibleCreature?: true;
+      readonly rangeFeet?: number;
+    }
   | { readonly kind: "targeted_by_named_spell"; readonly spellId: string }
   | {
       readonly kind: "creature_casts_spell";
@@ -212,6 +217,15 @@ type EffectAtom =
       readonly damageType: DamageTypeRef;
       readonly amount: DiceAmount;
       readonly timing?: "end_of_next_turn";
+    }
+  | {
+      readonly kind: "conditional_bonus_damage";
+      readonly when: {
+        readonly kind: "target_creature_type";
+        readonly types: ReadonlyNonEmptyArray<CreatureType>;
+      };
+      readonly damageType: DamageTypeRef;
+      readonly amount: DiceAmount;
     }
   | {
       readonly kind: "heal_hp";
@@ -648,6 +662,11 @@ export const ReactionTriggerSchema: Schema.suspend<
       weaponFilter: optionalExact(WeaponFilterSchema),
     }),
     Schema.Struct({
+      kind: Schema.Literal("takes_damage_from_creature"),
+      requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+      rangeFeet: optionalExact(Schema.Number),
+    }),
+    Schema.Struct({
       kind: Schema.Literal("targeted_by_named_spell"),
       spellId: Schema.String,
     }),
@@ -672,6 +691,11 @@ export const ReactionTriggerSchema: Schema.suspend<
   ),
 );
 
+export const BonusActionTriggerSchema = Schema.Struct({
+  kind: Schema.Literal("after_hit_with"),
+  attack: Schema.Literal("melee_weapon_or_unarmed_strike"),
+});
+
 export const CastingTimeSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
@@ -679,6 +703,7 @@ export const CastingTimeSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("bonus_action"),
+    trigger: optionalExact(BonusActionTriggerSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("reaction"),
@@ -1037,6 +1062,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         damageType: DamageTypeRefSchema,
         amount: DiceAmountSchema,
         timing: optionalExact(Schema.Literal("end_of_next_turn")),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("conditional_bonus_damage"),
+        when: Schema.Struct({
+          kind: Schema.Literal("target_creature_type"),
+          types: nonEmpty(CreatureTypeSchema),
+        }),
+        damageType: DamageTypeRefSchema,
+        amount: DiceAmountSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("heal_hp"),

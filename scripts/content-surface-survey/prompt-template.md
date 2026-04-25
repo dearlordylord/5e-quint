@@ -84,6 +84,36 @@ All reference files are provided below. Do NOT use the Read tool on any of these
 {{TAXONOMY_MD}}
 ```
 
+## Authored holes (REQUIRED for cast-time inputs)
+
+Any field that the player/DM picks at cast or activation time must be
+authored as a **hole** — `{ kind = "hole", holeId, label, value }`
+wrapping the underlying payload. This is the demarcation contract the
+runtime correction reducer depends on; emitting the bare payload (e.g.
+`{ kind = "target", selection = ... }` directly) is a verdict-failing
+defect.
+
+Required hole sites:
+
+- `attachment` whenever its inner `kind` is `target`, `mark`, `object`,
+  or `area` with `origin = "point_within_range"` / `"on_primary_target"`.
+- `damageType` whenever the spell offers a `choice` (chromatic_orb's
+  orb-type, dragonborn breath-weapon's ancestry, etc.). Reuse a prior
+  choice via `{ kind = "same_choice_as", holeId }`.
+
+NOT a hole — these are inherent and authored bare:
+
+- `attachment = { kind = "self" }` — the caster, no choice.
+- `attachment = { kind = "area", origin = { kind = "self" } }` —
+  caster-emanated AoE, no point input.
+- Static `damageType = "fire"` and similar literals.
+
+`holeId` must be slug-prefixed and role-suffixed (`<slug>_target`,
+`<slug>_point`, `<slug>_damage_type`, `<slug>_burst_origin`,
+`<slug>_object`, `<slug>_mark`). Reference `bless.dhall`,
+`fire_bolt.dhall`, `cure_wounds.dhall`, `chromatic_orb.dhall`, and
+`fireball.dhall` for shapes.
+
 ## Task steps
 
 1. Read the unit source text (below) and identify the payload family:

@@ -1,0 +1,86 @@
+{
+  "description": "You evoke a fiery blade in your free hand for the duration. As a Magic action, you can make a melee spell attack with the blade. On a hit, the target takes Fire damage equal to 3d6 plus your spellcasting ability modifier. The blade sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
+  "id": "flame_blade",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "bonus_action"
+    },
+    "components": {
+      "m": "a sumac leaf",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "brightRadiusFeet": 10,
+          "dimAdditionalFeet": 10,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "attackKind": "melee_spell_attack",
+          "kind": "attack_roll",
+          "onHit": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "spellcastingMod": true
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "startingAtLevel": 2
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "onMiss": [
+            {
+              "kind": "none"
+            }
+          ]
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Flame Blade",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Flame Blade"
+  }
+}
