@@ -420,6 +420,15 @@ type EffectAtom =
     }
   | { readonly kind: "deny_opportunity_attack" }
   | { readonly kind: "grant_temp_hp"; readonly amount: DiceAmount }
+  | {
+      readonly kind: "prevent_drop_to_0_hp";
+      readonly replacementHp: number;
+      readonly consumesEffect?: true;
+    }
+  | {
+      readonly kind: "negate_instant_death";
+      readonly consumesEffect?: true;
+    }
   | { readonly kind: "grant_condition_immunity"; readonly condition: Condition }
   | {
       readonly kind: "grant_damage_immunity";
@@ -1314,6 +1323,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("grant_temp_hp"),
         amount: DiceAmountSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("prevent_drop_to_0_hp"),
+        replacementHp: Schema.Number,
+        consumesEffect: optionalExact(Schema.Literal(true)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("negate_instant_death"),
+        consumesEffect: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_feat"),

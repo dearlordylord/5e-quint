@@ -518,6 +518,28 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "prevent_drop_to_0_hp": {
+      const id = ids("eff");
+      const once = e.consumesEffect === true ? "\nconsumes effect" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_drop_to_0_hp",
+        label: `prevent_drop_to_0_hp\nreplacement HP: ${e.replacementHp}${once}`,
+      });
+      return id;
+    }
+    case "negate_instant_death": {
+      const id = ids("eff");
+      const once = e.consumesEffect === true ? "\nconsumes effect" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "negate_instant_death",
+        label: `negate_instant_death${once}`,
+      });
+      return id;
+    }
     case "grant_feat": {
       const id = ids("eff");
       const categories =
@@ -1013,6 +1035,8 @@ function traceEffectAtomScaling(
     case "grant_proficiency":
     case "grant_spell_access":
     case "grant_condition_immunity":
+    case "prevent_drop_to_0_hp":
+    case "negate_instant_death":
     case "grant_damage_immunity":
     case "block_max_hp_reduction":
     case "set_speed_ratio":

@@ -1,0 +1,65 @@
+{
+  "description": "You touch a creature and grant it protection from death. The first time the target would drop to 0 Hit Points before the spell ends, the target instead drops to 1 Hit Point and the spell ends. If the target is subjected to an effect that would kill it instantly without dealing damage, that effect is negated against the target and the spell ends.",
+  "id": "death_ward",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "death_ward_target",
+      "kind": "hole",
+      "label": "touched creature",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 8,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 4,
+    "operations": [
+      {
+        "effect": {
+          "consumesEffect": true,
+          "kind": "prevent_drop_to_0_hp",
+          "replacementHp": 1
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "consumesEffect": true,
+          "kind": "negate_instant_death"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Death Ward",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Death Ward"
+  }
+}
