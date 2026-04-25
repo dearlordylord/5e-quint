@@ -896,6 +896,12 @@ export const AreaShapeDescriptorSchema = Schema.Union(
     radiusFeet: Schema.Number,
   }),
   Schema.Struct({
+    kind: Schema.Literal("sphere_cluster"),
+    count: Schema.Number,
+    radiusFeet: Schema.Number,
+    overlapResolution: Schema.Literal("affect_once"),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("cone"),
     lengthFeet: Schema.Number,
   }),

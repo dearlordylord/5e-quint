@@ -1,0 +1,86 @@
+{
+  "description": "Blazing orbs of fire plummet to the ground at four different points you can see within range. Each creature in a 40-foot-radius Sphere centered on each point makes a Dexterity saving throw, taking 20d6 Fire damage and 20d6 Bludgeoning damage on a failed save or half as much damage on a successful one. A creature in more than one Sphere is affected only once.",
+  "id": "meteor_swarm",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 9,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "holeId": "meteor_swarm_points",
+          "kind": "hole",
+          "label": "four meteor impact points",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "count": 4,
+              "kind": "sphere_cluster",
+              "overlapResolution": "affect_once",
+              "radiusFeet": 40
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 20,
+                  "dieSize": 6
+                },
+                "kind": "fixed"
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 20,
+                  "dieSize": 6
+                },
+                "kind": "fixed"
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      }
+    ],
+    "range": {
+      "feet": 5280,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Meteor Swarm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Meteor Swarm"
+  }
+}

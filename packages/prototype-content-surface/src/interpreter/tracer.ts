@@ -3323,6 +3323,8 @@ function describeAreaShape(s: AreaShapeSpec): string {
   switch (s.kind) {
     case "sphere":
       return `sphere r=${s.radiusFeet} ft`;
+    case "sphere_cluster":
+      return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
     case "cube":
@@ -3352,6 +3354,8 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
   switch (s.kind) {
     case "sphere":
       return `sphere r=${s.radiusFeet} ft`;
+    case "sphere_cluster":
+      return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
     case "cone":
       return `cone ${s.lengthFeet} ft`;
     case "cube":
