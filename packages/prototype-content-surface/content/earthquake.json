@@ -1,0 +1,224 @@
+{
+  "description": "Choose a point on the ground within range. For the duration, an intense tremor rips through the ground in a 100-foot-radius circle centered on that point, and the ground there is Difficult Terrain. When you cast the spell and at the end of each of your turns, each creature on the ground in the area makes a Dexterity saving throw. On a failed save, it has the Prone condition and its Concentration is broken. The tremor damages structures in contact with the ground in the area; structures that drop to 0 Hit Points collapse. Creatures near a collapsing structure make a Dexterity saving throw or take 12d6 Bludgeoning damage, fall Prone, and are buried in rubble.",
+  "id": "earthquake",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "earthquake_ground_area",
+      "kind": "hole",
+      "label": "ground tremor area",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "circle",
+          "radiusFeet": 100
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a fractured rock",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "holeId": "earthquake_ground_area",
+        "kind": "hole",
+        "label": "ground tremor area",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "circle",
+            "radiusFeet": 100
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "effects": [
+          {
+            "condition": "prone",
+            "kind": "apply_condition"
+          },
+          {
+            "kind": "break_concentration"
+          }
+        ],
+        "kind": "composite"
+      },
+      "onSuccess": {
+        "kind": "none"
+      }
+    },
+    "level": 8,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_is_difficult_terrain"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 0,
+                  "dieSize": 1,
+                  "flat": 50
+                },
+                "kind": "fixed"
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage_structure",
+              "structureContact": "ground_in_area"
+            },
+            {
+              "kind": "collapse_structure",
+              "trigger": "structure_drops_to_0_hp"
+            }
+          ],
+          "kind": "composite"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "condition": "prone",
+                "kind": "apply_condition"
+              },
+              {
+                "kind": "break_concentration"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "kind": "on_caster_turn_end"
+        }
+      },
+      {
+        "effect": {
+          "effects": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 0,
+                  "dieSize": 1,
+                  "flat": 50
+                },
+                "kind": "fixed"
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage_structure",
+              "structureContact": "ground_in_area"
+            },
+            {
+              "kind": "collapse_structure",
+              "trigger": "structure_drops_to_0_hp"
+            }
+          ],
+          "kind": "composite"
+        },
+        "trigger": {
+          "kind": "on_caster_turn_end"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "amount": {
+                  "expr": {
+                    "dice": 12,
+                    "dieSize": 6,
+                    "flat": 0
+                  },
+                  "kind": "fixed"
+                },
+                "damageType": "bludgeoning",
+                "kind": "damage"
+              },
+              {
+                "condition": "prone",
+                "kind": "apply_condition"
+              },
+              {
+                "escape": {
+                  "ability": "str",
+                  "action": "action",
+                  "dc": 20,
+                  "kind": "ability_check",
+                  "skill": "athletics"
+                },
+                "kind": "bury_in_rubble"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "affectedWithin": "half_structure_height",
+          "kind": "on_structure_collapses"
+        }
+      }
+    ],
+    "range": {
+      "feet": 500,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Earthquake",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Earthquake"
+  }
+}

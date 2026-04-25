@@ -990,6 +990,46 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "break_concentration": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "break_concentration",
+        label: "break_concentration",
+      });
+      return id;
+    }
+    case "damage_structure": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "damage_structure",
+        label: `damage_structure\n${describeDiceAmount(e.amount)} ${describeDamageTypeRef(e.damageType)}\ncontact: ${e.structureContact}`,
+      });
+      return id;
+    }
+    case "collapse_structure": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "collapse_structure",
+        label: `collapse_structure\ntrigger: ${e.trigger}`,
+      });
+      return id;
+    }
+    case "bury_in_rubble": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "bury_in_rubble",
+        label: `bury_in_rubble\nescape: ${e.escape.action} ${e.escape.ability.toUpperCase()} (${e.escape.skill}) DC ${e.escape.dc}`,
+      });
+      return id;
+    }
     case "bond_objects": {
       const id = ids("eff");
       nodes.push({
@@ -1421,6 +1461,9 @@ function traceEffectAtomScaling(
     case "create_object":
     case "create_illusion":
     case "force_drop_item":
+    case "break_concentration":
+    case "collapse_structure":
+    case "bury_in_rubble":
     case "bond_objects":
     case "lock_object":
     case "reposition_attachment":
@@ -1435,6 +1478,9 @@ function traceEffectAtomScaling(
     case "suppress_magic_items":
     case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
+      return;
+    case "damage_structure":
+      traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
     case "composite":
       for (const child of e.effects) {
@@ -1994,6 +2040,17 @@ function traceOngoingTrigger(
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
     }
+    case "on_caster_turn_end": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_end_window",
+        label: "turn_end_window\n(caster)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_attached_damaged": {
       const winId = ids("win");
       nodes.push({
@@ -2064,6 +2121,17 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(creature ends turn in area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_structure_collapses": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(structure collapses, affected within ${trigger.affectedWithin})`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -3509,6 +3577,8 @@ function describeAreaShape(s: AreaShapeSpec): string {
   switch (s.kind) {
     case "sphere":
       return `sphere r=${s.radiusFeet} ft`;
+    case "circle":
+      return `circle r=${s.radiusFeet} ft`;
     case "sphere_cluster":
       return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
     case "cone":
@@ -3540,6 +3610,8 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
   switch (s.kind) {
     case "sphere":
       return `sphere r=${s.radiusFeet} ft`;
+    case "circle":
+      return `circle r=${s.radiusFeet} ft`;
     case "sphere_cluster":
       return `${s.count} spheres r=${s.radiusFeet} ft (${s.overlapResolution})`;
     case "cone":

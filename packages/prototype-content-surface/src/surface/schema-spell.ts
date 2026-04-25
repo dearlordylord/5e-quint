@@ -653,6 +653,27 @@ type EffectAtom =
       readonly channels: ReadonlyNonEmptyArray<IllusionSensoryChannel>;
     }
   | { readonly kind: "force_drop_item" }
+  | { readonly kind: "break_concentration" }
+  | {
+      readonly kind: "damage_structure";
+      readonly amount: DiceAmount;
+      readonly damageType: DamageTypeRef;
+      readonly structureContact: "ground_in_area";
+    }
+  | {
+      readonly kind: "collapse_structure";
+      readonly trigger: "structure_drops_to_0_hp";
+    }
+  | {
+      readonly kind: "bury_in_rubble";
+      readonly escape: {
+        readonly kind: "ability_check";
+        readonly ability: "str";
+        readonly skill: "athletics";
+        readonly dc: number;
+        readonly action: "action";
+      };
+    }
   | { readonly kind: "bond_objects" }
   | { readonly kind: "lock_object"; readonly password?: string }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
@@ -945,6 +966,10 @@ export const AreaShapeDescriptorSchema = Schema.Union(
     radiusFeet: Schema.Number,
   }),
   Schema.Struct({
+    kind: Schema.Literal("circle"),
+    radiusFeet: Schema.Number,
+  }),
+  Schema.Struct({
     kind: Schema.Literal("sphere_cluster"),
     count: Schema.Number,
     radiusFeet: Schema.Number,
@@ -1117,6 +1142,7 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("on_attached_turn_start") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_turn_start") }),
+  Schema.Struct({ kind: Schema.Literal("on_caster_turn_end") }),
   Schema.Struct({ kind: Schema.Literal("on_attached_damaged") }),
   Schema.Struct({
     kind: Schema.Literal("on_creature_moves"),
@@ -1124,6 +1150,10 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_structure_collapses"),
+    affectedWithin: Schema.Literal("half_structure_height"),
+  }),
   Schema.Struct({
     kind: Schema.Literal("on_caster_spends_action"),
     cost: OngoingCasterActionCostSchema,
@@ -1714,6 +1744,27 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         channels: nonEmpty(IllusionSensoryChannelSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("force_drop_item") }),
+      Schema.Struct({ kind: Schema.Literal("break_concentration") }),
+      Schema.Struct({
+        kind: Schema.Literal("damage_structure"),
+        amount: DiceAmountSchema,
+        damageType: DamageTypeRefSchema,
+        structureContact: Schema.Literal("ground_in_area"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("collapse_structure"),
+        trigger: Schema.Literal("structure_drops_to_0_hp"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("bury_in_rubble"),
+        escape: Schema.Struct({
+          kind: Schema.Literal("ability_check"),
+          ability: Schema.Literal("str"),
+          skill: Schema.Literal("athletics"),
+          dc: Schema.Number,
+          action: Schema.Literal("action"),
+        }),
+      }),
       Schema.Struct({ kind: Schema.Literal("bond_objects") }),
       Schema.Struct({
         kind: Schema.Literal("lock_object"),
