@@ -1,0 +1,85 @@
+{
+  "description": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Force damage. Cantrip Upgrade. The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.",
+  "id": "eldritch_blast",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 0,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "eldritch_blast_beam_target",
+          "kind": "hole",
+          "label": "beam target (creature or object)",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "count": {
+                "axis": "character",
+                "base": 1,
+                "kind": "threshold_tiers",
+                "tiers": [
+                  {
+                    "atLevel": 5,
+                    "value": 2
+                  },
+                  {
+                    "atLevel": 11,
+                    "value": 3
+                  },
+                  {
+                    "atLevel": 17,
+                    "value": 4
+                  }
+                ]
+              },
+              "mode": "choose_up_to",
+              "repeatsAllowed": true
+            }
+          }
+        },
+        "attackKind": "ranged_spell_attack",
+        "kind": "attack_roll",
+        "onHit": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 1,
+                "dieSize": 10
+              },
+              "kind": "fixed"
+            },
+            "damageType": "force",
+            "kind": "damage"
+          }
+        ],
+        "onMiss": [
+          {
+            "kind": "none"
+          }
+        ]
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Eldritch Blast",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Eldritch Blast"
+  }
+}

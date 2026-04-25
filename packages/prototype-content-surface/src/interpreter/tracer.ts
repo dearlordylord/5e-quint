@@ -30,6 +30,7 @@ import type {
   WeaponFilter,
   TargetSelection,
   SlotScaling,
+  ThresholdTiers,
   SpellLevel,
   StandardActionKind,
   ProficiencyGrant,
@@ -186,6 +187,42 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "conditional_bonus_damage",
         label: `conditional_bonus_damage\n${when}\n${describeDiceAmount(e.amount)} ${describeDamageTypeRef(e.damageType)}`,
+      });
+      return id;
+    }
+    case "conditional_by_current_hp": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "conditional_by_current_hp",
+        label: `conditional_by_current_hp\nHP ${e.comparison} ${e.threshold}`,
+      });
+      if (edges !== undefined) {
+        const matchId = traceEffectAtom(e.onMatch, nodes, ids, edges);
+        if (matchId !== null) {
+          edges.push({ from: id, to: matchId, relation: "branches_on_match" });
+        }
+        if (e.otherwise !== undefined) {
+          const otherwiseId = traceEffectAtom(e.otherwise, nodes, ids, edges);
+          if (otherwiseId !== null) {
+            edges.push({
+              from: id,
+              to: otherwiseId,
+              relation: "branches_otherwise",
+            });
+          }
+        }
+      }
+      return id;
+    }
+    case "kill_target": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "kill_target",
+        label: "kill_target",
       });
       return id;
     }
@@ -1003,6 +1040,19 @@ function traceEffectAtomScaling(
     case "reduce_damage_taken":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
+    case "conditional_by_current_hp":
+      traceEffectAtomScaling(e.onMatch, effectId, slotId, nodes, edges, ids);
+      if (e.otherwise !== undefined) {
+        traceEffectAtomScaling(
+          e.otherwise,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      }
+      return;
     case "grant_extra_action":
       traceActionRestriction(e.restriction, effectId, nodes, edges, ids);
       return;
@@ -1013,6 +1063,7 @@ function traceEffectAtomScaling(
     case "apply_condition":
     case "remove_condition":
     case "grant_resistance":
+    case "kill_target":
     case "modify_roll_numeric":
     case "modify_damage_numeric":
     case "modify_roll_advantage":
@@ -4787,8 +4838,16 @@ function idGen(): IdGen {
   return (prefix: string) => `${prefix}${++n}`;
 }
 
-function describeScaling(s: number | SlotScaling<number>): string {
+function describeScaling(
+  s: number | SlotScaling<number> | ThresholdTiers<number>,
+): string {
   if (typeof s === "number") return `${s} (fixed)`;
+  if (s.kind === "threshold_tiers") {
+    const tiers = s.tiers
+      .map((tier) => `${tier.value} @ ${s.axis} ${tier.atLevel}`)
+      .join(", ");
+    return `${s.base} base; ${tiers}`;
+  }
   return `${s.base} + ${s.perSlotAboveBase} per slot above ${s.baseLevel}`;
 }
 

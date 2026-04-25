@@ -1,0 +1,67 @@
+{
+  "description": "You compel one creature you can see within range to die. If the target has 100 Hit Points or fewer, it dies. Otherwise, it takes 12d12 Psychic damage.",
+  "id": "power_word_kill",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 9,
+    "phases": [
+      {
+        "attachment": {
+          "holeId": "power_word_kill_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "effects": [
+          {
+            "comparison": "lte",
+            "kind": "conditional_by_current_hp",
+            "onMatch": {
+              "kind": "kill_target"
+            },
+            "otherwise": {
+              "amount": {
+                "expr": {
+                  "dice": 12,
+                  "dieSize": 12
+                },
+                "kind": "fixed"
+              },
+              "damageType": "psychic",
+              "kind": "damage"
+            },
+            "threshold": 100
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "enchantment"
+  },
+  "name": "Power Word Kill",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Power Word Kill"
+  }
+}

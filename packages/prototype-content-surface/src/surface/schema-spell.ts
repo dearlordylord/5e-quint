@@ -228,6 +228,14 @@ type EffectAtom =
       readonly amount: DiceAmount;
     }
   | {
+      readonly kind: "conditional_by_current_hp";
+      readonly threshold: number;
+      readonly comparison: "lte" | "lt" | "gte" | "gt" | "eq";
+      readonly onMatch: EffectAtom;
+      readonly otherwise?: EffectAtom;
+    }
+  | { readonly kind: "kill_target" }
+  | {
       readonly kind: "heal_hp";
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
@@ -803,7 +811,11 @@ export const TargetSelectionSchema = Schema.Union(
   }),
   Schema.Struct({
     mode: Schema.Literal("choose_up_to"),
-    count: Schema.Union(Schema.Number, SlotScalingNumberSchema),
+    count: Schema.Union(
+      Schema.Number,
+      SlotScalingNumberSchema,
+      ThresholdTiersNumberSchema,
+    ),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
   }),
@@ -1081,6 +1093,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         damageType: DamageTypeRefSchema,
         amount: DiceAmountSchema,
       }),
+      Schema.Struct({
+        kind: Schema.Literal("conditional_by_current_hp"),
+        threshold: Schema.Number,
+        comparison: Schema.Literal("lte", "lt", "gte", "gt", "eq"),
+        onMatch: EffectAtomSchema,
+        otherwise: optionalExact(EffectAtomSchema),
+      }),
+      Schema.Struct({ kind: Schema.Literal("kill_target") }),
       Schema.Struct({
         kind: Schema.Literal("heal_hp"),
         amount: DiceAmountSchema,
