@@ -1,0 +1,158 @@
+{
+  "description": "You create a wall of whirling blades made of magical energy within range. The wall lasts for the duration. You make a straight wall up to 100 feet long, 20 feet high, and 5 feet thick, or a ringed wall up to 60 feet in diameter, 20 feet high, and 5 feet thick. The wall provides Three-Quarters Cover, and its space is Difficult Terrain. Any creature in the wall's space makes a Dexterity saving throw, taking 6d10 Force damage on a failed save or half as much damage on a successful one. A creature also makes that save if it enters the wall's space or ends its turn there. A creature makes that save only once per turn.",
+  "id": "blade_barrier",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "blade_barrier_wall",
+      "kind": "hole",
+      "label": "blade wall",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "line",
+              "lengthFeet": 100,
+              "widthFeet": 5
+            },
+            {
+              "heightFeet": 20,
+              "kind": "cylinder",
+              "radiusFeet": 30
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "holeId": "blade_barrier_wall",
+        "kind": "hole",
+        "label": "blade wall",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "line",
+                "lengthFeet": 100,
+                "widthFeet": 5
+              },
+              {
+                "heightFeet": 20,
+                "kind": "cylinder",
+                "radiusFeet": 30
+              }
+            ]
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "amount": {
+          "expr": {
+            "dice": 6,
+            "dieSize": 10
+          },
+          "kind": "fixed"
+        },
+        "damageType": "force",
+        "kind": "damage"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 6,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_is_difficult_terrain"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "cover": "three_quarters",
+          "kind": "grant_cover"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 6,
+              "dieSize": 10
+            },
+            "kind": "fixed"
+          },
+          "damageType": "force",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 6,
+              "dieSize": 10
+            },
+            "kind": "fixed"
+          },
+          "damageType": "force",
+          "kind": "damage"
+        },
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Blade Barrier",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Blade Barrier"
+  }
+}

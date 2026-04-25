@@ -866,6 +866,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "grant_cover": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grant_cover",
+        label: `grant_cover\n${e.cover}`,
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -1131,6 +1141,7 @@ function traceEffectAtomScaling(
     case "lock_object":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "grant_cover":
       return;
     case "composite":
       for (const child of e.effects) {
