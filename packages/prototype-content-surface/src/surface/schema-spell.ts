@@ -73,6 +73,14 @@ export const CastTimeChoiceDamageTypeSchema = Schema.Struct({
   options: nonEmpty(DamageTypeSchema),
 });
 
+export const DamageTypeChoiceTableSchema = nonEmpty(
+  Schema.Struct({
+    id: Schema.String,
+    displayName: Schema.String,
+    damageType: DamageTypeSchema,
+  }),
+);
+
 export const CastTimeEffectModeChoiceSchema = Schema.Struct({
   label: Schema.String,
   options: nonEmpty(
@@ -103,6 +111,17 @@ export const DamageTypeRefBaseSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("same_choice_as"),
     holeId: HoleIdSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("choice_table"),
+    holeId: HoleIdSchema,
+    label: Schema.String,
+    options: DamageTypeChoiceTableSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("same_table_choice_as"),
+    holeId: HoleIdSchema,
+    options: DamageTypeChoiceTableSchema,
   }),
 );
 
@@ -286,6 +305,12 @@ type EffectAtom =
       readonly kind: "reduce_damage_taken";
       readonly amount: DiceAmount;
       readonly damageType?: DamageTypeRef;
+    }
+  | {
+      readonly kind: "retaliatory_damage";
+      readonly target: "triggering_attacker";
+      readonly damageType: DamageTypeRef;
+      readonly amount: DiceAmount;
     }
   | {
       readonly kind: "grant_extra_action";
@@ -999,6 +1024,11 @@ export const OngoingCasterActionCostSchema = Schema.Union(
 export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("passive") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_attack_hit") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_attached_hit_by_attack_roll"),
+    attackKind: optionalExact(Schema.Literal("melee")),
+    attackerWithinFeet: optionalExact(Schema.Number),
+  }),
   Schema.Struct({ kind: Schema.Literal("on_attached_turn_start") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_turn_start") }),
   Schema.Struct({ kind: Schema.Literal("on_attached_damaged") }),
@@ -1166,6 +1196,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("reduce_damage_taken"),
         amount: DiceAmountSchema,
         damageType: optionalExact(DamageTypeRefSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("retaliatory_damage"),
+        target: Schema.Literal("triggering_attacker"),
+        damageType: DamageTypeRefSchema,
+        amount: DiceAmountSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_extra_action"),

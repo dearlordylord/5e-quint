@@ -1,0 +1,107 @@
+{
+  "description": "Wispy flames wreathe your body for the duration, shedding Bright Light in a 10-foot radius and Dim Light for an additional 10 feet. Choose a warm shield or a chill shield. The warm shield grants Resistance to Cold damage; the chill shield grants Resistance to Fire damage. Whenever a creature within 5 feet of you hits you with a melee attack roll, the attacker takes 2d8 Fire damage from a warm shield or 2d8 Cold damage from a chill shield.",
+  "id": "fire_shield",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "self"
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a bit of phosphorus or a firefly",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 4,
+    "operations": [
+      {
+        "effect": {
+          "brightRadiusFeet": 10,
+          "dimAdditionalFeet": 10,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "damageType": {
+            "holeId": "fire_shield_mode",
+            "kind": "choice_table",
+            "label": "shield mode resistance",
+            "options": [
+              {
+                "damageType": "cold",
+                "displayName": "warm shield",
+                "id": "warm"
+              },
+              {
+                "damageType": "fire",
+                "displayName": "chill shield",
+                "id": "chill"
+              }
+            ]
+          },
+          "kind": "grant_resistance"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "amount": {
+            "expr": {
+              "dice": 2,
+              "dieSize": 8
+            },
+            "kind": "fixed"
+          },
+          "damageType": {
+            "holeId": "fire_shield_mode",
+            "kind": "same_table_choice_as",
+            "options": [
+              {
+                "damageType": "fire",
+                "displayName": "warm shield",
+                "id": "warm"
+              },
+              {
+                "damageType": "cold",
+                "displayName": "chill shield",
+                "id": "chill"
+              }
+            ]
+          },
+          "kind": "retaliatory_damage",
+          "target": "triggering_attacker"
+        },
+        "trigger": {
+          "attackKind": "melee",
+          "attackerWithinFeet": 5,
+          "kind": "on_attached_hit_by_attack_roll"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Fire Shield",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Fire Shield"
+  }
+}

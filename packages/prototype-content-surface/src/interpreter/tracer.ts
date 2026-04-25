@@ -327,6 +327,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "retaliatory_damage": {
+      const id = ids("dmg");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "retaliatory_damage",
+        label: `retaliatory_damage\n${describeDiceAmount(e.amount)} ${describeDamageTypeRef(e.damageType)}\ntarget: ${e.target}`,
+      });
+      return id;
+    }
     case "grant_extra_action": {
       const id = ids("eff");
       nodes.push({
@@ -1048,6 +1058,7 @@ function traceEffectAtomScaling(
   switch (e.kind) {
     case "damage":
     case "conditional_bonus_damage":
+    case "retaliatory_damage":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
     case "heal_hp":
@@ -1654,6 +1665,25 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "on_hit_window",
         label: "on_hit_window\n(caster hits attachment)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_attached_hit_by_attack_roll": {
+      const winId = ids("win");
+      const attack =
+        trigger.attackKind === undefined
+          ? ""
+          : `\nattack: ${trigger.attackKind}`;
+      const range =
+        trigger.attackerWithinFeet === undefined
+          ? ""
+          : `\nattacker within ${trigger.attackerWithinFeet} ft`;
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "on_hit_window",
+        label: `on_hit_window\n(attached hit by attack roll)${attack}${range}`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -3083,6 +3113,18 @@ function describeDamageTypeRef(d: DamageTypeRef): string {
     return `${describeDamageTypeRef(d.value)}${d.label !== undefined ? ` [hole: ${d.label}]` : " [hole]"}`;
   }
   if (d.kind === "same_choice_as") return `same choice as ${d.holeId}`;
+  if (d.kind === "choice_table") {
+    const options = d.options
+      .map((option) => `${option.displayName}: ${option.damageType}`)
+      .join(" | ");
+    return `${d.label} [${d.holeId}] (${options})`;
+  }
+  if (d.kind === "same_table_choice_as") {
+    const options = d.options
+      .map((option) => `${option.displayName}: ${option.damageType}`)
+      .join(" | ");
+    return `same table choice as ${d.holeId} (${options})`;
+  }
   if (d.kind === "choice")
     return `${d.label} (choose: ${d.options.join(" | ")})`;
   const _: never = d;
