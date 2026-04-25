@@ -125,6 +125,7 @@ type DamageTypeRef = Schema.Schema.Type<typeof DamageTypeRefSchema>;
 type DiceAmount = Schema.Schema.Type<typeof DiceAmountSchema>;
 type DiceDelta = Schema.Schema.Type<typeof DiceDeltaSchema>;
 type WeaponFilter = Schema.Schema.Type<typeof WeaponFilterSchema>;
+type ObjectFilter = Schema.Schema.Type<typeof ObjectFilterSchema>;
 type Skill = Schema.Schema.Type<typeof SkillSchema>;
 type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 type CreatureType = Schema.Schema.Type<typeof CreatureTypeSchema>;
@@ -556,6 +557,7 @@ type EffectAtom =
       readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
   | { readonly kind: "block_reanimation" }
+  | { readonly kind: "ignite_objects"; readonly filter: ObjectFilter }
   | {
       readonly kind: "create_object";
       readonly maxSize: Size;
@@ -843,6 +845,12 @@ export const AreaShapeDescriptorSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("cube"),
     sideFeet: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("cube_cluster"),
+    maxCubes: Schema.Number,
+    sideFeet: Schema.Number,
+    contiguous: optionalExact(Schema.Literal(true)),
   }),
   Schema.Struct({
     kind: Schema.Literal("cylinder"),
@@ -1500,6 +1508,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         effects: nonEmpty(EffectAtomSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("block_reanimation") }),
+      Schema.Struct({
+        kind: Schema.Literal("ignite_objects"),
+        filter: ObjectFilterSchema,
+      }),
       Schema.Struct({
         kind: Schema.Literal("create_object"),
         maxSize: SizeSchema,

@@ -778,6 +778,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "ignite_objects": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "ignite_objects",
+        label: `ignite_objects${describeObjectFilter(e.filter)}`,
+      });
+      return id;
+    }
     case "create_object": {
       const id = ids("eff");
       const shapeTag = e.shape ? `\n${describeAreaShape(e.shape)}` : "";
@@ -1113,6 +1123,7 @@ function traceEffectAtomScaling(
     case "water_breathing":
     case "emit_light":
     case "block_reanimation":
+    case "ignite_objects":
     case "create_object":
     case "create_illusion":
     case "force_drop_item":
@@ -3132,6 +3143,10 @@ function describeAreaShape(s: AreaShapeSpec): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "cube_cluster": {
+      const contig = s.contiguous === true ? ", contiguous" : "";
+      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
+    }
     case "cylinder":
       return `cylinder r=${s.radiusFeet} ft h=${s.heightFeet} ft`;
     case "emanation":
@@ -3157,6 +3172,10 @@ function describeAreaShapeFixed(s: AreaShapeDescriptor): string {
       return `cone ${s.lengthFeet} ft`;
     case "cube":
       return `cube ${s.sideFeet} ft side`;
+    case "cube_cluster": {
+      const contig = s.contiguous === true ? ", contiguous" : "";
+      return `up to ${s.maxCubes} cubes (${s.sideFeet} ft side${contig})`;
+    }
     case "cylinder":
       return `cylinder r=${s.radiusFeet} ft h=${s.heightFeet} ft`;
     case "emanation":

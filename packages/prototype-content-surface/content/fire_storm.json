@@ -1,0 +1,99 @@
+{
+  "description": "A storm of fire appears within range. The area consists of up to ten contiguous 10-foot Cubes arranged as you like. Each creature in the area makes a Dexterity saving throw, taking 7d10 Fire damage on a failed save or half as much damage on a successful one. Flammable objects in the area that aren't being worn or carried start burning.",
+  "id": "fire_storm",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "instantaneous"
+    },
+    "family": "activation",
+    "level": 7,
+    "phases": [
+      {
+        "ability": "dex",
+        "attachment": {
+          "holeId": "fire_storm_area",
+          "kind": "hole",
+          "label": "storm area",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "contiguous": true,
+              "kind": "cube_cluster",
+              "maxCubes": 10,
+              "sideFeet": 10
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "amount": {
+            "expr": {
+              "dice": 7,
+              "dieSize": 10
+            },
+            "kind": "fixed"
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        },
+        "onSuccess": {
+          "kind": "half_damage"
+        }
+      },
+      {
+        "attachment": {
+          "holeId": "fire_storm_area",
+          "kind": "hole",
+          "label": "storm area",
+          "value": {
+            "kind": "area",
+            "origin": {
+              "kind": "point_within_range"
+            },
+            "shape": {
+              "contiguous": true,
+              "kind": "cube_cluster",
+              "maxCubes": 10,
+              "sideFeet": 10
+            }
+          }
+        },
+        "effects": [
+          {
+            "filter": {
+              "heldOrWorn": "forbidden",
+              "material": "flammable"
+            },
+            "kind": "ignite_objects"
+          }
+        ],
+        "kind": "direct"
+      }
+    ],
+    "range": {
+      "feet": 150,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Fire Storm",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Fire Storm"
+  }
+}
