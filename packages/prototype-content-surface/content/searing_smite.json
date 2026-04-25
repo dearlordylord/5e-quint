@@ -1,0 +1,123 @@
+{
+  "description": "Immediately after hitting a target with a Melee weapon or an Unarmed Strike, you take a Bonus Action. As you hit the target, it takes an extra 1d6 Fire damage from the attack. At the start of each of its turns until the spell ends, the target takes 1d6 Fire damage and then makes a Constitution saving throw. On a failed save, the spell continues. On a successful save, the spell ends. Using a Higher-Level Spell Slot. All the damage increases by 1d6 for each spell slot level above 1.",
+  "id": "searing_smite",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "searing_smite_hit_target",
+      "kind": "hole",
+      "label": "hit target",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action",
+      "trigger": {
+        "attack": "melee_weapon_or_unarmed_strike",
+        "kind": "after_hit_with"
+      }
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "searing_smite_hit_target",
+        "kind": "hole",
+        "label": "hit target",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "effects": [
+        {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "startingAtLevel": 1
+          },
+          "damageType": "fire",
+          "kind": "damage"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 1,
+    "operations": [
+      {
+        "effect": {
+          "effects": [
+            {
+              "amount": {
+                "axis": "slot",
+                "base": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "linear_per_level",
+                "perLevel": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "startingAtLevel": 1
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            },
+            {
+              "ability": "con",
+              "dc": {
+                "kind": "caster_spell_save_dc"
+              },
+              "kind": "save_gate",
+              "onFail": {
+                "kind": "none"
+              },
+              "onSuccess": {
+                "kind": "end_current_effect"
+              }
+            }
+          ],
+          "kind": "composite_ongoing"
+        },
+        "trigger": {
+          "kind": "on_attached_turn_start"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Searing Smite",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Searing Smite"
+  }
+}

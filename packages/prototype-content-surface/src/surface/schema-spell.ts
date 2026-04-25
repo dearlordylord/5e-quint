@@ -255,6 +255,7 @@ type EffectAtom =
       readonly otherwise?: EffectAtom;
     }
   | { readonly kind: "kill_target" }
+  | { readonly kind: "end_current_effect" }
   | {
       readonly kind: "repeat_save_for_condition";
       readonly condition: Condition;
@@ -718,6 +719,10 @@ type OngoingEffect =
       readonly onHit: ReadonlyNonEmptyArray<EffectAtom>;
       readonly onMiss: ReadonlyNonEmptyArray<EffectAtom>;
     }
+  | {
+      readonly kind: "composite_ongoing";
+      readonly effects: ReadonlyNonEmptyArray<OngoingEffect>;
+    }
   | ModifyAcSetFloorEffect;
 
 export const ReactionTriggerSchema: Schema.suspend<
@@ -1164,6 +1169,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         otherwise: optionalExact(EffectAtomSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("kill_target") }),
+      Schema.Struct({ kind: Schema.Literal("end_current_effect") }),
       Schema.Struct({
         kind: Schema.Literal("repeat_save_for_condition"),
         condition: ConditionSchema,
@@ -1758,6 +1764,10 @@ export const OngoingEffectSchema: Schema.suspend<
       attackKind: Schema.Literal("ranged_spell_attack", "melee_spell_attack"),
       onHit: nonEmpty(EffectAtomSchema),
       onMiss: nonEmpty(EffectAtomSchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("composite_ongoing"),
+      effects: nonEmpty(OngoingEffectSchema),
     }),
     ModifyAcSetFloorEffectSchema,
   ),

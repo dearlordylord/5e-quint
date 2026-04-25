@@ -226,6 +226,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "end_current_effect": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "end_current_effect",
+        label: "end_current_effect",
+      });
+      return id;
+    }
     case "repeat_save_for_condition": {
       const id = ids("rep");
       nodes.push({
@@ -1152,6 +1162,7 @@ function traceEffectAtomScaling(
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":
+    case "end_current_effect":
     case "repeat_save_for_condition":
     case "modify_roll_numeric":
     case "modify_damage_numeric":
@@ -1935,6 +1946,30 @@ function traceOngoingOpEffect(
           edges.push({ from: arId, to: missId, relation: "branches_on_miss" });
           traceEffectAtomScaling(miss, missId, slotId, nodes, edges, ids);
         }
+      }
+      return;
+    }
+    case "composite_ongoing": {
+      const id = ids("op");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "composite_ongoing",
+        label: `composite_ongoing\n(${eff.effects.length} effects)`,
+      });
+      edges.push({ from: hostId, to: id, relation: hostRelation });
+      edges.push({ from: id, to: attId, relation: "attaches_to" });
+      for (const child of eff.effects) {
+        traceOngoingOpEffect(
+          child,
+          id,
+          "grants",
+          attId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
       }
       return;
     }
