@@ -1,0 +1,86 @@
+{
+  "description": "You banish a creature that you can see within range into a labyrinthine demiplane. The target remains there for the duration or until it escapes. The target can take a Study action to make a DC 20 Intelligence (Investigation) check. On a success, it escapes and the spell ends. When the spell ends, the target reappears in the space it left or, if occupied, the nearest unoccupied space.",
+  "id": "maze",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "maze_target",
+      "kind": "hole",
+      "label": "target creature",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "maze_target",
+        "kind": "hole",
+        "label": "target creature",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "effects": [
+        {
+          "destination": "demiplane",
+          "kind": "transport_exile"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 8,
+    "operations": [
+      {
+        "effect": {
+          "ability": "int",
+          "dc": {
+            "dc": 20,
+            "kind": "fixed"
+          },
+          "kind": "ability_check_gate",
+          "onFail": {
+            "kind": "none"
+          },
+          "onPass": {
+            "kind": "end_current_effect"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_studies"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Maze",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Maze"
+  }
+}
