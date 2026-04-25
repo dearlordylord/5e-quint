@@ -316,6 +316,7 @@ type EffectAtom =
       readonly amount: DiceAmount;
       readonly damageType?: DamageTypeRef;
     }
+  | { readonly kind: "share_damage_to_caster"; readonly rangeFeet: number }
   | {
       readonly kind: "retaliatory_damage";
       readonly target: "triggering_attacker";
@@ -1255,6 +1256,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("reduce_damage_taken"),
         amount: DiceAmountSchema,
         damageType: optionalExact(DamageTypeRefSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("share_damage_to_caster"),
+        rangeFeet: Schema.Number,
       }),
       Schema.Struct({
         kind: Schema.Literal("retaliatory_damage"),

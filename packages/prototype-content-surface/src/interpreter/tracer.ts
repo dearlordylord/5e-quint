@@ -357,6 +357,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "share_damage_to_caster": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "share_damage_to_caster",
+        label: `share_damage_to_caster\nrange ${e.rangeFeet} ft`,
+      });
+      return id;
+    }
     case "retaliatory_damage": {
       const id = ids("dmg");
       nodes.push({
@@ -1177,6 +1187,8 @@ function traceEffectAtomScaling(
     case "conditional_bonus_damage":
     case "retaliatory_damage":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
+      return;
+    case "share_damage_to_caster":
       return;
     case "heal_hp":
     case "grant_temp_hp":

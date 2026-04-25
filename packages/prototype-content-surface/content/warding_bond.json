@@ -1,0 +1,148 @@
+{
+  "description": "You touch another willing creature and create a mystic connection until the spell ends. While the target is within 60 feet of you, it gains a +1 bonus to AC and saving throws and has Resistance to all damage. Each time it takes damage, you take the same amount of damage. The spell ends if you drop to 0 Hit Points, if you and the target become separated by more than 60 feet, or if the spell is cast again on either connected creature.",
+  "id": "warding_bond",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "warding_bond_target",
+      "kind": "hole",
+      "label": "willing creature",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a pair of platinum rings worth 50+ GP each, which you and the target must wear for the duration",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "delta": {
+            "dice": 1,
+            "dieSize": 1,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_ac"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "delta": {
+            "dice": 1,
+            "dieSize": 1,
+            "kind": "fixed_dice",
+            "sign": "+"
+          },
+          "kind": "modify_roll_numeric",
+          "on": [
+            "saving_throw"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "effects": [
+            {
+              "damageType": "acid",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "bludgeoning",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "cold",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "fire",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "force",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "lightning",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "necrotic",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "piercing",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "poison",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "psychic",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "radiant",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "slashing",
+              "kind": "grant_resistance"
+            },
+            {
+              "damageType": "thunder",
+              "kind": "grant_resistance"
+            }
+          ],
+          "kind": "composite"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "share_damage_to_caster",
+          "rangeFeet": 60
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "touch"
+    },
+    "school": "abjuration"
+  },
+  "name": "Warding Bond",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Warding Bond"
+  }
+}
