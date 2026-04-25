@@ -1,0 +1,193 @@
+{
+  "description": "You create a wall of tangled brush bristling with needle-sharp thorns on a solid surface within range. The wall can be up to 60 feet long, 10 feet high, and 5 feet thick, or a circle 20 feet in diameter and up to 20 feet high and 5 feet thick. The wall blocks line of sight. When the wall appears, each creature in its area makes a Dexterity saving throw, taking 7d8 Piercing damage on a failed save or half as much damage on a successful one. For every 1 foot a creature moves through the wall, it must spend 4 feet of movement. The first time a creature enters a space in the wall on a turn or ends its turn there, it makes a Dexterity saving throw, taking 7d8 Slashing damage on a failed save or half as much on a successful one. Using a Higher-Level Spell Slot, both damage types increase by 1d8 for each spell slot level above 6.",
+  "id": "wall_of_thorns",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "wall_of_thorns_area",
+      "kind": "hole",
+      "label": "thorn wall",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "line",
+              "lengthFeet": 60,
+              "widthFeet": 5
+            },
+            {
+              "heightFeet": 20,
+              "kind": "cylinder",
+              "radiusFeet": 10
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a handful of thorns",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "holeId": "wall_of_thorns_area",
+        "kind": "hole",
+        "label": "thorn wall",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "line",
+                "lengthFeet": 60,
+                "widthFeet": 5
+              },
+              {
+                "heightFeet": 20,
+                "kind": "cylinder",
+                "radiusFeet": 10
+              }
+            ]
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "amount": {
+          "axis": "slot",
+          "base": {
+            "dice": 7,
+            "dieSize": 8
+          },
+          "kind": "linear_per_level",
+          "perLevel": {
+            "dice": 1
+          },
+          "startingAtLevel": 6
+        },
+        "damageType": "piercing",
+        "kind": "damage"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 6,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_movement_cost_multiplier",
+          "multiplier": 4
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_line_of_sight"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 7,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 6
+            },
+            "damageType": "slashing",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_enters_area"
+        }
+      },
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 7,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 6
+            },
+            "damageType": "slashing",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_ends_turn_in_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Wall of Thorns",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Wall of Thorns"
+  }
+}

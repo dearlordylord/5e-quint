@@ -626,7 +626,9 @@ type EffectAtom =
   | { readonly kind: "lock_object"; readonly password?: string }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
+  | { readonly kind: "area_movement_cost_multiplier"; readonly multiplier: 4 }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
+  | { readonly kind: "block_line_of_sight" }
   | { readonly kind: "allow_reaction_stand_up" }
   | { readonly kind: "none" };
 
@@ -1641,9 +1643,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
       Schema.Struct({
+        kind: Schema.Literal("area_movement_cost_multiplier"),
+        multiplier: Schema.Literal(4),
+      }),
+      Schema.Struct({
         kind: Schema.Literal("grant_cover"),
         cover: Schema.Literal("three_quarters"),
       }),
+      Schema.Struct({ kind: Schema.Literal("block_line_of_sight") }),
       Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
       Schema.Struct({ kind: Schema.Literal("none") }),
     ),

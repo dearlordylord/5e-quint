@@ -953,6 +953,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "area_movement_cost_multiplier": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_movement_cost_multiplier",
+        label: `area_movement_cost_multiplier\nx${e.multiplier}`,
+      });
+      return id;
+    }
     case "grant_cover": {
       const id = ids("eff");
       nodes.push({
@@ -960,6 +970,16 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "grant_cover",
         label: `grant_cover\n${e.cover}`,
+      });
+      return id;
+    }
+    case "block_line_of_sight": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_line_of_sight",
+        label: "block_line_of_sight",
       });
       return id;
     }
@@ -1247,7 +1267,9 @@ function traceEffectAtomScaling(
     case "lock_object":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "area_movement_cost_multiplier":
     case "grant_cover":
+    case "block_line_of_sight":
     case "allow_reaction_stand_up":
       return;
     case "composite":
