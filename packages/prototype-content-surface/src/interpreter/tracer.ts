@@ -505,6 +505,54 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "force_fall": {
+      const id = ids("eff");
+      const distance =
+        e.maxDistanceFeet === undefined
+          ? ""
+          : `\nup to ${e.maxDistanceFeet} ft`;
+      const impact =
+        e.impactAsNormalFall === true ? "\nimpact as normal fall" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "force_fall",
+        label: `force_fall\n${e.direction}${distance}${impact}`,
+      });
+      return id;
+    }
+    case "grab_fixed_object": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "grab_fixed_object",
+        label: "grab_fixed_object",
+      });
+      return id;
+    }
+    case "suspend_in_area": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suspend_in_area",
+        label: `suspend_in_area\nlocation: ${e.location}\nuntil: ${e.until}`,
+      });
+      return id;
+    }
+    case "fall_when_effect_ends": {
+      const id = ids("eff");
+      const unless =
+        e.unlessCanStopFall === true ? "\nunless can stop fall" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "fall_when_effect_ends",
+        label: `fall_when_effect_ends\n${e.direction}${unless}`,
+      });
+      return id;
+    }
     case "block_targeting": {
       const id = ids("eff");
       nodes.push({
@@ -1322,6 +1370,10 @@ function traceEffectAtomScaling(
     case "scale_attack_count":
     case "modify_speed":
     case "force_move":
+    case "force_fall":
+    case "grab_fixed_object":
+    case "suspend_in_area":
+    case "fall_when_effect_ends":
     case "block_targeting":
     case "block_travel":
     case "block_projectiles":

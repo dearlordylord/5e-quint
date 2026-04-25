@@ -1,0 +1,104 @@
+{
+  "description": "This spell reverses gravity in a 50-foot-radius, 100-foot-high Cylinder centered on a point within range. Creatures and objects in the area that aren't anchored to the ground fall upward to the top of the Cylinder. A creature can make a Dexterity saving throw to grab a fixed object it can reach, avoiding the fall upward. If a ceiling or anchored object is encountered, creatures and objects strike it as during a downward fall. Affected creatures and objects that reach the top hover there for the duration. When the spell ends, affected objects and creatures fall downward.",
+  "id": "reverse_gravity",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "reverse_gravity_cylinder",
+      "kind": "hole",
+      "label": "reversed gravity cylinder",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "heightFeet": 100,
+          "kind": "cylinder",
+          "radiusFeet": 50
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a lodestone and iron filings",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "dex",
+      "attachment": {
+        "holeId": "reverse_gravity_cylinder",
+        "kind": "hole",
+        "label": "reversed gravity cylinder",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "heightFeet": 100,
+            "kind": "cylinder",
+            "radiusFeet": 50
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "effects": [
+          {
+            "direction": "upward",
+            "impactAsNormalFall": true,
+            "kind": "force_fall",
+            "maxDistanceFeet": 100
+          },
+          {
+            "kind": "suspend_in_area",
+            "location": "top",
+            "until": "effect_ends"
+          }
+        ],
+        "kind": "composite"
+      },
+      "onSuccess": {
+        "kind": "grab_fixed_object"
+      }
+    },
+    "level": 7,
+    "operations": [
+      {
+        "effect": {
+          "direction": "downward",
+          "kind": "fall_when_effect_ends",
+          "unlessCanStopFall": true
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "feet": 100,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Reverse Gravity",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Reverse Gravity"
+  }
+}

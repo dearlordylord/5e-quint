@@ -425,6 +425,23 @@ type EffectAtom =
       readonly direction: "push" | "pull" | "slide";
       readonly distanceFeet: number;
     }
+  | {
+      readonly kind: "force_fall";
+      readonly direction: "upward" | "downward";
+      readonly maxDistanceFeet?: number;
+      readonly impactAsNormalFall?: true;
+    }
+  | { readonly kind: "grab_fixed_object" }
+  | {
+      readonly kind: "suspend_in_area";
+      readonly location: "top";
+      readonly until: "effect_ends";
+    }
+  | {
+      readonly kind: "fall_when_effect_ends";
+      readonly direction: "downward";
+      readonly unlessCanStopFall?: true;
+    }
   | { readonly kind: "block_targeting"; readonly scope: string }
   | { readonly kind: "block_travel"; readonly scope: string }
   | {
@@ -1400,6 +1417,23 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("force_move"),
         direction: Schema.Literal("push", "pull", "slide"),
         distanceFeet: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("force_fall"),
+        direction: Schema.Literal("upward", "downward"),
+        maxDistanceFeet: optionalExact(Schema.Number),
+        impactAsNormalFall: optionalExact(Schema.Literal(true)),
+      }),
+      Schema.Struct({ kind: Schema.Literal("grab_fixed_object") }),
+      Schema.Struct({
+        kind: Schema.Literal("suspend_in_area"),
+        location: Schema.Literal("top"),
+        until: Schema.Literal("effect_ends"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("fall_when_effect_ends"),
+        direction: Schema.Literal("downward"),
+        unlessCanStopFall: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
         kind: Schema.Literal("block_targeting"),
