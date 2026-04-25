@@ -256,6 +256,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "heal_to_max_hp": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "heal_to_max_hp",
+        label: `heal_to_max_hp\ntarget: ${e.target}`,
+      });
+      return id;
+    }
     case "modify_max_hp": {
       const id = ids("eff");
       const directionTag = e.direction === "decrease" ? "\n(decrease)" : "";
@@ -953,6 +963,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "allow_reaction_stand_up": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "allow_reaction_stand_up",
+        label: "allow_reaction_stand_up",
+      });
+      return id;
+    }
     case "composite": {
       // Emit a container node; children are traced as siblings all
       // rooted at the container. Container acts as the returned id.
@@ -1132,6 +1152,8 @@ function traceEffectAtomScaling(
     case "grant_temp_hp":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);
       return;
+    case "heal_to_max_hp":
+      return;
     case "modify_max_hp":
       traceDiceAmountScaling(e.delta, effectId, slotId, nodes, edges, ids);
       return;
@@ -1226,6 +1248,7 @@ function traceEffectAtomScaling(
     case "reposition_attachment":
     case "area_is_difficult_terrain":
     case "grant_cover":
+    case "allow_reaction_stand_up":
       return;
     case "composite":
       for (const child of e.effects) {

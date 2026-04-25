@@ -269,6 +269,7 @@ type EffectAtom =
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
     }
+  | { readonly kind: "heal_to_max_hp"; readonly target: "target_creature" }
   | {
       readonly kind: "modify_max_hp";
       readonly direction: "increase";
@@ -626,6 +627,7 @@ type EffectAtom =
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
+  | { readonly kind: "allow_reaction_stand_up" }
   | { readonly kind: "none" };
 
 type SaveSuccessOutcome = { readonly kind: "half_damage" } | EffectAtom;
@@ -1184,6 +1186,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         target: Schema.Literal("self", "target_creature"),
       }),
       Schema.Struct({
+        kind: Schema.Literal("heal_to_max_hp"),
+        target: Schema.Literal("target_creature"),
+      }),
+      Schema.Struct({
         kind: Schema.Literal("modify_max_hp"),
         direction: Schema.Literal("increase"),
         delta: DiceAmountSchema,
@@ -1632,6 +1638,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("grant_cover"),
         cover: Schema.Literal("three_quarters"),
       }),
+      Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
       Schema.Struct({ kind: Schema.Literal("none") }),
     ),
   );
