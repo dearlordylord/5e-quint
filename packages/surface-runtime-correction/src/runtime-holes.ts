@@ -20,6 +20,7 @@ import {
 } from "#/reducer-types.ts";
 
 type DamageEffectAtom = Extract<EffectAtom, { readonly kind: "damage" }>;
+type HealHpEffectAtom = Extract<EffectAtom, { readonly kind: "heal_hp" }>;
 
 function makeHoleInstanceKey(
   stepKey: HoleStepKey,
@@ -58,6 +59,10 @@ function isDamageEffect(effect: EffectAtom): effect is DamageEffectAtom {
   return effect.kind === "damage";
 }
 
+function isHealHpEffect(effect: EffectAtom): effect is HealHpEffectAtom {
+  return effect.kind === "heal_hp";
+}
+
 function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   return {
     holeInstanceKey: makeHoleInstanceKey(
@@ -66,6 +71,21 @@ function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
     ),
     holeId: holeId(`${stepKey}_attack_roll`),
     kind: "attackRoll",
+  };
+}
+
+function healingRollHole(
+  stepKey: HoleStepKey,
+  effectIndex: number,
+): RuntimeHole {
+  return {
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey(`runtime:healingRoll:${effectIndex}`),
+    ),
+    holeId: holeId(`${stepKey}_healing_roll_${effectIndex}`),
+    kind: "rolledDice",
+    label: "healing roll",
   };
 }
 
@@ -96,6 +116,11 @@ function attachmentHoles(
     return [targetChoiceHole(stepKey, attachment)];
   }
 
+  // Non-target attachment holes, including fireball_point, still use the
+  // temporary surfaceAttachment protocol. This currently echoes the authored
+  // area schema back to the caller; it does NOT yet represent the eventual
+  // runtime answer shape such as chosen affected creatures or another
+  // table-owned area resolution result.
   const baseHole = {
     holeInstanceKey: makeHoleInstanceKey(
       stepKey,
@@ -153,6 +178,15 @@ function phaseDamageTypeHolesFromEffects(
   return effects
     .filter(isDamageEffect)
     .flatMap((effect) => phaseDamageTypeHolesFromEffect(stepKey, effect));
+}
+
+function phaseHealingRollHolesFromEffects(
+  stepKey: HoleStepKey,
+  effects: ReadonlyArray<EffectAtom>,
+): RuntimeHoleSet {
+  return effects.flatMap((effect, index) =>
+    isHealHpEffect(effect) ? [healingRollHole(stepKey, index)] : [],
+  );
 }
 
 function assertNoGatedDamageTypeHoles(
@@ -214,7 +248,10 @@ export function projectPhaseHoles(
     Match.when({ kind: "direct" }, (directPhase) => [
       ...attachmentHoles(stepKey, directPhase.attachment),
       ...(directPhase.effects
-        ? phaseDamageTypeHolesFromEffects(stepKey, directPhase.effects)
+        ? [
+            ...phaseDamageTypeHolesFromEffects(stepKey, directPhase.effects),
+            ...phaseHealingRollHolesFromEffects(stepKey, directPhase.effects),
+          ]
         : []),
     ]),
     Match.when({ kind: "ability_check_gate" }, (abilityCheckGatePhase) => [

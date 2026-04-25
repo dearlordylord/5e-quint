@@ -83,6 +83,12 @@ describe("projectPhaseHoles", () => {
         kind: "targetChoice",
         label: "healing target",
       },
+      {
+        holeInstanceKey: "activation:0:runtime:healingRoll:0",
+        holeId: "activation:0_healing_roll_0",
+        kind: "rolledDice",
+        label: "healing roll",
+      },
     ]);
   });
 
@@ -94,6 +100,9 @@ describe("projectPhaseHoles", () => {
       ),
     ).toEqual([
       {
+        // fireball_point is still a temporary area-hole protocol: the runtime
+        // hole exposes authored area schema, not a resolved geometry/affected
+        // creature answer shape.
         holeInstanceKey: "activation:0:surface:fireball_point",
         holeId: "fireball_point",
         kind: "surfaceAttachment",

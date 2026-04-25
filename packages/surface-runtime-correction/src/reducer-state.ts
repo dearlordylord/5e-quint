@@ -1,7 +1,21 @@
+import { Brand } from "effect";
 import type { ConditionState } from "@dnd/shared/conditions-algebra";
 import type { InitiativeStack } from "@dnd/shared/initiative-algebra";
+import { Integer } from "@dnd/shared/types";
 import type { CreatureId, Hp, SpellSlots } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
+
+export type SpellcastingAbilityModifier = Integer &
+  Brand.Brand<"SpellcastingAbilityModifier">;
+const SpellcastingAbilityModifier = Brand.all(
+  Integer,
+  Brand.nominal<SpellcastingAbilityModifier>(),
+);
+export function spellcastingAbilityModifier(
+  value: number,
+): SpellcastingAbilityModifier {
+  return SpellcastingAbilityModifier(Math.floor(value));
+}
 
 export type CreatureState = {
   // invariant: hp can't be more than maxHp. for temp hp, there is a field
@@ -12,6 +26,7 @@ export type CreatureState = {
   // carried through the rounds, into the next turn
   readonly hasReaction: boolean;
   readonly units: ReadonlyArray<UnitRecord>;
+  readonly spellcastingAbilityModifier: SpellcastingAbilityModifier;
   readonly spellSlots: SpellSlots;
   // invariant: current spell slots can't be larger than max
   readonly spellSlotsMax: SpellSlots;

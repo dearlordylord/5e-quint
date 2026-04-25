@@ -14,8 +14,10 @@ import type {
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
 import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
+import { spellcastingAbilityModifier } from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";
+import type { FilledHoleValue, RolledDiceGroup } from "#/reducer-types.ts";
 import { loadSupportedUnit } from "#/supported-unit-library.ts";
 
 function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
@@ -26,9 +28,27 @@ function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
     conditions: EMPTY_CONDITION_STATE,
     hasReaction: true,
     units: [],
+    spellcastingAbilityModifier: spellcastingAbilityModifier(0),
     spellSlots: [],
     spellSlotsMax: [],
     ...overrides,
+  };
+}
+
+function healingRollFill(
+  results: ReadonlyNonEmptyArray<number>,
+): Extract<FilledHoleValue, { readonly kind: "rolledDice" }> {
+  return {
+    kind: "rolledDice" as const,
+    holeId: holeId("activation:0_healing_roll_0"),
+    value: [
+      {
+        results: results.map((result) => result as DieRollResult) as [
+          DieRollResult,
+          ...DieRollResult[],
+        ],
+      },
+    ] as ReadonlyNonEmptyArray<RolledDiceGroup>,
   };
 }
 
@@ -485,6 +505,350 @@ describe("reducer boundaries", () => {
     });
   });
 
+  it("resolveSubjectHoles rejects a unit-backed attack that targets a missing creature", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("fire_bolt_target"),
+            value: "Z" as CreatureId,
+          },
+          {
+            kind: "attackRoll",
+            holeId: holeId("activation:0_attack_roll"),
+            value: 17,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "invalid attack target",
+    });
+  });
+
+  it("resolveSubjectHoles rejects wrong-kind fills for fireball point hole", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fireball",
+        },
+        filledHoleValues: [
+          {
+            // fireball_point has not been refactored to an area-specific runtime
+            // answer yet, so targetChoice is intentionally the wrong protocol.
+            kind: "targetChoice",
+            holeId: holeId("fireball_point"),
+            value: "B" as CreatureId,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason:
+        "filled value kind targetChoice does not match hole fireball_point",
+    });
+  });
+
+  it("resolveSubjectHoles requests the fireball point hole when no fills are provided", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fireball",
+        },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          // The current fireball_point hole asks the caller to echo area schema.
+          // It does not yet mean "all affected creatures in this area".
+          holeInstanceKey: "activation:0:surface:fireball_point",
+          holeId: "fireball_point",
+          kind: "surfaceAttachment",
+          label: "point of explosion",
+          attachment: {
+            kind: "area",
+            origin: { kind: "point_within_range" },
+            shape: {
+              kind: "sphere",
+              radiusFeet: 20,
+            },
+          },
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles still reaches the save-gate frontier for malformed fireball area echo", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fireball",
+        },
+        filledHoleValues: [
+          {
+            // Current fireball_point handling only checks that the fill uses the
+            // surfaceAttachment protocol; it does not yet validate the inner
+            // area payload semantics.
+            kind: "surfaceAttachment",
+            holeId: holeId("fireball_point"),
+            value: {
+              kind: "target",
+              selection: { mode: "one" },
+            },
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "save-gate unit outcome application is not implemented yet",
+    });
+  });
+
+  it("resolveSubjectHoles requests the cure wounds target and healing roll holes when no fills are provided", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:surface:cure_wounds_target",
+          holeId: "cure_wounds_target",
+          kind: "targetChoice",
+          label: "healing target",
+        },
+        {
+          holeInstanceKey: "activation:0:runtime:healingRoll:0",
+          holeId: "activation:0_healing_roll_0",
+          kind: "rolledDice",
+          label: "healing roll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles requests the cure wounds healing roll after target fill", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("cure_wounds_target"),
+            value: "B" as CreatureId,
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:runtime:healingRoll:0",
+          holeId: "activation:0_healing_roll_0",
+          kind: "rolledDice",
+          label: "healing roll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles rejects cure wounds when direct target is missing", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("cure_wounds_target"),
+            value: "Z" as CreatureId,
+          },
+          healingRollFill([3, 4]),
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "invalid direct target",
+    });
+  });
+
+  it("resolveSubjectHoles applies cure wounds healing to the chosen target", () => {
+    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const state: State = {
+      ...base,
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          {
+            ...base.combatants.get("A" as CreatureId)!,
+            spellcastingAbilityModifier: spellcastingAbilityModifier(2),
+          },
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 1 as Hp,
+            maxHp: 12 as Hp,
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "cure_wounds",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("cure_wounds_target"),
+          value: "B" as CreatureId,
+        },
+        healingRollFill([5, 4]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(12);
+    }
+  });
+
+  it("resolveSubjectHoles does not let a negative spellcasting modifier turn healing into damage", () => {
+    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const state: State = {
+      ...base,
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          {
+            ...base.combatants.get("A" as CreatureId)!,
+            spellcastingAbilityModifier: spellcastingAbilityModifier(-5),
+          },
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 5 as Hp,
+            maxHp: 12 as Hp,
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "cure_wounds",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("cure_wounds_target"),
+          value: "B" as CreatureId,
+        },
+        healingRollFill([1, 1]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(5);
+    }
+  });
+
+  it("resolveSubjectHoles rejects cure wounds healing rolls outside the die size", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("cure_wounds_target"),
+            value: "B" as CreatureId,
+          },
+          healingRollFill([9, 1]),
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "filled die roll 9 is outside d8",
+    });
+  });
+
+  it("resolveSubjectHoles allows cure wounds to target self", () => {
+    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const state: State = {
+      ...base,
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          {
+            ...base.combatants.get("A" as CreatureId)!,
+            hp: 1 as Hp,
+            maxHp: 10 as Hp,
+          },
+        ],
+        ["B" as CreatureId, creatureState()],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "cure_wounds",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("cure_wounds_target"),
+          value: "A" as CreatureId,
+        },
+        healingRollFill([3, 4]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("A" as CreatureId)?.hp).toBe(8);
+    }
+  });
+
   it("resolveSubjectHoles reaches save-gate execution boundary after fireball point is filled", () => {
     expect(
       resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
@@ -495,6 +859,8 @@ describe("reducer boundaries", () => {
         },
         filledHoleValues: [
           {
+            // Temporary protocol for fireball_point: caller echoes authored area
+            // schema instead of supplying a later area-resolution result.
             kind: "surfaceAttachment",
             holeId: holeId("fireball_point"),
             value: {

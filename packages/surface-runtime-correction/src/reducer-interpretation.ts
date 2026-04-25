@@ -2,10 +2,7 @@ import { Either, Match, Option } from "effect";
 import { currentActing } from "@dnd/shared/initiative-algebra";
 import { getOnlyOneStrict } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
-import type {
-  ActivationPhase,
-  UnitRecord,
-} from "@dnd/prototype-content-surface/surface/types";
+import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
 
 import {
   type CoreAttackAct,
@@ -13,6 +10,7 @@ import {
 } from "#/reducer-core-attack.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import {
+  type CurrentSliceSupportedActivationPhase,
   type CurrentSliceSupportedActivationUnit,
   getCurrentSliceSupportedActivationUnit,
 } from "#/reducer-support.ts";
@@ -48,7 +46,7 @@ export type InterpretedUnitAct = AvailableAct & {
   readonly subject: UnitSubject;
   readonly tag: "unit";
   readonly unit: CurrentSliceSupportedActivationUnit;
-  readonly phase: ActivationPhase;
+  readonly phase: CurrentSliceSupportedActivationPhase;
 };
 
 export type InterpretedAct =
@@ -90,7 +88,7 @@ function requireSupportedUnit(
 
 function currentSliceActivationPhase(
   unit: CurrentSliceSupportedActivationUnit,
-): ActivationPhase {
+): CurrentSliceSupportedActivationPhase {
   return getOnlyOneStrict(unit.mechanics.phases);
 }
 

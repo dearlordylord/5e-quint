@@ -2,14 +2,44 @@ import { Either, Option } from "effect";
 import { isArrayOfOne } from "@dnd/shared/types";
 import type {
   ActivationPhase,
+  DiceAmount,
+  DiceExpr,
+  EffectAtom,
   UnitRecord,
 } from "@dnd/prototype-content-surface/surface/types";
 
+type CurrentSliceSupportedAttackRollPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "attack_roll" }
+>;
+
+type CurrentSliceSupportedSaveGatePhase = Extract<
+  ActivationPhase,
+  { readonly kind: "save_gate" }
+>;
+
+type CurrentSliceSupportedDirectEffect = Extract<
+  EffectAtom,
+  { readonly kind: "heal_hp" | "grant_extra_action" }
+>;
+
+type CurrentSliceSupportedDirectPhase = Extract<
+  ActivationPhase,
+  { readonly kind: "direct" }
+> & {
+  readonly effects: readonly [CurrentSliceSupportedDirectEffect];
+};
+
+export type CurrentSliceSupportedActivationPhase =
+  | CurrentSliceSupportedAttackRollPhase
+  | CurrentSliceSupportedSaveGatePhase
+  | CurrentSliceSupportedDirectPhase;
+
 export type CurrentSliceSupportedActivationUnit = UnitRecord & {
-  // to be deleted when we introduce more units. this type is not useful as a helper later
+  readonly kind: "spell" | "class_feature";
   readonly mechanics: {
     readonly family: "activation";
-    readonly phases: readonly [ActivationPhase];
+    readonly phases: readonly [CurrentSliceSupportedActivationPhase];
   };
 };
 
@@ -18,6 +48,60 @@ export class UnsupportedUnitError extends Error {
     super(message);
     this.name = "UnsupportedUnitError";
   }
+}
+
+function supportedHealingDiceExpr(expr: DiceExpr): boolean {
+  return expr.abilityModifier === undefined;
+}
+
+function supportedHealingAmount(amount: DiceAmount): boolean {
+  if (amount.kind === "fixed") {
+    return supportedHealingDiceExpr(amount.expr);
+  }
+
+  if (amount.kind === "linear_per_level") {
+    return (
+      amount.axis === "slot" &&
+      amount.startingAtLevel === 1 &&
+      supportedHealingDiceExpr(amount.base)
+    );
+  }
+
+  return false;
+}
+
+function supportedDirectEffect(
+  effect: EffectAtom,
+): effect is CurrentSliceSupportedDirectEffect {
+  if (effect.kind === "grant_extra_action") {
+    return true;
+  }
+
+  if (effect.kind === "heal_hp") {
+    return supportedHealingAmount(effect.amount);
+  }
+
+  return false;
+}
+
+function directEffectMatchesAttachment(
+  phase: Extract<ActivationPhase, { readonly kind: "direct" }>,
+  effect: CurrentSliceSupportedDirectEffect,
+): boolean {
+  const attachment =
+    phase.attachment.kind === "hole"
+      ? phase.attachment.value
+      : phase.attachment;
+
+  if (effect.kind === "grant_extra_action") {
+    return attachment.kind === "self";
+  }
+
+  if (effect.target === "self") {
+    return attachment.kind === "self";
+  }
+
+  return phase.attachment.kind === "hole" && attachment.kind === "target";
 }
 
 export function checkSupportedUnit(
@@ -113,7 +197,7 @@ export function checkSupportedUnit(
 
   if (phase.kind === "direct") {
     const directEffects = phase.effects;
-    if (directEffects === undefined || directEffects.length !== 1) {
+    if (directEffects === undefined || !isArrayOfOne(directEffects)) {
       return Either.left(
         new UnsupportedUnitError(
           `Reducer currently supports exactly one direct effect for unit ${unit.id}`,
@@ -122,13 +206,18 @@ export function checkSupportedUnit(
     }
 
     const [directEffect] = directEffects;
-    if (
-      directEffect.kind !== "heal_hp" &&
-      directEffect.kind !== "grant_extra_action"
-    ) {
+    if (!supportedDirectEffect(directEffect)) {
       return Either.left(
         new UnsupportedUnitError(
           `Unsupported direct effect for reducer unit ${unit.id}: ${directEffect.kind}`,
+        ),
+      );
+    }
+
+    if (!directEffectMatchesAttachment(phase, directEffect)) {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Direct effect target does not match attachment for reducer unit ${unit.id}`,
         ),
       );
     }
@@ -152,6 +241,11 @@ export function checkSupportedUnit(
     }
   }
 
+  // This is the package's parse/narrowing boundary for unit-backed resolution.
+  // The checks above prove the intersection facts that Surface's generated
+  // schema type cannot express incrementally: supported unit kind, activation
+  // mechanics, exactly one supported phase, and for direct phases exactly one
+  // supported direct effect.
   return Either.right(unit as CurrentSliceSupportedActivationUnit);
 }
 
