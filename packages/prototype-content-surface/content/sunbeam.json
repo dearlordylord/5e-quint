@@ -1,0 +1,158 @@
+{
+  "description": "You launch a sunbeam in a 5-foot-wide, 60-foot-long Line. Each creature in the Line makes a Constitution saving throw. On a failed save, a creature takes 6d8 Radiant damage and has the Blinded condition until the start of your next turn. On a successful save, it takes half as much damage only. Until the spell ends, you can take a Magic action to create a new Line of radiance. For the duration, a mote of brilliant radiance shines above you, shedding Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. This light is sunlight. Using a Higher-Level Spell Slot. The damage increases by 1d8 for each spell slot level above 1.",
+  "id": "sunbeam",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "sunbeam_line",
+      "kind": "hole",
+      "label": "line of radiance",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "self"
+        },
+        "shape": {
+          "kind": "line",
+          "lengthFeet": 60,
+          "widthFeet": 5
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a magnifying glass",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "con",
+      "attachment": {
+        "holeId": "sunbeam_line",
+        "kind": "hole",
+        "label": "line of radiance",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "self"
+          },
+          "shape": {
+            "kind": "line",
+            "lengthFeet": 60,
+            "widthFeet": 5
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "effects": [
+          {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 6,
+                "dieSize": 8
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1,
+                "dieSize": 8
+              },
+              "startingAtLevel": 1
+            },
+            "damageType": "radiant",
+            "kind": "damage"
+          },
+          {
+            "condition": "blinded",
+            "kind": "apply_condition"
+          }
+        ],
+        "kind": "composite"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 6,
+    "operations": [
+      {
+        "effect": {
+          "brightRadiusFeet": 30,
+          "dimAdditionalFeet": 30,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "amount": {
+                  "axis": "slot",
+                  "base": {
+                    "dice": 6,
+                    "dieSize": 8
+                  },
+                  "kind": "linear_per_level",
+                  "perLevel": {
+                    "dice": 1,
+                    "dieSize": 8
+                  },
+                  "startingAtLevel": 1
+                },
+                "damageType": "radiant",
+                "kind": "damage"
+              },
+              {
+                "condition": "blinded",
+                "kind": "apply_condition"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "evocation"
+  },
+  "name": "Sunbeam",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Sunbeam"
+  }
+}

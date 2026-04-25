@@ -1876,6 +1876,7 @@ function traceOngoingOpEffect(
       const failId = traceEffectAtom(eff.onFail, nodes, ids, edges);
       if (failId !== null) {
         edges.push({ from: sgId, to: failId, relation: "branches_on_save" });
+        traceEffectAtomScaling(eff.onFail, failId, slotId, nodes, edges, ids);
       }
       if (
         eff.onSuccess.kind !== "none" &&
@@ -1884,6 +1885,14 @@ function traceOngoingOpEffect(
         const sucId = traceEffectAtom(eff.onSuccess, nodes, ids, edges);
         if (sucId !== null) {
           edges.push({ from: sgId, to: sucId, relation: "branches_on_save" });
+          traceEffectAtomScaling(
+            eff.onSuccess,
+            sucId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
         }
       }
       return;
