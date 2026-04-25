@@ -159,6 +159,18 @@ type ExileDestination =
   | "ethereal_plane"
   | "plane_of_origin"
   | "different_plane";
+type SpellGrantedWeaponAttack = {
+  readonly kind: "make_weapon_attack";
+  readonly weapon: "material_component";
+  readonly abilityOverride?: "spellcasting";
+  readonly damageTypeChoice?: ReadonlyNonEmptyArray<
+    "radiant" | "weapon_normal"
+  >;
+  readonly bonusDamage?: {
+    readonly damageType: DamageTypeRef;
+    readonly amount: DiceAmount;
+  };
+};
 type ContainerStorageProfile = {
   readonly maxWeightPounds: number;
   readonly maxVolumeCubicFeet: number;
@@ -544,6 +556,7 @@ type EffectAtom =
       readonly destination: "unoccupied_visible_space";
     }
   | { readonly kind: "transport_exile"; readonly destination: ExileDestination }
+  | SpellGrantedWeaponAttack
   | {
       readonly kind: "container_storage";
       readonly storage: ContainerStorageProfile;
@@ -1587,6 +1600,20 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           "ethereal_plane",
           "plane_of_origin",
           "different_plane",
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("make_weapon_attack"),
+        weapon: Schema.Literal("material_component"),
+        abilityOverride: optionalExact(Schema.Literal("spellcasting")),
+        damageTypeChoice: optionalExact(
+          nonEmpty(Schema.Literal("radiant", "weapon_normal")),
+        ),
+        bonusDamage: optionalExact(
+          Schema.Struct({
+            damageType: DamageTypeRefSchema,
+            amount: DiceAmountSchema,
+          }),
         ),
       }),
       Schema.Struct({

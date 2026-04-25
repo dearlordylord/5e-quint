@@ -795,6 +795,28 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "make_weapon_attack": {
+      const id = ids("eff");
+      const ability =
+        e.abilityOverride === undefined
+          ? ""
+          : `\nability: ${e.abilityOverride}`;
+      const damageChoice =
+        e.damageTypeChoice === undefined
+          ? ""
+          : `\ndamage choice: ${e.damageTypeChoice.join(" or ")}`;
+      const bonus =
+        e.bonusDamage === undefined
+          ? ""
+          : `\nbonus: ${describeDiceAmount(e.bonusDamage.amount)} ${describeDamageTypeRef(e.bonusDamage.damageType)}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "make_weapon_attack",
+        label: `make_weapon_attack\nweapon: ${e.weapon}${ability}${damageChoice}${bonus}`,
+      });
+      return id;
+    }
     case "container_storage": {
       const id = ids("eff");
       nodes.push({
@@ -1267,6 +1289,18 @@ function traceEffectAtomScaling(
       return;
     case "grant_extra_action":
       traceActionRestriction(e.restriction, effectId, nodes, edges, ids);
+      return;
+    case "make_weapon_attack":
+      if (e.bonusDamage !== undefined) {
+        traceDiceAmountScaling(
+          e.bonusDamage.amount,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      }
       return;
     case "none":
     case "modify_ac":
