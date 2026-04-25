@@ -1,0 +1,122 @@
+{
+  "description": "You create a spectral sword that hovers within range. When the sword appears, you make a melee spell attack against a target within 5 feet of the sword. On a hit, the target takes Force damage equal to 4d12 plus your spellcasting ability modifier. On later turns, you can take a Bonus Action to move the sword up to 30 feet and repeat the attack against the same target or a different one.",
+  "id": "arcane_sword",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "arcane_sword",
+      "kind": "hole",
+      "label": "spectral sword",
+      "value": {
+        "description": "space within range",
+        "kind": "location"
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a miniature sword worth 250+ GP",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "arcane_sword_attack_target",
+        "kind": "hole",
+        "label": "target within 5 feet of the sword",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "attackKind": "melee_spell_attack",
+      "kind": "attack_roll",
+      "onHit": [
+        {
+          "amount": {
+            "expr": {
+              "dice": 4,
+              "dieSize": 12,
+              "spellcastingMod": true
+            },
+            "kind": "fixed"
+          },
+          "damageType": "force",
+          "kind": "damage"
+        }
+      ],
+      "onMiss": [
+        {
+          "kind": "none"
+        }
+      ]
+    },
+    "level": 7,
+    "operations": [
+      {
+        "effect": {
+          "kind": "reposition_attachment",
+          "maxMoveFeet": 30
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      },
+      {
+        "effect": {
+          "attackKind": "melee_spell_attack",
+          "kind": "attack_roll",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 4,
+                  "dieSize": 12,
+                  "spellcastingMod": true
+                },
+                "kind": "fixed"
+              },
+              "damageType": "force",
+              "kind": "damage"
+            }
+          ],
+          "onMiss": [
+            {
+              "kind": "none"
+            }
+          ]
+        },
+        "trigger": {
+          "cost": {
+            "kind": "bonus_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Arcane Sword",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Arcane Sword"
+  }
+}
