@@ -387,6 +387,10 @@ function traceEffectAtom(
         e.conditionFilter !== undefined && e.conditionFilter.length > 0
           ? `\ncondition: ${e.conditionFilter.join("/")}`
           : "";
+      const ability =
+        e.abilityFilter !== undefined && e.abilityFilter.length > 0
+          ? `\nability: ${e.abilityFilter.join("/")}`
+          : "";
       const contextRange =
         e.contextRangeFeet !== undefined
           ? `\ncontext: within ${e.contextRangeFeet} ft`
@@ -396,7 +400,7 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "modify_roll_advantage",
-        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${saveSource}${contextRange}`,
+        label: `modify_roll_advantage\n${e.mode} on ${e.on.join(", ")}${by}${condition}${ability}${saveSource}${contextRange}`,
       });
       return id;
     }

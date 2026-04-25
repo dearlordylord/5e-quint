@@ -367,6 +367,7 @@ type EffectAtom =
             readonly options: ReadonlyNonEmptyArray<Skill>;
           };
       readonly conditionFilter?: ReadonlyNonEmptyArray<Condition>;
+      readonly abilityFilter?: ReadonlyNonEmptyArray<Ability>;
       readonly saveAbilityFilter?: ReadonlyNonEmptyArray<Ability>;
       readonly saveSourceFilter?: SavingThrowSourceFilter;
       readonly contextRangeFeet?: number;
@@ -1292,6 +1293,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           ),
         ),
         conditionFilter: optionalExact(nonEmpty(ConditionSchema)),
+        abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
         saveAbilityFilter: optionalExact(nonEmpty(AbilitySchema)),
         saveSourceFilter: optionalExact(SavingThrowSourceFilterSchema),
         contextRangeFeet: optionalExact(Schema.Number),

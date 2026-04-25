@@ -1,0 +1,95 @@
+{
+  "description": "A beam of enervating energy shoots from you toward a creature within range. The target makes a Constitution saving throw. On a successful save, it has Disadvantage on the next attack roll it makes until the start of your next turn. On a failed save, it has Disadvantage on Strength-based D20 Tests for the duration and subtracts 1d8 from all its damage rolls. The target repeats the save at the end of each of its turns, ending the spell on a success.",
+  "id": "ray_of_enfeeblement",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 2,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "holeId": "ray_of_enfeeblement_target",
+          "kind": "hole",
+          "label": "target",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "abilityFilter": [
+                "str"
+              ],
+              "kind": "modify_roll_advantage",
+              "mode": "disadvantage",
+              "on": [
+                "attack_roll",
+                "ability_check",
+                "saving_throw"
+              ]
+            },
+            {
+              "delta": {
+                "dice": 1,
+                "dieSize": 8,
+                "kind": "fixed_dice",
+                "sign": "-"
+              },
+              "kind": "modify_damage_numeric"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "count": 1,
+          "expiresOn": {
+            "kind": "caster_turn_start"
+          },
+          "kind": "modify_roll_advantage",
+          "mode": "disadvantage",
+          "on": [
+            "attack_roll"
+          ]
+        },
+        "repeatSave": {
+          "cadence": "end_of_target_turn",
+          "onSuccess": "ends_on_target"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "necromancy"
+  },
+  "name": "Ray of Enfeeblement",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-Q-R#Ray of Enfeeblement"
+  }
+}
