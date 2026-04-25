@@ -1176,6 +1176,36 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "area_is_heavily_obscured": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_is_heavily_obscured",
+        label: "area_is_heavily_obscured",
+      });
+      return id;
+    }
+    case "area_has_strong_wind": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "area_has_strong_wind",
+        label: "area_has_strong_wind",
+      });
+      return id;
+    }
+    case "prevent_ranged_weapon_attacks": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_ranged_weapon_attacks",
+        label: "prevent_ranged_weapon_attacks",
+      });
+      return id;
+    }
     case "area_movement_cost_multiplier": {
       const id = ids("eff");
       nodes.push({
@@ -1580,6 +1610,9 @@ function traceEffectAtomScaling(
     case "lock_object":
     case "reposition_attachment":
     case "area_is_difficult_terrain":
+    case "area_is_heavily_obscured":
+    case "area_has_strong_wind":
+    case "prevent_ranged_weapon_attacks":
     case "area_movement_cost_multiplier":
     case "grant_cover":
     case "block_line_of_sight":
@@ -2110,6 +2143,18 @@ function traceOngoingOperation(
   const hostId = triggerCtx.hostId;
   const hostRelation = triggerCtx.hostRelation;
   traceUsageLimit(op.usageLimit, hostId, "limits", nodes, edges, ids);
+  if (op.targetLimit !== undefined) {
+    const limitId = ids("limit");
+    const targetTypes = op.targetLimit.targetTypes.join("/");
+    const distinct = op.targetLimit.distinct === true ? " distinct" : "";
+    nodes.push({
+      id: limitId,
+      category: "resolution",
+      atomKind: "target_limit",
+      label: `target_limit\n${op.targetLimit.count}${distinct} ${targetTypes}`,
+    });
+    edges.push({ from: hostId, to: limitId, relation: "limits" });
+  }
   traceOngoingOpEffect(
     op.effect,
     hostId,
@@ -2193,11 +2238,15 @@ function traceOngoingTrigger(
     }
     case "on_caster_turn_start": {
       const winId = ids("win");
+      const turn =
+        trigger.turnWindow === undefined
+          ? ""
+          : `\n${describeOngoingTurnWindow(trigger.turnWindow)}`;
       nodes.push({
         id: winId,
         category: "window",
         atomKind: "turn_start_window",
-        label: "turn_start_window\n(caster)",
+        label: `turn_start_window\n(caster)${turn}`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -2349,6 +2398,26 @@ function traceOngoingTrigger(
     default: {
       const _: never = trigger;
       throw new Error(`unhandled ongoing trigger: ${String(_)}`);
+    }
+  }
+}
+
+function describeOngoingTurnWindow(
+  turnWindow: NonNullable<
+    Extract<
+      import("../surface/types.ts").OngoingTrigger,
+      { readonly kind: "on_caster_turn_start" }
+    >["turnWindow"]
+  >,
+): string {
+  switch (turnWindow.kind) {
+    case "effect_turn":
+      return `effect turn ${turnWindow.turn}`;
+    case "effect_turn_range":
+      return `effect turns ${turnWindow.from}-${turnWindow.to}`;
+    default: {
+      const _: never = turnWindow;
+      throw new Error(`unhandled ongoing turn window: ${String(_)}`);
     }
   }
 }

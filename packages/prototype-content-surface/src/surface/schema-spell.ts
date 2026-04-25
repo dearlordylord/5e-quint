@@ -705,6 +705,9 @@ type EffectAtom =
   | { readonly kind: "lock_object"; readonly password?: string }
   | { readonly kind: "reposition_attachment"; readonly maxMoveFeet?: number }
   | { readonly kind: "area_is_difficult_terrain" }
+  | { readonly kind: "area_is_heavily_obscured" }
+  | { readonly kind: "area_has_strong_wind" }
+  | { readonly kind: "prevent_ranged_weapon_attacks" }
   | { readonly kind: "area_movement_cost_multiplier"; readonly multiplier: 4 }
   | { readonly kind: "grant_cover"; readonly cover: "three_quarters" }
   | { readonly kind: "block_line_of_sight" }
@@ -1165,6 +1168,18 @@ export const OngoingCasterActionCostSchema = Schema.Union(
   }),
 );
 
+export const OngoingTurnWindowSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("effect_turn"),
+    turn: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("effect_turn_range"),
+    from: Schema.Number,
+    to: Schema.Number,
+  }),
+);
+
 export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("passive") }),
   Schema.Struct({ kind: Schema.Literal("on_effect_starts") }),
@@ -1175,7 +1190,10 @@ export const OngoingTriggerSchema = Schema.Union(
     attackerWithinFeet: optionalExact(Schema.Number),
   }),
   Schema.Struct({ kind: Schema.Literal("on_attached_turn_start") }),
-  Schema.Struct({ kind: Schema.Literal("on_caster_turn_start") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_caster_turn_start"),
+    turnWindow: optionalExact(OngoingTurnWindowSchema),
+  }),
   Schema.Struct({ kind: Schema.Literal("on_caster_turn_end") }),
   Schema.Struct({ kind: Schema.Literal("on_attached_damaged") }),
   Schema.Struct({
@@ -1851,6 +1869,9 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxMoveFeet: optionalExact(Schema.Number),
       }),
       Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
+      Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+      Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
+      Schema.Struct({ kind: Schema.Literal("prevent_ranged_weapon_attacks") }),
       Schema.Struct({
         kind: Schema.Literal("area_movement_cost_multiplier"),
         multiplier: Schema.Literal(4),
@@ -2027,6 +2048,13 @@ export const OngoingEffectSchema: Schema.suspend<
 export const OngoingOperationSchema = Schema.Struct({
   trigger: OngoingTriggerSchema,
   predicate: optionalExact(OngoingPredicateSchema),
+  targetLimit: optionalExact(
+    Schema.Struct({
+      count: Schema.Number,
+      distinct: Schema.Literal(true),
+      targetTypes: nonEmpty(Schema.Literal("creature", "object")),
+    }),
+  ),
   effect: OngoingEffectSchema,
   usageLimit: optionalExact(UsageLimitSchema),
 });
