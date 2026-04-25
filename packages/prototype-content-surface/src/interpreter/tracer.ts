@@ -638,6 +638,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "suppress_condition_benefit": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_condition_benefit",
+        label: `suppress_condition_benefit\n${e.condition}`,
+      });
+      return id;
+    }
     case "grant_damage_immunity": {
       const id = ids("eff");
       nodes.push({
@@ -1117,6 +1127,7 @@ function traceEffectAtomScaling(
     case "grant_proficiency":
     case "grant_spell_access":
     case "grant_condition_immunity":
+    case "suppress_condition_benefit":
     case "prevent_drop_to_0_hp":
     case "negate_instant_death":
     case "grant_damage_immunity":

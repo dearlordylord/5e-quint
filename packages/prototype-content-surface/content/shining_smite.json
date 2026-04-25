@@ -1,0 +1,113 @@
+{
+  "description": "Immediately after hitting a creature with a Melee weapon or an Unarmed Strike, you take a Bonus Action. The target takes an extra 2d6 Radiant damage from the attack. Until the spell ends, the target sheds Bright Light in a 5-foot radius, attack rolls against it have Advantage, and it can't benefit from the Invisible condition. Using a Higher-Level Spell Slot. The damage increases by 1d6 for each spell slot level above 2.",
+  "id": "shining_smite",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "shining_smite_hit_target",
+      "kind": "hole",
+      "label": "hit creature",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "bonus_action",
+      "trigger": {
+        "attack": "melee_weapon_or_unarmed_strike",
+        "kind": "after_hit_with"
+      }
+    },
+    "components": {
+      "m": false,
+      "s": false,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "shining_smite_hit_target",
+        "kind": "hole",
+        "label": "hit creature",
+        "value": {
+          "kind": "target",
+          "selection": {
+            "mode": "one"
+          }
+        }
+      },
+      "effects": [
+        {
+          "amount": {
+            "axis": "slot",
+            "base": {
+              "dice": 2,
+              "dieSize": 6
+            },
+            "kind": "linear_per_level",
+            "perLevel": {
+              "dice": 1,
+              "dieSize": 6
+            },
+            "startingAtLevel": 2
+          },
+          "damageType": "radiant",
+          "kind": "damage"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 2,
+    "operations": [
+      {
+        "effect": {
+          "brightRadiusFeet": 5,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "modify_roll_advantage",
+          "mode": "advantage",
+          "on": [
+            "attack_roll"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "condition": "invisible",
+          "kind": "suppress_condition_benefit"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "transmutation"
+  },
+  "name": "Shining Smite",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Shining Smite"
+  }
+}

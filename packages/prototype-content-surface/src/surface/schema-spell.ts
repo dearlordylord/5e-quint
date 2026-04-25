@@ -465,6 +465,10 @@ type EffectAtom =
     }
   | { readonly kind: "grant_condition_immunity"; readonly condition: Condition }
   | {
+      readonly kind: "suppress_condition_benefit";
+      readonly condition: Condition;
+    }
+  | {
       readonly kind: "grant_damage_immunity";
       readonly damageType: Schema.Schema.Type<typeof DamageTypeSchema>;
     }
@@ -1430,6 +1434,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("grant_condition_immunity"),
+        condition: ConditionSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("suppress_condition_benefit"),
         condition: ConditionSchema,
       }),
       Schema.Struct({
