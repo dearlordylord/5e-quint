@@ -666,6 +666,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "replace_destroyed_object_section_with_area": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "replace_destroyed_object_section_with_area",
+        label: `replace_destroyed_object_section_with_area\n${e.areaLabel}`,
+      });
+      return id;
+    }
     case "block_projectiles": {
       const id = ids("eff");
       const exception =
@@ -1517,6 +1527,7 @@ function traceEffectAtomScaling(
     case "object_destroyed_by_spell":
     case "cannot_be_dispelled_by_spell":
     case "block_ethereal_travel":
+    case "replace_destroyed_object_section_with_area":
     case "block_projectiles":
     case "block_gases_and_gaseous_creatures":
     case "block_flying_movement":
@@ -2128,6 +2139,17 @@ function traceOngoingTrigger(
       // No event window — the effect is granted directly by the
       // procedure.
       return { hostId: procId, hostRelation: "grants" };
+    case "on_effect_starts": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "effect_start_window",
+        label: "effect_start_window",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
     case "on_caster_attack_hit": {
       const winId = ids("win");
       nodes.push({
@@ -2224,6 +2246,28 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(creature enters area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_moves_through_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: "post_action_window\n(creature moves through area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_object_section_destroyed": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: "post_action_window\n(object section destroyed)",
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };

@@ -1,0 +1,203 @@
+{
+  "description": "You create a wall of ice on a solid surface within range, either a hemispherical dome or globe with a radius of up to 10 feet, or a flat surface made of ten contiguous 10-foot-square panels. The wall is 1 foot thick. If it cuts through a creature's space when it appears, the creature is pushed to one side and makes a Dexterity saving throw, taking 10d6 Cold damage on a failed save or half as much on a success. The wall has AC 12, 30 Hit Points per 10-foot section, Immunity to Cold, Poison, and Psychic damage, and Vulnerability to Fire damage. Destroying a section leaves a sheet of frigid air in that space. A creature moving through that air for the first time on a turn makes a Constitution saving throw, taking 5d6 Cold damage on a failed save or half as much on a success. Both damage amounts scale with higher-level spell slots.",
+  "id": "wall_of_ice",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "wall_of_ice_area",
+      "kind": "hole",
+      "label": "ice wall",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "wall_volume",
+              "maxHeightFeet": 10,
+              "maxLengthFeet": 100,
+              "thicknessFeet": 1
+            },
+            {
+              "kind": "sphere",
+              "radiusFeet": 10
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a piece of quartz",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "wall_of_ice_area",
+        "kind": "hole",
+        "label": "ice wall",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "wall_volume",
+                "maxHeightFeet": 10,
+                "maxLengthFeet": 100,
+                "thicknessFeet": 1
+              },
+              {
+                "kind": "sphere",
+                "radiusFeet": 10
+              }
+            ]
+          }
+        }
+      },
+      "effects": [
+        {
+          "durability": {
+            "acValue": 12,
+            "damageImmunities": [
+              "cold",
+              "poison",
+              "psychic"
+            ],
+            "damageVulnerabilities": [
+              "fire"
+            ],
+            "hpPerSection": 30
+          },
+          "kind": "create_object",
+          "maxSize": "gargantuan",
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "wall_volume",
+                "maxHeightFeet": 10,
+                "maxLengthFeet": 100,
+                "thicknessFeet": 1
+              },
+              {
+                "kind": "sphere",
+                "radiusFeet": 10
+              }
+            ]
+          }
+        },
+        {
+          "direction": "push",
+          "distanceFeet": 5,
+          "kind": "force_move"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 6,
+    "operations": [
+      {
+        "effect": {
+          "ability": "dex",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 10,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 2
+              },
+              "startingAtLevel": 6
+            },
+            "damageType": "cold",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_effect_starts"
+        }
+      },
+      {
+        "effect": {
+          "areaLabel": "sheet of frigid air",
+          "kind": "replace_destroyed_object_section_with_area"
+        },
+        "trigger": {
+          "kind": "on_object_section_destroyed"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "axis": "slot",
+              "base": {
+                "dice": 5,
+                "dieSize": 6
+              },
+              "kind": "linear_per_level",
+              "perLevel": {
+                "dice": 1
+              },
+              "startingAtLevel": 6
+            },
+            "damageType": "cold",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_moves_through_area"
+        },
+        "usageLimit": {
+          "kind": "once_per_turn"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Wall of Ice",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Wall of Ice"
+  }
+}

@@ -468,6 +468,10 @@ type EffectAtom =
   | { readonly kind: "cannot_be_dispelled_by_spell"; readonly spellId: string }
   | { readonly kind: "block_ethereal_travel" }
   | {
+      readonly kind: "replace_destroyed_object_section_with_area";
+      readonly areaLabel: string;
+    }
+  | {
       readonly kind: "block_projectiles";
       readonly projectile: "ordinary";
       readonly exception?: "giant_or_siege";
@@ -1163,6 +1167,7 @@ export const OngoingCasterActionCostSchema = Schema.Union(
 
 export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("passive") }),
+  Schema.Struct({ kind: Schema.Literal("on_effect_starts") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_attack_hit") }),
   Schema.Struct({
     kind: Schema.Literal("on_attached_hit_by_attack_roll"),
@@ -1179,6 +1184,8 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
+  Schema.Struct({ kind: Schema.Literal("on_creature_moves_through_area") }),
+  Schema.Struct({ kind: Schema.Literal("on_object_section_destroyed") }),
   Schema.Struct({
     kind: Schema.Literal("on_area_moves_into_creature_space"),
     maxCreatureSize: optionalExact(SizeSchema),
@@ -1538,6 +1545,10 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         spellId: Schema.String,
       }),
       Schema.Struct({ kind: Schema.Literal("block_ethereal_travel") }),
+      Schema.Struct({
+        kind: Schema.Literal("replace_destroyed_object_section_with_area"),
+        areaLabel: Schema.String,
+      }),
       Schema.Struct({
         kind: Schema.Literal("block_projectiles"),
         projectile: Schema.Literal("ordinary"),
