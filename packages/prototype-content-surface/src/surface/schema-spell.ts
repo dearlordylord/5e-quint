@@ -637,6 +637,15 @@ type EffectAtom =
         "spells" | "ranged_attacks" | "reach_weapon_attacks"
       >;
     }
+  | { readonly kind: "prevent_spellcasting_and_magic_actions" }
+  | { readonly kind: "block_magical_targeting_and_aoe" }
+  | { readonly kind: "block_teleport_and_planar_travel" }
+  | { readonly kind: "suppress_magic_items" }
+  | {
+      readonly kind: "suppress_ongoing_magic_effects";
+      readonly exceptSources: ReadonlyNonEmptyArray<"artifact" | "deity">;
+      readonly suppressedTimeCountsAgainstDuration: true;
+    }
   | { readonly kind: "allow_reaction_stand_up" }
   | { readonly kind: "none" };
 
@@ -1669,6 +1678,21 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         allowsThroughBarrier: nonEmpty(
           Schema.Literal("spells", "ranged_attacks", "reach_weapon_attacks"),
         ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("prevent_spellcasting_and_magic_actions"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("block_magical_targeting_and_aoe"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("block_teleport_and_planar_travel"),
+      }),
+      Schema.Struct({ kind: Schema.Literal("suppress_magic_items") }),
+      Schema.Struct({
+        kind: Schema.Literal("suppress_ongoing_magic_effects"),
+        exceptSources: nonEmpty(Schema.Literal("artifact", "deity")),
+        suppressedTimeCountsAgainstDuration: Schema.Literal(true),
       }),
       Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
       Schema.Struct({ kind: Schema.Literal("none") }),

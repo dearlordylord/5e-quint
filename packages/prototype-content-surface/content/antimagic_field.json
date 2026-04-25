@@ -1,0 +1,90 @@
+{
+  "description": "An aura of antimagic surrounds you in a 10-foot Emanation. No one can cast spells, take Magic actions, or create other magical effects inside the aura, and those things can't target or otherwise affect anything inside it. Magical properties of magic items don't work inside the aura or on anything inside it. Areas of effect created by spells or other magic can't extend into the aura, and no one can teleport into or out of it or use planar travel there. Ongoing spells, except those cast by an Artifact or a deity, are suppressed in the area, and suppressed time counts against duration.",
+  "id": "antimagic_field",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "kind": "area",
+      "origin": {
+        "kind": "self"
+      },
+      "shape": {
+        "kind": "emanation",
+        "radiusFeet": 10
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "iron filings",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 8,
+    "operations": [
+      {
+        "effect": {
+          "kind": "prevent_spellcasting_and_magic_actions"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_magical_targeting_and_aoe"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_teleport_and_planar_travel"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "suppress_magic_items"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "exceptSources": [
+            "artifact",
+            "deity"
+          ],
+          "kind": "suppress_ongoing_magic_effects",
+          "suppressedTimeCountsAgainstDuration": true
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "abjuration"
+  },
+  "name": "Antimagic Field",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-A-D#Antimagic Field"
+  }
+}

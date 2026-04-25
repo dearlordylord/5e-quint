@@ -1003,6 +1003,56 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "prevent_spellcasting_and_magic_actions": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_spellcasting_and_magic_actions",
+        label: "prevent_spellcasting_and_magic_actions",
+      });
+      return id;
+    }
+    case "block_magical_targeting_and_aoe": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_magical_targeting_and_aoe",
+        label: "block_magical_targeting_and_aoe",
+      });
+      return id;
+    }
+    case "block_teleport_and_planar_travel": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_teleport_and_planar_travel",
+        label: "block_teleport_and_planar_travel",
+      });
+      return id;
+    }
+    case "suppress_magic_items": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_magic_items",
+        label: "suppress_magic_items",
+      });
+      return id;
+    }
+    case "suppress_ongoing_magic_effects": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suppress_ongoing_magic_effects",
+        label: `suppress_ongoing_magic_effects\nexcept: ${e.exceptSources.join(", ")}\ntime counts: ${e.suppressedTimeCountsAgainstDuration}`,
+      });
+      return id;
+    }
     case "allow_reaction_stand_up": {
       const id = ids("eff");
       nodes.push({
@@ -1293,6 +1343,11 @@ function traceEffectAtomScaling(
     case "grant_cover":
     case "block_line_of_sight":
     case "prevent_creature_passage":
+    case "prevent_spellcasting_and_magic_actions":
+    case "block_magical_targeting_and_aoe":
+    case "block_teleport_and_planar_travel":
+    case "suppress_magic_items":
+    case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
       return;
     case "composite":
