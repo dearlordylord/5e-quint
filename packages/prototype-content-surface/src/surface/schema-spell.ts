@@ -404,6 +404,17 @@ type EffectAtom =
   | { readonly kind: "block_targeting"; readonly scope: string }
   | { readonly kind: "block_travel"; readonly scope: string }
   | {
+      readonly kind: "block_projectiles";
+      readonly projectile: "ordinary";
+      readonly exception?: "giant_or_siege";
+    }
+  | { readonly kind: "block_gases_and_gaseous_creatures" }
+  | {
+      readonly kind: "block_flying_movement";
+      readonly maxSize: "small";
+      readonly includesObjects?: true;
+    }
+  | {
       readonly kind: "negate_named_effect";
       readonly spellId: string;
       readonly scope: "damage_only" | "all_effects";
@@ -1325,6 +1336,19 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("block_travel"),
         scope: Schema.String,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("block_projectiles"),
+        projectile: Schema.Literal("ordinary"),
+        exception: optionalExact(Schema.Literal("giant_or_siege")),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("block_gases_and_gaseous_creatures"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("block_flying_movement"),
+        maxSize: Schema.Literal("small"),
+        includesObjects: optionalExact(Schema.Literal(true)),
       }),
       Schema.Struct({
         kind: Schema.Literal("negate_named_effect"),

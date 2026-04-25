@@ -481,6 +481,39 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "block_projectiles": {
+      const id = ids("eff");
+      const exception =
+        e.exception === undefined ? "" : `\nexcept: ${e.exception}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_projectiles",
+        label: `block_projectiles\n${e.projectile}${exception}`,
+      });
+      return id;
+    }
+    case "block_gases_and_gaseous_creatures": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_gases",
+        label: "block_gases_and_gaseous_creatures",
+      });
+      return id;
+    }
+    case "block_flying_movement": {
+      const id = ids("eff");
+      const objects = e.includesObjects === true ? "\nincludes objects" : "";
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "block_flying_movement",
+        label: `block_flying_movement\nmax size: ${e.maxSize}${objects}`,
+      });
+      return id;
+    }
     case "negate_named_effect": {
       const id = ids("eff");
       nodes.push({
@@ -1117,6 +1150,9 @@ function traceEffectAtomScaling(
     case "force_move":
     case "block_targeting":
     case "block_travel":
+    case "block_projectiles":
+    case "block_gases_and_gaseous_creatures":
+    case "block_flying_movement":
     case "negate_named_effect":
     case "grant_sense":
     case "modify_sense_range":
