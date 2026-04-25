@@ -226,6 +226,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "repeat_save_for_condition": {
+      const id = ids("rep");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "repeat_save",
+        label: `repeat_save\n${e.ability.toUpperCase()} vs ${describeDc(e.dc)}\ncondition: ${e.condition}\ncadence: ${e.cadence}\non success: ${e.onSuccess}`,
+      });
+      return id;
+    }
     case "heal_hp": {
       const id = ids("eff");
       nodes.push({
@@ -1138,6 +1148,7 @@ function traceEffectAtomScaling(
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":
+    case "repeat_save_for_condition":
     case "modify_roll_numeric":
     case "modify_damage_numeric":
     case "modify_roll_advantage":

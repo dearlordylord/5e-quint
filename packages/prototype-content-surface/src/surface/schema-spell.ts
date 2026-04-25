@@ -256,6 +256,14 @@ type EffectAtom =
     }
   | { readonly kind: "kill_target" }
   | {
+      readonly kind: "repeat_save_for_condition";
+      readonly condition: Condition;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly cadence: "end_of_target_turn";
+      readonly onSuccess: "ends_condition";
+    }
+  | {
       readonly kind: "heal_hp";
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
@@ -1155,6 +1163,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         otherwise: optionalExact(EffectAtomSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("kill_target") }),
+      Schema.Struct({
+        kind: Schema.Literal("repeat_save_for_condition"),
+        condition: ConditionSchema,
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        cadence: Schema.Literal("end_of_target_turn"),
+        onSuccess: Schema.Literal("ends_condition"),
+      }),
       Schema.Struct({
         kind: Schema.Literal("heal_hp"),
         amount: DiceAmountSchema,
