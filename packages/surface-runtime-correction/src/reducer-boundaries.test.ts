@@ -30,6 +30,7 @@ function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
     units: [],
     spellcastingAbilityModifier: spellcastingAbilityModifier(0),
     spellSlots: [],
+    slotExpendedThisTurn: false,
     spellSlotsMax: [],
     ...overrides,
   };
@@ -107,11 +108,18 @@ function twoCreatureStateWithActingUnit(
   };
 }
 
-function twoCreatureStateWithActingSpellSlot(unitId: string): State {
+function twoCreatureStateWithActingSpellSlots(
+  unitId: string,
+  spellSlots: ReadonlyArray<number>,
+): State {
   return twoCreatureStateWithActingUnit(unitId, {
-    spellSlots: [1],
-    spellSlotsMax: [1],
+    spellSlots,
+    spellSlotsMax: spellSlots,
   });
+}
+
+function twoCreatureStateWithActingSpellSlot(unitId: string): State {
+  return twoCreatureStateWithActingSpellSlots(unitId, [1]);
 }
 
 describe("reducer boundaries", () => {
@@ -224,6 +232,33 @@ describe("reducer boundaries", () => {
     expect(result.state.currentActionsAvailable).toBe(1);
     expect(result.state.currentHasBonusAction).toBe(true);
     expect(result.state.currentHasFreeAction).toBe(true);
+  });
+
+  it("resolveSubjectHoles resets the next actor's slot-expended flag on endTurn", () => {
+    const result = resolveSubjectHoles(
+      {
+        ...twoCreatureState(),
+        combatants: new Map([
+          ["A" as CreatureId, creatureState({ slotExpendedThisTurn: true })],
+          ["B" as CreatureId, creatureState()],
+        ]),
+      },
+      {
+        subject: {
+          tag: "coreAct",
+          actorId: "A" as CreatureId,
+          act: "endTurn",
+        },
+        filledHoleValues: [],
+      },
+    );
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.slotExpendedThisTurn,
+      ).toBe(false);
+    }
   });
 
   it("resolveSubjectHoles requests a target hole for core attack", () => {
@@ -545,22 +580,25 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles rejects wrong-kind fills for fireball point hole", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
-        subject: {
-          tag: "unit",
-          actorId: "A" as CreatureId,
-          unitId: "fireball",
-        },
-        filledHoleValues: [
-          {
-            // fireball_point has not been refactored to an area-specific runtime
-            // answer yet, so targetChoice is intentionally the wrong protocol.
-            kind: "targetChoice",
-            holeId: holeId("fireball_point"),
-            value: "B" as CreatureId,
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
           },
-        ],
-      }),
+          filledHoleValues: [
+            {
+              // fireball_point has not been refactored to an area-specific runtime
+              // answer yet, so targetChoice is intentionally the wrong protocol.
+              kind: "targetChoice",
+              holeId: holeId("fireball_point"),
+              value: "B" as CreatureId,
+            },
+          ],
+        },
+      ),
     ).toEqual({
       tag: "invalid",
       reason:
@@ -570,14 +608,17 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles requests the fireball point hole when no fills are provided", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
-        subject: {
-          tag: "unit",
-          actorId: "A" as CreatureId,
-          unitId: "fireball",
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [],
         },
-        filledHoleValues: [],
-      }),
+      ),
     ).toEqual({
       tag: "needsHoles",
       holes: [
@@ -603,26 +644,29 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles still reaches the save-gate frontier for malformed fireball area echo", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
-        subject: {
-          tag: "unit",
-          actorId: "A" as CreatureId,
-          unitId: "fireball",
-        },
-        filledHoleValues: [
-          {
-            // Current fireball_point handling only checks that the fill uses the
-            // surfaceAttachment protocol; it does not yet validate the inner
-            // area payload semantics.
-            kind: "surfaceAttachment",
-            holeId: holeId("fireball_point"),
-            value: {
-              kind: "target",
-              selection: { mode: "one" },
-            },
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
           },
-        ],
-      }),
+          filledHoleValues: [
+            {
+              // Current fireball_point handling only checks that the fill uses the
+              // surfaceAttachment protocol; it does not yet validate the inner
+              // area payload semantics.
+              kind: "surfaceAttachment",
+              holeId: holeId("fireball_point"),
+              value: {
+                kind: "target",
+                selection: { mode: "one" },
+              },
+            },
+          ],
+        },
+      ),
     ).toEqual({
       tag: "invalid",
       reason: "save-gate unit outcome application is not implemented yet",
@@ -631,7 +675,7 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles requests the cure wounds target and healing roll holes when no fills are provided", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+      resolveSubjectHoles(twoCreatureStateWithActingSpellSlot("cure_wounds"), {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
@@ -660,7 +704,7 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles requests the cure wounds healing roll after target fill", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+      resolveSubjectHoles(twoCreatureStateWithActingSpellSlot("cure_wounds"), {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
@@ -689,7 +733,7 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles rejects cure wounds when direct target is missing", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+      resolveSubjectHoles(twoCreatureStateWithActingSpellSlot("cure_wounds"), {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
@@ -755,7 +799,32 @@ describe("reducer boundaries", () => {
       expect(
         result.state.combatants.get("A" as CreatureId)?.spellSlots,
       ).toEqual([0]);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.slotExpendedThisTurn,
+      ).toBe(true);
     }
+  });
+
+  it("resolveSubjectHoles rejects cure wounds without asking holes when no action is available", () => {
+    expect(
+      resolveSubjectHoles(
+        {
+          ...twoCreatureStateWithActingSpellSlot("cure_wounds"),
+          currentActionsAvailable: 0,
+        },
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "cure_wounds",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "no action available for unit",
+    });
   });
 
   it("resolveSubjectHoles rejects cure wounds when no action is available", () => {
@@ -831,12 +900,15 @@ describe("reducer boundaries", () => {
       expect(
         result.state.combatants.get("A" as CreatureId)?.spellSlots,
       ).toEqual([0]);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.slotExpendedThisTurn,
+      ).toBe(true);
     }
   });
 
   it("resolveSubjectHoles rejects cure wounds healing rolls outside the die size", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+      resolveSubjectHoles(twoCreatureStateWithActingSpellSlot("cure_wounds"), {
         subject: {
           tag: "unit",
           actorId: "A" as CreatureId,
@@ -896,7 +968,26 @@ describe("reducer boundaries", () => {
       expect(
         result.state.combatants.get("A" as CreatureId)?.spellSlots,
       ).toEqual([0]);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.slotExpendedThisTurn,
+      ).toBe(true);
     }
+  });
+
+  it("resolveSubjectHoles rejects cure wounds without asking holes when no base spell slot is available", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "no spell slot available for unit",
+    });
   });
 
   it("resolveSubjectHoles rejects cure wounds when no base spell slot is available", () => {
@@ -922,31 +1013,57 @@ describe("reducer boundaries", () => {
     });
   });
 
+  it("resolveSubjectHoles rejects cure wounds when a spell slot was already expended this turn", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingUnit("cure_wounds", {
+          spellSlots: [1],
+          spellSlotsMax: [1],
+          slotExpendedThisTurn: true,
+        }),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "cure_wounds",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "spell slot already expended this turn",
+    });
+  });
+
   it("resolveSubjectHoles reaches save-gate execution boundary after fireball point is filled", () => {
     expect(
-      resolveSubjectHoles(twoCreatureStateWithActingUnit("fireball"), {
-        subject: {
-          tag: "unit",
-          actorId: "A" as CreatureId,
-          unitId: "fireball",
-        },
-        filledHoleValues: [
-          {
-            // Temporary protocol for fireball_point: caller echoes authored area
-            // schema instead of supplying a later area-resolution result.
-            kind: "surfaceAttachment",
-            holeId: holeId("fireball_point"),
-            value: {
-              kind: "area",
-              origin: { kind: "point_within_range" },
-              shape: {
-                kind: "sphere",
-                radiusFeet: 20,
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [
+            {
+              // Temporary protocol for fireball_point: caller echoes authored area
+              // schema instead of supplying a later area-resolution result.
+              kind: "surfaceAttachment",
+              holeId: holeId("fireball_point"),
+              value: {
+                kind: "area",
+                origin: { kind: "point_within_range" },
+                shape: {
+                  kind: "sphere",
+                  radiusFeet: 20,
+                },
               },
             },
-          },
-        ],
-      }),
+          ],
+        },
+      ),
     ).toEqual({
       tag: "invalid",
       reason: "save-gate unit outcome application is not implemented yet",

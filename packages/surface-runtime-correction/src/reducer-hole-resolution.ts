@@ -1,5 +1,5 @@
 import { Either, Match } from "effect";
-import { nextInitiative } from "@dnd/shared/initiative-algebra";
+import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
 import { Hp } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 
@@ -43,6 +43,11 @@ type ActivationResourceCost =
   | { readonly kind: "free" }
   | { readonly kind: "action" }
   | { readonly kind: "bonusAction" };
+type SupportedSurfaceActivationResourceKind =
+  | "free"
+  | "action"
+  | "bonus_action";
+type SpellSlotIndex = number;
 
 function invalid(reason: string): ResolutionInvalid {
   return { tag: "invalid", reason };
@@ -62,12 +67,22 @@ function requireOnlyOne<T>(
 
 function resolveCoreEndTurn(state: State): ResolutionResult {
   const initiative = nextInitiative(state.initiative);
+  const nextActorId = currentActing(initiative);
+  const nextActor = state.combatants.get(nextActorId);
+  const combatants =
+    nextActor === undefined
+      ? state.combatants
+      : new Map(state.combatants).set(nextActorId, {
+          ...nextActor,
+          slotExpendedThisTurn: false,
+        });
 
   return {
     tag: "resolved",
     state: {
       ...state,
       initiative,
+      combatants,
       currentActionsAvailable: 1,
       currentHasBonusAction: true,
       currentHasFreeAction: true,
@@ -237,26 +252,48 @@ function activationResourceCost(
   const mechanics = unit.mechanics;
 
   if ("activationCost" in mechanics) {
-    if (mechanics.activationCost.kind === "free") {
-      return Either.right({ kind: "free" });
+    if (
+      isSupportedSurfaceActivationResourceKind(mechanics.activationCost.kind)
+    ) {
+      return Either.right(
+        activationResourceCostFromSurfaceKind(mechanics.activationCost.kind),
+      );
     }
 
     return Either.left(invalid("unsupported unit activation cost"));
   }
 
   if ("castingTime" in mechanics) {
-    if (mechanics.castingTime.kind === "action") {
-      return Either.right({ kind: "action" });
-    }
-
-    if (mechanics.castingTime.kind === "bonus_action") {
-      return Either.right({ kind: "bonusAction" });
+    if (isSupportedSurfaceActivationResourceKind(mechanics.castingTime.kind)) {
+      return Either.right(
+        activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
+      );
     }
 
     return Either.left(invalid("unsupported unit casting time"));
   }
 
   return Either.left(invalid("unsupported unit activation cost"));
+}
+
+function isSupportedSurfaceActivationResourceKind(
+  kind: string,
+): kind is SupportedSurfaceActivationResourceKind {
+  return kind === "free" || kind === "action" || kind === "bonus_action";
+}
+
+function activationResourceCostFromSurfaceKind(
+  kind: SupportedSurfaceActivationResourceKind,
+): ActivationResourceCost {
+  return Match.value(kind).pipe(
+    Match.when("free", (): ActivationResourceCost => ({ kind: "free" })),
+    Match.when("action", (): ActivationResourceCost => ({ kind: "action" })),
+    Match.when(
+      "bonus_action",
+      (): ActivationResourceCost => ({ kind: "bonusAction" }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function spendOneActionCount(
@@ -298,12 +335,23 @@ function spendActivationCost(
   });
 }
 
+function baseSpellSlotIndex(
+  unit: CurrentSliceSupportedActivationUnit,
+): SpellSlotIndex | null {
+  if (unit.kind !== "spell" || unit.mechanics.level === 0) {
+    return null;
+  }
+
+  return unit.mechanics.level - 1;
+}
+
 function spendBaseSpellSlot(
   state: State,
   actorId: CreatureId,
   unit: CurrentSliceSupportedActivationUnit,
 ): Either.Either<State, ResolutionInvalid> {
-  if (unit.kind !== "spell" || unit.mechanics.level === 0) {
+  const slotIndex = baseSpellSlotIndex(unit);
+  if (slotIndex === null) {
     return Either.right(state);
   }
 
@@ -312,7 +360,13 @@ function spendBaseSpellSlot(
       state.combatants.get(actorId),
       () => invalid("acting actor not found in combatants"),
     );
-    const slotIndex = unit.mechanics.level - 1;
+
+    if (actor.slotExpendedThisTurn) {
+      return yield* Either.left(
+        invalid("spell slot already expended this turn"),
+      );
+    }
+
     const availableSlots = actor.spellSlots[slotIndex] ?? 0;
 
     if (availableSlots <= 0) {
@@ -325,13 +379,14 @@ function spendBaseSpellSlot(
       spellSlots: actor.spellSlots.map((slots, index) =>
         index === slotIndex ? slots - 1 : slots,
       ),
+      slotExpendedThisTurn: true,
     });
 
     return { ...state, combatants };
   });
 }
 
-function spendUnitCosts(
+function unitCostPaidState(
   state: State,
   actorId: CreatureId,
   unit: CurrentSliceSupportedActivationUnit,
@@ -340,6 +395,16 @@ function spendUnitCosts(
     const actionPaidState = yield* spendActivationCost(state, unit);
     return yield* spendBaseSpellSlot(actionPaidState, actorId, unit);
   });
+}
+
+function requireUnitCostsAvailable(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<void, ResolutionInvalid> {
+  return unitCostPaidState(state, actorId, unit).pipe(
+    Either.map(() => undefined),
+  );
 }
 
 function diceExprStaticBonus(
@@ -571,7 +636,7 @@ function resolveFilledActivationPhase(
                 healHpEffect,
                 rolledDice,
               );
-              const paidState = yield* spendUnitCosts(state, actorId, unit);
+              const paidState = yield* unitCostPaidState(state, actorId, unit);
               const nextState = yield* applyHealing(
                 paidState,
                 targetId,
@@ -607,6 +672,15 @@ export function resolveSubjectHoles(
         ),
         Match.when({ tag: "coreEndTurn" }, () => resolveCoreEndTurn(state)),
         Match.when({ tag: "unit" }, (act) => {
+          const costsAvailable = requireUnitCostsAvailable(
+            state,
+            act.subject.actorId,
+            act.unit,
+          );
+          if (Either.isLeft(costsAvailable)) {
+            return costsAvailable.left;
+          }
+
           const holes = requireValidHoleInputs(
             request.filledHoleValues,
             act.initialHoles,

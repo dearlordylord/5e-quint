@@ -38,7 +38,7 @@ flowchart TD
   ValidateInputs["requireValidHoleInputs(filled, holes)<br/>input: FilledHoleValue[] + expected RuntimeHoleSet<br/>success: Right(same holes)<br/>failure: Left(invalid duplicate, unexpected, or wrong-kind fill)<br/>why: shape-check fills before asking/executing<br/>without: stale or malformed fills reach semantics"]
   RequireComplete["requireNoMissingHoles(filled, holes)<br/>input: FilledHoleValue[] + validated RuntimeHoleSet<br/>success: Right(same holes)<br/>continuation: Left(needsHoles with missing subset)<br/>why: separate valid-but-incomplete from executable<br/>without: unit resolution proceeds with missing data or treats missing data as invalid"]
   ResolvePhase["resolveFilledActivationPhase(phase)<br/>input: filled supported phase + current holes<br/>success: direct heal_hp mutates HP<br/>invalid/frontier: attack_roll damage, save_gate outcome, grant_extra_action not implemented<br/>why: explicit post-refill execution boundary<br/>without: unit resolution conflates complete holes with implemented effects"]
-  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot + slot-expended-turn guard for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, other once/turn limits"]
   UnitMutation["unit battle-state mutation<br/>implemented: direct heal_hp applies HP regain capped at max HP<br/>missing: damage, save outcomes, extra action, conditions/effects"]
   CoreAttackAdjudication{{"MISSING: core attack hit adjudication + damage mutation"}}
 
@@ -152,7 +152,7 @@ flowchart TD
   ValidInputs["unit -> requireValidHoleInputs<br/>success: Right(initialHoles)<br/>failure: Left(invalid duplicate/unexpected/wrong-kind)"]
   Missing["requireNoMissingHoles<br/>success: Right(initialHoles)<br/>continuation: Left(needsHoles missing subset)"]
   PhaseExec["resolveFilledActivationPhase<br/>implemented: direct heal_hp target validation, dice validation, HP mutation<br/>frontier: attack_roll damage, save_gate outcome, grant_extra_action"]
-  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot for direct heal_hp"]
+  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot + slot-expended-turn guard for direct heal_hp"]
   UnitMutation["unit battle-state mutation<br/>implemented: heal_hp applies HP regain capped at max HP"]
   RuntimeDice["runtime-dice validation<br/>checks rolledDice count and die range for Surface DiceExpr"]
 
@@ -247,7 +247,7 @@ flowchart TD
   ResolverLane["Resolver lane<br/>interpretUnitAct: any actor-owned supported unit subject"]
   PhaseKinds["Allowed phase kinds<br/>attack_roll | save_gate | direct"]
   Execution["Execution<br/>implemented: direct heal_hp; frontiers remain for attack_roll, save_gate, grant_extra_action"]
-  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot + slot-expended-turn guard for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, other once/turn limits"]
   StateMutation["battle-state mutation<br/>implemented: HP regain for heal_hp"]
 
   UnitRecord --> Support --> Supported
@@ -295,7 +295,7 @@ flowchart LR
   ReducerFacade{{"MISSING: single reducer facade<br/>one table-facing protocol wrapping options + reaction"}}
   StateLoop{{"MISSING: explicit resolved-state feedback<br/>next options come from returned state"}}
   UnitExecution["unit phase execution<br/>implemented: direct heal_hp<br/>missing: attack_roll damage, save_gate outcome, grant_extra_action"]
-  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot + slot-expended-turn guard for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, other once/turn limits"]
   ApplyEffects["battle-state mutation<br/>implemented: healing<br/>missing: damage, extra action, conditions/effects"]
   DecisionType{{"MISSING: explicit Decision type<br/>AvailableAct subject + filled answers"}}
 
@@ -303,7 +303,7 @@ flowchart LR
   Options --> TableDecision
   TableDecision --> DecisionType --> Resolve
   State --> Resolve
-  Resolve -->|resolved today: endTurn| EndTurnState
+  Resolve -->|resolved today: endTurn or direct heal_hp| EndTurnState
   EndTurnState --> StateLoop --> Options
   Resolve -->|needsHoles| TableDecision
   Resolve -->|invalid| TableDecision
@@ -329,13 +329,14 @@ The current System Graph does not yet make these interface-level facts explicit:
 - State feedback is underdrawn. `resolveCoreEndTurn` returns a new `State`, but
   the graph does not draw `resolved.state` back into the next discovery cycle.
 - Unit execution is still partial. Direct `heal_hp` can now validate its target
-  and healing dice, pay action/free activation cost plus a base spell slot, then
-  mutate HP. Attack-roll damage application, save outcome application, and extra
-  action grants remain missing.
+  and healing dice, pay action/free activation cost plus a base spell slot,
+  enforce the slot-expended-turn guard, then mutate HP. Attack-roll damage
+  application, save outcome application, and extra action grants remain missing.
 - Resource legality is still incomplete for unit-backed acts. Direct `heal_hp`
-  now handles action/free activation cost and base spell slot spending, but
-  bonus-action spending, upcast slot choice, use-count spending, once-per-turn
-  limits, and broader illegal-use rejection remain missing.
+  now handles action/free activation cost, base spell slot spending, and the
+  slotted-spell once-per-turn guard, but bonus-action spending, upcast slot
+  choice, use-count spending, other once-per-turn limits, and broader illegal-use
+  rejection remain missing.
 - The decision type is not explicit. `AvailableAct` is an offered option;
   `ResolutionRequest` is a replay request. The conceptual table decision is the
   bridge between them: selected `subject` plus accumulated `FilledHoleValue[]`.

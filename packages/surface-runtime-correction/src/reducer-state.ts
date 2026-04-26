@@ -28,6 +28,7 @@ export type CreatureState = {
   readonly units: ReadonlyArray<UnitRecord>;
   readonly spellcastingAbilityModifier: SpellcastingAbilityModifier;
   readonly spellSlots: SpellSlots;
+  readonly slotExpendedThisTurn: boolean;
   // invariant: current spell slots can't be larger than max
   readonly spellSlotsMax: SpellSlots;
 };
