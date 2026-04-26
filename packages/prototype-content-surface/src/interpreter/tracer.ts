@@ -247,6 +247,44 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "repeat_save_counter": {
+      const id = ids("rep");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "repeat_save_counter",
+        label: `repeat_save_counter\n${e.ability.toUpperCase()} vs ${describeDc(e.dc)}\ncondition: ${e.condition}\ncadence: ${e.cadence}\n${e.successCount} successes / ${e.failureCount} failures`,
+      });
+      if (edges !== undefined) {
+        const successId = traceEffectAtom(e.onSuccessCount, nodes, ids, edges);
+        if (successId !== null) {
+          edges.push({
+            from: id,
+            to: successId,
+            relation: "on_success_count",
+          });
+        }
+        const failureId = traceEffectAtom(e.onFailureCount, nodes, ids, edges);
+        if (failureId !== null) {
+          edges.push({
+            from: id,
+            to: failureId,
+            relation: "on_failure_count",
+          });
+        }
+      }
+      return id;
+    }
+    case "condition_persists_after_full_duration": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "condition_persists_after_full_duration",
+        label: `condition_persists_after_full_duration\n${e.condition}\nuntil: ${e.untilEndedBy}`,
+      });
+      return id;
+    }
     case "heal_hp": {
       const id = ids("eff");
       nodes.push({
@@ -1543,6 +1581,7 @@ function traceEffectAtomScaling(
     case "kill_target":
     case "end_current_effect":
     case "repeat_save_for_condition":
+    case "condition_persists_after_full_duration":
     case "modify_roll_numeric":
     case "modify_damage_numeric":
     case "modify_roll_advantage":
@@ -1634,6 +1673,24 @@ function traceEffectAtomScaling(
     case "suppress_magic_items":
     case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
+      return;
+    case "repeat_save_counter":
+      traceEffectAtomScaling(
+        e.onSuccessCount,
+        effectId,
+        slotId,
+        nodes,
+        edges,
+        ids,
+      );
+      traceEffectAtomScaling(
+        e.onFailureCount,
+        effectId,
+        slotId,
+        nodes,
+        edges,
+        ids,
+      );
       return;
     case "reduce_area_height":
       traceDiceAmountScaling(e.amount, effectId, slotId, nodes, edges, ids);

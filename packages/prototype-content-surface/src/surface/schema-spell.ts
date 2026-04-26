@@ -277,6 +277,22 @@ type EffectAtom =
       readonly onSuccess: "ends_condition";
     }
   | {
+      readonly kind: "repeat_save_counter";
+      readonly condition: Condition;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly cadence: "end_of_target_turn";
+      readonly successCount: number;
+      readonly failureCount: number;
+      readonly onSuccessCount: EffectAtom;
+      readonly onFailureCount: EffectAtom;
+    }
+  | {
+      readonly kind: "condition_persists_after_full_duration";
+      readonly condition: Condition;
+      readonly untilEndedBy: string;
+    }
+  | {
       readonly kind: "heal_hp";
       readonly amount: DiceAmount;
       readonly target: "self" | "target_creature";
@@ -1324,6 +1340,22 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         dc: DcSourceSchema,
         cadence: Schema.Literal("end_of_target_turn"),
         onSuccess: Schema.Literal("ends_condition"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("repeat_save_counter"),
+        condition: ConditionSchema,
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        cadence: Schema.Literal("end_of_target_turn"),
+        successCount: Schema.Number,
+        failureCount: Schema.Number,
+        onSuccessCount: EffectAtomSchema,
+        onFailureCount: EffectAtomSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("condition_persists_after_full_duration"),
+        condition: ConditionSchema,
+        untilEndedBy: Schema.String,
       }),
       Schema.Struct({
         kind: Schema.Literal("heal_hp"),

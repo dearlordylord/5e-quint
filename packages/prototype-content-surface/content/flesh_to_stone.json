@@ -1,0 +1,90 @@
+{
+  "description": "You attempt to turn one creature that you can see within range into stone. The target makes a Constitution saving throw. On a failed save, it has the Restrained condition for the duration. On a successful save, its Speed is 0 until the start of your next turn. Constructs automatically succeed. A Restrained target repeats the Constitution save at the end of each of its turns. Three successes end the spell; three failures turn it to stone and give it the Petrified condition for the duration. If you maintain Concentration for the entire possible duration, the target is Petrified until ended by Greater Restoration or similar magic.",
+  "id": "flesh_to_stone",
+  "kind": "spell",
+  "mechanics": {
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a cockatrice feather",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "activation",
+    "level": 6,
+    "phases": [
+      {
+        "ability": "con",
+        "attachment": {
+          "holeId": "flesh_to_stone_target",
+          "kind": "hole",
+          "label": "target creature",
+          "value": {
+            "kind": "target",
+            "selection": {
+              "mode": "one"
+            }
+          }
+        },
+        "dc": {
+          "kind": "caster_spell_save_dc"
+        },
+        "kind": "save_gate",
+        "onFail": {
+          "effects": [
+            {
+              "condition": "restrained",
+              "kind": "apply_condition"
+            },
+            {
+              "ability": "con",
+              "cadence": "end_of_target_turn",
+              "condition": "restrained",
+              "dc": {
+                "kind": "caster_spell_save_dc"
+              },
+              "failureCount": 3,
+              "kind": "repeat_save_counter",
+              "onFailureCount": {
+                "condition": "petrified",
+                "kind": "apply_condition"
+              },
+              "onSuccessCount": {
+                "kind": "end_current_effect"
+              },
+              "successCount": 3
+            },
+            {
+              "condition": "petrified",
+              "kind": "condition_persists_after_full_duration",
+              "untilEndedBy": "greater_restoration_or_similar_magic"
+            }
+          ],
+          "kind": "composite"
+        },
+        "onSuccess": {
+          "feet": 0,
+          "kind": "set_speed"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Flesh to Stone",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Flesh to Stone"
+  }
+}
