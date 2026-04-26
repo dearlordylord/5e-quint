@@ -10,7 +10,10 @@ import {
 } from "#/reducer-hole-refilling.ts";
 import { interpretSubject } from "#/reducer-interpretation.ts";
 import type { SpellcastingAbilityModifier, State } from "#/reducer-state.ts";
-import type { CurrentSliceSupportedActivationPhase } from "#/reducer-support.ts";
+import type {
+  CurrentSliceSupportedActivationPhase,
+  CurrentSliceSupportedActivationUnit,
+} from "#/reducer-support.ts";
 import type {
   FilledHoleValue,
   ResolutionInvalid,
@@ -30,9 +33,31 @@ import {
 } from "#/runtime-dice.ts";
 
 type HealHpEffect = Extract<EffectAtom, { readonly kind: "heal_hp" }>;
+type CurrentSliceSupportedDirectPhase = Extract<
+  CurrentSliceSupportedActivationPhase,
+  { readonly kind: "direct" }
+>;
+type CurrentSliceSupportedDirectEffect =
+  CurrentSliceSupportedDirectPhase["effects"][number];
+type ActivationResourceCost =
+  | { readonly kind: "free" }
+  | { readonly kind: "action" }
+  | { readonly kind: "bonusAction" };
 
 function invalid(reason: string): ResolutionInvalid {
   return { tag: "invalid", reason };
+}
+
+function requireOnlyOne<T>(
+  values: ReadonlyArray<T>,
+  invalidReason: (count: number) => ResolutionInvalid,
+): Either.Either<T, ResolutionInvalid> {
+  if (values.length !== 1) {
+    return Either.left(invalidReason(values.length));
+  }
+
+  const [value] = values;
+  return Either.right(value);
 }
 
 function resolveCoreEndTurn(state: State): ResolutionResult {
@@ -61,16 +86,11 @@ function currentAttackRollHole(
       hole.kind === "attackRoll",
   );
 
-  if (attackRollHoles.length !== 1) {
-    return Either.left(
-      invalid(
-        `expected exactly one attack-roll hole in current phase, got ${attackRollHoles.length}`,
-      ),
-    );
-  }
-
-  const [attackRollHole] = attackRollHoles;
-  return Either.right(attackRollHole);
+  return requireOnlyOne(attackRollHoles, (count) =>
+    invalid(
+      `expected exactly one attack-roll hole in current phase, got ${count}`,
+    ),
+  );
 }
 
 function requireAttackRollFill(
@@ -109,16 +129,11 @@ function currentTargetChoiceHole(
       hole.kind === "targetChoice",
   );
 
-  if (targetChoiceHoles.length !== 1) {
-    return Either.left(
-      invalid(
-        `expected exactly one target-choice hole in current phase, got ${targetChoiceHoles.length}`,
-      ),
-    );
-  }
-
-  const [targetChoiceHole] = targetChoiceHoles;
-  return Either.right(targetChoiceHole);
+  return requireOnlyOne(targetChoiceHoles, (count) =>
+    invalid(
+      `expected exactly one target-choice hole in current phase, got ${count}`,
+    ),
+  );
 }
 
 function currentRolledDiceHole(
@@ -132,16 +147,11 @@ function currentRolledDiceHole(
       hole.kind === "rolledDice",
   );
 
-  if (rolledDiceHoles.length !== 1) {
-    return Either.left(
-      invalid(
-        `expected exactly one rolled-dice hole in current phase, got ${rolledDiceHoles.length}`,
-      ),
-    );
-  }
-
-  const [rolledDiceHole] = rolledDiceHoles;
-  return Either.right(rolledDiceHole);
+  return requireOnlyOne(rolledDiceHoles, (count) =>
+    invalid(
+      `expected exactly one rolled-dice hole in current phase, got ${count}`,
+    ),
+  );
 }
 
 function requireTargetChoiceFill(
@@ -219,6 +229,117 @@ function requireExistingDirectTarget(
   }
 
   return Either.right(targetId);
+}
+
+function activationResourceCost(
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<ActivationResourceCost, ResolutionInvalid> {
+  const mechanics = unit.mechanics;
+
+  if ("activationCost" in mechanics) {
+    if (mechanics.activationCost.kind === "free") {
+      return Either.right({ kind: "free" });
+    }
+
+    return Either.left(invalid("unsupported unit activation cost"));
+  }
+
+  if ("castingTime" in mechanics) {
+    if (mechanics.castingTime.kind === "action") {
+      return Either.right({ kind: "action" });
+    }
+
+    if (mechanics.castingTime.kind === "bonus_action") {
+      return Either.right({ kind: "bonusAction" });
+    }
+
+    return Either.left(invalid("unsupported unit casting time"));
+  }
+
+  return Either.left(invalid("unsupported unit activation cost"));
+}
+
+function spendOneActionCount(
+  currentActionsAvailable: State["currentActionsAvailable"],
+): Either.Either<0 | 1, ResolutionInvalid> {
+  if (currentActionsAvailable === 0) {
+    return Either.left(invalid("no action available for unit"));
+  }
+
+  if (currentActionsAvailable === 1) {
+    return Either.right(0);
+  }
+
+  return Either.right(1);
+}
+
+function spendActivationCost(
+  state: State,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<State, ResolutionInvalid> {
+  return Either.gen(function* () {
+    const cost = yield* activationResourceCost(unit);
+
+    return yield* Match.value(cost).pipe(
+      Match.when({ kind: "free" }, () => Either.right(state)),
+      Match.when({ kind: "action" }, () =>
+        spendOneActionCount(state.currentActionsAvailable).pipe(
+          Either.map((currentActionsAvailable) => ({
+            ...state,
+            currentActionsAvailable,
+          })),
+        ),
+      ),
+      Match.when({ kind: "bonusAction" }, () =>
+        Either.left(invalid("unsupported unit activation resource cost")),
+      ),
+      Match.exhaustive,
+    );
+  });
+}
+
+function spendBaseSpellSlot(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<State, ResolutionInvalid> {
+  if (unit.kind !== "spell" || unit.mechanics.level === 0) {
+    return Either.right(state);
+  }
+
+  return Either.gen(function* () {
+    const actor = yield* Either.fromNullable(
+      state.combatants.get(actorId),
+      () => invalid("acting actor not found in combatants"),
+    );
+    const slotIndex = unit.mechanics.level - 1;
+    const availableSlots = actor.spellSlots[slotIndex] ?? 0;
+
+    if (availableSlots <= 0) {
+      return yield* Either.left(invalid("no spell slot available for unit"));
+    }
+
+    const combatants = new Map(state.combatants);
+    combatants.set(actorId, {
+      ...actor,
+      spellSlots: actor.spellSlots.map((slots, index) =>
+        index === slotIndex ? slots - 1 : slots,
+      ),
+    });
+
+    return { ...state, combatants };
+  });
+}
+
+function spendUnitCosts(
+  state: State,
+  actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
+): Either.Either<State, ResolutionInvalid> {
+  return Either.gen(function* () {
+    const actionPaidState = yield* spendActivationCost(state, unit);
+    return yield* spendBaseSpellSlot(actionPaidState, actorId, unit);
+  });
 }
 
 function diceExprStaticBonus(
@@ -326,10 +447,7 @@ function directAttachmentTargetChoice(
   state: State,
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
   currentHoles: ReadonlyArray<RuntimeHole>,
-  phase: Extract<
-    CurrentSliceSupportedActivationPhase,
-    { readonly kind: "direct" }
-  >,
+  phase: CurrentSliceSupportedDirectPhase,
 ): Either.Either<CreatureId | null, ResolutionInvalid> {
   return Either.gen(function* () {
     if (phase.attachment.kind !== "hole") {
@@ -351,6 +469,16 @@ function directAttachmentTargetChoice(
     yield* requireExistingDirectTarget(state, targetChoice);
     return targetChoice;
   });
+}
+
+function requireOnlyDirectEffect(
+  effects: ReadonlyArray<CurrentSliceSupportedDirectEffect>,
+): Either.Either<CurrentSliceSupportedDirectEffect, ResolutionInvalid> {
+  return requireOnlyOne(effects, (count) =>
+    invalid(
+      `expected exactly one direct effect in current phase, got ${count}`,
+    ),
+  );
 }
 
 function applyHealing(
@@ -376,6 +504,7 @@ function applyHealing(
 function resolveFilledActivationPhase(
   state: State,
   actorId: CreatureId,
+  unit: CurrentSliceSupportedActivationUnit,
   phase: CurrentSliceSupportedActivationPhase,
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
   currentHoles: ReadonlyArray<RuntimeHole>,
@@ -414,7 +543,9 @@ function resolveFilledActivationPhase(
     ),
     Match.when({ kind: "direct" }, (directPhase) =>
       Either.gen(function* () {
-        const directEffect = directPhase.effects[0];
+        const directEffect = yield* requireOnlyDirectEffect(
+          directPhase.effects,
+        );
         const chosenTargetId = yield* directAttachmentTargetChoice(
           state,
           filledHoleValues,
@@ -440,8 +571,9 @@ function resolveFilledActivationPhase(
                 healHpEffect,
                 rolledDice,
               );
+              const paidState = yield* spendUnitCosts(state, actorId, unit);
               const nextState = yield* applyHealing(
-                state,
+                paidState,
                 targetId,
                 healingAmount,
               );
@@ -493,6 +625,7 @@ export function resolveSubjectHoles(
           return resolveFilledActivationPhase(
             state,
             act.subject.actorId,
+            act.unit,
             act.phase,
             request.filledHoleValues,
             holes.right,

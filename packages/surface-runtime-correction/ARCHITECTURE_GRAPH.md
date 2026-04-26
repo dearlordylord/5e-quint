@@ -1,5 +1,9 @@
 # Surface Runtime Correction Architecture
 
+<!-- Keep mutation examples intentionally sparse. Do not add more edge-case mutation
+examples to this graph unless explicitly asked; one or two concrete examples are
+enough to keep the architecture readable. -->
+
 This is a data-flow map of the current reducer architecture. Return labels name
 the concrete success, absence, continuation, and invalid payloads. Each major
 node also states what would happen if it did not exist.
@@ -13,6 +17,7 @@ flowchart TD
   AssertSupport["assertSupportedUnit(unit)<br/>input: UnitRecord<br/>success: CurrentSliceSupportedActivationUnit<br/>failure: throws UnsupportedUnitError<br/>why: fail fast while loading unsupported content<br/>without: unsupported unit shapes enter CreatureState.units"]
   CreatureUnits["CreatureState.units<br/>data: readonly UnitRecord[] on each combatant<br/>why: actor-owned unit source<br/>without: unit-backed acts cannot be discovered or resolved by ownership"]
   State["State<br/>data: initiative, combatants, action economy<br/>why: single legality/replay input<br/>without: discovery and resolution would not share one runtime snapshot"]
+  RuntimeDice["runtime-dice helpers<br/>input: rolled dice groups + Surface DiceExpr<br/>success: validated dice total/count/range facts<br/>failure: validation error reason<br/>why: one dice-roll validation path for Surface dice expressions<br/>without: each effect family validates rolls differently or forgets die range"]
 
   DiscoverPublic["discoverAvailableActs(state)<br/>input: State<br/>success: AvailableAct[] = subject + label + summary + initialHoles<br/>absence: [] only if interpreted discovery returns no acts; current code normally includes End Turn<br/>why: public discovery API<br/>without: callers depend on internal InterpretedAct or duplicate projection"]
   DiscoverInterpreted["discoverInterpretedActs(state)<br/>input: State<br/>success: InterpretedAct[] = legal current-actor acts with resolver payloads attached<br/>absence: omits unavailable attack and non-discoverable units<br/>why: one internal representation for discovery and later subject interpretation<br/>without: discovery must rebuild tag/unit/phase details or expose internals"]
@@ -26,15 +31,15 @@ flowchart TD
   ProjectHoles["projectPhaseHoles(phase, stepKey)<br/>input: ActivationPhase + HoleStepKey<br/>success: RuntimeHoleSet<br/>failure: throws for unsupported gated damage-type holes or duplicate instance keys<br/>why: one runtime-hole vocabulary<br/>without: discovery and resolution invent parallel hole projections"]
 
   Request["ResolutionRequest<br/>data: subject + accumulated FilledHoleValue[]<br/>why: replay-from-root input<br/>without: caller cannot refill holes against a stable branch identity"]
-  Resolve["resolveSubjectHoles(state, request)<br/>input: State + ResolutionRequest<br/>success: resolved State only for endTurn today<br/>continuation: needsHoles<br/>invalid: stale subject, bad fills, or unimplemented execution<br/>why: top-level replay/refill dispatcher<br/>without: callers duplicate interpretation and act-specific routing"]
+  Resolve["resolveSubjectHoles(state, request)<br/>input: State + ResolutionRequest<br/>success: resolved State for endTurn and supported direct heal_hp<br/>continuation: needsHoles<br/>invalid: stale subject, bad fills, illegal target, or unimplemented execution<br/>why: top-level replay/refill dispatcher<br/>without: callers duplicate interpretation and act-specific routing"]
   InterpretSubject["interpretSubject(state, subject)<br/>input: State + Subject<br/>success: Right(InterpretedAct)<br/>failure: Left(ResolutionInvalid)<br/>why: re-validate chosen subject against current state<br/>without: stale or forged subjects bypass legality checks"]
   ResolveCoreAttack["resolveCoreAttackHoles(state, filled)<br/>input: State + FilledHoleValue[]<br/>continuation: needs target, attack roll, or damage roll<br/>invalid: no action, no target, bad target, malformed fills, or adjudication frontier<br/>why: core attack owns staged replay<br/>without: Attack can be discovered but not driven through choices"]
   ResolveEndTurn["resolveCoreEndTurn(state)<br/>input: State<br/>success: resolved State with next initiative and reset action economy<br/>failure: none<br/>why: implement core endTurn mutation<br/>without: End Turn can be selected but not executed"]
   ValidateInputs["requireValidHoleInputs(filled, holes)<br/>input: FilledHoleValue[] + expected RuntimeHoleSet<br/>success: Right(same holes)<br/>failure: Left(invalid duplicate, unexpected, or wrong-kind fill)<br/>why: shape-check fills before asking/executing<br/>without: stale or malformed fills reach semantics"]
   RequireComplete["requireNoMissingHoles(filled, holes)<br/>input: FilledHoleValue[] + validated RuntimeHoleSet<br/>success: Right(same holes)<br/>continuation: Left(needsHoles with missing subset)<br/>why: separate valid-but-incomplete from executable<br/>without: unit resolution proceeds with missing data or treats missing data as invalid"]
-  ResolvePhase{{"MISSING FRONTIER: resolveFilledActivationPhase(phase)<br/>input: filled ActivationPhase<br/>invalid today: phase-specific application frontier<br/>why: explicit post-refill execution boundary<br/>without: unit resolution conflates complete holes with implemented effects"}}
-  UnitResource{{"MISSING: unit resource legality + consumption<br/>action cost, slots, use counts, once/turn"}}
-  UnitMutation{{"MISSING: unit battle-state mutation<br/>damage, healing, extra action, conditions/effects"}}
+  ResolvePhase["resolveFilledActivationPhase(phase)<br/>input: filled supported phase + current holes<br/>success: direct heal_hp mutates HP<br/>invalid/frontier: attack_roll damage, save_gate outcome, grant_extra_action not implemented<br/>why: explicit post-refill execution boundary<br/>without: unit resolution conflates complete holes with implemented effects"]
+  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  UnitMutation["unit battle-state mutation<br/>implemented: direct heal_hp applies HP regain capped at max HP<br/>missing: damage, save outcomes, extra action, conditions/effects"]
   CoreAttackAdjudication{{"MISSING: core attack hit adjudication + damage mutation"}}
 
   Content --> Decode --> AssertSupport --> CreatureUnits --> State
@@ -50,13 +55,15 @@ flowchart TD
   Resolve --> InterpretSubject
   InterpretSubject -->|Right coreAttack| ResolveCoreAttack --> CoreAttackAdjudication
   InterpretSubject -->|Right coreEndTurn| ResolveEndTurn
-  InterpretSubject -->|Right unit| ValidateInputs --> RequireComplete --> ResolvePhase --> UnitResource --> UnitMutation
+  InterpretSubject -->|Right unit| ValidateInputs --> RequireComplete --> ResolvePhase
+  ResolvePhase --> RuntimeDice --> UnitMutation
+  ResolvePhase --> UnitResource
   InterpretSubject -. unit path uses .-> InterpretUnit
 
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class ResolvePhase,UnitResource,UnitMutation,CoreAttackAdjudication missing;
-  class Content,Decode,AssertSupport,CreatureUnits,State,DiscoverPublic,DiscoverInterpreted,ProjectAvailable,CoreAttackDiscover,EndTurnAct,UnitDiscover,CantripGate,InterpretUnit,ProjectHoles,Request,Resolve,InterpretSubject,ResolveCoreAttack,ResolveEndTurn,ValidateInputs,RequireComplete,AvailableActs implemented;
+  class CoreAttackAdjudication missing;
+  class Content,Decode,AssertSupport,CreatureUnits,State,RuntimeDice,DiscoverPublic,DiscoverInterpreted,ProjectAvailable,CoreAttackDiscover,EndTurnAct,UnitDiscover,CantripGate,InterpretUnit,ProjectHoles,Request,Resolve,InterpretSubject,ResolveCoreAttack,ResolveEndTurn,ValidateInputs,RequireComplete,ResolvePhase,UnitResource,UnitMutation,AvailableActs implemented;
 ```
 
 ## Interpretation Graph
@@ -100,8 +107,10 @@ flowchart TD
 
   Attachment["attachmentHoles(stepKey, attachment)<br/>success: [] for concrete attachment; [targetChoice hole] for target hole; [surfaceAttachment hole] for non-target authored attachment hole<br/>failure: none<br/>without: target/area choices stay buried in Surface attachment"]
   AttackRoll["attackRollHole(stepKey)<br/>success: attackRoll hole with id '<step>_attack_roll'<br/>failure: none<br/>without: attack_roll phases never ask for D20 result"]
+  HealingRoll["healingRollHole(stepKey, effectIndex)<br/>success: rolledDice hole with id '<step>_healing_roll_<effectIndex>'<br/>failure: none<br/>without: direct heal_hp phases cannot ask for the healing dice result"]
   DamageType["damageTypeHoles(stepKey, damageTypeRef)<br/>success: [] for fixed ref; [surfaceDamageTypeRef hole] for fillable hole<br/>failure: throws non-fillable hole payload<br/>without: authored damage-type choices are invisible to callers"]
   DamageEffects["phaseDamageTypeHolesFromEffects(stepKey, effects)<br/>success: flattened damage-type holes from damage atoms<br/>absence: [] if no damage holes<br/>without: each phase duplicates damage-atom filtering"]
+  HealingEffects["phaseHealingRollHolesFromEffects(stepKey, effects)<br/>success: rolledDice holes for heal_hp atoms<br/>absence: [] if no healing effects<br/>without: direct healing rolls are not part of the shared runtime-hole vocabulary"]
   GatedAssert{{"MISSING-SUPPORT GUARD: assertNoGatedDamageTypeHoles(effects, context)<br/>success: void<br/>failure: throws unsupported gated damage-type hole<br/>without: reducer can ask branch-timed choices it cannot execute correctly"}}
   Unique["assertUniqueHoleInstanceKeys(holes)<br/>success: same RuntimeHoleSet<br/>failure: throws duplicate instance-key error<br/>without: repeated occurrences can collide during refill"]
 
@@ -112,11 +121,13 @@ flowchart TD
   Project -->|save_gate effects| GatedAssert
   Project -->|direct| Attachment
   Project -->|direct effects| DamageEffects
+  Project -->|direct heal_hp effects| HealingEffects --> HealingRoll
   Project -->|ability_check_gate| Attachment
   Project -->|ability_check_gate effects| GatedAssert
   Project -->|random_table| Empty["success: []"]
   Attachment --> Unique
   AttackRoll --> Unique
+  HealingRoll --> Unique
   DamageType --> Unique
   GatedAssert --> Unique
   Empty --> Unique
@@ -124,7 +135,7 @@ flowchart TD
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
   class GatedAssert missing;
-  class Project,Attachment,AttackRoll,DamageType,DamageEffects,Unique,Empty implemented;
+  class Project,Attachment,AttackRoll,HealingRoll,DamageType,DamageEffects,HealingEffects,Unique,Empty implemented;
 ```
 
 ## Resolution Graph
@@ -140,9 +151,10 @@ flowchart TD
   EndTurnResolve["coreEndTurn -> resolveCoreEndTurn<br/>success: resolved State"]
   ValidInputs["unit -> requireValidHoleInputs<br/>success: Right(initialHoles)<br/>failure: Left(invalid duplicate/unexpected/wrong-kind)"]
   Missing["requireNoMissingHoles<br/>success: Right(initialHoles)<br/>continuation: Left(needsHoles missing subset)"]
-  PhaseExec{{"MISSING FRONTIER: resolveFilledActivationPhase<br/>invalid today: attack_roll/save_gate/direct application not implemented"}}
-  UnitResource{{"MISSING: unit resource legality + consumption"}}
-  UnitMutation{{"MISSING: unit battle-state mutation"}}
+  PhaseExec["resolveFilledActivationPhase<br/>implemented: direct heal_hp target validation, dice validation, HP mutation<br/>frontier: attack_roll damage, save_gate outcome, grant_extra_action"]
+  UnitResource["unit resource legality + consumption<br/>implemented: action/free activation cost + base spell slot for direct heal_hp"]
+  UnitMutation["unit battle-state mutation<br/>implemented: heal_hp applies HP regain capped at max HP"]
+  RuntimeDice["runtime-dice validation<br/>checks rolledDice count and die range for Surface DiceExpr"]
 
   Resolve --> Interpret
   Interpret -->|Left invalid| Invalid["return invalid"]
@@ -153,12 +165,14 @@ flowchart TD
   ValidInputs -->|Left invalid| Invalid
   ValidInputs -->|Right holes| Missing
   Missing -->|Left needsHoles| Needs["return needsHoles"]
-  Missing -->|Right complete| PhaseExec --> UnitResource --> UnitMutation
+  Missing -->|Right complete| PhaseExec
+  PhaseExec --> RuntimeDice --> UnitMutation
+  PhaseExec --> UnitResource
 
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class PhaseExec,UnitResource,UnitMutation,CoreAttackFrontier missing;
-  class Resolve,Interpret,Match,CoreAttackResolve,EndTurnResolve,ValidInputs,Missing,Invalid,Needs implemented;
+  class CoreAttackFrontier missing;
+  class Resolve,Interpret,Match,CoreAttackResolve,EndTurnResolve,ValidInputs,Missing,PhaseExec,RuntimeDice,UnitResource,UnitMutation,Invalid,Needs implemented;
 ```
 
 ## Core Attack Replay
@@ -187,37 +201,39 @@ flowchart TD
 
 ## Function Contracts
 
-| Function or type                               | Input                                 | Success / continuation payload                                                     | Failure / absence payload                                                               | Why                                                            | Without this                                                       |
-| ---------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `State`                                        | n/a                                   | Runtime snapshot: `initiative`, `combatants`, action economy                       | n/a                                                                                     | Shared substrate for legality and replay                       | Discovery/resolution would not agree on current combat facts       |
-| `CreatureState.units`                          | n/a                                   | Actor-owned `ReadonlyArray<UnitRecord>`                                            | n/a                                                                                     | Places authored units on combatants                            | Unit-backed act ownership cannot be checked                        |
-| `loadSupportedUnit(unitId)`                    | `string`                              | Decoded `CurrentSliceSupportedActivationUnit`                                      | File/JSON/schema throw, or `UnsupportedUnitError`                                       | Schema + support boundary for content loading                  | Content bypasses validation or support gate                        |
-| `checkSupportedUnit(unit)`                     | `UnitRecord`                          | `Right(CurrentSliceSupportedActivationUnit)`                                       | `Left(UnsupportedUnitError)` with specific support reason                               | Central executable support gate                                | Support constraints scatter across modules                         |
-| `assertSupportedUnit(unit)`                    | `UnitRecord`                          | `CurrentSliceSupportedActivationUnit`                                              | Throws `UnsupportedUnitError`                                                           | Fail-fast loader variant of support gate                       | Unsupported content can enter supported library                    |
-| `getCurrentSliceSupportedActivationUnit(unit)` | `UnitRecord`                          | `Some(CurrentSliceSupportedActivationUnit)`                                        | `None`                                                                                  | Non-throwing discovery/interpreter support check               | Discovery uses exceptions or duplicates support logic              |
-| `discoverAvailableActs(state)`                 | `State`                               | `AvailableAct[]` of `{ subject, label, summary, initialHoles }`                    | No error path; could be `[]`, though End Turn normally exists                           | Public act-offer API                                           | Callers consume `InterpretedAct` internals or duplicate projection |
-| `discoverInterpretedActs(state)`               | `State`                               | `InterpretedAct[]`: optional core attack, End Turn, discoverable unit acts         | Omits unavailable attack and non-discoverable units                                     | Internal discovered-act IR with dispatch and execution payload | Public discovery loses parsed payload or recomputes it             |
-| `discoverCoreAttackAct(state, actorId)`        | `State`, `CreatureId`                 | `CoreAttackAct` with `core_attack_target` initial hole                             | `null` if no action or no other combatant                                               | Shared core attack availability and discovery payload          | Attack discovery and resolution legality drift                     |
-| `actionCantripUnit(unit)`                      | `UnitRecord`                          | `DiscoverableActionCantrip`                                                        | `null` if unsupported, non-spell, non-cantrip, or non-action                            | Current unit discovery filter                                  | Discovery exposes units outside the current lane                   |
-| `discoverUnitActs(state, actorId)`             | `State`, `CreatureId`                 | `InterpretedUnitAct[]`                                                             | `[]` if actor missing or no qualifying units                                            | Enumerates acting actor unit acts                              | Unit-backed acts do not appear in discovery                        |
-| `interpretSubject(state, subject)`             | `State`, `Subject`                    | `Right(InterpretedAct)`                                                            | `Left(ResolutionInvalid)` for stale actor, unavailable attack, missing/unsupported unit | Re-parse selected subject against current state                | Stale/forged subjects can bypass legality                          |
-| `interpretUnitAct(state, subject)`             | `State`, `UnitSubject`                | `Right(InterpretedUnitAct)` with supported unit, phase, initial holes              | `Left(ResolutionInvalid)` for missing actor/unit/unsupported unit                       | Unit subject parser                                            | Resolution repeats lookup/support/projection                       |
-| `requireUnitActor(state, actorId)`             | `State`, `CreatureId`                 | `Right(CreatureState)`                                                             | `Left(invalid 'acting actor not found in combatants')`                                  | Actor existence boundary                                       | Undefined actor flows downstream                                   |
-| `requireUnit(actor, subject)`                  | `CreatureState`, `UnitSubject`        | `Right(UnitRecord)` matching `unitId`                                              | `Left(invalid 'unit not found: <unitId>')`                                              | Unit ownership boundary                                        | Missing unit handling is duplicated or unsafe                      |
-| `requireSupportedUnit(unit, subject)`          | `UnitRecord`, `UnitSubject`           | `Right(CurrentSliceSupportedActivationUnit)`                                       | `Left(invalid 'unsupported unit: <unitId>')`                                            | Converts support failure to reducer invalid                    | Wide unit reaches one-phase assumptions                            |
-| `currentSliceActivationPhase(unit)`            | `CurrentSliceSupportedActivationUnit` | Sole `ActivationPhase`                                                             | Throws only if support invariant is broken                                              | Names one-phase current-slice invariant                        | Positional phase assumption repeats                                |
-| `projectPhaseHoles(phase, stepKey)`            | `ActivationPhase`, `HoleStepKey`      | `RuntimeHoleSet` for the phase                                                     | Throws unsupported gated damage-type or duplicate instance key                          | Phase-to-hole compiler                                         | Unit acts cannot expose initial holes                              |
-| `validateCurrentHoleInputs(filled, holes)`     | `FilledHoleValue[]`, `RuntimeHoleSet` | `null`                                                                             | `ResolutionInvalid` for duplicate, unexpected, or wrong-kind fills                      | Pure shape validation                                          | Bad fills reach semantic execution                                 |
-| `requireValidHoleInputs(filled, holes)`        | `FilledHoleValue[]`, `RuntimeHoleSet` | `Right(same holes)`                                                                | `Left(ResolutionInvalid)` from validation                                               | Pipeline wrapper preserving expected holes                     | Callers hand-roll null checks                                      |
-| `missingHoles(filled, holes)`                  | `FilledHoleValue[]`, `RuntimeHoleSet` | Missing subset of `holes` by `holeId`                                              | No invalid path                                                                         | Shared ID-set subtraction                                      | Missing-hole computation duplicates                                |
-| `requireNoMissingHoles(filled, holes)`         | `FilledHoleValue[]`, `RuntimeHoleSet` | `Right(same holes)` when complete                                                  | `Left({ tag: 'needsHoles', holes: missingSubset })`                                     | Separates incomplete valid input from executable input         | Unit execution can proceed incomplete or misreport missing input   |
-| `resolveSubjectHoles(state, request)`          | `State`, `ResolutionRequest`          | `{ tag: 'resolved', state }` or `{ tag: 'needsHoles', holes }` or frontier invalid | `ResolutionInvalid` for illegal subject/bad fills/unimplemented execution               | Top-level replay/refill dispatcher                             | Callers duplicate interpretation and routing                       |
-| `resolveCoreAttackHoles(state, filled)`        | `State`, `FilledHoleValue[]`          | `needsHoles` for target, roll, or damage; frontier invalid after full data         | Invalid for no action, no target, invalid target, bad fills                             | Core attack replay protocol                                    | Attack can be offered but not advanced                             |
-| `resolveCoreEndTurn(state)`                    | `State`                               | `{ tag: 'resolved', state: next turn with action economy reset }`                  | No local failure                                                                        | Only implemented state mutation here                           | End Turn can be selected but not executed                          |
-| `resolveFilledActivationPhase(phase, filled, currentHoles)` | Filled `ActivationPhase`, current `FilledHoleValue[]`, current `RuntimeHole[]` | No resolved success today                                                          | `attack_roll` now validates `targetChoice` + `attackRoll` and rejects invalid target before phase-specific frontier | Explicit unit execution boundary                               | Completed unit holes have no semantic destination                  |
-| `coreAttackTargetHole()`                       | none                                  | `RuntimeHole` for `core_attack_target`                                             | none                                                                                    | Stable target ask                                              | Core target identity duplicates                                    |
-| `coreAttackRollHole()`                         | none                                  | `RuntimeHole` for `core_attack_roll`                                               | none                                                                                    | Stable attack-roll ask                                         | Core roll identity duplicates                                      |
-| `coreAttackDamageHole()`                       | none                                  | `RuntimeHole` for `core_attack_damage`                                             | none                                                                                    | Stable damage-roll ask                                         | Core damage identity duplicates                                    |
+| Function or type                                            | Input                                                                                    | Success / continuation payload                                                                                    | Failure / absence payload                                                                                           | Why                                                            | Without this                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `State`                                                     | n/a                                                                                      | Runtime snapshot: `initiative`, `combatants`, action economy                                                      | n/a                                                                                                                 | Shared substrate for legality and replay                       | Discovery/resolution would not agree on current combat facts       |
+| `CreatureState.units`                                       | n/a                                                                                      | Actor-owned `ReadonlyArray<UnitRecord>`                                                                           | n/a                                                                                                                 | Places authored units on combatants                            | Unit-backed act ownership cannot be checked                        |
+| `loadSupportedUnit(unitId)`                                 | `string`                                                                                 | Decoded `CurrentSliceSupportedActivationUnit`                                                                     | File/JSON/schema throw, or `UnsupportedUnitError`                                                                   | Schema + support boundary for content loading                  | Content bypasses validation or support gate                        |
+| `checkSupportedUnit(unit)`                                  | `UnitRecord`                                                                             | `Right(CurrentSliceSupportedActivationUnit)`                                                                      | `Left(UnsupportedUnitError)` with specific support reason                                                           | Central executable support gate                                | Support constraints scatter across modules                         |
+| `assertSupportedUnit(unit)`                                 | `UnitRecord`                                                                             | `CurrentSliceSupportedActivationUnit`                                                                             | Throws `UnsupportedUnitError`                                                                                       | Fail-fast loader variant of support gate                       | Unsupported content can enter supported library                    |
+| `getCurrentSliceSupportedActivationUnit(unit)`              | `UnitRecord`                                                                             | `Some(CurrentSliceSupportedActivationUnit)`                                                                       | `None`                                                                                                              | Non-throwing discovery/interpreter support check               | Discovery uses exceptions or duplicates support logic              |
+| `discoverAvailableActs(state)`                              | `State`                                                                                  | `AvailableAct[]` of `{ subject, label, summary, initialHoles }`                                                   | No error path; could be `[]`, though End Turn normally exists                                                       | Public act-offer API                                           | Callers consume `InterpretedAct` internals or duplicate projection |
+| `discoverInterpretedActs(state)`                            | `State`                                                                                  | `InterpretedAct[]`: optional core attack, End Turn, discoverable unit acts                                        | Omits unavailable attack and non-discoverable units                                                                 | Internal discovered-act IR with dispatch and execution payload | Public discovery loses parsed payload or recomputes it             |
+| `discoverCoreAttackAct(state, actorId)`                     | `State`, `CreatureId`                                                                    | `CoreAttackAct` with `core_attack_target` initial hole                                                            | `null` if no action or no other combatant                                                                           | Shared core attack availability and discovery payload          | Attack discovery and resolution legality drift                     |
+| `actionCantripUnit(unit)`                                   | `UnitRecord`                                                                             | `DiscoverableActionCantrip`                                                                                       | `null` if unsupported, non-spell, non-cantrip, or non-action                                                        | Current unit discovery filter                                  | Discovery exposes units outside the current lane                   |
+| `discoverUnitActs(state, actorId)`                          | `State`, `CreatureId`                                                                    | `InterpretedUnitAct[]`                                                                                            | `[]` if actor missing or no qualifying units                                                                        | Enumerates acting actor unit acts                              | Unit-backed acts do not appear in discovery                        |
+| `interpretSubject(state, subject)`                          | `State`, `Subject`                                                                       | `Right(InterpretedAct)`                                                                                           | `Left(ResolutionInvalid)` for stale actor, unavailable attack, missing/unsupported unit                             | Re-parse selected subject against current state                | Stale/forged subjects can bypass legality                          |
+| `interpretUnitAct(state, subject)`                          | `State`, `UnitSubject`                                                                   | `Right(InterpretedUnitAct)` with supported unit, phase, initial holes                                             | `Left(ResolutionInvalid)` for missing actor/unit/unsupported unit                                                   | Unit subject parser                                            | Resolution repeats lookup/support/projection                       |
+| `requireUnitActor(state, actorId)`                          | `State`, `CreatureId`                                                                    | `Right(CreatureState)`                                                                                            | `Left(invalid 'acting actor not found in combatants')`                                                              | Actor existence boundary                                       | Undefined actor flows downstream                                   |
+| `requireUnit(actor, subject)`                               | `CreatureState`, `UnitSubject`                                                           | `Right(UnitRecord)` matching `unitId`                                                                             | `Left(invalid 'unit not found: <unitId>')`                                                                          | Unit ownership boundary                                        | Missing unit handling is duplicated or unsafe                      |
+| `requireSupportedUnit(unit, subject)`                       | `UnitRecord`, `UnitSubject`                                                              | `Right(CurrentSliceSupportedActivationUnit)`                                                                      | `Left(invalid 'unsupported unit: <unitId>')`                                                                        | Converts support failure to reducer invalid                    | Wide unit reaches one-phase assumptions                            |
+| `currentSliceActivationPhase(unit)`                         | `CurrentSliceSupportedActivationUnit`                                                    | Sole `ActivationPhase`                                                                                            | Throws only if support invariant is broken                                                                          | Names one-phase current-slice invariant                        | Positional phase assumption repeats                                |
+| `projectPhaseHoles(phase, stepKey)`                         | `ActivationPhase`, `HoleStepKey`                                                         | `RuntimeHoleSet` for the phase                                                                                    | Throws unsupported gated damage-type or duplicate instance key                                                      | Phase-to-hole compiler                                         | Unit acts cannot expose initial holes                              |
+| `validateRolledDiceForDiceExpr(groups, expr)`               | `RolledDiceGroup[]`, `DiceExpr`                                                          | `Right(void)` when count and every die result fit the expression's die size                                       | `Left({ reason })` for wrong count or out-of-range die result                                                       | Shared Surface dice-roll validation                            | Effect families duplicate or forget dice validation                |
+| `rolledDiceTotal(groups)`                                   | `RolledDiceGroup[]`                                                                      | Sum of all die results                                                                                            | n/a                                                                                                                 | Shared roll total computation                                  | Each effect sums roll groups differently                           |
+| `validateCurrentHoleInputs(filled, holes)`                  | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | `null`                                                                                                            | `ResolutionInvalid` for duplicate, unexpected, or wrong-kind fills                                                  | Pure shape validation                                          | Bad fills reach semantic execution                                 |
+| `requireValidHoleInputs(filled, holes)`                     | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | `Right(same holes)`                                                                                               | `Left(ResolutionInvalid)` from validation                                                                           | Pipeline wrapper preserving expected holes                     | Callers hand-roll null checks                                      |
+| `missingHoles(filled, holes)`                               | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | Missing subset of `holes` by `holeId`                                                                             | No invalid path                                                                                                     | Shared ID-set subtraction                                      | Missing-hole computation duplicates                                |
+| `requireNoMissingHoles(filled, holes)`                      | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | `Right(same holes)` when complete                                                                                 | `Left({ tag: 'needsHoles', holes: missingSubset })`                                                                 | Separates incomplete valid input from executable input         | Unit execution can proceed incomplete or misreport missing input   |
+| `resolveSubjectHoles(state, request)`                       | `State`, `ResolutionRequest`                                                             | `{ tag: 'resolved', state }` for endTurn or direct `heal_hp`; `{ tag: 'needsHoles', holes }`; or frontier invalid | `ResolutionInvalid` for illegal subject/bad fills/unsupported execution                                             | Top-level replay/refill dispatcher                             | Callers duplicate interpretation and routing                       |
+| `resolveCoreAttackHoles(state, filled)`                     | `State`, `FilledHoleValue[]`                                                             | `needsHoles` for target, roll, or damage; frontier invalid after full data                                        | Invalid for no action, no target, invalid target, bad fills                                                         | Core attack replay protocol                                    | Attack can be offered but not advanced                             |
+| `resolveCoreEndTurn(state)`                                 | `State`                                                                                  | `{ tag: 'resolved', state: next turn with action economy reset }`                                                 | No local failure                                                                                                    | Only implemented state mutation here                           | End Turn can be selected but not executed                          |
+| `resolveFilledActivationPhase(phase, filled, currentHoles)` | Filled supported `ActivationPhase`, current `FilledHoleValue[]`, current `RuntimeHole[]` | Direct `heal_hp` resolves by validating target + healing dice and applying HP regain capped at max HP             | `attack_roll`, `save_gate`, and `grant_extra_action` still return explicit frontiers after validating current holes | Explicit unit execution boundary                               | Completed unit holes have no semantic destination                  |
+| `coreAttackTargetHole()`                                    | none                                                                                     | `RuntimeHole` for `core_attack_target`                                                                            | none                                                                                                                | Stable target ask                                              | Core target identity duplicates                                    |
+| `coreAttackRollHole()`                                      | none                                                                                     | `RuntimeHole` for `core_attack_roll`                                                                              | none                                                                                                                | Stable attack-roll ask                                         | Core roll identity duplicates                                      |
+| `coreAttackDamageHole()`                                    | none                                                                                     | `RuntimeHole` for `core_attack_damage`                                                                            | none                                                                                                                | Stable damage-roll ask                                         | Core damage identity duplicates                                    |
 
 ## Current Slice Invariants
 
@@ -226,15 +242,17 @@ flowchart TD
   UnitRecord["UnitRecord"]
   Support["checkSupportedUnit<br/>Right: activation, one phase, supported kind/effects<br/>Left: UnsupportedUnitError"]
   Supported["CurrentSliceSupportedActivationUnit<br/>type fact: mechanics.family activation + readonly [ActivationPhase]"]
+  DirectSupport["direct effect support<br/>one supported effect; heal_hp amount shape; attachment/effect target compatibility"]
   DiscoveryLane["Discovery lane<br/>actionCantripUnit: supported spell level 0 action only"]
   ResolverLane["Resolver lane<br/>interpretUnitAct: any actor-owned supported unit subject"]
   PhaseKinds["Allowed phase kinds<br/>attack_roll | save_gate | direct"]
-  Execution{{"MISSING FRONTIER: Execution<br/>holes complete -> phase-specific invalid until application exists"}}
-  ResourceLegality{{"MISSING: unit resource legality"}}
-  StateMutation{{"MISSING: battle-state mutation"}}
+  Execution["Execution<br/>implemented: direct heal_hp; frontiers remain for attack_roll, save_gate, grant_extra_action"]
+  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  StateMutation["battle-state mutation<br/>implemented: HP regain for heal_hp"]
 
   UnitRecord --> Support --> Supported
   Supported --> PhaseKinds
+  Supported --> DirectSupport
   Supported --> DiscoveryLane
   Supported --> ResolverLane
   DiscoveryLane --> Execution --> ResourceLegality --> StateMutation
@@ -242,8 +260,7 @@ flowchart TD
 
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Execution,ResourceLegality,StateMutation missing;
-  class UnitRecord,Support,Supported,DiscoveryLane,ResolverLane,PhaseKinds implemented;
+  class UnitRecord,Support,Supported,DirectSupport,DiscoveryLane,ResolverLane,PhaseKinds,Execution,ResourceLegality,StateMutation implemented;
 ```
 
 Important consequences:
@@ -272,14 +289,14 @@ flowchart LR
   State["Battle State<br/>implemented: State"]
   Options["decisionOptions(state)<br/>implemented: discoverAvailableActs(state)"]
   Resolve["react(state, request)<br/>implemented: resolveSubjectHoles(state, request)"]
-  EndTurnState["Battle State'<br/>implemented only for endTurn"]
+  EndTurnState["Battle State'<br/>implemented for endTurn and direct heal_hp"]
 
   TableDecision{{"MISSING: Table Decision<br/>selected subject + accumulated FilledHoleValue[]"}}
   ReducerFacade{{"MISSING: single reducer facade<br/>one table-facing protocol wrapping options + reaction"}}
   StateLoop{{"MISSING: explicit resolved-state feedback<br/>next options come from returned state"}}
-  UnitExecution{{"MISSING: unit phase execution<br/>attack_roll | save_gate | direct semantics"}}
-  ResourceLegality{{"MISSING: unit resource legality<br/>action cost, slots, use counts, once/turn"}}
-  ApplyEffects{{"MISSING: battle-state mutation<br/>damage, healing, extra action, conditions/effects"}}
+  UnitExecution["unit phase execution<br/>implemented: direct heal_hp<br/>missing: attack_roll damage, save_gate outcome, grant_extra_action"]
+  ResourceLegality["unit resource legality<br/>implemented: action/free activation cost + base spell slot for direct heal_hp<br/>missing: bonus-action spend, upcast slots, use counts, once/turn"]
+  ApplyEffects["battle-state mutation<br/>implemented: healing<br/>missing: damage, extra action, conditions/effects"]
   DecisionType{{"MISSING: explicit Decision type<br/>AvailableAct subject + filled answers"}}
 
   State --> Options
@@ -297,8 +314,8 @@ flowchart LR
 
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class TableDecision,ReducerFacade,StateLoop,UnitExecution,ResourceLegality,ApplyEffects,DecisionType missing;
-  class State,Options,Resolve,EndTurnState implemented;
+  class TableDecision,ReducerFacade,StateLoop,DecisionType missing;
+  class State,Options,Resolve,EndTurnState,UnitExecution,ResourceLegality,ApplyEffects implemented;
 ```
 
 The current System Graph does not yet make these interface-level facts explicit:
@@ -311,14 +328,14 @@ The current System Graph does not yet make these interface-level facts explicit:
   the graph does not show them as the two halves of one reducer protocol.
 - State feedback is underdrawn. `resolveCoreEndTurn` returns a new `State`, but
   the graph does not draw `resolved.state` back into the next discovery cycle.
-- Unit execution is still a frontier. Completed unit holes currently reach
-  phase-specific invalid results, not state mutation. The missing nodes are
-  effect application, damage/healing application, save outcome application,
-  extra action grants, and resource consumption.
-- Resource legality is incomplete for unit-backed acts. The graph has core
-  attack action-economy legality, but not spell slot spending, use-count
-  spending, action/bonus/free activation costs, once-per-turn limits, or illegal
-  use rejection for units.
+- Unit execution is still partial. Direct `heal_hp` can now validate its target
+  and healing dice, pay action/free activation cost plus a base spell slot, then
+  mutate HP. Attack-roll damage application, save outcome application, and extra
+  action grants remain missing.
+- Resource legality is still incomplete for unit-backed acts. Direct `heal_hp`
+  now handles action/free activation cost and base spell slot spending, but
+  bonus-action spending, upcast slot choice, use-count spending, once-per-turn
+  limits, and broader illegal-use rejection remain missing.
 - The decision type is not explicit. `AvailableAct` is an offered option;
   `ResolutionRequest` is a replay request. The conceptual table decision is the
   bridge between them: selected `subject` plus accumulated `FilledHoleValue[]`.

@@ -87,7 +87,10 @@ function exhaustedActionState(): State {
   };
 }
 
-function twoCreatureStateWithActingUnit(unitId: string): State {
+function twoCreatureStateWithActingUnit(
+  unitId: string,
+  actingOverrides: Partial<CreatureState> = {},
+): State {
   const unit = loadSupportedUnit(unitId);
   return {
     ...twoCreatureState(),
@@ -96,11 +99,19 @@ function twoCreatureStateWithActingUnit(unitId: string): State {
         "A" as CreatureId,
         creatureState({
           units: [unit],
+          ...actingOverrides,
         }),
       ],
       ["B" as CreatureId, creatureState()],
     ]),
   };
+}
+
+function twoCreatureStateWithActingSpellSlot(unitId: string): State {
+  return twoCreatureStateWithActingUnit(unitId, {
+    spellSlots: [1],
+    spellSlotsMax: [1],
+  });
 }
 
 describe("reducer boundaries", () => {
@@ -700,7 +711,7 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles applies cure wounds healing to the chosen target", () => {
-    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const base = twoCreatureStateWithActingSpellSlot("cure_wounds");
     const state: State = {
       ...base,
       combatants: new Map([
@@ -740,11 +751,44 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(12);
+      expect(result.state.currentActionsAvailable).toBe(0);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.spellSlots,
+      ).toEqual([0]);
     }
   });
 
+  it("resolveSubjectHoles rejects cure wounds when no action is available", () => {
+    expect(
+      resolveSubjectHoles(
+        {
+          ...twoCreatureStateWithActingUnit("cure_wounds"),
+          currentActionsAvailable: 0,
+        },
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "cure_wounds",
+          },
+          filledHoleValues: [
+            {
+              kind: "targetChoice",
+              holeId: holeId("cure_wounds_target"),
+              value: "B" as CreatureId,
+            },
+            healingRollFill([5, 4]),
+          ],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "no action available for unit",
+    });
+  });
+
   it("resolveSubjectHoles does not let a negative spellcasting modifier turn healing into damage", () => {
-    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const base = twoCreatureStateWithActingSpellSlot("cure_wounds");
     const state: State = {
       ...base,
       combatants: new Map([
@@ -784,6 +828,9 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(5);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.spellSlots,
+      ).toEqual([0]);
     }
   });
 
@@ -811,7 +858,7 @@ describe("reducer boundaries", () => {
   });
 
   it("resolveSubjectHoles allows cure wounds to target self", () => {
-    const base = twoCreatureStateWithActingUnit("cure_wounds");
+    const base = twoCreatureStateWithActingSpellSlot("cure_wounds");
     const state: State = {
       ...base,
       combatants: new Map([
@@ -846,7 +893,33 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("A" as CreatureId)?.hp).toBe(8);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.spellSlots,
+      ).toEqual([0]);
     }
+  });
+
+  it("resolveSubjectHoles rejects cure wounds when no base spell slot is available", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("cure_wounds"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "cure_wounds",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("cure_wounds_target"),
+            value: "B" as CreatureId,
+          },
+          healingRollFill([5, 4]),
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "no spell slot available for unit",
+    });
   });
 
   it("resolveSubjectHoles reaches save-gate execution boundary after fireball point is filled", () => {
@@ -880,10 +953,13 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubjectHoles reaches direct execution boundary for holeless action surge", () => {
+  it("resolveSubjectHoles reaches direct execution boundary for holeless action surge even with no action", () => {
     expect(
       resolveSubjectHoles(
-        twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+        {
+          ...twoCreatureStateWithActingUnit("fighter_action_surge_l2"),
+          currentActionsAvailable: 0,
+        },
         {
           subject: {
             tag: "unit",
