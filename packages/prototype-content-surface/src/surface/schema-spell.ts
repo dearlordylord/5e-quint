@@ -282,10 +282,20 @@ type EffectAtom =
       readonly ability: Ability;
       readonly dc: DcSource;
       readonly cadence: "end_of_target_turn";
+      readonly appliesCondition?: true;
       readonly successCount: number;
       readonly failureCount: number;
       readonly onSuccessCount: EffectAtom;
       readonly onFailureCount: EffectAtom;
+    }
+  | {
+      readonly kind: "delayed_save";
+      readonly condition?: Condition;
+      readonly ability: Ability;
+      readonly dc: DcSource;
+      readonly cadence: "start_of_caster_next_turn";
+      readonly onSuccess: EffectAtom;
+      readonly onFailure: EffectAtom;
     }
   | {
       readonly kind: "condition_persists_after_full_duration";
@@ -479,6 +489,8 @@ type EffectAtom =
   | { readonly kind: "fall_to_ground" }
   | { readonly kind: "block_targeting"; readonly scope: string }
   | { readonly kind: "block_travel"; readonly scope: string }
+  | { readonly kind: "end_if_created_in_occupied_space" }
+  | { readonly kind: "allow_designated_creatures_safe_passage" }
   | { readonly kind: "object_immune_to_all_damage" }
   | { readonly kind: "object_destroyed_by_spell"; readonly spellId: string }
   | { readonly kind: "cannot_be_dispelled_by_spell"; readonly spellId: string }
@@ -736,6 +748,7 @@ type EffectAtom =
       >;
     }
   | { readonly kind: "prevent_spellcasting_and_magic_actions" }
+  | { readonly kind: "prevent_magical_ranged_attacks" }
   | { readonly kind: "block_magical_targeting_and_aoe" }
   | { readonly kind: "block_teleport_and_planar_travel" }
   | { readonly kind: "suppress_magic_items" }
@@ -743,6 +756,21 @@ type EffectAtom =
       readonly kind: "suppress_ongoing_magic_effects";
       readonly exceptSources: ReadonlyNonEmptyArray<"artifact" | "deity">;
       readonly suppressedTimeCountsAgainstDuration: true;
+    }
+  | {
+      readonly kind: "ordered_barrier_layers";
+      readonly layers: ReadonlyNonEmptyArray<{
+        readonly order: number;
+        readonly label: string;
+        readonly save?: {
+          readonly ability: Ability;
+          readonly dc: DcSource;
+          readonly onFail: EffectAtom;
+          readonly onSuccess: SaveSuccessOutcome;
+        };
+        readonly passiveEffects?: ReadonlyNonEmptyArray<EffectAtom>;
+        readonly destroyedBy: string;
+      }>;
     }
   | { readonly kind: "allow_reaction_stand_up" }
   | { readonly kind: "none" };
@@ -1220,6 +1248,14 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("on_creature_enters_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_ends_turn_in_area") }),
   Schema.Struct({ kind: Schema.Literal("on_creature_moves_through_area") }),
+  Schema.Struct({
+    kind: Schema.Literal("on_creature_moves_within_area"),
+    distanceFeet: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("on_creature_starts_turn_within_area"),
+    distanceFeet: Schema.Number,
+  }),
   Schema.Struct({ kind: Schema.Literal("on_object_section_destroyed") }),
   Schema.Struct({
     kind: Schema.Literal("on_area_moves_into_creature_space"),
@@ -1347,10 +1383,20 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         ability: AbilitySchema,
         dc: DcSourceSchema,
         cadence: Schema.Literal("end_of_target_turn"),
+        appliesCondition: optionalExact(Schema.Literal(true)),
         successCount: Schema.Number,
         failureCount: Schema.Number,
         onSuccessCount: EffectAtomSchema,
         onFailureCount: EffectAtomSchema,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("delayed_save"),
+        condition: optionalExact(ConditionSchema),
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        cadence: Schema.Literal("start_of_caster_next_turn"),
+        onSuccess: EffectAtomSchema,
+        onFailure: EffectAtomSchema,
       }),
       Schema.Struct({
         kind: Schema.Literal("condition_persists_after_full_duration"),
@@ -1585,6 +1631,12 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("block_travel"),
         scope: Schema.String,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("end_if_created_in_occupied_space"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("allow_designated_creatures_safe_passage"),
       }),
       Schema.Struct({ kind: Schema.Literal("object_immune_to_all_damage") }),
       Schema.Struct({
@@ -1925,6 +1977,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("prevent_spellcasting_and_magic_actions"),
       }),
+      Schema.Struct({ kind: Schema.Literal("prevent_magical_ranged_attacks") }),
       Schema.Struct({
         kind: Schema.Literal("block_magical_targeting_and_aoe"),
       }),
@@ -1936,6 +1989,25 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("suppress_ongoing_magic_effects"),
         exceptSources: nonEmpty(Schema.Literal("artifact", "deity")),
         suppressedTimeCountsAgainstDuration: Schema.Literal(true),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("ordered_barrier_layers"),
+        layers: nonEmpty(
+          Schema.Struct({
+            order: Schema.Number,
+            label: Schema.String,
+            save: optionalExact(
+              Schema.Struct({
+                ability: AbilitySchema,
+                dc: DcSourceSchema,
+                onFail: EffectAtomSchema,
+                onSuccess: SaveSuccessOutcomeSchema,
+              }),
+            ),
+            passiveEffects: optionalExact(nonEmpty(EffectAtomSchema)),
+            destroyedBy: Schema.String,
+          }),
+        ),
       }),
       Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
       Schema.Struct({ kind: Schema.Literal("none") }),

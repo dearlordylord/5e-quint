@@ -253,7 +253,7 @@ function traceEffectAtom(
         id,
         category: "resolution",
         atomKind: "repeat_save_counter",
-        label: `repeat_save_counter\n${e.ability.toUpperCase()} vs ${describeDc(e.dc)}\ncondition: ${e.condition}\ncadence: ${e.cadence}\n${e.successCount} successes / ${e.failureCount} failures`,
+        label: `repeat_save_counter\n${e.ability.toUpperCase()} vs ${describeDc(e.dc)}\ncondition: ${e.condition}${e.appliesCondition === true ? " (applies)" : ""}\ncadence: ${e.cadence}\n${e.successCount} successes / ${e.failureCount} failures`,
       });
       if (edges !== undefined) {
         const successId = traceEffectAtom(e.onSuccessCount, nodes, ids, edges);
@@ -270,6 +270,34 @@ function traceEffectAtom(
             from: id,
             to: failureId,
             relation: "on_failure_count",
+          });
+        }
+      }
+      return id;
+    }
+    case "delayed_save": {
+      const id = ids("rep");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "delayed_save",
+        label: `delayed_save\n${e.ability.toUpperCase()} vs ${describeDc(e.dc)}\ncadence: ${e.cadence}${e.condition === undefined ? "" : `\ncondition: ${e.condition}`}`,
+      });
+      if (edges !== undefined) {
+        const successId = traceEffectAtom(e.onSuccess, nodes, ids, edges);
+        if (successId !== null) {
+          edges.push({
+            from: id,
+            to: successId,
+            relation: "branches_on_save",
+          });
+        }
+        const failureId = traceEffectAtom(e.onFailure, nodes, ids, edges);
+        if (failureId !== null) {
+          edges.push({
+            from: id,
+            to: failureId,
+            relation: "branches_on_save",
           });
         }
       }
@@ -661,6 +689,26 @@ function traceEffectAtom(
         category: "effect",
         atomKind: "block_travel",
         label: `block_travel\nscope: ${e.scope}`,
+      });
+      return id;
+    }
+    case "end_if_created_in_occupied_space": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "lifecycle",
+        atomKind: "end_if_created_in_occupied_space",
+        label: "end_if_created_in_occupied_space",
+      });
+      return id;
+    }
+    case "allow_designated_creatures_safe_passage": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "allow_designated_creatures_safe_passage",
+        label: "allow_designated_creatures_safe_passage",
       });
       return id;
     }
@@ -1304,6 +1352,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "prevent_magical_ranged_attacks": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "prevent_magical_ranged_attacks",
+        label: "prevent_magical_ranged_attacks",
+      });
+      return id;
+    }
     case "block_magical_targeting_and_aoe": {
       const id = ids("eff");
       nodes.push({
@@ -1342,6 +1400,91 @@ function traceEffectAtom(
         atomKind: "suppress_ongoing_magic_effects",
         label: `suppress_ongoing_magic_effects\nexcept: ${e.exceptSources.join(", ")}\ntime counts: ${e.suppressedTimeCountsAgainstDuration}`,
       });
+      return id;
+    }
+    case "ordered_barrier_layers": {
+      const id = ids("layers");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "ordered_barrier_layers",
+        label: `ordered_barrier_layers\n${e.layers.length} layers`,
+      });
+      if (edges !== undefined) {
+        for (const layer of e.layers) {
+          const layerId = ids("layer");
+          nodes.push({
+            id: layerId,
+            category: "resolution",
+            atomKind: "barrier_layer",
+            label: `layer ${layer.order}: ${layer.label}\ndestroyed by: ${layer.destroyedBy}`,
+          });
+          edges.push({ from: id, to: layerId, relation: "orders" });
+          if (layer.save !== undefined) {
+            const saveId = ids("sg");
+            nodes.push({
+              id: saveId,
+              category: "resolution",
+              atomKind: "save_gate",
+              label: `save_gate\n${layer.save.ability.toUpperCase()} vs ${describeDc(layer.save.dc)}`,
+            });
+            edges.push({ from: layerId, to: saveId, relation: "requires" });
+            const failId = traceEffectAtom(
+              layer.save.onFail,
+              nodes,
+              ids,
+              edges,
+            );
+            if (failId !== null) {
+              edges.push({
+                from: saveId,
+                to: failId,
+                relation: "branches_on_save",
+              });
+            }
+            if (layer.save.onSuccess.kind === "half_damage") {
+              const halfId = ids("eff");
+              nodes.push({
+                id: halfId,
+                category: "effect",
+                atomKind: "half_damage",
+                label: "half_damage\n(½ of onFail damage)",
+              });
+              edges.push({
+                from: saveId,
+                to: halfId,
+                relation: "branches_on_save",
+              });
+            } else {
+              const successId = traceEffectAtom(
+                layer.save.onSuccess,
+                nodes,
+                ids,
+                edges,
+              );
+              if (successId !== null) {
+                edges.push({
+                  from: saveId,
+                  to: successId,
+                  relation: "branches_on_save",
+                });
+              }
+            }
+          }
+          if (layer.passiveEffects !== undefined) {
+            for (const passive of layer.passiveEffects) {
+              const passiveId = traceEffectAtom(passive, nodes, ids, edges);
+              if (passiveId !== null) {
+                edges.push({
+                  from: layerId,
+                  to: passiveId,
+                  relation: "grants",
+                });
+              }
+            }
+          }
+        }
+      }
       return id;
     }
     case "allow_reaction_stand_up": {
@@ -1602,6 +1745,8 @@ function traceEffectAtomScaling(
     case "fall_to_ground":
     case "block_targeting":
     case "block_travel":
+    case "end_if_created_in_occupied_space":
+    case "allow_designated_creatures_safe_passage":
     case "object_immune_to_all_damage":
     case "object_destroyed_by_spell":
     case "cannot_be_dispelled_by_spell":
@@ -1668,11 +1813,45 @@ function traceEffectAtomScaling(
     case "block_line_of_sight":
     case "prevent_creature_passage":
     case "prevent_spellcasting_and_magic_actions":
+    case "prevent_magical_ranged_attacks":
     case "block_magical_targeting_and_aoe":
     case "block_teleport_and_planar_travel":
     case "suppress_magic_items":
     case "suppress_ongoing_magic_effects":
     case "allow_reaction_stand_up":
+      return;
+    case "ordered_barrier_layers":
+      for (const layer of e.layers) {
+        if (layer.save !== undefined) {
+          traceEffectAtomScaling(
+            layer.save.onFail,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+          if (layer.save.onSuccess.kind !== "half_damage") {
+            traceEffectAtomScaling(
+              layer.save.onSuccess,
+              effectId,
+              slotId,
+              nodes,
+              edges,
+              ids,
+            );
+          }
+        }
+        if (layer.passiveEffects !== undefined) {
+          for (const passive of layer.passiveEffects) {
+            traceEffectAtomScaling(passive, effectId, slotId, nodes, edges, ids);
+          }
+        }
+      }
+      return;
+    case "delayed_save":
+      traceEffectAtomScaling(e.onSuccess, effectId, slotId, nodes, edges, ids);
+      traceEffectAtomScaling(e.onFailure, effectId, slotId, nodes, edges, ids);
       return;
     case "repeat_save_counter":
       traceEffectAtomScaling(
@@ -2374,6 +2553,28 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "post_action_window",
         label: "post_action_window\n(creature moves through area)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_moves_within_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "post_action_window",
+        label: `post_action_window\n(creature moves within ${trigger.distanceFeet} ft of area)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_starts_turn_within_area": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_start_window",
+        label: `turn_start_window\n(creature within ${trigger.distanceFeet} ft of area)`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };

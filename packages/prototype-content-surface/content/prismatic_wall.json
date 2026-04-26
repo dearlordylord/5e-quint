@@ -1,0 +1,371 @@
+{
+  "description": "A shimmering, multicolored plane of light forms a vertical opaque wall up to 90 feet long, 30 feet high, and 1 inch thick, or a globe up to 30 feet in diameter. If positioned in an occupied space, the spell ends without effect. The wall sheds Bright Light within 100 feet and Dim Light for an additional 100 feet. You and designated creatures can pass through and be near it without harm. Other creatures that can see it and move within 20 feet or start their turn there make a Constitution save or have the Blinded condition for 1 minute. The wall has seven ordered layers, each with its own Dexterity-save effect and destruction condition.",
+  "id": "prismatic_wall",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "prismatic_wall_area",
+      "kind": "hole",
+      "label": "prismatic wall",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "wall_volume",
+              "maxHeightFeet": 30,
+              "maxLengthFeet": 90,
+              "thicknessFeet": 8.33333e-2
+            },
+            {
+              "kind": "sphere",
+              "radiusFeet": 15
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "timed",
+      "value": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 9,
+    "operations": [
+      {
+        "effect": {
+          "kind": "end_if_created_in_occupied_space"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "brightRadiusFeet": 100,
+          "dimAdditionalFeet": 100,
+          "kind": "emit_light"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "allow_designated_creatures_safe_passage"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_line_of_sight"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "ordered_barrier_layers",
+          "layers": [
+            {
+              "destroyedBy": "takes at least 25 Cold damage",
+              "label": "red",
+              "order": 1,
+              "passiveEffects": [
+                {
+                  "kind": "block_projectiles",
+                  "projectile": "ordinary"
+                }
+              ],
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "amount": {
+                    "expr": {
+                      "dice": 12,
+                      "dieSize": 6,
+                      "flat": 0
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "fire",
+                  "kind": "damage"
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              }
+            },
+            {
+              "destroyedBy": "strong wind",
+              "label": "orange",
+              "order": 2,
+              "passiveEffects": [
+                {
+                  "kind": "prevent_magical_ranged_attacks"
+                }
+              ],
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "amount": {
+                    "expr": {
+                      "dice": 12,
+                      "dieSize": 6,
+                      "flat": 0
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "acid",
+                  "kind": "damage"
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              }
+            },
+            {
+              "destroyedBy": "takes at least 60 Force damage",
+              "label": "yellow",
+              "order": 3,
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "amount": {
+                    "expr": {
+                      "dice": 12,
+                      "dieSize": 6,
+                      "flat": 0
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "lightning",
+                  "kind": "damage"
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              }
+            },
+            {
+              "destroyedBy": "Passwall or equal/greater portal-opening spell",
+              "label": "green",
+              "order": 4,
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "amount": {
+                    "expr": {
+                      "dice": 12,
+                      "dieSize": 6,
+                      "flat": 0
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "poison",
+                  "kind": "damage"
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              }
+            },
+            {
+              "destroyedBy": "takes at least 25 Fire damage",
+              "label": "blue",
+              "order": 5,
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "amount": {
+                    "expr": {
+                      "dice": 12,
+                      "dieSize": 6,
+                      "flat": 0
+                    },
+                    "kind": "fixed"
+                  },
+                  "damageType": "cold",
+                  "kind": "damage"
+                },
+                "onSuccess": {
+                  "kind": "half_damage"
+                }
+              }
+            },
+            {
+              "destroyedBy": "bright light shed by Daylight",
+              "label": "indigo",
+              "order": 6,
+              "passiveEffects": [
+                {
+                  "kind": "prevent_spellcasting_and_magic_actions"
+                }
+              ],
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "ability": "con",
+                  "appliesCondition": true,
+                  "cadence": "end_of_target_turn",
+                  "condition": "restrained",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "failureCount": 3,
+                  "kind": "repeat_save_counter",
+                  "onFailureCount": {
+                    "condition": "petrified",
+                    "kind": "apply_condition"
+                  },
+                  "onSuccessCount": {
+                    "kind": "end_current_effect"
+                  },
+                  "successCount": 3
+                },
+                "onSuccess": {
+                  "kind": "none"
+                }
+              }
+            },
+            {
+              "destroyedBy": "Dispel Magic",
+              "label": "violet",
+              "order": 7,
+              "passiveEffects": [
+                {
+                  "kind": "object_destroyed_by_spell",
+                  "spellId": "dispel_magic"
+                }
+              ],
+              "save": {
+                "ability": "dex",
+                "dc": {
+                  "kind": "caster_spell_save_dc"
+                },
+                "onFail": {
+                  "ability": "wis",
+                  "cadence": "start_of_caster_next_turn",
+                  "condition": "blinded",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "kind": "delayed_save",
+                  "onFailure": {
+                    "effects": [
+                      {
+                        "condition": "blinded",
+                        "kind": "remove_condition"
+                      },
+                      {
+                        "destination": "different_plane",
+                        "kind": "transport_exile"
+                      }
+                    ],
+                    "kind": "composite"
+                  },
+                  "onSuccess": {
+                    "condition": "blinded",
+                    "kind": "remove_condition"
+                  }
+                },
+                "onSuccess": {
+                  "kind": "none"
+                }
+              }
+            }
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "condition": "blinded",
+            "kind": "apply_condition"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "distanceFeet": 20,
+          "kind": "on_creature_moves_within_area"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "condition": "blinded",
+            "kind": "apply_condition"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "distanceFeet": 20,
+          "kind": "on_creature_starts_turn_within_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "abjuration"
+  },
+  "name": "Prismatic Wall",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-M-P#Prismatic Wall"
+  }
+}
