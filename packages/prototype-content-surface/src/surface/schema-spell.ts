@@ -448,9 +448,11 @@ type EffectAtom =
     }
   | {
       readonly kind: "force_move";
-      readonly direction: "push" | "pull" | "slide";
+      readonly direction: "push" | "pull" | "slide" | "any_direction";
       readonly distanceFeet: number;
     }
+  | { readonly kind: "suspend_target"; readonly until: "end_of_next_turn" }
+  | { readonly kind: "fall_at_end_of_next_turn_unless_reapplied" }
   | {
       readonly kind: "force_fall";
       readonly direction: "upward" | "downward";
@@ -693,6 +695,15 @@ type EffectAtom =
       readonly kind: "composite";
       readonly effects: ReadonlyNonEmptyArray<EffectAtom>;
     }
+  | {
+      readonly kind: "choose_effect_mode";
+      readonly label: string;
+      readonly options: ReadonlyNonEmptyArray<{
+        readonly id: string;
+        readonly displayName: string;
+        readonly effects: ReadonlyNonEmptyArray<OngoingEffect>;
+      }>;
+    }
   | { readonly kind: "block_reanimation" }
   | { readonly kind: "ignite_objects"; readonly filter: ObjectFilter }
   | {
@@ -708,6 +719,9 @@ type EffectAtom =
       readonly channels: ReadonlyNonEmptyArray<IllusionSensoryChannel>;
     }
   | { readonly kind: "force_drop_item" }
+  | { readonly kind: "move_object"; readonly maxDistanceFeet: number }
+  | { readonly kind: "pull_object_away"; readonly maxDistanceFeet: number }
+  | { readonly kind: "manipulate_object" }
   | { readonly kind: "break_concentration" }
   | {
       readonly kind: "damage_structure";
@@ -1583,8 +1597,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       }),
       Schema.Struct({
         kind: Schema.Literal("force_move"),
-        direction: Schema.Literal("push", "pull", "slide"),
+        direction: Schema.Literal("push", "pull", "slide", "any_direction"),
         distanceFeet: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("suspend_target"),
+        until: Schema.Literal("end_of_next_turn"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("fall_at_end_of_next_turn_unless_reapplied"),
       }),
       Schema.Struct({
         kind: Schema.Literal("force_fall"),
@@ -1905,6 +1926,17 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         kind: Schema.Literal("composite"),
         effects: nonEmpty(EffectAtomSchema),
       }),
+      Schema.Struct({
+        kind: Schema.Literal("choose_effect_mode"),
+        label: Schema.String,
+        options: nonEmpty(
+          Schema.Struct({
+            id: Schema.String,
+            displayName: Schema.String,
+            effects: nonEmpty(OngoingEffectSchema),
+          }),
+        ),
+      }),
       Schema.Struct({ kind: Schema.Literal("block_reanimation") }),
       Schema.Struct({
         kind: Schema.Literal("ignite_objects"),
@@ -1923,6 +1955,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         channels: nonEmpty(IllusionSensoryChannelSchema),
       }),
       Schema.Struct({ kind: Schema.Literal("force_drop_item") }),
+      Schema.Struct({
+        kind: Schema.Literal("move_object"),
+        maxDistanceFeet: Schema.Number,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("pull_object_away"),
+        maxDistanceFeet: Schema.Number,
+      }),
+      Schema.Struct({ kind: Schema.Literal("manipulate_object") }),
       Schema.Struct({ kind: Schema.Literal("break_concentration") }),
       Schema.Struct({
         kind: Schema.Literal("damage_structure"),

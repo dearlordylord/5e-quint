@@ -1,0 +1,243 @@
+{
+  "description": "When you cast the spell and as a Magic action on later turns, you can exert your will on one creature or object you can see within range. A Huge or smaller creature makes a Strength saving throw; on a failure you move it up to 30 feet in any direction, it has the Restrained condition until the end of your next turn, and if lifted it is suspended and later falls unless this option is used again and it fails the save. A Huge or smaller unattended object can be moved up to 30 feet. A worn or carried object is pulled away and moved on a failed Strength save by the carrier. You can also exert fine control on objects.",
+  "id": "telekinesis",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "telekinesis_target",
+      "kind": "hole",
+      "label": "creature or object",
+      "value": {
+        "kind": "target",
+        "selection": {
+          "mode": "one"
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 10,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 5,
+    "operations": [
+      {
+        "effect": {
+          "kind": "choose_effect_mode",
+          "label": "telekinetic exertion",
+          "options": [
+            {
+              "displayName": "Huge or smaller creature",
+              "effects": [
+                {
+                  "ability": "str",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "kind": "save_gate",
+                  "onFail": {
+                    "effects": [
+                      {
+                        "direction": "any_direction",
+                        "distanceFeet": 30,
+                        "kind": "force_move"
+                      },
+                      {
+                        "condition": "restrained",
+                        "kind": "apply_condition"
+                      },
+                      {
+                        "kind": "suspend_target",
+                        "until": "end_of_next_turn"
+                      },
+                      {
+                        "kind": "fall_at_end_of_next_turn_unless_reapplied"
+                      }
+                    ],
+                    "kind": "composite"
+                  },
+                  "onSuccess": {
+                    "kind": "none"
+                  }
+                }
+              ],
+              "id": "creature"
+            },
+            {
+              "displayName": "Huge or smaller unattended object",
+              "effects": [
+                {
+                  "kind": "move_object",
+                  "maxDistanceFeet": 30
+                }
+              ],
+              "id": "unattended_object"
+            },
+            {
+              "displayName": "Huge or smaller worn or carried object",
+              "effects": [
+                {
+                  "ability": "str",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "kind": "save_gate",
+                  "onFail": {
+                    "effects": [
+                      {
+                        "kind": "pull_object_away",
+                        "maxDistanceFeet": 30
+                      },
+                      {
+                        "kind": "move_object",
+                        "maxDistanceFeet": 30
+                      }
+                    ],
+                    "kind": "composite"
+                  },
+                  "onSuccess": {
+                    "kind": "none"
+                  }
+                }
+              ],
+              "id": "worn_or_carried_object"
+            },
+            {
+              "displayName": "fine object control",
+              "effects": [
+                {
+                  "kind": "manipulate_object"
+                }
+              ],
+              "id": "fine_object_control"
+            }
+          ]
+        },
+        "trigger": {
+          "kind": "on_effect_starts"
+        }
+      },
+      {
+        "effect": {
+          "kind": "choose_effect_mode",
+          "label": "telekinetic exertion",
+          "options": [
+            {
+              "displayName": "Huge or smaller creature",
+              "effects": [
+                {
+                  "ability": "str",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "kind": "save_gate",
+                  "onFail": {
+                    "effects": [
+                      {
+                        "direction": "any_direction",
+                        "distanceFeet": 30,
+                        "kind": "force_move"
+                      },
+                      {
+                        "condition": "restrained",
+                        "kind": "apply_condition"
+                      },
+                      {
+                        "kind": "suspend_target",
+                        "until": "end_of_next_turn"
+                      },
+                      {
+                        "kind": "fall_at_end_of_next_turn_unless_reapplied"
+                      }
+                    ],
+                    "kind": "composite"
+                  },
+                  "onSuccess": {
+                    "kind": "none"
+                  }
+                }
+              ],
+              "id": "creature"
+            },
+            {
+              "displayName": "Huge or smaller unattended object",
+              "effects": [
+                {
+                  "kind": "move_object",
+                  "maxDistanceFeet": 30
+                }
+              ],
+              "id": "unattended_object"
+            },
+            {
+              "displayName": "Huge or smaller worn or carried object",
+              "effects": [
+                {
+                  "ability": "str",
+                  "dc": {
+                    "kind": "caster_spell_save_dc"
+                  },
+                  "kind": "save_gate",
+                  "onFail": {
+                    "effects": [
+                      {
+                        "kind": "pull_object_away",
+                        "maxDistanceFeet": 30
+                      },
+                      {
+                        "kind": "move_object",
+                        "maxDistanceFeet": 30
+                      }
+                    ],
+                    "kind": "composite"
+                  },
+                  "onSuccess": {
+                    "kind": "none"
+                  }
+                }
+              ],
+              "id": "worn_or_carried_object"
+            },
+            {
+              "displayName": "fine object control",
+              "effects": [
+                {
+                  "kind": "manipulate_object"
+                }
+              ],
+              "id": "fine_object_control"
+            }
+          ]
+        },
+        "trigger": {
+          "cost": {
+            "action": "magic",
+            "kind": "standard_action"
+          },
+          "kind": "on_caster_spends_action"
+        }
+      }
+    ],
+    "range": {
+      "feet": 60,
+      "kind": "point"
+    },
+    "school": "transmutation"
+  },
+  "name": "Telekinesis",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Telekinesis"
+  }
+}

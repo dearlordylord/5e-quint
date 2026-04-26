@@ -572,6 +572,26 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "suspend_target": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "suspend_target",
+        label: `suspend_target\nuntil: ${e.until}`,
+      });
+      return id;
+    }
+    case "fall_at_end_of_next_turn_unless_reapplied": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "fall_at_end_of_next_turn_unless_reapplied",
+        label: "fall_at_end_of_next_turn_unless_reapplied",
+      });
+      return id;
+    }
     case "force_fall": {
       const id = ids("eff");
       const distance =
@@ -1179,6 +1199,36 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "move_object": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "move_object",
+        label: `move_object\nup to ${e.maxDistanceFeet} ft`,
+      });
+      return id;
+    }
+    case "pull_object_away": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "pull_object_away",
+        label: `pull_object_away\nup to ${e.maxDistanceFeet} ft`,
+      });
+      return id;
+    }
+    case "manipulate_object": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "manipulate_object",
+        label: "manipulate_object",
+      });
+      return id;
+    }
     case "break_concentration": {
       const id = ids("eff");
       nodes.push({
@@ -1517,6 +1567,39 @@ function traceEffectAtom(
       }
       return id;
     }
+    case "choose_effect_mode": {
+      const id = ids("choice");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "choose_effect_mode",
+        label: `choose_effect_mode\n${e.label}`,
+      });
+      if (edges !== undefined) {
+        for (const option of e.options) {
+          const optionId = ids("opt");
+          nodes.push({
+            id: optionId,
+            category: "resolution",
+            atomKind: "effect_mode_option",
+            label: `mode: ${option.displayName}`,
+          });
+          edges.push({ from: id, to: optionId, relation: "offers" });
+          for (const effect of option.effects) {
+            const effectId = traceDetachedOngoingChoiceEffect(
+              effect,
+              nodes,
+              ids,
+              edges,
+            );
+            if (effectId !== null) {
+              edges.push({ from: optionId, to: effectId, relation: "grants" });
+            }
+          }
+        }
+      }
+      return id;
+    }
     case "grant_speed": {
       const id = ids("eff");
       const suffix = e.hover === true ? " (hover)" : "";
@@ -1735,6 +1818,8 @@ function traceEffectAtomScaling(
     case "scale_attack_count":
     case "modify_speed":
     case "force_move":
+    case "suspend_target":
+    case "fall_at_end_of_next_turn_unless_reapplied":
     case "force_fall":
     case "grab_fixed_object":
     case "suspend_in_area":
@@ -1797,6 +1882,9 @@ function traceEffectAtomScaling(
     case "create_object":
     case "create_illusion":
     case "force_drop_item":
+    case "move_object":
+    case "pull_object_away":
+    case "manipulate_object":
     case "break_concentration":
     case "collapse_structure":
     case "bury_in_rubble":
@@ -1882,6 +1970,20 @@ function traceEffectAtomScaling(
         traceEffectAtomScaling(child, effectId, slotId, nodes, edges, ids);
       }
       return;
+    case "choose_effect_mode":
+      for (const option of e.options) {
+        for (const effect of option.effects) {
+          traceOngoingChoiceEffectScaling(
+            effect,
+            effectId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
+        }
+      }
+      return;
     default: {
       const _exhaustive: never = e;
       throw new Error(`unhandled effect atom scaling: ${String(_exhaustive)}`);
@@ -1909,6 +2011,177 @@ function traceUsageLimit(
   });
   edges.push({ from: hostId, to: fenceId, relation });
   return fenceId;
+}
+
+function traceDetachedOngoingChoiceEffect(
+  eff: import("../surface/types.ts").OngoingEffect,
+  nodes: TraceNode[],
+  ids: IdGen,
+  edges: TraceEdge[],
+): string | null {
+  switch (eff.kind) {
+    case "save_gate": {
+      const sgId = ids("sg");
+      nodes.push({
+        id: sgId,
+        category: "resolution",
+        atomKind: "save_gate",
+        label: `save_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+      });
+      const failId = traceEffectAtom(eff.onFail, nodes, ids, edges);
+      if (failId !== null) {
+        edges.push({ from: sgId, to: failId, relation: "branches_on_save" });
+      }
+      if (
+        eff.onSuccess.kind !== "none" &&
+        eff.onSuccess.kind !== "half_damage"
+      ) {
+        const sucId = traceEffectAtom(eff.onSuccess, nodes, ids, edges);
+        if (sucId !== null) {
+          edges.push({ from: sgId, to: sucId, relation: "branches_on_save" });
+        }
+      }
+      return sgId;
+    }
+    case "ability_check_gate": {
+      const acgId = ids("acg");
+      nodes.push({
+        id: acgId,
+        category: "resolution",
+        atomKind: "ability_check_gate",
+        label: `ability_check_gate\n${eff.ability.toUpperCase()} vs ${describeDc(eff.dc)}`,
+      });
+      const passId = traceEffectAtom(eff.onPass, nodes, ids, edges);
+      if (passId !== null) {
+        edges.push({ from: acgId, to: passId, relation: "branches_on_pass" });
+      }
+      if (eff.onFail !== undefined) {
+        const failId = traceEffectAtom(eff.onFail, nodes, ids, edges);
+        if (failId !== null) {
+          edges.push({
+            from: acgId,
+            to: failId,
+            relation: "branches_on_fail",
+          });
+        }
+      }
+      return acgId;
+    }
+    case "attack_roll": {
+      const arId = ids("ar");
+      nodes.push({
+        id: arId,
+        category: "resolution",
+        atomKind: "attack_roll",
+        label: `attack_roll\n${eff.attackKind}`,
+      });
+      for (const hit of eff.onHit) {
+        const hitId = traceEffectAtom(hit, nodes, ids, edges);
+        if (hitId !== null) {
+          edges.push({ from: arId, to: hitId, relation: "branches_on_hit" });
+        }
+      }
+      for (const miss of eff.onMiss) {
+        const missId = traceEffectAtom(miss, nodes, ids, edges);
+        if (missId !== null) {
+          edges.push({ from: arId, to: missId, relation: "branches_on_miss" });
+        }
+      }
+      return arId;
+    }
+    case "composite_ongoing": {
+      const id = ids("op");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "composite_ongoing",
+        label: `composite_ongoing\n(${eff.effects.length} effects)`,
+      });
+      for (const child of eff.effects) {
+        const childId = traceDetachedOngoingChoiceEffect(
+          child,
+          nodes,
+          ids,
+          edges,
+        );
+        if (childId !== null) {
+          edges.push({ from: id, to: childId, relation: "grants" });
+        }
+      }
+      return id;
+    }
+    case "modify_ac_set_floor": {
+      const id = ids("op");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "modify_ac",
+        label: `modify_ac\nfloor: max(AC, ${eff.const})`,
+      });
+      return id;
+    }
+    default:
+      return traceEffectAtom(eff, nodes, ids, edges);
+  }
+}
+
+function traceOngoingChoiceEffectScaling(
+  eff: import("../surface/types.ts").OngoingEffect,
+  effectId: string,
+  slotId: string | null,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  switch (eff.kind) {
+    case "save_gate":
+      traceEffectAtomScaling(eff.onFail, effectId, slotId, nodes, edges, ids);
+      if (
+        eff.onSuccess.kind !== "none" &&
+        eff.onSuccess.kind !== "half_damage"
+      ) {
+        traceEffectAtomScaling(
+          eff.onSuccess,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      }
+      return;
+    case "ability_check_gate":
+      traceEffectAtomScaling(eff.onPass, effectId, slotId, nodes, edges, ids);
+      if (eff.onFail !== undefined) {
+        traceEffectAtomScaling(eff.onFail, effectId, slotId, nodes, edges, ids);
+      }
+      return;
+    case "attack_roll":
+      for (const hit of eff.onHit) {
+        traceEffectAtomScaling(hit, effectId, slotId, nodes, edges, ids);
+      }
+      for (const miss of eff.onMiss) {
+        traceEffectAtomScaling(miss, effectId, slotId, nodes, edges, ids);
+      }
+      return;
+    case "composite_ongoing":
+      for (const child of eff.effects) {
+        traceOngoingChoiceEffectScaling(
+          child,
+          effectId,
+          slotId,
+          nodes,
+          edges,
+          ids,
+        );
+      }
+      return;
+    case "modify_ac_set_floor":
+      return;
+    default:
+      traceEffectAtomScaling(eff, effectId, slotId, nodes, edges, ids);
+      return;
+  }
 }
 
 function describeUsageLimit(limit: UsageLimit): string {
@@ -2822,6 +3095,40 @@ function traceOngoingOpEffect(
             to: failId,
             relation: "branches_on_fail",
           });
+        }
+      }
+      return;
+    }
+    case "choose_effect_mode": {
+      const id = ids("choice");
+      nodes.push({
+        id,
+        category: "resolution",
+        atomKind: "choose_effect_mode",
+        label: `choose_effect_mode\n${eff.label}`,
+      });
+      edges.push({ from: hostId, to: id, relation: hostRelation });
+      edges.push({ from: id, to: attId, relation: "attaches_to" });
+      for (const option of eff.options) {
+        const optionId = ids("opt");
+        nodes.push({
+          id: optionId,
+          category: "resolution",
+          atomKind: "effect_mode_option",
+          label: `mode: ${option.displayName}`,
+        });
+        edges.push({ from: id, to: optionId, relation: "offers" });
+        for (const effect of option.effects) {
+          traceOngoingOpEffect(
+            effect,
+            optionId,
+            "grants",
+            attId,
+            slotId,
+            nodes,
+            edges,
+            ids,
+          );
         }
       }
       return;
