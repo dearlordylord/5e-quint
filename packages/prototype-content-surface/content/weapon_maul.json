@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 10,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 2,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Maul from the SRD weapons table.",
+  "id": "weapon_maul",
+  "kind": "weapon",
+  "mastery": "topple",
+  "name": "Maul",
+  "properties": [
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 10
+}

@@ -1,0 +1,26 @@
+{
+  "category": "simple",
+  "costGp": 1,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 4,
+    "kind": "dice"
+  },
+  "description": "Sickle from the SRD weapons table.",
+  "id": "weapon_sickle",
+  "kind": "weapon",
+  "mastery": "nick",
+  "name": "Sickle",
+  "properties": [
+    {
+      "kind": "light"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

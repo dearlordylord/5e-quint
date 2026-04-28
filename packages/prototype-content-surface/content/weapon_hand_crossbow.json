@@ -1,0 +1,36 @@
+{
+  "category": "martial",
+  "costGp": 75,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Hand Crossbow from the SRD weapons table.",
+  "id": "weapon_hand_crossbow",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Hand Crossbow",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 120,
+        "normal": 30
+      }
+    },
+    {
+      "kind": "light"
+    },
+    {
+      "kind": "loading"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 3
+}

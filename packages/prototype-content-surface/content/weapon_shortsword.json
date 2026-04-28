@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 10,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Shortsword from the SRD weapons table.",
+  "id": "weapon_shortsword",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Shortsword",
+  "properties": [
+    {
+      "kind": "finesse"
+    },
+    {
+      "kind": "light"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

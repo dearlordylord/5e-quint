@@ -7,7 +7,7 @@
     ],
     "kind": "any_armor"
   },
-  "description": "While wearing this armor, you have a bonus to Armor Class determined by the armor's rarity.",
+  "description": "You have a bonus to Armor Class while wearing this armor. The bonus is determined by its rarity.",
   "id": "magic_item_armor_1_2_or_3",
   "kind": "armor_template",
   "name": "Armor, +1, +2, or +3",

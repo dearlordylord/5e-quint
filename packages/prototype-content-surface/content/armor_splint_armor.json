@@ -1,0 +1,23 @@
+{
+  "acFormula": {
+    "ac": 17,
+    "kind": "heavy_fixed"
+  },
+  "category": "heavy",
+  "costGp": 200,
+  "description": "Splint Armor from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 5,
+    "donMinutes": 10
+  },
+  "id": "armor_splint_armor",
+  "kind": "armor",
+  "name": "Splint Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "strengthRequirement": 15,
+  "weightPounds": 60
+}

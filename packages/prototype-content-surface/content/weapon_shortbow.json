@@ -1,0 +1,33 @@
+{
+  "category": "simple",
+  "costGp": 25,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Shortbow from the SRD weapons table.",
+  "id": "weapon_shortbow",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Shortbow",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 320,
+        "normal": 80
+      }
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 2
+}

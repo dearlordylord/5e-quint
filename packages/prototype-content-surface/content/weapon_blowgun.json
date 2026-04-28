@@ -1,0 +1,32 @@
+{
+  "category": "martial",
+  "costGp": 10,
+  "damage": {
+    "amount": 1,
+    "damageType": "piercing",
+    "kind": "flat"
+  },
+  "description": "Blowgun from the SRD weapons table.",
+  "id": "weapon_blowgun",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Blowgun",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 100,
+        "normal": 25
+      }
+    },
+    {
+      "kind": "loading"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 1
+}

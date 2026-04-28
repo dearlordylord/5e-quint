@@ -1,0 +1,22 @@
+{
+  "acFormula": {
+    "base": 15,
+    "kind": "medium_dex_max_2"
+  },
+  "category": "medium",
+  "costGp": 750,
+  "description": "Half Plate Armor from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 5
+  },
+  "id": "armor_half_plate_armor",
+  "kind": "armor",
+  "name": "Half Plate Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "weightPounds": 40
+}

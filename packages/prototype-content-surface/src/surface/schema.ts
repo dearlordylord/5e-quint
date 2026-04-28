@@ -197,6 +197,7 @@ export {
   UnitRecordSchema,
   ItemDestructionPolicySchema,
   MagicItemSpawnedCreatureMechanicsSchema,
+  WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
 
@@ -211,6 +212,7 @@ import {
   ShieldTemplateRecordSchema,
   SpeciesTraitRecordSchema,
   UnitRecordSchema,
+  WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
 import {
@@ -291,6 +293,12 @@ export function decodeWeaponRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof WeaponRecordSchema> {
   return Schema.decodeUnknownSync(WeaponRecordSchema)(raw);
+}
+
+export function decodeWeaponTemplateRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof WeaponTemplateRecordSchema> {
+  return Schema.decodeUnknownSync(WeaponTemplateRecordSchema)(raw);
 }
 
 export function decodeUnitRecordEither(

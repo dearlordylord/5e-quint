@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 2,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 4,
+    "kind": "dice"
+  },
+  "description": "Whip from the SRD weapons table.",
+  "id": "weapon_whip",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Whip",
+  "properties": [
+    {
+      "kind": "finesse"
+    },
+    {
+      "kind": "reach"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 3
+}

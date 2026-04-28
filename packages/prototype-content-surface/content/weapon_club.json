@@ -1,0 +1,26 @@
+{
+  "category": "simple",
+  "costGp": 0.1,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 4,
+    "kind": "dice"
+  },
+  "description": "Club from the SRD weapons table.",
+  "id": "weapon_club",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Club",
+  "properties": [
+    {
+      "kind": "light"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

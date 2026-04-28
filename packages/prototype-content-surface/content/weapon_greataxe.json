@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 30,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 12,
+    "kind": "dice"
+  },
+  "description": "Greataxe from the SRD weapons table.",
+  "id": "weapon_greataxe",
+  "kind": "weapon",
+  "mastery": "cleave",
+  "name": "Greataxe",
+  "properties": [
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 7
+}

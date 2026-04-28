@@ -1,0 +1,33 @@
+{
+  "category": "simple",
+  "costGp": 5,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Handaxe from the SRD weapons table.",
+  "id": "weapon_handaxe",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Handaxe",
+  "properties": [
+    {
+      "kind": "light"
+    },
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 60,
+        "normal": 20
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

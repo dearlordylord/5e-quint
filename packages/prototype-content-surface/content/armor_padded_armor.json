@@ -1,0 +1,22 @@
+{
+  "acFormula": {
+    "base": 11,
+    "kind": "light_dex"
+  },
+  "category": "light",
+  "costGp": 5,
+  "description": "Padded Armor from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 1
+  },
+  "id": "armor_padded_armor",
+  "kind": "armor",
+  "name": "Padded Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "weightPounds": 8
+}

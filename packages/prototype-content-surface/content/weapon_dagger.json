@@ -4,9 +4,10 @@
   "damage": {
     "damageType": "piercing",
     "dice": 1,
-    "dieSize": 4
+    "dieSize": 4,
+    "kind": "dice"
   },
-  "description": "A Dagger is a Simple Melee Weapon that deals 1d4 Piercing damage and has the Finesse, Light, and Thrown properties.",
+  "description": "Dagger from the SRD weapons table.",
   "id": "weapon_dagger",
   "kind": "weapon",
   "mastery": "nick",

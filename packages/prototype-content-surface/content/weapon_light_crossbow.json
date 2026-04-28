@@ -1,0 +1,36 @@
+{
+  "category": "simple",
+  "costGp": 25,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Light Crossbow from the SRD weapons table.",
+  "id": "weapon_light_crossbow",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Light Crossbow",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 320,
+        "normal": 80
+      }
+    },
+    {
+      "kind": "loading"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 5
+}

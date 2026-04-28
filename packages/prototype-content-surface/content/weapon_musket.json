@@ -1,0 +1,36 @@
+{
+  "category": "martial",
+  "costGp": 500,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 12,
+    "kind": "dice"
+  },
+  "description": "Musket from the SRD weapons table.",
+  "id": "weapon_musket",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Musket",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 120,
+        "normal": 40
+      }
+    },
+    {
+      "kind": "loading"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 10
+}

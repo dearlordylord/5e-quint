@@ -1,0 +1,30 @@
+{
+  "category": "simple",
+  "costGp": 0.5,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Javelin from the SRD weapons table.",
+  "id": "weapon_javelin",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Javelin",
+  "properties": [
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 120,
+        "normal": 30
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

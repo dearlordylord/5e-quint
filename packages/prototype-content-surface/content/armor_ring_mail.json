@@ -1,0 +1,22 @@
+{
+  "acFormula": {
+    "ac": 14,
+    "kind": "heavy_fixed"
+  },
+  "category": "heavy",
+  "costGp": 30,
+  "description": "Ring Mail from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 5,
+    "donMinutes": 10
+  },
+  "id": "armor_ring_mail",
+  "kind": "armor",
+  "name": "Ring Mail",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "weightPounds": 40
+}

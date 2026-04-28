@@ -1,0 +1,21 @@
+{
+  "category": "simple",
+  "costGp": 5,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Mace from the SRD weapons table.",
+  "id": "weapon_mace",
+  "kind": "weapon",
+  "mastery": "sap",
+  "name": "Mace",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 4
+}

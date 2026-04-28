@@ -1,0 +1,39 @@
+{
+  "category": "martial",
+  "costGp": 5,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Trident from the SRD weapons table.",
+  "id": "weapon_trident",
+  "kind": "weapon",
+  "mastery": "topple",
+  "name": "Trident",
+  "properties": [
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 60,
+        "normal": 20
+      }
+    },
+    {
+      "damage": {
+        "damageType": "piercing",
+        "dice": 1,
+        "dieSize": 10,
+        "kind": "dice"
+      },
+      "kind": "versatile"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 4
+}

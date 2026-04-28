@@ -1,25 +1,15 @@
--- Mithral Armor — SRD 5.2.1 magic item.
---
--- RAW (MagicItems#MithralArmor):
---   "Armor made of this substance can be worn under normal clothes. If
---    the armor normally imposes Disadvantage on Dexterity (Stealth)
---    checks or has a Strength requirement, the mithral version of the
---    armor doesn't."
---
--- The clothing sentence is descriptive/fictional positioning. The two
--- executable mechanics are suppression of Stealth-check Disadvantage
--- and removal of the armor Strength requirement.
+-- Mithral Armor — SRD 5.2.1 magic armor template.
+let SkillFilter = { kind : Text, skills : List Text }
 
-let Grant
-    : Type
-    = { kind : Text
+let Effect =
+      { kind : Text
       , on : Optional (List Text)
-      , skillFilter : Optional { kind : Text, skills : List Text }
+      , skillFilter : Optional SkillFilter
       , requirement : Optional Text
       }
 
 let suppressStealthDisadvantage
-    : Grant
+    : Effect
     = { kind = "suppress_roll_disadvantage"
       , on = Some [ "ability_check" ]
       , skillFilter = Some { kind = "fixed", skills = [ "stealth" ] }
@@ -27,32 +17,41 @@ let suppressStealthDisadvantage
       }
 
 let removeStrengthRequirement
-    : Grant
+    : Effect
     = { kind = "remove_equipment_requirement"
       , on = None (List Text)
-      , skillFilter = None { kind : Text, skills : List Text }
+      , skillFilter = None SkillFilter
       , requirement = Some "strength"
       }
 
 let armor =
-      { kind = "magic_item"
+      { kind = "armor_template"
+      , template = "any_armor_magic"
       , id = "magic_item_mithral_armor"
       , name = "Mithral Armor"
-      , rarity = "uncommon"
-      , requiresAttunement = False
-      , provenance =
-          { kind = "srd-5.2.1"
-          , section = "MagicItems#MithralArmor"
-          }
+      , provenance = { kind = "srd-5.2.1", section = "MagicItems#MithralArmor" }
       , description =
-          "Mithral is a light, flexible metal. Armor made of this substance can be worn under normal clothes. If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn't."
-      , mechanics =
-          { family = "passive"
-          , condition = { kind = "wearing_item" }
-          , grants =
-              [ suppressStealthDisadvantage, removeStrengthRequirement ]
+          "If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn't."
+      , armorApplicability =
+        { kind = "any_armor"
+        , categories = [ "medium", "heavy" ]
+        , excludedArmorIds = [ "armor_hide_armor" ]
+        }
+      , variants =
+        [ { id = "magic_item_mithral_armor"
+          , name = "Mithral Armor"
+          , magic =
+            { rarity = "uncommon"
+            , attunement.requiresAttunement = False
+            , mechanics =
+              { family = "passive"
+              , grants =
+                [ suppressStealthDisadvantage, removeStrengthRequirement ]
+              }
+            , destruction.kind = "none"
+            }
           }
-      , destruction = { kind = "none" }
+        ]
       }
 
 in  armor

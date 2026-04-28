@@ -5,7 +5,7 @@
   },
   "category": "light",
   "costGp": 10,
-  "description": "Leather Armor gives a base Armor Class of 11 plus your Dexterity modifier.",
+  "description": "Leather Armor from the SRD armor table.",
   "donDoff": {
     "doffMinutes": 1,
     "donMinutes": 1

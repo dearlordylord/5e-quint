@@ -1,0 +1,32 @@
+{
+  "category": "martial",
+  "costGp": 15,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Warhammer from the SRD weapons table.",
+  "id": "weapon_warhammer",
+  "kind": "weapon",
+  "mastery": "push",
+  "name": "Warhammer",
+  "properties": [
+    {
+      "damage": {
+        "damageType": "bludgeoning",
+        "dice": 1,
+        "dieSize": 10,
+        "kind": "dice"
+      },
+      "kind": "versatile"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 5
+}

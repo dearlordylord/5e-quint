@@ -1,0 +1,21 @@
+{
+  "acFormula": {
+    "base": 12,
+    "kind": "medium_dex_max_2"
+  },
+  "category": "medium",
+  "costGp": 10,
+  "description": "Hide Armor from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 5
+  },
+  "id": "armor_hide_armor",
+  "kind": "armor",
+  "name": "Hide Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 12
+}

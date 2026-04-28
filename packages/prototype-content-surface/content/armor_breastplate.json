@@ -5,7 +5,7 @@
   },
   "category": "medium",
   "costGp": 400,
-  "description": "A Breastplate gives a base Armor Class of 14 plus your Dexterity modifier, to a maximum Dexterity bonus of 2.",
+  "description": "Breastplate from the SRD armor table.",
   "donDoff": {
     "doffMinutes": 1,
     "donMinutes": 5

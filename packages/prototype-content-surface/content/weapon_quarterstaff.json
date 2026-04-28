@@ -1,0 +1,32 @@
+{
+  "category": "simple",
+  "costGp": 0.2,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Quarterstaff from the SRD weapons table.",
+  "id": "weapon_quarterstaff",
+  "kind": "weapon",
+  "mastery": "topple",
+  "name": "Quarterstaff",
+  "properties": [
+    {
+      "damage": {
+        "damageType": "bludgeoning",
+        "dice": 1,
+        "dieSize": 8,
+        "kind": "dice"
+      },
+      "kind": "versatile"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 4
+}

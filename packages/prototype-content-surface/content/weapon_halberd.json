@@ -1,0 +1,32 @@
+{
+  "category": "martial",
+  "costGp": 20,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 10,
+    "kind": "dice"
+  },
+  "description": "Halberd from the SRD weapons table.",
+  "id": "weapon_halberd",
+  "kind": "weapon",
+  "mastery": "cleave",
+  "name": "Halberd",
+  "properties": [
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "reach"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 6
+}

@@ -254,11 +254,19 @@ export const WeaponCategorySchema = Schema.Literal("simple", "martial");
 
 export const WeaponUsageSchema = Schema.Literal("melee", "ranged");
 
-export const WeaponDamageSchema = Schema.Struct({
-  dice: Schema.Number,
-  dieSize: Schema.Number,
-  damageType: DamageTypeSchema,
-});
+export const WeaponDamageSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("dice"),
+    dice: Schema.Number,
+    dieSize: Schema.Number,
+    damageType: DamageTypeSchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("flat"),
+    amount: Schema.Number,
+    damageType: DamageTypeSchema,
+  }),
+);
 
 export const WeaponRangeSchema = Schema.Struct({
   normal: Schema.Number,

@@ -5,7 +5,7 @@
   },
   "category": "heavy",
   "costGp": 1500,
-  "description": "Plate Armor gives a base Armor Class of 18. It requires Strength 15 and imposes Disadvantage on Dexterity (Stealth) checks.",
+  "description": "Plate Armor from the SRD armor table.",
   "donDoff": {
     "doffMinutes": 5,
     "donMinutes": 10

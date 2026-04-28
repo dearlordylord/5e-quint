@@ -1,26 +1,44 @@
 {
-  "description": "This suit of armor is reinforced with adamantine, one of the hardest substances in existence. While you're wearing it, any Critical Hit against you becomes a normal hit.",
-  "destruction": {
-    "kind": "none"
+  "armorApplicability": {
+    "categories": [
+      "medium",
+      "heavy"
+    ],
+    "excludedArmorIds": [
+      "armor_hide_armor"
+    ],
+    "kind": "any_armor"
   },
+  "description": "This suit of armor is reinforced with adamantine. While you're wearing it, any Critical Hit against you becomes a normal hit.",
   "id": "magic_item_adamantine_armor",
-  "kind": "magic_item",
-  "mechanics": {
-    "condition": {
-      "kind": "wearing_item"
-    },
-    "family": "passive",
-    "grants": [
-      {
-        "kind": "suppress_incoming_critical_hit"
-      }
-    ]
-  },
+  "kind": "armor_template",
   "name": "Adamantine Armor",
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "MagicItems#AdamantineArmor"
   },
-  "rarity": "uncommon",
-  "requiresAttunement": false
+  "template": "any_armor_magic",
+  "variants": [
+    {
+      "id": "magic_item_adamantine_armor",
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
+        },
+        "destruction": {
+          "kind": "none"
+        },
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "suppress_incoming_critical_hit"
+            }
+          ]
+        },
+        "rarity": "uncommon"
+      },
+      "name": "Adamantine Armor"
+    }
+  ]
 }

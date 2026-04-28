@@ -1,0 +1,26 @@
+{
+  "category": "simple",
+  "costGp": 0.2,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Greatclub from the SRD weapons table.",
+  "id": "weapon_greatclub",
+  "kind": "weapon",
+  "mastery": "push",
+  "name": "Greatclub",
+  "properties": [
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 10
+}

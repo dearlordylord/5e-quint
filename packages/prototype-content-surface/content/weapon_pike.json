@@ -1,0 +1,32 @@
+{
+  "category": "martial",
+  "costGp": 5,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 10,
+    "kind": "dice"
+  },
+  "description": "Pike from the SRD weapons table.",
+  "id": "weapon_pike",
+  "kind": "weapon",
+  "mastery": "push",
+  "name": "Pike",
+  "properties": [
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "reach"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 18
+}

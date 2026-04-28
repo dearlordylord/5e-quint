@@ -1,0 +1,33 @@
+{
+  "category": "martial",
+  "costGp": 250,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 10,
+    "kind": "dice"
+  },
+  "description": "Pistol from the SRD weapons table.",
+  "id": "weapon_pistol",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Pistol",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 90,
+        "normal": 30
+      }
+    },
+    {
+      "kind": "loading"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 3
+}

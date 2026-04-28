@@ -1,0 +1,21 @@
+{
+  "acFormula": {
+    "base": 12,
+    "kind": "light_dex"
+  },
+  "category": "light",
+  "costGp": 45,
+  "description": "Studded Leather Armor from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 1
+  },
+  "id": "armor_studded_leather_armor",
+  "kind": "armor",
+  "name": "Studded Leather Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 13
+}

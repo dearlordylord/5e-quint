@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 50,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 2,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Greatsword from the SRD weapons table.",
+  "id": "weapon_greatsword",
+  "kind": "weapon",
+  "mastery": "graze",
+  "name": "Greatsword",
+  "properties": [
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 6
+}

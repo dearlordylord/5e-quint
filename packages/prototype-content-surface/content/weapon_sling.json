@@ -1,0 +1,30 @@
+{
+  "category": "simple",
+  "costGp": 0.1,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 4,
+    "kind": "dice"
+  },
+  "description": "Sling from the SRD weapons table.",
+  "id": "weapon_sling",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Sling",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 120,
+        "normal": 30
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 0
+}

@@ -1,0 +1,26 @@
+{
+  "category": "martial",
+  "costGp": 25,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Rapier from the SRD weapons table.",
+  "id": "weapon_rapier",
+  "kind": "weapon",
+  "mastery": "vex",
+  "name": "Rapier",
+  "properties": [
+    {
+      "kind": "finesse"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

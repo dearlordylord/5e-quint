@@ -1,39 +1,57 @@
 {
-  "description": "Mithral is a light, flexible metal. Armor made of this substance can be worn under normal clothes. If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn't.",
-  "destruction": {
-    "kind": "none"
+  "armorApplicability": {
+    "categories": [
+      "medium",
+      "heavy"
+    ],
+    "excludedArmorIds": [
+      "armor_hide_armor"
+    ],
+    "kind": "any_armor"
   },
+  "description": "If the armor normally imposes Disadvantage on Dexterity (Stealth) checks or has a Strength requirement, the mithral version of the armor doesn't.",
   "id": "magic_item_mithral_armor",
-  "kind": "magic_item",
-  "mechanics": {
-    "condition": {
-      "kind": "wearing_item"
-    },
-    "family": "passive",
-    "grants": [
-      {
-        "kind": "suppress_roll_disadvantage",
-        "on": [
-          "ability_check"
-        ],
-        "skillFilter": {
-          "kind": "fixed",
-          "skills": [
-            "stealth"
-          ]
-        }
-      },
-      {
-        "kind": "remove_equipment_requirement",
-        "requirement": "strength"
-      }
-    ]
-  },
+  "kind": "armor_template",
   "name": "Mithral Armor",
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "MagicItems#MithralArmor"
   },
-  "rarity": "uncommon",
-  "requiresAttunement": false
+  "template": "any_armor_magic",
+  "variants": [
+    {
+      "id": "magic_item_mithral_armor",
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
+        },
+        "destruction": {
+          "kind": "none"
+        },
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "kind": "suppress_roll_disadvantage",
+              "on": [
+                "ability_check"
+              ],
+              "skillFilter": {
+                "kind": "fixed",
+                "skills": [
+                  "stealth"
+                ]
+              }
+            },
+            {
+              "kind": "remove_equipment_requirement",
+              "requirement": "strength"
+            }
+          ]
+        },
+        "rarity": "uncommon"
+      },
+      "name": "Mithral Armor"
+    }
+  ]
 }

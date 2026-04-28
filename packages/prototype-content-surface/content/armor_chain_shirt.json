@@ -1,0 +1,21 @@
+{
+  "acFormula": {
+    "base": 13,
+    "kind": "medium_dex_max_2"
+  },
+  "category": "medium",
+  "costGp": 50,
+  "description": "Chain Shirt from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 5
+  },
+  "id": "armor_chain_shirt",
+  "kind": "armor",
+  "name": "Chain Shirt",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 20
+}

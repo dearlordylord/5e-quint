@@ -1,0 +1,137 @@
+{
+  "description": "You have a bonus to attack rolls and damage rolls made with this magic weapon. The bonus is determined by the weapon's rarity.",
+  "id": "magic_item_weapon_1_2_or_3",
+  "kind": "weapon_template",
+  "name": "Weapon, +1, +2, or +3",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#Weapon+1+2or+3"
+  },
+  "template": "any_weapon_magic",
+  "variants": [
+    {
+      "id": "magic_item_weapon_plus_1",
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
+        },
+        "destruction": {
+          "kind": "none"
+        },
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 1,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "attack_roll"
+              ]
+            },
+            {
+              "delta": {
+                "dice": 1,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_damage_numeric"
+            }
+          ]
+        },
+        "rarity": "uncommon"
+      },
+      "name": "Weapon, +1"
+    },
+    {
+      "id": "magic_item_weapon_plus_2",
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
+        },
+        "destruction": {
+          "kind": "none"
+        },
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 2,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "attack_roll"
+              ]
+            },
+            {
+              "delta": {
+                "dice": 2,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_damage_numeric"
+            }
+          ]
+        },
+        "rarity": "rare"
+      },
+      "name": "Weapon, +2"
+    },
+    {
+      "id": "magic_item_weapon_plus_3",
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
+        },
+        "destruction": {
+          "kind": "none"
+        },
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 3,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_roll_numeric",
+              "on": [
+                "attack_roll"
+              ]
+            },
+            {
+              "delta": {
+                "dice": 3,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_damage_numeric"
+            }
+          ]
+        },
+        "rarity": "very_rare"
+      },
+      "name": "Weapon, +3"
+    }
+  ],
+  "weaponApplicability": {
+    "categories": [
+      "simple",
+      "martial"
+    ],
+    "kind": "any_weapon"
+  }
+}

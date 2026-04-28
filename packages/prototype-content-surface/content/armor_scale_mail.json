@@ -1,0 +1,22 @@
+{
+  "acFormula": {
+    "base": 14,
+    "kind": "medium_dex_max_2"
+  },
+  "category": "medium",
+  "costGp": 50,
+  "description": "Scale Mail from the SRD armor table.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 5
+  },
+  "id": "armor_scale_mail",
+  "kind": "armor",
+  "name": "Scale Mail",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "weightPounds": 45
+}

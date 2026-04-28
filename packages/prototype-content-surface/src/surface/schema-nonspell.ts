@@ -434,6 +434,7 @@ export const MagicItemAttunementRestrictionSchema = Schema.Union(
 
 export const ItemDestructionPolicySchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("none") }),
+  Schema.Struct({ kind: Schema.Literal("becomes_nonmagical_on_hit") }),
   Schema.Struct({
     kind: Schema.Literal("last_charge_roll"),
     die: Schema.Number,
@@ -538,6 +539,7 @@ export const ArmorTemplateRecordSchema = Schema.Struct({
   armorApplicability: Schema.Struct({
     kind: Schema.Literal("any_armor"),
     categories: Schema.NonEmptyArray(ArmorCategorySchema),
+    excludedArmorIds: exactOptional(Schema.Array(NonEmptyStringSchema)),
   }),
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });
@@ -580,13 +582,32 @@ export const ShieldTemplateRecordSchema = Schema.Struct({
   variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
 });
 
+export const WeaponTemplateRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("weapon_template"),
+  template: Schema.Literal("any_weapon_magic", "ammunition_magic"),
+  weaponApplicability: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("any_weapon"),
+      categories: Schema.NonEmptyArray(WeaponCategorySchema),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("any_melee_weapon"),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("ammunition"),
+    }),
+  ),
+  variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
+});
+
 export const WeaponRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("weapon"),
   category: WeaponCategorySchema,
   usage: WeaponUsageSchema,
   damage: WeaponDamageSchema,
-  properties: Schema.Array(WeaponPropertyDetailSchema),
+  properties: exactOptional(Schema.Array(WeaponPropertyDetailSchema)),
   mastery: WeaponMasteryNameSchema,
   weightPounds: Schema.Number,
   costGp: Schema.Number,
@@ -603,5 +624,6 @@ export const UnitRecordSchema = Schema.Union(
   ArmorTemplateRecordSchema,
   ShieldRecordSchema,
   ShieldTemplateRecordSchema,
+  WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 );

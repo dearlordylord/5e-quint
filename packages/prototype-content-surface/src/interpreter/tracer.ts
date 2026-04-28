@@ -98,6 +98,7 @@ import type {
   ShieldRecord,
   ShieldTemplateRecord,
   WeaponRecord,
+  WeaponTemplateRecord,
   ArmorAcFormula,
   WeaponDamage,
   WeaponPropertyDetail,
@@ -161,6 +162,8 @@ export function traceUnit(unit: UnitRecord): Trace {
       return traceShieldTemplateUnit(unit);
     case "weapon":
       return traceWeaponUnit(unit);
+    case "weapon_template":
+      return traceWeaponTemplateUnit(unit);
     default: {
       const _exhaustive: never = unit;
       throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
@@ -4931,6 +4934,7 @@ function traceMagicEquipmentVariant(
   for (const procId of procIds) {
     edges.push({ from: variantId, to: procId, relation: "roots" });
   }
+  traceItemDestruction(variant.magic.destruction, variantId, nodes, edges, ids);
 }
 
 function traceWeaponUnit(weapon: WeaponRecord): Trace {
@@ -4955,7 +4959,7 @@ function traceWeaponUnit(weapon: WeaponRecord): Trace {
   });
   edges.push({ from: rootId, to: damageId, relation: "defines" });
 
-  for (const property of weapon.properties) {
+  for (const property of weapon.properties ?? []) {
     const propertyId = ids("prop");
     nodes.push({
       id: propertyId,
@@ -4976,6 +4980,43 @@ function traceWeaponUnit(weapon: WeaponRecord): Trace {
   edges.push({ from: rootId, to: masteryId, relation: "defines" });
 
   return traceFromNodes(weapon, nodes, edges);
+}
+
+function traceWeaponTemplateUnit(weapon: WeaponTemplateRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "weapon_template_root",
+    label: `weapon_template_root\n${weapon.name}\n${describeWeaponApplicability(weapon.weaponApplicability)}`,
+  });
+  for (const variant of weapon.variants) {
+    traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
+  }
+  return traceFromNodes(weapon, nodes, edges);
+}
+
+function describeWeaponApplicability(
+  applicability: WeaponTemplateRecord["weaponApplicability"],
+): string {
+  switch (applicability.kind) {
+    case "any_weapon":
+      return `(${applicability.categories.join(", ")})`;
+    case "any_melee_weapon":
+      return "(any melee weapon)";
+    case "ammunition":
+      return "(ammunition)";
+    default: {
+      const _exhaustive: never = applicability;
+      throw new Error(
+        `unhandled weapon applicability: ${String(_exhaustive)}`,
+      );
+    }
+  }
 }
 
 function traceDonDoff(
@@ -5011,7 +5052,16 @@ function describeArmorAcFormula(formula: ArmorAcFormula): string {
 }
 
 function describeWeaponDamage(damage: WeaponDamage): string {
-  return `${damage.dice}d${damage.dieSize} ${damage.damageType}`;
+  switch (damage.kind) {
+    case "dice":
+      return `${damage.dice}d${damage.dieSize} ${damage.damageType}`;
+    case "flat":
+      return `${damage.amount} ${damage.damageType}`;
+    default: {
+      const _exhaustive: never = damage;
+      throw new Error(`unhandled weapon damage: ${String(_exhaustive)}`);
+    }
+  }
 }
 
 function describeWeaponProperty(property: WeaponPropertyDetail): string {
@@ -5042,6 +5092,7 @@ function traceFromNodes(
     | ArmorTemplateRecord
     | ShieldRecord
     | ShieldTemplateRecord
+    | WeaponTemplateRecord
     | WeaponRecord,
   nodes: ReadonlyArray<TraceNode>,
   edges: ReadonlyArray<TraceEdge>,
@@ -5402,6 +5453,17 @@ function traceItemDestruction(
   switch (d.kind) {
     case "none":
       return;
+    case "becomes_nonmagical_on_hit": {
+      const destId = ids("dest");
+      nodes.push({
+        id: destId,
+        category: "lifecycle",
+        atomKind: "item_destruction",
+        label: "item_destruction\nbecomes nonmagical on hit",
+      });
+      edges.push({ from: rootId, to: destId, relation: "lifecycle" });
+      return;
+    }
     case "last_charge_roll": {
       const destId = ids("dest");
       nodes.push({

@@ -1,0 +1,33 @@
+{
+  "category": "simple",
+  "costGp": 2,
+  "damage": {
+    "damageType": "bludgeoning",
+    "dice": 1,
+    "dieSize": 4,
+    "kind": "dice"
+  },
+  "description": "Light Hammer from the SRD weapons table.",
+  "id": "weapon_light_hammer",
+  "kind": "weapon",
+  "mastery": "nick",
+  "name": "Light Hammer",
+  "properties": [
+    {
+      "kind": "light"
+    },
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 60,
+        "normal": 20
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 2
+}

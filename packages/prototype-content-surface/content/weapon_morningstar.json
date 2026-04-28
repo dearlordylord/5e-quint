@@ -1,0 +1,21 @@
+{
+  "category": "martial",
+  "costGp": 15,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 8,
+    "kind": "dice"
+  },
+  "description": "Morningstar from the SRD weapons table.",
+  "id": "weapon_morningstar",
+  "kind": "weapon",
+  "mastery": "sap",
+  "name": "Morningstar",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 4
+}

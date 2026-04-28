@@ -1,0 +1,39 @@
+{
+  "category": "martial",
+  "costGp": 50,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 10,
+    "kind": "dice"
+  },
+  "description": "Heavy Crossbow from the SRD weapons table.",
+  "id": "weapon_heavy_crossbow",
+  "kind": "weapon",
+  "mastery": "push",
+  "name": "Heavy Crossbow",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 400,
+        "normal": 100
+      }
+    },
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "loading"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 18
+}

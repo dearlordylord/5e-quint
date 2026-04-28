@@ -1,0 +1,39 @@
+{
+  "category": "simple",
+  "costGp": 1,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Spear from the SRD weapons table.",
+  "id": "weapon_spear",
+  "kind": "weapon",
+  "mastery": "sap",
+  "name": "Spear",
+  "properties": [
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 60,
+        "normal": 20
+      }
+    },
+    {
+      "damage": {
+        "damageType": "piercing",
+        "dice": 1,
+        "dieSize": 8,
+        "kind": "dice"
+      },
+      "kind": "versatile"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 3
+}

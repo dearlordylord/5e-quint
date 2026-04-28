@@ -1,0 +1,29 @@
+{
+  "category": "martial",
+  "costGp": 25,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 6,
+    "kind": "dice"
+  },
+  "description": "Scimitar from the SRD weapons table.",
+  "id": "weapon_scimitar",
+  "kind": "weapon",
+  "mastery": "nick",
+  "name": "Scimitar",
+  "properties": [
+    {
+      "kind": "finesse"
+    },
+    {
+      "kind": "light"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 3
+}

@@ -202,5 +202,6 @@ export type ArmorRecord = Schema.Schema.Type<typeof SurfaceSchema.ArmorRecordSch
 export type ArmorTemplateRecord = Schema.Schema.Type<typeof SurfaceSchema.ArmorTemplateRecordSchema>;
 export type ShieldRecord = Schema.Schema.Type<typeof SurfaceSchema.ShieldRecordSchema>;
 export type ShieldTemplateRecord = Schema.Schema.Type<typeof SurfaceSchema.ShieldTemplateRecordSchema>;
+export type WeaponTemplateRecord = Schema.Schema.Type<typeof SurfaceSchema.WeaponTemplateRecordSchema>;
 export type WeaponRecord = Schema.Schema.Type<typeof SurfaceSchema.WeaponRecordSchema>;
 export type UnitRecord = Schema.Schema.Type<typeof SurfaceSchema.UnitRecordSchema>;
