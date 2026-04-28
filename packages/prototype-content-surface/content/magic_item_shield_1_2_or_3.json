@@ -1,26 +1,33 @@
 {
-  "defaultAttunement": {
-    "requiresAttunement": false
+  "armorClassProjection": {
+    "bonus": 2,
+    "handUse": "shield",
+    "kind": "trained_shield_bonus",
+    "trainingRequired": "shield"
   },
+  "costGp": 10,
   "description": "While holding this Shield, you have a bonus to Armor Class determined by the Shield's rarity, in addition to the Shield's normal bonus to AC.",
+  "donDoff": {
+    "action": "utilize"
+  },
   "id": "magic_item_shield_1_2_or_3",
-  "kind": "magic_item",
+  "kind": "shield",
   "name": "Shield, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
     "section": "MagicItems#Shield+1+2or+3"
   },
+  "template": "shield_magic",
   "variants": [
     {
-      "destruction": {
-        "kind": "none"
-      },
       "id": "magic_item_shield_plus_1",
-      "mechanics": {
-        "condition": {
-          "kind": "holding_item"
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
         },
-        "family": "passive",
+        "destruction": {
+          "kind": "none"
+        },
         "grants": [
           {
             "delta": {
@@ -31,21 +38,20 @@
             },
             "kind": "modify_ac"
           }
-        ]
+        ],
+        "rarity": "uncommon"
       },
-      "name": "Shield, +1",
-      "rarity": "uncommon"
+      "name": "Shield, +1"
     },
     {
-      "destruction": {
-        "kind": "none"
-      },
       "id": "magic_item_shield_plus_2",
-      "mechanics": {
-        "condition": {
-          "kind": "holding_item"
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
         },
-        "family": "passive",
+        "destruction": {
+          "kind": "none"
+        },
         "grants": [
           {
             "delta": {
@@ -56,21 +62,20 @@
             },
             "kind": "modify_ac"
           }
-        ]
+        ],
+        "rarity": "rare"
       },
-      "name": "Shield, +2",
-      "rarity": "rare"
+      "name": "Shield, +2"
     },
     {
-      "destruction": {
-        "kind": "none"
-      },
       "id": "magic_item_shield_plus_3",
-      "mechanics": {
-        "condition": {
-          "kind": "holding_item"
+      "magic": {
+        "attunement": {
+          "requiresAttunement": false
         },
-        "family": "passive",
+        "destruction": {
+          "kind": "none"
+        },
         "grants": [
           {
             "delta": {
@@ -81,10 +86,11 @@
             },
             "kind": "modify_ac"
           }
-        ]
+        ],
+        "rarity": "very_rare"
       },
-      "name": "Shield, +3",
-      "rarity": "very_rare"
+      "name": "Shield, +3"
     }
-  ]
+  ],
+  "weightPounds": 6
 }

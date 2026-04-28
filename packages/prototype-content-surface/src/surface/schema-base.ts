@@ -229,19 +229,25 @@ export const ArmorTrainingCategorySchema = Schema.Literal(
 
 export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
 
+export const LightArmorAcFormulaSchema = Schema.Struct({
+  kind: Schema.Literal("light_dex"),
+  base: Schema.Number,
+});
+
+export const MediumArmorAcFormulaSchema = Schema.Struct({
+  kind: Schema.Literal("medium_dex_max_2"),
+  base: Schema.Number,
+});
+
+export const HeavyArmorAcFormulaSchema = Schema.Struct({
+  kind: Schema.Literal("heavy_fixed"),
+  ac: Schema.Number,
+});
+
 export const ArmorAcFormulaSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("light_dex"),
-    base: Schema.Number,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("medium_dex_max_2"),
-    base: Schema.Number,
-  }),
-  Schema.Struct({
-    kind: Schema.Literal("heavy_fixed"),
-    ac: Schema.Number,
-  }),
+  LightArmorAcFormulaSchema,
+  MediumArmorAcFormulaSchema,
+  HeavyArmorAcFormulaSchema,
 );
 
 export const WeaponCategorySchema = Schema.Literal("simple", "martial");

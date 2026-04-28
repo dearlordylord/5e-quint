@@ -2,12 +2,16 @@ import { Schema } from "effect";
 
 import {
   AbilitySchema,
+  ArmorCategorySchema,
   ClassNameSchema,
   ConditionSchema,
   DiceAmountSchema,
   FeatCategorySchema,
+  HeavyArmorAcFormulaSchema,
   LevelAxisSchema,
+  LightArmorAcFormulaSchema,
   MagicItemRaritySchema,
+  MediumArmorAcFormulaSchema,
   ProvenanceSchema,
   RollKindSchema,
   StandardActionKindSchema,
@@ -482,6 +486,20 @@ export const MagicItemRecordSchema = Schema.Union(
   }),
 );
 
+export const MagicEquipmentTraitSchema = Schema.Struct({
+  rarity: MagicItemRaritySchema,
+  attunement: MagicItemAttunementSchema,
+  grants: Schema.NonEmptyArray(EffectAtomSchema),
+  destruction: ItemDestructionPolicySchema,
+});
+
+export const MagicEquipmentVariantSchema = Schema.Struct({
+  id: NonEmptyStringSchema,
+  name: NonEmptyStringSchema,
+  description: exactOptional(Schema.String),
+  magic: MagicEquipmentTraitSchema,
+});
+
 const armorRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("armor"),
@@ -499,30 +517,31 @@ export const ArmorRecordSchema = Schema.Union(
   Schema.Struct({
     ...armorRecordBaseFields,
     category: Schema.Literal("light"),
-    acFormula: Schema.Struct({
-      kind: Schema.Literal("light_dex"),
-      base: Schema.Number,
-    }),
+    acFormula: LightArmorAcFormulaSchema,
   }),
   Schema.Struct({
     ...armorRecordBaseFields,
     category: Schema.Literal("medium"),
-    acFormula: Schema.Struct({
-      kind: Schema.Literal("medium_dex_max_2"),
-      base: Schema.Number,
-    }),
+    acFormula: MediumArmorAcFormulaSchema,
   }),
   Schema.Struct({
     ...armorRecordBaseFields,
     category: Schema.Literal("heavy"),
-    acFormula: Schema.Struct({
-      kind: Schema.Literal("heavy_fixed"),
-      ac: Schema.Number,
+    acFormula: HeavyArmorAcFormulaSchema,
+  }),
+  Schema.Struct({
+    ...UnitMetadataSchema.fields,
+    kind: Schema.Literal("armor"),
+    template: Schema.Literal("any_armor_magic"),
+    armorApplicability: Schema.Struct({
+      kind: Schema.Literal("any_armor"),
+      categories: Schema.NonEmptyArray(ArmorCategorySchema),
     }),
+    variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
   }),
 );
 
-export const ShieldRecordSchema = Schema.Struct({
+const shieldRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("shield"),
   armorClassProjection: Schema.Struct({
@@ -536,7 +555,16 @@ export const ShieldRecordSchema = Schema.Struct({
   donDoff: Schema.Struct({
     action: Schema.Literal("utilize"),
   }),
-});
+};
+
+export const ShieldRecordSchema = Schema.Union(
+  Schema.Struct({
+    ...shieldRecordBaseFields,
+    template: Schema.Literal("shield_magic"),
+    variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
+  }),
+  Schema.Struct(shieldRecordBaseFields),
+);
 
 export const WeaponRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,

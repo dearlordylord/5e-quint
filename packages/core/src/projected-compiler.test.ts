@@ -343,7 +343,10 @@ describe("projected compiler shape-driven widening", () => {
         operations: [
           {
             ...operation,
-            effect: { ...operation.effect, const: 14 },
+            effect: {
+              ...operation.effect,
+              formula: { kind: "base_plus_dex", base: 14 },
+            },
           },
         ],
       },

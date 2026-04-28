@@ -1,5 +1,44 @@
+-- Shield, +1, +2, or +3 — SRD 5.2.1 magic shield template.
+--
+-- This remains top-level kind = "shield": the object occupying the hand
+-- as a shield is a shield first, with magic traits layered on that object.
+
+let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
+
+let Grant = { kind : Text, delta : Delta }
+
+let MagicTrait =
+      { rarity : Text
+      , attunement : { requiresAttunement : Bool }
+      , grants : List Grant
+      , destruction : { kind : Text }
+      }
+
+let Variant =
+      { id : Text
+      , name : Text
+      , magic : MagicTrait
+      }
+
+let acBonus = \(n : Natural) ->
+      { kind = "modify_ac"
+      , delta = { kind = "fixed_dice", dice = n, dieSize = 1, sign = "+" }
+      }
+
+let variant = \(id : Text) -> \(name : Text) -> \(rarity : Text) -> \(n : Natural) ->
+      { id
+      , name
+      , magic =
+          { rarity
+          , attunement = { requiresAttunement = False }
+          , grants = [ acBonus n ]
+          , destruction = { kind = "none" }
+          }
+      }
+
 let shield =
-      { kind = "magic_item"
+      { kind = "shield"
+      , template = "shield_magic"
       , id = "magic_item_shield_1_2_or_3"
       , name = "Shield, +1, +2, or +3"
       , provenance =
@@ -8,66 +47,20 @@ let shield =
           }
       , description =
           "While holding this Shield, you have a bonus to Armor Class determined by the Shield's rarity, in addition to the Shield's normal bonus to AC."
-      , defaultAttunement = { requiresAttunement = False }
+      , armorClassProjection =
+          { kind = "trained_shield_bonus"
+          , handUse = "shield"
+          , trainingRequired = "shield"
+          , bonus = 2
+          }
+      , weightPounds = 6
+      , costGp = 10
+      , donDoff = { action = "utilize" }
       , variants =
-          [ { id = "magic_item_shield_plus_1"
-            , name = "Shield, +1"
-            , rarity = "uncommon"
-            , mechanics =
-                { family = "passive"
-                , condition = { kind = "holding_item" }
-                , grants =
-                    [ { kind = "modify_ac"
-                      , delta =
-                          { kind = "fixed_dice"
-                          , dice = 1
-                          , dieSize = 1
-                          , sign = "+"
-                          }
-                      }
-                    ]
-                }
-            , destruction = { kind = "none" }
-            }
-          , { id = "magic_item_shield_plus_2"
-            , name = "Shield, +2"
-            , rarity = "rare"
-            , mechanics =
-                { family = "passive"
-                , condition = { kind = "holding_item" }
-                , grants =
-                    [ { kind = "modify_ac"
-                      , delta =
-                          { kind = "fixed_dice"
-                          , dice = 2
-                          , dieSize = 1
-                          , sign = "+"
-                          }
-                      }
-                    ]
-                }
-            , destruction = { kind = "none" }
-            }
-          , { id = "magic_item_shield_plus_3"
-            , name = "Shield, +3"
-            , rarity = "very_rare"
-            , mechanics =
-                { family = "passive"
-                , condition = { kind = "holding_item" }
-                , grants =
-                    [ { kind = "modify_ac"
-                      , delta =
-                          { kind = "fixed_dice"
-                          , dice = 3
-                          , dieSize = 1
-                          , sign = "+"
-                          }
-                      }
-                    ]
-                }
-            , destruction = { kind = "none" }
-            }
-          ]
+          [ variant "magic_item_shield_plus_1" "Shield, +1" "uncommon" 1
+          , variant "magic_item_shield_plus_2" "Shield, +2" "rare" 2
+          , variant "magic_item_shield_plus_3" "Shield, +3" "very_rare" 3
+          ] : List Variant
       }
 
 in  shield

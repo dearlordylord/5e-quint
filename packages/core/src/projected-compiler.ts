@@ -62,6 +62,10 @@ type DirectPhase =
   ActivationClassFeatureRecord["mechanics"]["phases"][number] & {
     readonly kind: "direct";
   };
+type ProjectedAttachmentSurface =
+  | SaveGatePhase["attachment"]
+  | DirectPhase["attachment"]
+  | OngoingSpellRecord["mechanics"]["attachment"];
 type UseCountResource = Extract<
   NonNullable<ActivationClassFeatureRecord["mechanics"]["resource"]>,
   { readonly kind: "use_count" }
@@ -129,11 +133,11 @@ function compileActivationCost(
 
 function compileAttachment(
   unit: ProjectableSurfaceUnit,
-  attachment:
-    | SaveGatePhase["attachment"]
-    | DirectPhase["attachment"]
-    | OngoingSpellRecord["mechanics"]["attachment"],
+  attachment: ProjectedAttachmentSurface,
 ): ProjectedExecutableAction["attachment"] {
+  if (attachment.kind === "hole") {
+    return compileAttachment(unit, attachment.value);
+  }
   if (attachment.kind === "self") {
     return { tag: "PEASelf" };
   }
@@ -423,8 +427,9 @@ function compilePassiveSetBaseAc(
   if (operation.trigger.kind !== "passive") return null;
   if (operation.predicate != null || operation.usageLimit != null) return null;
   if (operation.effect.kind !== "modify_ac_set_base") return null;
-  if (unit.mechanics.attachment.kind !== "target") return null;
-  if (unit.mechanics.attachment.selection.mode !== "one") return null;
+  const attachment = unwrapProjectedAttachment(unit.mechanics.attachment);
+  if (attachment.kind !== "target") return null;
+  if (attachment.selection.mode !== "one") return null;
   require(
     unit.mechanics.duration.kind === "timed",
     unit.id,
@@ -436,13 +441,43 @@ function compilePassiveSetBaseAc(
     value: {
       source: projectedSource(unit),
       attachment: "PPAChosenTarget",
-      baseArmorClass: operation.effect.const,
-      abilityModifier: operation.effect.abilityMod,
+      ...compileProjectedSetBaseAc(unit, operation.effect.formula),
       earlyEnds: (unit.mechanics.duration.earlyEnd ?? []).map((trigger) =>
         compileEarlyEnd(unit, trigger)
       ),
     },
   };
+}
+
+function unwrapProjectedAttachment(
+  attachment: ProjectedAttachmentSurface,
+): Exclude<ProjectedAttachmentSurface, { readonly kind: "hole" }> {
+  if (attachment.kind !== "hole") return attachment;
+  return unwrapProjectedAttachment(attachment.value);
+}
+
+function compileProjectedSetBaseAc(
+  unit: ProjectableSurfaceUnit,
+  formula: Extract<
+    OngoingOperation["effect"],
+    { readonly kind: "modify_ac_set_base" }
+  >["formula"],
+): Pick<
+  ProjectedPersistentRecord["value"],
+  "baseArmorClass" | "abilityModifier"
+> {
+  return Match.value(formula).pipe(
+    Match.when({ kind: "base_plus_dex" }, ({ base }) => ({
+      baseArmorClass: base,
+      abilityModifier: "dex" as const,
+    })),
+    Match.orElse(({ kind }) =>
+      unsupported(
+        unit.id,
+        `unsupported projected persistent base-AC formula "${kind}"`,
+      ),
+    ),
+  );
 }
 
 function compileEarlyEnd(

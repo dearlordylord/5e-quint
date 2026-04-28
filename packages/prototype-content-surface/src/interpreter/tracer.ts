@@ -99,6 +99,7 @@ import type {
   ArmorAcFormula,
   WeaponDamage,
   WeaponPropertyDetail,
+  MagicEquipmentVariant,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -4763,6 +4764,19 @@ function traceArmorUnit(armor: ArmorRecord): Trace {
   const ids = idGen();
 
   const rootId = ids("root");
+  if ("variants" in armor) {
+    nodes.push({
+      id: rootId,
+      category: "source",
+      atomKind: "armor_root",
+      label: `armor_root\n${armor.name}\n(${armor.armorApplicability.categories.join(", ")})`,
+    });
+    for (const variant of armor.variants) {
+      traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
+    }
+    return traceFromNodes(armor, nodes, edges);
+  }
+
   nodes.push({
     id: rootId,
     category: "source",
@@ -4842,7 +4856,46 @@ function traceShieldUnit(shield: ShieldRecord): Trace {
     ids,
   );
 
+  if ("variants" in shield) {
+    for (const variant of shield.variants) {
+      traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
+    }
+  }
+
   return traceFromNodes(shield, nodes, edges);
+}
+
+function traceMagicEquipmentVariant(
+  rootId: string,
+  variant: MagicEquipmentVariant,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const variantId = ids("root");
+  nodes.push({
+    id: variantId,
+    category: "source",
+    atomKind: "magic_equipment_variant",
+    label: `magic_equipment_variant\n${variant.name}\n(${variant.magic.rarity})`,
+  });
+  edges.push({ from: rootId, to: variantId, relation: "roots" });
+
+  const grantId = ids("pass");
+  nodes.push({
+    id: grantId,
+    category: "procedure",
+    atomKind: "grant",
+    label: `grant (equipped magic)\n${variant.magic.grants.length} effect(s)`,
+  });
+  edges.push({ from: variantId, to: grantId, relation: "roots" });
+
+  for (const grant of variant.magic.grants) {
+    const effectId = traceEffectAtom(grant, nodes, ids, edges);
+    if (effectId !== null) {
+      edges.push({ from: grantId, to: effectId, relation: "grants" });
+    }
+  }
 }
 
 function traceWeaponUnit(weapon: WeaponRecord): Trace {
