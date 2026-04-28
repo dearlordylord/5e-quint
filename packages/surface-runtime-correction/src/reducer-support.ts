@@ -1,10 +1,11 @@
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import { isArrayOfOne } from "@dnd/shared/types";
 import type {
   ActivationPhase,
   Attachment,
   DiceAmount,
   DiceExpr,
+  DamageTypeRef,
   EffectAtom,
   UnitRecord,
 } from "@dnd/prototype-content-surface/surface/types";
@@ -15,10 +16,18 @@ type TargetAttachment = Extract<Attachment, { readonly kind: "target" }>;
 type TargetHoleAttachment = Extract<Attachment, { readonly kind: "hole" }> & {
   readonly value: TargetAttachment;
 };
+type AreaAttachment = Extract<Attachment, { readonly kind: "area" }>;
+type AreaHoleAttachment = Extract<Attachment, { readonly kind: "hole" }> & {
+  readonly value: AreaAttachment;
+};
 
 export type CurrentSliceSupportedDamageAmount =
   | (Extract<DiceAmount, { readonly kind: "fixed" }> & {
       readonly expr: DiceExpr;
+    })
+  | (Extract<DiceAmount, { readonly kind: "linear_per_level" }> & {
+      readonly axis: "slot";
+      readonly base: DiceExpr;
     })
   | (Extract<DiceAmount, { readonly kind: "threshold_tiers" }> & {
       readonly axis: "character";
@@ -42,7 +51,14 @@ type CurrentSliceSupportedAttackRollPhase = Extract<
 type CurrentSliceSupportedSaveGatePhase = Extract<
   ActivationPhase,
   { readonly kind: "save_gate" }
->;
+> & {
+  readonly attachment: AreaAttachment | AreaHoleAttachment;
+  readonly onFail: CurrentSliceSupportedDamageEffect;
+  readonly onSuccess: { readonly kind: "half_damage" };
+  readonly repeatSave?: undefined;
+  readonly autoSuccessIfCasterSlotGte?: undefined;
+  readonly saveAppliesIf?: undefined;
+};
 
 type CurrentSliceSupportedDirectEffect = Extract<
   EffectAtom,
@@ -80,11 +96,78 @@ function supportedHealingDiceExpr(expr: DiceExpr): boolean {
   return expr.abilityModifier === undefined;
 }
 
-function supportedDamageDiceExpr(expr: DiceExpr): boolean {
+export function currentSliceSupportsDamageDiceExpr(expr: DiceExpr): boolean {
   return (
     expr.abilityModifier === undefined &&
     expr.spellcastingMod === undefined &&
     (expr.flat === undefined || expr.flat >= 0)
+  );
+}
+
+function isFixedDamageTypeRef(damageType: DamageTypeRef): boolean {
+  return typeof damageType === "string";
+}
+
+export function currentSliceDamageBaseExpr(
+  amount: DiceAmount,
+  baseSpellLevel: number | null,
+): Either.Either<DiceExpr, UnsupportedUnitError> {
+  return Match.value(amount).pipe(
+    Match.when({ kind: "fixed" }, (fixed) =>
+      currentSliceSupportsDamageDiceExpr(fixed.expr)
+        ? Either.right(fixed.expr)
+        : Either.left(
+            new UnsupportedUnitError("unsupported damage dice expression"),
+          ),
+    ),
+    Match.when({ kind: "linear_per_level" }, (linear) => {
+      if (
+        baseSpellLevel === null ||
+        linear.axis !== "slot" ||
+        linear.startingAtLevel !== baseSpellLevel
+      ) {
+        return Either.left(
+          new UnsupportedUnitError(
+            "unsupported damage amount scaling for current slice",
+          ),
+        );
+      }
+
+      return currentSliceSupportsDamageDiceExpr(linear.base)
+        ? Either.right(linear.base)
+        : Either.left(
+            new UnsupportedUnitError("unsupported damage dice expression"),
+          );
+    }),
+    Match.when({ kind: "threshold_tiers" }, (threshold) => {
+      if (threshold.axis !== "character") {
+        return Either.left(
+          new UnsupportedUnitError(
+            "unsupported damage threshold axis for current slice",
+          ),
+        );
+      }
+
+      return currentSliceSupportsDamageDiceExpr(threshold.base)
+        ? Either.right(threshold.base)
+        : Either.left(
+            new UnsupportedUnitError("unsupported damage dice expression"),
+          );
+    }),
+    Match.when({ kind: "resource_spent" }, () =>
+      Either.left(
+        new UnsupportedUnitError("unsupported resource-spent damage amount"),
+      ),
+    ),
+    Match.when({ kind: "resource_spent_linear" }, () =>
+      Either.left(
+        new UnsupportedUnitError("unsupported resource-spent damage amount"),
+      ),
+    ),
+    Match.when({ kind: "linked" }, () =>
+      Either.left(new UnsupportedUnitError("unsupported linked damage amount")),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -104,16 +187,11 @@ function supportedHealingAmount(amount: DiceAmount): boolean {
   return false;
 }
 
-function supportedDamageAmount(amount: DiceAmount): boolean {
-  if (amount.kind === "fixed") {
-    return supportedDamageDiceExpr(amount.expr);
-  }
-
-  if (amount.kind === "threshold_tiers") {
-    return amount.axis === "character" && supportedDamageDiceExpr(amount.base);
-  }
-
-  return false;
+function supportedDamageAmount(
+  amount: DiceAmount,
+  baseSpellLevel: number | null,
+): boolean {
+  return Either.isRight(currentSliceDamageBaseExpr(amount, baseSpellLevel));
 }
 
 function supportedDirectEffect(
@@ -132,6 +210,7 @@ function supportedDirectEffect(
 
 function supportedAttackRollPhase(
   phase: Extract<ActivationPhase, { readonly kind: "attack_roll" }>,
+  baseSpellLevel: number | null,
 ): phase is CurrentSliceSupportedAttackRollPhase {
   return (
     phase.continue === undefined &&
@@ -139,7 +218,7 @@ function supportedAttackRollPhase(
     phase.attachment.value.kind === "target" &&
     isArrayOfOne(phase.onHit) &&
     phase.onHit[0].kind === "damage" &&
-    supportedDamageAmount(phase.onHit[0].amount) &&
+    supportedDamageAmount(phase.onHit[0].amount, baseSpellLevel) &&
     isArrayOfOne(phase.onMiss) &&
     phase.onMiss[0].kind === "none"
   );
@@ -193,6 +272,7 @@ export function checkSupportedUnit(
   }
 
   const [phase] = unit.mechanics.phases;
+  const baseSpellLevel = unit.kind === "spell" ? unit.mechanics.level : null;
 
   if (
     phase.kind !== "attack_roll" &&
@@ -266,7 +346,7 @@ export function checkSupportedUnit(
       );
     }
 
-    if (!supportedDamageAmount(phase.onHit[0].amount)) {
+    if (!supportedDamageAmount(phase.onHit[0].amount, baseSpellLevel)) {
       return Either.left(
         new UnsupportedUnitError(
           `Unsupported attack-roll damage amount for reducer unit ${unit.id}`,
@@ -312,10 +392,51 @@ export function checkSupportedUnit(
   }
 
   if (phase.kind === "save_gate") {
+    const saveGateAttachment =
+      phase.attachment.kind === "hole"
+        ? phase.attachment.value
+        : phase.attachment;
+
+    if (saveGateAttachment.kind !== "area") {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Reducer currently supports only area save-gate attachment for unit ${unit.id}`,
+        ),
+      );
+    }
+
+    if (
+      phase.repeatSave !== undefined ||
+      phase.autoSuccessIfCasterSlotGte !== undefined ||
+      phase.saveAppliesIf !== undefined
+    ) {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Reducer currently does not support save-gate riders for unit ${unit.id}`,
+        ),
+      );
+    }
+
     if (phase.onFail.kind !== "damage") {
       return Either.left(
         new UnsupportedUnitError(
           `Reducer currently supports only damage on save failure for unit ${unit.id}`,
+        ),
+      );
+    }
+
+    if (!isFixedDamageTypeRef(phase.onFail.damageType)) {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Reducer currently supports only fixed save-gate damage type for unit ${unit.id}`,
+        ),
+      );
+    }
+
+    if (!supportedDamageAmount(phase.onFail.amount, baseSpellLevel)) {
+      return Either.left(
+        new UnsupportedUnitError(
+          `Unsupported save-gate damage amount for reducer unit ${unit.id}`,
         ),
       );
     }
@@ -329,7 +450,10 @@ export function checkSupportedUnit(
     }
   }
 
-  if (phase.kind === "attack_roll" && !supportedAttackRollPhase(phase)) {
+  if (
+    phase.kind === "attack_roll" &&
+    !supportedAttackRollPhase(phase, baseSpellLevel)
+  ) {
     return Either.left(
       new UnsupportedUnitError(
         `Unsupported attack-roll phase for reducer unit ${unit.id}`,
@@ -340,8 +464,8 @@ export function checkSupportedUnit(
   // This is the package's parse/narrowing boundary for unit-backed resolution.
   // The checks above prove the intersection facts that Surface's generated
   // schema type cannot express incrementally: supported unit kind, activation
-  // mechanics, exactly one supported phase, attack-roll target/damage shape,
-  // and for direct phases exactly one supported direct effect.
+  // mechanics, exactly one supported phase, attack-roll/save-gate damage
+  // shape, and for direct phases exactly one supported direct effect.
   return Either.right(unit as CurrentSliceSupportedActivationUnit);
 }
 

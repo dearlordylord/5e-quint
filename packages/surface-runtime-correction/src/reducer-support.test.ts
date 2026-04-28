@@ -94,14 +94,39 @@ describe("assertSupportedUnit", () => {
               {
                 ...phase.onHit[0],
                 amount: {
-                  kind: "linear_per_level",
-                  axis: "slot",
-                  startingAtLevel: 1,
-                  base: { dice: 1, dieSize: 10 },
-                  perLevel: { dice: 1, dieSize: 10 },
+                  kind: "resource_spent",
                 },
               },
             ],
+          },
+        ],
+      },
+    };
+
+    expect(() => assertSupportedUnit(unsupported)).toThrow(
+      UnsupportedUnitError,
+    );
+  });
+
+  it("rejects non-area save-gate units at load time", () => {
+    const unit = loadSupportedUnit("fireball");
+    if (unit.kind !== "spell" || unit.mechanics.family !== "activation") {
+      throw new Error("expected activation spell");
+    }
+
+    const [phase] = unit.mechanics.phases;
+    if (phase.kind !== "save_gate") {
+      throw new Error("expected save-gate phase");
+    }
+
+    const unsupported: UnitRecord = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: { kind: "self" },
           },
         ],
       },

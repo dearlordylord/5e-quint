@@ -74,6 +74,23 @@ function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   };
 }
 
+function savingThrowOutcomeHole(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+  stepKey: HoleStepKey,
+): RuntimeHole {
+  return {
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey("runtime:savingThrowOutcome"),
+    ),
+    holeId: holeId(`${stepKey}_saving_throw_outcome`),
+    kind: "savingThrowOutcome",
+    ability: phase.ability,
+    dc: phase.dc,
+    label: "saving throw outcome",
+  };
+}
+
 function damageRollHole(
   stepKey: HoleStepKey,
   effectIndex: number,
@@ -296,4 +313,18 @@ export function projectAttackRollDamageHoles(
   return phase.onHit.flatMap((effect, index) =>
     effect.kind === "damage" ? [damageRollHole(stepKey, index)] : [],
   );
+}
+
+export function projectSaveGateSavingThrowOutcomeHoles(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+  stepKey: HoleStepKey,
+): RuntimeHoleSet {
+  return [savingThrowOutcomeHole(phase, stepKey)];
+}
+
+export function projectSaveGateDamageHoles(
+  phase: Extract<ActivationPhase, { readonly kind: "save_gate" }>,
+  stepKey: HoleStepKey,
+): RuntimeHoleSet {
+  return phase.onFail.kind === "damage" ? [damageRollHole(stepKey, 0)] : [];
 }

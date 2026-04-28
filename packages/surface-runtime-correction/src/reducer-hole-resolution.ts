@@ -1,7 +1,8 @@
 import { Either, Match } from "effect";
 import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
+import { traverseValidation } from "@dnd/shared/validation-algebra";
 import { Hp } from "@dnd/shared/types";
-import type { CreatureId } from "@dnd/shared/types";
+import type { CreatureId, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
 import { spendOneAction } from "#/reducer-action-economy.ts";
@@ -13,19 +14,19 @@ import {
 import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
 import { applyHpDamage } from "#/reducer-damage.ts";
 import {
-  missingHoles,
-  requireNoMissingHoles,
+  requireCompleteOrNeedsHoles,
+  requirePresentOrNeedsHoles,
   requireValidHoleInputs,
 } from "#/reducer-hole-refilling.ts";
 import {
   CURRENT_SLICE_ACTIVATION_STEP,
   interpretSubject,
 } from "#/reducer-interpretation.ts";
+import { currentSliceDamageBaseExpr } from "#/reducer-support.ts";
 import type { SpellcastingAbilityModifier, State } from "#/reducer-state.ts";
 import type {
   CurrentSliceSupportedActivationPhase,
   CurrentSliceSupportedActivationUnit,
-  CurrentSliceSupportedDamageAmount,
   CurrentSliceSupportedDamageEffect,
 } from "#/reducer-support.ts";
 import type {
@@ -36,6 +37,7 @@ import type {
   ResolutionResult,
   RolledDiceGroup,
   RuntimeHole,
+  SavingThrowOutcome,
 } from "#/reducer-types.ts";
 import type {
   DiceAmount,
@@ -46,7 +48,11 @@ import {
   rolledDiceTotal,
   validateRolledDiceForDiceExpr,
 } from "#/runtime-dice.ts";
-import { projectAttackRollDamageHoles } from "#/runtime-holes.ts";
+import {
+  projectAttackRollDamageHoles,
+  projectSaveGateDamageHoles,
+  projectSaveGateSavingThrowOutcomeHoles,
+} from "#/runtime-holes.ts";
 
 type HealHpEffect = Extract<EffectAtom, { readonly kind: "heal_hp" }>;
 type CurrentSliceSupportedDirectPhase = Extract<
@@ -64,6 +70,13 @@ type SupportedSurfaceActivationResourceKind =
   | "action"
   | "bonus_action";
 type SpellSlotIndex = number;
+type CombatantState =
+  State["combatants"] extends ReadonlyMap<CreatureId, infer T> ? T : never;
+type SaveGateDamageApplication = {
+  readonly targetId: CreatureId;
+  readonly target: CombatantState;
+  readonly damageAmount: number;
+};
 
 function invalid(reason: string): ResolutionInvalid {
   return { tag: "invalid", reason };
@@ -189,6 +202,26 @@ function currentRolledDiceHole(
   );
 }
 
+function currentSavingThrowOutcomeHole(
+  holes: ReadonlyArray<RuntimeHole>,
+): Either.Either<
+  Extract<RuntimeHole, { readonly kind: "savingThrowOutcome" }>,
+  ResolutionInvalid
+> {
+  const savingThrowOutcomeHoles = holes.filter(
+    (
+      hole,
+    ): hole is Extract<RuntimeHole, { readonly kind: "savingThrowOutcome" }> =>
+      hole.kind === "savingThrowOutcome",
+  );
+
+  return requireOnlyOne(savingThrowOutcomeHoles, (count) =>
+    invalid(
+      `expected exactly one saving-throw hole in current phase, got ${count}`,
+    ),
+  );
+}
+
 function requireTargetChoiceFill(
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
   holes: ReadonlyArray<RuntimeHole>,
@@ -206,6 +239,31 @@ function requireTargetChoiceFill(
       return yield* Either.left(
         invalid(
           `filled value kind ${value.kind} does not match hole ${targetChoiceHole.holeId}`,
+        ),
+      );
+    }
+
+    return value.value;
+  });
+}
+
+function requireSavingThrowOutcomeFill(
+  filledHoleValues: ReadonlyArray<FilledHoleValue>,
+  holes: ReadonlyArray<RuntimeHole>,
+): Either.Either<ReadonlyArray<SavingThrowOutcome>, ResolutionInvalid> {
+  return Either.gen(function* () {
+    const savingThrowOutcomeHole = yield* currentSavingThrowOutcomeHole(holes);
+    const value = yield* Either.fromNullable(
+      filledHoleValues.find(
+        (candidate) => candidate.holeId === savingThrowOutcomeHole.holeId,
+      ),
+      () => invalid("missing filled saving throw for current phase"),
+    );
+
+    if (value.kind !== "savingThrowOutcome") {
+      return yield* Either.left(
+        invalid(
+          `filled value kind ${value.kind} does not match hole ${savingThrowOutcomeHole.holeId}`,
         ),
       );
     }
@@ -434,18 +492,6 @@ function requireSupportedHealingDiceExpr(
   return Either.right(expr);
 }
 
-function requireSupportedDamageDiceExpr(
-  expr: DiceExpr,
-): Either.Either<DiceExpr, ResolutionInvalid> {
-  if (expr.abilityModifier !== undefined) {
-    return Either.left(
-      invalid("unsupported damage amount ability modifier field"),
-    );
-  }
-
-  return Either.right(expr);
-}
-
 function currentSliceHealingBaseExpr(
   amount: DiceAmount,
 ): Either.Either<DiceExpr, ResolutionInvalid> {
@@ -480,21 +526,10 @@ function currentSliceHealingBaseExpr(
   );
 }
 
-function currentSliceDamageBaseExpr(
-  amount: CurrentSliceSupportedDamageAmount,
-): Either.Either<DiceExpr, ResolutionInvalid> {
-  return Match.value(amount).pipe(
-    Match.when({ kind: "fixed" }, (fixed) =>
-      requireSupportedDamageDiceExpr(fixed.expr),
-    ),
-    Match.when({ kind: "threshold_tiers" }, (threshold) => {
-      // The correction state does not model character level yet. For current
-      // Surface execution, cantrip threshold damage resolves at the authored
-      // base expression until level projection exists.
-      return requireSupportedDamageDiceExpr(threshold.base);
-    }),
-    Match.exhaustive,
-  );
+function baseSpellLevel(
+  unit: CurrentSliceSupportedActivationUnit,
+): number | null {
+  return unit.kind === "spell" ? unit.mechanics.level : null;
 }
 
 function healingAmountFromRoll(
@@ -523,12 +558,16 @@ function healingAmountFromRoll(
 }
 
 function damageAmountFromRoll(
+  unit: CurrentSliceSupportedActivationUnit,
   effect: CurrentSliceSupportedDamageEffect,
   rolledDice: ReadonlyArray<RolledDiceGroup>,
   isCriticalHit: boolean,
 ): Either.Either<number, ResolutionInvalid> {
   return Either.gen(function* () {
-    const expr = yield* currentSliceDamageBaseExpr(effect.amount);
+    const expr = yield* currentSliceDamageBaseExpr(
+      effect.amount,
+      baseSpellLevel(unit),
+    ).pipe(Either.mapLeft((error) => invalid(error.message)));
     const effectiveExpr = isCriticalHit
       ? { ...expr, dice: expr.dice * 2 }
       : expr;
@@ -658,6 +697,63 @@ function applyDamage(
   });
 }
 
+function applySaveGateDamage(
+  state: State,
+  outcomes: ReadonlyArray<SavingThrowOutcome>,
+  damageAmount: number,
+): Either.Either<State, ResolutionInvalid> {
+  const firstTargetIndexes = outcomes.reduce<ReadonlyMap<CreatureId, number>>(
+    (indexes, outcome, index) =>
+      indexes.has(outcome.targetId)
+        ? indexes
+        : new Map(indexes).set(outcome.targetId, index),
+    new Map(),
+  );
+
+  const applications: Either.Either<
+    ReadonlyArray<SaveGateDamageApplication>,
+    ReadonlyNonEmptyArray<ResolutionInvalid>
+  > = traverseValidation(outcomes, (outcome, index) => {
+    const target = state.combatants.get(outcome.targetId);
+    const issues = [
+      ...(firstTargetIndexes.get(outcome.targetId) === index
+        ? []
+        : [invalid("duplicate saving throw target")]),
+      ...(target === undefined ? [invalid("invalid saving throw target")] : []),
+    ];
+
+    if (issues.length > 0 || target === undefined) {
+      return Either.left(
+        invalid(issues.map((issue) => issue.reason).join("; ")),
+      );
+    }
+
+    return Either.right({
+      targetId: outcome.targetId,
+      target,
+      damageAmount: outcome.succeeded
+        ? Math.trunc(damageAmount / 2)
+        : damageAmount,
+    });
+  });
+
+  return Either.map(applications, (validApplications) => ({
+    ...state,
+    combatants: validApplications.reduce(
+      (combatants, application) =>
+        new Map(combatants).set(
+          application.targetId,
+          applyHpDamage(application.target, application.damageAmount),
+        ),
+      new Map(state.combatants),
+    ),
+  })).pipe(
+    Either.mapLeft((issues) =>
+      invalid(issues.map((issue) => issue.reason).join("; ")),
+    ),
+  );
+}
+
 function resolveFilledActivationPhase(
   state: State,
   actorId: CreatureId,
@@ -669,20 +765,12 @@ function resolveFilledActivationPhase(
   return Match.value(phase).pipe(
     Match.when({ kind: "attack_roll" }, (attackRollPhase) =>
       Either.gen(function* () {
-        const missingInitialHoles = missingHoles(
+        const completeInitialHoles = requirePresentOrNeedsHoles(
           filledHoleValues,
           currentHoles,
         );
-        if (missingInitialHoles.length > 0) {
-          const initialInputs = requireValidHoleInputs(
-            filledHoleValues,
-            currentHoles,
-          );
-          if (Either.isLeft(initialInputs)) {
-            return yield* Either.left(initialInputs.left);
-          }
-
-          return { tag: "needsHoles" as const, holes: missingInitialHoles };
+        if (Either.isLeft(completeInitialHoles)) {
+          return completeInitialHoles.left;
         }
 
         const targetId = yield* requireTargetChoiceFill(
@@ -720,20 +808,12 @@ function resolveFilledActivationPhase(
         );
 
         const allCurrentHoles = [...currentHoles, ...damageHoles];
-        const validInputs = requireValidHoleInputs(
+        const completeDamageHoles = requireCompleteOrNeedsHoles(
           filledHoleValues,
           allCurrentHoles,
         );
-        if (Either.isLeft(validInputs)) {
-          return yield* Either.left(validInputs.left);
-        }
-
-        const missingDamageHoles = requireNoMissingHoles(
-          filledHoleValues,
-          allCurrentHoles,
-        );
-        if (Either.isLeft(missingDamageHoles)) {
-          return missingDamageHoles.left;
+        if (Either.isLeft(completeDamageHoles)) {
+          return completeDamageHoles.left;
         }
 
         const [damageEffect] = attackRollPhase.onHit;
@@ -743,6 +823,7 @@ function resolveFilledActivationPhase(
         );
 
         const damageAmount = yield* damageAmountFromRoll(
+          unit,
           damageEffect,
           rolledDice,
           attackRollIsCritical(attackRoll),
@@ -753,8 +834,85 @@ function resolveFilledActivationPhase(
         return { tag: "resolved" as const, state: nextState };
       }).pipe(Either.merge),
     ),
-    Match.when({ kind: "save_gate" }, () =>
-      invalid("save-gate unit outcome application is not implemented yet"),
+    Match.when({ kind: "save_gate" }, (saveGatePhase) =>
+      Either.gen(function* () {
+        const completeAttachmentHoles = requirePresentOrNeedsHoles(
+          filledHoleValues,
+          currentHoles,
+        );
+        if (Either.isLeft(completeAttachmentHoles)) {
+          return completeAttachmentHoles.left;
+        }
+
+        const savingThrowOutcomeHoles = projectSaveGateSavingThrowOutcomeHoles(
+          saveGatePhase,
+          CURRENT_SLICE_ACTIVATION_STEP,
+        );
+        const holesWithSavingThrowOutcome = [
+          ...currentHoles,
+          ...savingThrowOutcomeHoles,
+        ];
+        const completeSavingThrowOutcomeHoles = requirePresentOrNeedsHoles(
+          filledHoleValues,
+          holesWithSavingThrowOutcome,
+        );
+        if (Either.isLeft(completeSavingThrowOutcomeHoles)) {
+          return completeSavingThrowOutcomeHoles.left;
+        }
+
+        const outcomes = yield* requireSavingThrowOutcomeFill(
+          filledHoleValues,
+          holesWithSavingThrowOutcome,
+        );
+
+        if (outcomes.length === 0) {
+          const validZeroOutcomeInputs = requireValidHoleInputs(
+            filledHoleValues,
+            holesWithSavingThrowOutcome,
+          );
+          if (Either.isLeft(validZeroOutcomeInputs)) {
+            return yield* Either.left(validZeroOutcomeInputs.left);
+          }
+
+          const paidState = yield* unitCostPaidState(state, actorId, unit);
+          return { tag: "resolved" as const, state: paidState };
+        }
+
+        const damageHoles = projectSaveGateDamageHoles(
+          saveGatePhase,
+          CURRENT_SLICE_ACTIVATION_STEP,
+        );
+        const allCurrentHoles = [
+          ...holesWithSavingThrowOutcome,
+          ...damageHoles,
+        ];
+        const completeDamageHoles = requireCompleteOrNeedsHoles(
+          filledHoleValues,
+          allCurrentHoles,
+        );
+        if (Either.isLeft(completeDamageHoles)) {
+          return completeDamageHoles.left;
+        }
+
+        const rolledDice = yield* requireRolledDiceFill(
+          filledHoleValues,
+          allCurrentHoles,
+        );
+        const damageAmount = yield* damageAmountFromRoll(
+          unit,
+          saveGatePhase.onFail,
+          rolledDice,
+          false,
+        );
+        const paidState = yield* unitCostPaidState(state, actorId, unit);
+        const nextState = yield* applySaveGateDamage(
+          paidState,
+          outcomes,
+          damageAmount,
+        );
+
+        return { tag: "resolved" as const, state: nextState };
+      }).pipe(Either.merge),
     ),
     Match.when({ kind: "direct" }, (directPhase) =>
       Either.gen(function* () {
@@ -831,7 +989,10 @@ export function resolveSubjectHoles(
             return costsAvailable.left;
           }
 
-          if (act.phase.kind === "attack_roll") {
+          if (
+            act.phase.kind === "attack_roll" ||
+            act.phase.kind === "save_gate"
+          ) {
             return resolveFilledActivationPhase(
               state,
               act.subject.actorId,
@@ -842,17 +1003,9 @@ export function resolveSubjectHoles(
             );
           }
 
-          const holes = requireValidHoleInputs(
+          const filledHoles = requireCompleteOrNeedsHoles(
             request.filledHoleValues,
             act.initialHoles,
-          );
-          if (Either.isLeft(holes)) {
-            return holes.left;
-          }
-
-          const filledHoles = requireNoMissingHoles(
-            request.filledHoleValues,
-            holes.right,
           );
           if (Either.isLeft(filledHoles)) {
             return filledHoles.left;
@@ -863,7 +1016,7 @@ export function resolveSubjectHoles(
             act.unit,
             act.phase,
             request.filledHoleValues,
-            holes.right,
+            filledHoles.right,
           );
         }),
         Match.exhaustive,

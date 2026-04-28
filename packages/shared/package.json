@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./types": "./src/types.ts",
+    "./validation-algebra": "./src/validation-algebra.ts",
     "./initiative-algebra": "./src/initiative-algebra.ts",
     "./conditions-algebra": "./src/conditions-algebra.ts"
   },

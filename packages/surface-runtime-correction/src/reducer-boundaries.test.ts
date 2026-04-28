@@ -55,7 +55,7 @@ function healingRollFill(
   };
 }
 
-function fireBoltDamageRollFill(
+function activationDamageRollFill(
   results: ReadonlyNonEmptyArray<number>,
 ): Extract<FilledHoleValue, { readonly kind: "rolledDice" }> {
   return {
@@ -69,6 +69,37 @@ function fireBoltDamageRollFill(
         ],
       },
     ] as ReadonlyNonEmptyArray<RolledDiceGroup>,
+  };
+}
+
+function fireballPointEchoFill(): Extract<
+  FilledHoleValue,
+  { readonly kind: "surfaceAttachment" }
+> {
+  return {
+    kind: "surfaceAttachment",
+    holeId: holeId("fireball_point"),
+    value: {
+      kind: "area",
+      origin: { kind: "point_within_range" },
+      shape: {
+        kind: "sphere",
+        radiusFeet: 20,
+      },
+    },
+  };
+}
+
+function saveOutcomeFill(
+  outcomes: ReadonlyArray<{
+    readonly targetId: CreatureId;
+    readonly succeeded: boolean;
+  }>,
+): Extract<FilledHoleValue, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: holeId("activation:0_saving_throw_outcome"),
+    value: outcomes,
   };
 }
 
@@ -512,6 +543,35 @@ describe("reducer boundaries", () => {
     });
   });
 
+  it("resolveSubjectHoles accumulates independent filled-hole validation errors", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureState(), {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("core_attack_target"),
+            value: "B" as CreatureId,
+          },
+          {
+            kind: "targetChoice",
+            holeId: holeId("core_attack_target"),
+            value: "B" as CreatureId,
+          },
+          {
+            kind: "rolledDice",
+            holeId: holeId("core_attack_damage"),
+            value: [{ results: [6 as DieRollResult] }],
+          },
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason:
+        "duplicate filled value for hole core_attack_target; unexpected filled value for hole core_attack_damage",
+    });
+  });
+
   it("resolveSubjectHoles requests all current holes for unit-backed fire bolt", () => {
     expect(
       resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
@@ -638,7 +698,7 @@ describe("reducer boundaries", () => {
             value: "B" as CreatureId,
           },
           attackRollFill("activation:0_attack_roll", 9),
-          fireBoltDamageRollFill([6]),
+          activationDamageRollFill([6]),
         ],
       }),
     ).toEqual({
@@ -771,7 +831,7 @@ describe("reducer boundaries", () => {
           value: "B" as CreatureId,
         },
         attackRollFill("activation:0_attack_roll", 20, 20),
-        fireBoltDamageRollFill([6, 4]),
+        activationDamageRollFill([6, 4]),
       ],
     });
 
@@ -813,7 +873,7 @@ describe("reducer boundaries", () => {
           value: "B" as CreatureId,
         },
         attackRollFill("activation:0_attack_roll", 17),
-        fireBoltDamageRollFill([6]),
+        activationDamageRollFill([6]),
       ],
     });
 
@@ -934,7 +994,35 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubjectHoles still reaches the save-gate frontier for malformed fireball area echo", () => {
+  it("resolveSubjectHoles requests fireball saving throw outcomes after area fill", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [fireballPointEchoFill()],
+        },
+      ),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:runtime:savingThrowOutcome",
+          holeId: "activation:0_saving_throw_outcome",
+          kind: "savingThrowOutcome",
+          ability: "dex",
+          dc: { kind: "caster_spell_save_dc" },
+          label: "saving throw outcome",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles rejects fireball point fills that do not match the authored area hole", () => {
     expect(
       resolveSubjectHoles(
         twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
@@ -946,14 +1034,14 @@ describe("reducer boundaries", () => {
           },
           filledHoleValues: [
             {
-              // Current fireball_point handling only checks that the fill uses the
-              // surfaceAttachment protocol; it does not yet validate the inner
-              // area payload semantics.
-              kind: "surfaceAttachment",
-              holeId: holeId("fireball_point"),
+              ...fireballPointEchoFill(),
               value: {
-                kind: "target",
-                selection: { mode: "one" },
+                kind: "area",
+                origin: { kind: "point_within_range" },
+                shape: {
+                  kind: "sphere",
+                  radiusFeet: 10,
+                },
               },
             },
           ],
@@ -961,7 +1049,166 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual({
       tag: "invalid",
-      reason: "save-gate unit outcome application is not implemented yet",
+      reason: "filled attachment does not match hole fireball_point",
+    });
+  });
+
+  it("resolveSubjectHoles requests fireball damage once after saving throw outcomes", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [
+            fireballPointEchoFill(),
+            saveOutcomeFill([
+              { targetId: "A" as CreatureId, succeeded: true },
+              { targetId: "B" as CreatureId, succeeded: false },
+            ]),
+          ],
+        },
+      ),
+    ).toEqual({
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:runtime:damageRoll:0",
+          holeId: "activation:0_damage_roll_0",
+          kind: "rolledDice",
+          label: "damage roll",
+        },
+      ],
+    });
+  });
+
+  it("resolveSubjectHoles rejects fireball damage when no saving throw targets are supplied", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [
+            fireballPointEchoFill(),
+            saveOutcomeFill([]),
+            activationDamageRollFill([1, 2, 3, 4, 5, 6, 1, 2]),
+          ],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unexpected filled value for hole activation:0_damage_roll_0",
+    });
+  });
+
+  it("resolveSubjectHoles applies fireball full and half damage from one roll", () => {
+    const state = {
+      ...twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          creatureState({
+            hp: 30 as Hp,
+            maxHp: 30 as Hp,
+            units: [loadSupportedUnit("fireball")],
+            spellSlots: [0, 0, 1],
+            spellSlotsMax: [0, 0, 1],
+          }),
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 30 as Hp,
+            maxHp: 30 as Hp,
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fireball",
+      },
+      filledHoleValues: [
+        fireballPointEchoFill(),
+        saveOutcomeFill([
+          { targetId: "A" as CreatureId, succeeded: true },
+          { targetId: "B" as CreatureId, succeeded: false },
+        ]),
+        activationDamageRollFill([1, 2, 3, 4, 5, 6, 1, 2]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("A" as CreatureId)?.hp).toBe(18);
+      expect(
+        result.state.combatants.get("A" as CreatureId)?.spellSlots,
+      ).toEqual([0, 0, 0]);
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(6);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles rejects duplicate fireball saving throw targets", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [
+            fireballPointEchoFill(),
+            saveOutcomeFill([
+              { targetId: "B" as CreatureId, succeeded: true },
+              { targetId: "B" as CreatureId, succeeded: false },
+            ]),
+            activationDamageRollFill([1, 2, 3, 4, 5, 6, 1, 2]),
+          ],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "duplicate saving throw target",
+    });
+  });
+
+  it("resolveSubjectHoles accumulates fireball saving throw outcome errors", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "fireball",
+          },
+          filledHoleValues: [
+            fireballPointEchoFill(),
+            saveOutcomeFill([
+              { targetId: "B" as CreatureId, succeeded: true },
+              { targetId: "B" as CreatureId, succeeded: false },
+              { targetId: "missing" as CreatureId, succeeded: false },
+            ]),
+            activationDamageRollFill([1, 2, 3, 4, 5, 6, 1, 2]),
+          ],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "duplicate saving throw target; invalid saving throw target",
     });
   });
 
@@ -1325,40 +1572,6 @@ describe("reducer boundaries", () => {
     ).toEqual({
       tag: "invalid",
       reason: "spell slot already expended this turn",
-    });
-  });
-
-  it("resolveSubjectHoles reaches save-gate execution boundary after fireball point is filled", () => {
-    expect(
-      resolveSubjectHoles(
-        twoCreatureStateWithActingSpellSlots("fireball", [0, 0, 1]),
-        {
-          subject: {
-            tag: "unit",
-            actorId: "A" as CreatureId,
-            unitId: "fireball",
-          },
-          filledHoleValues: [
-            {
-              // Temporary protocol for fireball_point: caller echoes authored area
-              // schema instead of supplying a later area-resolution result.
-              kind: "surfaceAttachment",
-              holeId: holeId("fireball_point"),
-              value: {
-                kind: "area",
-                origin: { kind: "point_within_range" },
-                shape: {
-                  kind: "sphere",
-                  radiusFeet: 20,
-                },
-              },
-            },
-          ],
-        },
-      ),
-    ).toEqual({
-      tag: "invalid",
-      reason: "save-gate unit outcome application is not implemented yet",
     });
   });
 

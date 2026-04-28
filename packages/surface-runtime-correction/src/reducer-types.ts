@@ -1,7 +1,9 @@
 import { Brand } from "effect";
 import type {
   Attachment,
+  Ability,
   DamageTypeRef,
+  DcSource,
   UnitRecord,
 } from "@dnd/prototype-content-surface/surface/types";
 import type {
@@ -58,6 +60,11 @@ export type AttackRollResult = {
   readonly naturalD20: DieRollResult;
 };
 
+export type SavingThrowOutcome = {
+  readonly targetId: CreatureId;
+  readonly succeeded: boolean;
+};
+
 // "non-runtime" holes are Surface holes.
 export type RuntimeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -76,6 +83,12 @@ export type RuntimeHole = {
   | {
       readonly kind: "rolledDice";
       readonly label?: string;
+    }
+  | {
+      readonly kind: "savingThrowOutcome";
+      readonly label?: string;
+      readonly ability: Ability;
+      readonly dc: DcSource;
     }
   | {
       readonly kind: "surfaceAttachment";
@@ -138,6 +151,11 @@ export type FilledHoleValue =
       readonly kind: "attackRoll";
       readonly holeId: HoleId;
       readonly value: AttackRollResult;
+    }
+  | {
+      readonly kind: "savingThrowOutcome";
+      readonly holeId: HoleId;
+      readonly value: ReadonlyArray<SavingThrowOutcome>;
     }
   | {
       readonly kind: "rolledDice";
