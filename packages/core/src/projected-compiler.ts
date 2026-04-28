@@ -1,3 +1,6 @@
+// Transitional projected Surface bridge; max-lines is disabled for this file in
+// eslint.config.mjs because this compiler is likely removed when core consumes
+// Surface/shared reducer facts directly.
 /**
  * Compiler from authored unit definitions to execution projections.
  *
@@ -105,9 +108,7 @@ function require(
   if (!condition) unsupported(unitId, reason);
 }
 
-function projectedSource(
-  unit: ProjectableSurfaceUnit,
-): ProjectedSource {
+function projectedSource(unit: ProjectableSurfaceUnit): ProjectedSource {
   return {
     unitId: unit.id,
     unitKind: unit.kind === "spell" ? "PUKSpell" : "PUKClassFeature",
@@ -142,20 +143,14 @@ function compileAttachment(
     return { tag: "PEASelf" };
   }
   if (attachment.kind === "target") {
-    require(
-      attachment.selection.mode === "one",
-      unit.id,
-      "target attachment must stay a single chosen target",
-    );
+    require(attachment.selection.mode ===
+      "one", unit.id, "target attachment must stay a single chosen target");
     return { tag: "PEAOneTarget" };
   }
   if (attachment.kind === "area") {
-    require(
-      attachment.origin.kind === "point_within_range" &&
-        attachment.shape.kind === "sphere",
-      unit.id,
-      "area attachment must stay a point-within-range sphere",
-    );
+    require(attachment.origin.kind === "point_within_range" &&
+      attachment.shape.kind ===
+        "sphere", unit.id, "area attachment must stay a point-within-range sphere");
     return {
       tag: "PEAAreaSpherePointWithinRange",
       value: {
@@ -176,11 +171,8 @@ function compileSpellAttachment(
 ): ProjectedExecutableAction["attachment"] {
   const attachment = compileAttachment(unit, phase.attachment);
   if (attachment.tag === "PEAAreaSpherePointWithinRange") {
-    require(
-      unit.mechanics.range.kind === "point",
-      unit.id,
-      "area spell range must stay a point range",
-    );
+    require(unit.mechanics.range.kind ===
+      "point", unit.id, "area spell range must stay a point range");
     return {
       ...attachment,
       value: {
@@ -211,12 +203,12 @@ function compileUsageLimit(
 function compileThresholdCap(
   unit: ProjectableSurfaceUnit,
   cap: UseCountResource["cap"],
-): Extract<ProjectedExecutableAction["resourceGate"], { readonly tag: "PRGUseCount" }>["value"]["cap"] {
-  require(
-    cap.kind === "threshold_tiers",
-    unit.id,
-    'resource cap must stay "threshold_tiers"',
-  );
+): Extract<
+  ProjectedExecutableAction["resourceGate"],
+  { readonly tag: "PRGUseCount" }
+>["value"]["cap"] {
+  require(cap.kind ===
+    "threshold_tiers", unit.id, 'resource cap must stay "threshold_tiers"');
   require(cap.axis === "class", unit.id, 'resource cap axis must stay "class"');
   return {
     tag: "PRCThresholdTiers",
@@ -234,7 +226,10 @@ function compileThresholdCap(
 function compileResetCadence(
   unit: ProjectableSurfaceUnit,
   cadence: ResetCadence,
-): Extract<ProjectedExecutableAction["resourceGate"], { readonly tag: "PRGUseCount" }>["value"]["resetCadence"] {
+): Extract<
+  ProjectedExecutableAction["resourceGate"],
+  { readonly tag: "PRGUseCount" }
+>["value"]["resetCadence"] {
   if (cadence.kind === "partial_short_full_long") {
     return {
       tag: "PRCPartialShortFullLong",
@@ -261,16 +256,10 @@ function compileResourceGate(
 ): ProjectedExecutableAction["resourceGate"] {
   const { resource, resetCadence } = unit.mechanics;
   if (resource == null) return { tag: "PRGNone" };
-  require(
-    pool != null,
-    unit.id,
-    "resource-backed projected feature requires a supported resource pool",
-  );
-  require(
-    resetCadence != null,
-    unit.id,
-    "resource-backed projected feature requires a reset cadence",
-  );
+  require(pool !=
+    null, unit.id, "resource-backed projected feature requires a supported resource pool");
+  require(resetCadence !=
+    null, unit.id, "resource-backed projected feature requires a reset cadence");
   return Match.value(resource.kind).pipe(
     Match.when("use_count", () => ({
       tag: "PRGUseCount" as const,
@@ -292,9 +281,15 @@ function compileResourceGate(
 function compileSpellSaveDc(
   unit: ProjectableSurfaceUnit,
   dc: DcSource,
-): Extract<ProjectedExecutableAction, { readonly tag: "PEASaveGateDamage" }>["dc"] {
+): Extract<
+  ProjectedExecutableAction,
+  { readonly tag: "PEASaveGateDamage" }
+>["dc"] {
   if (dc.kind === "caster_spell_save_dc") return "PDCSpellSaveDc";
-  return unsupported(unit.id, `unsupported projected save DC source "${dc.kind}"`);
+  return unsupported(
+    unit.id,
+    `unsupported projected save DC source "${dc.kind}"`,
+  );
 }
 
 function compileAmount(
@@ -302,11 +297,8 @@ function compileAmount(
   amount: DiceAmount,
 ): Extract<ProjectedExecutableAction, { readonly amount: unknown }>["amount"] {
   if (amount.kind === "threshold_tiers") {
-    require(
-      amount.axis === "character",
-      unit.id,
-      'threshold-tier amount axis must stay "character"',
-    );
+    require(amount.axis ===
+      "character", unit.id, 'threshold-tier amount axis must stay "character"');
     return {
       tag: "PAThresholdDice",
       value: {
@@ -324,11 +316,8 @@ function compileAmount(
     };
   }
   if (amount.kind === "linear_per_level") {
-    require(
-      amount.axis === "class",
-      unit.id,
-      'linear-per-level amount axis must stay "class"',
-    );
+    require(amount.axis ===
+      "class", unit.id, 'linear-per-level amount axis must stay "class"');
     return {
       tag: "PALinearDicePlusLevel",
       value: {
@@ -343,7 +332,10 @@ function compileAmount(
       },
     };
   }
-  return unsupported(unit.id, `unsupported projected amount kind "${amount.kind}"`);
+  return unsupported(
+    unit.id,
+    `unsupported projected amount kind "${amount.kind}"`,
+  );
 }
 
 function compileActivationSaveGateDamageSpell(
@@ -355,11 +347,8 @@ function compileActivationSaveGateDamageSpell(
   if (phase.kind !== "save_gate") return null;
   if (phase.onSuccess.kind !== "none") return null;
   if (phase.onFail.kind !== "damage") return null;
-  require(
-    typeof phase.onFail.damageType === "string",
-    unit.id,
-    "projected damage type must stay a concrete damage type",
-  );
+  require(typeof phase.onFail.damageType ===
+    "string", unit.id, "projected damage type must stay a concrete damage type");
   return {
     tag: "PEASaveGateDamage",
     source: projectedSource(unit),
@@ -401,13 +390,10 @@ function compileDirectFeature(
     };
   }
   if (effect.kind === "grant_extra_action") {
-    require(
-      effect.restriction.kind === "exclude" &&
-        effect.restriction.actions.length === 1 &&
-        effect.restriction.actions[0] === "magic",
-      unit.id,
-      "grant_extra_action restriction must stay exclude magic",
-    );
+    require(effect.restriction.kind === "exclude" &&
+      effect.restriction.actions.length === 1 &&
+      effect.restriction.actions[0] ===
+        "magic", unit.id, "grant_extra_action restriction must stay exclude magic");
     return {
       tag: "PEADirectGrantExtraAction",
       ...base,
@@ -430,11 +416,8 @@ function compilePassiveSetBaseAc(
   const attachment = unwrapProjectedAttachment(unit.mechanics.attachment);
   if (attachment.kind !== "target") return null;
   if (attachment.selection.mode !== "one") return null;
-  require(
-    unit.mechanics.duration.kind === "timed",
-    unit.id,
-    'persistent base-AC projection requires a timed duration',
-  );
+  require(unit.mechanics.duration.kind ===
+    "timed", unit.id, "persistent base-AC projection requires a timed duration");
 
   return {
     tag: "PPRSetBaseAc",
@@ -443,7 +426,7 @@ function compilePassiveSetBaseAc(
       attachment: "PPAChosenTarget",
       ...compileProjectedSetBaseAc(unit, operation.effect.formula),
       earlyEnds: (unit.mechanics.duration.earlyEnd ?? []).map((trigger) =>
-        compileEarlyEnd(unit, trigger)
+        compileEarlyEnd(unit, trigger),
       ),
     },
   };
@@ -496,18 +479,18 @@ function compileEarlyEnd(
 }
 
 function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
-  require(
-    unit.kind === "spell",
-    unit.id,
-    'projected spell compiler requires kind "spell"',
-  );
+  require(unit.kind ===
+    "spell", unit.id, 'projected spell compiler requires kind "spell"');
   return Match.value(unit.mechanics.family).pipe(
     Match.when("activation", () => {
       const compiled = compileActivationSaveGateDamageSpell(
         unit as ActivationSpellRecord,
       );
       if (compiled == null) {
-        unsupported(unit.id, "activation spell shape is out of projected scope");
+        unsupported(
+          unit.id,
+          "activation spell shape is out of projected scope",
+        );
       }
       return { tag: "CPUExecutable" as const, value: compiled };
     }),
@@ -533,11 +516,8 @@ function compileProjectedSpell(unit: SpellRecord): CompiledProjectedUnit {
 function compileProjectedClassFeature(
   unit: ClassFeatureRecord,
 ): CompiledProjectedUnit {
-  require(
-    unit.mechanics.family === "activation",
-    unit.id,
-    'projected class-feature compiler currently supports only "activation"',
-  );
+  require(unit.mechanics.family ===
+    "activation", unit.id, 'projected class-feature compiler currently supports only "activation"');
   const compiled = compileDirectFeature(unit as ActivationClassFeatureRecord);
   if (compiled == null) {
     unsupported(unit.id, "class-feature shape is out of projected scope");

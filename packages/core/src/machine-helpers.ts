@@ -2,6 +2,12 @@ import {
   CHAMPION_SURVIVOR_LEVEL,
   SURVIVOR_DEFY_DEATH_THRESHOLD,
 } from "#/features/class-fighter.ts";
+import {
+  addDeathFailures as addSharedDeathFailures,
+  resolveDeathSavingThrow,
+  type DeathSaveCount,
+  type DeathSaveRuntimeState,
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type { ClassName, HitDiceRemaining } from "#/features/class-tables.ts";
 import { hitDiceFromClassLevels } from "#/features/class-tables.ts";
 import { computeLongRest } from "#/machine-spells.ts";
@@ -118,47 +124,84 @@ interface DeathSaveResult {
   readonly regainsConsciousness: boolean;
 }
 
+function deathSaveCountValue(value: number): DeathSaveCount {
+  return Math.max(0, Math.min(3, Math.floor(value))) as DeathSaveCount;
+}
+
+function deathSaveRuntimeState(
+  successes: number,
+  failures: number,
+): DeathSaveRuntimeState {
+  return {
+    deathSaves: {
+      successes: deathSaveCountValue(successes),
+      failures: deathSaveCountValue(failures),
+    },
+    stable: false,
+    dead: false,
+    hpRegained: false,
+  };
+}
+
+function deathSaveResult(state: DeathSaveRuntimeState): DeathSaveResult {
+  return {
+    isDead: state.dead,
+    isStabilized: state.stable,
+    newFailures: state.deathSaves.failures,
+    newSuccesses: state.deathSaves.successes,
+    regainsConsciousness: state.hpRegained,
+  };
+}
+
+function rawDeathSaveCounters(
+  d20Roll: number,
+  successes: number,
+  failures: number,
+): Pick<DeathSaveResult, "newFailures" | "newSuccesses"> {
+  if (d20Roll === NAT_20) {
+    return { newFailures: 0, newSuccesses: 0 };
+  }
+
+  if (d20Roll === NAT_1) {
+    return {
+      newFailures: failures + DOUBLE_FAILURE_COUNT,
+      newSuccesses: successes,
+    };
+  }
+
+  if (d20Roll >= DEATH_SAVE_SUCCESS_MIN) {
+    return {
+      newFailures: failures,
+      newSuccesses: successes + 1,
+    };
+  }
+
+  return {
+    newFailures: failures + 1,
+    newSuccesses: successes,
+  };
+}
+
 export function resolveDeathSave(
   d20Roll: number,
   successes: number,
   failures: number,
 ): DeathSaveResult {
-  if (d20Roll === NAT_20) {
-    return {
-      isDead: false,
-      isStabilized: false,
-      newFailures: 0,
-      newSuccesses: 0,
-      regainsConsciousness: true,
-    };
-  }
-  if (d20Roll === NAT_1) {
-    const newFail = failures + DOUBLE_FAILURE_COUNT;
-    return {
-      isDead: newFail >= DEATH_SAVE_THRESHOLD,
-      isStabilized: false,
-      newFailures: newFail,
-      newSuccesses: successes,
-      regainsConsciousness: false,
-    };
-  }
-  if (d20Roll >= DEATH_SAVE_SUCCESS_MIN) {
-    const newSucc = successes + 1;
-    return {
-      isDead: false,
-      isStabilized: newSucc >= DEATH_SAVE_THRESHOLD,
-      newFailures: failures,
-      newSuccesses: newSucc,
-      regainsConsciousness: false,
-    };
-  }
-  const newFail = failures + 1;
+  const sharedResult = deathSaveResult(
+    resolveDeathSavingThrow(
+      deathSaveRuntimeState(successes, failures),
+      d20Roll,
+    ),
+  );
+  const counters = rawDeathSaveCounters(d20Roll, successes, failures);
+
   return {
-    isDead: newFail >= DEATH_SAVE_THRESHOLD,
-    isStabilized: false,
-    newFailures: newFail,
-    newSuccesses: successes,
-    regainsConsciousness: false,
+    ...sharedResult,
+    ...counters,
+    isDead: counters.newFailures >= DEATH_SAVE_THRESHOLD,
+    isStabilized:
+      sharedResult.isStabilized ||
+      counters.newSuccesses >= DEATH_SAVE_THRESHOLD,
   };
 }
 
@@ -169,7 +212,11 @@ export function addDeathFailures(
 ): { readonly newFailures: number; readonly isDead: boolean } {
   const count = isCritical ? DOUBLE_FAILURE_COUNT : 1;
   const newFailures = currentFailures + count;
-  return { isDead: newFailures >= DEATH_SAVE_THRESHOLD, newFailures };
+  const state = addSharedDeathFailures(
+    deathSaveRuntimeState(0, currentFailures),
+    count,
+  );
+  return { isDead: state.dead, newFailures };
 }
 
 // --- Damage-at-zero-HP state transitions ---

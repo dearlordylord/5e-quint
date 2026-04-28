@@ -22,11 +22,13 @@ import {
 } from "#/machine-combat.ts";
 import {
   applyDamageModifiers,
+  addDeathFailures,
   armorSpeedPenalty,
   calculateEffectiveSpeed,
   effectiveMaxHp,
   fallDamageDice,
   movementCostMultiplier,
+  resolveDeathSave,
 } from "#/machine-helpers.ts";
 import {
   canAct,
@@ -374,6 +376,27 @@ describe("damage track - death saves", () => {
     expect(isUnstable(snap(a))).toBe(true);
     return a;
   }
+
+  it("death save helper preserves raw terminal counters for core callers", () => {
+    expect(resolveDeathSave(10, 2, 1)).toEqual({
+      isDead: false,
+      isStabilized: true,
+      newFailures: 1,
+      newSuccesses: 3,
+      regainsConsciousness: false,
+    });
+    expect(resolveDeathSave(1, 0, 2)).toEqual({
+      isDead: true,
+      isStabilized: false,
+      newFailures: 4,
+      newSuccesses: 0,
+      regainsConsciousness: false,
+    });
+    expect(addDeathFailures(2, true)).toEqual({
+      isDead: true,
+      newFailures: 4,
+    });
+  });
 
   it("success on >= 10", () => {
     const a = createDying();

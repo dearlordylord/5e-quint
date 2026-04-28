@@ -189,9 +189,9 @@ flowchart TD
 
 The key non-obvious status is death saves. The pure counter algebra is MBT-covered. The composed creature lifecycle that decides whether a creature dies at 0 HP, uses death saves, becomes unconscious, or resets counters on healing is not MBT-covered yet; it is covered by reducer unit tests and reducer boundary tests. The start-turn death-save roll path is missing from the public reducer. It is a "wire soon" item because the pure counter and creature lifecycle helpers already exist; what is missing is the reducer act/window that asks for the death save roll at the right turn boundary.
 
-The key action-economy status is similar. The algebra supports action, free action, bonus action, and reset. The public discovery lane currently exposes action cantrips only, so bonus/free-action algebra is implemented but only exercised when an explicit supported unit subject reaches resolution. Wiring bonus/free actions into discovery is a "wire later" item because it depends on broader supported Surface units, not just the algebra.
+The key action-economy status is similar. The algebra supports action, free action, bonus action, and reset. The public discovery lane currently exposes action cantrips only, so bonus/free-action algebra is implemented but only exercised when an explicit supported unit subject reaches resolution. Wiring bonus/free actions into discovery is a "wire later" item because it depends on broader supported Surface units, not just the algebra. Core adoption is also later: first evolve this into a richer shared resource-payment algebra with multi-cost validation, atomic spend, and Surface/core cost compilation into the same reducer facts.
 
-Armor-class math is MBT-covered and used for unit attack AC comparison. Surface armor/equipment projection into `ArmorClassState` does not exist yet. That belongs to the open Surface/MBT boundary discussion: first decide the Surface fact projection contract, then decide whether that contract needs ordinary tests, MBT, or both.
+Armor-class math is MBT-covered and used for unit attack AC comparison. Surface armor/equipment projection into `ArmorClassState` does not exist yet. Core adoption is explicitly deferred until core has a Surface-backed armor/equipment projection path. That belongs to the open Surface/MBT boundary discussion: first decide the Surface fact projection contract, then decide whether that contract needs ordinary tests, MBT, or both.
 
 ## Surface Boundary
 
@@ -207,6 +207,8 @@ Current MBT validates reducer algebra over reducer facts, not Surface facts. The
 - `resolveSubjectHoles` consumes the projected holes and then calls MBT-backed reducer algebra where needed.
 
 The distinction matters: a reducer fact is something like "this activation costs one action", "this target has AC 18", or "this runtime hole asks for an attack roll". A Surface fact is authored content shape: `UnitRecord`, phases, attachments, effects, dice expressions, equipment, and other content-level data.
+
+Core also has a separate projected-unit bridge in `@dnd/core`, with local tags such as `CPUExecutable`, `CPUPersistent`, `PEASaveGateDamage`, `PPRSetBaseAc`, and `PRGUseCount`. Those names are not Surface vocabulary and are not the correction package's reducer-fact vocabulary. They are a transitional core-local compiled projected-unit IR: authored Surface-like records are narrowed into execution/persistent records that core can currently consume. Treat that bridge as another projection boundary, not as the canonical Surface model. This `CPU*`/`PEA*`/`PPR*` projected-unit vocabulary is not the intended long-term architecture; it should be removed or replaced once core consumes Surface/shared reducer facts through the same contracts used by correction.
 
 Whether Surface fact projection should get MBT is an open question. For now, this document must not assume a Surface projection MBT exists or must exist. The current concrete coverage is ordinary unit/boundary testing around support gates, runtime-hole projection, and reducer execution.
 
@@ -324,7 +326,7 @@ Implemented but not fully utilized by MBT:
 Implemented but not fully utilized by main reducer logic:
 
 - Bonus/free-action action-economy spending is implemented in the sub-reducer; discovery of bonus/free-action unit acts is not wired yet.
-- Armor algebra is ready to receive projected armor/equipment reducer facts; the Surface-to-armor projection contract is undecided and not implemented.
+- Armor algebra is ready to receive projected armor/equipment reducer facts; core use waits for core's Surface-backed armor/equipment projection path, and the Surface-to-armor projection contract is undecided and not implemented.
 - Death-save counter algebra is ready for start-turn death-save rolls; the public reducer has no start-turn death-save act/window yet.
 
 Likely wire soon:
@@ -335,5 +337,6 @@ Likely wire soon:
 Likely wire later:
 
 - Bonus/free-action unit discovery. The sub-reducer can spend those resources, but useful discovery depends on more supported Surface units.
-- Surface armor/equipment projection. The armor reducer shape exists, but the projection contract from authored Surface equipment facts still needs design.
+- Shared action-economy adoption in core. The current primitive should first grow into a real resource-payment algebra with multi-cost validation and atomic spend.
+- Surface armor/equipment projection. The armor reducer shape exists, but core adoption waits for core to have Surface-backed armor/equipment facts, and the projection contract from authored Surface equipment facts still needs design.
 - Upcasts, use counts, and other once-per-turn limits. These depend on broader Surface resource semantics.

@@ -17,3 +17,9 @@ Rules:
 - `@dnd/shared` should remain the lower-level package. Since `@dnd/shared-algebras` depends on `@dnd/shared`, `@dnd/shared` should not re-export `@dnd/shared-algebras`.
 
 Current adoption note: `@dnd/core` and `@dnd/surface-runtime-correction` both import reusable algebras from this package. `@dnd/shared` should not contain algebra modules.
+
+## Core Adoption Notes
+
+- Death saves are the first core adoption target because the algebra is Surface-free and replaces duplicated counter transition logic.
+- Action economy should be adopted by core later, after the small action/bonus/free primitive grows into a shared resource-payment algebra: multi-cost validation, atomic spend, richer resource vocabulary, and Surface/core cost compilation into the same reducer facts.
+- Armor class should be adopted by core when core has a Surface-backed armor/equipment projection path. Until then, wiring the armor algebra into core would mostly adapt the existing scalar/projected AC model into a shape intended for richer projected armor facts.
