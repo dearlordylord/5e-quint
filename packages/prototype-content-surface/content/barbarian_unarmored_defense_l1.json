@@ -11,11 +11,10 @@
     "family": "passive",
     "grants": [
       {
-        "abilityMods": [
-          "dex",
-          "con"
-        ],
-        "const": 10,
+        "formula": {
+          "base": 10,
+          "kind": "base_plus_dex_con"
+        },
         "kind": "modify_ac_set_base"
       }
     ]

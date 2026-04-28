@@ -1,5 +1,10 @@
 {
-  "acBonus": 2,
+  "armorClassProjection": {
+    "bonus": 2,
+    "handUse": "shield",
+    "kind": "trained_shield_bonus",
+    "trainingRequired": "shield"
+  },
   "costGp": 10,
   "description": "A Shield gives a +2 bonus to Armor Class and takes the Utilize action to don or doff.",
   "donDoff": {

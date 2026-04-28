@@ -12,7 +12,7 @@ let chainMail =
       , description =
           "Chain Mail gives a base Armor Class of 16. It requires Strength 13 and imposes Disadvantage on Dexterity (Stealth) checks."
       , acFormula =
-          { kind = "fixed"
+          { kind = "heavy_fixed"
           , ac = 16
           }
       , strengthRequirement = 13

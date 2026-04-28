@@ -11,11 +11,12 @@ let DiceDelta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
 let SavingThrowSourceFilter = { kind : Text }
 
+let BaseAcFormula = { kind : Text, base : Natural }
+
 let EffectRow =
       { kind : Text
       , delta : Optional DiceDelta
-      , const : Optional Natural
-      , abilityMod : Optional Text
+      , formula : Optional BaseAcFormula
       , mode : Optional Text
       , on : Optional (List Text)
       , saveSourceFilter : Optional SavingThrowSourceFilter
@@ -70,8 +71,7 @@ let robeOfTheArchmagi =
                     Some
                       [ { kind = "modify_roll_advantage"
                         , delta = None DiceDelta
-                        , const = None Natural
-                        , abilityMod = None Text
+                        , formula = None BaseAcFormula
                         , mode = Some "advantage"
                         , on = Some ["saving_throw"]
                         , saveSourceFilter =
@@ -85,8 +85,7 @@ let robeOfTheArchmagi =
                               , dieSize = 1
                               , sign = "+"
                               }
-                        , const = None Natural
-                        , abilityMod = None Text
+                        , formula = None BaseAcFormula
                         , mode = None Text
                         , on = None (List Text)
                         , saveSourceFilter = None SavingThrowSourceFilter
@@ -99,8 +98,7 @@ let robeOfTheArchmagi =
                               , dieSize = 1
                               , sign = "+"
                               }
-                        , const = None Natural
-                        , abilityMod = None Text
+                        , formula = None BaseAcFormula
                         , mode = None Text
                         , on = Some ["spell_attack_roll"]
                         , saveSourceFilter = None SavingThrowSourceFilter
@@ -121,8 +119,11 @@ let robeOfTheArchmagi =
                     Some
                       [ { kind = "modify_ac_set_base"
                         , delta = None DiceDelta
-                        , const = Some 15
-                        , abilityMod = Some "dex"
+                        , formula =
+                            Some
+                              { kind = "base_plus_dex"
+                              , base = 15
+                              }
                         , mode = None Text
                         , on = None (List Text)
                         , saveSourceFilter = None SavingThrowSourceFilter

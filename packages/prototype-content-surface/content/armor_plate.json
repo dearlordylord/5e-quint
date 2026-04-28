@@ -1,7 +1,7 @@
 {
   "acFormula": {
     "ac": 18,
-    "kind": "fixed"
+    "kind": "heavy_fixed"
   },
   "category": "heavy",
   "costGp": 1500,

@@ -1,8 +1,7 @@
 {
   "acFormula": {
     "base": 14,
-    "kind": "dex_modifier",
-    "maxDexBonus": 2
+    "kind": "medium_dex_max_2"
   },
   "category": "medium",
   "costGp": 400,

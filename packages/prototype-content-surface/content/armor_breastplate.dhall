@@ -12,9 +12,8 @@ let breastplate =
       , description =
           "A Breastplate gives a base Armor Class of 14 plus your Dexterity modifier, to a maximum Dexterity bonus of 2."
       , acFormula =
-          { kind = "dex_modifier"
+          { kind = "medium_dex_max_2"
           , base = 14
-          , maxDexBonus = 2
           }
       , weightPounds = 20
       , costGp = 400

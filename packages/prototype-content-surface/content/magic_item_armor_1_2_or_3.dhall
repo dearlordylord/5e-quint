@@ -1,5 +1,17 @@
 -- Armor, +1, +2, or +3 — SRD 5.2.1 magic item.
 
+let SimplePredicate = { kind : Text, categories : Optional (List Text) }
+
+let armorCondition =
+      { kind = "all_of"
+      , predicates =
+          [ { kind = "wearing_item", categories = None (List Text) }
+          , { kind = "wearing_armor"
+            , categories = Some [ "light", "medium", "heavy" ]
+            }
+          ] : List SimplePredicate
+      }
+
 let armor =
       { kind = "magic_item"
       , id = "magic_item_armor_1_2_or_3"
@@ -17,7 +29,7 @@ let armor =
             , rarity = "rare"
             , mechanics =
                 { family = "passive"
-                , condition = { kind = "wearing_item" }
+                , condition = armorCondition
                 , grants =
                     [ { kind = "modify_ac"
                       , delta =
@@ -36,7 +48,7 @@ let armor =
             , rarity = "very_rare"
             , mechanics =
                 { family = "passive"
-                , condition = { kind = "wearing_item" }
+                , condition = armorCondition
                 , grants =
                     [ { kind = "modify_ac"
                       , delta =
@@ -55,7 +67,7 @@ let armor =
             , rarity = "legendary"
             , mechanics =
                 { family = "passive"
-                , condition = { kind = "wearing_item" }
+                , condition = armorCondition
                 , grants =
                     [ { kind = "modify_ac"
                       , delta =

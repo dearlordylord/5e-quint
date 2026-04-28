@@ -231,13 +231,16 @@ export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
 
 export const ArmorAcFormulaSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("fixed"),
-    ac: Schema.Number,
+    kind: Schema.Literal("light_dex"),
+    base: Schema.Number,
   }),
   Schema.Struct({
-    kind: Schema.Literal("dex_modifier"),
+    kind: Schema.Literal("medium_dex_max_2"),
     base: Schema.Number,
-    maxDexBonus: exactOptional(Schema.Number),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("heavy_fixed"),
+    ac: Schema.Number,
   }),
 );
 

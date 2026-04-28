@@ -39,8 +39,10 @@
     "operations": [
       {
         "effect": {
-          "abilityMod": "dex",
-          "const": 13,
+          "formula": {
+            "base": 13,
+            "kind": "base_plus_dex"
+          },
           "kind": "modify_ac_set_base"
         },
         "trigger": {

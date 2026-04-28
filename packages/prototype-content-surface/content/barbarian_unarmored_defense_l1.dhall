@@ -17,8 +17,10 @@ let unarmoredDefense =
           , condition = { kind = "unarmored" }
           , grants =
               [ { kind = "modify_ac_set_base"
-                , const = 10
-                , abilityMods = [ "dex", "con" ]
+                , formula =
+                    { kind = "base_plus_dex_con"
+                    , base = 10
+                    }
                 }
               ]
           }

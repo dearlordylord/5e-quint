@@ -51,8 +51,10 @@ let mageArmor =
               [ { trigger = { kind = "passive" }
                 , effect =
                     { kind = "modify_ac_set_base"
-                    , const = 13
-                    , abilityMod = "dex"
+                    , formula =
+                        { kind = "base_plus_dex"
+                        , base = 13
+                        }
                     }
                 }
               ]

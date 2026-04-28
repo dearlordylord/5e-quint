@@ -12,7 +12,7 @@ let leather =
       , description =
           "Leather Armor gives a base Armor Class of 11 plus your Dexterity modifier."
       , acFormula =
-          { kind = "dex_modifier"
+          { kind = "light_dex"
           , base = 11
           }
       , weightPounds = 10

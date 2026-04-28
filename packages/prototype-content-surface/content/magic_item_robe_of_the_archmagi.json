@@ -70,8 +70,10 @@
         "family": "passive",
         "grants": [
           {
-            "abilityMod": "dex",
-            "const": 15,
+            "formula": {
+              "base": 15,
+              "kind": "base_plus_dex"
+            },
             "kind": "modify_ac_set_base"
           }
         ]

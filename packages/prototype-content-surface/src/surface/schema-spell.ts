@@ -1317,18 +1317,25 @@ export const OngoingPredicateSchema = Schema.Union(
   }),
 );
 
-export const ModifyAcSetBaseEffectSchema = Schema.Union(
+const BaseAcReplacementFormulaSchema = Schema.Union(
   Schema.Struct({
-    kind: Schema.Literal("modify_ac_set_base"),
-    const: Schema.Number,
-    abilityMod: AbilitySchema,
+    kind: Schema.Literal("base_plus_dex"),
+    base: Schema.Number,
   }),
   Schema.Struct({
-    kind: Schema.Literal("modify_ac_set_base"),
-    const: Schema.Number,
-    abilityMods: nonEmpty(AbilitySchema),
+    kind: Schema.Literal("base_plus_dex_con"),
+    base: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("base_plus_dex_wis"),
+    base: Schema.Number,
   }),
 );
+
+export const ModifyAcSetBaseEffectSchema = Schema.Struct({
+  kind: Schema.Literal("modify_ac_set_base"),
+  formula: BaseAcReplacementFormulaSchema,
+});
 
 export const ModifyAcSetFloorEffectSchema = Schema.Struct({
   kind: Schema.Literal("modify_ac_set_floor"),

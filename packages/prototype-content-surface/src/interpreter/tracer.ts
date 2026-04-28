@@ -375,8 +375,8 @@ function traceEffectAtom(
       nodes.push({
         id,
         category: "effect",
-        atomKind: "modify_ac",
-        label: `modify_ac\nset base = ${describeModifyAcSetBase(e)}`,
+        atomKind: "modify_ac_set_base",
+        label: `modify_ac_set_base\n${describeModifyAcSetBase(e)}`,
       });
       return id;
     }
@@ -4739,9 +4739,18 @@ function describeDelta_(d: DiceExprDelta, base: DiceExpr): string {
 function describeModifyAcSetBase(
   effect: Extract<EffectAtom, { readonly kind: "modify_ac_set_base" }>,
 ): string {
-  const mods =
-    "abilityMods" in effect ? effect.abilityMods : [effect.abilityMod];
-  return `${effect.const} + ${mods.map((mod) => `${mod.toUpperCase()} mod`).join(" + ")}`;
+  switch (effect.formula.kind) {
+    case "base_plus_dex":
+      return `${effect.formula.base} + DEX mod`;
+    case "base_plus_dex_con":
+      return `${effect.formula.base} + DEX mod + CON mod`;
+    case "base_plus_dex_wis":
+      return `${effect.formula.base} + DEX mod + WIS mod`;
+    default: {
+      const _exhaustive: never = effect.formula;
+      throw new Error(`unhandled AC base formula: ${String(_exhaustive)}`);
+    }
+  }
 }
 
 // ============================================================
@@ -4813,7 +4822,7 @@ function traceShieldUnit(shield: ShieldRecord): Trace {
     id: rootId,
     category: "source",
     atomKind: "shield_root",
-    label: `shield_root\n${shield.name}`,
+    label: `shield_root\n${shield.name}\nhand use: ${shield.armorClassProjection.handUse}\ntraining: ${shield.armorClassProjection.trainingRequired}`,
   });
 
   const bonusId = ids("ac");
@@ -4821,7 +4830,7 @@ function traceShieldUnit(shield: ShieldRecord): Trace {
     id: bonusId,
     category: "effect",
     atomKind: "modify_ac",
-    label: `shield AC bonus\n+${shield.acBonus}`,
+    label: `shield AC bonus\n+${shield.armorClassProjection.bonus}`,
   });
   edges.push({ from: rootId, to: bonusId, relation: "grants" });
 
@@ -4900,12 +4909,12 @@ function traceDonDoff(
 
 function describeArmorAcFormula(formula: ArmorAcFormula): string {
   switch (formula.kind) {
-    case "fixed":
+    case "light_dex":
+      return `${formula.base} + DEX mod`;
+    case "medium_dex_max_2":
+      return `${formula.base} + DEX mod (max 2)`;
+    case "heavy_fixed":
       return `${formula.ac}`;
-    case "dex_modifier":
-      return formula.maxDexBonus === undefined
-        ? `${formula.base} + DEX mod`
-        : `${formula.base} + DEX mod (max ${formula.maxDexBonus})`;
     default: {
       const _exhaustive: never = formula;
       throw new Error(`unhandled armor AC formula: ${String(_exhaustive)}`);

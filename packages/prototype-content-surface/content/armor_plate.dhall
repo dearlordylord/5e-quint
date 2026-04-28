@@ -12,7 +12,7 @@ let plate =
       , description =
           "Plate Armor gives a base Armor Class of 18. It requires Strength 15 and imposes Disadvantage on Dexterity (Stealth) checks."
       , acFormula =
-          { kind = "fixed"
+          { kind = "heavy_fixed"
           , ac = 18
           }
       , strengthRequirement = 15

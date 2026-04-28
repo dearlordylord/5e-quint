@@ -10,7 +10,12 @@ let shield =
           }
       , description =
           "A Shield gives a +2 bonus to Armor Class and takes the Utilize action to don or doff."
-      , acBonus = 2
+      , armorClassProjection =
+          { kind = "trained_shield_bonus"
+          , handUse = "shield"
+          , trainingRequired = "shield"
+          , bonus = 2
+          }
       , weightPounds = 6
       , costGp = 10
       , donDoff = { action = "utilize" }

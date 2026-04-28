@@ -2,8 +2,6 @@ import { Schema } from "effect";
 
 import {
   AbilitySchema,
-  ArmorAcFormulaSchema,
-  ArmorCategorySchema,
   ClassNameSchema,
   ConditionSchema,
   DiceAmountSchema,
@@ -484,11 +482,9 @@ export const MagicItemRecordSchema = Schema.Union(
   }),
 );
 
-export const ArmorRecordSchema = Schema.Struct({
+const armorRecordBaseFields = {
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("armor"),
-  category: ArmorCategorySchema,
-  acFormula: ArmorAcFormulaSchema,
   strengthRequirement: exactOptional(Schema.Number),
   stealthDisadvantage: exactOptional(Schema.Literal(true)),
   weightPounds: Schema.Number,
@@ -497,12 +493,44 @@ export const ArmorRecordSchema = Schema.Struct({
     donMinutes: Schema.Number,
     doffMinutes: Schema.Number,
   }),
-});
+};
+
+export const ArmorRecordSchema = Schema.Union(
+  Schema.Struct({
+    ...armorRecordBaseFields,
+    category: Schema.Literal("light"),
+    acFormula: Schema.Struct({
+      kind: Schema.Literal("light_dex"),
+      base: Schema.Number,
+    }),
+  }),
+  Schema.Struct({
+    ...armorRecordBaseFields,
+    category: Schema.Literal("medium"),
+    acFormula: Schema.Struct({
+      kind: Schema.Literal("medium_dex_max_2"),
+      base: Schema.Number,
+    }),
+  }),
+  Schema.Struct({
+    ...armorRecordBaseFields,
+    category: Schema.Literal("heavy"),
+    acFormula: Schema.Struct({
+      kind: Schema.Literal("heavy_fixed"),
+      ac: Schema.Number,
+    }),
+  }),
+);
 
 export const ShieldRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("shield"),
-  acBonus: Schema.Number,
+  armorClassProjection: Schema.Struct({
+    kind: Schema.Literal("trained_shield_bonus"),
+    handUse: Schema.Literal("shield"),
+    trainingRequired: Schema.Literal("shield"),
+    bonus: Schema.Number,
+  }),
   weightPounds: Schema.Number,
   costGp: Schema.Number,
   donDoff: Schema.Struct({

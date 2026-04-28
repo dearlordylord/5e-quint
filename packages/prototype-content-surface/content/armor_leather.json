@@ -1,7 +1,7 @@
 {
   "acFormula": {
     "base": 11,
-    "kind": "dex_modifier"
+    "kind": "light_dex"
   },
   "category": "light",
   "costGp": 10,

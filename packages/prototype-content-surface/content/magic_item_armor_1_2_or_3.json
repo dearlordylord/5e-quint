@@ -18,7 +18,20 @@
       "id": "magic_item_armor_plus_1",
       "mechanics": {
         "condition": {
-          "kind": "wearing_item"
+          "kind": "all_of",
+          "predicates": [
+            {
+              "kind": "wearing_item"
+            },
+            {
+              "categories": [
+                "light",
+                "medium",
+                "heavy"
+              ],
+              "kind": "wearing_armor"
+            }
+          ]
         },
         "family": "passive",
         "grants": [
@@ -43,7 +56,20 @@
       "id": "magic_item_armor_plus_2",
       "mechanics": {
         "condition": {
-          "kind": "wearing_item"
+          "kind": "all_of",
+          "predicates": [
+            {
+              "kind": "wearing_item"
+            },
+            {
+              "categories": [
+                "light",
+                "medium",
+                "heavy"
+              ],
+              "kind": "wearing_armor"
+            }
+          ]
         },
         "family": "passive",
         "grants": [
@@ -68,7 +94,20 @@
       "id": "magic_item_armor_plus_3",
       "mechanics": {
         "condition": {
-          "kind": "wearing_item"
+          "kind": "all_of",
+          "predicates": [
+            {
+              "kind": "wearing_item"
+            },
+            {
+              "categories": [
+                "light",
+                "medium",
+                "heavy"
+              ],
+              "kind": "wearing_armor"
+            }
+          ]
         },
         "family": "passive",
         "grants": [
