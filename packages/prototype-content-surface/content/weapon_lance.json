@@ -20,7 +20,8 @@
       "kind": "reach"
     },
     {
-      "kind": "two_handed"
+      "kind": "two_handed",
+      "unless": "mounted"
     }
   ],
   "provenance": {

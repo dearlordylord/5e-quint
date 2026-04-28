@@ -19,6 +19,9 @@ export const WeaponPropertySchema = Schema.Literal("thrown");
 
 export const WeaponFilterSchema = Schema.Union(
   Schema.Struct({
+    kind: Schema.Literal("source_item"),
+  }),
+  Schema.Struct({
     kind: Schema.Literal("weapon_category"),
     category: Schema.Literal("melee", "ranged"),
   }),
@@ -273,15 +276,30 @@ export const WeaponRangeSchema = Schema.Struct({
   long: Schema.Number,
 });
 
+export const AmmunitionKindSchema = Schema.Literal(
+  "arrow",
+  "bolt",
+  "bullet",
+  "needle",
+  "sling_bullet",
+);
+
 export const WeaponPropertyDetailSchema = Schema.Union(
-  Schema.Struct({ kind: Schema.Literal("ammunition"), range: WeaponRangeSchema }),
+  Schema.Struct({
+    kind: Schema.Literal("ammunition"),
+    range: WeaponRangeSchema,
+    ammunition: AmmunitionKindSchema,
+  }),
   Schema.Struct({ kind: Schema.Literal("finesse") }),
   Schema.Struct({ kind: Schema.Literal("heavy") }),
   Schema.Struct({ kind: Schema.Literal("light") }),
   Schema.Struct({ kind: Schema.Literal("loading") }),
   Schema.Struct({ kind: Schema.Literal("reach") }),
   Schema.Struct({ kind: Schema.Literal("thrown"), range: WeaponRangeSchema }),
-  Schema.Struct({ kind: Schema.Literal("two_handed") }),
+  Schema.Struct({
+    kind: Schema.Literal("two_handed"),
+    unless: exactOptional(Schema.Literal("mounted")),
+  }),
   Schema.Struct({
     kind: Schema.Literal("versatile"),
     damage: WeaponDamageSchema,

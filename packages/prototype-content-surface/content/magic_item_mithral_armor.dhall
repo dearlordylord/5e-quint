@@ -45,6 +45,7 @@ let armor =
             , attunement.requiresAttunement = False
             , mechanics =
               { family = "passive"
+              , condition = Some { kind = "wearing_item" }
               , grants =
                 [ suppressStealthDisadvantage, removeStrengthRequirement ]
               }

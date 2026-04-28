@@ -1,19 +1,27 @@
 -- Weapon, +1, +2, or +3 — SRD 5.2.1 magic weapon template.
 let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
-let SpecificItemFilter = { kind : Text, itemId : Text }
+let WeaponFilter = { kind : Text, itemId : Optional Text }
+
+let SourceItemFilter = { kind = "source_item", itemId = None Text }
 
 let Effect =
       { kind : Text
       , delta : Delta
       , on : Optional (List Text)
-      , weaponFilter : Optional SpecificItemFilter
+      , weaponFilter : Optional WeaponFilter
       }
+
+let Condition = { kind : Text }
 
 let MagicTrait =
       { rarity : Text
       , attunement : { requiresAttunement : Bool }
-      , mechanics : { family : Text, grants : List Effect }
+      , mechanics :
+          { family : Text
+          , condition : Optional Condition
+          , grants : List Effect
+          }
       , destruction : { kind : Text }
       }
 
@@ -24,7 +32,7 @@ let attackBonus =
         { kind = "modify_roll_numeric"
         , delta = { kind = "fixed_dice", dice = n, dieSize = 1, sign = "+" }
         , on = Some [ "attack_roll" ]
-        , weaponFilter = None SpecificItemFilter
+        , weaponFilter = Some SourceItemFilter
         }
 
 let damageBonus =
@@ -32,7 +40,7 @@ let damageBonus =
         { kind = "modify_damage_numeric"
         , delta = { kind = "fixed_dice", dice = n, dieSize = 1, sign = "+" }
         , on = None (List Text)
-        , weaponFilter = None SpecificItemFilter
+        , weaponFilter = Some SourceItemFilter
         }
 
 let variant =
@@ -46,7 +54,10 @@ let variant =
           { rarity
           , attunement.requiresAttunement = False
           , mechanics =
-            { family = "passive", grants = [ attackBonus n, damageBonus n ] }
+            { family = "passive"
+            , condition = None Condition
+            , grants = [ attackBonus n, damageBonus n ]
+            }
           , destruction.kind = "none"
           }
         }

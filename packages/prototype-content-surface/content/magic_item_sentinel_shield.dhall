@@ -34,6 +34,7 @@ let shield =
             , attunement.requiresAttunement = False
             , mechanics =
               { family = "passive"
+              , condition = Some { kind = "holding_item" }
               , grants =
                 [   { kind = "modify_roll_advantage"
                     , mode = "advantage"

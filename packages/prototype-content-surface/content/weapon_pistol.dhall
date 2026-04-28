@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -34,15 +36,19 @@ let weapon =
             [ { kind = "ammunition"
               , range = Some { normal = 30, long = 90 }
               , damage = None WeaponDamage
+              , ammunition = Some "bullet"
+              , unless = None Text
               }
             , { kind = "loading"
               , range = None WeaponRange
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             ]
           : List WeaponProperty
       , mastery = "vex"
-      , weightPounds = 3
+      , weightPounds = Some 3
       , costGp = 250
       }
 

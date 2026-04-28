@@ -1,5 +1,5 @@
 {
-  "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. The first-attack bonus transfer to AC is not yet represented.",
+  "description": "You gain a +3 bonus to attack rolls and damage rolls made with this magic weapon. The first time you attack with it on each of your turns, you can transfer some or all of the bonus to your Armor Class while holding the weapon until the start of your next turn.",
   "id": "magic_item_defender",
   "kind": "weapon_template",
   "name": "Defender",
@@ -19,6 +19,9 @@
           "kind": "none"
         },
         "mechanics": {
+          "condition": {
+            "kind": "holding_item"
+          },
           "family": "passive",
           "grants": [
             {
@@ -31,7 +34,10 @@
               "kind": "modify_roll_numeric",
               "on": [
                 "attack_roll"
-              ]
+              ],
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             },
             {
               "delta": {
@@ -40,7 +46,20 @@
                 "kind": "fixed_dice",
                 "sign": "+"
               },
-              "kind": "modify_damage_numeric"
+              "kind": "modify_damage_numeric",
+              "weaponFilter": {
+                "kind": "source_item"
+              }
+            },
+            {
+              "duration": "start_of_next_turn",
+              "from": "attack_and_damage_bonus",
+              "kind": "transfer_weapon_bonus_to_ac",
+              "maxBonus": 3,
+              "trigger": "first_attack_roll_each_turn",
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             }
           ]
         },

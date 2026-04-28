@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -32,7 +34,7 @@ let weapon =
         }
       , properties = [] : List WeaponProperty
       , mastery = "sap"
-      , weightPounds = 2
+      , weightPounds = Some 2
       , costGp = 10
       }
 

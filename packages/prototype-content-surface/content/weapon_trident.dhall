@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -34,6 +36,8 @@ let weapon =
             [ { kind = "thrown"
               , range = Some { normal = 20, long = 60 }
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             , { kind = "versatile"
               , range = None WeaponRange
@@ -44,11 +48,13 @@ let weapon =
                 , amount = None Natural
                 , damageType = "piercing"
                 }
+              , ammunition = None Text
+              , unless = None Text
               }
             ]
           : List WeaponProperty
       , mastery = "topple"
-      , weightPounds = 4
+      , weightPounds = Some 4
       , costGp = 5
       }
 

@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -34,23 +36,31 @@ let weapon =
             [ { kind = "ammunition"
               , range = Some { normal = 100, long = 400 }
               , damage = None WeaponDamage
+              , ammunition = Some "bolt"
+              , unless = None Text
               }
             , { kind = "heavy"
               , range = None WeaponRange
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             , { kind = "loading"
               , range = None WeaponRange
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             , { kind = "two_handed"
               , range = None WeaponRange
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             ]
           : List WeaponProperty
       , mastery = "push"
-      , weightPounds = 18
+      , weightPounds = Some 18
       , costGp = 50
       }
 

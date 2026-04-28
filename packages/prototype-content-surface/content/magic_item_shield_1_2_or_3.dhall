@@ -3,7 +3,10 @@ let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
 let Effect = { kind : Text, delta : Delta }
 
-let Mechanics = { family : Text, grants : List Effect }
+let Condition = { kind : Text }
+
+let Mechanics =
+      { family : Text, condition : Optional Condition, grants : List Effect }
 
 let MagicTrait =
       { rarity : Text
@@ -30,7 +33,11 @@ let variant =
         , magic =
           { rarity
           , attunement.requiresAttunement = False
-          , mechanics = { family = "passive", grants = [ acBonus n ] }
+          , mechanics =
+            { family = "passive"
+            , condition = Some { kind = "holding_item" }
+            , grants = [ acBonus n ]
+            }
           , destruction.kind = "none"
           }
         }

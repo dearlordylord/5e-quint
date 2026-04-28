@@ -403,6 +403,14 @@ type EffectAtom =
       readonly threshold: number;
       readonly weaponFilter?: WeaponFilter;
     }
+  | {
+      readonly kind: "transfer_weapon_bonus_to_ac";
+      readonly maxBonus: number;
+      readonly from: "attack_and_damage_bonus";
+      readonly trigger: "first_attack_roll_each_turn";
+      readonly duration: "start_of_next_turn";
+      readonly weaponFilter?: WeaponFilter;
+    }
   | { readonly kind: "suppress_incoming_critical_hit" }
   | {
       readonly kind: "modify_roll_advantage";
@@ -1570,6 +1578,14 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
       Schema.Struct({
         kind: Schema.Literal("modify_crit_range"),
         threshold: Schema.Number,
+        weaponFilter: optionalExact(WeaponFilterSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("transfer_weapon_bonus_to_ac"),
+        maxBonus: Schema.Number,
+        from: Schema.Literal("attack_and_damage_bonus"),
+        trigger: Schema.Literal("first_attack_roll_each_turn"),
+        duration: Schema.Literal("start_of_next_turn"),
         weaponFilter: optionalExact(WeaponFilterSchema),
       }),
       Schema.Struct({

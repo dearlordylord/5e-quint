@@ -2,7 +2,11 @@
 let MagicTrait =
       { rarity : Text
       , attunement : { requiresAttunement : Bool }
-      , mechanics : { family : Text, grants : List { kind : Text } }
+      , mechanics :
+          { family : Text
+          , condition : Optional { kind : Text }
+          , grants : List { kind : Text }
+          }
       , destruction : { kind : Text }
       }
 
@@ -28,6 +32,7 @@ let armor =
             , attunement.requiresAttunement = False
             , mechanics =
               { family = "passive"
+              , condition = Some { kind = "wearing_item" }
               , grants = [ { kind = "suppress_incoming_critical_hit" } ]
               }
             , destruction.kind = "none"

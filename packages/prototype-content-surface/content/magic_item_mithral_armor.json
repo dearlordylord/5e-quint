@@ -29,6 +29,9 @@
           "kind": "none"
         },
         "mechanics": {
+          "condition": {
+            "kind": "wearing_item"
+          },
           "family": "passive",
           "grants": [
             {

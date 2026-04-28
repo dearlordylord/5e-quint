@@ -586,6 +586,16 @@ export const WeaponTemplateRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
   kind: Schema.Literal("weapon_template"),
   template: Schema.Literal("any_weapon_magic", "ammunition_magic"),
+  ammunitionQuantity: exactOptional(
+    Schema.Struct({
+      kind: Schema.Literal("typically_found_or_sold"),
+      counts: Schema.NonEmptyArray(Schema.Number),
+      valueEquivalence: Schema.Struct({
+        count: Schema.Number,
+        item: Schema.Literal("potion_of_same_rarity"),
+      }),
+    }),
+  ),
   weaponApplicability: Schema.Union(
     Schema.Struct({
       kind: Schema.Literal("any_weapon"),
@@ -609,7 +619,7 @@ export const WeaponRecordSchema = Schema.Struct({
   damage: WeaponDamageSchema,
   properties: exactOptional(Schema.Array(WeaponPropertyDetailSchema)),
   mastery: WeaponMasteryNameSchema,
-  weightPounds: Schema.Number,
+  weightPounds: exactOptional(Schema.Number),
   costGp: Schema.Number,
 });
 

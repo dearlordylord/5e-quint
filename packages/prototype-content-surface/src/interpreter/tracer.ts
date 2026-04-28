@@ -567,6 +567,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "transfer_weapon_bonus_to_ac": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "transfer_weapon_bonus_to_ac",
+        label: `transfer_weapon_bonus_to_ac\nup to +${e.maxBonus} from ${e.from}\n${e.trigger} until ${e.duration}${describeWeaponFilter(e.weaponFilter)}`,
+      });
+      return id;
+    }
     case "suppress_incoming_critical_hit": {
       const id = ids("eff");
       nodes.push({
@@ -1861,6 +1871,7 @@ function traceEffectAtomScaling(
     case "suppress_roll_disadvantage":
     case "remove_equipment_requirement":
     case "modify_crit_range":
+    case "transfer_weapon_bonus_to_ac":
     case "suppress_incoming_critical_hit":
     case "scale_attack_count":
     case "modify_speed":
@@ -4994,6 +5005,16 @@ function traceWeaponTemplateUnit(weapon: WeaponTemplateRecord): Trace {
     atomKind: "weapon_template_root",
     label: `weapon_template_root\n${weapon.name}\n${describeWeaponApplicability(weapon.weaponApplicability)}`,
   });
+  if (weapon.ammunitionQuantity !== undefined) {
+    const qtyId = ids("qty");
+    nodes.push({
+      id: qtyId,
+      category: "source",
+      atomKind: "ammunition_quantity",
+      label: `ammunition_quantity\n${weapon.ammunitionQuantity.counts.join(" or ")} pieces\n${weapon.ammunitionQuantity.valueEquivalence.count} = ${weapon.ammunitionQuantity.valueEquivalence.item}`,
+    });
+    edges.push({ from: rootId, to: qtyId, relation: "defines" });
+  }
   for (const variant of weapon.variants) {
     traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
   }
@@ -5067,14 +5088,17 @@ function describeWeaponDamage(damage: WeaponDamage): string {
 function describeWeaponProperty(property: WeaponPropertyDetail): string {
   switch (property.kind) {
     case "ammunition":
-      return `ammunition (${property.range.normal}/${property.range.long})`;
+      return `ammunition (${property.range.normal}/${property.range.long}; ${property.ammunition})`;
     case "finesse":
     case "heavy":
     case "light":
     case "loading":
     case "reach":
-    case "two_handed":
       return property.kind;
+    case "two_handed":
+      return property.unless === undefined
+        ? property.kind
+        : `${property.kind} unless ${property.unless}`;
     case "thrown":
       return `thrown (${property.range.normal}/${property.range.long})`;
     case "versatile":
@@ -6797,6 +6821,8 @@ function describeGrantedSpellAreaOverride(
 function describeWeaponFilter(f: WeaponFilter | undefined): string {
   if (!f) return "";
   switch (f.kind) {
+    case "source_item":
+      return " [source item only]";
     case "weapon_category":
       return ` [${f.category} weapons only]`;
     case "weapon_property":

@@ -31,7 +31,10 @@
               "kind": "modify_roll_numeric",
               "on": [
                 "attack_roll"
-              ]
+              ],
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             },
             {
               "delta": {
@@ -40,7 +43,10 @@
                 "kind": "fixed_dice",
                 "sign": "+"
               },
-              "kind": "modify_damage_numeric"
+              "kind": "modify_damage_numeric",
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             }
           ]
         },
@@ -70,7 +76,10 @@
               "kind": "modify_roll_numeric",
               "on": [
                 "attack_roll"
-              ]
+              ],
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             },
             {
               "delta": {
@@ -79,7 +88,10 @@
                 "kind": "fixed_dice",
                 "sign": "+"
               },
-              "kind": "modify_damage_numeric"
+              "kind": "modify_damage_numeric",
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             }
           ]
         },
@@ -109,7 +121,10 @@
               "kind": "modify_roll_numeric",
               "on": [
                 "attack_roll"
-              ]
+              ],
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             },
             {
               "delta": {
@@ -118,7 +133,10 @@
                 "kind": "fixed_dice",
                 "sign": "+"
               },
-              "kind": "modify_damage_numeric"
+              "kind": "modify_damage_numeric",
+              "weaponFilter": {
+                "kind": "source_item"
+              }
             }
           ]
         },

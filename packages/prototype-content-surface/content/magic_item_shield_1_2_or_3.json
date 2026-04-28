@@ -29,6 +29,9 @@
           "kind": "none"
         },
         "mechanics": {
+          "condition": {
+            "kind": "holding_item"
+          },
           "family": "passive",
           "grants": [
             {
@@ -56,6 +59,9 @@
           "kind": "none"
         },
         "mechanics": {
+          "condition": {
+            "kind": "holding_item"
+          },
           "family": "passive",
           "grants": [
             {
@@ -83,6 +89,9 @@
           "kind": "none"
         },
         "mechanics": {
+          "condition": {
+            "kind": "holding_item"
+          },
           "family": "passive",
           "grants": [
             {

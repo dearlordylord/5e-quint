@@ -13,6 +13,7 @@
   "name": "Blowgun",
   "properties": [
     {
+      "ammunition": "needle",
       "kind": "ammunition",
       "range": {
         "long": 100,

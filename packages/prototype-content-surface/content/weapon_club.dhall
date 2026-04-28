@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -34,11 +36,13 @@ let weapon =
             [ { kind = "light"
               , range = None WeaponRange
               , damage = None WeaponDamage
+              , ammunition = None Text
+              , unless = None Text
               }
             ]
           : List WeaponProperty
       , mastery = "slow"
-      , weightPounds = 2
+      , weightPounds = Some 2
       , costGp = 0.1
       }
 

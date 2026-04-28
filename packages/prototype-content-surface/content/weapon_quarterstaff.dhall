@@ -13,6 +13,8 @@ let WeaponProperty =
       { kind : Text
       , range : Optional WeaponRange
       , damage : Optional WeaponDamage
+      , ammunition : Optional Text
+      , unless : Optional Text
       }
 
 let weapon =
@@ -40,11 +42,13 @@ let weapon =
                 , amount = None Natural
                 , damageType = "bludgeoning"
                 }
+              , ammunition = None Text
+              , unless = None Text
               }
             ]
           : List WeaponProperty
       , mastery = "topple"
-      , weightPounds = 4
+      , weightPounds = Some 4
       , costGp = 0.2
       }
 
