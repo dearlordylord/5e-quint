@@ -8,6 +8,11 @@ import {
   type CoreAttackAct,
   discoverCoreAttackAct,
 } from "#/reducer-core-attack.ts";
+import { canCurrentActorAct } from "#/reducer-core-acts.ts";
+import {
+  activationResourceCost,
+  canSpendAction,
+} from "#/reducer-action-economy.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import {
   type CurrentSliceSupportedActivationPhase,
@@ -97,6 +102,10 @@ function interpretUnitAct(
   subject: UnitSubject,
 ): Either.Either<InterpretedUnitAct, ResolutionInvalid> {
   return Either.gen(function* () {
+    if (!canCurrentActorAct(state)) {
+      return yield* Either.left(invalid("acting actor cannot act"));
+    }
+
     const actor = yield* requireUnitActor(state, subject.actorId);
     const unit = yield* requireUnit(actor, subject);
     const supportedUnit = yield* requireSupportedUnit(unit, subject);
@@ -147,6 +156,19 @@ function discoverUnitActs(
   return actor.units.flatMap((unit) => {
     const cantripUnit = actionCantripUnit(unit);
     if (cantripUnit === null) {
+      return [];
+    }
+
+    const cost = activationResourceCost(cantripUnit);
+    if (Either.isLeft(cost)) {
+      throw new Error(cost.left);
+    }
+
+    if (cost.right.kind !== "action") {
+      throw new Error("discoverable action cantrip must spend an action");
+    }
+
+    if (!canSpendAction(state)) {
       return [];
     }
 

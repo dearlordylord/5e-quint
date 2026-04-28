@@ -5,6 +5,9 @@ import { Integer } from "@dnd/shared/types";
 import type { CreatureId, Hp, SpellSlots } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
 import type { ArmorClassState } from "#/reducer-armor-class.ts";
+import type { DeathSaveRuntimeState } from "#/reducer-death-saves.ts";
+
+export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 
 export type SpellcastingAbilityModifier = Integer &
   Brand.Brand<"SpellcastingAbilityModifier">;
@@ -28,6 +31,8 @@ export type CreatureState = {
   readonly hasReaction: boolean;
   readonly units: ReadonlyArray<UnitRecord>;
   readonly armorClass: ArmorClassState;
+  readonly zeroHpLifecyclePolicy: ZeroHpLifecyclePolicy;
+  readonly deathSaves: DeathSaveRuntimeState;
   readonly spellcastingAbilityModifier: SpellcastingAbilityModifier;
   readonly spellSlots: SpellSlots;
   readonly slotExpendedThisTurn: boolean;

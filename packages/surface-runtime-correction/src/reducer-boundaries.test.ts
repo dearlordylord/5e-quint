@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { EMPTY_CONDITION_STATE } from "@dnd/shared/conditions-algebra";
+import {
+  EMPTY_CONDITION_STATE,
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared/conditions-algebra";
 import {
   createInitiativeStack,
   currentActing,
@@ -15,6 +19,7 @@ import type {
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
 import { statBlockArmorClassState } from "#/reducer-armor-class.ts";
 import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
+import { resetDeathSaveRuntimeState } from "#/reducer-death-saves.ts";
 import { spellcastingAbilityModifier } from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";
@@ -30,6 +35,8 @@ function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
     hasReaction: true,
     units: [],
     armorClass: statBlockArmorClassState(10),
+    zeroHpLifecyclePolicy: "usesDeathSavingThrows",
+    deathSaves: resetDeathSaveRuntimeState(),
     spellcastingAbilityModifier: spellcastingAbilityModifier(0),
     spellSlots: [],
     slotExpendedThisTurn: false,
@@ -179,6 +186,40 @@ describe("reducer boundaries", () => {
 
   it("discoverAvailableActs suppresses core attack when no action is available", () => {
     expect(discoverAvailableActs(exhaustedActionState())).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs suppresses action-cost unit acts when no action is available", () => {
+    expect(
+      discoverAvailableActs({
+        ...twoCreatureStateWithActingUnit("fire_bolt"),
+        currentActionsAvailable: 0,
+      }),
+    ).toEqual([
+      {
+        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        label: "End Turn",
+        summary: "End the current turn.",
+        initialHoles: [],
+      },
+    ]);
+  });
+
+  it("discoverAvailableActs suppresses non-end-turn acts for an incapacitated actor", () => {
+    expect(
+      discoverAvailableActs(
+        twoCreatureStateWithActingUnit("fire_bolt", {
+          hp: 0 as Hp,
+          conditions: applyCondition(EMPTY_CONDITION_STATE, "unconscious"),
+        }),
+      ),
+    ).toEqual([
       {
         subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
         label: "End Turn",
@@ -671,6 +712,54 @@ describe("reducer boundaries", () => {
     }
   });
 
+  it("resolveSubjectHoles makes a fire bolt target unconscious when damage drops it to zero", () => {
+    const state = {
+      ...twoCreatureStateWithActingUnit("fire_bolt"),
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          creatureState({ units: [loadSupportedUnit("fire_bolt")] }),
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 6 as Hp,
+            maxHp: 10 as Hp,
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fire_bolt",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("fire_bolt_target"),
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: holeId("activation:0_attack_roll"),
+          value: 17,
+        },
+        fireBoltDamageRollFill([6]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      const target = result.state.combatants.get("B" as CreatureId)!;
+      expect(Number(target.hp)).toBe(0);
+      expect(hasCondition(target.conditions, "unconscious")).toBe(true);
+      expect(target.deathSaves).toEqual(resetDeathSaveRuntimeState());
+    }
+  });
+
   it("resolveSubjectHoles rejects a unit-backed attack that targets the actor", () => {
     expect(
       resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
@@ -952,6 +1041,61 @@ describe("reducer boundaries", () => {
     }
   });
 
+  it("resolveSubjectHoles clears death saves and unconscious when cure wounds heals a zero-HP target", () => {
+    const base = twoCreatureStateWithActingSpellSlot("cure_wounds");
+    const state: State = {
+      ...base,
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          {
+            ...base.combatants.get("A" as CreatureId)!,
+            spellcastingAbilityModifier: spellcastingAbilityModifier(2),
+          },
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 0 as Hp,
+            maxHp: 12 as Hp,
+            conditions: applyCondition(EMPTY_CONDITION_STATE, "unconscious"),
+            deathSaves: {
+              deathSaves: { successes: 1, failures: 1 },
+              stable: false,
+              dead: false,
+              hpRegained: false,
+            },
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "cure_wounds",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("cure_wounds_target"),
+          value: "B" as CreatureId,
+        },
+        healingRollFill([5, 1]),
+      ],
+    });
+
+    if (result.tag !== "resolved") {
+      throw new Error(`expected resolved result, got ${result.tag}`);
+    }
+
+    const target = result.state.combatants.get("B" as CreatureId)!;
+    expect(Number(target.hp)).toBe(8);
+    expect(target.deathSaves).toEqual(resetDeathSaveRuntimeState());
+    expect(hasCondition(target.conditions, "unconscious")).toBe(false);
+  });
+
   it("resolveSubjectHoles rejects cure wounds without asking holes when no action is available", () => {
     expect(
       resolveSubjectHoles(
@@ -1000,6 +1144,28 @@ describe("reducer boundaries", () => {
     ).toEqual({
       tag: "invalid",
       reason: "no action available for unit",
+    });
+  });
+
+  it("resolveSubjectHoles rejects unit subjects for an incapacitated actor", () => {
+    expect(
+      resolveSubjectHoles(
+        twoCreatureStateWithActingUnit("cure_wounds", {
+          hp: 0 as Hp,
+          conditions: applyCondition(EMPTY_CONDITION_STATE, "unconscious"),
+        }),
+        {
+          subject: {
+            tag: "unit",
+            actorId: "A" as CreatureId,
+            unitId: "cure_wounds",
+          },
+          filledHoleValues: [],
+        },
+      ),
+    ).toEqual({
+      tag: "invalid",
+      reason: "acting actor cannot act",
     });
   });
 

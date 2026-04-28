@@ -1,8 +1,7 @@
 import * as path from "node:path";
-import { execSync } from "node:child_process";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import {
@@ -19,15 +18,6 @@ type ModelState = {
   readonly hasIncapacitated: boolean;
   readonly hasProne: boolean;
 };
-
-function killZombieEvaluators(): void {
-  try {
-    execSync("pkill -9 -f quint_evaluator", { stdio: "ignore" });
-  } catch {}
-  try {
-    execSync("pkill -9 -f 'quint run .* --mbt'", { stdio: "ignore" });
-  } catch {}
-}
 
 const quintStateSchema = z.object({
   qBlinded: z.boolean(),
@@ -156,14 +146,6 @@ function createConditionsDriver() {
 const conditionsStateCheck = stateCheck(normalizeQuintState, compareState);
 
 describe("Conditions Algebra MBT", () => {
-  beforeAll(() => {
-    killZombieEvaluators();
-  });
-
-  afterAll(() => {
-    killZombieEvaluators();
-  });
-
   it("replays condition traces against TS algebra", async () => {
     const specPath = path.resolve(
       import.meta.dirname,

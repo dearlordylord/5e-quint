@@ -1,10 +1,9 @@
 import * as path from "node:path";
-import { execSync } from "node:child_process";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
 import {
@@ -24,15 +23,6 @@ type ModelState = {
   readonly lastInsertStatus: "none" | "ok" | "decide" | "error";
   readonly lastTie: ReadonlyArray<CreatureId>;
 };
-
-function killZombieEvaluators(): void {
-  try {
-    execSync("pkill -9 -f quint_evaluator", { stdio: "ignore" });
-  } catch {}
-  try {
-    execSync("pkill -9 -f 'quint run .* --mbt'", { stdio: "ignore" });
-  } catch {}
-}
 
 const entrySchema = z.object({
   creature: z.enum(["c1", "c2", "c2b", "c3", "c4", "cx"]),
@@ -245,14 +235,6 @@ function createInitiativeDriver() {
 const initiativeStateCheck = stateCheck(normalizeQuintState, compareState);
 
 describe("Initiative Algebra MBT", () => {
-  beforeAll(() => {
-    killZombieEvaluators();
-  });
-
-  afterAll(() => {
-    killZombieEvaluators();
-  });
-
   it("replays initiative traces against TS algebra", async () => {
     const specPath = path.resolve(
       import.meta.dirname,

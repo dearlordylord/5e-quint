@@ -1,8 +1,17 @@
 import { Either, Match } from "effect";
 import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
-import { getOnlyOne, Hp } from "@dnd/shared/types";
+import { getOnlyOne } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 
+import {
+  activationResourceCost,
+  resetTurnActionEconomy,
+  spendActivationResource,
+} from "#/reducer-action-economy.ts";
+import {
+  damageCreatureHp,
+  healCreatureHp,
+} from "#/reducer-creature-lifecycle.ts";
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
 import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
 import {
@@ -45,14 +54,6 @@ type CurrentSliceSupportedDirectPhase = Extract<
 >;
 type CurrentSliceSupportedDirectEffect =
   CurrentSliceSupportedDirectPhase["effects"][number];
-type ActivationResourceCost =
-  | { readonly kind: "free" }
-  | { readonly kind: "action" }
-  | { readonly kind: "bonusAction" };
-type SupportedSurfaceActivationResourceKind =
-  | "free"
-  | "action"
-  | "bonus_action";
 type SpellSlotIndex = number;
 
 type DamageEffect = Extract<EffectAtom, { readonly kind: "damage" }>;
@@ -91,14 +92,11 @@ function resolveCoreEndTurn(state: State): ResolutionResult {
 
   return {
     tag: "resolved",
-    state: {
+    state: resetTurnActionEconomy({
       ...state,
       initiative,
       combatants,
-      currentActionsAvailable: 1,
-      currentHasBonusAction: true,
-      currentHasFreeAction: true,
-    },
+    }),
   };
 }
 
@@ -280,91 +278,17 @@ function requireOnlyHitDamageEffect(
   });
 }
 
-function activationResourceCost(
-  unit: CurrentSliceSupportedActivationUnit,
-): Either.Either<ActivationResourceCost, ResolutionInvalid> {
-  const mechanics = unit.mechanics;
-
-  if ("activationCost" in mechanics) {
-    if (
-      isSupportedSurfaceActivationResourceKind(mechanics.activationCost.kind)
-    ) {
-      return Either.right(
-        activationResourceCostFromSurfaceKind(mechanics.activationCost.kind),
-      );
-    }
-
-    return Either.left(invalid("unsupported unit activation cost"));
-  }
-
-  if ("castingTime" in mechanics) {
-    if (isSupportedSurfaceActivationResourceKind(mechanics.castingTime.kind)) {
-      return Either.right(
-        activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
-      );
-    }
-
-    return Either.left(invalid("unsupported unit casting time"));
-  }
-
-  return Either.left(invalid("unsupported unit activation cost"));
-}
-
-function isSupportedSurfaceActivationResourceKind(
-  kind: string,
-): kind is SupportedSurfaceActivationResourceKind {
-  return kind === "free" || kind === "action" || kind === "bonus_action";
-}
-
-function activationResourceCostFromSurfaceKind(
-  kind: SupportedSurfaceActivationResourceKind,
-): ActivationResourceCost {
-  return Match.value(kind).pipe(
-    Match.when("free", (): ActivationResourceCost => ({ kind: "free" })),
-    Match.when("action", (): ActivationResourceCost => ({ kind: "action" })),
-    Match.when(
-      "bonus_action",
-      (): ActivationResourceCost => ({ kind: "bonusAction" }),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function spendOneActionCount(
-  currentActionsAvailable: State["currentActionsAvailable"],
-): Either.Either<0 | 1, ResolutionInvalid> {
-  if (currentActionsAvailable === 0) {
-    return Either.left(invalid("no action available for unit"));
-  }
-
-  if (currentActionsAvailable === 1) {
-    return Either.right(0);
-  }
-
-  return Either.right(1);
-}
-
 function spendActivationCost(
   state: State,
   unit: CurrentSliceSupportedActivationUnit,
 ): Either.Either<State, ResolutionInvalid> {
   return Either.gen(function* () {
-    const cost = yield* activationResourceCost(unit);
+    const cost = yield* activationResourceCost(unit).pipe(
+      Either.mapLeft((reason) => invalid(reason)),
+    );
 
-    return yield* Match.value(cost).pipe(
-      Match.when({ kind: "free" }, () => Either.right(state)),
-      Match.when({ kind: "action" }, () =>
-        spendOneActionCount(state.currentActionsAvailable).pipe(
-          Either.map((currentActionsAvailable) => ({
-            ...state,
-            currentActionsAvailable,
-          })),
-        ),
-      ),
-      Match.when({ kind: "bonusAction" }, () =>
-        Either.left(invalid("unsupported unit activation resource cost")),
-      ),
-      Match.exhaustive,
+    return yield* spendActivationResource(state, cost).pipe(
+      Either.mapLeft((reason) => invalid(reason)),
     );
   });
 }
@@ -651,11 +575,8 @@ function applyHealing(
       state.combatants.get(targetId),
       () => invalid("invalid direct target"),
     );
-    const nextHp = Hp(
-      Math.min(Number(target.maxHp), Number(target.hp) + healingAmount),
-    );
     const combatants = new Map(state.combatants);
-    combatants.set(targetId, { ...target, hp: nextHp });
+    combatants.set(targetId, healCreatureHp(target, healingAmount));
 
     return { ...state, combatants };
   });
@@ -670,7 +591,6 @@ function currentSliceTargetArmorClass(
   ).pipe(Either.map((target) => Number(currentCreatureArmorClass(target))));
 }
 
-// FIXME: note that Overdamage is sometimes used by game logic (e.g. instant death) - check the RAW and advice
 function applyDamage(
   state: State,
   targetId: CreatureId,
@@ -682,9 +602,8 @@ function applyDamage(
       () => invalid("invalid attack target"),
     );
 
-    const nextHp = Hp(Math.max(0, Number(target.hp) - damageAmount));
     const combatants = new Map(state.combatants);
-    combatants.set(targetId, { ...target, hp: nextHp });
+    combatants.set(targetId, damageCreatureHp(target, damageAmount));
 
     return { ...state, combatants };
   });
