@@ -1,0 +1,23 @@
+{
+  "acFormula": {
+    "ac": 18,
+    "kind": "fixed"
+  },
+  "category": "heavy",
+  "costGp": 1500,
+  "description": "Plate Armor gives a base Armor Class of 18. It requires Strength 15 and imposes Disadvantage on Dexterity (Stealth) checks.",
+  "donDoff": {
+    "doffMinutes": 5,
+    "donMinutes": 10
+  },
+  "id": "armor_plate",
+  "kind": "armor",
+  "name": "Plate Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "strengthRequirement": 15,
+  "weightPounds": 65
+}

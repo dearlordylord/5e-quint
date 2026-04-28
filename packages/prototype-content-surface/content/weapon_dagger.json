@@ -1,0 +1,35 @@
+{
+  "category": "simple",
+  "costGp": 2,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 4
+  },
+  "description": "A Dagger is a Simple Melee Weapon that deals 1d4 Piercing damage and has the Finesse, Light, and Thrown properties.",
+  "id": "weapon_dagger",
+  "kind": "weapon",
+  "mastery": "nick",
+  "name": "Dagger",
+  "properties": [
+    {
+      "kind": "finesse"
+    },
+    {
+      "kind": "light"
+    },
+    {
+      "kind": "thrown",
+      "range": {
+        "long": 60,
+        "normal": 20
+      }
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 1
+}

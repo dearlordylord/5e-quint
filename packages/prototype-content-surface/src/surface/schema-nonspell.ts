@@ -2,6 +2,8 @@ import { Schema } from "effect";
 
 import {
   AbilitySchema,
+  ArmorAcFormulaSchema,
+  ArmorCategorySchema,
   ClassNameSchema,
   ConditionSchema,
   DiceAmountSchema,
@@ -12,6 +14,11 @@ import {
   RollKindSchema,
   StandardActionKindSchema,
   UsageLimitSchema,
+  WeaponCategorySchema,
+  WeaponDamageSchema,
+  WeaponMasteryNameSchema,
+  WeaponPropertyDetailSchema,
+  WeaponUsageSchema,
 } from "./schema-base.ts";
 import { exactOptional } from "./schema-helpers.ts";
 import {
@@ -477,6 +484,44 @@ export const MagicItemRecordSchema = Schema.Union(
   }),
 );
 
+export const ArmorRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("armor"),
+  category: ArmorCategorySchema,
+  acFormula: ArmorAcFormulaSchema,
+  strengthRequirement: exactOptional(Schema.Number),
+  stealthDisadvantage: exactOptional(Schema.Literal(true)),
+  weightPounds: Schema.Number,
+  costGp: Schema.Number,
+  donDoff: Schema.Struct({
+    donMinutes: Schema.Number,
+    doffMinutes: Schema.Number,
+  }),
+});
+
+export const ShieldRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("shield"),
+  acBonus: Schema.Number,
+  weightPounds: Schema.Number,
+  costGp: Schema.Number,
+  donDoff: Schema.Struct({
+    action: Schema.Literal("utilize"),
+  }),
+});
+
+export const WeaponRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("weapon"),
+  category: WeaponCategorySchema,
+  usage: WeaponUsageSchema,
+  damage: WeaponDamageSchema,
+  properties: Schema.Array(WeaponPropertyDetailSchema),
+  mastery: WeaponMasteryNameSchema,
+  weightPounds: Schema.Number,
+  costGp: Schema.Number,
+});
+
 export const UnitRecordSchema = Schema.Union(
   SpellRecordSchema,
   ClassFeatureRecordSchema,
@@ -484,4 +529,7 @@ export const UnitRecordSchema = Schema.Union(
   FeatRecordSchema,
   SpeciesTraitRecordSchema,
   MagicItemRecordSchema,
+  ArmorRecordSchema,
+  ShieldRecordSchema,
+  WeaponRecordSchema,
 );

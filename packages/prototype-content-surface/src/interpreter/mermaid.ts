@@ -98,6 +98,10 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
       return `https://5e.tools/races.html#${encodeHashParts(unit.species, source)}`;
     case "magic_item":
       return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
+    case "armor":
+    case "shield":
+    case "weapon":
+      return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
     case "mastery":
       return null;
     default: {

@@ -1,0 +1,22 @@
+{
+  "acFormula": {
+    "base": 14,
+    "kind": "dex_modifier",
+    "maxDexBonus": 2
+  },
+  "category": "medium",
+  "costGp": 400,
+  "description": "A Breastplate gives a base Armor Class of 14 plus your Dexterity modifier, to a maximum Dexterity bonus of 2.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 5
+  },
+  "id": "armor_breastplate",
+  "kind": "armor",
+  "name": "Breastplate",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 20
+}

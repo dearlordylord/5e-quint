@@ -1,0 +1,21 @@
+{
+  "acFormula": {
+    "base": 11,
+    "kind": "dex_modifier"
+  },
+  "category": "light",
+  "costGp": 10,
+  "description": "Leather Armor gives a base Armor Class of 11 plus your Dexterity modifier.",
+  "donDoff": {
+    "doffMinutes": 1,
+    "donMinutes": 1
+  },
+  "id": "armor_leather",
+  "kind": "armor",
+  "name": "Leather Armor",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 10
+}

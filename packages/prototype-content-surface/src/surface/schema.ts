@@ -95,6 +95,8 @@ export {
 } from "./schema-spell.ts";
 export {
   AbilitySchema,
+  ArmorAcFormulaSchema,
+  ArmorCategorySchema,
   AreaShapeSchema,
   AttackKindSchema,
   ArmorTrainingCategorySchema,
@@ -130,13 +132,20 @@ export {
   SpellAccessModeSchema,
   StandardActionKindSchema,
   UsageLimitSchema,
+  WeaponCategorySchema,
+  WeaponDamageSchema,
   WeaponFilterSchema,
+  WeaponMasteryNameSchema,
+  WeaponPropertyDetailSchema,
   WeaponPropertySchema,
   WeaponProficiencyCategorySchema,
+  WeaponRangeSchema,
+  WeaponUsageSchema,
 } from "./schema-base.ts";
 export {
   ActivationResourceSchema,
   ActivatedAbilityMechanicsSchema,
+  ArmorRecordSchema,
   ChargePoolResourceSchema,
   ClassFeatureActivationCostSchema,
   ClassFeatureActivationMechanicsSchema,
@@ -173,6 +182,7 @@ export {
   SecondaryTargetSelectionSchema,
   SpeciesTraitMechanicsSchema,
   SpeciesTraitRecordSchema,
+  ShieldRecordSchema,
   TimeResetCadenceSchema,
   TriggeredReactionAbilityMechanicsSchema,
   UseCountCapSchema,
@@ -180,15 +190,19 @@ export {
   UnitRecordSchema,
   ItemDestructionPolicySchema,
   MagicItemSpawnedCreatureMechanicsSchema,
+  WeaponRecordSchema,
 } from "./schema-nonspell.ts";
 
 import {
+  ArmorRecordSchema,
   ClassFeatureRecordSchema,
   FeatRecordSchema,
   MagicItemRecordSchema,
   MasteryRecordSchema,
+  ShieldRecordSchema,
   SpeciesTraitRecordSchema,
   UnitRecordSchema,
+  WeaponRecordSchema,
 } from "./schema-nonspell.ts";
 import {
   SpellRecordSchema,
@@ -238,6 +252,24 @@ export function decodeMagicItemRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof MagicItemRecordSchema> {
   return Schema.decodeUnknownSync(MagicItemRecordSchema)(raw);
+}
+
+export function decodeArmorRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof ArmorRecordSchema> {
+  return Schema.decodeUnknownSync(ArmorRecordSchema)(raw);
+}
+
+export function decodeShieldRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof ShieldRecordSchema> {
+  return Schema.decodeUnknownSync(ShieldRecordSchema)(raw);
+}
+
+export function decodeWeaponRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof WeaponRecordSchema> {
+  return Schema.decodeUnknownSync(WeaponRecordSchema)(raw);
 }
 
 export function decodeUnitRecordEither(

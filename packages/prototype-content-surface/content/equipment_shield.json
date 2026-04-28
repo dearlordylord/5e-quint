@@ -1,0 +1,16 @@
+{
+  "acBonus": 2,
+  "costGp": 10,
+  "description": "A Shield gives a +2 bonus to Armor Class and takes the Utilize action to don or doff.",
+  "donDoff": {
+    "action": "utilize"
+  },
+  "id": "equipment_shield",
+  "kind": "shield",
+  "name": "Shield",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "weightPounds": 6
+}

@@ -93,6 +93,12 @@ import type {
   SpawnedCreatureStatBlock,
   SkillFilter,
   UsageLimit,
+  ArmorRecord,
+  ShieldRecord,
+  WeaponRecord,
+  ArmorAcFormula,
+  WeaponDamage,
+  WeaponPropertyDetail,
 } from "../surface/types.ts";
 
 export type AtomCategory =
@@ -142,6 +148,12 @@ export function traceUnit(unit: UnitRecord): Trace {
       return traceSpeciesTraitUnit(unit);
     case "magic_item":
       return traceMagicItemUnit(unit);
+    case "armor":
+      return traceArmorUnit(unit);
+    case "shield":
+      return traceShieldUnit(unit);
+    case "weapon":
+      return traceWeaponUnit(unit);
     default: {
       const _exhaustive: never = unit;
       throw new Error(`unhandled unit kind: ${String(_exhaustive)}`);
@@ -364,7 +376,7 @@ function traceEffectAtom(
         id,
         category: "effect",
         atomKind: "modify_ac",
-        label: `modify_ac\nset base = ${e.const} + ${e.abilityMod.toUpperCase()} mod`,
+        label: `modify_ac\nset base = ${describeModifyAcSetBase(e)}`,
       });
       return id;
     }
@@ -4722,6 +4734,223 @@ function describeDelta_(d: DiceExprDelta, base: DiceExpr): string {
     parts.push(`die size ${d.dieSize}`);
   if (d.flat !== undefined) parts.push(`${d.flat} flat`);
   return parts.join(" + ");
+}
+
+function describeModifyAcSetBase(
+  effect: Extract<EffectAtom, { readonly kind: "modify_ac_set_base" }>,
+): string {
+  const mods =
+    "abilityMods" in effect ? effect.abilityMods : [effect.abilityMod];
+  return `${effect.const} + ${mods.map((mod) => `${mod.toUpperCase()} mod`).join(" + ")}`;
+}
+
+// ============================================================
+// Equipment tracer
+// ============================================================
+
+function traceArmorUnit(armor: ArmorRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "armor_root",
+    label: `armor_root\n${armor.name}\n(${armor.category})`,
+  });
+
+  const baseId = ids("ac");
+  nodes.push({
+    id: baseId,
+    category: "effect",
+    atomKind: "modify_ac_set_base",
+    label: `armor base AC\n${describeArmorAcFormula(armor.acFormula)}`,
+  });
+  edges.push({ from: rootId, to: baseId, relation: "defines" });
+
+  if (armor.strengthRequirement !== undefined) {
+    const strId = ids("req");
+    nodes.push({
+      id: strId,
+      category: "resolution",
+      atomKind: "strength_requirement",
+      label: `strength_requirement\nSTR ${armor.strengthRequirement}`,
+    });
+    edges.push({ from: rootId, to: strId, relation: "requires" });
+  }
+
+  if (armor.stealthDisadvantage === true) {
+    const stealthId = ids("pred");
+    nodes.push({
+      id: stealthId,
+      category: "effect",
+      atomKind: "stealth_disadvantage",
+      label: "stealth_disadvantage",
+    });
+    edges.push({ from: rootId, to: stealthId, relation: "imposes" });
+  }
+
+  traceDonDoff(
+    rootId,
+    `don ${armor.donDoff.donMinutes} min / doff ${armor.donDoff.doffMinutes} min`,
+    nodes,
+    edges,
+    ids,
+  );
+
+  return traceFromNodes(armor, nodes, edges);
+}
+
+function traceShieldUnit(shield: ShieldRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "shield_root",
+    label: `shield_root\n${shield.name}`,
+  });
+
+  const bonusId = ids("ac");
+  nodes.push({
+    id: bonusId,
+    category: "effect",
+    atomKind: "modify_ac",
+    label: `shield AC bonus\n+${shield.acBonus}`,
+  });
+  edges.push({ from: rootId, to: bonusId, relation: "grants" });
+
+  traceDonDoff(
+    rootId,
+    `don/doff action: ${shield.donDoff.action}`,
+    nodes,
+    edges,
+    ids,
+  );
+
+  return traceFromNodes(shield, nodes, edges);
+}
+
+function traceWeaponUnit(weapon: WeaponRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "weapon_root",
+    label: `weapon_root\n${weapon.name}\n(${weapon.category}, ${weapon.usage})`,
+  });
+
+  const damageId = ids("dmg");
+  nodes.push({
+    id: damageId,
+    category: "effect",
+    atomKind: "weapon_damage",
+    label: `weapon_damage\n${describeWeaponDamage(weapon.damage)}`,
+  });
+  edges.push({ from: rootId, to: damageId, relation: "defines" });
+
+  for (const property of weapon.properties) {
+    const propertyId = ids("prop");
+    nodes.push({
+      id: propertyId,
+      category: "source",
+      atomKind: "weapon_property",
+      label: `weapon_property\n${describeWeaponProperty(property)}`,
+    });
+    edges.push({ from: rootId, to: propertyId, relation: "defines" });
+  }
+
+  const masteryId = ids("mast");
+  nodes.push({
+    id: masteryId,
+    category: "source",
+    atomKind: "weapon_mastery",
+    label: `weapon_mastery\n${weapon.mastery}`,
+  });
+  edges.push({ from: rootId, to: masteryId, relation: "defines" });
+
+  return traceFromNodes(weapon, nodes, edges);
+}
+
+function traceDonDoff(
+  rootId: string,
+  label: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): void {
+  const id = ids("equip");
+  nodes.push({
+    id,
+    category: "procedure",
+    atomKind: "don_doff",
+    label: `don_doff\n${label}`,
+  });
+  edges.push({ from: rootId, to: id, relation: "uses" });
+}
+
+function describeArmorAcFormula(formula: ArmorAcFormula): string {
+  switch (formula.kind) {
+    case "fixed":
+      return `${formula.ac}`;
+    case "dex_modifier":
+      return formula.maxDexBonus === undefined
+        ? `${formula.base} + DEX mod`
+        : `${formula.base} + DEX mod (max ${formula.maxDexBonus})`;
+    default: {
+      const _exhaustive: never = formula;
+      throw new Error(`unhandled armor AC formula: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function describeWeaponDamage(damage: WeaponDamage): string {
+  return `${damage.dice}d${damage.dieSize} ${damage.damageType}`;
+}
+
+function describeWeaponProperty(property: WeaponPropertyDetail): string {
+  switch (property.kind) {
+    case "ammunition":
+      return `ammunition (${property.range.normal}/${property.range.long})`;
+    case "finesse":
+    case "heavy":
+    case "light":
+    case "loading":
+    case "reach":
+    case "two_handed":
+      return property.kind;
+    case "thrown":
+      return `thrown (${property.range.normal}/${property.range.long})`;
+    case "versatile":
+      return `versatile (${describeWeaponDamage(property.damage)})`;
+    default: {
+      const _exhaustive: never = property;
+      throw new Error(`unhandled weapon property: ${String(_exhaustive)}`);
+    }
+  }
+}
+
+function traceFromNodes(
+  unit: ArmorRecord | ShieldRecord | WeaponRecord,
+  nodes: ReadonlyArray<TraceNode>,
+  edges: ReadonlyArray<TraceEdge>,
+): Trace {
+  return {
+    unitId: unit.id,
+    unitName: unit.name,
+    nodes,
+    edges,
+    atomKinds: [...new Set(nodes.map((n) => n.atomKind))].sort(),
+  };
 }
 
 // ============================================================

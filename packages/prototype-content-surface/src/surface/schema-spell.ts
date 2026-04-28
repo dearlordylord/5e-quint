@@ -1317,11 +1317,18 @@ export const OngoingPredicateSchema = Schema.Union(
   }),
 );
 
-export const ModifyAcSetBaseEffectSchema = Schema.Struct({
-  kind: Schema.Literal("modify_ac_set_base"),
-  const: Schema.Number,
-  abilityMod: AbilitySchema,
-});
+export const ModifyAcSetBaseEffectSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("modify_ac_set_base"),
+    const: Schema.Number,
+    abilityMod: AbilitySchema,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("modify_ac_set_base"),
+    const: Schema.Number,
+    abilityMods: nonEmpty(AbilitySchema),
+  }),
+);
 
 export const ModifyAcSetFloorEffectSchema = Schema.Struct({
   kind: Schema.Literal("modify_ac_set_floor"),

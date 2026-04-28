@@ -1,0 +1,43 @@
+{
+  "description": "While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield.",
+  "destruction": {
+    "kind": "none"
+  },
+  "id": "magic_item_bracers_of_defense",
+  "kind": "magic_item",
+  "mechanics": {
+    "condition": {
+      "kind": "all_of",
+      "predicates": [
+        {
+          "kind": "wearing_item"
+        },
+        {
+          "kind": "unarmored"
+        },
+        {
+          "kind": "not_wielding_shield"
+        }
+      ]
+    },
+    "family": "passive",
+    "grants": [
+      {
+        "delta": {
+          "dice": 2,
+          "dieSize": 1,
+          "kind": "fixed_dice",
+          "sign": "+"
+        },
+        "kind": "modify_ac"
+      }
+    ]
+  },
+  "name": "Bracers of Defense",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "MagicItems#BracersOfDefense"
+  },
+  "rarity": "rare",
+  "requiresAttunement": true
+}

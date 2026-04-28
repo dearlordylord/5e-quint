@@ -1,0 +1,23 @@
+{
+  "acFormula": {
+    "ac": 16,
+    "kind": "fixed"
+  },
+  "category": "heavy",
+  "costGp": 75,
+  "description": "Chain Mail gives a base Armor Class of 16. It requires Strength 13 and imposes Disadvantage on Dexterity (Stealth) checks.",
+  "donDoff": {
+    "doffMinutes": 5,
+    "donMinutes": 10
+  },
+  "id": "armor_chain_mail",
+  "kind": "armor",
+  "name": "Chain Mail",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Armor"
+  },
+  "stealthDisadvantage": true,
+  "strengthRequirement": 13,
+  "weightPounds": 55
+}

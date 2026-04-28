@@ -1,0 +1,35 @@
+{
+  "category": "martial",
+  "costGp": 50,
+  "damage": {
+    "damageType": "piercing",
+    "dice": 1,
+    "dieSize": 8
+  },
+  "description": "A Longbow is a Martial Ranged Weapon that deals 1d8 Piercing damage and has the Ammunition, Heavy, and Two-Handed properties.",
+  "id": "weapon_longbow",
+  "kind": "weapon",
+  "mastery": "slow",
+  "name": "Longbow",
+  "properties": [
+    {
+      "kind": "ammunition",
+      "range": {
+        "long": 600,
+        "normal": 150
+      }
+    },
+    {
+      "kind": "heavy"
+    },
+    {
+      "kind": "two_handed"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "ranged",
+  "weightPounds": 2
+}

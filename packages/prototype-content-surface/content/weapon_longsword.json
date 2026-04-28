@@ -1,0 +1,30 @@
+{
+  "category": "martial",
+  "costGp": 15,
+  "damage": {
+    "damageType": "slashing",
+    "dice": 1,
+    "dieSize": 8
+  },
+  "description": "A Longsword is a Martial Melee Weapon that deals 1d8 Slashing damage and has the Versatile property.",
+  "id": "weapon_longsword",
+  "kind": "weapon",
+  "mastery": "sap",
+  "name": "Longsword",
+  "properties": [
+    {
+      "damage": {
+        "damageType": "slashing",
+        "dice": 1,
+        "dieSize": 10
+      },
+      "kind": "versatile"
+    }
+  ],
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Equipment#Weapons"
+  },
+  "usage": "melee",
+  "weightPounds": 3
+}

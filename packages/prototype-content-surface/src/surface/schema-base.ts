@@ -227,6 +227,61 @@ export const ArmorTrainingCategorySchema = Schema.Literal(
   "shield",
 );
 
+export const ArmorCategorySchema = Schema.Literal("light", "medium", "heavy");
+
+export const ArmorAcFormulaSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    ac: Schema.Number,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("dex_modifier"),
+    base: Schema.Number,
+    maxDexBonus: exactOptional(Schema.Number),
+  }),
+);
+
+export const WeaponCategorySchema = Schema.Literal("simple", "martial");
+
+export const WeaponUsageSchema = Schema.Literal("melee", "ranged");
+
+export const WeaponDamageSchema = Schema.Struct({
+  dice: Schema.Number,
+  dieSize: Schema.Number,
+  damageType: DamageTypeSchema,
+});
+
+export const WeaponRangeSchema = Schema.Struct({
+  normal: Schema.Number,
+  long: Schema.Number,
+});
+
+export const WeaponPropertyDetailSchema = Schema.Union(
+  Schema.Struct({ kind: Schema.Literal("ammunition"), range: WeaponRangeSchema }),
+  Schema.Struct({ kind: Schema.Literal("finesse") }),
+  Schema.Struct({ kind: Schema.Literal("heavy") }),
+  Schema.Struct({ kind: Schema.Literal("light") }),
+  Schema.Struct({ kind: Schema.Literal("loading") }),
+  Schema.Struct({ kind: Schema.Literal("reach") }),
+  Schema.Struct({ kind: Schema.Literal("thrown"), range: WeaponRangeSchema }),
+  Schema.Struct({ kind: Schema.Literal("two_handed") }),
+  Schema.Struct({
+    kind: Schema.Literal("versatile"),
+    damage: WeaponDamageSchema,
+  }),
+);
+
+export const WeaponMasteryNameSchema = Schema.Literal(
+  "cleave",
+  "graze",
+  "nick",
+  "push",
+  "sap",
+  "slow",
+  "topple",
+  "vex",
+);
+
 export const ProficiencyGrantSubjectSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("skill"),
