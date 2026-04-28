@@ -367,8 +367,9 @@ The current System Graph does not yet make these interface-level facts explicit:
   the graph does not draw `resolved.state` back into the next discovery cycle.
 - Unit execution is still partial. Direct `heal_hp` can now validate its target
   and healing dice, pay action/free activation cost plus a base spell slot,
-  enforce the slot-expended-turn guard, then mutate HP. Attack-roll damage
-  application, save outcome application, and extra action grants remain missing.
+  enforce the slot-expended-turn guard, then mutate HP. Attack-roll and
+  save-gate damage application are implemented. Extra action grants remain
+  missing.
 - Resource legality is still incomplete for unit-backed acts. Direct `heal_hp`
   now handles action/free activation cost, base spell slot spending, and the
   slotted-spell once-per-turn guard, but bonus-action spending, upcast slot

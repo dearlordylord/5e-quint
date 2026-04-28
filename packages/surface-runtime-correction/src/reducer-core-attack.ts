@@ -1,5 +1,5 @@
 import type { CreatureId } from "@dnd/shared/types";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 
 import {
   coreAttackRollHole,
@@ -11,7 +11,7 @@ import {
   attackRollResultIsValid,
 } from "#/reducer-attack-roll.ts";
 import { canUseCoreAttack } from "#/reducer-core-acts.ts";
-import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
+import { currentCreatureArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { validateCurrentHoleInputs } from "#/reducer-hole-refilling.ts";
 import type { State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";

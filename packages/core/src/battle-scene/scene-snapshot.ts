@@ -267,4 +267,7 @@ export function deriveSnapshot(
     activeCreatureId: activeId,
   };
 }
-import { currentActing, initiativeOrder } from "@dnd/shared/initiative-algebra";
+import {
+  currentActing,
+  initiativeOrder,
+} from "@dnd/shared-algebras/initiative-algebra";

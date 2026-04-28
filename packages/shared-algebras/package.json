@@ -1,0 +1,29 @@
+{
+  "name": "@dnd/shared-algebras",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./initiative-algebra": "./src/initiative-algebra.ts",
+    "./conditions-algebra": "./src/conditions-algebra.ts",
+    "./death-saves-algebra": "./src/death-saves-algebra.ts",
+    "./armor-class-algebra": "./src/armor-class-algebra.ts",
+    "./action-economy-algebra": "./src/action-economy-algebra.ts",
+    "./validation-algebra": "./src/validation-algebra.ts"
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dnd/prototype-content-surface": "workspace:*",
+    "@dnd/shared": "workspace:*",
+    "effect": "^3.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.2"
+  }
+}

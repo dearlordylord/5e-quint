@@ -1,5 +1,5 @@
 import { Either } from "effect";
-import { traverseValidation } from "@dnd/shared/validation-algebra";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 
 import type {
   FilledHoleValue,

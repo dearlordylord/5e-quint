@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { EMPTY_CONDITION_STATE } from "@dnd/shared/conditions-algebra";
+import { EMPTY_CONDITION_STATE } from "@dnd/shared-algebras/conditions-algebra";
+import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import type { Hp } from "@dnd/shared/types";
 
-import { statBlockArmorClassState } from "#/reducer-armor-class.ts";
+import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { applyHpDamage } from "#/reducer-damage.ts";
 import { spellcastingAbilityModifier } from "#/reducer-state.ts";
 import type { CreatureState } from "#/reducer-state.ts";
@@ -17,6 +18,8 @@ function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
     hasReaction: true,
     units: [],
     armorClass: statBlockArmorClassState(10),
+    zeroHpLifecyclePolicy: "diesAtZeroHp",
+    deathSaves: resetDeathSaveRuntimeState(),
     spellcastingAbilityModifier: spellcastingAbilityModifier(0),
     spellSlots: [],
     slotExpendedThisTurn: false,

@@ -1,5 +1,8 @@
 import { Option } from "effect";
-import { currentActing, initiativeOrder } from "@dnd/shared/initiative-algebra";
+import {
+  currentActing,
+  initiativeOrder,
+} from "@dnd/shared-algebras/initiative-algebra";
 import { describe, expect, it } from "vitest";
 import { createActor } from "xstate";
 
@@ -38,9 +41,7 @@ import {
 
 const SPELL_LIBRARY = makeSpellLibrary(SRD_SPELLS);
 
-function battlePreparedSpellAccesses(
-  ...spells: ReadonlyArray<string>
-) {
+function battlePreparedSpellAccesses(...spells: ReadonlyArray<string>) {
   return preparedBattleSpellAccesses({
     spellDictionary: SPELL_LIBRARY,
     spellIds: spells.map(spellId),
@@ -146,7 +147,9 @@ function ctx(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   return actor.getSnapshot().context;
 }
 
-function turnIndex(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+function turnIndex(
+  actor: ReturnType<typeof createActor<typeof battleMachine>>,
+) {
   return ctx(actor).initiative.alreadyActed.length;
 }
 
@@ -154,7 +157,9 @@ function round(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
   return ctx(actor).initiative.round;
 }
 
-function initiative(actor: ReturnType<typeof createActor<typeof battleMachine>>) {
+function initiative(
+  actor: ReturnType<typeof createActor<typeof battleMachine>>,
+) {
   return initiativeOrder(ctx(actor).initiative);
 }
 
@@ -919,7 +924,9 @@ describe("battle rules scenario regressions", () => {
     const beforeActor = initStartedThreeCreatureBattle();
     send(beforeActor, {
       type: "BATTLE_ADD_CREATURE",
-      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 25 }],
+      creatures: [
+        { id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 25 },
+      ],
     });
     expect(initiative(beforeActor)).toEqual([
       CreatureId("D"),
@@ -959,7 +966,9 @@ describe("battle rules scenario regressions", () => {
     const afterActor = initStartedThreeCreatureBattle();
     send(afterActor, {
       type: "BATTLE_ADD_CREATURE",
-      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 5 }],
+      creatures: [
+        { id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 5 },
+      ],
     });
     expect(initiative(afterActor)).toEqual([
       CreatureId("A"),
@@ -992,7 +1001,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 18,
         },
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("goblin-warrior-1"),
           statBlock: GOBLIN_WARRIOR,
           statBlockId: "goblinWarrior",
@@ -1017,7 +1026,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_ADD_CREATURE",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("goblin-minion-1"),
           statBlock: GOBLIN_MINION,
           statBlockId: "goblinMinion",
@@ -1071,7 +1080,9 @@ describe("battle rules scenario regressions", () => {
     const before = ctx(actor);
     send(actor, {
       type: "BATTLE_ADD_CREATURE",
-      creatures: [{ id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 15 }],
+      creatures: [
+        { id: CreatureId("D"), maxHp: 18, kind: "PC", initiativeRoll: 15 },
+      ],
     });
     expect(ctx(actor)).toEqual(before);
   });
@@ -1877,7 +1888,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: ABOLETH,
           statBlockId: "aboleth",
@@ -1885,7 +1896,7 @@ describe("battle rules scenario regressions", () => {
         }),
         { id: CreatureId("B"), maxHp: 20, kind: "PC", initiativeRoll: 15 },
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("C"),
           statBlock: CENTAUR_TROOPER,
           statBlockId: "centaurTrooper",
@@ -1983,7 +1994,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("C"),
           statBlock: CENTAUR_TROOPER,
           initiativeRoll: 20,
@@ -2769,7 +2780,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -3998,7 +4009,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 15,
         },
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("B"),
           statBlock: PSEUDODRAGON,
           initiativeRoll: 10,
@@ -4044,7 +4055,7 @@ describe("battle rules scenario regressions", () => {
           initiativeRoll: 15,
         },
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("B"),
           statBlock: PSEUDODRAGON,
           initiativeRoll: 10,
@@ -4427,7 +4438,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: MAGE,
           statBlockId: "mage",
@@ -5829,7 +5840,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -5870,7 +5881,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -5912,7 +5923,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           primaryAttackName: "shortbow",
@@ -5958,7 +5969,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,
@@ -6036,7 +6047,7 @@ describe("battle rules scenario regressions", () => {
       type: "BATTLE_INIT",
       creatures: [
         statBlockToInitCreatureConfig({
-        spellLibrary: SPELL_LIBRARY,
+          spellLibrary: SPELL_LIBRARY,
           id: CreatureId("A"),
           statBlock: GOBLIN_WARRIOR,
           initiativeRoll: 20,

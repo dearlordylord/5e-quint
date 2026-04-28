@@ -9,7 +9,7 @@ import {
   defaultArmorClassState,
   statBlockArmorClassState,
   zeroAbilityModifiers,
-} from "#/reducer-armor-class.ts";
+} from "@dnd/shared-algebras/armor-class-algebra";
 
 describe("reducer armor class state", () => {
   it("derives stat-block AC without storing current AC as a scalar", () => {

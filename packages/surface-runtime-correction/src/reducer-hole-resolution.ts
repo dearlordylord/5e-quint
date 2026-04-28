@@ -1,18 +1,27 @@
 import { Either, Match } from "effect";
-import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
-import { traverseValidation } from "@dnd/shared/validation-algebra";
-import { Hp } from "@dnd/shared/types";
+import {
+  currentActing,
+  nextInitiative,
+} from "@dnd/shared-algebras/initiative-algebra";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { CreatureId, ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
+import {
+  activationResourceCost,
+  resetTurnActionEconomy,
+  spendActivationResource,
+} from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  damageCreatureHp,
+  healCreatureHp,
+} from "#/reducer-creature-lifecycle.ts";
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
-import { spendOneAction } from "#/reducer-action-economy.ts";
+import { currentCreatureArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   attackRollHits,
   attackRollIsCritical,
   attackRollResultIsValid,
 } from "#/reducer-attack-roll.ts";
-import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
-import { applyHpDamage } from "#/reducer-damage.ts";
 import {
   requireCompleteOrNeedsHoles,
   requirePresentOrNeedsHoles,
@@ -61,14 +70,6 @@ type CurrentSliceSupportedDirectPhase = Extract<
 >;
 type CurrentSliceSupportedDirectEffect =
   CurrentSliceSupportedDirectPhase["effects"][number];
-type ActivationResourceCost =
-  | { readonly kind: "free" }
-  | { readonly kind: "action" }
-  | { readonly kind: "bonusAction" };
-type SupportedSurfaceActivationResourceKind =
-  | "free"
-  | "action"
-  | "bonus_action";
 type SpellSlotIndex = number;
 type CombatantState =
   State["combatants"] extends ReadonlyMap<CreatureId, infer T> ? T : never;
@@ -108,14 +109,11 @@ function resolveCoreEndTurn(state: State): ResolutionResult {
 
   return {
     tag: "resolved",
-    state: {
+    state: resetTurnActionEconomy({
       ...state,
       initiative,
       combatants,
-      currentActionsAvailable: 1,
-      currentHasBonusAction: true,
-      currentHasFreeAction: true,
-    },
+    }),
   };
 }
 
@@ -324,72 +322,17 @@ function requireExistingDirectTarget(
   return Either.right(targetId);
 }
 
-function activationResourceCost(
-  unit: CurrentSliceSupportedActivationUnit,
-): Either.Either<ActivationResourceCost, ResolutionInvalid> {
-  const mechanics = unit.mechanics;
-
-  if ("activationCost" in mechanics) {
-    if (
-      isSupportedSurfaceActivationResourceKind(mechanics.activationCost.kind)
-    ) {
-      return Either.right(
-        activationResourceCostFromSurfaceKind(mechanics.activationCost.kind),
-      );
-    }
-
-    return Either.left(invalid("unsupported unit activation cost"));
-  }
-
-  if ("castingTime" in mechanics) {
-    if (isSupportedSurfaceActivationResourceKind(mechanics.castingTime.kind)) {
-      return Either.right(
-        activationResourceCostFromSurfaceKind(mechanics.castingTime.kind),
-      );
-    }
-
-    return Either.left(invalid("unsupported unit casting time"));
-  }
-
-  return Either.left(invalid("unsupported unit activation cost"));
-}
-
-function isSupportedSurfaceActivationResourceKind(
-  kind: string,
-): kind is SupportedSurfaceActivationResourceKind {
-  return kind === "free" || kind === "action" || kind === "bonus_action";
-}
-
-function activationResourceCostFromSurfaceKind(
-  kind: SupportedSurfaceActivationResourceKind,
-): ActivationResourceCost {
-  return Match.value(kind).pipe(
-    Match.when("free", (): ActivationResourceCost => ({ kind: "free" })),
-    Match.when("action", (): ActivationResourceCost => ({ kind: "action" })),
-    Match.when(
-      "bonus_action",
-      (): ActivationResourceCost => ({ kind: "bonusAction" }),
-    ),
-    Match.exhaustive,
-  );
-}
-
 function spendActivationCost(
   state: State,
   unit: CurrentSliceSupportedActivationUnit,
 ): Either.Either<State, ResolutionInvalid> {
   return Either.gen(function* () {
-    const cost = yield* activationResourceCost(unit);
+    const cost = yield* activationResourceCost(unit).pipe(
+      Either.mapLeft((reason) => invalid(reason)),
+    );
 
-    return yield* Match.value(cost).pipe(
-      Match.when({ kind: "free" }, () => Either.right(state)),
-      Match.when({ kind: "action" }, () =>
-        spendOneAction(state, "no action available for unit"),
-      ),
-      Match.when({ kind: "bonusAction" }, () =>
-        Either.left(invalid("unsupported unit activation resource cost")),
-      ),
-      Match.exhaustive,
+    return yield* spendActivationResource(state, cost).pipe(
+      Either.mapLeft((reason) => invalid(reason)),
     );
   });
 }
@@ -654,11 +597,8 @@ function applyHealing(
       state.combatants.get(targetId),
       () => invalid("invalid direct target"),
     );
-    const nextHp = Hp(
-      Math.min(Number(target.maxHp), Number(target.hp) + healingAmount),
-    );
     const combatants = new Map(state.combatants);
-    combatants.set(targetId, { ...target, hp: nextHp });
+    combatants.set(targetId, healCreatureHp(target, healingAmount));
 
     return { ...state, combatants };
   });
@@ -677,7 +617,7 @@ function currentSliceTargetArmorClass(
 // reaction windows such as Hellish Rebuke. When added, do not hide that
 // protocol inside this helper; introduce a damage-event resolution layer that
 // carries source, target, damage type/qualifiers, trigger qualifiers, and return
-// frame, then delegates final HP arithmetic to applyHpDamage.
+// frame, then delegates final creature lifecycle arithmetic to damageCreatureHp.
 function applyDamage(
   state: State,
   targetId: CreatureId,
@@ -689,9 +629,8 @@ function applyDamage(
       () => invalid("invalid attack target"),
     );
 
-    const damagedTarget = applyHpDamage(target, damageAmount);
     const combatants = new Map(state.combatants);
-    combatants.set(targetId, damagedTarget);
+    combatants.set(targetId, damageCreatureHp(target, damageAmount));
 
     return { ...state, combatants };
   });
@@ -743,7 +682,7 @@ function applySaveGateDamage(
       (combatants, application) =>
         new Map(combatants).set(
           application.targetId,
-          applyHpDamage(application.target, application.damageAmount),
+          damageCreatureHp(application.target, application.damageAmount),
         ),
       new Map(state.combatants),
     ),

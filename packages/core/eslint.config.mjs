@@ -39,7 +39,10 @@ export default [
       "src/types.ts",
       "src/machine-helpers.ts",
       "src/battle-machine-creature.ts",
-      "src/character-open-choice-payload.ts"
+      "src/character-open-choice-payload.ts",
+      // Transitional projected Surface bridge; likely removed when core consumes
+      // Surface/shared reducer facts directly.
+      "src/projected-compiler.ts"
     ],
     rules: {
       "max-lines": "off"
