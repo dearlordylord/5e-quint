@@ -2689,6 +2689,11 @@ function traceOngoingOperation(
   const hostId = triggerCtx.hostId;
   const hostRelation = triggerCtx.hostRelation;
   traceUsageLimit(op.usageLimit, hostId, "limits", nodes, edges, ids);
+  const effectHostId =
+    op.predicate === undefined
+      ? hostId
+      : traceOngoingPredicateGate(op.predicate, hostId, nodes, edges, ids);
+  const effectHostRelation = op.predicate === undefined ? hostRelation : "grants";
   if (op.targetLimit !== undefined) {
     const limitId = ids("limit");
     const targetTypes = op.targetLimit.targetTypes.join("/");
@@ -2703,8 +2708,8 @@ function traceOngoingOperation(
   }
   traceOngoingOpEffect(
     op.effect,
-    hostId,
-    hostRelation,
+    effectHostId,
+    effectHostRelation,
     attId,
     slotId,
     nodes,
@@ -2717,6 +2722,24 @@ type OngoingTriggerCtx = {
   readonly hostId: string;
   readonly hostRelation: "grants" | "opens_window";
 };
+
+function traceOngoingPredicateGate(
+  predicate: import("../surface/types.ts").OngoingPredicate,
+  hostId: string,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): string {
+  const id = ids("pred");
+  nodes.push({
+    id,
+    category: "resolution",
+    atomKind: "ongoing_predicate",
+    label: `ongoing_predicate\n${describeOngoingPredicate(predicate)}`,
+  });
+  edges.push({ from: hostId, to: id, relation: "gates" });
+  return id;
+}
 
 function traceOngoingTrigger(
   trigger: import("../surface/types.ts").OngoingTrigger,
@@ -2782,6 +2805,17 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "turn_start_window",
         label: "turn_start_window\n(attached creature)",
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_attached_turn_end": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "turn_end_window",
+        label: "turn_end_window\n(attached creature)",
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
@@ -6251,20 +6285,27 @@ function describeConditionList(conditions: ReadonlyArray<string>): string {
   return conditions.length === 1 ? conditions[0] : `[${conditions.join(", ")}]`;
 }
 
-function describeOngoingPredicate(p: {
-  readonly kind: "at_hp_threshold";
-  readonly threshold: number;
-  readonly comparison: "lte" | "eq" | "gte";
-}): string {
-  switch (p.comparison) {
-    case "lte":
-      return `HP <= ${p.threshold}`;
-    case "eq":
-      return `HP = ${p.threshold}`;
-    case "gte":
-      return `HP >= ${p.threshold}`;
+function describeOngoingPredicate(
+  p: import("../surface/types.ts").OngoingPredicate,
+): string {
+  switch (p.kind) {
+    case "at_hp_threshold":
+      switch (p.comparison) {
+        case "lte":
+          return `HP <= ${p.threshold}`;
+        case "eq":
+          return `HP = ${p.threshold}`;
+        case "gte":
+          return `HP >= ${p.threshold}`;
+        default: {
+          const _exhaustive: never = p.comparison;
+          throw new Error(`unhandled HP comparison: ${String(_exhaustive)}`);
+        }
+      }
+    case "has_condition":
+      return `has condition: ${p.condition}`;
     default: {
-      const _exhaustive: never = p.comparison;
+      const _exhaustive: never = p;
       throw new Error(`unhandled ongoing predicate: ${String(_exhaustive)}`);
     }
   }

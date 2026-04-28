@@ -1,0 +1,129 @@
+{
+  "description": "Each creature of your choice in a 30-foot-radius Sphere centered on a point within range makes a Wisdom saving throw. On a failed save, a target takes 10d10 Psychic damage and has the Frightened condition for the duration. On a successful save, a target takes half as much damage only. A Frightened target makes a Wisdom saving throw at the end of each of its turns. On a failed save, it takes 5d10 Psychic damage. On a successful save, the spell ends on that target.",
+  "id": "weird",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "weird_targets",
+      "kind": "hole",
+      "label": "chosen creatures in fear sphere",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 30
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": false,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "ability": "wis",
+      "attachment": {
+        "holeId": "weird_targets",
+        "kind": "hole",
+        "label": "chosen creatures in fear sphere",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "sphere",
+            "radiusFeet": 30
+          }
+        }
+      },
+      "dc": {
+        "kind": "caster_spell_save_dc"
+      },
+      "kind": "save_gate",
+      "onFail": {
+        "effects": [
+          {
+            "amount": {
+              "expr": {
+                "dice": 10,
+                "dieSize": 10,
+                "flat": 0
+              },
+              "kind": "fixed"
+            },
+            "damageType": "psychic",
+            "kind": "damage"
+          },
+          {
+            "condition": "frightened",
+            "duration": "spell_duration",
+            "kind": "apply_condition"
+          }
+        ],
+        "kind": "composite"
+      },
+      "onSuccess": {
+        "kind": "half_damage"
+      }
+    },
+    "level": 9,
+    "operations": [
+      {
+        "effect": {
+          "ability": "wis",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 5,
+                "dieSize": 10,
+                "flat": 0
+              },
+              "kind": "fixed"
+            },
+            "damageType": "psychic",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "end_current_effect"
+          }
+        },
+        "predicate": {
+          "condition": "frightened",
+          "kind": "has_condition"
+        },
+        "trigger": {
+          "kind": "on_attached_turn_end"
+        }
+      }
+    ],
+    "range": {
+      "feet": 120,
+      "kind": "point"
+    },
+    "school": "illusion"
+  },
+  "name": "Weird",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Weird"
+  }
+}

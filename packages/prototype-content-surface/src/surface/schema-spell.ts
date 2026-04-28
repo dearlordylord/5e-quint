@@ -1262,6 +1262,7 @@ export const OngoingTriggerSchema = Schema.Union(
     attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
   }),
   Schema.Struct({ kind: Schema.Literal("on_attached_turn_start") }),
+  Schema.Struct({ kind: Schema.Literal("on_attached_turn_end") }),
   Schema.Struct({
     kind: Schema.Literal("on_caster_turn_start"),
     turnWindow: optionalExact(OngoingTurnWindowSchema),
@@ -1304,11 +1305,17 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("on_creature_studies") }),
 );
 
-export const OngoingPredicateSchema = Schema.Struct({
-  kind: Schema.Literal("at_hp_threshold"),
-  threshold: Schema.Number,
-  comparison: Schema.Literal("lte", "eq", "gte"),
-});
+export const OngoingPredicateSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("at_hp_threshold"),
+    threshold: Schema.Number,
+    comparison: Schema.Literal("lte", "eq", "gte"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("has_condition"),
+    condition: ConditionSchema,
+  }),
+);
 
 export const ModifyAcSetBaseEffectSchema = Schema.Struct({
   kind: Schema.Literal("modify_ac_set_base"),
