@@ -1,7 +1,7 @@
-import { hasCondition } from "@dnd/shared/conditions-algebra";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 
-import { canSpendAction } from "#/reducer-action-economy.ts";
+import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import type { State } from "#/reducer-state.ts";
 
 export function canCurrentActorAct(state: State): boolean {

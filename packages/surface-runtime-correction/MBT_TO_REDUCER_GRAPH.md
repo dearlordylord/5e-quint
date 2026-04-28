@@ -6,9 +6,15 @@ The MBT entry points do not currently prove `resolveSubjectHoles` as one large s
 
 ## Ownership Note
 
-`@dnd/shared/initiative-algebra` and `@dnd/shared/conditions-algebra` are already package-neutral domain primitives, so this package imports and MBT-checks them directly.
+`@dnd/shared-algebras` is the correction package's algebra home. It contains the shared initiative, conditions, death-save, armor-class, and action-economy algebras consumed by this package's MBT drivers and reducer code.
 
-The newer death-save, armor-class, and action-economy reducers intentionally stay local to `surface-runtime-correction` for now. Their MBT specs check the local TypeScript modules against the local Quint models:
+The shared-algebras package is intentionally separate from `@dnd/shared`:
+
+- `@dnd/shared` owns low-level scalar/domain types.
+- `@dnd/shared-algebras` owns reusable semantic algebras.
+- `@dnd/shared-algebras` may depend on Surface vocabulary where an algebra or adapter intentionally speaks Surface, but Surface imports must stay explicit.
+
+The death-save, armor-class, and action-economy algebras used to live inside `surface-runtime-correction`; they now live in `@dnd/shared-algebras`. Their MBT specs check those shared TypeScript modules against the local Quint models:
 
 - death saves are tied to `CreatureState`, zero-HP lifecycle policy, healing, and damage;
 - armor class is the reducer-local structured state for armor/equipment reducer facts, regardless of whether those facts later come from Surface, fixtures, or another caller;
@@ -16,7 +22,7 @@ The newer death-save, armor-class, and action-economy reducers intentionally sta
 
 Promotion rule:
 
-- move pure, package-neutral algebra to `@dnd/shared`;
+- move reusable algebra to `@dnd/shared-algebras`;
 - move battle-owned lifecycle/action semantics to `@dnd/core` when they become canonical runtime behavior;
 - keep Surface projection glue near the Surface/correction runtime.
 
@@ -43,11 +49,11 @@ flowchart TD
   end
 
   subgraph TS["TypeScript algebra modules"]
-    TSInitiative["@dnd/shared/initiative-algebra"]
-    TSConditions["@dnd/shared/conditions-algebra"]
-    TSDeath["reducer-death-saves.ts"]
-    TSArmor["reducer-armor-class.ts"]
-    TSAction["reducer-action-economy.ts"]
+    TSInitiative["@dnd/shared-algebras/initiative-algebra"]
+    TSConditions["@dnd/shared-algebras/conditions-algebra"]
+    TSDeath["@dnd/shared-algebras/death-saves-algebra"]
+    TSArmor["@dnd/shared-algebras/armor-class-algebra"]
+    TSAction["@dnd/shared-algebras/action-economy-algebra"]
   end
 
   QInitiative --> DInitiative --> TSInitiative
@@ -85,9 +91,9 @@ flowchart TD
   subgraph Algebra["MBT-backed algebra modules"]
     Initiative["initiative-algebra<br/>currentActing / nextInitiative"]
     Conditions["conditions-algebra<br/>has/apply/remove condition"]
-    Action["reducer-action-economy<br/>can/spend/reset resources"]
-    Armor["reducer-armor-class<br/>currentCreatureArmorClass"]
-    Death["reducer-death-saves<br/>death-save counters"]
+    Action["action-economy-algebra<br/>can/spend/reset resources"]
+    Armor["armor-class-algebra<br/>currentCreatureArmorClass"]
+    Death["death-saves-algebra<br/>death-save counters"]
   end
 
   Lifecycle["reducer-creature-lifecycle<br/>damage/heal/death-save policy"]
@@ -238,6 +244,48 @@ The open Surface projection question should be decided using representative cont
 - Healing spell: Surface `cure_wounds` unit -> target/healing-roll holes -> spell slot/action spend -> lifecycle healing.
 
 Do not make the full battle MBT enumerate all Surface content and all concrete runtime states. If Surface projection gets MBT later, keep it as projection-contract checks and keep battle semantics abstract where the architecture already treats inputs as caller/session/table-provided.
+
+## Draft: Surface Vocabulary And Authored Unit Coverage
+
+This section is a draft planning note, not a committed testing strategy.
+
+Surface coverage should be split into different goals:
+
+- **Vocabulary coverage:** every Surface vocabulary construct has at least one representative fixture that checks the projection contract into reducer facts.
+- **Authored-unit coverage:** every authored unit has deterministic contract tests for decode, support-gate result, projected holes/effects, resource cost, and expected resolver frontier or execution path.
+- **Reducer behavior coverage:** reducer algebras and selected integrated flows are checked with MBT where nondeterministic traces add value.
+
+This is not the same as proving every authored unit in every battle state. The goal is to cover Surface language shapes and authored content contracts without multiplying them by all reducer states.
+
+```mermaid
+flowchart TD
+  Vocabulary["Surface vocabulary coverage<br/>one fixture per vocabulary construct"]
+  UnitContracts["Authored-unit contract tests<br/>decode/support/project/frontier"]
+  Small["Small algebra MBT<br/>reducer facts -> reducer algebra"]
+  Integrated["Selected integrated MBT<br/>high-risk Surface-backed flows"]
+
+  Vocabulary --> UnitContracts
+  UnitContracts --> Integrated
+  Small --> Integrated
+
+  classDef draft fill:#f8fafc,stroke:#64748b,stroke-dasharray:6 4,color:#0f172a;
+  class Vocabulary,UnitContracts,Small,Integrated draft;
+```
+
+Per-authored-unit MBT is possible, but should be selective. The default should be table-driven contract tests. Add MBT when a unit introduces a new semantic reducer shape or a high-risk interaction.
+
+Possible examples:
+
+- `fire_bolt` covers `attack_roll`, target choice, attack roll, damage roll, action cost, AC comparison, and HP damage.
+- `cure_wounds` covers direct `heal_hp`, target choice, healing dice, spell slot cost, and death-save/lifecycle healing.
+- `fireball` should cover `save_gate`, area attachment, saving throw outcomes, and damage application once implemented.
+- `chromatic_orb` should cover damage-type choice and continuation/frontier behavior until supported.
+- `fighter_action_surge_l2` should cover `grant_extra_action` once implemented.
+
+Open decision:
+
+- Whether Surface vocabulary projection should use MBT, ordinary table-driven tests, or both.
+- Current working bias: table-driven tests for broad vocabulary/authored-unit coverage; MBT for reducer algebra and selected integrated reducer flows.
 
 ## Current Coverage Boundary
 

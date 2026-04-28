@@ -1,11 +1,11 @@
 import { Brand } from "effect";
-import type { ConditionState } from "@dnd/shared/conditions-algebra";
-import type { InitiativeStack } from "@dnd/shared/initiative-algebra";
+import type { ConditionState } from "@dnd/shared-algebras/conditions-algebra";
+import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import { Integer } from "@dnd/shared/types";
 import type { CreatureId, Hp, SpellSlots } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
-import type { ArmorClassState } from "#/reducer-armor-class.ts";
-import type { DeathSaveRuntimeState } from "#/reducer-death-saves.ts";
+import type { ArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import type { DeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 

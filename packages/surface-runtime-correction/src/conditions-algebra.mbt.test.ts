@@ -11,7 +11,7 @@ import {
   isIncapacitated,
   removeCondition,
   type ConditionState,
-} from "@dnd/shared/conditions-algebra";
+} from "@dnd/shared-algebras/conditions-algebra";
 
 type ModelState = {
   readonly state: ConditionState;

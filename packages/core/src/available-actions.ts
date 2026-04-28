@@ -1,5 +1,5 @@
 import { Match, Option, Schema } from "effect";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 
 import {
   battleSpellAccessById,
@@ -42,7 +42,10 @@ import type {
   InitCreatureConfig,
   MovementProvocationKind,
 } from "#/battle-machine-types.ts";
-import { battleHasFreeHand, isIncapacitated } from "#/battle-machine-creature.ts";
+import {
+  battleHasFreeHand,
+  isIncapacitated,
+} from "#/battle-machine-creature.ts";
 import { bardicInspirationDie } from "#/features/class-bard.ts";
 import { deflectAttacksReduction } from "#/features/class-monk-features.ts";
 import { counterspellAutoSuccess } from "#/features/spell-abjuration.ts";
@@ -829,8 +832,8 @@ type ResolvedTokenByType = {
 };
 export type CreatureResolvedActionToken =
   ResolvedTokenByType[SupportedActionType] & {
-  readonly scope: "creature";
-};
+    readonly scope: "creature";
+  };
 type SpecificBattleResolvedActionToken =
   | {
       readonly scope: "battle";
@@ -1845,16 +1848,15 @@ const BattleInitControlSchema = Schema.Struct({
 const BattleAddCreatureTieDecisionSchema = Schema.Struct({
   creatureId: Schema.String,
   tie: Schema.NonEmptyArray(Schema.String),
-  index: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(0),
-  ),
+  index: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
 });
 const BattleAddCreatureControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
   type: Schema.Literal("BATTLE_ADD_CREATURE"),
   creatures: Schema.NonEmptyArray(BattleInitCreatureConfigSchema),
-  tieDecisions: Schema.optional(Schema.Array(BattleAddCreatureTieDecisionSchema)),
+  tieDecisions: Schema.optional(
+    Schema.Array(BattleAddCreatureTieDecisionSchema),
+  ),
 });
 const BattleRemoveCreatureControlSchema = Schema.Struct({
   scope: Schema.Literal("battle"),
@@ -4060,17 +4062,19 @@ function damageReactionToken(
   reaction: "RUncannyDodge" | "RDeflectAttacks",
 ): AvailableBattleActionToken {
   return Match.value(reaction).pipe(
-    Match.when("RUncannyDodge", () =>
-      ({
-        scope: "authoredBattle",
-        actorId,
-        type: "USE_UNCANNY_DODGE",
-        cost: costs(quotaCost("reaction")),
-        outcome: {
-          summary:
-            "Use your reaction to halve the triggering attack's damage against you",
-        },
-      }) satisfies AuthoredBattleActionToken,
+    Match.when(
+      "RUncannyDodge",
+      () =>
+        ({
+          scope: "authoredBattle",
+          actorId,
+          type: "USE_UNCANNY_DODGE",
+          cost: costs(quotaCost("reaction")),
+          outcome: {
+            summary:
+              "Use your reaction to halve the triggering attack's damage against you",
+          },
+        }) satisfies AuthoredBattleActionToken,
     ),
     Match.when("RDeflectAttacks", () =>
       battleToken({
@@ -4199,21 +4203,21 @@ function battleCastableSpellSlotOptions(
 ): ReadonlyArray<SpellSlotLevelValue> {
   return [
     ...new Set(
-      currentReadyableSpellPayloads(actor, access).map((payload) => payload.slotLevel),
+      currentReadyableSpellPayloads(actor, access).map(
+        (payload) => payload.slotLevel,
+      ),
     ),
   ].sort((a, b) => a - b);
 }
 
 function battleCastableSpellCost(access: BattleSpellAccess): ResourceCost {
-  return access.resourcePath.kind ===
-    "dailyUse"
+  return access.resourcePath.kind === "dailyUse"
     ? costs(quotaCost("action"))
     : costs(quotaCost("action"), poolCost("spellSlot"));
 }
 
 function battleCastableSpellSpend(access: BattleSpellAccess): string {
-  return access.resourcePath.kind ===
-    "dailyUse"
+  return access.resourcePath.kind === "dailyUse"
     ? "action and one daily use"
     : "action and a spell slot";
 }
@@ -4684,20 +4688,18 @@ export function getAvailableBattleActions(
       }
     }
     if (canUseProjectedBattleActionSurge(activeCreature)) {
-      tokens.push(
-        {
-          scope: "authoredBattle",
-          actorId: activeCreatureId,
-          type: "USE_ACTION_SURGE",
-          cost: projectedCosts(...projectedActionSurgeCost()),
-          outcome: {
-            summary: projectedBattleActionSurgeSummary(
-              activeCreatureId,
-              activeCreature,
-            ),
-          },
+      tokens.push({
+        scope: "authoredBattle",
+        actorId: activeCreatureId,
+        type: "USE_ACTION_SURGE",
+        cost: projectedCosts(...projectedActionSurgeCost()),
+        outcome: {
+          summary: projectedBattleActionSurgeSummary(
+            activeCreatureId,
+            activeCreature,
+          ),
         },
-      );
+      });
     }
     if (
       !activeCreature.bonusActionUsed &&
@@ -4705,18 +4707,16 @@ export function getAvailableBattleActions(
       activeCreature.barbarianLevel > 0 &&
       activeCreature.rageCharges > 0
     ) {
-      tokens.push(
-        {
-          scope: "authoredBattle",
-          actorId: activeCreatureId,
-          type: "ENTER_RAGE",
-          cost: costs(quotaCost("bonusAction"), poolCost("rage")),
-          outcome: {
-            summary:
-              "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
-          },
+      tokens.push({
+        scope: "authoredBattle",
+        actorId: activeCreatureId,
+        type: "ENTER_RAGE",
+        cost: costs(quotaCost("bonusAction"), poolCost("rage")),
+        outcome: {
+          summary:
+            "Enter a Rage, consume your bonus action, and apply Rage's battle effects",
         },
-      );
+      });
     }
     if (
       !activeCreature.bonusActionUsed &&
@@ -4765,17 +4765,15 @@ export function getAvailableBattleActions(
       !activeCreature.attackActionUsed &&
       !activeCreature.recklessThisTurn
     ) {
-      tokens.push(
-        {
-          scope: "authoredBattle",
-          actorId: activeCreatureId,
-          type: "DECLARE_RECKLESS",
-          cost: FREE_COST,
-          outcome: {
-            summary: "Declare Reckless Attack for this turn",
-          },
+      tokens.push({
+        scope: "authoredBattle",
+        actorId: activeCreatureId,
+        type: "DECLARE_RECKLESS",
+        cost: FREE_COST,
+        outcome: {
+          summary: "Declare Reckless Attack for this turn",
         },
-      );
+      });
     }
     if (
       canUseBattleAttack(activeCreature) &&
@@ -5248,124 +5246,127 @@ function availableBattleTokenForResolved(
       if (candidate.scope !== "battle") return false;
       if (candidate.type !== token.type || candidate.actorId !== token.actorId)
         return false;
-    if (
-      candidate.type === "BATTLE_DISENGAGE" &&
-      token.type === "BATTLE_DISENGAGE"
-    ) {
-      return candidate.activation === token.activation;
-    }
-    if (candidate.type === "BATTLE_HIDE" && token.type === "BATTLE_HIDE") {
-      return candidate.activation === token.activation;
-    }
-    if (
-      candidate.type === "BATTLE_READY_SPELL" &&
-      token.type === "BATTLE_READY_SPELL"
-    ) {
-      return (
-        sameAccessOrCompat(candidate.accessId, token.accessId) &&
-        candidate.spellId === token.spellId
-      );
-    }
-    if (candidate.type === "BATTLE_SEARCH" && token.type === "BATTLE_SEARCH") {
-      return candidate.targetId.options.includes(token.targetId);
-    }
-    if (
-      (candidate.type === "BATTLE_ATTACK" ||
-        candidate.type === "BATTLE_OFF_HAND_ATTACK" ||
-        candidate.type === "BATTLE_LEGENDARY_ATTACK") &&
-      candidate.type === token.type
-    ) {
       if (
-        candidate.type === "BATTLE_LEGENDARY_ATTACK" &&
-        token.type === "BATTLE_LEGENDARY_ATTACK" &&
-        candidate.abilityId !== token.abilityId
+        candidate.type === "BATTLE_DISENGAGE" &&
+        token.type === "BATTLE_DISENGAGE"
       ) {
-        return false;
+        return candidate.activation === token.activation;
       }
-      if (!candidate.targetId.options.includes(token.targetId)) return false;
-      return candidate.knockOut.options.includes(token.knockOut);
-    }
-    if (
-      candidate.type === "BATTLE_GRAPPLE" &&
-      token.type === "BATTLE_GRAPPLE"
-    ) {
-      return candidate.targetId.options.includes(token.targetId);
-    }
-    if (
-      candidate.type === "BATTLE_CAST_AOE" &&
-      token.type === "BATTLE_CAST_AOE"
-    ) {
-      return (
-        sameAccessOrCompat(candidate.accessId, token.accessId) &&
-        candidate.spellId === token.spellId &&
-        candidate.slotLevel.options.includes(token.slotLevel)
-      );
-    }
-    if (
-      candidate.type === "BATTLE_CAST_SAVE_SPELL" &&
-      token.type === "BATTLE_CAST_SAVE_SPELL"
-    ) {
-      return (
-        sameAccessOrCompat(candidate.accessId, token.accessId) &&
-        candidate.spellId === token.spellId &&
-        candidate.slotLevel.options.includes(token.slotLevel) &&
-        candidate.targetId.options.includes(token.targetId)
-      );
-    }
-    if (
-      candidate.type === "CAST_COUNTERSPELL" &&
-      token.type === "CAST_COUNTERSPELL"
-    ) {
-      return (
-        sameAccessOrCompat(candidate.accessId, token.accessId) &&
-        candidate.slotLevel.options.includes(token.slotLevel)
-      );
-    }
-    if (candidate.type === "CAST_SHIELD" && token.type === "CAST_SHIELD") {
-      return sameAccessOrCompat(candidate.accessId, token.accessId);
-    }
-    if (
-      candidate.type === "CAST_HELLISH_REBUKE" &&
-      token.type === "CAST_HELLISH_REBUKE"
-    ) {
-      return sameAccessOrCompat(candidate.accessId, token.accessId);
-    }
-    if (
-      candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
-      token.type === "BATTLE_MONSTER_SAVE_EFFECT"
-    ) {
-      return (
-        candidate.abilityId === token.abilityId &&
-        candidate.targetId.options.includes(token.targetId)
-      );
-    }
-    if (
-      candidate.type === "BATTLE_MONSTER_TRAVERSAL" &&
-      token.type === "BATTLE_MONSTER_TRAVERSAL"
-    ) {
-      return candidate.abilityId === token.abilityId;
-    }
-    if (
-      candidate.type === "BATTLE_WAKE_EFFECT" &&
-      token.type === "BATTLE_WAKE_EFFECT"
-    ) {
-      return candidate.targetId.options.includes(token.targetId);
-    }
-    if (
-      candidate.type === "BATTLE_HELP_ATTACK" &&
-      token.type === "BATTLE_HELP_ATTACK"
-    ) {
-      return (
-        candidate.allyId.options.includes(token.allyId) &&
-        candidate.targetId.options.includes(token.targetId)
-      );
-    }
-    if (
-      candidate.type === "USE_REDIRECT_ATTACK" &&
-      token.type === "USE_REDIRECT_ATTACK"
-    ) {
-      return candidate.allyId.options.includes(token.allyId);
-    }
+      if (candidate.type === "BATTLE_HIDE" && token.type === "BATTLE_HIDE") {
+        return candidate.activation === token.activation;
+      }
+      if (
+        candidate.type === "BATTLE_READY_SPELL" &&
+        token.type === "BATTLE_READY_SPELL"
+      ) {
+        return (
+          sameAccessOrCompat(candidate.accessId, token.accessId) &&
+          candidate.spellId === token.spellId
+        );
+      }
+      if (
+        candidate.type === "BATTLE_SEARCH" &&
+        token.type === "BATTLE_SEARCH"
+      ) {
+        return candidate.targetId.options.includes(token.targetId);
+      }
+      if (
+        (candidate.type === "BATTLE_ATTACK" ||
+          candidate.type === "BATTLE_OFF_HAND_ATTACK" ||
+          candidate.type === "BATTLE_LEGENDARY_ATTACK") &&
+        candidate.type === token.type
+      ) {
+        if (
+          candidate.type === "BATTLE_LEGENDARY_ATTACK" &&
+          token.type === "BATTLE_LEGENDARY_ATTACK" &&
+          candidate.abilityId !== token.abilityId
+        ) {
+          return false;
+        }
+        if (!candidate.targetId.options.includes(token.targetId)) return false;
+        return candidate.knockOut.options.includes(token.knockOut);
+      }
+      if (
+        candidate.type === "BATTLE_GRAPPLE" &&
+        token.type === "BATTLE_GRAPPLE"
+      ) {
+        return candidate.targetId.options.includes(token.targetId);
+      }
+      if (
+        candidate.type === "BATTLE_CAST_AOE" &&
+        token.type === "BATTLE_CAST_AOE"
+      ) {
+        return (
+          sameAccessOrCompat(candidate.accessId, token.accessId) &&
+          candidate.spellId === token.spellId &&
+          candidate.slotLevel.options.includes(token.slotLevel)
+        );
+      }
+      if (
+        candidate.type === "BATTLE_CAST_SAVE_SPELL" &&
+        token.type === "BATTLE_CAST_SAVE_SPELL"
+      ) {
+        return (
+          sameAccessOrCompat(candidate.accessId, token.accessId) &&
+          candidate.spellId === token.spellId &&
+          candidate.slotLevel.options.includes(token.slotLevel) &&
+          candidate.targetId.options.includes(token.targetId)
+        );
+      }
+      if (
+        candidate.type === "CAST_COUNTERSPELL" &&
+        token.type === "CAST_COUNTERSPELL"
+      ) {
+        return (
+          sameAccessOrCompat(candidate.accessId, token.accessId) &&
+          candidate.slotLevel.options.includes(token.slotLevel)
+        );
+      }
+      if (candidate.type === "CAST_SHIELD" && token.type === "CAST_SHIELD") {
+        return sameAccessOrCompat(candidate.accessId, token.accessId);
+      }
+      if (
+        candidate.type === "CAST_HELLISH_REBUKE" &&
+        token.type === "CAST_HELLISH_REBUKE"
+      ) {
+        return sameAccessOrCompat(candidate.accessId, token.accessId);
+      }
+      if (
+        candidate.type === "BATTLE_MONSTER_SAVE_EFFECT" &&
+        token.type === "BATTLE_MONSTER_SAVE_EFFECT"
+      ) {
+        return (
+          candidate.abilityId === token.abilityId &&
+          candidate.targetId.options.includes(token.targetId)
+        );
+      }
+      if (
+        candidate.type === "BATTLE_MONSTER_TRAVERSAL" &&
+        token.type === "BATTLE_MONSTER_TRAVERSAL"
+      ) {
+        return candidate.abilityId === token.abilityId;
+      }
+      if (
+        candidate.type === "BATTLE_WAKE_EFFECT" &&
+        token.type === "BATTLE_WAKE_EFFECT"
+      ) {
+        return candidate.targetId.options.includes(token.targetId);
+      }
+      if (
+        candidate.type === "BATTLE_HELP_ATTACK" &&
+        token.type === "BATTLE_HELP_ATTACK"
+      ) {
+        return (
+          candidate.allyId.options.includes(token.allyId) &&
+          candidate.targetId.options.includes(token.targetId)
+        );
+      }
+      if (
+        candidate.type === "USE_REDIRECT_ATTACK" &&
+        token.type === "USE_REDIRECT_ATTACK"
+      ) {
+        return candidate.allyId.options.includes(token.allyId);
+      }
       return true;
     },
   );
@@ -5438,7 +5439,10 @@ export function resolveBattleAction(
       },
     };
   }
-  if (token.type === "BATTLE_HIDE" && !isResolvedD20CheckTotal(token.stealthTotal)) {
+  if (
+    token.type === "BATTLE_HIDE" &&
+    !isResolvedD20CheckTotal(token.stealthTotal)
+  ) {
     return {
       code: "INVALID_RUNTIME_INPUT",
       message: "Hide Stealth total must be an integer.",
@@ -5892,7 +5896,8 @@ export function resolveBattleAction(
       token.accessId ??
       ("accessId" in availableToken ? availableToken.accessId : undefined);
     return {
-      token: chosenAccessId == null ? token : { ...token, accessId: chosenAccessId },
+      token:
+        chosenAccessId == null ? token : { ...token, accessId: chosenAccessId },
       outcome: availableToken.outcome.summary,
       runtime: "hellishRebuke",
     };
@@ -5915,7 +5920,10 @@ export function resolveAuthoredBattleAction(
   context: BattleContext,
   token: AuthoredBattleResolvedActionToken,
 ): BattleResolutionRequest | ActionResolutionError {
-  const availableToken = availableAuthoredBattleTokenForResolved(context, token);
+  const availableToken = availableAuthoredBattleTokenForResolved(
+    context,
+    token,
+  );
   if (availableToken == null) {
     return {
       code: "ACTION_NOT_AVAILABLE",

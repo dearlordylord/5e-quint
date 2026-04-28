@@ -7,7 +7,7 @@
 import * as path from "node:path";
 
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { Option } from "effect";
 import { afterAll, beforeAll, describe, it } from "vitest";
 import { createActor } from "xstate";

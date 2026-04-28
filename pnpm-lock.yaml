@@ -210,6 +210,9 @@ importers:
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       '@firfi/quint-connect':
         specifier: ^0.8.2
         version: 0.8.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)
@@ -311,6 +314,25 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/shared-algebras:
+    dependencies:
+      '@dnd/prototype-content-surface':
+        specifier: workspace:*
+        version: link:../prototype-content-surface
+      '@dnd/shared':
+        specifier: workspace:*
+        version: link:../shared
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.0
+        version: 22.19.15
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/surface-runtime-correction:
     dependencies:
       '@dnd/prototype-content-surface':
@@ -319,6 +341,9 @@ importers:
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       '@firfi/quint-connect':
         specifier: ^0.8.2
         version: 0.8.2(effect@3.21.0)(vitest@3.2.4(@types/node@22.19.15)(jiti@2.6.1)(jsdom@28.1.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))(zod@4.3.6)

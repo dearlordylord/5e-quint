@@ -13,7 +13,7 @@ import {
   nextInitiative,
   removeFromInitiative,
   type InitiativeStack,
-} from "@dnd/shared/initiative-algebra";
+} from "@dnd/shared-algebras/initiative-algebra";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 type CreatureId = "c1" | "c2" | "c2b" | "c3" | "c4" | "cx";

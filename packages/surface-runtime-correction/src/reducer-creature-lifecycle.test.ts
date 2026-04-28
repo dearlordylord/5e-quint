@@ -4,11 +4,11 @@ import {
   EMPTY_CONDITION_STATE,
   applyCondition,
   hasCondition,
-} from "@dnd/shared/conditions-algebra";
+} from "@dnd/shared-algebras/conditions-algebra";
 import { Hp } from "@dnd/shared/types";
 
-import { statBlockArmorClassState } from "#/reducer-armor-class.ts";
-import { resetDeathSaveRuntimeState } from "#/reducer-death-saves.ts";
+import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
+import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import {
   addCreatureDeathFailures,
   damageCreatureHp,

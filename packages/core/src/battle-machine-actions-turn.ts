@@ -7,7 +7,7 @@ import {
   type InitiativeEntry,
   type InitiativeTieDecision,
   type InitiativeStack,
-} from "@dnd/shared/initiative-algebra";
+} from "@dnd/shared-algebras/initiative-algebra";
 import { Index, Initiative, Round } from "@dnd/shared/types";
 
 import {
@@ -362,10 +362,7 @@ export function battleInit({
     initiative: Initiative(score),
   })) as [InitiativeEntry<CreatureId>, ...Array<InitiativeEntry<CreatureId>>];
   for (const [index, { cfg }] of sorted.entries()) {
-    creatures.set(
-      cfg.id,
-      buildCreatureState(cfg, index),
-    );
+    creatures.set(cfg.id, buildCreatureState(cfg, index));
   }
   return {
     creatures,
@@ -390,7 +387,10 @@ export function battleAddCreature({
     return {};
   if (e.creatures.some((cfg) => c.creatures.has(cfg.id))) return {};
   const addedIds = new Set(e.creatures.map((cfg) => cfg.id));
-  const tieDecisionsByCreature = new Map<CreatureId, InitiativeTieDecision<CreatureId>>();
+  const tieDecisionsByCreature = new Map<
+    CreatureId,
+    InitiativeTieDecision<CreatureId>
+  >();
   for (const decision of e.tieDecisions ?? []) {
     if (!addedIds.has(decision.creatureId)) return {};
     if (tieDecisionsByCreature.has(decision.creatureId)) return {};
@@ -446,10 +446,7 @@ export function battleAddCreature({
   for (const { cfg } of sorted) {
     const newIndex = newOrder.indexOf(cfg.id);
     if (newIndex < 0) return {};
-    creatures.set(
-      cfg.id,
-      buildCreatureState(cfg, newIndex),
-    );
+    creatures.set(cfg.id, buildCreatureState(cfg, newIndex));
   }
 
   return {
@@ -519,7 +516,10 @@ export function battleRemoveCreature({
 
   let initiative = c.initiative;
   for (const id of creatureIds) {
-    const removed = removeFromInitiativeStack(initiative, (current) => current === id);
+    const removed = removeFromInitiativeStack(
+      initiative,
+      (current) => current === id,
+    );
     if (Option.isNone(removed)) return {};
     initiative = removed.value;
   }
@@ -630,11 +630,7 @@ export function battleEndTurn({
   }
   return {
     creatures: cs,
-    ...readyWindowOrAdvance(
-      cs,
-      c.initiative,
-      c.initiative.alreadyActed.length,
-    ),
+    ...readyWindowOrAdvance(cs, c.initiative, c.initiative.alreadyActed.length),
   };
 }
 

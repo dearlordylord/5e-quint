@@ -9,7 +9,7 @@ import {
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
   type DeathSaveRuntimeState,
-} from "#/reducer-death-saves.ts";
+} from "@dnd/shared-algebras/death-saves-algebra";
 
 const quintStateSchema = z.object({
   qSuccesses: z.bigint(),

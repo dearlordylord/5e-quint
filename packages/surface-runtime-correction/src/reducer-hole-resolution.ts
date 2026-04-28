@@ -1,5 +1,8 @@
 import { Either, Match } from "effect";
-import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
+import {
+  currentActing,
+  nextInitiative,
+} from "@dnd/shared-algebras/initiative-algebra";
 import { getOnlyOne } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 
@@ -7,13 +10,13 @@ import {
   activationResourceCost,
   resetTurnActionEconomy,
   spendActivationResource,
-} from "#/reducer-action-economy.ts";
+} from "@dnd/shared-algebras/action-economy-algebra";
 import {
   damageCreatureHp,
   healCreatureHp,
 } from "#/reducer-creature-lifecycle.ts";
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
-import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
+import { currentCreatureArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
   missingHoles,
   requireNoMissingHoles,

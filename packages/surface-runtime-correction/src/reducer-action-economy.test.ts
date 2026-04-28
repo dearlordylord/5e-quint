@@ -7,7 +7,7 @@ import {
   resetTurnActionEconomy,
   spendActivationResource,
   type ActionEconomyState,
-} from "#/reducer-action-economy.ts";
+} from "@dnd/shared-algebras/action-economy-algebra";
 
 const ready: ActionEconomyState = {
   currentActionsAvailable: 1,

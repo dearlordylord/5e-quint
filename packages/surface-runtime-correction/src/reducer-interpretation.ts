@@ -1,5 +1,5 @@
 import { Either, Match, Option } from "effect";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { getOnlyOneStrict } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
@@ -12,7 +12,7 @@ import { canCurrentActorAct } from "#/reducer-core-acts.ts";
 import {
   activationResourceCost,
   canSpendAction,
-} from "#/reducer-action-economy.ts";
+} from "@dnd/shared-algebras/action-economy-algebra";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import {
   type CurrentSliceSupportedActivationPhase,

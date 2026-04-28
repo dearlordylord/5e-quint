@@ -4,11 +4,11 @@ import {
   EMPTY_CONDITION_STATE,
   applyCondition,
   hasCondition,
-} from "@dnd/shared/conditions-algebra";
+} from "@dnd/shared-algebras/conditions-algebra";
 import {
   createInitiativeStack,
   currentActing,
-} from "@dnd/shared/initiative-algebra";
+} from "@dnd/shared-algebras/initiative-algebra";
 import type {
   CreatureId,
   DieRollResult,
@@ -17,9 +17,9 @@ import type {
 } from "@dnd/shared/types";
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
-import { statBlockArmorClassState } from "#/reducer-armor-class.ts";
+import { statBlockArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
-import { resetDeathSaveRuntimeState } from "#/reducer-death-saves.ts";
+import { resetDeathSaveRuntimeState } from "@dnd/shared-algebras/death-saves-algebra";
 import { spellcastingAbilityModifier } from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";

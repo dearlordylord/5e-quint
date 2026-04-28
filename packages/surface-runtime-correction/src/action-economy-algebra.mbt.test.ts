@@ -9,7 +9,7 @@ import {
   resetTurnActionEconomy,
   spendActivationResource,
   type ActionEconomyState,
-} from "#/reducer-action-economy.ts";
+} from "@dnd/shared-algebras/action-economy-algebra";
 
 const quintStateSchema = z.object({
   qActions: z.bigint(),

@@ -3,7 +3,10 @@
  * Creature-level pure functions are in battle-machine-creature.ts.
  */
 import { Match, Option } from "effect";
-import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
+import {
+  currentActing,
+  nextInitiative,
+} from "@dnd/shared-algebras/initiative-algebra";
 
 import type { BattleSpellAccess } from "#/battle-spell-access.ts";
 import { sameBattleCreatureReactionTrigger } from "#/battle-spell-access.ts";
@@ -507,21 +510,16 @@ export function battleReactionSpellAccesses(
     readonly resolution?: BattleSpellAccess["projection"]["reactionResolution"];
   },
 ): ReadonlyArray<BattleSpellAccess> {
-  return c.spellAccesses.filter(
-    (access) => {
-      const trigger = access.projection.creatureReactionTrigger;
-      return (
-        access.projection.activation === "reaction" &&
-        trigger != null &&
-      sameBattleCreatureReactionTrigger(
-        trigger,
-        params.trigger,
-      ) &&
+  return c.spellAccesses.filter((access) => {
+    const trigger = access.projection.creatureReactionTrigger;
+    return (
+      access.projection.activation === "reaction" &&
+      trigger != null &&
+      sameBattleCreatureReactionTrigger(trigger, params.trigger) &&
       (params.resolution == null ||
         access.projection.reactionResolution === params.resolution)
-      );
-    },
-  );
+    );
+  });
 }
 
 export function firstAvailableSpellSlotLevel(
@@ -643,10 +641,7 @@ export function legalHitReactions(
         canProvideBattleSpellComponentsForAccess(c, access) &&
         battleSpellAccessHasAvailableResource(c, access),
     );
-    if (
-      id === atk.target &&
-      shieldAccesses.length > 0
-    ) {
+    if (id === atk.target && shieldAccesses.length > 0) {
       legal.add("RShield");
     }
     if (

@@ -1,14 +1,14 @@
 import {
   applyCondition,
   removeCondition,
-} from "@dnd/shared/conditions-algebra";
+} from "@dnd/shared-algebras/conditions-algebra";
 import { Hp } from "@dnd/shared/types";
 
 import {
   addDeathFailures,
   resetDeathSaveRuntimeState,
   resolveDeathSavingThrow,
-} from "#/reducer-death-saves.ts";
+} from "@dnd/shared-algebras/death-saves-algebra";
 import type { CreatureState } from "#/reducer-state.ts";
 
 export type CreatureDamageContext = {

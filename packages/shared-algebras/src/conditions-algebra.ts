@@ -1,6 +1,6 @@
 import { Match } from "effect";
 
-import type { Condition } from "./types";
+import type { Condition } from "@dnd/shared/types";
 
 export type ConditionFlag = Exclude<Condition, "incapacitated">;
 
@@ -59,8 +59,15 @@ export const applyCondition = (
   condition: Condition,
 ): ConditionState =>
   Match.value(condition).pipe(
-    Match.when("incapacitated", () => ({ ...state, directIncapacitated: true })),
-    Match.when("unconscious", () => ({ ...state, unconscious: true, prone: true })),
+    Match.when("incapacitated", () => ({
+      ...state,
+      directIncapacitated: true,
+    })),
+    Match.when("unconscious", () => ({
+      ...state,
+      unconscious: true,
+      prone: true,
+    })),
     Match.when("blinded", () => ({ ...state, blinded: true })),
     Match.when("charmed", () => ({ ...state, charmed: true })),
     Match.when("deafened", () => ({ ...state, deafened: true })),
@@ -81,7 +88,10 @@ export const removeCondition = (
   condition: Condition,
 ): ConditionState =>
   Match.value(condition).pipe(
-    Match.when("incapacitated", () => ({ ...state, directIncapacitated: false })),
+    Match.when("incapacitated", () => ({
+      ...state,
+      directIncapacitated: false,
+    })),
     // RAW: when Unconscious ends, the creature remains Prone.
     Match.when("unconscious", () => ({ ...state, unconscious: false })),
     Match.when("blinded", () => ({ ...state, blinded: false })),
@@ -93,7 +103,9 @@ export const removeCondition = (
     Match.when("paralyzed", () => ({ ...state, paralyzed: false })),
     Match.when("petrified", () => ({ ...state, petrified: false })),
     Match.when("poisoned", () => ({ ...state, poisoned: false })),
-    Match.when("prone", () => (state.unconscious ? state : { ...state, prone: false })),
+    Match.when("prone", () =>
+      state.unconscious ? state : { ...state, prone: false },
+    ),
     Match.when("restrained", () => ({ ...state, restrained: false })),
     Match.when("stunned", () => ({ ...state, stunned: false })),
     Match.exhaustive,

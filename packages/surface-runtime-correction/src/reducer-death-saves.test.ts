@@ -6,7 +6,7 @@ import {
   resolveDeathSavingThrow,
   validDeathSaveRuntimeState,
   type DeathSaveRuntimeState,
-} from "#/reducer-death-saves.ts";
+} from "@dnd/shared-algebras/death-saves-algebra";
 
 function state(
   overrides: Partial<DeathSaveRuntimeState> = {},

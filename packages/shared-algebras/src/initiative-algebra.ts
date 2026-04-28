@@ -7,7 +7,7 @@ import type {
   Initiative,
   ReadonlyNonEmptyArray,
   Round,
-} from "./types";
+} from "@dnd/shared/types";
 
 export type InitiativeStack<T> = {
   readonly round: Round;
@@ -28,9 +28,10 @@ export const nextInitiative = <T>(
   s0: InitiativeStack<T>,
 ): InitiativeStack<T> => {
   const [current, ...remaining] = s0.stillToAct;
-  const acted = [...s0.alreadyActed, current] as unknown as ReadonlyNonEmptyArray<
-    InitiativeEntry<T>
-  >;
+  const acted = [
+    ...s0.alreadyActed,
+    current,
+  ] as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>;
 
   if (isEmptyReadonlyArray(remaining)) {
     return {
@@ -43,14 +44,18 @@ export const nextInitiative = <T>(
   return {
     round: s0.round,
     alreadyActed: acted,
-    stillToAct: remaining as unknown as ReadonlyNonEmptyArray<InitiativeEntry<T>>,
+    stillToAct: remaining as unknown as ReadonlyNonEmptyArray<
+      InitiativeEntry<T>
+    >,
   };
 };
 
 export const currentActing = <T>(stack: InitiativeStack<T>): T =>
   stack.stillToAct[0]!.creature;
 
-export const initiativeOrder = <T>(stack: InitiativeStack<T>): ReadonlyArray<T> =>
+export const initiativeOrder = <T>(
+  stack: InitiativeStack<T>,
+): ReadonlyArray<T> =>
   [...stack.alreadyActed, ...stack.stillToAct].map((entry) => entry.creature);
 
 export const initiativeEntries = <T>(
@@ -65,7 +70,10 @@ export const insertAtOrderIndex = <T>(
   index: number,
   value: InitiativeEntry<T>,
 ): InitiativeStack<T> => {
-  const normalizedIndex = Math.max(0, Math.min(index, initiativeEntries(stack).length));
+  const normalizedIndex = Math.max(
+    0,
+    Math.min(index, initiativeEntries(stack).length),
+  );
   const actedCount = stack.alreadyActed.length;
 
   if (normalizedIndex <= actedCount) {
@@ -96,8 +104,12 @@ export const removeFromInitiative = <T>(
   stack: InitiativeStack<T>,
   predicate: (value: T) => boolean,
 ): Option.Option<InitiativeStack<T>> => {
-  const acted = stack.alreadyActed.filter((entry) => !predicate(entry.creature));
-  const stillToAct = stack.stillToAct.filter((entry) => !predicate(entry.creature));
+  const acted = stack.alreadyActed.filter(
+    (entry) => !predicate(entry.creature),
+  );
+  const stillToAct = stack.stillToAct.filter(
+    (entry) => !predicate(entry.creature),
+  );
 
   if (isNonEmptyReadonlyArray(stillToAct)) {
     return Option.some({ round: stack.round, alreadyActed: acted, stillToAct });
@@ -122,7 +134,7 @@ export type InitiativeEntry<T> = {
 export const createScoredInitiativeStack = <T>(
   order: ReadonlyNonEmptyArray<InitiativeEntry<T>>,
   round: Round,
-) : Either.Either<InitiativeStack<T>, string> =>
+): Either.Either<InitiativeStack<T>, string> =>
   isMonotoneInitiative(order)
     ? Either.right(createInitiativeStack(order, round))
     : Either.left("Initiative order must be monotone nonincreasing.");
@@ -141,7 +153,10 @@ export type InsertWithInitiativeResult<T> =
       readonly tie: ReadonlyNonEmptyArray<T>;
     };
 
-export type InitiativeTieDecision<T> = readonly [ReadonlyNonEmptyArray<T>, Index];
+export type InitiativeTieDecision<T> = readonly [
+  ReadonlyNonEmptyArray<T>,
+  Index,
+];
 
 export const insertByInitiative = <T>(
   stack: InitiativeStack<T>,
@@ -179,7 +194,10 @@ export const insertByInitiative = <T>(
   const tieStart = order[firstEqualIndex]!;
   const tiedEntries: Array<InitiativeEntry<T>> = [tieStart];
   let tieIndex = firstEqualIndex + 1;
-  while (tieIndex < order.length && order[tieIndex]!.initiative === initiative) {
+  while (
+    tieIndex < order.length &&
+    order[tieIndex]!.initiative === initiative
+  ) {
     tiedEntries.push(order[tieIndex]!);
     tieIndex += 1;
   }
@@ -192,7 +210,11 @@ export const insertByInitiative = <T>(
     if (sameTieCreatures(tie, decisionTie) && decisionIndex <= tie.length) {
       return {
         status: "ok",
-        stack: insertAtScoredOrderIndex(stack, firstEqualIndex + decisionIndex, entry),
+        stack: insertAtScoredOrderIndex(
+          stack,
+          firstEqualIndex + decisionIndex,
+          entry,
+        ),
       };
     }
   }
@@ -204,7 +226,7 @@ function insertAtScoredOrderIndex<T>(
   stack: InitiativeStack<T>,
   index: number,
   value: InitiativeEntry<T>,
-) : InitiativeStack<T> {
+): InitiativeStack<T> {
   const inserted = insertAtOrderIndex(stack, index, value);
   if (!isMonotoneInitiative(initiativeEntries(inserted))) {
     throw new Error("Initiative order must be monotone nonincreasing.");

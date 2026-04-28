@@ -1,5 +1,5 @@
 import type { Option } from "effect";
-import type { InitiativeStack } from "@dnd/shared/initiative-algebra";
+import type { InitiativeStack } from "@dnd/shared-algebras/initiative-algebra";
 import type { ReadiedSpellParams } from "#/battle-ready-types.ts";
 import type {
   LAWindowCtx,

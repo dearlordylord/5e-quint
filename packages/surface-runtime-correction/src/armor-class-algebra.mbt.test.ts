@@ -13,7 +13,7 @@ import {
   statBlockArmorClassState,
   zeroAbilityModifiers,
   type ArmorClassState,
-} from "#/reducer-armor-class.ts";
+} from "@dnd/shared-algebras/armor-class-algebra";
 
 type ModelState = {
   readonly baseKind: number;

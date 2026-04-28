@@ -1,5 +1,5 @@
 import type { CreatureId } from "@dnd/shared/types";
-import { currentActing } from "@dnd/shared/initiative-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 
 import {
   coreAttackDamageHole,

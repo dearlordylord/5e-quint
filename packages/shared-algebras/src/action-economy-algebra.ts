@@ -1,12 +1,12 @@
 import { Either, Match } from "effect";
 
-import type { State } from "#/reducer-state.ts";
-import type { CurrentSliceSupportedActivationUnit } from "#/reducer-support.ts";
+export type ActionCount = 0 | 1 | 2;
 
-export type ActionEconomyState = Pick<
-  State,
-  "currentActionsAvailable" | "currentHasBonusAction" | "currentHasFreeAction"
->;
+export type ActionEconomyState = {
+  readonly currentActionsAvailable: ActionCount;
+  readonly currentHasBonusAction: boolean;
+  readonly currentHasFreeAction: boolean;
+};
 
 export type ActivationResourceCost =
   | { readonly kind: "free" }
@@ -25,6 +25,20 @@ export type ActionEconomySpendError =
   | "unsupported unit activation cost"
   | "unsupported unit casting time"
   | "unsupported unit activation resource cost";
+
+export type SurfaceActivationResourceCarrier = {
+  readonly mechanics:
+    | {
+        readonly activationCost: {
+          readonly kind: string;
+        };
+      }
+    | {
+        readonly castingTime: {
+          readonly kind: string;
+        };
+      };
+};
 
 export function isSupportedSurfaceActivationResourceKind(
   kind: string,
@@ -47,7 +61,7 @@ export function activationResourceCostFromSurfaceKind(
 }
 
 export function activationResourceCost(
-  unit: CurrentSliceSupportedActivationUnit,
+  unit: SurfaceActivationResourceCarrier,
 ): Either.Either<ActivationResourceCost, ActionEconomySpendError> {
   const mechanics = unit.mechanics;
 
@@ -100,8 +114,8 @@ export function resetTurnActionEconomy<T extends ActionEconomyState>(
 }
 
 function spendOneActionCount(
-  currentActionsAvailable: State["currentActionsAvailable"],
-): Either.Either<0 | 1, ActionEconomySpendError> {
+  currentActionsAvailable: ActionCount,
+): Either.Either<ActionCount, ActionEconomySpendError> {
   if (currentActionsAvailable === 0) {
     return Either.left("no action available for unit");
   }
