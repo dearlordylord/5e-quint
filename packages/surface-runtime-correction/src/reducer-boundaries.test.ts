@@ -53,6 +53,23 @@ function healingRollFill(
   };
 }
 
+function fireBoltDamageRollFill(
+  results: ReadonlyNonEmptyArray<number>,
+): Extract<FilledHoleValue, { readonly kind: "rolledDice" }> {
+  return {
+    kind: "rolledDice" as const,
+    holeId: holeId("activation:0_damage_roll_0"),
+    value: [
+      {
+        results: results.map((result) => result as DieRollResult) as [
+          DieRollResult,
+          ...DieRollResult[],
+        ],
+      },
+    ] as ReadonlyNonEmptyArray<RolledDiceGroup>,
+  };
+}
+
 function emptyState(): State {
   const order = [
     { creature: "A" as CreatureId, initiative: 10 as never },
@@ -497,7 +514,7 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubjectHoles reaches attack-roll execution boundary after fire bolt holes are filled", () => {
+  it("resolveSubjectHoles requests fire bolt damage dice after a hit", () => {
     expect(
       resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
         subject: {
@@ -519,9 +536,91 @@ describe("reducer boundaries", () => {
         ],
       }),
     ).toEqual({
-      tag: "invalid",
-      reason: "attack-roll unit damage application is not implemented yet",
+      tag: "needsHoles",
+      holes: [
+        {
+          holeInstanceKey: "activation:0:runtime:damageRoll:0",
+          holeId: "activation:0_damage_roll_0",
+          kind: "rolledDice",
+          label: "damage roll",
+        },
+      ],
     });
+  });
+
+  it("resolveSubjectHoles resolves a missed fire bolt without damage", () => {
+    const state = twoCreatureStateWithActingUnit("fire_bolt");
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fire_bolt",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("fire_bolt_target"),
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: holeId("activation:0_attack_roll"),
+          value: 9,
+        },
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles applies fire bolt damage after damage dice are filled", () => {
+    const state = {
+      ...twoCreatureStateWithActingUnit("fire_bolt"),
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          creatureState({ units: [loadSupportedUnit("fire_bolt")] }),
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 10 as Hp,
+            maxHp: 10 as Hp,
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fire_bolt",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("fire_bolt_target"),
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: holeId("activation:0_attack_roll"),
+          value: 17,
+        },
+        fireBoltDamageRollFill([6]),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(4);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
   });
 
   it("resolveSubjectHoles rejects a unit-backed attack that targets the actor", () => {

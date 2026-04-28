@@ -74,7 +74,10 @@ function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   };
 }
 
-function damageRollHole(stepKey: HoleStepKey, effectIndex: number): RuntimeHole {
+function damageRollHole(
+  stepKey: HoleStepKey,
+  effectIndex: number,
+): RuntimeHole {
   return {
     holeInstanceKey: makeHoleInstanceKey(
       stepKey,
