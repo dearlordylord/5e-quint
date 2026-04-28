@@ -21,6 +21,7 @@ export {
   COVER_TYPES,
   DAMAGE_QUALIFIERS,
   DAMAGE_TYPES,
+  HAND_USES,
   INCAP_SOURCES,
   MAGICAL_DAMAGE_TYPES,
   PHYSICAL_DAMAGE_TYPES,
@@ -40,6 +41,7 @@ export type {
   CoverType,
   DamageQualifier,
   DamageType,
+  HandUse,
   IncapSource,
   MagicalDamageType,
   PhysicalDamageType,
@@ -58,15 +60,6 @@ export interface QualifiedPhysicalBypass {
   readonly damageType: PhysicalDamageType;
   readonly bypassedBy: ReadonlySet<DamageQualifier>;
 }
-
-export const HAND_USES = [
-  "free",
-  "mainWeapon",
-  "offWeapon",
-  "shield",
-  "grapple",
-] as const;
-export type HandUse = (typeof HAND_USES)[number];
 
 export interface ConditionConsequences {
   readonly ownAttackDisadvantage: boolean;

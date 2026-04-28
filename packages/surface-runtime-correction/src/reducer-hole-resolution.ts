@@ -4,6 +4,7 @@ import { getOnlyOne, Hp } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
+import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
 import {
   missingHoles,
   requireNoMissingHoles,
@@ -660,11 +661,13 @@ function applyHealing(
   });
 }
 
-function currentSliceTargetArmorClass(): number {
-  // RAW compares an attack roll against target AC. The correction state has no
-  // AC projection yet, and AC is ultimately derived from stat blocks/character
-  // sheets plus effects, so this current Surface slice uses the base AC value.
-  return 10;
+function currentSliceTargetArmorClass(
+  state: State,
+  targetId: CreatureId,
+): Either.Either<number, ResolutionInvalid> {
+  return Either.fromNullable(state.combatants.get(targetId), () =>
+    invalid("invalid attack target"),
+  ).pipe(Either.map((target) => Number(currentCreatureArmorClass(target))));
 }
 
 // FIXME: note that Overdamage is sometimes used by game logic (e.g. instant death) - check the RAW and advice
@@ -739,7 +742,12 @@ function resolveFilledActivationPhase(
           currentHoles,
         );
 
-        if (attackRoll < currentSliceTargetArmorClass()) {
+        const targetArmorClass = yield* currentSliceTargetArmorClass(
+          state,
+          targetId,
+        );
+
+        if (attackRoll < targetArmorClass) {
           const paidState = yield* unitCostPaidState(state, actorId, unit);
           return { tag: "resolved" as const, state: paidState };
         }

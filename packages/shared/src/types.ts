@@ -55,6 +55,15 @@ export type IncapSource = (typeof INCAP_SOURCES)[number];
 export const ABILITIES = ["str", "dex", "con", "int", "wis", "cha"] as const;
 export type Ability = (typeof ABILITIES)[number];
 
+export const HAND_USES = [
+  "free",
+  "mainWeapon",
+  "offWeapon",
+  "shield",
+  "grapple",
+] as const;
+export type HandUse = (typeof HAND_USES)[number];
+
 export const PHYSICAL_DAMAGE_TYPES = [
   "bludgeoning",
   "piercing",

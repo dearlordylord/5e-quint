@@ -4,6 +4,7 @@ import type { InitiativeStack } from "@dnd/shared/initiative-algebra";
 import { Integer } from "@dnd/shared/types";
 import type { CreatureId, Hp, SpellSlots } from "@dnd/shared/types";
 import type { UnitRecord } from "@dnd/prototype-content-surface/surface/types";
+import type { ArmorClassState } from "#/reducer-armor-class.ts";
 
 export type SpellcastingAbilityModifier = Integer &
   Brand.Brand<"SpellcastingAbilityModifier">;
@@ -26,6 +27,7 @@ export type CreatureState = {
   // carried through the rounds, into the next turn
   readonly hasReaction: boolean;
   readonly units: ReadonlyArray<UnitRecord>;
+  readonly armorClass: ArmorClassState;
   readonly spellcastingAbilityModifier: SpellcastingAbilityModifier;
   readonly spellSlots: SpellSlots;
   readonly slotExpendedThisTurn: boolean;

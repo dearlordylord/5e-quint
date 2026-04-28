@@ -13,6 +13,7 @@ import type {
 } from "@dnd/shared/types";
 
 import { discoverAvailableActs } from "#/reducer-discovery.ts";
+import { statBlockArmorClassState } from "#/reducer-armor-class.ts";
 import { resolveSubjectHoles } from "#/reducer-hole-resolution.ts";
 import { spellcastingAbilityModifier } from "#/reducer-state.ts";
 import type { CreatureState, State } from "#/reducer-state.ts";
@@ -28,6 +29,7 @@ function creatureState(overrides: Partial<CreatureState> = {}): CreatureState {
     conditions: EMPTY_CONDITION_STATE,
     hasReaction: true,
     units: [],
+    armorClass: statBlockArmorClassState(10),
     spellcastingAbilityModifier: spellcastingAbilityModifier(0),
     spellSlots: [],
     slotExpendedThisTurn: false,
@@ -573,6 +575,52 @@ describe("reducer boundaries", () => {
     expect(result.tag).toBe("resolved");
     if (result.tag === "resolved") {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles compares unit-backed attack rolls against target AC", () => {
+    const state = {
+      ...twoCreatureStateWithActingUnit("fire_bolt"),
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          creatureState({ units: [loadSupportedUnit("fire_bolt")] }),
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 10 as Hp,
+            maxHp: 10 as Hp,
+            armorClass: statBlockArmorClassState(18),
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fire_bolt",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("fire_bolt_target"),
+          value: "B" as CreatureId,
+        },
+        {
+          kind: "attackRoll",
+          holeId: holeId("activation:0_attack_roll"),
+          value: 17,
+        },
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
       expect(result.state.currentActionsAvailable).toBe(0);
     }
   });
