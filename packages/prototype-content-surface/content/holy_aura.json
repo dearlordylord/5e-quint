@@ -1,0 +1,100 @@
+{
+  "description": "For the duration, you emit an aura in a 30-foot Emanation. While in the aura, creatures of your choice have Advantage on all saving throws, and other creatures have Disadvantage on attack rolls against them. In addition, when a Fiend or an Undead hits an affected creature with a melee attack roll, the attacker must succeed on a Constitution saving throw or have the Blinded condition until the end of its next turn.",
+  "id": "holy_aura",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "holy_aura_chosen_creatures",
+      "kind": "hole",
+      "label": "chosen creatures in aura",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "self"
+        },
+        "shape": {
+          "kind": "emanation",
+          "radiusFeet": 30
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a reliquary",
+      "materialCostGp": 1000,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 8,
+    "operations": [
+      {
+        "effect": {
+          "kind": "modify_roll_advantage",
+          "mode": "advantage",
+          "on": [
+            "saving_throw"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "modify_roll_advantage",
+          "mode": "disadvantage",
+          "on": [
+            "attack_roll"
+          ]
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "condition": "blinded",
+            "duration": "end_of_next_turn",
+            "kind": "apply_condition"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "attackKind": "melee",
+          "attackerTypeFilter": [
+            "fiend",
+            "undead"
+          ],
+          "kind": "on_attached_hit_by_attack_roll"
+        }
+      }
+    ],
+    "range": {
+      "kind": "self"
+    },
+    "school": "abjuration"
+  },
+  "name": "Holy Aura",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Holy Aura"
+  }
+}

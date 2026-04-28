@@ -1259,6 +1259,7 @@ export const OngoingTriggerSchema = Schema.Union(
     kind: Schema.Literal("on_attached_hit_by_attack_roll"),
     attackKind: optionalExact(Schema.Literal("melee")),
     attackerWithinFeet: optionalExact(Schema.Number),
+    attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
   }),
   Schema.Struct({ kind: Schema.Literal("on_attached_turn_start") }),
   Schema.Struct({

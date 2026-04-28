@@ -2762,11 +2762,15 @@ function traceOngoingTrigger(
         trigger.attackerWithinFeet === undefined
           ? ""
           : `\nattacker within ${trigger.attackerWithinFeet} ft`;
+      const attackerTypes =
+        trigger.attackerTypeFilter === undefined
+          ? ""
+          : `\nattacker type: ${trigger.attackerTypeFilter.join("/")}`;
       nodes.push({
         id: winId,
         category: "window",
         atomKind: "on_hit_window",
-        label: `on_hit_window\n(attached hit by attack roll)${attack}${range}`,
+        label: `on_hit_window\n(attached hit by attack roll)${attack}${range}${attackerTypes}`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
