@@ -349,13 +349,15 @@ The current System Graph does not yet make these interface-level facts explicit:
 - State feedback is underdrawn. `resolveCoreEndTurn` returns a new `State`, but
   the graph does not draw `resolved.state` back into the next discovery cycle.
 - Unit execution is still partial. Direct `heal_hp` can now validate its target
-  and healing dice, pay action/free activation cost plus a base spell slot,
-  enforce the slot-expended-turn guard, then mutate HP. Attack-roll damage
-  application, save outcome application, and extra action grants remain missing.
+  and healing dice, pay action/free/bonus-action activation cost plus a base
+  spell slot, enforce the slot-expended-turn guard, then mutate HP. Unit
+  `attack_roll` can now compare against AC, pay its activation cost, and apply
+  HP damage on hit. Core attack damage application, save outcome application,
+  and extra action grants remain missing.
 - Resource legality is still incomplete for unit-backed acts. Direct `heal_hp`
-  now handles action/free activation cost, base spell slot spending, and the
-  slotted-spell once-per-turn guard, but bonus-action spending, upcast slot
-  choice, use-count spending, other once-per-turn limits, and broader illegal-use
+  now handles action/free/bonus-action activation cost, base spell slot
+  spending, and the slotted-spell once-per-turn guard. Upcast slot choice,
+  use-count spending, other once-per-turn limits, and broader illegal-use
   rejection remain missing.
 - The decision type is not explicit. `AvailableAct` is an offered option;
   `ResolutionRequest` is a replay request. The conceptual table decision is the
