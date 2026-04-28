@@ -74,6 +74,18 @@ function attackRollHole(stepKey: HoleStepKey): RuntimeHole {
   };
 }
 
+function damageRollHole(stepKey: HoleStepKey, effectIndex: number): RuntimeHole {
+  return {
+    holeInstanceKey: makeHoleInstanceKey(
+      stepKey,
+      holeLocalKey(`runtime:damageRoll:${effectIndex}`),
+    ),
+    holeId: holeId(`${stepKey}_damage_roll_${effectIndex}`),
+    kind: "rolledDice",
+    label: "damage roll",
+  };
+}
+
 function healingRollHole(
   stepKey: HoleStepKey,
   effectIndex: number,
@@ -272,4 +284,13 @@ export function projectPhaseHoles(
   );
 
   return assertUniqueHoleInstanceKeys(holes);
+}
+
+export function projectAttackRollDamageHoles(
+  phase: Extract<ActivationPhase, { readonly kind: "attack_roll" }>,
+  stepKey: HoleStepKey,
+): RuntimeHoleSet {
+  return phase.onHit.flatMap((effect, index) =>
+    effect.kind === "damage" ? [damageRollHole(stepKey, index)] : [],
+  );
 }

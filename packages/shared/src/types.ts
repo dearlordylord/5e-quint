@@ -1,17 +1,24 @@
-import { Brand, Schema } from "effect";
+import { Brand, Either, Schema } from "effect";
 
 export type NonEmptyArray<T> = [T, ...T[]];
 export type ReadonlyNonEmptyArray<T> = readonly [T, ...T[]];
 
-export function isArrayOfOne<T>(
-  value: readonly T[],
-): value is readonly [T] {
+export function isArrayOfOne<T>(value: readonly T[]): value is readonly [T] {
   return value.length === 1;
 }
 
-export const getOnlyOneStrict = <T>(
-  value: readonly [T],
-): T => {
+const defaultGetOnlyOneError = (length: number): Error =>
+  new Error(`Expected exactly one value, got ${length}`);
+
+export const getOnlyOne = <T, E = Error>(
+  value: readonly T[],
+  error?: (length: number) => E,
+): Either.Either<T, E | Error> =>
+  isArrayOfOne(value)
+    ? Either.right(value[0])
+    : Either.left((error ?? defaultGetOnlyOneError)(value.length));
+
+export const getOnlyOneStrict = <T>(value: readonly [T]): T => {
   if (isArrayOfOne(value)) {
     return value[0];
   }
@@ -163,22 +170,13 @@ export const DieRollResult = Brand.all(
 );
 
 export type Initiative = Integer & Brand.Brand<"Initiative">;
-export const Initiative = Brand.all(
-  Integer,
-  Brand.nominal<Initiative>(),
-);
+export const Initiative = Brand.all(Integer, Brand.nominal<Initiative>());
 
 export type Index = NonNegativeInteger & Brand.Brand<"Index">;
-export const Index = Brand.all(
-  NonNegativeInteger,
-  Brand.nominal<Index>(),
-);
+export const Index = Brand.all(NonNegativeInteger, Brand.nominal<Index>());
 
 export type Hp = NonNegativeInteger & Brand.Brand<"Hp">;
-export const Hp = Brand.all(
-  NonNegativeInteger,
-  Brand.nominal<Hp>(),
-);
+export const Hp = Brand.all(NonNegativeInteger, Brand.nominal<Hp>());
 
 export const CASTER_CLASSES = [
   "bard",
@@ -208,10 +206,7 @@ export type CasterType = (typeof CASTER_TYPES)[number];
 export type SpellSlots = ReadonlyArray<number>;
 
 export type Round = PositiveInteger & Brand.Brand<"Round">;
-export const Round = Brand.all(
-  PositiveInteger,
-  Brand.nominal<Round>(),
-);
+export const Round = Brand.all(PositiveInteger, Brand.nominal<Round>());
 
 export const CreatureId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("CreatureId"),
