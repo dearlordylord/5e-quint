@@ -18,12 +18,3 @@ export function coreAttackRollHole(): RuntimeHole {
     label: "attack roll",
   };
 }
-
-export function coreAttackDamageHole(): RuntimeHole {
-  return {
-    holeInstanceKey: holeInstanceKey("core:attack:damage"),
-    holeId: holeId("core_attack_damage"),
-    kind: "rolledDice",
-    label: "damage roll",
-  };
-}

@@ -72,6 +72,21 @@ function fireBoltDamageRollFill(
   };
 }
 
+function attackRollFill(
+  holeIdText: string,
+  total: number,
+  naturalD20 = total,
+): Extract<FilledHoleValue, { readonly kind: "attackRoll" }> {
+  return {
+    kind: "attackRoll",
+    holeId: holeId(holeIdText),
+    value: {
+      total,
+      naturalD20: naturalD20 as DieRollResult,
+    },
+  };
+}
+
 function emptyState(): State {
   const order = [
     { creature: "A" as CreatureId, initiative: 10 as never },
@@ -324,7 +339,7 @@ describe("reducer boundaries", () => {
     });
   });
 
-  it("resolveSubjectHoles requests damage dice after an attack roll", () => {
+  it("resolveSubjectHoles resolves a core attack hit without applying damage yet", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
         subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
@@ -334,27 +349,39 @@ describe("reducer boundaries", () => {
             holeId: "core_attack_target" as never,
             value: "B" as CreatureId,
           },
-          {
-            kind: "attackRoll",
-            holeId: "core_attack_roll" as never,
-            value: 17,
-          },
+          attackRollFill("core_attack_roll", 17),
         ],
       }),
     ).toEqual({
-      tag: "needsHoles",
-      holes: [
-        {
-          holeInstanceKey: "core:attack:damage",
-          holeId: "core_attack_damage",
-          kind: "rolledDice",
-          label: "damage roll",
-        },
-      ],
+      tag: "resolved",
+      state: {
+        ...twoCreatureState(),
+        currentActionsAvailable: 0,
+      },
     });
   });
 
-  it("resolveSubjectHoles stops at hit adjudication after attack damage is filled", () => {
+  it("resolveSubjectHoles resolves a missed core attack without asking for damage", () => {
+    const result = resolveSubjectHoles(twoCreatureState(), {
+      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: "core_attack_target" as never,
+          value: "B" as CreatureId,
+        },
+        attackRollFill("core_attack_roll", 9),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles rejects core attack damage dice on a miss", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
         subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
@@ -364,11 +391,7 @@ describe("reducer boundaries", () => {
             holeId: "core_attack_target" as never,
             value: "B" as CreatureId,
           },
-          {
-            kind: "attackRoll",
-            holeId: "core_attack_roll" as never,
-            value: 17,
-          },
+          attackRollFill("core_attack_roll", 9),
           {
             kind: "rolledDice",
             holeId: "core_attack_damage" as never,
@@ -378,8 +401,43 @@ describe("reducer boundaries", () => {
       }),
     ).toEqual({
       tag: "invalid",
-      reason: "attack hit adjudication is not implemented yet",
+      reason: "unexpected filled value for hole core_attack_damage",
     });
+  });
+
+  it("resolveSubjectHoles compares core attacks against target AC", () => {
+    const state = {
+      ...twoCreatureState(),
+      combatants: new Map([
+        ["A" as CreatureId, creatureState()],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 10 as Hp,
+            maxHp: 10 as Hp,
+            armorClass: statBlockArmorClassState(18),
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: "core_attack_target" as never,
+          value: "B" as CreatureId,
+        },
+        attackRollFill("core_attack_roll", 17),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
   });
 
   it("resolveSubjectHoles rejects an invalid attack target", () => {
@@ -445,13 +503,7 @@ describe("reducer boundaries", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
         subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
-        filledHoleValues: [
-          {
-            kind: "attackRoll",
-            holeId: holeId("core_attack_target"),
-            value: 17,
-          },
-        ],
+        filledHoleValues: [attackRollFill("core_attack_target", 17)],
       }),
     ).toEqual({
       tag: "invalid",
@@ -530,11 +582,7 @@ describe("reducer boundaries", () => {
             holeId: holeId("fire_bolt_target"),
             value: "B" as CreatureId,
           },
-          {
-            kind: "attackRoll",
-            holeId: holeId("activation:0_attack_roll"),
-            value: 17,
-          },
+          attackRollFill("activation:0_attack_roll", 17),
         ],
       }),
     ).toEqual({
@@ -564,11 +612,7 @@ describe("reducer boundaries", () => {
           holeId: holeId("fire_bolt_target"),
           value: "B" as CreatureId,
         },
-        {
-          kind: "attackRoll",
-          holeId: holeId("activation:0_attack_roll"),
-          value: 9,
-        },
+        attackRollFill("activation:0_attack_roll", 9),
       ],
     });
 
@@ -577,6 +621,30 @@ describe("reducer boundaries", () => {
       expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
       expect(result.state.currentActionsAvailable).toBe(0);
     }
+  });
+
+  it("resolveSubjectHoles rejects fire bolt damage dice on a miss", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("fire_bolt_target"),
+            value: "B" as CreatureId,
+          },
+          attackRollFill("activation:0_attack_roll", 9),
+          fireBoltDamageRollFill([6]),
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "unexpected filled value for hole activation:0_damage_roll_0",
+    });
   });
 
   it("resolveSubjectHoles compares unit-backed attack rolls against target AC", () => {
@@ -610,11 +678,100 @@ describe("reducer boundaries", () => {
           holeId: holeId("fire_bolt_target"),
           value: "B" as CreatureId,
         },
-        {
-          kind: "attackRoll",
-          holeId: holeId("activation:0_attack_roll"),
-          value: 17,
+        attackRollFill("activation:0_attack_roll", 17),
+      ],
+    });
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(10);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles treats natural 1 attack rolls as misses", () => {
+    const result = resolveSubjectHoles(
+      twoCreatureStateWithActingUnit("fire_bolt"),
+      {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
         },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("fire_bolt_target"),
+            value: "B" as CreatureId,
+          },
+          attackRollFill("activation:0_attack_roll", 25, 1),
+        ],
+      },
+    );
+
+    expect(result.tag).toBe("resolved");
+    if (result.tag === "resolved") {
+      expect(result.state.combatants.get("B" as CreatureId)?.hp).toBe(1);
+      expect(result.state.currentActionsAvailable).toBe(0);
+    }
+  });
+
+  it("resolveSubjectHoles rejects invalid natural d20 attack-roll results", () => {
+    expect(
+      resolveSubjectHoles(twoCreatureStateWithActingUnit("fire_bolt"), {
+        subject: {
+          tag: "unit",
+          actorId: "A" as CreatureId,
+          unitId: "fire_bolt",
+        },
+        filledHoleValues: [
+          {
+            kind: "targetChoice",
+            holeId: holeId("fire_bolt_target"),
+            value: "B" as CreatureId,
+          },
+          attackRollFill("activation:0_attack_roll", 17, 21),
+        ],
+      }),
+    ).toEqual({
+      tag: "invalid",
+      reason: "invalid attack roll result",
+    });
+  });
+
+  it("resolveSubjectHoles treats natural 20 attack rolls as critical hits", () => {
+    const state = {
+      ...twoCreatureStateWithActingUnit("fire_bolt"),
+      combatants: new Map([
+        [
+          "A" as CreatureId,
+          creatureState({ units: [loadSupportedUnit("fire_bolt")] }),
+        ],
+        [
+          "B" as CreatureId,
+          creatureState({
+            hp: 20 as Hp,
+            maxHp: 20 as Hp,
+            armorClass: statBlockArmorClassState(30),
+          }),
+        ],
+      ]),
+    };
+
+    const result = resolveSubjectHoles(state, {
+      subject: {
+        tag: "unit",
+        actorId: "A" as CreatureId,
+        unitId: "fire_bolt",
+      },
+      filledHoleValues: [
+        {
+          kind: "targetChoice",
+          holeId: holeId("fire_bolt_target"),
+          value: "B" as CreatureId,
+        },
+        attackRollFill("activation:0_attack_roll", 20, 20),
+        fireBoltDamageRollFill([6, 4]),
       ],
     });
 
@@ -655,11 +812,7 @@ describe("reducer boundaries", () => {
           holeId: holeId("fire_bolt_target"),
           value: "B" as CreatureId,
         },
-        {
-          kind: "attackRoll",
-          holeId: holeId("activation:0_attack_roll"),
-          value: 17,
-        },
+        attackRollFill("activation:0_attack_roll", 17),
         fireBoltDamageRollFill([6]),
       ],
     });
@@ -685,11 +838,7 @@ describe("reducer boundaries", () => {
             holeId: holeId("fire_bolt_target"),
             value: "A" as CreatureId,
           },
-          {
-            kind: "attackRoll",
-            holeId: holeId("activation:0_attack_roll"),
-            value: 17,
-          },
+          attackRollFill("activation:0_attack_roll", 17),
         ],
       }),
     ).toEqual({
@@ -712,11 +861,7 @@ describe("reducer boundaries", () => {
             holeId: holeId("fire_bolt_target"),
             value: "Z" as CreatureId,
           },
-          {
-            kind: "attackRoll",
-            holeId: holeId("activation:0_attack_roll"),
-            value: 17,
-          },
+          attackRollFill("activation:0_attack_roll", 17),
         ],
       }),
     ).toEqual({

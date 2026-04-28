@@ -42,4 +42,73 @@ describe("assertSupportedUnit", () => {
       UnsupportedUnitError,
     );
   });
+
+  it("rejects attack-roll units without a target hole at load time", () => {
+    const unit = loadSupportedUnit("fire_bolt");
+    if (unit.kind !== "spell" || unit.mechanics.family !== "activation") {
+      throw new Error("expected activation spell");
+    }
+
+    const [phase] = unit.mechanics.phases;
+    if (phase.kind !== "attack_roll") {
+      throw new Error("expected attack-roll phase");
+    }
+
+    const unsupported: UnitRecord = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            attachment: { kind: "self" },
+          },
+        ],
+      },
+    };
+
+    expect(() => assertSupportedUnit(unsupported)).toThrow(
+      UnsupportedUnitError,
+    );
+  });
+
+  it("rejects attack-roll damage amounts the reducer cannot execute", () => {
+    const unit = loadSupportedUnit("fire_bolt");
+    if (unit.kind !== "spell" || unit.mechanics.family !== "activation") {
+      throw new Error("expected activation spell");
+    }
+
+    const [phase] = unit.mechanics.phases;
+    if (phase.kind !== "attack_roll" || phase.onHit[0].kind !== "damage") {
+      throw new Error("expected attack-roll damage phase");
+    }
+
+    const unsupported: UnitRecord = {
+      ...unit,
+      mechanics: {
+        ...unit.mechanics,
+        phases: [
+          {
+            ...phase,
+            onHit: [
+              {
+                ...phase.onHit[0],
+                amount: {
+                  kind: "linear_per_level",
+                  axis: "slot",
+                  startingAtLevel: 1,
+                  base: { dice: 1, dieSize: 10 },
+                  perLevel: { dice: 1, dieSize: 10 },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(() => assertSupportedUnit(unsupported)).toThrow(
+      UnsupportedUnitError,
+    );
+  });
 });

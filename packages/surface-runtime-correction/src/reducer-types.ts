@@ -15,11 +15,7 @@ import type { State } from "#/reducer-state.ts";
 // Example: "chromatic_orb_damage_type", "fireball_slot_level".
 // Note that we NEVER would match fireball_slot_level, chromatic_orb_damage_type or other authored-unit hole ids in code.
 
-type HoleIdText =
-  | "core_attack_target"
-  | "core_attack_roll"
-  | "core_attack_damage"
-  | (string & {});
+type HoleIdText = "core_attack_target" | "core_attack_roll" | (string & {});
 export type HoleId = HoleIdText & Brand.Brand<"HoleId">;
 const HoleId = Brand.nominal<HoleId>();
 export const holeId: (value: HoleIdText) => HoleId = HoleId;
@@ -55,6 +51,11 @@ export type FillableDamageTypeRef = ExcludeByKind<
 
 export type RolledDiceGroup = {
   readonly results: ReadonlyNonEmptyArray<DieRollResult>;
+};
+
+export type AttackRollResult = {
+  readonly total: number;
+  readonly naturalD20: DieRollResult;
 };
 
 // "non-runtime" holes are Surface holes.
@@ -136,7 +137,7 @@ export type FilledHoleValue =
       // Runtime answer for the D20 Test kind "attack roll".
       readonly kind: "attackRoll";
       readonly holeId: HoleId;
-      readonly value: number;
+      readonly value: AttackRollResult;
     }
   | {
       readonly kind: "rolledDice";

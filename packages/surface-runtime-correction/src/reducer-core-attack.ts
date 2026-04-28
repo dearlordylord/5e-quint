@@ -2,11 +2,16 @@ import type { CreatureId } from "@dnd/shared/types";
 import { currentActing } from "@dnd/shared/initiative-algebra";
 
 import {
-  coreAttackDamageHole,
   coreAttackRollHole,
   coreAttackTargetHole,
 } from "#/reducer-core-attack-holes.ts";
+import { spendOneAction } from "#/reducer-action-economy.ts";
+import {
+  attackRollHits,
+  attackRollResultIsValid,
+} from "#/reducer-attack-roll.ts";
 import { canUseCoreAttack } from "#/reducer-core-acts.ts";
+import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
 import { validateCurrentHoleInputs } from "#/reducer-hole-refilling.ts";
 import type { State } from "#/reducer-state.ts";
 import { holeId } from "#/reducer-types.ts";
@@ -17,6 +22,7 @@ import type {
   RuntimeHoleSet,
   Subject,
 } from "#/reducer-types.ts";
+import { Either } from "effect";
 
 export type CoreAttackSubject = Extract<
   Subject,
@@ -41,12 +47,6 @@ function isAttackRollValue(
   value: FilledHoleValue,
 ): value is Extract<FilledHoleValue, { readonly kind: "attackRoll" }> {
   return value.kind === "attackRoll";
-}
-
-function isRolledDiceValue(
-  value: FilledHoleValue,
-): value is Extract<FilledHoleValue, { readonly kind: "rolledDice" }> {
-  return value.kind === "rolledDice";
 }
 
 function hasAttackTarget(state: State, actorId: CreatureId): boolean {
@@ -132,31 +132,47 @@ export function resolveCoreAttackHoles(
     return nextCoreAttackHoles([coreAttackRollHole()]);
   }
 
-  const damageRoll = filledHoleValues
-    .filter(isRolledDiceValue)
-    .find((value) => value.holeId === holeId("core_attack_damage"));
+  if (!attackRollResultIsValid(attackRoll.value)) {
+    return invalid("invalid attack roll result");
+  }
 
-  if (damageRoll === undefined) {
-    const damageRollValidation = validateCurrentHoleInputs(filledHoleValues, [
+  const target = state.combatants.get(targetChoice.value);
+  if (target === undefined) {
+    return invalid("invalid attack target");
+  }
+
+  const paidState = spendOneAction(state, "no action available for attack");
+  if (Either.isLeft(paidState)) {
+    return paidState.left;
+  }
+
+  if (
+    !attackRollHits(attackRoll.value, Number(currentCreatureArmorClass(target)))
+  ) {
+    const missValidation = validateCurrentHoleInputs(filledHoleValues, [
       coreAttackTargetHole(),
       coreAttackRollHole(),
-      coreAttackDamageHole(),
     ]);
-    if (damageRollValidation !== null) {
-      return damageRollValidation;
+    if (missValidation !== null) {
+      return missValidation;
     }
 
-    return nextCoreAttackHoles([coreAttackDamageHole()]);
+    return {
+      tag: "resolved",
+      state: paidState.right,
+    };
   }
 
-  const fullValidation = validateCurrentHoleInputs(filledHoleValues, [
+  const hitValidation = validateCurrentHoleInputs(filledHoleValues, [
     coreAttackTargetHole(),
     coreAttackRollHole(),
-    coreAttackDamageHole(),
   ]);
-  if (fullValidation !== null) {
-    return fullValidation;
+  if (hitValidation !== null) {
+    return hitValidation;
   }
 
-  return invalid("attack hit adjudication is not implemented yet");
+  return {
+    tag: "resolved",
+    state: paidState.right,
+  };
 }

@@ -1,10 +1,17 @@
 import { Either, Match } from "effect";
 import { currentActing, nextInitiative } from "@dnd/shared/initiative-algebra";
-import { getOnlyOne, Hp } from "@dnd/shared/types";
+import { Hp } from "@dnd/shared/types";
 import type { CreatureId } from "@dnd/shared/types";
 
 import { resolveCoreAttackHoles } from "#/reducer-core-attack.ts";
+import { spendOneAction } from "#/reducer-action-economy.ts";
+import {
+  attackRollHits,
+  attackRollIsCritical,
+  attackRollResultIsValid,
+} from "#/reducer-attack-roll.ts";
 import { currentCreatureArmorClass } from "#/reducer-armor-class.ts";
+import { applyHpDamage } from "#/reducer-damage.ts";
 import {
   missingHoles,
   requireNoMissingHoles,
@@ -18,8 +25,11 @@ import type { SpellcastingAbilityModifier, State } from "#/reducer-state.ts";
 import type {
   CurrentSliceSupportedActivationPhase,
   CurrentSliceSupportedActivationUnit,
+  CurrentSliceSupportedDamageAmount,
+  CurrentSliceSupportedDamageEffect,
 } from "#/reducer-support.ts";
 import type {
+  AttackRollResult,
   FilledHoleValue,
   ResolutionInvalid,
   ResolutionRequest,
@@ -54,12 +64,6 @@ type SupportedSurfaceActivationResourceKind =
   | "action"
   | "bonus_action";
 type SpellSlotIndex = number;
-
-type DamageEffect = Extract<EffectAtom, { readonly kind: "damage" }>;
-type CurrentSliceSupportedAttackRollPhase = Extract<
-  CurrentSliceSupportedActivationPhase,
-  { readonly kind: "attack_roll" }
->;
 
 function invalid(reason: string): ResolutionInvalid {
   return { tag: "invalid", reason };
@@ -123,7 +127,7 @@ function currentAttackRollHole(
 function requireAttackRollFill(
   filledHoleValues: ReadonlyArray<FilledHoleValue>,
   holes: ReadonlyArray<RuntimeHole>,
-): Either.Either<number, ResolutionInvalid> {
+): Either.Either<AttackRollResult, ResolutionInvalid> {
   return Either.gen(function* () {
     const attackRollHole = yield* currentAttackRollHole(holes);
     const value = yield* Either.fromNullable(
@@ -139,6 +143,10 @@ function requireAttackRollFill(
           `filled value kind ${value.kind} does not match hole ${attackRollHole.holeId}`,
         ),
       );
+    }
+
+    if (!attackRollResultIsValid(value.value)) {
+      return yield* Either.left(invalid("invalid attack roll result"));
     }
 
     return value.value;
@@ -258,28 +266,6 @@ function requireExistingDirectTarget(
   return Either.right(targetId);
 }
 
-function requireOnlyHitDamageEffect(
-  phase: CurrentSliceSupportedAttackRollPhase,
-): Either.Either<DamageEffect, ResolutionInvalid> {
-  return Either.gen(function* () {
-    const effect = yield* getOnlyOne(phase.onHit, () =>
-      invalid("expected one attack-roll hit damage effect"),
-    ).pipe((result) =>
-      Either.mapLeft(result, (error) =>
-        error instanceof Error ? invalid(error.message) : error,
-      ),
-    );
-
-    if (effect.kind !== "damage") {
-      return yield* Either.left(
-        invalid("expected one attack-roll hit damage effect"),
-      );
-    }
-
-    return effect;
-  });
-}
-
 function activationResourceCost(
   unit: CurrentSliceSupportedActivationUnit,
 ): Either.Either<ActivationResourceCost, ResolutionInvalid> {
@@ -330,20 +316,6 @@ function activationResourceCostFromSurfaceKind(
   );
 }
 
-function spendOneActionCount(
-  currentActionsAvailable: State["currentActionsAvailable"],
-): Either.Either<0 | 1, ResolutionInvalid> {
-  if (currentActionsAvailable === 0) {
-    return Either.left(invalid("no action available for unit"));
-  }
-
-  if (currentActionsAvailable === 1) {
-    return Either.right(0);
-  }
-
-  return Either.right(1);
-}
-
 function spendActivationCost(
   state: State,
   unit: CurrentSliceSupportedActivationUnit,
@@ -354,12 +326,7 @@ function spendActivationCost(
     return yield* Match.value(cost).pipe(
       Match.when({ kind: "free" }, () => Either.right(state)),
       Match.when({ kind: "action" }, () =>
-        spendOneActionCount(state.currentActionsAvailable).pipe(
-          Either.map((currentActionsAvailable) => ({
-            ...state,
-            currentActionsAvailable,
-          })),
-        ),
+        spendOneAction(state, "no action available for unit"),
       ),
       Match.when({ kind: "bonusAction" }, () =>
         Either.left(invalid("unsupported unit activation resource cost")),
@@ -514,34 +481,18 @@ function currentSliceHealingBaseExpr(
 }
 
 function currentSliceDamageBaseExpr(
-  amount: DiceAmount,
+  amount: CurrentSliceSupportedDamageAmount,
 ): Either.Either<DiceExpr, ResolutionInvalid> {
   return Match.value(amount).pipe(
     Match.when({ kind: "fixed" }, (fixed) =>
       requireSupportedDamageDiceExpr(fixed.expr),
     ),
     Match.when({ kind: "threshold_tiers" }, (threshold) => {
-      if (threshold.axis !== "character") {
-        return Either.left(invalid("unsupported damage amount threshold axis"));
-      }
-
       // The correction state does not model character level yet. For current
       // Surface execution, cantrip threshold damage resolves at the authored
       // base expression until level projection exists.
       return requireSupportedDamageDiceExpr(threshold.base);
     }),
-    Match.when({ kind: "linear_per_level" }, () =>
-      Either.left(invalid("unsupported damage amount scaling")),
-    ),
-    Match.when({ kind: "resource_spent" }, () =>
-      Either.left(invalid("unsupported resource-spent damage amount")),
-    ),
-    Match.when({ kind: "resource_spent_linear" }, () =>
-      Either.left(invalid("unsupported resource-spent damage amount")),
-    ),
-    Match.when({ kind: "linked" }, () =>
-      Either.left(invalid("unsupported linked damage amount")),
-    ),
     Match.exhaustive,
   );
 }
@@ -572,18 +523,31 @@ function healingAmountFromRoll(
 }
 
 function damageAmountFromRoll(
-  effect: DamageEffect,
+  effect: CurrentSliceSupportedDamageEffect,
   rolledDice: ReadonlyArray<RolledDiceGroup>,
+  isCriticalHit: boolean,
 ): Either.Either<number, ResolutionInvalid> {
   return Either.gen(function* () {
     const expr = yield* currentSliceDamageBaseExpr(effect.amount);
-    const diceValidation = validateRolledDiceForDiceExpr(rolledDice, expr);
+    const effectiveExpr = isCriticalHit
+      ? { ...expr, dice: expr.dice * 2 }
+      : expr;
+    const diceValidation = validateRolledDiceForDiceExpr(
+      rolledDice,
+      effectiveExpr,
+    );
 
     if (Either.isLeft(diceValidation)) {
       return yield* Either.left(invalid(diceValidation.left.reason));
     }
 
-    return rolledDiceTotal(rolledDice) + (expr.flat ?? 0);
+    const damageAmount =
+      rolledDiceTotal(rolledDice) + (effectiveExpr.flat ?? 0);
+    if (damageAmount < 0) {
+      return yield* Either.left(invalid("damage amount cannot be negative"));
+    }
+
+    return damageAmount;
   });
 }
 
@@ -670,7 +634,11 @@ function currentSliceTargetArmorClass(
   ).pipe(Either.map((target) => Number(currentCreatureArmorClass(target))));
 }
 
-// FIXME: note that Overdamage is sometimes used by game logic (e.g. instant death) - check the RAW and advice
+// TODO: This is HP mutation only. Surface does not yet model damage-triggered
+// reaction windows such as Hellish Rebuke. When added, do not hide that
+// protocol inside this helper; introduce a damage-event resolution layer that
+// carries source, target, damage type/qualifiers, trigger qualifiers, and return
+// frame, then delegates final HP arithmetic to applyHpDamage.
 function applyDamage(
   state: State,
   targetId: CreatureId,
@@ -682,9 +650,9 @@ function applyDamage(
       () => invalid("invalid attack target"),
     );
 
-    const nextHp = Hp(Math.max(0, Number(target.hp) - damageAmount));
+    const damagedTarget = applyHpDamage(target, damageAmount);
     const combatants = new Map(state.combatants);
-    combatants.set(targetId, { ...target, hp: nextHp });
+    combatants.set(targetId, damagedTarget);
 
     return { ...state, combatants };
   });
@@ -701,20 +669,6 @@ function resolveFilledActivationPhase(
   return Match.value(phase).pipe(
     Match.when({ kind: "attack_roll" }, (attackRollPhase) =>
       Either.gen(function* () {
-        if (attackRollPhase.attachment.kind !== "hole") {
-          return yield* Either.left(
-            invalid("current slice expects hole-backed attack-roll attachment"),
-          );
-        }
-
-        if (attackRollPhase.attachment.value.kind !== "target") {
-          return yield* Either.left(
-            invalid(
-              "current slice expects target attachment for attack-roll units",
-            ),
-          );
-        }
-
         const missingInitialHoles = missingHoles(
           filledHoleValues,
           currentHoles,
@@ -747,7 +701,15 @@ function resolveFilledActivationPhase(
           targetId,
         );
 
-        if (attackRoll < targetArmorClass) {
+        if (!attackRollHits(attackRoll, targetArmorClass)) {
+          const validMissInputs = requireValidHoleInputs(
+            filledHoleValues,
+            currentHoles,
+          );
+          if (Either.isLeft(validMissInputs)) {
+            return yield* Either.left(validMissInputs.left);
+          }
+
           const paidState = yield* unitCostPaidState(state, actorId, unit);
           return { tag: "resolved" as const, state: paidState };
         }
@@ -774,7 +736,7 @@ function resolveFilledActivationPhase(
           return missingDamageHoles.left;
         }
 
-        const damageEffect = yield* requireOnlyHitDamageEffect(attackRollPhase);
+        const [damageEffect] = attackRollPhase.onHit;
         const rolledDice = yield* requireRolledDiceFill(
           filledHoleValues,
           allCurrentHoles,
@@ -783,6 +745,7 @@ function resolveFilledActivationPhase(
         const damageAmount = yield* damageAmountFromRoll(
           damageEffect,
           rolledDice,
+          attackRollIsCritical(attackRoll),
         );
         const paidState = yield* unitCostPaidState(state, actorId, unit);
         const nextState = yield* applyDamage(paidState, targetId, damageAmount);
