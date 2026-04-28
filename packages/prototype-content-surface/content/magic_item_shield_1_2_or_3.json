@@ -11,7 +11,7 @@
     "action": "utilize"
   },
   "id": "magic_item_shield_1_2_or_3",
-  "kind": "shield",
+  "kind": "shield_template",
   "name": "Shield, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
@@ -28,17 +28,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 1,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 1,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "uncommon"
       },
       "name": "Shield, +1"
@@ -52,17 +55,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 2,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 2,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "rare"
       },
       "name": "Shield, +2"
@@ -76,17 +82,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 3,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 3,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "very_rare"
       },
       "name": "Shield, +3"

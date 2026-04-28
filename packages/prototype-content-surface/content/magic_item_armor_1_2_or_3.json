@@ -9,7 +9,7 @@
   },
   "description": "While wearing this armor, you have a bonus to Armor Class determined by the armor's rarity.",
   "id": "magic_item_armor_1_2_or_3",
-  "kind": "armor",
+  "kind": "armor_template",
   "name": "Armor, +1, +2, or +3",
   "provenance": {
     "kind": "srd-5.2.1",
@@ -26,17 +26,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 1,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 1,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "rare"
       },
       "name": "Armor, +1"
@@ -50,17 +53,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 2,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 2,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "very_rare"
       },
       "name": "Armor, +2"
@@ -74,17 +80,20 @@
         "destruction": {
           "kind": "none"
         },
-        "grants": [
-          {
-            "delta": {
-              "dice": 3,
-              "dieSize": 1,
-              "kind": "fixed_dice",
-              "sign": "+"
-            },
-            "kind": "modify_ac"
-          }
-        ],
+        "mechanics": {
+          "family": "passive",
+          "grants": [
+            {
+              "delta": {
+                "dice": 3,
+                "dieSize": 1,
+                "kind": "fixed_dice",
+                "sign": "+"
+              },
+              "kind": "modify_ac"
+            }
+          ]
+        },
         "rarity": "legendary"
       },
       "name": "Armor, +3"

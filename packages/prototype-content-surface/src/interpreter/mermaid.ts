@@ -99,7 +99,9 @@ function get5etoolsUrl(unit: UnitRecord): string | null {
     case "magic_item":
       return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
     case "armor":
+    case "armor_template":
     case "shield":
+    case "shield_template":
     case "weapon":
       return `https://5e.tools/items.html#${encodeHashParts(unit.name, source)}`;
     case "mastery":

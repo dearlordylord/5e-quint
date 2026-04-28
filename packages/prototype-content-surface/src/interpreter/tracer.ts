@@ -94,7 +94,9 @@ import type {
   SkillFilter,
   UsageLimit,
   ArmorRecord,
+  ArmorTemplateRecord,
   ShieldRecord,
+  ShieldTemplateRecord,
   WeaponRecord,
   ArmorAcFormula,
   WeaponDamage,
@@ -151,8 +153,12 @@ export function traceUnit(unit: UnitRecord): Trace {
       return traceMagicItemUnit(unit);
     case "armor":
       return traceArmorUnit(unit);
+    case "armor_template":
+      return traceArmorTemplateUnit(unit);
     case "shield":
       return traceShieldUnit(unit);
+    case "shield_template":
+      return traceShieldTemplateUnit(unit);
     case "weapon":
       return traceWeaponUnit(unit);
     default: {
@@ -4764,19 +4770,6 @@ function traceArmorUnit(armor: ArmorRecord): Trace {
   const ids = idGen();
 
   const rootId = ids("root");
-  if ("variants" in armor) {
-    nodes.push({
-      id: rootId,
-      category: "source",
-      atomKind: "armor_root",
-      label: `armor_root\n${armor.name}\n(${armor.armorApplicability.categories.join(", ")})`,
-    });
-    for (const variant of armor.variants) {
-      traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
-    }
-    return traceFromNodes(armor, nodes, edges);
-  }
-
   nodes.push({
     id: rootId,
     category: "source",
@@ -4826,6 +4819,24 @@ function traceArmorUnit(armor: ArmorRecord): Trace {
   return traceFromNodes(armor, nodes, edges);
 }
 
+function traceArmorTemplateUnit(armor: ArmorTemplateRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "armor_template_root",
+    label: `armor_template_root\n${armor.name}\n(${armor.armorApplicability.categories.join(", ")})`,
+  });
+  for (const variant of armor.variants) {
+    traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
+  }
+  return traceFromNodes(armor, nodes, edges);
+}
+
 function traceShieldUnit(shield: ShieldRecord): Trace {
   const nodes: TraceNode[] = [];
   const edges: TraceEdge[] = [];
@@ -4856,10 +4867,41 @@ function traceShieldUnit(shield: ShieldRecord): Trace {
     ids,
   );
 
-  if ("variants" in shield) {
-    for (const variant of shield.variants) {
-      traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
-    }
+  return traceFromNodes(shield, nodes, edges);
+}
+
+function traceShieldTemplateUnit(shield: ShieldTemplateRecord): Trace {
+  const nodes: TraceNode[] = [];
+  const edges: TraceEdge[] = [];
+  const ids = idGen();
+
+  const rootId = ids("root");
+  nodes.push({
+    id: rootId,
+    category: "source",
+    atomKind: "shield_template_root",
+    label: `shield_template_root\n${shield.name}\nhand use: ${shield.armorClassProjection.handUse}\ntraining: ${shield.armorClassProjection.trainingRequired}`,
+  });
+
+  const bonusId = ids("ac");
+  nodes.push({
+    id: bonusId,
+    category: "effect",
+    atomKind: "modify_ac",
+    label: `shield AC bonus\n+${shield.armorClassProjection.bonus}`,
+  });
+  edges.push({ from: rootId, to: bonusId, relation: "grants" });
+
+  traceDonDoff(
+    rootId,
+    `don/doff action: ${shield.donDoff.action}`,
+    nodes,
+    edges,
+    ids,
+  );
+
+  for (const variant of shield.variants) {
+    traceMagicEquipmentVariant(rootId, variant, nodes, edges, ids);
   }
 
   return traceFromNodes(shield, nodes, edges);
@@ -4880,21 +4922,14 @@ function traceMagicEquipmentVariant(
     label: `magic_equipment_variant\n${variant.name}\n(${variant.magic.rarity})`,
   });
   edges.push({ from: rootId, to: variantId, relation: "roots" });
-
-  const grantId = ids("pass");
-  nodes.push({
-    id: grantId,
-    category: "procedure",
-    atomKind: "grant",
-    label: `grant (equipped magic)\n${variant.magic.grants.length} effect(s)`,
-  });
-  edges.push({ from: variantId, to: grantId, relation: "roots" });
-
-  for (const grant of variant.magic.grants) {
-    const effectId = traceEffectAtom(grant, nodes, ids, edges);
-    if (effectId !== null) {
-      edges.push({ from: grantId, to: effectId, relation: "grants" });
-    }
+  const procIds = traceMagicItemMechanics(
+    variant.magic.mechanics,
+    nodes,
+    edges,
+    ids,
+  );
+  for (const procId of procIds) {
+    edges.push({ from: variantId, to: procId, relation: "roots" });
   }
 }
 
@@ -5002,7 +5037,12 @@ function describeWeaponProperty(property: WeaponPropertyDetail): string {
 }
 
 function traceFromNodes(
-  unit: ArmorRecord | ShieldRecord | WeaponRecord,
+  unit:
+    | ArmorRecord
+    | ArmorTemplateRecord
+    | ShieldRecord
+    | ShieldTemplateRecord
+    | WeaponRecord,
   nodes: ReadonlyArray<TraceNode>,
   edges: ReadonlyArray<TraceEdge>,
 ): Trace {

@@ -1,17 +1,18 @@
 -- Armor, +1, +2, or +3 — SRD 5.2.1 magic armor template.
---
--- This remains top-level kind = "armor": the object occupying the armor
--- slot is armor first. Magic-item facts are metadata/traits of that armor,
--- not a competing record identity.
 
 let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
 let Grant = { kind : Text, delta : Delta }
 
+let Mechanics =
+      { family : Text
+      , grants : List Grant
+      }
+
 let MagicTrait =
       { rarity : Text
       , attunement : { requiresAttunement : Bool }
-      , grants : List Grant
+      , mechanics : Mechanics
       , destruction : { kind : Text }
       }
 
@@ -32,13 +33,13 @@ let variant = \(id : Text) -> \(name : Text) -> \(rarity : Text) -> \(n : Natura
       , magic =
           { rarity
           , attunement = { requiresAttunement = False }
-          , grants = [ acBonus n ]
+          , mechanics = { family = "passive", grants = [ acBonus n ] }
           , destruction = { kind = "none" }
           }
       }
 
 let armor =
-      { kind = "armor"
+      { kind = "armor_template"
       , template = "any_armor_magic"
       , id = "magic_item_armor_1_2_or_3"
       , name = "Armor, +1, +2, or +3"

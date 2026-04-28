@@ -149,6 +149,7 @@ export {
   ActivationResourceSchema,
   ActivatedAbilityMechanicsSchema,
   ArmorRecordSchema,
+  ArmorTemplateRecordSchema,
   ChargePoolResourceSchema,
   ClassFeatureActivationCostSchema,
   ClassFeatureActivationMechanicsSchema,
@@ -188,6 +189,7 @@ export {
   SpeciesTraitMechanicsSchema,
   SpeciesTraitRecordSchema,
   ShieldRecordSchema,
+  ShieldTemplateRecordSchema,
   TimeResetCadenceSchema,
   TriggeredReactionAbilityMechanicsSchema,
   UseCountCapSchema,
@@ -200,11 +202,13 @@ export {
 
 import {
   ArmorRecordSchema,
+  ArmorTemplateRecordSchema,
   ClassFeatureRecordSchema,
   FeatRecordSchema,
   MagicItemRecordSchema,
   MasteryRecordSchema,
   ShieldRecordSchema,
+  ShieldTemplateRecordSchema,
   SpeciesTraitRecordSchema,
   UnitRecordSchema,
   WeaponRecordSchema,
@@ -265,10 +269,22 @@ export function decodeArmorRecordSync(
   return Schema.decodeUnknownSync(ArmorRecordSchema)(raw);
 }
 
+export function decodeArmorTemplateRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof ArmorTemplateRecordSchema> {
+  return Schema.decodeUnknownSync(ArmorTemplateRecordSchema)(raw);
+}
+
 export function decodeShieldRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ShieldRecordSchema> {
   return Schema.decodeUnknownSync(ShieldRecordSchema)(raw);
+}
+
+export function decodeShieldTemplateRecordSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof ShieldTemplateRecordSchema> {
+  return Schema.decodeUnknownSync(ShieldTemplateRecordSchema)(raw);
 }
 
 export function decodeWeaponRecordSync(

@@ -1,16 +1,18 @@
 -- Shield, +1, +2, or +3 — SRD 5.2.1 magic shield template.
---
--- This remains top-level kind = "shield": the object occupying the hand
--- as a shield is a shield first, with magic traits layered on that object.
 
 let Delta = { kind : Text, dice : Natural, dieSize : Natural, sign : Text }
 
 let Grant = { kind : Text, delta : Delta }
 
+let Mechanics =
+      { family : Text
+      , grants : List Grant
+      }
+
 let MagicTrait =
       { rarity : Text
       , attunement : { requiresAttunement : Bool }
-      , grants : List Grant
+      , mechanics : Mechanics
       , destruction : { kind : Text }
       }
 
@@ -31,13 +33,13 @@ let variant = \(id : Text) -> \(name : Text) -> \(rarity : Text) -> \(n : Natura
       , magic =
           { rarity
           , attunement = { requiresAttunement = False }
-          , grants = [ acBonus n ]
+          , mechanics = { family = "passive", grants = [ acBonus n ] }
           , destruction = { kind = "none" }
           }
       }
 
 let shield =
-      { kind = "shield"
+      { kind = "shield_template"
       , template = "shield_magic"
       , id = "magic_item_shield_1_2_or_3"
       , name = "Shield, +1, +2, or +3"

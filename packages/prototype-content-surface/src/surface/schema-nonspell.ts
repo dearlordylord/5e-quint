@@ -489,7 +489,7 @@ export const MagicItemRecordSchema = Schema.Union(
 export const MagicEquipmentTraitSchema = Schema.Struct({
   rarity: MagicItemRaritySchema,
   attunement: MagicItemAttunementSchema,
-  grants: Schema.NonEmptyArray(EffectAtomSchema),
+  mechanics: MagicItemMechanicsSchema,
   destruction: ItemDestructionPolicySchema,
 });
 
@@ -529,17 +529,18 @@ export const ArmorRecordSchema = Schema.Union(
     category: Schema.Literal("heavy"),
     acFormula: HeavyArmorAcFormulaSchema,
   }),
-  Schema.Struct({
-    ...UnitMetadataSchema.fields,
-    kind: Schema.Literal("armor"),
-    template: Schema.Literal("any_armor_magic"),
-    armorApplicability: Schema.Struct({
-      kind: Schema.Literal("any_armor"),
-      categories: Schema.NonEmptyArray(ArmorCategorySchema),
-    }),
-    variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
-  }),
 );
+
+export const ArmorTemplateRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("armor_template"),
+  template: Schema.Literal("any_armor_magic"),
+  armorApplicability: Schema.Struct({
+    kind: Schema.Literal("any_armor"),
+    categories: Schema.NonEmptyArray(ArmorCategorySchema),
+  }),
+  variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
+});
 
 const shieldRecordBaseFields = {
   ...UnitMetadataSchema.fields,
@@ -558,13 +559,26 @@ const shieldRecordBaseFields = {
 };
 
 export const ShieldRecordSchema = Schema.Union(
-  Schema.Struct({
-    ...shieldRecordBaseFields,
-    template: Schema.Literal("shield_magic"),
-    variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
-  }),
   Schema.Struct(shieldRecordBaseFields),
 );
+
+export const ShieldTemplateRecordSchema = Schema.Struct({
+  ...UnitMetadataSchema.fields,
+  kind: Schema.Literal("shield_template"),
+  template: Schema.Literal("shield_magic"),
+  armorClassProjection: Schema.Struct({
+    kind: Schema.Literal("trained_shield_bonus"),
+    handUse: Schema.Literal("shield"),
+    trainingRequired: Schema.Literal("shield"),
+    bonus: Schema.Number,
+  }),
+  weightPounds: Schema.Number,
+  costGp: Schema.Number,
+  donDoff: Schema.Struct({
+    action: Schema.Literal("utilize"),
+  }),
+  variants: Schema.NonEmptyArray(MagicEquipmentVariantSchema),
+});
 
 export const WeaponRecordSchema = Schema.Struct({
   ...UnitMetadataSchema.fields,
@@ -586,6 +600,8 @@ export const UnitRecordSchema = Schema.Union(
   SpeciesTraitRecordSchema,
   MagicItemRecordSchema,
   ArmorRecordSchema,
+  ArmorTemplateRecordSchema,
   ShieldRecordSchema,
+  ShieldTemplateRecordSchema,
   WeaponRecordSchema,
 );
