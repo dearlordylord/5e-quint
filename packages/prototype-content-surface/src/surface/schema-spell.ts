@@ -153,6 +153,7 @@ type SavingThrowSourceFilter = Schema.Schema.Type<
   typeof SavingThrowSourceFilterSchema
 >;
 type ActionRestriction = Schema.Schema.Type<typeof ActionRestrictionSchema>;
+type ActionEconomyKind = "action" | "bonus_action" | "reaction";
 type ExileDestination =
   | "demiplane"
   | "astral_plane"
@@ -331,6 +332,16 @@ type EffectAtom =
             readonly kind: "choose";
             readonly from: ReadonlyNonEmptyArray<Condition>;
           };
+      readonly duration?:
+        | "current_turn"
+        | "end_of_next_turn"
+        | "spell_duration";
+    }
+  | {
+      readonly kind: "restrict_action_usage";
+      readonly actions: ReadonlyNonEmptyArray<ActionEconomyKind>;
+      readonly whileCondition?: Condition;
+      readonly duration?: "current_turn" | "spell_duration";
     }
   | {
       readonly kind: "remove_condition";
@@ -522,6 +533,7 @@ type EffectAtom =
       readonly maxSpellLevel?: number;
     }
   | { readonly kind: "reflect_triggering_spell" }
+  | { readonly kind: "waste_triggering_spell_or_effect" }
   | { readonly kind: "maximize_healing_received" }
   | {
       readonly kind: "transform_target";
@@ -1270,6 +1282,10 @@ export const OngoingTriggerSchema = Schema.Union(
     kind: Schema.Literal("on_creature_starts_turn_within_area"),
     distanceFeet: Schema.Number,
   }),
+  Schema.Struct({
+    kind: Schema.Literal("on_creature_attempts_magical_escape"),
+    methods: nonEmpty(Schema.Literal("teleportation", "interplanar_travel")),
+  }),
   Schema.Struct({ kind: Schema.Literal("on_object_section_destroyed") }),
   Schema.Struct({
     kind: Schema.Literal("on_area_moves_into_creature_space"),
@@ -1456,6 +1472,15 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
             from: nonEmpty(ConditionSchema),
           }),
         ),
+        duration: optionalExact(
+          Schema.Literal("current_turn", "end_of_next_turn", "spell_duration"),
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("restrict_action_usage"),
+        actions: nonEmpty(Schema.Literal("action", "bonus_action", "reaction")),
+        whileCondition: optionalExact(ConditionSchema),
+        duration: optionalExact(Schema.Literal("current_turn", "spell_duration")),
       }),
       Schema.Struct({
         kind: Schema.Literal("remove_condition"),
@@ -1696,6 +1721,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
         maxSpellLevel: optionalExact(Schema.Number),
       }),
       Schema.Struct({ kind: Schema.Literal("reflect_triggering_spell") }),
+      Schema.Struct({ kind: Schema.Literal("waste_triggering_spell_or_effect") }),
       Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
       Schema.Struct({
         kind: Schema.Literal("transform_target"),

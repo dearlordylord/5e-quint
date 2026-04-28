@@ -1,0 +1,94 @@
+{
+  "description": "You create a 20-foot-radius Sphere of yellow, nauseating gas centered on a point within range. The cloud is Heavily Obscured. Each creature that starts its turn in the Sphere must succeed on a Constitution saving throw or have the Poisoned condition until the end of the current turn. While Poisoned in this way, the creature can't take an action or a Bonus Action. Strong wind can disperse the cloud.",
+  "id": "stinking_cloud",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "stinking_cloud_point",
+      "kind": "hole",
+      "label": "cloud origin point",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "sphere",
+          "radiusFeet": 20
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "a rotten egg",
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "minute"
+      }
+    },
+    "family": "ongoing_effect",
+    "level": 3,
+    "operations": [
+      {
+        "effect": {
+          "kind": "area_is_heavily_obscured"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "con",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "condition": "poisoned",
+                "duration": "current_turn",
+                "kind": "apply_condition"
+              },
+              {
+                "actions": [
+                  "action",
+                  "bonus_action"
+                ],
+                "duration": "current_turn",
+                "kind": "restrict_action_usage",
+                "whileCondition": "poisoned"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "distanceFeet": 0,
+          "kind": "on_creature_starts_turn_within_area"
+        }
+      }
+    ],
+    "range": {
+      "feet": 90,
+      "kind": "point"
+    },
+    "school": "conjuration"
+  },
+  "name": "Stinking Cloud",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-S-Z#Stinking Cloud"
+  }
+}

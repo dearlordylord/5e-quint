@@ -1,0 +1,192 @@
+{
+  "description": "An immobile, Invisible, Cube-shaped prison composed of magical force springs into existence around an area within range. The prison can be a cage or a solid box. Creatures completely inside are trapped; partial creatures or those too large are pushed away. A creature inside can't leave by nonmagical means. Teleportation or interplanar travel requires a Charisma saving throw first; on a failed save, the creature doesn't exit and wastes the spell or effect. The cage extends into the Ethereal Plane and can't be dispelled by Dispel Magic.",
+  "id": "forcecage",
+  "kind": "spell",
+  "mechanics": {
+    "attachment": {
+      "holeId": "forcecage_area",
+      "kind": "hole",
+      "label": "force prison",
+      "value": {
+        "kind": "area",
+        "origin": {
+          "kind": "point_within_range"
+        },
+        "shape": {
+          "kind": "choice",
+          "options": [
+            {
+              "kind": "cube",
+              "sideFeet": 20
+            },
+            {
+              "kind": "cube",
+              "sideFeet": 10
+            }
+          ]
+        }
+      }
+    },
+    "castingTime": {
+      "kind": "action"
+    },
+    "components": {
+      "m": "ruby dust",
+      "materialConsumed": true,
+      "materialCostGp": 1500,
+      "s": true,
+      "v": true
+    },
+    "duration": {
+      "kind": "concentration",
+      "upTo": {
+        "amount": 1,
+        "unit": "hour"
+      }
+    },
+    "family": "ongoing_effect",
+    "initialPhase": {
+      "attachment": {
+        "holeId": "forcecage_area",
+        "kind": "hole",
+        "label": "force prison",
+        "value": {
+          "kind": "area",
+          "origin": {
+            "kind": "point_within_range"
+          },
+          "shape": {
+            "kind": "choice",
+            "options": [
+              {
+                "kind": "cube",
+                "sideFeet": 20
+              },
+              {
+                "kind": "cube",
+                "sideFeet": 10
+              }
+            ]
+          }
+        }
+      },
+      "effects": [
+        {
+          "effects": [
+            {
+              "kind": "create_object",
+              "maxSize": "huge",
+              "shape": {
+                "kind": "choice",
+                "options": [
+                  {
+                    "kind": "cube",
+                    "sideFeet": 20
+                  },
+                  {
+                    "kind": "cube",
+                    "sideFeet": 10
+                  }
+                ]
+              }
+            },
+            {
+              "direction": "push",
+              "distanceFeet": 5,
+              "kind": "force_move"
+            }
+          ],
+          "kind": "composite"
+        }
+      ],
+      "kind": "direct"
+    },
+    "level": 7,
+    "operations": [
+      {
+        "effect": {
+          "kind": "block_travel",
+          "scope": "nonmagical_exit_from_cage"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_travel",
+          "scope": "matter_through_solid_box"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_magical_targeting_and_aoe"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "block_ethereal_travel"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "kind": "cannot_be_dispelled_by_spell",
+          "spellId": "dispel_magic"
+        },
+        "trigger": {
+          "kind": "passive"
+        }
+      },
+      {
+        "effect": {
+          "ability": "cha",
+          "dc": {
+            "kind": "caster_spell_save_dc"
+          },
+          "kind": "save_gate",
+          "onFail": {
+            "effects": [
+              {
+                "kind": "block_travel",
+                "scope": "magical_escape_from_cage"
+              },
+              {
+                "kind": "waste_triggering_spell_or_effect"
+              }
+            ],
+            "kind": "composite"
+          },
+          "onSuccess": {
+            "kind": "none"
+          }
+        },
+        "trigger": {
+          "kind": "on_creature_attempts_magical_escape",
+          "methods": [
+            "teleportation",
+            "interplanar_travel"
+          ]
+        }
+      }
+    ],
+    "range": {
+      "feet": 100,
+      "kind": "point"
+    },
+    "school": "evocation"
+  },
+  "name": "Forcecage",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Spells/Descriptions-E-L#Forcecage"
+  }
+}

@@ -380,12 +380,26 @@ function traceEffectAtom(
     }
     case "apply_condition": {
       const id = ids("cond");
-      const label = `apply_condition\n${describeConditionChoice(e.condition)}`;
+      const duration = e.duration === undefined ? "" : `\nuntil: ${e.duration}`;
+      const label = `apply_condition\n${describeConditionChoice(e.condition)}${duration}`;
       nodes.push({
         id,
         category: "effect",
         atomKind: "apply_condition",
         label,
+      });
+      return id;
+    }
+    case "restrict_action_usage": {
+      const id = ids("eff");
+      const condition =
+        e.whileCondition === undefined ? "" : `\nwhile: ${e.whileCondition}`;
+      const duration = e.duration === undefined ? "" : `\nuntil: ${e.duration}`;
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "restrict_action_usage",
+        label: `restrict_action_usage\n${e.actions.join(", ")}${condition}${duration}`,
       });
       return id;
     }
@@ -1688,6 +1702,16 @@ function traceEffectAtom(
       });
       return id;
     }
+    case "waste_triggering_spell_or_effect": {
+      const id = ids("eff");
+      nodes.push({
+        id,
+        category: "effect",
+        atomKind: "waste_triggering_spell_or_effect",
+        label: "waste_triggering_spell_or_effect",
+      });
+      return id;
+    }
     case "end_ongoing_spells": {
       const id = ids("eff");
       nodes.push({
@@ -1802,6 +1826,7 @@ function traceEffectAtomScaling(
     case "modify_ac_set_base":
     case "modify_save_dc":
     case "apply_condition":
+    case "restrict_action_usage":
     case "remove_condition":
     case "grant_resistance":
     case "kill_target":
@@ -1871,6 +1896,7 @@ function traceEffectAtomScaling(
     case "set_speed":
     case "negate_triggering_spell":
     case "reflect_triggering_spell":
+    case "waste_triggering_spell_or_effect":
     case "end_ongoing_spells":
     case "maximize_healing_received":
     case "transform_target":
@@ -2848,6 +2874,17 @@ function traceOngoingTrigger(
         category: "window",
         atomKind: "turn_start_window",
         label: `turn_start_window\n(creature within ${trigger.distanceFeet} ft of area)`,
+      });
+      edges.push({ from: procId, to: winId, relation: "opens_window" });
+      return { hostId: winId, hostRelation: "grants" };
+    }
+    case "on_creature_attempts_magical_escape": {
+      const winId = ids("win");
+      nodes.push({
+        id: winId,
+        category: "window",
+        atomKind: "escape_attempt_window",
+        label: `escape_attempt_window\n${trigger.methods.join(", ")}`,
       });
       edges.push({ from: procId, to: winId, relation: "opens_window" });
       return { hostId: winId, hostRelation: "grants" };
