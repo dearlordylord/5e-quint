@@ -156,6 +156,7 @@ flowchart TD
     LifecycleOnly["creature lifecycle<br/>damage/heal/zero-HP policy<br/>Tests: unit + reducer-boundary"]
     SupportOnly["Surface support gate<br/>UnitRecord -> supported slice<br/>Tests: reducer-support + boundaries"]
     HolesOnly["runtime holes/refilling<br/>project/validate/replay holes<br/>Tests: runtime-holes + boundaries"]
+    SaveGateOnly["save_gate damage execution<br/>area + save outcomes + one damage roll<br/>Tests: reducer-boundary"]
     PublicReducerOnly["public reducer flow<br/>discoverAvailableActs / resolveSubjectHoles<br/>Tests: reducer-boundaries"]
   end
 
@@ -163,7 +164,6 @@ flowchart TD
     IntegratedMbtMissing["integrated reducer MBT<br/>Surface act -> holes -> resolution -> state"]
     SurfaceMbtQuestion["OPEN QUESTION<br/>whether/where to MBT Surface fact projection"]
     CoreAttackMissing["core Attack adjudication<br/>target + roll + damage still frontier"]
-    SaveGateMissing["save_gate outcome application"]
     GrantExtraActionMissing["grant_extra_action execution"]
     UpcastUsesMissing["upcast slots / use counts / other once-turn limits"]
     StartTurnDeathSaveMissing["start-turn death-save reducer path"]
@@ -177,14 +177,15 @@ flowchart TD
   ArmorFull --> PublicReducerOnly
   SupportOnly --> PublicReducerOnly
   HolesOnly --> PublicReducerOnly
+  SaveGateOnly --> PublicReducerOnly
 
   IntegratedMbtMissing -. would cover .-> PublicReducerOnly
   SurfaceMbtQuestion -. would clarify .-> SupportOnly
 
   class InitiativeFull,ConditionsFull,DeathPureFull,ArmorFull full;
   class ActionPartial partial;
-  class LifecycleOnly,SupportOnly,HolesOnly,PublicReducerOnly reducerOnly;
-  class IntegratedMbtMissing,SurfaceMbtQuestion,CoreAttackMissing,SaveGateMissing,GrantExtraActionMissing,UpcastUsesMissing,StartTurnDeathSaveMissing missing;
+  class LifecycleOnly,SupportOnly,HolesOnly,SaveGateOnly,PublicReducerOnly reducerOnly;
+  class IntegratedMbtMissing,SurfaceMbtQuestion,CoreAttackMissing,GrantExtraActionMissing,UpcastUsesMissing,StartTurnDeathSaveMissing missing;
 ```
 
 The key non-obvious status is death saves. The pure counter algebra is MBT-covered. The composed creature lifecycle that decides whether a creature dies at 0 HP, uses death saves, becomes unconscious, or resets counters on healing is not MBT-covered yet; it is covered by reducer unit tests and reducer boundary tests. The start-turn death-save roll path is missing from the public reducer. It is a "wire soon" item because the pure counter and creature lifecycle helpers already exist; what is missing is the reducer act/window that asks for the death save roll at the right turn boundary.
@@ -280,7 +281,7 @@ Possible examples:
 
 - `fire_bolt` covers `attack_roll`, target choice, attack roll, damage roll, action cost, AC comparison, and HP damage.
 - `cure_wounds` covers direct `heal_hp`, target choice, healing dice, spell slot cost, and death-save/lifecycle healing.
-- `fireball` should cover `save_gate`, area attachment, saving throw outcomes, and damage application once implemented.
+- `fireball` covers `save_gate`, area attachment, saving throw outcomes, and damage application in the reducer-boundary tests; it remains a candidate for selected integrated MBT if this flow becomes a proof target.
 - `chromatic_orb` should cover damage-type choice and continuation/frontier behavior until supported.
 - `fighter_action_surge_l2` should cover `grant_extra_action` once implemented.
 
@@ -312,7 +313,6 @@ Missing entirely:
 - Integrated reducer MBT for a real Surface-backed act.
 - Decision on whether Surface fact projection should have MBT, ordinary tests, or both.
 - Core `Attack` adjudication and state mutation.
-- `save_gate` outcome execution.
 - `grant_extra_action` execution.
 - Upcast slots, use counts, and other once-per-turn limits.
 - Start-turn death-save transition in the public reducer.
@@ -321,6 +321,7 @@ Implemented but not fully utilized by MBT:
 
 - Creature lifecycle composition (`damageCreatureHp`, `healCreatureHp`, zero-HP policy).
 - Public reducer discovery/resolution flow.
+- `save_gate` damage execution.
 - Surface support gate and runtime-hole projection/refilling.
 
 Implemented but not fully utilized by main reducer logic:
