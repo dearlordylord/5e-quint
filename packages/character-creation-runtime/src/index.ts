@@ -219,11 +219,6 @@ export type CreationHole =
       readonly holeId: CreationHoleId;
       readonly source: CreationHoleSource;
       readonly methods: readonly SupportedAbilityScoreMethod[];
-    }
-  | {
-      readonly kind: "freeText";
-      readonly holeId: CreationHoleId;
-      readonly source: CreationHoleSource;
     };
 
 type ChoiceCreationHole = Extract<CreationHole, { readonly kind: "choice" }>;
@@ -239,11 +234,6 @@ export type CreationFill =
       readonly holeId: CreationHoleId;
       readonly method: SupportedAbilityScoreMethod;
       readonly value: AbilityScoreAssignment;
-    }
-  | {
-      readonly kind: "text";
-      readonly holeId: CreationHoleId;
-      readonly value: string;
     };
 
 export const CREATION_FILL_ISSUE_CODES = [
@@ -1191,8 +1181,7 @@ function fillIssuesForHole(
 function fillKindMatchesHole(fill: CreationFill, hole: CreationHole): boolean {
   return (
     (hole.kind === "choice" && fill.kind === "choice") ||
-    (hole.kind === "abilityScores" && fill.kind === "abilityScores") ||
-    (hole.kind === "freeText" && fill.kind === "text")
+    (hole.kind === "abilityScores" && fill.kind === "abilityScores")
   );
 }
 

@@ -1031,9 +1031,17 @@ describe("character creation batch fill", () => {
       expectedRevision: draft.revision,
       fills: [
         {
-          kind: "text",
+          kind: "abilityScores",
           holeId: creationHoleId("cc:draft:draft.primaryClass"),
-          value: "Fighter",
+          method: "standardArray",
+          value: {
+            str: 15,
+            dex: 14,
+            con: 13,
+            int: 12,
+            wis: 10,
+            cha: 8,
+          },
         },
         choiceFill("cc:draft:draft.alignment", "neutral_good"),
       ],
