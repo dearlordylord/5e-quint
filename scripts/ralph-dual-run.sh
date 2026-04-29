@@ -846,7 +846,7 @@ run_codex() {
   local prompt="$2"
   local log_file="$3"
   local output_file="$4"
-  local -a args=(exec --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
+  local -a args=(exec --ephemeral --dangerously-bypass-approvals-and-sandbox -C "$workspace" -o "$output_file")
 
   if [[ -n "${RALPH_CODEX_MODEL:-}" ]]; then
     args+=("--model" "$RALPH_CODEX_MODEL")
