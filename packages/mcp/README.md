@@ -27,6 +27,9 @@ battle-seed mapping lives in `src/green/battle-seed.ts`, where finalized
 character facts and Surface Unit lookups are projected into battle-owned seed
 data before calling `startBattle`. This keeps character draft/session concepts
 out of `@dnd/battle-runtime` without introducing a new intermediate language.
+This is package ownership, not a domain term: `@dnd/mcp` may see Character
+Sheets, authored Units, authored Stat Blocks, and battle seed APIs together
+because its job is wiring runtimes for tools.
 
 No file under `src/green/` may import or re-export from the legacy Core-backed
 MCP modules. Check that boundary with:

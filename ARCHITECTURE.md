@@ -88,21 +88,19 @@ This keeps `StatBlock` monster-only, keeps battle/runtime surfaces narrow, and a
 
 ## Surface, Unit, Stat Block, and Runtime Boundaries
 
-The Correction Application Migration green path uses explicit content/runtime
-boundaries. These are architectural invariants, not temporary implementation
-details:
+Content records, player-character state, monster records, and battle state have
+separate ownership. These boundaries are stable architecture:
 
-- `@dnd/surface` owns authored content records and provenance-preserving
-  catalogs. Surface records are not reducer state and not a projected
-  executable IR.
+- `@dnd/surface` owns authored content records and provenance. Surface records
+  are not reducer state and not a projected executable IR.
 - `UnitRecord` is authored selectable/ownable content: classes, backgrounds,
   species records, features, feats, spells, weapons, armor, shields, masteries,
   and similar records. A player character may reference Units, but the character
   is not a Unit.
-- `StatBlockRecord` is authored monster/NPC content. It is installed in a
-  `StatBlockCatalog`, not in the `UnitCatalog`. A Stat Block may reuse shared
-  Surface sub-shapes for attacks, damage, resources, or actions, but the Stat
-  Block remains a separate monster-authored record boundary.
+- `StatBlockRecord` is authored monster/NPC content. It is a separate record
+  family from Units. A Stat Block may reuse shared Surface sub-shapes for
+  attacks, damage, resources, or actions, but the Stat Block remains a separate
+  monster-authored record boundary.
 - `CharacterDraft` is session-owned mutable creation state with holes. It is not
   authored content. Draft holes may be opened by draft structure or by selected
   Units.
@@ -111,20 +109,21 @@ details:
   and not a battle seed.
 - `@dnd/battle-runtime` owns battle state and replay-from-root battle
   resolution. It consumes battle-owned seed data, not character drafts and not
-  whole source catalogs.
-- The MCP green composition root is allowed to see the Unit Catalog, Stat Block
-  Catalog, Character Sheets, and battle seed APIs at the same time. That is
-  where Character Sheet plus Unit lookups are projected into character battle
-  seeds, and where Stat Blocks are projected into monster battle seeds.
+  whole source records.
+- The application composition layer is allowed to see multiple boundaries at
+  the same time: Character Sheets, authored Unit content, authored Stat Blocks,
+  and battle seed APIs. That is where Character Sheet plus selected Unit lookups
+  are projected into character battle seeds, and where Stat Blocks are projected
+  into monster battle seeds.
 
 In short:
 
 ```text
 Character creation:
-UnitCatalog -> CharacterDraft holes/fills -> CharacterSheet with Unit refs
+authored Units -> CharacterDraft holes/fills -> CharacterSheet with Unit refs
 
 Monster selection:
-StatBlockCatalog -> StatBlockRecord
+authored Stat Block -> StatBlockRecord
 
 Battle composition:
 CharacterSheet + Unit lookups -> CharacterCombatantSeed
@@ -132,10 +131,17 @@ StatBlockRecord -> MonsterCombatantSeed
 CharacterCombatantSeed + MonsterCombatantSeed -> BattleState
 ```
 
-The shared combat abstraction is `Creature`, not Unit, Character Sheet, or Stat
-Block. If a future change needs a monster attack to use the same damage shape as
-a weapon or spell, reuse the shared sub-shape; do not move the monster into the
-Unit Catalog or introduce a second executable content model.
+The shared battle participant abstraction is `Creature`/combatant state, not
+Unit, Character Sheet, or Stat Block. A creature can still own or reference
+Units as capabilities: a Character Sheet selects Units, battle composition reads
+those Unit refs, and battle state may carry the resulting creature-owned
+capabilities needed for act discovery, resources, armor, weapons, or feature
+activation. The invariant is that Units are not the participant identity and are
+not a replacement for creature/combatant state.
+
+If a future change needs a monster attack to use the same damage shape as a
+weapon or spell, reuse the shared sub-shape; do not move the monster into the
+Unit record family or introduce a second executable content model.
 
 ---
 

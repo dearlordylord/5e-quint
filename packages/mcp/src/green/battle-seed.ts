@@ -25,6 +25,11 @@ import type { UnitRecord, WeaponRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Match } from "effect";
 
+// MCP green owns cross-runtime wiring. Character creation finalizes a
+// CharacterSheet; battle accepts battle-owned seeds. This mapper is the place
+// where selected Unit refs are read to derive seed facts, so neither runtime has
+// to import the other or grow an intermediate executable content model.
+
 export type CharacterSheetCombatantInput = {
   readonly combatantId: CombatantId;
   readonly characterId: CharacterId;

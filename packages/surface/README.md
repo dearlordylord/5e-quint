@@ -65,8 +65,8 @@ provenance-bearing authored content, not a projected executable IR.
 Boundary invariant: Units and Stat Blocks are different authored record
 families. Characters may select and reference Units during creation, but a
 Character Draft or Character Sheet is not a Unit. Monsters/NPCs use
-`StatBlockRecord`s from the Stat Block catalog; a Stat Block is not installed in
-the Unit catalog even if its actions later reuse shared Surface sub-shapes.
+`StatBlockRecord`s; a Stat Block is not a Unit even if its actions later reuse
+shared Surface sub-shapes.
 
 ## Stat Block Catalog Boundary
 

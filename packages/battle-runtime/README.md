@@ -4,9 +4,10 @@ Battle runtime owns the durable battle state, phase-1 battle subjects, replay-fr
 
 This package intentionally imports generic Surface `StatBlockRecord`s and shared algebras. It does not import legacy engine packages, SRD-specific stat-block collection types, or projected-executable vocabulary.
 
-The MCP green composition root installs this runtime with a Surface Unit library
-and generic Stat Block catalog. It stores durable `BattleState` separately from
-transient battle fills so `resolveBattleSubject` can remain replay-from-root.
+The MCP green composition root installs this runtime with authored Surface
+content for character Units and monster Stat Blocks. It stores durable
+`BattleState` separately from transient battle fills so `resolveBattleSubject`
+can remain replay-from-root.
 
 Domain boundary: battle consumes combatant seeds. Character combatant seeds are
 projected from Character Sheets plus selected Unit lookups at the composition
