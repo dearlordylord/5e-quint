@@ -9,6 +9,7 @@
     "./death-saves-algebra": "./src/death-saves-algebra.ts",
     "./armor-class-algebra": "./src/armor-class-algebra.ts",
     "./action-economy-algebra": "./src/action-economy-algebra.ts",
+    "./runtime-hole-algebra": "./src/runtime-hole-algebra.ts",
     "./validation-algebra": "./src/validation-algebra.ts"
   },
   "imports": {

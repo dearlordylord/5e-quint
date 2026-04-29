@@ -18,6 +18,23 @@ Rules:
 
 Current adoption note: `@dnd/core` and `@dnd/surface-runtime-correction` both import reusable algebras from this package. `@dnd/shared` should not contain algebra modules.
 
+## Runtime Hole Algebra
+
+`runtime-hole-algebra` owns the reducer-facing hole/fill vocabulary currently
+used by Correction:
+
+- stable `HoleId` values pair holes with submitted fills across replay;
+- `HoleInstanceKey` identifies one concrete occurrence in a replay path;
+- `RuntimeHole` describes caller-visible asks such as target choice, attack
+  roll, rolled dice, saving throw outcome, or fillable Surface payloads;
+- `FilledHoleValue` carries keyed answers supplied by the caller.
+
+The algebra intentionally does not own act subjects, battle state, Unit support
+gates, or execution semantics. Those remain in the consuming runtime.
+`@dnd/battle-runtime` may reuse the branded hole identity types, but it should
+expose only the battle hole/fill variants that its own reducer can discover and
+resolve.
+
 ## Core Adoption Notes
 
 - Death saves are the first core adoption target because the algebra is Surface-free and replaces duplicated counter transition logic.

@@ -103,13 +103,13 @@ The Ralph harness reads this machine-readable index for task order and status. K
     {
       "number": 11,
       "id": "CAM11",
-      "status": "ready-for-implementation-after-light-research",
+      "status": "done",
       "title": "Create Battle Runtime Skeleton"
     },
     {
       "number": 12,
       "id": "CAM12",
-      "status": "blocked",
+      "status": "ready-for-implementation-after-light-research",
       "title": "Start Battle From Character Sheet And Stat Block"
     },
     {
@@ -191,8 +191,8 @@ The Ralph harness reads this machine-readable index for task order and status. K
 | 8     | CAM8 - Implement Atomic Creation Batch Fill                     | done                                          | CAM7              | CAM9, CAM10, CAM17                   | Atomic batch fill landed with revision checks, duplicate/invalid/wrong-kind/unsupported issues, Standard Array validation, and hole rediscovery after accepted fills.                           | Done in this task.                                                                                   |
 | 9     | CAM9 - Finalize Legal Fighter Character Sheet                   | done                                          | CAM5, CAM8        | CAM10, CAM12, CAM17                  | Legal Orc Soldier Fighter `CharacterSheet` finalization landed with legality tests and Second Wind resource preservation.                                                                       | Done in this task.                                                                                   |
 | 10    | CAM10 - Add Character Creation QNT Slice And Parity             | done                                          | CAM9              | CAM17, CAM18                         | Added `character-creation-runtime-slice.qnt` plus deterministic runtime/QNT parity for complete Fighter creation, invalid fills, stale revision, cardinality, and duplicate multi-choice input. | Done in this task.                                                                                   |
-| 11    | CAM11 - Create Battle Runtime Skeleton                          | ready-for-implementation-after-light-research | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Create `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                                  | Ready after runtime package architecture check.                                                      |
-| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | blocked                                       | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.                               | Blocker Type: dependency. Blocker Detail: waits on finalized sheet and battle runtime skeleton.      |
+| 11    | CAM11 - Create Battle Runtime Skeleton                          | done                                          | CAM1, CAM2, CAM3  | CAM12, CAM13, CAM14, CAM15, CAM18    | Created `@dnd/battle-runtime` package with battle state, action resources, subject, hole/fill, resolution, snapshot, and stat-block seed types.                                                 | Done in this task.                                                                                   |
+| 12    | CAM12 - Start Battle From Character Sheet And Stat Block        | ready-for-implementation-after-light-research | CAM5, CAM9, CAM11 | CAM13, CAM18                         | Implement battle initialization from finalized Character Sheet plus generic `StatBlockRecord`, deriving AC/HP/loadout/action-resource facts without Core imports.                               | Ready after battle initialization architecture check.                                                |
 | 13    | CAM13 - Implement Battle Attack Holes And Replay                | blocked                                       | CAM12             | CAM14, CAM15, CAM18                  | Implement Attack act discovery and replay-from-root holes for target, attack roll, and damage-result protocol using the action-resource model.                                                  | Blocker Type: dependency. Blocker Detail: waits on battle initialization.                            |
 | 14    | CAM14 - Implement Battle Damage And Zero-HP Policy              | blocked                                       | CAM13             | CAM15, CAM18                         | Implement damage application with Temporary HP absorption, HP floor, monster death policy, and Character Sheet zero-HP policy scaffolding.                                                      | Blocker Type: dependency. Blocker Detail: waits on Attack replay.                                    |
 | 15    | CAM15 - Implement End Turn And Battle QNT Slice                 | blocked                                       | CAM14             | CAM18, CAM19                         | Implement runtime `endTurn`, initiative advancement, `battle-runtime-slice.qnt`, and deterministic/MBT checks for hit, miss, damage, action spend, and end turn.                                | Blocker Type: dependency. Blocker Detail: waits on damage and zero-HP policy.                        |
@@ -635,7 +635,7 @@ Plan Impact:
 
 ### Task 11 - CAM11 - Create Battle Runtime Skeleton
 
-Status: `ready-for-implementation-after-light-research`
+Status: `done`
 
 Depends on: CAM1, CAM2, CAM3  
 Blocks: CAM12, CAM13, CAM14, CAM15, CAM18
@@ -668,17 +668,14 @@ Verification:
 
 Plan Impact:
 
-- Unblock CAM12 when CAM9 is done.
+- CAM12 is unblocked because CAM5, CAM9, and CAM11 are done.
 
 ### Task 12 - CAM12 - Start Battle From Character Sheet And Stat Block
 
-Status: `blocked`
+Status: `ready-for-implementation-after-light-research`
 
 Depends on: CAM5, CAM9, CAM11  
 Blocks: CAM13, CAM18
-
-Blocker Type: dependency  
-Blocker Detail: waits on finalized sheet and battle runtime skeleton.
 
 Input:
 

@@ -22,10 +22,14 @@ They live in the source language.
 
 runtime holes - reducer-facing projected holes used by discovery/resolution.
 These include both:
+
 - projected authored fillables like `surfaceAttachment`
 - reducer-local asks like `attackRoll`
-This mixed umbrella term is intentional for the current slice.
-It is a convenience bucket, not a claim that both sources have the same ownership.
+  This mixed umbrella term is intentional for the current slice.
+  It is a convenience bucket, not a claim that both sources have the same ownership.
+  The generic type vocabulary lives in
+  `@dnd/shared-algebras/runtime-hole-algebra`; Correction owns projection and
+  resolution semantics for its reducer slice.
 
 hole id - stable identity used to match a hole across replay.
 Used to pair holes in the currently active hole set with filled values.
@@ -42,13 +46,18 @@ filled hole values - caller-supplied values for currently known holes.
 Runtime holes are asks; filled hole values are keyed answers to those asks for the same subject.
 Replay-from-root always resends the full accumulated filled-hole assignment for
 the chosen subject.
+The filled-value union is Correction's current runtime-hole protocol.
+`@dnd/battle-runtime` may reuse hole identity brands, but it exposes only its
+own implemented battle hole/fill variants. Durable state in either runtime
+stores the root state, not accumulated fills.
 
 subject - execution identity for one attempted branch.
 Current variants:
+
 - core act subject
 - unit subject
-Subject comes from choosing an available act.
-It is then reused across replay and hole refilling for that same attempted branch.
+  Subject comes from choosing an available act.
+  It is then reused across replay and hole refilling for that same attempted branch.
 
 available act - discovery payload for one currently legal subject plus metadata
 and initial holes.
@@ -82,7 +91,7 @@ flowchart TD
     SUB[Subject]
     U[Supported units]
     CA[Core acts]
-    
+
     subgraph REFILL["Hole refilling"]
       direction TB
       H[Runtime holes]
@@ -111,6 +120,7 @@ flowchart TD
 ```
 
 File anchors:
+
 - state: [reducer-state.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/reducer-state.ts:1)
 - discovery / available acts: [reducer-discovery.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/reducer-discovery.ts:1)
 - subject / holes / filled hole values / results: [reducer-types.ts](/workspace/typescript/dnd/packages/surface-runtime-correction/src/reducer-types.ts:1)

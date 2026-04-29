@@ -573,6 +573,7 @@ export type CharacterCombatantSeed = {
   readonly kind: "character";
   readonly characterId: CharacterId;
   readonly sheetUnitRefs: readonly UnitRef[];
+  readonly armorClass: ArmorClassState;
   readonly currentHp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
@@ -610,7 +611,7 @@ export type BattleState = {
 };
 ```
 
-`@dnd/battle-runtime` must not import `@dnd/character-creation-runtime`. MCP passes the finalized `CharacterSheet` through a composition-root mapper that copies only the sheet's selected Unit references into `CharacterCombatantSeed.sheetUnitRefs` and supplies current HP. This keeps the character draft/session model out of battle state while avoiding a parallel battle seed type in character creation.
+`@dnd/battle-runtime` must not import `@dnd/character-creation-runtime`. MCP passes the finalized `CharacterSheet` through a composition-root mapper that copies only the sheet's selected Unit references into `CharacterCombatantSeed.sheetUnitRefs` and supplies current HP plus structured `ArmorClassState`. This keeps the character draft/session model out of battle state while avoiding a parallel battle seed type in character creation.
 
 `CombatantState` may use the same reducer facts already present in Correction: HP/max HP/Temporary HP, conditions, reaction availability, actor-owned `UnitRecord[]`, structured armor facts, zero-HP lifecycle policy, death saves, spell slots, and action-resource facts. It must not carry a duplicate current Armor Class scalar if `ArmorClassState` can derive it. Battle state should use the `RuntimeActionResource` model from `@dnd/shared-algebras`, including turn-granted actions and unit-granted restricted actions; do not introduce a scalar action quota.
 
@@ -628,33 +629,19 @@ export type BattleSubject = {
 
 Phase 1 subjects are only `coreAct.attack` and `coreAct.endTurn`. Do not include `unit` or `monsterStatBlockAction` in the public subject union until discovery and resolution support them. Monster seed ownership is visible through `MonsterCombatantSeed` and `StatBlockCatalog`; exposing unsupported subject variants would make invalid act states representable.
 
-Battle holes and fills should reuse only the minimal generic hole/fill algebra
-from Correction after it is re-homed into `@dnd/shared-algebras`. These types
-must not import `packages/surface-runtime-correction`, must not encode
-Unit/effect semantics, and must not preserve `CPU*`/`PEA*`/`PPR*` projected
-execution vocabulary.
+Battle hole identity may reuse the branded `HoleId`/`HoleInstanceKey` values
+from `@dnd/shared-algebras/runtime-hole-algebra`, but the battle public
+hole/fill union must stay as narrow as the implemented battle protocol. CAM11
+has no fillable battle protocol, so `BattleHole` and `BattleFill` are `never`.
+Later attack/damage tasks should add only battle-owned variants that are
+actually discoverable and resolvable. Do not expose Correction's
+Surface/Unit/effect execution holes through `@dnd/battle-runtime`.
 
 ```ts
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
-export type BattleHole =
-  | RuntimeHole
-  | {
-      readonly kind: "weaponDamageRoll";
-      readonly holeId: BattleHoleId;
-      readonly holeInstanceKey: BattleHoleInstanceKey;
-      readonly damageExpression: DiceExpr;
-      readonly damageType: DamageType;
-      readonly protocol: "diceResult";
-    };
-
-export type BattleFill =
-  | FilledHoleValue
-  | {
-      readonly kind: "weaponDamageRoll";
-      readonly holeId: BattleHoleId;
-      readonly value: ReadonlyNonEmptyArray<RolledDiceGroup>;
-    };
+export type BattleHole = never;
+export type BattleFill = never;
 
 export type BattleResolutionInput = {
   readonly state: BattleState;
@@ -798,7 +785,8 @@ Tool sequence:
 
 9. `end_turn`
    - Calls `endTurn({ state, actorId })`.
-   - Stores returned `BattleState`.
+   - CAM11 returns `unsupportedSubject` without mutating `BattleState`.
+   - CAM15 stores the returned `BattleState` after implementing End Turn advancement.
 
 MCP composition root owns:
 
