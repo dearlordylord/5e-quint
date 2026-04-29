@@ -13,7 +13,7 @@ written.
 
 Load authored `Surface` units from JSON, interpret a small supported subset
 structurally, and have reducer code handle them generically without branching on
- spell or feature ids.
+spell or feature ids.
 
 Examples:
 
@@ -93,9 +93,14 @@ Recommended shape:
 ```ts
 type ResolutionSubject =
   | {
-      readonly tag: "coreAction";
+      readonly tag: "srdAction";
       readonly actorId: CreatureId;
-      readonly action: "attack" | "endTurn";
+      readonly action: "attack";
+    }
+  | {
+      readonly tag: "runtimeCommand";
+      readonly actorId: CreatureId;
+      readonly command: "endTurn";
     }
   | {
       readonly tag: "unit";

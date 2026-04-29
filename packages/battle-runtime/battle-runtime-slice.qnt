@@ -7,14 +7,16 @@ module battleRuntimeSlice {
   // - Playing-the-Game.md lines 501-513: a turn can include one action, and
   //   doing nothing is a legal turn choice. ASSUMPTIONS.md A2 records the repo
   //   modeling choice that End Turn is a runtime transition, not an SRD Action.
-  // - Playing-the-Game.md lines 582-589: an Attack chooses a target, resolves
-  //   an attack roll, and rolls damage on a hit.
+  // - Playing-the-Game.md lines 582-589 and 700-703: an Attack chooses a
+  //   target, resolves an attack roll, rolls damage on a hit, and rolls the
+  //   attack's damage dice twice on a Critical Hit.
   // - Playing-the-Game.md lines 684-698 and 788-808: damage subtracts from HP,
   //   HP cannot go below 0, weapon damage adds the attack ability modifier, and
   //   Temporary Hit Points absorb damage before HP.
   // - Playing-the-Game.md lines 748-780 and ASSUMPTIONS.md A12: Stat Block
   //   monsters use Monster Death at 0 HP; Character Sheet combatants use the
-  //   Death Saving Throw lifecycle.
+  //   Death Saving Throw lifecycle, including instant death from massive
+  //   damage.
   //
   // This slice is the executable authority for @dnd/battle-runtime's CAM15
   // green path. The legacy root battle.qnt remains the broader combat authority
@@ -150,16 +152,19 @@ module battleRuntimeSlice {
     val tempHpAbsorbed = if (target.tempHp < effectiveDamage) target.tempHp else effectiveDamage
     val hpDamage = effectiveDamage - tempHpAbsorbed
     val nextHp = if (target.hp - hpDamage < 0) 0 else target.hp - hpDamage
+    val massiveDamageKills =
+      hpDamage > 0 and
+      (if (target.hp <= 0) hpDamage else hpDamage - target.hp) >= target.maxHp
     val damaged = { ...target, hp: nextHp, tempHp: target.tempHp - tempHpAbsorbed }
 
     if (effectiveDamage <= 0)
       target
     else if (target.hp <= 0)
-      applyDamageAtZeroHp(damaged, deathFailuresAtZeroHp)
+      if (massiveDamageKills) applyInstantDeath(damaged) else applyDamageAtZeroHp(damaged, deathFailuresAtZeroHp)
     else if (nextHp > 0)
       damaged
     else
-      applyDropToZeroHp(damaged)
+      if (massiveDamageKills) applyInstantDeath(damaged) else applyDropToZeroHp(damaged)
   }
 
   pure def applyDropToZeroHp(target: Combatant): Combatant =
@@ -176,6 +181,12 @@ module battleRuntimeSlice {
           unconscious: true,
           deathFailures: if (target.deathFailures + deathFailuresAtZeroHp > 3) 3 else target.deathFailures + deathFailuresAtZeroHp,
         }
+    }
+
+  pure def applyInstantDeath(target: Combatant): Combatant =
+    match target.lifecycle {
+      | DiesAtZeroHp => target
+      | UsesDeathSavingThrows => { ...target, unconscious: true, deathFailures: 3 }
     }
 
   run test_initial_holes_cover_attack_target = {
@@ -207,6 +218,14 @@ module battleRuntimeSlice {
     }
   }
 
+  run test_critical_hit_applies_doubled_damage_dice = {
+    val result = resolveAttack(initialState, 20, 20, 9)
+    all {
+      assert(result.actionAvailable == false),
+      assert(result.goblin.hp == 0),
+    }
+  }
+
   run test_temporary_hp_absorbs_damage_before_hp = {
     val result = resolveAttack(withGoblinHp(initialState, 10, 5), 15, 10, 4)
     all {
@@ -233,6 +252,15 @@ module battleRuntimeSlice {
     }
   }
 
+  run test_massive_damage_kills_character_on_drop_to_zero = {
+    val result = applyDamage(withFighterHp(initialState, 3, 0).fighter, 19, 2)
+    all {
+      assert(result.hp == 0),
+      assert(result.unconscious),
+      assert(result.deathFailures == 3),
+    }
+  }
+
   run test_character_damage_at_zero_adds_one_death_failure = {
     val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 7, 1)
     all {
@@ -248,6 +276,15 @@ module battleRuntimeSlice {
       assert(result.hp == 0),
       assert(result.unconscious),
       assert(result.deathFailures == 2),
+    }
+  }
+
+  run test_massive_damage_at_zero_kills_character = {
+    val result = applyDamage(withFighterHp(initialState, 0, 0).fighter, 13, 2)
+    all {
+      assert(result.hp == 0),
+      assert(result.unconscious),
+      assert(result.deathFailures == 3),
     }
   }
 

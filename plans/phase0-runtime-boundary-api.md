@@ -620,14 +620,25 @@ Battle seed data is runtime seed data only. Weapon damage dice, Damage Type, arm
 Subjects:
 
 ```ts
-export type BattleSubject = {
-  readonly tag: "coreAct";
-  readonly actorId: CombatantId;
-  readonly act: "attack" | "endTurn";
-};
+export type BattleSubject =
+  | {
+      readonly tag: "srdAction";
+      readonly actorId: CombatantId;
+      readonly action: "attack";
+    }
+  | {
+      readonly tag: "runtimeCommand";
+      readonly actorId: CombatantId;
+      readonly command: "endTurn";
+    };
 ```
 
-Phase 1 subjects are only `coreAct.attack` and `coreAct.endTurn`. Do not include `unit` or `monsterStatBlockAction` in the public subject union until discovery and resolution support them. Monster seed ownership is visible through `MonsterCombatantSeed` and `StatBlockCatalog`; exposing unsupported subject variants would make invalid act states representable.
+Phase 1 subjects are only `srdAction.attack` and `runtimeCommand.endTurn`.
+`endTurn` is a runtime command, not an SRD Action. Do not include `unit` or
+`monsterStatBlockAction` in the public subject union until discovery and
+resolution support them. Monster seed ownership is visible through
+`MonsterCombatantSeed` and `StatBlockCatalog`; exposing unsupported subject
+variants would make invalid act states representable.
 
 Battle hole identity may reuse the branded `HoleId`/`HoleInstanceKey` values
 from `@dnd/shared-algebras/runtime-hole-algebra`, but the battle public

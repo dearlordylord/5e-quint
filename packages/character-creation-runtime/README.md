@@ -29,6 +29,12 @@ The fill reducer uses the same package-private Phase 1 support gates as hole dis
 
 Unit-backed selections are projected from the accepted hole option's `unitRef`, not from the submitted option id. Option ids are protocol choices; Unit ids are durable draft selections.
 
+Background-granted tool holes are derived from Surface background facts. In the
+current first vertical, Soldier grants a `gaming_set` category choice and the
+runtime narrows that category to the authored Dice Set option because the SRD
+Unit catalog does not yet contain the full gaming-set catalog. This is a
+package-private phase narrowing, not a new Soldier rule and not a preset.
+
 The phase-0 draft used the name `UnitLibrary`; the current Surface package exposes `UnitCatalog`. This package exports `UnitLibrary` as a type alias to `UnitCatalog` so the runtime API can keep the durable boundary language without adding an adapter or duplicated catalog state.
 
 The public selection types keep SRD/domain facts structured at the runtime boundary: ability assignments reuse Surface `SixAbilityScores`, class advancement entries use `CharacterClassLevel`, starting languages are Common plus two distinct selectable Standard Languages, alignment is the SRD morality/order pair, and background ability-score increases cannot select the same ability twice.

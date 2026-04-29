@@ -88,14 +88,14 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  Subject["Subject<br/>coreAct(actorId, attack|endTurn) or unit(actorId, unitId)"]
+  Subject["Subject<br/>srdAction(actorId, attack), runtimeCommand(actorId, endTurn), or unit(actorId, unitId)"]
   ActorCheck["actorId === currentActing(state.initiative)<br/>success: continue<br/>failure: Left(invalid 'actor is not currently acting')<br/>why: subject legality is turn-local<br/>without: stale subjects from other turns can resolve"]
   InterpretSubject["interpretSubject(state, subject)<br/>success: Right(InterpretedAct)<br/>failure: Left(ResolutionInvalid)<br/>why: parse public Subject to internal act"]
 
-  CoreAttack["coreAct.attack<br/>calls discoverCoreAttackAct"]
+  CoreAttack["srdAction.attack<br/>calls discoverCoreAttackAct"]
   CoreAttackRight["success: Right({ ...CoreAttackAct, tag: 'coreAttack' })"]
   CoreAttackLeft["failure: Left(invalid 'no action available for attack')"]
-  CoreEndTurn["coreAct.endTurn<br/>success: Right(endTurnAct(actorId))<br/>failure after actor check: none"]
+  CoreEndTurn["runtimeCommand.endTurn<br/>success: Right(endTurnAct(actorId))<br/>failure after actor check: none"]
   UnitSubject["unit subject<br/>calls interpretUnitAct"]
 
   RequireActor["requireUnitActor(state, actorId)<br/>success: Right(CreatureState)<br/>failure: Left(invalid 'acting actor not found in combatants')<br/>without: undefined actor flows into unit lookup"]

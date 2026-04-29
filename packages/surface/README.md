@@ -50,16 +50,17 @@ Three-way separation:
   (e.g., `SURFACES_spells.md` cites `RESEARCH_foundry_effect_staging.md`
   for effect staging patterns). Read-only.
 - `packages/surface/` (this package) — **where the
-  surface evolves**. Greenfield, no `@dnd/*` deps, deletable wholesale
-  without breaking the monorepo. This is the tail of the research
-  work, not a downstream consumer.
+  surface evolves**. It remains independent from engine packages and has no
+  `@dnd/core` dependency, but it is now an active green-path input for
+  character creation, battle seed composition, and stat-block catalog lookup.
+  It is not a disposable prototype.
 
-## Isolated prototype
+## Runtime Boundary
 
-Does not import from the combat engine package. Can be deleted wholesale
-without affecting the rest of the repo.
-Typechecks uniformly with the rest of the monorepo via
-`turbo typecheck` at the root.
+This package does not import from the combat engine package. Runtime packages
+consume Surface through typed Unit and Stat Block catalog boundaries, then
+derive their own execution state at package boundaries. Surface records remain
+provenance-bearing authored content, not a projected executable IR.
 
 ## Stat Block Catalog Boundary
 

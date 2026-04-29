@@ -32,9 +32,7 @@ import { projectPhaseHoles } from "#/runtime-holes.ts";
 export const CURRENT_SLICE_ACTIVATION_STEP = holeStepKey("activation:0");
 
 type UnitSubject = Extract<Subject, { readonly tag: "unit" }>;
-type EndTurnSubject = Extract<Subject, { readonly tag: "coreAct" }> & {
-  readonly act: "endTurn";
-};
+type EndTurnSubject = Extract<Subject, { readonly tag: "runtimeCommand" }>;
 
 type DiscoverableActionCantrip = CurrentSliceSupportedActivationUnit & {
   readonly kind: "spell";
@@ -217,9 +215,9 @@ function endTurnAct(actorId: CreatureId): InterpretedCoreEndTurnAct {
   return {
     tag: "coreEndTurn",
     subject: {
-      tag: "coreAct",
+      tag: "runtimeCommand",
       actorId,
-      act: "endTurn",
+      command: "endTurn",
     },
     label: "End Turn",
     summary: "End the current turn.",
@@ -250,13 +248,13 @@ export function interpretSubject(
   }
 
   return Match.value(subject).pipe(
-    Match.when({ tag: "coreAct", act: "attack" }, () => {
+    Match.when({ tag: "srdAction", action: "attack" }, () => {
       const act = discoverCoreAttackAct(state, subject.actorId);
       return act === null
         ? Either.left(invalid("no action available for attack"))
         : Either.right({ ...act, tag: "coreAttack" as const });
     }),
-    Match.when({ tag: "coreAct", act: "endTurn" }, () =>
+    Match.when({ tag: "runtimeCommand", command: "endTurn" }, () =>
       Either.right(endTurnAct(subject.actorId)),
     ),
     Match.when({ tag: "unit" }, (unitSubject) =>

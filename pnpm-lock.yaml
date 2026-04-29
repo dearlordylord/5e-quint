@@ -204,9 +204,6 @@ importers:
 
   packages/battle-runtime:
     dependencies:
-      '@dnd/character-creation-runtime':
-        specifier: workspace:*
-        version: link:../character-creation-runtime
       '@dnd/shared':
         specifier: workspace:*
         version: link:../shared
@@ -309,6 +306,12 @@ importers:
       '@dnd/core':
         specifier: workspace:*
         version: link:../core
+      '@dnd/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@dnd/shared-algebras':
+        specifier: workspace:*
+        version: link:../shared-algebras
       '@dnd/surface':
         specifier: workspace:*
         version: link:../surface

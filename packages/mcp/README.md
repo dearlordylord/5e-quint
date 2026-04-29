@@ -22,6 +22,12 @@ so MCP session state cannot drift from the SRD stat-block catalog.
 Transient battle fills are MCP session state. They are kept separate from
 `BattleState` so battle replay remains owned by `@dnd/battle-runtime`.
 
+The green root also owns cross-runtime composition helpers. Character Sheet to
+battle-seed mapping lives in `src/green/battle-seed.ts`, where finalized
+character facts and Surface Unit lookups are projected into battle-owned seed
+data before calling `startBattle`. This keeps character draft/session concepts
+out of `@dnd/battle-runtime` without introducing a new intermediate language.
+
 No file under `src/green/` may import or re-export from the legacy Core-backed
 MCP modules. Check that boundary with:
 

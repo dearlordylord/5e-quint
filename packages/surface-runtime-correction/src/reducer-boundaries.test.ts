@@ -223,7 +223,11 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs surfaces core attack and endTurn when another creature exists", () => {
     expect(discoverAvailableActs(twoCreatureState())).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -236,7 +240,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -247,7 +255,11 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs suppresses core attack when no other creature exists", () => {
     expect(discoverAvailableActs(emptyState())).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -258,7 +270,11 @@ describe("reducer boundaries", () => {
   it("discoverAvailableActs suppresses core attack when no action is available", () => {
     expect(discoverAvailableActs(exhaustedActionState())).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -274,7 +290,11 @@ describe("reducer boundaries", () => {
       }),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -292,7 +312,11 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -305,7 +329,11 @@ describe("reducer boundaries", () => {
       discoverAvailableActs(twoCreatureStateWithActingUnit("fire_bolt")),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -318,7 +346,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -355,7 +387,11 @@ describe("reducer boundaries", () => {
       ),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -368,7 +404,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -396,7 +436,11 @@ describe("reducer boundaries", () => {
       }),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -409,7 +453,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -427,7 +475,11 @@ describe("reducer boundaries", () => {
       }),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -440,7 +492,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -464,7 +520,11 @@ describe("reducer boundaries", () => {
       }),
     ).toEqual([
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         label: "Attack",
         summary: "Make an attack.",
         initialHoles: [
@@ -477,7 +537,11 @@ describe("reducer boundaries", () => {
         ],
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         label: "End Turn",
         summary: "End the current turn.",
         initialHoles: [],
@@ -487,7 +551,11 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles advances initiative for core endTurn", () => {
     const result = resolveSubjectHoles(emptyState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+      subject: {
+        tag: "runtimeCommand",
+        actorId: "A" as CreatureId,
+        command: "endTurn",
+      },
       filledHoleValues: [],
     });
 
@@ -513,7 +581,11 @@ describe("reducer boundaries", () => {
         ]),
       },
       {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "A" as CreatureId,
+          command: "endTurn",
+        },
         filledHoleValues: [],
       },
     );
@@ -536,9 +608,9 @@ describe("reducer boundaries", () => {
       },
       {
         subject: {
-          tag: "coreAct",
+          tag: "runtimeCommand",
           actorId: "A" as CreatureId,
-          act: "endTurn",
+          command: "endTurn",
         },
         filledHoleValues: [],
       },
@@ -555,7 +627,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles requests a target hole for core attack", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [],
       }),
     ).toEqual({
@@ -574,7 +650,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles requests an attack roll after a valid attack target", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -599,7 +679,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles resolves a core attack hit without applying damage yet", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -620,7 +704,11 @@ describe("reducer boundaries", () => {
 
   it("resolveSubjectHoles resolves a missed core attack without asking for damage", () => {
     const result = resolveSubjectHoles(twoCreatureState(), {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: "A" as CreatureId,
+        action: "attack",
+      },
       filledHoleValues: [
         {
           kind: "targetChoice",
@@ -641,7 +729,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects core attack damage dice on a miss", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -679,7 +771,11 @@ describe("reducer boundaries", () => {
     };
 
     const result = resolveSubjectHoles(state, {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: "A" as CreatureId,
+        action: "attack",
+      },
       filledHoleValues: [
         {
           kind: "targetChoice",
@@ -700,7 +796,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects an invalid attack target", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -718,7 +818,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects duplicate filled values for the same current hole", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -741,7 +845,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects unexpected future filled values", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "rolledDice",
@@ -759,7 +867,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects kind mismatches for the current hole", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [attackRollFill("core_attack_target", 17)],
       }),
     ).toEqual({
@@ -772,7 +884,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles accumulates independent filled-hole validation errors", () => {
     expect(
       resolveSubjectHoles(twoCreatureState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [
           {
             kind: "targetChoice",
@@ -2089,7 +2205,11 @@ describe("reducer boundaries", () => {
     }
 
     const attacked = resolveSubjectHoles(surged.state, {
-      subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+      subject: {
+        tag: "srdAction",
+        actorId: "A" as CreatureId,
+        action: "attack",
+      },
       filledHoleValues: [
         {
           kind: "targetChoice",
@@ -2151,7 +2271,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects core attack when no action is available", () => {
     expect(
       resolveSubjectHoles(exhaustedActionState(), {
-        subject: { tag: "coreAct", actorId: "A" as CreatureId, act: "attack" },
+        subject: {
+          tag: "srdAction",
+          actorId: "A" as CreatureId,
+          action: "attack",
+        },
         filledHoleValues: [],
       }),
     ).toEqual({
@@ -2163,7 +2287,11 @@ describe("reducer boundaries", () => {
   it("resolveSubjectHoles rejects core endTurn for a non-acting creature", () => {
     expect(
       resolveSubjectHoles(emptyState(), {
-        subject: { tag: "coreAct", actorId: "B" as CreatureId, act: "endTurn" },
+        subject: {
+          tag: "runtimeCommand",
+          actorId: "B" as CreatureId,
+          command: "endTurn",
+        },
         filledHoleValues: [],
       }),
     ).toEqual({

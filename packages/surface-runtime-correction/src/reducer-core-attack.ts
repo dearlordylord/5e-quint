@@ -24,10 +24,7 @@ import type {
 } from "#/reducer-types.ts";
 import { Either } from "effect";
 
-export type CoreAttackSubject = Extract<
-  Subject,
-  { readonly tag: "coreAct" }
-> & { readonly act: "attack" };
+export type CoreAttackSubject = Extract<Subject, { readonly tag: "srdAction" }>;
 
 export type CoreAttackAct = AvailableAct & {
   readonly subject: CoreAttackSubject;
@@ -63,9 +60,9 @@ export function discoverCoreAttackAct(
 
   return {
     subject: {
-      tag: "coreAct",
+      tag: "srdAction",
       actorId,
-      act: "attack",
+      action: "attack",
     },
     label: "Attack",
     summary: "Make an attack.",

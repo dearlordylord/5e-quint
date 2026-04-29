@@ -1,4 +1,4 @@
-import { Brand, Option } from "effect";
+import { Brand, Match, Option } from "effect";
 import {
   readBackgroundCreationFacts,
   readClassCreationFacts,
@@ -10,6 +10,7 @@ import type {
   Ability,
   ActivationResource,
   ArmorTrainingCategory,
+  BackgroundToolProficiency,
   FeatRecord,
   Skill,
   SixAbilityScores,
@@ -1812,12 +1813,7 @@ function discoverBackgroundGrantedHoles(input: {
       input.draft,
       singleChoiceHole({
         source: unitSource(backgroundUnitId, BACKGROUND_TOOL_CHOICE_KEY),
-        options: [
-          {
-            optionId: creationChoiceOptionId("tool_dice_set"),
-            label: "Dice Set",
-          },
-        ],
+        options: backgroundToolProficiencyOptions(facts.value.toolProficiency),
       }),
     ),
     ...unselectedUnitChoiceHole(
@@ -1831,6 +1827,31 @@ function discoverBackgroundGrantedHoles(input: {
       }),
     ),
   ];
+}
+
+function backgroundToolProficiencyOptions(
+  proficiency: BackgroundToolProficiency,
+): readonly CreationChoiceOption[] {
+  return Match.value(proficiency).pipe(
+    Match.when({ kind: "specific_tool" }, (specificTool) => [
+      {
+        optionId: creationChoiceOptionId(specificTool.toolId),
+        label: specificTool.toolId,
+        unitRef: { unitId: specificTool.toolId },
+      },
+    ]),
+    Match.when({ kind: "tool_category_choice", category: "gaming_set" }, () => [
+      {
+        optionId: creationChoiceOptionId("tool_dice_set"),
+        label: "Dice Set",
+      },
+    ]),
+    Match.when(
+      { kind: "tool_category_choice", category: "artisan_tool" },
+      () => [],
+    ),
+    Match.exhaustive,
+  );
 }
 
 function discoverEquipmentHoles(input: {

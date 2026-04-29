@@ -29,9 +29,14 @@ export type {
 
 export type Subject =
   | {
-      readonly tag: "coreAct";
+      readonly tag: "srdAction";
       readonly actorId: CreatureId;
-      readonly act: "attack" | "endTurn";
+      readonly action: "attack";
+    }
+  | {
+      readonly tag: "runtimeCommand";
+      readonly actorId: CreatureId;
+      readonly command: "endTurn";
     }
   | {
       readonly tag: "unit";

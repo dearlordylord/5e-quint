@@ -538,11 +538,7 @@ Explicitly out of scope for the first slice:
 The first resolution API should conceptually be:
 
 ```ts
-resolveSubject(
-  state,
-  subject,
-  filledHoles,
-)
+resolveSubject(state, subject, filledHoles);
 ```
 
 and return one of:
@@ -678,9 +674,14 @@ Notes:
 ```ts
 type ResolutionSubject =
   | {
-      readonly tag: "coreAction";
+      readonly tag: "srdAction";
       readonly actorId: CreatureId;
-      readonly action: "attack" | "endTurn";
+      readonly action: "attack";
+    }
+  | {
+      readonly tag: "runtimeCommand";
+      readonly actorId: CreatureId;
+      readonly command: "endTurn";
     }
   | {
       readonly tag: "unit";
