@@ -8,9 +8,12 @@ import {
   endTurn,
   initiativeScore,
   monsterId,
+  resolveBattleSubject,
   snapshotBattle,
   startBattle,
   startBattleFromCharacterSheetAndStatBlock,
+  type BattleFill,
+  type BattleHole,
   type BattleState,
   type CombatantSeedInput,
 } from "./index.ts";
@@ -23,7 +26,7 @@ import {
   finalizeCharacterDraft,
 } from "@dnd/character-creation-runtime";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { Hp } from "@dnd/shared/types";
+import { DieRollResult, Hp } from "@dnd/shared/types";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -41,6 +44,11 @@ import type {
 
 const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
+type BattleFillableHole = Pick<BattleHole, "kind" | "holeId">;
+type DamageRollValue = Extract<
+  BattleFill,
+  { readonly kind: "rolledDice" }
+>["value"];
 const unitCatalogResult = buildUnitCatalog({
   collections: [srdUnitCollection],
 });
@@ -208,11 +216,6 @@ describe("battle runtime skeleton", () => {
       ],
       acts: [
         {
-          subject: { tag: "coreAct", actorId: goblinId, act: "attack" },
-          label: "Attack",
-          initialHoles: [],
-        },
-        {
           subject: { tag: "coreAct", actorId: goblinId, act: "endTurn" },
           label: "End Turn",
           initialHoles: [],
@@ -240,6 +243,379 @@ describe("battle runtime skeleton", () => {
       { tag: "coreAct", actorId: fighterId, act: "attack" },
       { tag: "coreAct", actorId: fighterId, act: "endTurn" },
     ]);
+    expect(acts[0]?.initialHoles).toMatchObject([
+      {
+        kind: "targetChoice",
+        label: "Attack target",
+        choices: [goblinId],
+      },
+    ]);
+  });
+
+  test("discoverBattleActs omits attack when there is no target", () => {
+    const acts = discoverBattleActs(
+      startBattle({
+        battleId: battleId("battle-no-target"),
+        combatants: [characterSeed({ initiative: 20 })],
+      }),
+    );
+
+    expect(acts.map((act) => act.subject)).toEqual([
+      { tag: "coreAct", actorId: fighterId, act: "endTurn" },
+    ]);
+  });
+
+  test("attack replay asks for a target before roll or damage", () => {
+    const state = fighterVsGoblinBattle();
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "targetChoice",
+          label: "Attack target",
+          choices: [goblinId],
+        },
+      ],
+    });
+  });
+
+  test("attack replay asks for an attack roll after target selection", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [],
+      }),
+      "targetChoice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [targetFill(targetHole, goblinId)],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "attackRoll", label: "Attack roll" }],
+    });
+  });
+
+  test("attack hit asks for Longsword damage dice before spending the action", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [],
+      }),
+      "targetChoice",
+    );
+    const rollHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [targetFill(targetHole, goblinId)],
+      }),
+      "attackRoll",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        {
+          kind: "rolledDice",
+          label: "Longsword damage (1d8+3-slashing)",
+          attack: {
+            weapon: { id: "weapon_longsword" },
+            ability: "str",
+            abilityModifier: 3,
+          },
+        },
+      ],
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+        },
+      },
+    });
+  });
+
+  test("attack miss spends the action without asking for weapon damage", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [],
+        },
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 10 },
+        ],
+      },
+    });
+  });
+
+  test("natural 1 attack roll misses even when the total meets Armor Class", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 99, naturalD20: 1 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: { currentTurnResources: { actionResources: [] } },
+    });
+  });
+
+  test("natural 20 attack roll hits even when the total is below Armor Class", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 1, naturalD20: 20 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "needsHoles",
+      holes: [
+        { kind: "rolledDice", label: "Longsword damage (1d8+3-slashing)" },
+      ],
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+        },
+      },
+    });
+  });
+
+  test("attack replay rejects invalid natural d20 attack-roll results", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 21 }),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+        },
+      },
+    });
+  });
+
+  test("attack replay rejects damage fills on a miss", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 14, naturalD20: 9 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+  });
+
+  test("attack replay rejects damage dice outside the selected weapon expression", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 99),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+        },
+      },
+    });
+  });
+
+  test("attack replay rejects damage dice count that does not match the selected weapon", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFillWithGroups(damageHole, [[4], [5]]),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [{ kind: "action", source: "turn" }],
+        },
+      },
+    });
+  });
+
+  test("attack rejects a non-current actor", () => {
+    const state = fighterVsGoblinBattle();
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: goblinId, act: "attack" },
+      fills: [],
+    });
+
+    expect(result).toMatchObject({
+      tag: "invalid",
+      reason: "wrongActor",
+    });
+  });
+
+  test("filled attack hit spends the action and keeps damage application for CAM14", () => {
+    const state = fighterVsGoblinBattle();
+    const targetHole = attackInitialTargetHole(state);
+    const rollHole = attackRollHoleAfterTarget(state, targetHole);
+    const damageHole = requireHole(
+      resolveBattleSubject({
+        state,
+        subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+        fills: [
+          targetFill(targetHole, goblinId),
+          attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        ],
+      }),
+      "rolledDice",
+    );
+
+    const result = resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [
+        targetFill(targetHole, goblinId),
+        attackRollFill(rollHole, { total: 15, naturalD20: 10 }),
+        damageRollFill(damageHole, 4),
+      ],
+    });
+
+    expect(result).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        currentTurnResources: {
+          actionResources: [],
+        },
+        combatants: [
+          { combatantId: fighterId },
+          { combatantId: goblinId, hp: 10 },
+        ],
+      },
+    });
   });
 
   test("snapshotBattle projects current acts from the supplied state", () => {
@@ -294,6 +670,132 @@ describe("battle runtime skeleton", () => {
   });
 });
 
+function fighterVsGoblinBattle(): BattleState {
+  return startBattle({
+    battleId: battleId("battle-attack"),
+    combatants: [
+      characterSeed({ initiative: 20 }),
+      monsterSeed({ initiative: 10 }),
+    ],
+  });
+}
+
+function attackInitialTargetHole(state: BattleState): BattleHole {
+  return requireHole(
+    resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [],
+    }),
+    "targetChoice",
+  );
+}
+
+function attackRollHoleAfterTarget(
+  state: BattleState,
+  targetHole: BattleHole,
+): BattleHole {
+  return requireHole(
+    resolveBattleSubject({
+      state,
+      subject: { tag: "coreAct", actorId: fighterId, act: "attack" },
+      fills: [targetFill(targetHole, goblinId)],
+    }),
+    "attackRoll",
+  );
+}
+
+function requireHole(
+  result: ReturnType<typeof resolveBattleSubject>,
+  kind: BattleHole["kind"],
+): BattleHole {
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected needsHoles, got ${result.tag}.`);
+  }
+  const hole = result.holes.find((candidate) => candidate.kind === kind);
+  if (hole == null) {
+    throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function targetFill(hole: BattleHole, targetId: typeof goblinId): BattleFill {
+  if (hole.kind !== "targetChoice") {
+    throw new Error("Expected targetChoice hole.");
+  }
+  return {
+    kind: "targetChoice",
+    holeId: hole.holeId,
+    value: targetId,
+  };
+}
+
+function attackRollFill(
+  hole: BattleHole,
+  value: { readonly total: number; readonly naturalD20: number },
+): BattleFill {
+  if (hole.kind !== "attackRoll") {
+    throw new Error("Expected attackRoll hole.");
+  }
+  return {
+    kind: "attackRoll",
+    holeId: hole.holeId,
+    value: {
+      total: value.total,
+      naturalD20: DieRollResult(value.naturalD20),
+    },
+  };
+}
+
+function damageRollFill(
+  hole: BattleFillableHole,
+  dieResult: number,
+): BattleFill {
+  return damageRollFillWithGroups(hole, [[dieResult]]);
+}
+
+function damageRollFillWithGroups(
+  hole: BattleFillableHole,
+  groups: readonly (readonly number[])[],
+): BattleFill {
+  if (hole.kind !== "rolledDice") {
+    throw new Error("Expected rolledDice hole.");
+  }
+  return {
+    kind: "rolledDice",
+    holeId: hole.holeId,
+    value: rolledDiceGroups(groups),
+  };
+}
+
+function rolledDiceGroups(
+  groups: readonly (readonly number[])[],
+): DamageRollValue {
+  const [firstGroup, ...restGroups] = groups;
+  if (firstGroup === undefined) {
+    throw new Error("Expected at least one rolled dice group.");
+  }
+
+  return [
+    rolledDiceGroup(firstGroup),
+    ...restGroups.map((group) => rolledDiceGroup(group)),
+  ];
+}
+
+function rolledDiceGroup(group: readonly number[]): DamageRollValue[number] {
+  const [first, ...rest] = group;
+  if (first === undefined) {
+    throw new Error("Expected at least one die result.");
+  }
+
+  return {
+    results: [
+      DieRollResult(first),
+      ...rest.map((dieResult) => DieRollResult(dieResult)),
+    ],
+  };
+}
+
 function characterSeed(input: {
   readonly initiative: number;
 }): CombatantSeedInput {
@@ -310,8 +812,28 @@ function characterSeed(input: {
       maxHp: Hp(12),
       tempHp: Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
-      selectedLoadout: {},
+      selectedLoadout: {
+        weapon: { unitId: "weapon_longsword", grip: "one_handed" },
+      },
+      attack: testLongswordAttack(),
     },
+  };
+}
+
+function testLongswordAttack(): Extract<
+  CombatantSeedInput["seed"],
+  { readonly kind: "character" }
+>["attack"] {
+  const weapon = unitLibrary.requireUnit("weapon_longsword");
+  if (weapon.kind !== "weapon") {
+    throw new Error("Expected Longsword weapon Unit.");
+  }
+
+  return {
+    kind: "weapon",
+    weapon,
+    ability: "str",
+    abilityModifier: 3,
   };
 }
 

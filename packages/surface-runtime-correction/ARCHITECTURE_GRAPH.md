@@ -23,7 +23,8 @@ flowchart TD
   State["State<br/>data: initiative, combatants, action economy, unit activation/use-count memory<br/>why: single legality/replay input<br/>without: discovery and resolution would not share one runtime snapshot"]
   ArmorClass["ArmorClassState helpers<br/>input: creature.armorClass<br/>success: currentCreatureArmorClass(target)<br/>why: attack rolls compare against derived target AC<br/>without: unit attack rolls need duplicated or scalar AC state"]
   Damage["applyHpDamage(creature, amount)<br/>success: creature with temp HP absorbed first and HP clamped at 0<br/>why: one HP damage arithmetic boundary while dead/dying semantics are not modeled here<br/>without: reducers duplicate temp-HP and clamp math"]
-  RuntimeDice["runtime-dice helpers<br/>input: rolled dice groups + Surface DiceExpr<br/>success: validated dice total/count/range facts<br/>failure: validation error reason<br/>why: one dice-roll validation path for Surface dice expressions<br/>without: each effect family validates rolls differently or forgets die range"]
+  AttackRollAlgebra["attack-roll-algebra<br/>package: @dnd/shared-algebras<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one D20 attack-roll adjudication path for Correction and battle runtime<br/>without: runtimes drift on natural 1/20 semantics"]
+  RuntimeDice["runtime-dice helpers<br/>shared validation in @dnd/shared-algebras, Correction wrapper returns Either<br/>input: rolled dice groups + Surface DiceExpr<br/>success: validated dice total/count/range facts<br/>failure: validation error reason<br/>why: one dice-roll validation path for Surface dice expressions<br/>without: each effect family validates rolls differently or forgets die range"]
 
   DiscoverPublic["discoverAvailableActs(state)<br/>input: State<br/>success: AvailableAct[] = subject + label + summary + initialHoles<br/>absence: [] only if interpreted discovery returns no acts; current code normally includes End Turn<br/>why: public discovery API<br/>without: callers depend on internal InterpretedAct or duplicate projection"]
   DiscoverInterpreted["discoverInterpretedActs(state)<br/>input: State<br/>success: InterpretedAct[] = legal current-actor acts with resolver payloads attached<br/>absence: omits unavailable attack and non-discoverable units<br/>why: one internal representation for discovery and later subject interpretation<br/>without: discovery must rebuild tag/unit/phase details or expose internals"]
@@ -54,6 +55,7 @@ flowchart TD
   Content --> Decode --> AssertSupport --> CreatureUnits --> State
   State --> ArmorClass
   State --> Damage
+  AttackRollAlgebra --> ResolveCoreAttack
   State --> DiscoverPublic --> DiscoverInterpreted
   DiscoverInterpreted --> CoreAttackDiscover
   DiscoverInterpreted --> EndTurnAct
@@ -70,6 +72,7 @@ flowchart TD
   InterpretSubject -->|Right unit attack_roll| UnitAttackReplay --> ResolvePhase
   InterpretSubject -->|Right unit save_gate| UnitSaveReplay --> ResolvePhase
   InterpretSubject -->|Right non-attack unit| ValidateInputs --> RequireComplete --> ResolvePhase
+  ResolvePhase --> AttackRollAlgebra
   ResolvePhase --> RuntimeDice --> Damage --> UnitMutation
   ResolvePhase --> ArmorClass
   ResolvePhase --> UnitResource
@@ -78,7 +81,7 @@ flowchart TD
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
   class CoreAttackAdjudication implemented;
-  class Content,Decode,AssertSupport,CreatureUnits,State,ArmorClass,Damage,RuntimeDice,DiscoverPublic,DiscoverInterpreted,ProjectAvailable,CoreAttackDiscover,EndTurnAct,UnitDiscover,CantripGate,InterpretUnit,ProjectHoles,Request,Resolve,InterpretSubject,ResolveCoreAttack,ResolveEndTurn,UnitAttackReplay,ValidateInputs,RequireComplete,ResolvePhase,UnitResource,UnitMutation,AvailableActs implemented;
+  class Content,Decode,AssertSupport,CreatureUnits,State,ArmorClass,Damage,AttackRollAlgebra,RuntimeDice,DiscoverPublic,DiscoverInterpreted,ProjectAvailable,CoreAttackDiscover,EndTurnAct,UnitDiscover,CantripGate,InterpretUnit,ProjectHoles,Request,Resolve,InterpretSubject,ResolveCoreAttack,ResolveEndTurn,UnitAttackReplay,ValidateInputs,RequireComplete,ResolvePhase,UnitResource,UnitMutation,AvailableActs implemented;
 ```
 
 ## Interpretation Graph
@@ -180,18 +183,20 @@ flowchart TD
   PhaseExec["resolveFilledActivationPhase<br/>implemented: attack_roll hit/miss/damage, save_gate damage, direct heal_hp, and grant_extra_action"]
   UnitResource["unit resource legality + consumption<br/>implemented: Surface action resource spend, free no-op, bonus activation cost, base spell slot + slot-expended-turn guard, creature-scoped Action Surge use-count/once-per-turn gates, and restricted action-resource grant"]
   UnitMutation["unit battle-state mutation<br/>implemented: attack_roll/save_gate HP damage, heal_hp HP regain capped at max HP, and restricted action resources"]
-  RuntimeDice["runtime-dice validation<br/>checks rolledDice count and die range for Surface DiceExpr"]
+  AttackRollAlgebra["attack-roll-algebra<br/>shared SRD natural 1/20 and AC hit check"]
+  RuntimeDice["runtime-dice validation<br/>shared helper checks rolledDice count and die range for Surface DiceExpr"]
   ArmorClass["currentCreatureArmorClass(target)<br/>derives target AC from ArmorClassState"]
   Damage["applyHpDamage<br/>absorbs temp HP first, then clamps HP at 0"]
 
   Resolve --> Interpret
   Interpret -->|Left invalid| Invalid["return invalid"]
   Interpret -->|Right act| Match
-  Match --> CoreAttackResolve --> CoreAttackAdjudication
+  Match --> CoreAttackResolve --> CoreAttackAdjudication --> AttackRollAlgebra
   Match --> EndTurnResolve
   Match --> UnitDispatch
   UnitDispatch --> AttackRollPhase
   AttackRollPhase --> ArmorClass
+  AttackRollPhase --> AttackRollAlgebra
   AttackRollPhase --> RuntimeDice
   AttackRollPhase --> Damage
   AttackRollPhase --> UnitResource
@@ -206,7 +211,7 @@ flowchart TD
 
   classDef missing fill:#fff1f0,stroke:#c2410c,stroke-width:2px,stroke-dasharray: 6 4,color:#7c2d12;
   classDef implemented fill:#eef6ff,stroke:#2563eb,color:#172554;
-  class Resolve,Interpret,Match,CoreAttackResolve,CoreAttackAdjudication,EndTurnResolve,UnitDispatch,AttackRollPhase,NonAttackValidInputs,Missing,PhaseExec,RuntimeDice,ArmorClass,Damage,UnitResource,UnitMutation,Invalid,Needs implemented;
+  class Resolve,Interpret,Match,CoreAttackResolve,CoreAttackAdjudication,EndTurnResolve,UnitDispatch,AttackRollPhase,NonAttackValidInputs,Missing,PhaseExec,AttackRollAlgebra,RuntimeDice,ArmorClass,Damage,UnitResource,UnitMutation,Invalid,Needs implemented;
 ```
 
 ## Core Attack Replay
@@ -262,8 +267,10 @@ flowchart TD
 | `projectAttackRollDamageHoles(phase, stepKey)`                 | Attack-roll `ActivationPhase`, `HoleStepKey`                                             | `RuntimeHoleSet` of hit-only damage `rolledDice` holes                                                                                                                                                   | No invalid path                                                                             | Opens damage dice only after hit adjudication                             | Attack-roll damage holes are asked too early or duplicated             |
 | `projectSaveGateSavingThrowOutcomeHoles(phase, stepKey)`       | Save-gate `ActivationPhase`, `HoleStepKey`                                               | One `savingThrowOutcome` hole carrying the save ability and DC source                                                                                                                                    | No invalid path                                                                             | Opens per-target caller-adjudicated save outcomes after area/target fills | Save-gate execution has no branch outcome input                        |
 | `projectSaveGateDamageHoles(phase, stepKey)`                   | Save-gate `ActivationPhase`, `HoleStepKey`                                               | One shared damage `rolledDice` hole                                                                                                                                                                      | No invalid path                                                                             | Models Fireball-style one damage roll for all targets                     | Save-gate damage is rolled per target or not at all                    |
-| `validateRolledDiceForDiceExpr(groups, expr)`                  | `RolledDiceGroup[]`, `DiceExpr`                                                          | `Right(void)` when count and every die result fit the expression's die size                                                                                                                              | `Left({ reason })` for wrong count or out-of-range die result                               | Shared Surface dice-roll validation                                       | Effect families duplicate or forget dice validation                    |
-| `rolledDiceTotal(groups)`                                      | `RolledDiceGroup[]`                                                                      | Sum of all die results                                                                                                                                                                                   | n/a                                                                                         | Shared roll total computation                                             | Each effect sums roll groups differently                               |
+| `attackRollHits(roll, armorClass)`                             | `AttackRollResult`, Armor Class                                                          | `true` for natural 20 or total >= AC; `false` for natural 1 or total < AC                                                                                                                                | n/a                                                                                         | Shared SRD attack-roll hit adjudication                                   | Correction and battle runtime drift on natural 1/20                    |
+| `attackRollResultIsValid(roll)`                                | `AttackRollResult`                                                                       | `true` when total is an integer and natural d20 is 1..20                                                                                                                                                 | `false`                                                                                     | Shared attack-roll boundary validation                                    | Invalid d20 values enter hit adjudication                              |
+| `validateRolledDiceForDiceExpr(groups, expr)`                  | `RolledDiceGroup[]`, `DiceExpr`                                                          | `Right(void)` when count and every die result fit the expression's die size                                                                                                                              | `Left({ reason })` for wrong count or out-of-range die result                               | Correction wrapper around shared Surface dice-roll validation             | Effect families duplicate or forget dice validation                    |
+| `rolledDiceTotal(groups)`                                      | `RolledDiceGroup[]`                                                                      | Sum of all die results                                                                                                                                                                                   | n/a                                                                                         | Re-exported shared roll total computation                                 | Each effect sums roll groups differently                               |
 | `validateCurrentHoleInputs(filled, holes)`                     | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | `null`                                                                                                                                                                                                   | `ResolutionInvalid` for duplicate, unexpected, wrong-kind, or mismatched Surface echo fills | Pure shape validation                                                     | Bad fills reach semantic execution                                     |
 | `requireValidHoleInputs(filled, holes)`                        | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | `Right(same holes)`                                                                                                                                                                                      | `Left(ResolutionInvalid)` from validation                                                   | Pipeline wrapper preserving expected holes                                | Callers hand-roll null checks                                          |
 | `missingHoles(filled, holes)`                                  | `FilledHoleValue[]`, `RuntimeHoleSet`                                                    | Missing subset of `holes` by `holeId`                                                                                                                                                                    | No invalid path                                                                             | Shared ID-set subtraction                                                 | Missing-hole computation duplicates                                    |

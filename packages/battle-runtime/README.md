@@ -4,7 +4,7 @@ Battle runtime owns the durable battle state, phase-1 battle subjects, replay-fr
 
 This package intentionally imports generic Surface `StatBlockRecord`s and shared algebras. It does not import legacy engine packages, SRD-specific stat-block collection types, or projected-executable vocabulary.
 
-The current runtime covers the CAM11/CAM12 boundary:
+The current runtime covers the CAM11-CAM13 boundary:
 
 - `startBattle` accepts caller-built combatant seeds and creates sorted Initiative state.
 - `startBattleFromCharacterSheetAndStatBlock` accepts the finalized `CharacterSheet` from `@dnd/character-creation-runtime`, the Surface `UnitCatalog`, and a generic `StatBlockRecord`; it derives the character seed and monster seed before calling `startBattle`.
@@ -12,12 +12,13 @@ The current runtime covers the CAM11/CAM12 boundary:
 - Character Armor Class is structured `ArmorClassState`, not a copied scalar: armor base and category come from the loaded armor Unit, trained Shield bonus comes from the loaded Shield Unit and sheet armor training, and the Defense Fighting Style bonus comes from the loaded feat Unit as a conditional wearing-armor bonus.
 - Monster initialization derives display name, Armor Class, Hit Points, and Initiative score from the supplied generic `StatBlockRecord`; the runtime does not import Core monster catalogs or SRD-specific collection types.
 - `BattleState.currentTurnResources` uses `RuntimeActionResource[]` plus bonus-action availability from `@dnd/shared-algebras/action-economy-algebra`; it does not store a scalar action quota.
-- `discoverBattleActs` exposes only the phase-1 `coreAct.attack` and `coreAct.endTurn` subjects for the current actor.
-- `resolveBattleSubject` is replay-from-root: callers pass the root `BattleState`, the selected `BattleSubject`, and all accumulated `BattleFill`s. Fills are not stored in `BattleState`.
-- CAM11 has no battle hole/fill protocol yet: `BattleHole` and `BattleFill` are `never`, so unsupported Unit/effect-shaped asks are not publicly representable through this package.
+- `discoverBattleActs` exposes phase-1 `coreAct.attack` only for the current actor when an Attack-compatible action resource and the single supported character weapon attack profile are both present. `coreAct.endTurn` remains discoverable for the current actor.
+- `resolveBattleSubject` is replay-from-root: callers pass the root `BattleState`, the selected `BattleSubject`, and all accumulated `BattleFill`s. Fills are caller/session state and are not stored in `BattleState`.
+- Attack replay uses shared runtime holes and fills: target choice, attack roll, and on-hit rolled-dice damage. The damage hole id and instance key are derived at the hole boundary from the dice-result protocol and the selected weapon damage expression, for example `battle:attack:damage-result:1d8+3-slashing`.
+- Filled Attack resolution uses the shared attack-roll algebra: natural 1 misses, natural 20 hits, otherwise the total is compared to the target's current Armor Class. A miss spends the Attack action and leaves HP unchanged. A hit asks for weapon damage dice before spending the action; once valid damage dice are supplied, CAM13 spends the action and leaves damage application to CAM14.
 - `snapshotBattle` projects a JSON-friendly read model without exposing mutable `Map` internals.
 
-Attack and End Turn resolution beyond act discovery are intentionally left as later tasks. Until CAM13 adds target/roll/damage replay and CAM15 adds End Turn state advancement, resolving either subject returns `invalid` with `unsupportedSubject` rather than mutating state or inventing placeholder holes.
+End Turn resolution beyond act discovery is intentionally left to CAM15. Until CAM15 adds End Turn state advancement, resolving End Turn returns `invalid` with `unsupportedSubject`.
 
 ## RAW Traceability For Retained Phase-1 Behavior
 
@@ -27,4 +28,6 @@ Attack and End Turn resolution beyond act discovery are intentionally left as la
 - Character Armor Class is traced to SRD 5.2.1 `Playing-the-Game.md` "Armor Class" and `Equipment.md` "Armor": base AC can come from armor, Shield benefit requires Shield training, and the Defense feat says wearing Light, Medium, or Heavy armor grants +1 AC.
 - `endTurn` is exposed only as a discoverable subject in this skeleton. SRD combat has participants take turns in Initiative order and starts a new round after everyone has taken a turn. `ASSUMPTIONS.md` A2 records the repository's explicit modeling decision to expose a discrete End Turn transition because D&D has end-of-turn trigger points even though "end turn" is not itself an SRD action. CAM15 owns the state transition.
 - Per-turn action resources are traced to SRD 5.2.1 `Playing-the-Game.md` "Your Turn" / "Actions" and "Bonus Actions": on your turn you can take one action, and at most one Bonus Action when a rule grants one. `UBIQUITOUS_LANGUAGE.md` defines Action and Bonus Action using those same per-turn resource boundaries.
+- Attack replay is traced to SRD 5.2.1 `Rules-Glossary.md` "Attack [Action]" and `Playing-the-Game.md` "Making an Attack": taking the Attack action permits one weapon or Unarmed Strike attack roll, attacks choose a target, and resolving the attack makes an attack roll. `Playing-the-Game.md` "Attack Rolls" says an attack roll hits when it equals or exceeds the target's Armor Class, with natural 20 and natural 1 overriding the total.
+- Longsword damage-hole naming is traced to SRD 5.2.1 `Equipment.md` "Weapons" and `Playing-the-Game.md` "Damage Rolls": weapon damage specifies the amount and type dealt on a hit, the Longsword row is `1d8 Slashing` with the Versatile `1d10` property, and weapon damage rolls add the same ability modifier used for the attack roll. The first vertical uses the character sheet's one-handed Longsword loadout with Strength +3, so the selected damage expression is `1d8+3-slashing`.
 - Snapshot `defeated` is a read-model projection from `hp === 0`. SRD 5.2.1 `Playing-the-Game.md` "Dropping to 0 Hit Points" distinguishes Monster Death from player-character death saves; the durable state keeps the explicit `zeroHpLifecyclePolicy` alongside HP so later damage/death-save tasks can refine behavior without encoding death as a copied scalar.

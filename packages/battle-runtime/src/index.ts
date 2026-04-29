@@ -4,7 +4,12 @@ import * as Either from "effect/Either";
 import {
   canSpendAction,
   resetTurnActionEconomy,
+  spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
+import {
+  attackRollHits,
+  attackRollResultIsValid,
+} from "@dnd/shared-algebras/attack-roll-algebra";
 import {
   createScoredInitiativeStack,
   currentActing,
@@ -37,6 +42,15 @@ import type {
   HoleInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import {
+  holeId,
+  holeInstanceKey,
+  type AttackRollResult,
+  type FilledHoleValue,
+  type RolledDiceGroup,
+  type RuntimeHole,
+} from "@dnd/shared-algebras/runtime-hole-algebra";
+import { validateRolledDiceForDiceExpr } from "@dnd/shared-algebras/runtime-dice-algebra";
+import {
   CONDITIONS as ALL_CONDITIONS,
   Hp,
   Round,
@@ -46,10 +60,13 @@ import {
   type Round as RoundType,
 } from "@dnd/shared/types";
 import type {
+  Ability,
   SixAbilityScores,
   StatBlockRecord,
   StatBlockValue,
   UnitRecord,
+  WeaponDamage,
+  WeaponRecord,
 } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import type { CharacterSheet, UnitRef } from "@dnd/character-creation-runtime";
@@ -78,6 +95,17 @@ export const initiativeScore: (value: number) => InitiativeScore =
 export type ZeroHpLifecyclePolicy = "diesAtZeroHp" | "usesDeathSavingThrows";
 
 export type CharacterLoadoutRef = CharacterSheet["equipment"]["loadout"];
+export type BattleWeaponDamage = Extract<
+  WeaponDamage,
+  { readonly kind: "dice" }
+>;
+
+export type BattleAttackProfile = {
+  readonly kind: "weapon";
+  readonly weapon: WeaponRecord;
+  readonly ability: Ability;
+  readonly abilityModifier: number;
+};
 
 export type CharacterCombatantSeed = {
   readonly kind: "character";
@@ -89,6 +117,7 @@ export type CharacterCombatantSeed = {
   readonly tempHp: Hp;
   readonly zeroHpLifecyclePolicy: "usesDeathSavingThrows";
   readonly selectedLoadout: CharacterLoadoutRef;
+  readonly attack: BattleAttackProfile | null;
 };
 
 export type CharacterSheetCombatantInput = {
@@ -146,6 +175,7 @@ export type CombatantState = {
         readonly characterId: CharacterId;
         readonly sheetUnitRefs: readonly UnitRef[];
         readonly selectedLoadout: CharacterLoadoutRef;
+        readonly attack: BattleAttackProfile | null;
       }
     | {
         readonly kind: "monster";
@@ -179,8 +209,30 @@ export type AvailableBattleAct = {
 
 export type BattleHoleId = HoleId;
 export type BattleHoleInstanceKey = HoleInstanceKey;
-export type BattleHole = never;
-export type BattleFill = never;
+export type BattleTargetChoiceHole = Extract<
+  RuntimeHole,
+  { readonly kind: "targetChoice" }
+> & {
+  readonly choices: readonly CombatantId[];
+};
+export type BattleAttackRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "attackRoll" }
+>;
+export type BattleDamageRollHole = Extract<
+  RuntimeHole,
+  { readonly kind: "rolledDice" }
+> & {
+  readonly attack: BattleAttackProfile;
+};
+export type BattleHole =
+  | BattleTargetChoiceHole
+  | BattleAttackRollHole
+  | BattleDamageRollHole;
+export type BattleFill = Extract<
+  FilledHoleValue,
+  { readonly kind: "targetChoice" | "attackRoll" | "rolledDice" }
+>;
 
 export type BattleResolutionInput = {
   readonly state: BattleState;
@@ -246,6 +298,10 @@ const INITIAL_TURN_RESOURCES = resetTurnActionEconomy({
   actionResources: [],
   currentHasBonusAction: false,
 });
+const ATTACK_TARGET_HOLE_ID = holeId("battle:attack:target");
+const ATTACK_ROLL_HOLE_ID = holeId("battle:attack:roll");
+const ATTACK_TARGET_HOLE_INSTANCE = holeInstanceKey("battle:attack:target");
+const ATTACK_ROLL_HOLE_INSTANCE = holeInstanceKey("battle:attack:roll");
 
 export function startBattle(input: {
   readonly battleId: BattleId;
@@ -316,12 +372,16 @@ export function discoverBattleActs(
   }
 
   const acts: AvailableBattleAct[] = [];
-  if (canSpendAction(state.currentTurnResources, "attack")) {
+  if (
+    canSpendAction(state.currentTurnResources, "attack") &&
+    supportedAttackProfile(state, actorId) != null &&
+    attackTargetChoices(state, actorId).length > 0
+  ) {
     acts.push({
       subject: { tag: "coreAct", actorId, act: "attack" },
       label: "Attack",
       summary: "Take the Attack action.",
-      initialHoles: [],
+      initialHoles: [attackTargetHole(state, actorId)],
     });
   }
   acts.push({
@@ -337,14 +397,6 @@ export function discoverBattleActs(
 export function resolveBattleSubject(
   input: BattleResolutionInput,
 ): BattleResolutionResult {
-  if (input.fills.length > 0) {
-    return invalidResult(
-      input.state,
-      "invalidFill",
-      "Phase 1 battle skeleton does not accept fills yet.",
-    );
-  }
-
   if (input.subject.actorId !== currentActorId(input.state)) {
     return invalidResult(
       input.state,
@@ -369,6 +421,18 @@ export function resolveBattleSubject(
       input.state,
       "staleSubject",
       "Attack is no longer available for the current actor.",
+    );
+  }
+
+  if (input.subject.act === "attack") {
+    return resolveAttack(input);
+  }
+
+  if (input.fills.length > 0) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "End Turn does not accept battle fills.",
     );
   }
 
@@ -434,6 +498,7 @@ function combatantState(input: CombatantSeedInput): CombatantState {
         characterId: input.seed.characterId,
         sheetUnitRefs: input.seed.sheetUnitRefs,
         selectedLoadout: input.seed.selectedLoadout,
+        attack: input.seed.attack,
       },
     };
   }
@@ -503,6 +568,7 @@ function combatantSeedFromCharacterSheet(
       tempHp: input.tempHp ?? Hp(0),
       zeroHpLifecyclePolicy: "usesDeathSavingThrows",
       selectedLoadout: input.sheet.equipment.loadout,
+      attack: characterAttackProfile(input.sheet, input.unitLibrary),
     },
   };
 }
@@ -633,6 +699,303 @@ function statBlockInitiativeScore(statBlock: StatBlockRecord): InitiativeScore {
       (statBlock.statBlock.initiativeModifier ??
         scoreModifier(statBlock.statBlock.abilityScores.dex)),
   );
+}
+
+function resolveAttack(input: BattleResolutionInput): BattleResolutionResult {
+  const attack = supportedAttackProfile(input.state, input.subject.actorId);
+  if (attack == null) {
+    return invalidResult(
+      input.state,
+      "unsupportedSurfaceShape",
+      "Attack resolution requires a supported weapon attack profile.",
+    );
+  }
+
+  const fillSet = attackFillSet(input.fills, attack);
+  if (fillSet.tag === "invalid") {
+    return invalidResult(input.state, "invalidFill", fillSet.message);
+  }
+
+  if (fillSet.targetId == null) {
+    if (fillSet.attackRoll != null || fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack target must be filled before attack roll or damage.",
+      );
+    }
+    return needsHolesResult(input.state, input.subject, [
+      attackTargetHole(input.state, input.subject.actorId),
+    ]);
+  }
+
+  const target = input.state.combatants.get(fillSet.targetId);
+  if (target == null || target.combatantId === input.subject.actorId) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack target must be another combatant in this battle.",
+    );
+  }
+
+  if (fillSet.attackRoll == null) {
+    if (fillSet.damageRoll != null) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Attack roll must be filled before attack damage.",
+      );
+    }
+    return needsHolesResult(input.state, input.subject, [attackRollHole()]);
+  }
+
+  if (!attackRollResultIsValid(fillSet.attackRoll)) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack roll result is outside the d20 attack-roll protocol.",
+    );
+  }
+
+  const hit = attackRollHits(
+    fillSet.attackRoll,
+    currentArmorClass(target.armorClass),
+  );
+  if (hit && fillSet.damageRoll == null) {
+    return needsHolesResult(input.state, input.subject, [
+      attackDamageHole(attack),
+    ]);
+  }
+  if (!hit && fillSet.damageRoll != null) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Attack damage can only be filled after a hit.",
+    );
+  }
+
+  return spendAttackAction(input.state);
+}
+
+type AttackFillSet =
+  | {
+      readonly tag: "ok";
+      readonly targetId: CombatantId | undefined;
+      readonly attackRoll: AttackRollResult | undefined;
+      readonly damageRoll:
+        | Extract<BattleFill, { readonly kind: "rolledDice" }>
+        | undefined;
+    }
+  | { readonly tag: "invalid"; readonly message: string };
+
+function attackFillSet(
+  fills: readonly BattleFill[],
+  attack: BattleAttackProfile,
+): AttackFillSet {
+  let targetId: CombatantId | undefined;
+  let attackRoll: AttackRollResult | undefined;
+  let damageRoll:
+    | Extract<BattleFill, { readonly kind: "rolledDice" }>
+    | undefined;
+  const damageHoleId = attackDamageHoleId(attack);
+
+  for (const fill of fills) {
+    if (fill.kind === "targetChoice" && fill.holeId === ATTACK_TARGET_HOLE_ID) {
+      if (targetId !== undefined) {
+        return { tag: "invalid", message: "Attack target was filled twice." };
+      }
+      targetId = combatantId(fill.value);
+      continue;
+    }
+
+    if (fill.kind === "attackRoll" && fill.holeId === ATTACK_ROLL_HOLE_ID) {
+      if (attackRoll !== undefined) {
+        return { tag: "invalid", message: "Attack roll was filled twice." };
+      }
+      attackRoll = fill.value;
+      continue;
+    }
+
+    if (fill.kind === "rolledDice" && fill.holeId === damageHoleId) {
+      if (damageRoll !== undefined) {
+        return { tag: "invalid", message: "Attack damage was filled twice." };
+      }
+      const damageValidation = validateRolledDiceForWeaponAttack(
+        fill.value,
+        attack,
+      );
+      if (damageValidation !== null) {
+        return { tag: "invalid", message: damageValidation };
+      }
+      damageRoll = fill;
+      continue;
+    }
+
+    return {
+      tag: "invalid",
+      message: `Fill ${fill.kind} does not match the Attack replay holes.`,
+    };
+  }
+
+  return { tag: "ok", targetId, attackRoll, damageRoll };
+}
+
+function validateRolledDiceForWeaponAttack(
+  groups: ReadonlyArray<RolledDiceGroup>,
+  attack: BattleAttackProfile,
+): string | null {
+  const damage = selectedWeaponDamage(attack.weapon);
+  const validation = validateRolledDiceForDiceExpr(groups, {
+    dice: damage.dice,
+    dieSize: damage.dieSize,
+  });
+  if (validation !== null) {
+    return validation.reason;
+  }
+
+  return null;
+}
+
+function spendAttackAction(
+  state: BattleState,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" | "invalid" }> {
+  const spent = spendAction(state.currentTurnResources, "attack");
+  if (Either.isLeft(spent)) {
+    return invalidResult(
+      state,
+      "staleSubject",
+      "Attack is no longer available for the current actor.",
+    );
+  }
+
+  const nextState = { ...state, currentTurnResources: spent.right };
+  return {
+    tag: "resolved",
+    state: nextState,
+    snapshot: snapshotBattle(nextState),
+  };
+}
+
+function needsHolesResult(
+  state: BattleState,
+  subject: BattleSubject,
+  holes: readonly BattleHole[],
+): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
+  return {
+    tag: "needsHoles",
+    subject,
+    holes,
+    snapshot: snapshotBattle(state),
+  };
+}
+
+function attackTargetHole(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleTargetChoiceHole {
+  return {
+    kind: "targetChoice",
+    holeId: ATTACK_TARGET_HOLE_ID,
+    holeInstanceKey: ATTACK_TARGET_HOLE_INSTANCE,
+    label: "Attack target",
+    choices: attackTargetChoices(state, actorId),
+  };
+}
+
+function attackTargetChoices(
+  state: BattleState,
+  actorId: CombatantId,
+): readonly CombatantId[] {
+  return [...state.combatants.keys()].filter((id) => id !== actorId);
+}
+
+function attackRollHole(): BattleAttackRollHole {
+  return {
+    kind: "attackRoll",
+    holeId: ATTACK_ROLL_HOLE_ID,
+    holeInstanceKey: ATTACK_ROLL_HOLE_INSTANCE,
+    label: "Attack roll",
+  };
+}
+
+function attackDamageHole(attack: BattleAttackProfile): BattleDamageRollHole {
+  const expression = weaponAttackDamageExpression(attack);
+  return {
+    kind: "rolledDice",
+    holeId: attackDamageHoleId(attack),
+    holeInstanceKey: holeInstanceKey(
+      `battle:attack:damage-result:${expression}`,
+    ),
+    label: `${attack.weapon.name} damage (${expression})`,
+    attack,
+  };
+}
+
+function attackDamageHoleId(attack: BattleAttackProfile): BattleHoleId {
+  return holeId(
+    `battle:attack:damage-result:${weaponAttackDamageExpression(attack)}`,
+  );
+}
+
+function supportedAttackProfile(
+  state: BattleState,
+  actorId: CombatantId,
+): BattleAttackProfile | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.source.kind !== "character") {
+    return undefined;
+  }
+
+  return actor.source.attack ?? undefined;
+}
+
+function characterAttackProfile(
+  sheet: CharacterSheet,
+  unitLibrary: UnitCatalog,
+): BattleAttackProfile | null {
+  const selectedWeapon = sheet.equipment.loadout.weapon;
+  if (selectedWeapon == null) {
+    return null;
+  }
+
+  const unit = unitLibrary.requireUnit(selectedWeapon.unitId);
+  if (unit.kind !== "weapon") {
+    return null;
+  }
+
+  if (unit.damage.kind !== "dice") {
+    return null;
+  }
+
+  return {
+    kind: "weapon",
+    weapon: unit,
+    ability: "str",
+    abilityModifier: scoreModifier(sheet.abilityScores.final.str),
+  };
+}
+
+function selectedWeaponDamage(weapon: WeaponRecord): BattleWeaponDamage {
+  if (weapon.damage.kind !== "dice") {
+    throw new Error("Battle Attack requires dice weapon damage.");
+  }
+
+  return weapon.damage;
+}
+
+function weaponAttackDamageExpression(attack: BattleAttackProfile): string {
+  const damage = selectedWeaponDamage(attack.weapon);
+  const modifier = signedModifier(attack.abilityModifier);
+
+  return `${damage.dice}d${damage.dieSize}${modifier}-${damage.damageType}`;
+}
+
+function signedModifier(modifier: number): string {
+  if (modifier === 0) {
+    return "";
+  }
+
+  return modifier > 0 ? `+${modifier}` : `${modifier}`;
 }
 
 function invalidResult(
